@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="test.ruleset" ToolsVersion="16.0">
+  <Include Path="full.ruleset" Action="Default" />
+
+  <!-- overrule some specific rules for test projects -->
+  <Rules AnalyzerId="Microsoft.CodeQuality.Analyzers" RuleNamespace="Microsoft.CodeQuality.Analyzers">
+    <!-- allow underscores in identifiers (necessary for test naming conventions) -->
+    <Rule Id="CA1707" Action="None" />
+
+    <!-- in controller integration tests we want to provide relative URIs as plain strings -->
+    <Rule Id="CA2234" Action="None" />
+  </Rules>
+</RuleSet>

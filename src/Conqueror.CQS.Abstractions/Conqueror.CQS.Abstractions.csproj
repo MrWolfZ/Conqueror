@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets"/>
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Abstractions for all command-query-separation (CQS) packages.</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <RootNamespace>Conqueror.CQS</RootNamespace>
+    </PropertyGroup>
+
+</Project>

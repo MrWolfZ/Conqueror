@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets"/>
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Powercharge your application by using command-query-separation (CQS).</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.CQS.Abstractions\Conqueror.CQS.Abstractions.csproj"/>
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj"/>
+    </ItemGroup>
+
+</Project>

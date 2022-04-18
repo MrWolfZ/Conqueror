@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="full.ruleset" ToolsVersion="16.0">
+  <Include Path="microsoft.ruleset" Action="Default" />
+  <Include Path="sonarqube.ruleset" Action="Default" />
+  <Include Path="stylecop.ruleset" Action="Default" />
+</RuleSet>

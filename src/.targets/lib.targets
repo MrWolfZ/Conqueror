@@ -1,0 +1,29 @@
+<Project>
+
+    <Import Project="common.targets"/>
+    <Import Project="analyzers.targets"/>
+
+    <PropertyGroup>
+        <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <PackageId>$(ProjectName)</PackageId>
+        <Title>$(PackageId)</Title>
+        <PackageVersion>$(ConquerorVersion)</PackageVersion>
+        <AssemblyVersion>$(ConquerorAssemblyVersion)</AssemblyVersion>
+        <FileVersion>$(AssemblyVersion)</FileVersion>
+        <Authors>Jonathan Ziller</Authors>
+        <Copyright>Copyright (c) 2022-present Jonathan Ziller</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageTags>CQS CQRS Command-Query-Separation Eventing Events PubSub</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="../../README.md" Pack="true" PackagePath="\" Visible="false"/>
+    </ItemGroup>
+
+</Project>

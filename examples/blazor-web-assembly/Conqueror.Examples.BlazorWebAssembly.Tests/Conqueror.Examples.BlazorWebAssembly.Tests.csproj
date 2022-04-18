@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Conqueror.Examples.BlazorWebAssembly.API.Tests</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.4" />
+        <PackageReference Include="NUnit" Version="3.13.2" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+        <PackageReference Include="coverlet.collector" Version="3.1.2" />
+        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Client" Version="0.1.0-beta.5" Condition="!Exists('../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj')" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Conqueror.Examples.BlazorWebAssembly.API\Conqueror.Examples.BlazorWebAssembly.API.csproj" />
+        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj" Condition="Exists('../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj')" />
+    </ItemGroup>
+
+</Project>

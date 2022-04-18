@@ -1,0 +1,17 @@
+[*.cs]
+dotnet_diagnostic.IDE0058.severity = error
+csharp_style_unused_value_expression_statement_preference = discard_variable
+indent_style = space
+indent_size = 4
+
+[{Program,Startup,*ServiceCollectionExtensions}.cs]
+dotnet_diagnostic.IDE0058.severity = none
+
+[*.csproj]
+end_of_line = lf
+indent_size = 4
+
+[*.targets]
+end_of_line = lf
+indent_size = 4
+

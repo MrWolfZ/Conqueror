@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets"/>
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Abstractions for all command-query-separation (CQS) ASP Core extension packages.</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <RootNamespace>Conqueror.CQS</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.CQS.Abstractions\Conqueror.CQS.Abstractions.csproj"/>
+    </ItemGroup>
+
+</Project>

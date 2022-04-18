@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets"/>
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4"/>
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="5.0.6" Condition="'$(TargetFramework)' == 'net5.0'"/>
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.4" Condition="'$(TargetFramework)' == 'net6.0'"/>
+        <PackageReference Include="NUnit" Version="3.13.1"/>
+        <PackageReference Include="NUnit3TestAdapter" Version="3.17.0"/>
+        <PackageReference Include="coverlet.collector" Version="3.0.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.CQS.Extensions.AspNetCore.Server\Conqueror.CQS.Extensions.AspNetCore.Server.csproj"/>
+        <ProjectReference Include="..\Conqueror.CQS\Conqueror.CQS.csproj"/>
+    </ItemGroup>
+
+</Project>

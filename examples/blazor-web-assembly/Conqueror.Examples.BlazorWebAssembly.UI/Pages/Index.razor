@@ -1,0 +1,37 @@
+﻿@page "/"
+@inject IGetSharedCounterValueQueryHandler getValueHandler
+@inject IIncrementSharedCounterValueCommandHandler incrementHandler
+
+<PageTitle>Shared Counter</PageTitle>
+
+<h1>Counter</h1>
+
+@if (currentCount == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <p role="status">Current count: @currentCount</p>
+
+    <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+}
+
+@code {
+    private long? currentCount;
+
+    private async Task IncrementCount()
+    {
+        var result = await incrementHandler.ExecuteCommand(new() { IncrementBy = 1 }, CancellationToken.None);
+        currentCount = result.ValueAfterIncrement;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await getValueHandler.ExecuteQuery(new(), CancellationToken.None);
+        currentCount = result.Value;
+    }
+
+}

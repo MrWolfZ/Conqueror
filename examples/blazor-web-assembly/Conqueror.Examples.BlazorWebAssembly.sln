@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Example.Blazor.UI", "Conqueror.Example.Blazor.UI\Conqueror.Example.Blazor.UI.csproj", "{BE22DDBA-D77A-4C86-919E-8CB5D945FAA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Example.Blazor.API", "Conqueror.Example.Blazor.API\Conqueror.Example.Blazor.API.csproj", "{B9B15944-20DB-4D4D-889C-BFA0D6DF41D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Example.Blazor.Contracts", "Conqueror.Example.Blazor.Contracts\Conqueror.Example.Blazor.Contracts.csproj", "{79304CC1-5579-417E-BE20-A5261E7D4307}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BE22DDBA-D77A-4C86-919E-8CB5D945FAA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE22DDBA-D77A-4C86-919E-8CB5D945FAA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE22DDBA-D77A-4C86-919E-8CB5D945FAA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE22DDBA-D77A-4C86-919E-8CB5D945FAA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9B15944-20DB-4D4D-889C-BFA0D6DF41D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9B15944-20DB-4D4D-889C-BFA0D6DF41D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9B15944-20DB-4D4D-889C-BFA0D6DF41D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9B15944-20DB-4D4D-889C-BFA0D6DF41D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79304CC1-5579-417E-BE20-A5261E7D4307}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79304CC1-5579-417E-BE20-A5261E7D4307}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79304CC1-5579-417E-BE20-A5261E7D4307}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79304CC1-5579-417E-BE20-A5261E7D4307}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
