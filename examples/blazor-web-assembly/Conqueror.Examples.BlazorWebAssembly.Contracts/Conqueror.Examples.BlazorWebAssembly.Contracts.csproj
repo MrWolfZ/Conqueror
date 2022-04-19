@@ -7,11 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Abstractions" Version="0.1.0-beta.5" Condition="!Exists('../../../src/Conqueror.CQS.Extensions.AspNetCore.Abstractions/Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj')" />
+        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Abstractions" Version="0.1.0-beta.5" Condition="'$(SolutionFileName)'!='Conqueror.sln'" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Abstractions/Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj" Condition="Exists('../../../src/Conqueror.CQS.Extensions.AspNetCore.Abstractions/Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj')" />
+        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Abstractions/Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj" Condition="'$(SolutionFileName)'=='Conqueror.sln'" />
     </ItemGroup>
 
 </Project>

@@ -3,6 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "blazor-web-assembly", "blazor-web-assembly", "{A5634B02-A5D3-42F7-B765-E653F0CEFACE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.API", "blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.API\Conqueror.Examples.BlazorWebAssembly.API.csproj", "{4786FDB7-B3A8-4E2A-B6B1-F3FA56616C55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Application", "blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Application\Conqueror.Examples.BlazorWebAssembly.Application.csproj", "{FB854E01-FA19-42F9-B93F-DDD366DF3C1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Contracts", "blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Contracts\Conqueror.Examples.BlazorWebAssembly.Contracts.csproj", "{139F81D6-E27F-4A98-8C1D-1B1EBB126E5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Tests", "blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Tests\Conqueror.Examples.BlazorWebAssembly.Tests.csproj", "{860EF35E-AF1C-4916-BE88-4FD0C1B20308}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.UI", "blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.UI\Conqueror.Examples.BlazorWebAssembly.UI.csproj", "{97E8A70D-9FF5-4E34-8A9B-0F7B85581E15}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -10,5 +22,34 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4786FDB7-B3A8-4E2A-B6B1-F3FA56616C55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4786FDB7-B3A8-4E2A-B6B1-F3FA56616C55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4786FDB7-B3A8-4E2A-B6B1-F3FA56616C55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4786FDB7-B3A8-4E2A-B6B1-F3FA56616C55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB854E01-FA19-42F9-B93F-DDD366DF3C1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB854E01-FA19-42F9-B93F-DDD366DF3C1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB854E01-FA19-42F9-B93F-DDD366DF3C1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB854E01-FA19-42F9-B93F-DDD366DF3C1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{139F81D6-E27F-4A98-8C1D-1B1EBB126E5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{139F81D6-E27F-4A98-8C1D-1B1EBB126E5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{139F81D6-E27F-4A98-8C1D-1B1EBB126E5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{139F81D6-E27F-4A98-8C1D-1B1EBB126E5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{860EF35E-AF1C-4916-BE88-4FD0C1B20308}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{860EF35E-AF1C-4916-BE88-4FD0C1B20308}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{860EF35E-AF1C-4916-BE88-4FD0C1B20308}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{860EF35E-AF1C-4916-BE88-4FD0C1B20308}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97E8A70D-9FF5-4E34-8A9B-0F7B85581E15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97E8A70D-9FF5-4E34-8A9B-0F7B85581E15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97E8A70D-9FF5-4E34-8A9B-0F7B85581E15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97E8A70D-9FF5-4E34-8A9B-0F7B85581E15}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4786FDB7-B3A8-4E2A-B6B1-F3FA56616C55} = {A5634B02-A5D3-42F7-B765-E653F0CEFACE}
+		{FB854E01-FA19-42F9-B93F-DDD366DF3C1B} = {A5634B02-A5D3-42F7-B765-E653F0CEFACE}
+		{139F81D6-E27F-4A98-8C1D-1B1EBB126E5D} = {A5634B02-A5D3-42F7-B765-E653F0CEFACE}
+		{860EF35E-AF1C-4916-BE88-4FD0C1B20308} = {A5634B02-A5D3-42F7-B765-E653F0CEFACE}
+		{97E8A70D-9FF5-4E34-8A9B-0F7B85581E15} = {A5634B02-A5D3-42F7-B765-E653F0CEFACE}
 	EndGlobalSection
 EndGlobal

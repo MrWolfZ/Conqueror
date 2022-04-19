@@ -14,12 +14,12 @@
         <PackageReference Include="NUnit" Version="3.13.2" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
         <PackageReference Include="coverlet.collector" Version="3.1.2" />
-        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Client" Version="0.1.0-beta.5" Condition="!Exists('../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj')" />
+        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Client" Version="0.1.0-beta.5" Condition="'$(SolutionFileName)'!='Conqueror.sln'" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Conqueror.Examples.BlazorWebAssembly.API\Conqueror.Examples.BlazorWebAssembly.API.csproj" />
-        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj" Condition="Exists('../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj')" />
+        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj" Condition="'$(SolutionFileName)'=='Conqueror.sln'" />
     </ItemGroup>
 
 </Project>

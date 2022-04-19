@@ -7,13 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Server" Version="0.1.0-beta.5" Condition="!Exists('../../../src/Conqueror.CQS.Extensions.AspNetCore.Server/Conqueror.CQS.Extensions.AspNetCore.Server.csproj')" />
+        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Server" Version="0.1.0-beta.5" Condition="'$(SolutionFileName)'!='Conqueror.sln'" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.Application/Conqueror.Examples.BlazorWebAssembly.Application.csproj" />
-        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Server/Conqueror.CQS.Extensions.AspNetCore.Server.csproj" Condition="Exists('../../../src/Conqueror.CQS.Extensions.AspNetCore.Server/Conqueror.CQS.Extensions.AspNetCore.Server.csproj')" />
+        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Server/Conqueror.CQS.Extensions.AspNetCore.Server.csproj" Condition="'$(SolutionFileName)'=='Conqueror.sln'" />
     </ItemGroup>
 
 </Project>
