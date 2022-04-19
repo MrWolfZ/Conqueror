@@ -20,9 +20,6 @@ builder.Services.ConfigureConqueror();
 
 var app = builder.Build();
 
-// TODO: replace this hack properly in Conqueror
-app.Services.GetRequiredService<IStartupFilter>().Configure(_ => { })(app);
-
 // Configure the HTTP request pipeline.
 
 if (app.Environment.IsDevelopment())
