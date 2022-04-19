@@ -1,6 +1,6 @@
 ﻿using Conqueror.Eventing;
 
-namespace Conqueror.Examples.BlazorWebAssembly.Application;
+namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
 
 internal sealed class PublishSharedCounterIncrementToHubEventObserver : IEventObserver<SharedCounterIncrementedEvent>
 {

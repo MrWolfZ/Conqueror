@@ -1,7 +1,6 @@
 ﻿using Conqueror.Eventing;
-using Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-namespace Conqueror.Examples.BlazorWebAssembly.Application;
+namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
 
 internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementSharedCounterValueCommandHandler
 {
@@ -16,6 +15,8 @@ internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementShar
 
     [LogCommand]
     [ValidateCommand]
+    [ExecuteInTransaction(EnlistInAmbientTransaction = false)]
+    [RetryCommand(MaxNumberOfAttempts = 2, RetryIntervalInSeconds = 2)]
     public async Task<IncrementSharedCounterValueCommandResponse> ExecuteCommand(IncrementSharedCounterValueCommand command, CancellationToken cancellationToken)
     {
         var valueAfterIncrement = counter.IncrementBy(command.IncrementBy);

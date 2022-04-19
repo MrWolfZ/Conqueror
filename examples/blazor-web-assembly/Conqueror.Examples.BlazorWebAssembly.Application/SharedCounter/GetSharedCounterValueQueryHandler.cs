@@ -1,6 +1,4 @@
-﻿using Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
-
-namespace Conqueror.Examples.BlazorWebAssembly.Application;
+﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
 
 internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValueQueryHandler
 {
@@ -13,6 +11,7 @@ internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValue
 
     [LogQuery]
     [ValidateQuery]
+    [CacheQueryResult(invalidateResultsAfterSeconds: 1, InvalidateResultsOnEventTypes = new []{ typeof(SharedCounterIncrementedEvent) })]
     public async Task<GetSharedCounterValueQueryResponse> ExecuteQuery(GetSharedCounterValueQuery query, CancellationToken cancellationToken)
     {
         await Task.CompletedTask;
