@@ -10,8 +10,11 @@ internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValue
     }
 
     [LogQuery]
+    [RequiresQueryPermission(Permissions.UseSharedCounter)]
     [ValidateQuery]
-    [CacheQueryResult(invalidateResultsAfterSeconds: 1, InvalidateResultsOnEventTypes = new []{ typeof(SharedCounterIncrementedEvent) })]
+    [CacheQueryResult(invalidateResultsAfterSeconds: 60, InvalidateResultsOnEventTypes = new []{ typeof(SharedCounterIncrementedEvent) })]
+    [QueryTimeout(TimeoutAfterSeconds = 10)]
+    [GatherQueryMetrics]
     public async Task<GetSharedCounterValueQueryResponse> ExecuteQuery(GetSharedCounterValueQuery query, CancellationToken cancellationToken)
     {
         await Task.CompletedTask;

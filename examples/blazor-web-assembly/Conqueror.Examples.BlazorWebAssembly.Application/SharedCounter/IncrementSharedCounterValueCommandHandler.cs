@@ -14,9 +14,12 @@ internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementShar
     }
 
     [LogCommand]
+    [RequiresCommandPermission(Permissions.UseSharedCounter)]
     [ValidateCommand]
     [ExecuteInTransaction(EnlistInAmbientTransaction = false)]
     [RetryCommand(MaxNumberOfAttempts = 2, RetryIntervalInSeconds = 2)]
+    [CommandTimeout]
+    [GatherCommandMetrics]
     public async Task<IncrementSharedCounterValueCommandResponse> ExecuteCommand(IncrementSharedCounterValueCommand command, CancellationToken cancellationToken)
     {
         var valueAfterIncrement = counter.IncrementBy(command.IncrementBy);
