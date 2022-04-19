@@ -1,8 +1,6 @@
-﻿using Conqueror.Eventing;
+﻿namespace Conqueror.Examples.BlazorWebAssembly.Application;
 
-namespace Conqueror.Examples.BlazorWebAssembly.Application;
-
-internal sealed class InMemoryEventStore : IEventObserver<SharedCounterIncrementedEvent>
+internal sealed class InMemoryEventStore : ISharedCounterIncrementedEventObserver
 {
     private readonly List<object> events = new();
 

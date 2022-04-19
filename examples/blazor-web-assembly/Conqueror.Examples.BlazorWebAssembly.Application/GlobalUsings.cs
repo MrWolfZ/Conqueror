@@ -1,4 +1,5 @@
 ﻿global using Conqueror.CQS;
+global using Conqueror.Eventing;
 global using Conqueror.Examples.BlazorWebAssembly.Contracts;
 global using Microsoft.Extensions.Logging;
 global using System.Text.Json;

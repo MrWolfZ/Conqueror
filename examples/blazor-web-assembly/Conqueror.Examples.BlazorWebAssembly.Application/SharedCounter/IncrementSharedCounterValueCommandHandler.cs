@@ -1,13 +1,11 @@
-﻿using Conqueror.Eventing;
-
-namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
+﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
 
 internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementSharedCounterValueCommandHandler
 {
     private readonly SharedCounter counter;
-    private readonly IEventObserver<SharedCounterIncrementedEvent> eventObserver;
+    private readonly ISharedCounterIncrementedEventObserver eventObserver;
 
-    public IncrementSharedCounterValueCommandHandler(SharedCounter counter, IEventObserver<SharedCounterIncrementedEvent> eventObserver)
+    public IncrementSharedCounterValueCommandHandler(SharedCounter counter, ISharedCounterIncrementedEventObserver eventObserver)
     {
         this.counter = counter;
         this.eventObserver = eventObserver;
