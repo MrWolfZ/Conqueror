@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Reflection;
-using Conqueror.Util;
+using Conqueror.Common;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
 {

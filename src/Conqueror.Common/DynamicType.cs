@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Conqueror.Util
+namespace Conqueror.Common
 {
     internal static class DynamicType
     {
@@ -19,7 +19,7 @@ namespace Conqueror.Util
 
         private static Type GenerateType(Type interfaceType, Type targetType)
         {
-            var typeName = $"{GetTypeLabel(interfaceType)}_{GetTypeLabel(targetType)}_Dynamic";
+            var typeName = $"{interfaceType.FullName}_{targetType.FullName}_Dynamic";
             var typeBuilder = ModuleBuilder.DefineType(typeName, TypeAttributes.NotPublic | TypeAttributes.Sealed, null, new[] { interfaceType });
 
             var targetFieldBuilder = typeBuilder.DefineField(
@@ -35,33 +35,6 @@ namespace Conqueror.Util
             }
 
             return typeBuilder.CreateType()!;
-
-            static string GetTypeLabel(Type t) => $"{GetDeclaringTypesLabel(t)}{t.Name}{GetGenericTypesLabel(t)}";
-
-            static string GetDeclaringTypesLabel(Type t)
-            {
-                var result = string.Empty;
-
-                while (t.DeclaringType is not null)
-                {
-                    t = t.DeclaringType;
-                    result += $"{t.Name}+";
-                }
-
-                return result;
-            }
-
-            static string GetGenericTypesLabel(Type t)
-            {
-                if (!t.IsGenericType)
-                {
-                    return string.Empty;
-                }
-
-                var genericTypeNames = t.GetGenericArguments().Select(t => t.Name);
-
-                return $"({string.Join("+", genericTypeNames)})";
-            }
         }
 
         private static void EmitConstructor(TypeBuilder typeBuilder, FieldInfo targetField, Type targetType)

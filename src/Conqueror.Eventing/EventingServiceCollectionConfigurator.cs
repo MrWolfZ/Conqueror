@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Linq;
+using Conqueror.Common;
 using Conqueror.Eventing.Util;
-using Conqueror.Util;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Eventing
 {
     internal sealed class EventingServiceCollectionConfigurator : IServiceCollectionConfigurator
     {
+        public int ConfigurationPhase => 1;
+        
         public void Configure(IServiceCollection services)
         {
             ConfigureEventObservers(services);

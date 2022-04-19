@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using Conqueror.Util;
+using Conqueror.Common;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection
@@ -10,6 +10,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var configurators = services.Select(d => d.ImplementationInstance)
                                         .OfType<IServiceCollectionConfigurator>()
+                                        .OrderBy(c => c.ConfigurationPhase)
                                         .ToList();
 
             foreach (var configurator in configurators)

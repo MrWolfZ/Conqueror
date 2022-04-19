@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Linq;
-using Conqueror.Util;
+using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class CommandServiceCollectionConfigurator : IServiceCollectionConfigurator
     {
+        public int ConfigurationPhase => 1;
+        
         public void Configure(IServiceCollection services)
         {
             ConfigureHandlers(services);

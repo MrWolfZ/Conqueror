@@ -63,6 +63,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Application", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Application\Conqueror.Examples.BlazorWebAssembly.Application.csproj", "{6F100036-6720-477D-9FDA-66E2C45EEEA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Extensions.AspNetCore.Server.Tests.TopLevelProgram", "src\Conqueror.CQS.Extensions.AspNetCore.Server.Tests.TopLevelProgram\Conqueror.CQS.Extensions.AspNetCore.Server.Tests.TopLevelProgram.csproj", "{BC284CFD-4289-42E2-87AE-7F73F372ABEC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -140,6 +142,10 @@ Global
 		{6F100036-6720-477D-9FDA-66E2C45EEEA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F100036-6720-477D-9FDA-66E2C45EEEA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F100036-6720-477D-9FDA-66E2C45EEEA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}

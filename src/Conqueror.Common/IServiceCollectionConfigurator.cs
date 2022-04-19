@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Conqueror.Util
+namespace Conqueror.Common
 {
     internal interface IServiceCollectionConfigurator
     {
+        int ConfigurationPhase { get; }
+        
         void Configure(IServiceCollection services);
     }
 }

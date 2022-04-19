@@ -9,8 +9,8 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
     internal abstract class DynamicControllerFactory
     {
-        private static readonly AssemblyBuilder DynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new("ConquerorHttpServerAspNetCoreDynamic"), AssemblyBuilderAccess.Run);
-        private static readonly ModuleBuilder ModuleBuilder = DynamicAssembly.DefineDynamicModule("ConquerorHttpServerAspNetCoreDynamicModule");
+        private static readonly AssemblyBuilder DynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new("ConquerorCqsExtensionsAspNetCoreServerDynamic"), AssemblyBuilderAccess.Run);
+        private static readonly ModuleBuilder ModuleBuilder = DynamicAssembly.DefineDynamicModule("ConquerorCqsExtensionsAspNetCoreServerDynamicModule");
         private static readonly ConcurrentDictionary<string, Lazy<Type>> DynamicTypeDictionary = new();
 
         protected static Type Create(string name, Func<Type> typeFactory)
