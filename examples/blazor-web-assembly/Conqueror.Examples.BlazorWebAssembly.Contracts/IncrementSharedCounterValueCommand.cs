@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Conqueror.Examples.BlazorWebAssembly.Contracts;
+﻿namespace Conqueror.Examples.BlazorWebAssembly.Contracts;
 
 [HttpCommand]
 public sealed record IncrementSharedCounterValueCommand

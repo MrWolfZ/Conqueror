@@ -9,12 +9,12 @@ internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValue
         this.counter = counter;
     }
 
+    [GatherQueryMetrics]
     [LogQuery]
     [RequiresQueryPermission(Permissions.UseSharedCounter)]
     [ValidateQuery]
     [CacheQueryResult(invalidateResultsAfterSeconds: 60, InvalidateResultsOnEventTypes = new []{ typeof(SharedCounterIncrementedEvent) })]
     [QueryTimeout(TimeoutAfterSeconds = 10)]
-    [GatherQueryMetrics]
     public async Task<GetSharedCounterValueQueryResponse> ExecuteQuery(GetSharedCounterValueQuery query, CancellationToken cancellationToken)
     {
         await Task.CompletedTask;

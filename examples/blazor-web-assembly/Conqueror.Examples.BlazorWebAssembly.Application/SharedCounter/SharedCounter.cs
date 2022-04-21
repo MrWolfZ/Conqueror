@@ -10,5 +10,11 @@ internal sealed class SharedCounter
         return GetValue();
     }
 
+    public long DecrementBy(long amount)
+    {
+        value -= amount;
+        return GetValue();
+    }
+
     public long GetValue() => value;
 }
