@@ -4,4 +4,8 @@
     {
         public int Payload { get; init; }
     }
+    
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    {
+    }
 }
