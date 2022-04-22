@@ -15,23 +15,21 @@ namespace Conqueror.CQS.QueryHandling
             where TQuery : class
         {
             var index = 0;
-            var invokers = metadata.MiddlewareConfigurationAttributes
-                                   .Keys
-                                   .Select(a => serviceProvider.GetService(typeof(QueryMiddlewareInvoker<>).MakeGenericType(a)))
-                                   .Cast<IQueryMiddlewareInvoker>()
-                                   .ToList();
+            var attributes = metadata.MiddlewareConfigurationAttributes.ToList();
 
             return await ExecuteNextMiddleware(command, cancellationToken);
 
             async Task<TResponse> ExecuteNextMiddleware(TQuery cmd, CancellationToken token)
             {
-                if (index >= invokers.Count)
+                if (index >= attributes.Count)
                 {
                     return await handler.ExecuteQuery(cmd, token);
                 }
 
-                var middlewareInvoker = invokers[index++];
-                return await middlewareInvoker.Invoke(cmd, ExecuteNextMiddleware, metadata, serviceProvider, token);
+                var attribute = attributes[index++];
+                var invoker = (IQueryMiddlewareInvoker)serviceProvider.GetService(typeof(QueryMiddlewareInvoker<>).MakeGenericType(attribute.GetType()))!;
+
+                return await invoker.Invoke(cmd, ExecuteNextMiddleware, metadata, attribute, serviceProvider, token);
             }
         }
     }

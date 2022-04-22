@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -13,7 +12,7 @@ namespace Conqueror.CQS
             CommandType = commandType;
             ResponseType = responseType;
             HandlerType = handlerType;
-            MiddlewareConfigurationAttributes = GetConfigurationAttribute(handlerType).ToDictionary(a => a.GetType());
+            MiddlewareConfigurationAttributes = GetConfigurationAttribute(handlerType).ToList();
         }
 
         public Type CommandType { get; }
@@ -22,15 +21,7 @@ namespace Conqueror.CQS
 
         public Type HandlerType { get; }
 
-        public IReadOnlyDictionary<Type, CommandMiddlewareConfigurationAttribute> MiddlewareConfigurationAttributes { get; }
-
-        public bool TryGetMiddlewareConfigurationAttribute<TConfiguration>([MaybeNullWhen(false)] out TConfiguration attribute)
-            where TConfiguration : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<ICommandMiddleware<TConfiguration>>
-        {
-            var success = MiddlewareConfigurationAttributes.TryGetValue(typeof(TConfiguration), out var a);
-            attribute = a as TConfiguration;
-            return success && attribute != null;
-        }
+        public IReadOnlyCollection<CommandMiddlewareConfigurationAttribute> MiddlewareConfigurationAttributes { get; }
 
         private IEnumerable<CommandMiddlewareConfigurationAttribute> GetConfigurationAttribute(Type handlerType)
         {

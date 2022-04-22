@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class GatherCommandMetricsAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<CommandMetricsMiddleware>
+public sealed class GatherCommandMetricsAttribute : CommandMiddlewareConfigurationAttribute
 {
 }
 

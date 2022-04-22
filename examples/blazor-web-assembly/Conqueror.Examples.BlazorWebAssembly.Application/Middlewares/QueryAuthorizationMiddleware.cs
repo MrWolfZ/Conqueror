@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class RequiresQueryPermissionAttribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<QueryAuthorizationMiddleware>
+public sealed class RequiresQueryPermissionAttribute : QueryMiddlewareConfigurationAttribute
 {
     public RequiresQueryPermissionAttribute(string permission)
     {

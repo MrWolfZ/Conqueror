@@ -11,6 +11,7 @@ namespace Conqueror.CQS.CommandHandling
         Task<TResponse> Invoke<TCommand, TResponse>(TCommand command,
                                                     CommandMiddlewareNext<TCommand, TResponse> next,
                                                     CommandHandlerMetadata metadata,
+                                                    CommandMiddlewareConfigurationAttribute middlewareConfigurationAttribute,
                                                     IServiceProvider serviceProvider,
                                                     CancellationToken cancellationToken)
             where TCommand : class;

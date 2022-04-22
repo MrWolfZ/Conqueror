@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class RetryCommandAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<CommandRetryMiddleware>
+public sealed class RetryCommandAttribute : CommandMiddlewareConfigurationAttribute
 {
     public int MaxNumberOfAttempts { get; init; } = 3;
 

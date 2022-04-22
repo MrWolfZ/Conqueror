@@ -5,7 +5,7 @@ namespace Conqueror.CQS.QueryHandling
 {
     internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse, TConfiguration> : QueryMiddlewareContext<TQuery, TResponse, TConfiguration>
         where TQuery : class
-        where TConfiguration : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<IQueryMiddleware<TConfiguration>>
+        where TConfiguration : QueryMiddlewareConfigurationAttribute
     {
         private readonly QueryMiddlewareNext<TQuery, TResponse> next;
 

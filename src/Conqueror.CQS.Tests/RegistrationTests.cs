@@ -17,9 +17,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection().AddConquerorCQS().AddConquerorCQS();
 
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryMiddlewareRegistry)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryMiddlewaresInvoker)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryServiceCollectionConfigurator)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandHandlerRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandMiddlewareRegistry)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandMiddlewaresInvoker)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandServiceCollectionConfigurator)));
         }
@@ -150,7 +152,7 @@ namespace Conqueror.CQS.Tests
             public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken) => Task.FromResult(new TestQueryResponse());
         }
 
-        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<TestQueryMiddleware>
+        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
         {
         }
 
@@ -203,7 +205,7 @@ namespace Conqueror.CQS.Tests
             public Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
         }
 
-        private sealed class TestCommandMiddlewareAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<TestCommandMiddleware>
+        private sealed class TestCommandMiddlewareAttribute : CommandMiddlewareConfigurationAttribute
         {
         }
 

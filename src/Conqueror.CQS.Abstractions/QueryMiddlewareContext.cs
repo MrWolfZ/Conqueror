@@ -18,7 +18,7 @@ namespace Conqueror.CQS
 
     public abstract class QueryMiddlewareContext<TQuery, TResponse, TConfiguration> : QueryMiddlewareContext<TQuery, TResponse>
         where TQuery : class
-        where TConfiguration : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<IQueryMiddleware<TConfiguration>>
+        where TConfiguration : QueryMiddlewareConfigurationAttribute
     {
         public abstract TConfiguration Configuration { get; }
     }

@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class LogCommandAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<CommandLoggingMiddleware>
+public sealed class LogCommandAttribute : CommandMiddlewareConfigurationAttribute
 {
     public bool LogException { get; init; } = true;
 

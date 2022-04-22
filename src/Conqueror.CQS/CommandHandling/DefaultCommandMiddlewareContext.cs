@@ -5,7 +5,7 @@ namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration> : CommandMiddlewareContext<TCommand, TResponse, TConfiguration>
         where TCommand : class
-        where TConfiguration : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<ICommandMiddleware<TConfiguration>>
+        where TConfiguration : CommandMiddlewareConfigurationAttribute
     {
         private readonly CommandMiddlewareNext<TCommand, TResponse> next;
 

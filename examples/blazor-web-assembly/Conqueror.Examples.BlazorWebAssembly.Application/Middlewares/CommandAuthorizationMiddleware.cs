@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class RequiresCommandPermissionAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<CommandAuthorizationMiddleware>
+public sealed class RequiresCommandPermissionAttribute : CommandMiddlewareConfigurationAttribute
 {
     public RequiresCommandPermissionAttribute(string permission)
     {

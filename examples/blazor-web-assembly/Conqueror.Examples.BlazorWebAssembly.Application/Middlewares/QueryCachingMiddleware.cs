@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class CacheQueryResultAttribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<QueryCachingMiddleware>
+public sealed class CacheQueryResultAttribute : QueryMiddlewareConfigurationAttribute
 {
     public CacheQueryResultAttribute(int invalidateResultsAfterSeconds)
     {

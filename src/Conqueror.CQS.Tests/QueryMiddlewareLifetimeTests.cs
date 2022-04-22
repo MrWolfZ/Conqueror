@@ -286,11 +286,11 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<TestQueryMiddleware>
+        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
         {
         }
 
-        private sealed class TestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<TestQueryMiddleware2>
+        private sealed class TestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute
         {
         }
 

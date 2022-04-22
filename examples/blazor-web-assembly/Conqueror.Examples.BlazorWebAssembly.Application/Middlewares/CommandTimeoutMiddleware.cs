@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class CommandTimeoutAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<CommandTimeoutMiddleware>
+public sealed class CommandTimeoutAttribute : CommandMiddlewareConfigurationAttribute
 {
     public int TimeoutAfterSeconds { get; init; }
     

@@ -11,6 +11,7 @@ namespace Conqueror.CQS.QueryHandling
         Task<TResponse> Invoke<TQuery, TResponse>(TQuery query,
                                                   QueryMiddlewareNext<TQuery, TResponse> next,
                                                   QueryHandlerMetadata metadata,
+                                                  QueryMiddlewareConfigurationAttribute middlewareConfigurationAttribute,
                                                   IServiceProvider serviceProvider,
                                                   CancellationToken cancellationToken)
             where TQuery : class;

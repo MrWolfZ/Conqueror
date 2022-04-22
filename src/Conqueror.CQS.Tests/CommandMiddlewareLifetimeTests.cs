@@ -342,11 +342,11 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandMiddlewareAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<TestCommandMiddleware>
+        private sealed class TestCommandMiddlewareAttribute : CommandMiddlewareConfigurationAttribute
         {
         }
 
-        private sealed class TestCommandMiddleware2Attribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<TestCommandMiddleware2>
+        private sealed class TestCommandMiddleware2Attribute : CommandMiddlewareConfigurationAttribute
         {
         }
 

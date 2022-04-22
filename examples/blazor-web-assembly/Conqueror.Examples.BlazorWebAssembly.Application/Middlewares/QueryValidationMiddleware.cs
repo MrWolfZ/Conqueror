@@ -2,7 +2,7 @@
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class ValidateQueryAttribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<QueryValidationMiddleware>
+public sealed class ValidateQueryAttribute : QueryMiddlewareConfigurationAttribute
 {
 }
 

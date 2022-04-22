@@ -319,12 +319,12 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<TestQueryMiddleware>
+        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
         {
             public int Parameter { get; set; }
         }
 
-        private sealed class TestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<TestQueryMiddleware2>
+        private sealed class TestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute
         {
         }
 
@@ -372,11 +372,11 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class MutatingTestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<MutatingTestQueryMiddleware>
+        private sealed class MutatingTestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
         {
         }
 
-        private sealed class MutatingTestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<MutatingTestQueryMiddleware2>
+        private sealed class MutatingTestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute
         {
         }
 

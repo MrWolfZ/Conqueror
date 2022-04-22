@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class ExecuteInTransactionAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<CommandTransactionMiddleware>
+public sealed class ExecuteInTransactionAttribute : CommandMiddlewareConfigurationAttribute
 {
     public bool EnlistInAmbientTransaction { get; init; } = true;
 }

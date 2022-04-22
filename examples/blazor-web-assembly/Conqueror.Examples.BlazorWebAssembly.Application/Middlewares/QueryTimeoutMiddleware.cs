@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class QueryTimeoutAttribute : QueryMiddlewareConfigurationAttribute, IQueryMiddlewareConfiguration<QueryTimeoutMiddleware>
+public sealed class QueryTimeoutAttribute : QueryMiddlewareConfigurationAttribute
 {
     public int TimeoutAfterSeconds { get; init; }
     

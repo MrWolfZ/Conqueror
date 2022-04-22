@@ -20,7 +20,7 @@ namespace Conqueror.CQS
 
     public abstract class CommandMiddlewareContext<TCommand, TResponse, TConfiguration> : CommandMiddlewareContext<TCommand, TResponse>
         where TCommand : class
-        where TConfiguration : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<ICommandMiddleware<TConfiguration>>
+        where TConfiguration : CommandMiddlewareConfigurationAttribute
     {
         public abstract TConfiguration Configuration { get; }
     }

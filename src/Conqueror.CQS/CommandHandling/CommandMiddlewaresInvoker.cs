@@ -15,23 +15,21 @@ namespace Conqueror.CQS.CommandHandling
             where TCommand : class
         {
             var index = 0;
-            var invokers = metadata.MiddlewareConfigurationAttributes
-                                   .Keys
-                                   .Select(a => serviceProvider.GetService(typeof(CommandMiddlewareInvoker<>).MakeGenericType(a)))
-                                   .Cast<ICommandMiddlewareInvoker>()
-                                   .ToList();
+            var attributes = metadata.MiddlewareConfigurationAttributes.ToList();
 
             return await ExecuteNextMiddleware(command, cancellationToken);
 
             async Task<TResponse> ExecuteNextMiddleware(TCommand cmd, CancellationToken token)
             {
-                if (index >= invokers.Count)
+                if (index >= attributes.Count)
                 {
                     return await handler.ExecuteCommand(cmd, token);
                 }
+                
+                var attribute = attributes[index++];
+                var invoker = (ICommandMiddlewareInvoker)serviceProvider.GetService(typeof(CommandMiddlewareInvoker<>).MakeGenericType(attribute.GetType()))!;
 
-                var middlewareInvoker = invokers[index++];
-                return await middlewareInvoker.Invoke(cmd, ExecuteNextMiddleware, metadata, serviceProvider, token);
+                return await invoker.Invoke(cmd, ExecuteNextMiddleware, metadata, attribute, serviceProvider, token);
             }
         }
 

@@ -2,7 +2,7 @@
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class ValidateCommandAttribute : CommandMiddlewareConfigurationAttribute, ICommandMiddlewareConfiguration<CommandValidationMiddleware>
+public sealed class ValidateCommandAttribute : CommandMiddlewareConfigurationAttribute
 {
 }
 
