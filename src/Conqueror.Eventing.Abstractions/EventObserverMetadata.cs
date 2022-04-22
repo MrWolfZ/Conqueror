@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -13,7 +12,7 @@ namespace Conqueror.Eventing
             EventType = eventType;
             ObserverType = observerType;
             Options = options;
-            MiddlewareConfigurationAttributes = GetConfigurationAttribute(observerType).ToDictionary(t => (t.EventType, t.Attribute.GetType()), t => t.Attribute);
+            MiddlewareConfigurationAttributes = GetConfigurationAttribute(observerType).ToList();
         }
 
         public Type EventType { get; }
@@ -22,21 +21,15 @@ namespace Conqueror.Eventing
 
         public EventObserverOptions Options { get; }
 
-        public IReadOnlyDictionary<(Type EventType, Type AttributeType), EventObserverMiddlewareConfigurationAttribute> MiddlewareConfigurationAttributes { get; }
+        public IReadOnlyCollection<EventObserverMiddlewareConfigurationAttribute> MiddlewareConfigurationAttributes { get; }
 
-        public bool TryGetMiddlewareConfiguration<TEvent, TConfiguration>([MaybeNullWhen(false)] out TConfiguration attribute)
-            where TEvent : class
-            where TConfiguration : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<IEventObserverMiddleware<TConfiguration>>
+        private IEnumerable<EventObserverMiddlewareConfigurationAttribute> GetConfigurationAttribute(Type observerType)
         {
-            var success = MiddlewareConfigurationAttributes.TryGetValue((typeof(TEvent), typeof(TConfiguration)), out var a);
-            attribute = a as TConfiguration;
-            return success && attribute != null;
-        }
+            var executeMethod = observerType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                                            .Where(m => m.Name == nameof(IEventObserver<object>.HandleEvent))
+                                            .First(m => m.GetParameters().First().ParameterType == EventType);
 
-        private static IEnumerable<(Type EventType, EventObserverMiddlewareConfigurationAttribute Attribute)> GetConfigurationAttribute(Type observerType)
-        {
-            var executeMethods = observerType.GetMethods(BindingFlags.Instance | BindingFlags.Public).Where(m => m.Name == nameof(IEventObserver<object>.HandleEvent));
-            return executeMethods.SelectMany(m => m.GetCustomAttributes().OfType<EventObserverMiddlewareConfigurationAttribute>().Select(a => (m.GetParameters().First().ParameterType, a)));
+            return executeMethod.GetCustomAttributes().OfType<EventObserverMiddlewareConfigurationAttribute>();
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Conqueror.Eventing
 
     public abstract class EventObserverMiddlewareContext<TEvent, TConfiguration> : EventMiddlewareContext<TEvent>
         where TEvent : class
-        where TConfiguration : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<IEventObserverMiddleware<TConfiguration>>
+        where TConfiguration : EventObserverMiddlewareConfigurationAttribute
     {
         public abstract TConfiguration Configuration { get; }
     }

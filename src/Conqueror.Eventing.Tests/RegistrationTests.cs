@@ -16,8 +16,8 @@ namespace Conqueror.Eventing.Tests
 
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IEventPublisher)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IEventObserver<>)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventObserverMiddlewareInvoker<>)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventObserverRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventObserverMiddlewareRegistry)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventMiddlewaresInvoker)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventingServiceCollectionConfigurator)));
         }
@@ -167,7 +167,7 @@ namespace Conqueror.Eventing.Tests
             public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
         }
 
-        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<TestEventObserverMiddleware>
+        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
         {
         }
 

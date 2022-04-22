@@ -67,7 +67,14 @@ namespace Conqueror.Eventing
 
         private static void ConfigureEventObserverMiddlewares(IServiceCollection services)
         {
-            foreach (var middlewareType in services.Where(d => d.ServiceType == d.ImplementationType).Select(d => d.ImplementationType).OfType<Type>().ToList())
+            var middlewareTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
+                                          .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
+                                          .OfType<Type>()
+                                          .Where(t => t.IsAssignableTo(typeof(IEventObserverMiddleware)))
+                                          .Distinct()
+                                          .ToList();
+            
+            foreach (var middlewareType in middlewareTypes)
             {
                 var middlewareInterfaces = middlewareType.GetInterfaces().Where(IsEventObserverMiddlewareInterface).ToList();
 
@@ -79,6 +86,26 @@ namespace Conqueror.Eventing
                     case > 1:
                         throw new ArgumentException($"type {middlewareType.Name} implements {typeof(IEventObserverMiddleware<>).Name} more than once");
                 }
+            }
+
+            foreach (var middlewareType in middlewareTypes)
+            {
+                RegisterMetadata(middlewareType);
+                RegisterInvoker(middlewareType);
+            }
+
+            void RegisterMetadata(Type middlewareType)
+            {
+                var attributeType = middlewareType.GetInterfaces().First(IsEventObserverMiddlewareInterface).GetGenericArguments().First();
+
+                _ = services.AddSingleton(new EventObserverMiddlewareMetadata(middlewareType, attributeType));
+            }
+
+            void RegisterInvoker(Type middlewareType)
+            {
+                var attributeType = middlewareType.GetInterfaces().First(IsEventObserverMiddlewareInterface).GetGenericArguments().First();
+
+                _ = services.AddTransient(typeof(EventObserverMiddlewareInvoker<>).MakeGenericType(attributeType));
             }
 
             static bool IsEventObserverMiddlewareInterface(Type i) => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventObserverMiddleware<>);

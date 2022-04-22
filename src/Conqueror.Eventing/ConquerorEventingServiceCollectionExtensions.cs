@@ -13,8 +13,8 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.TryAddTransient<IEventPublisher, EventPublisher>();
             services.TryAddTransient(typeof(IEventObserver<>), typeof(EventObserverProxy<>));
-            services.TryAddSingleton(typeof(EventObserverMiddlewareInvoker<>));
             services.TryAddSingleton<EventObserverRegistry>();
+            services.TryAddSingleton<EventObserverMiddlewareRegistry>();
             services.TryAddSingleton<EventMiddlewaresInvoker>();
             services.TryAddSingleton(new EventingServiceCollectionConfigurator());
 

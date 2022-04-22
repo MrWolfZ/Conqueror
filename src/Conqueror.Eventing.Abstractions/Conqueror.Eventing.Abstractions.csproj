@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../.targets/lib.targets"/>
+    <Import Project="../.targets/lib.targets" />
 
     <!-- for NuGet -->
     <PropertyGroup>

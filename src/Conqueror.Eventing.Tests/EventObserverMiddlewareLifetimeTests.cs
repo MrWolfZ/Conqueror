@@ -222,11 +222,11 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<TestEventObserverMiddleware>
+        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
         {
         }
 
-        private sealed class TestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<TestEventObserverMiddleware2>
+        private sealed class TestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute
         {
         }
 

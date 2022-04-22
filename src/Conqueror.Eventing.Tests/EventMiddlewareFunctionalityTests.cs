@@ -662,12 +662,12 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<TestEventObserverMiddleware>
+        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
         {
             public int Parameter { get; set; }
         }
 
-        private sealed class TestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<TestEventObserverMiddleware2>
+        private sealed class TestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute
         {
         }
 
@@ -715,11 +715,11 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class MutatingTestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<MutatingTestEventObserverMiddleware>
+        private sealed class MutatingTestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
         {
         }
 
-        private sealed class MutatingTestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<MutatingTestEventObserverMiddleware2>
+        private sealed class MutatingTestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute
         {
         }
 

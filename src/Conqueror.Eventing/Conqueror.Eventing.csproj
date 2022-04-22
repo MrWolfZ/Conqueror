@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../.targets/lib.targets"/>
+    <Import Project="../.targets/lib.targets" />
 
     <!-- for NuGet -->
     <PropertyGroup>
@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Eventing.Abstractions\Conqueror.Eventing.Abstractions.csproj"/>
-        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj"/>
+        <ProjectReference Include="..\Conqueror.Eventing.Abstractions\Conqueror.Eventing.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
     </ItemGroup>
 
 </Project>

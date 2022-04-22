@@ -5,7 +5,7 @@ namespace Conqueror.Eventing
 {
     internal sealed class DefaultEventObserverMiddlewareContext<TEvent, TConfiguration> : EventObserverMiddlewareContext<TEvent, TConfiguration>
         where TEvent : class
-        where TConfiguration : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<IEventObserverMiddleware<TConfiguration>>
+        where TConfiguration : EventObserverMiddlewareConfigurationAttribute
     {
         private readonly EventObserverMiddlewareNext<TEvent> next;
 

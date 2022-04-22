@@ -55,26 +55,22 @@ namespace Conqueror.Eventing
             where TEvent : class
         {
             var index = 0;
-            var invokers = metadata.MiddlewareConfigurationAttributes
-                                   .Keys
-                                   .Where(t => t.EventType == typeof(TEvent))
-                                   .Select(t => t.AttributeType)
-                                   .Select(a => serviceProvider.GetService(typeof(EventObserverMiddlewareInvoker<>).MakeGenericType(a)))
-                                   .Cast<IEventObserverMiddlewareInvoker>()
-                                   .ToList();
+            var attributes = metadata.MiddlewareConfigurationAttributes.ToList();
 
             await ExecuteNextMiddleware(evt, cancellationToken);
 
             async Task ExecuteNextMiddleware(TEvent e, CancellationToken token)
             {
-                if (index >= invokers.Count)
+                if (index >= attributes.Count)
                 {
                     await observer.HandleEvent(e, token);
                     return;
                 }
+                
+                var attribute = attributes[index++];
+                var invoker = (IEventObserverMiddlewareInvoker)serviceProvider.GetService(typeof(EventObserverMiddlewareInvoker<>).MakeGenericType(attribute.GetType()))!;
 
-                var middlewareInvoker = invokers[index++];
-                await middlewareInvoker.Invoke(e, ExecuteNextMiddleware, metadata, serviceProvider, token);
+                await invoker.Invoke(e, ExecuteNextMiddleware, metadata, attribute, serviceProvider, token);
             }
         }
     }
