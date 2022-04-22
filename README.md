@@ -4,7 +4,6 @@ A set of libraries to powercharge your .NET development.
 
 ## Open points
 
-- align tests in CQS lib with Eventing lib
 - edge cases (i.e. write tests)
   - core
     - registering same handler multiple times
@@ -17,6 +16,8 @@ A set of libraries to powercharge your .NET development.
     - null properties
     - null GET parameters
     - throw error on double http service registration
+- allow implementing multiple command or query handler interfaces
+- pass through custom interface extra methods to backing instance
 - reduce use of open generics in DI
 - remove middleware config interfaces
 - ensure middlewares can call next middleware multiple times
