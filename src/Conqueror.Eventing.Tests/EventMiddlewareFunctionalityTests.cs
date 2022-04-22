@@ -546,7 +546,7 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            [TestEventObserverMiddlewareAttribute]
+            [TestEventObserverMiddleware]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
@@ -564,8 +564,8 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            [TestEventObserverMiddlewareAttribute]
-            [TestEventObserverMiddleware2Attribute]
+            [TestEventObserverMiddleware]
+            [TestEventObserverMiddleware2]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
@@ -600,8 +600,8 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            [MutatingTestEventObserverMiddlewareAttribute]
-            [MutatingTestEventObserverMiddleware2Attribute]
+            [MutatingTestEventObserverMiddleware]
+            [MutatingTestEventObserverMiddleware2]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();

@@ -205,7 +205,7 @@ namespace Conqueror.Eventing.Tests
 
         private sealed class TestEventObserver : IEventObserver<TestEvent>
         {
-            [TestEventObserverMiddlewareAttribute]
+            [TestEventObserverMiddleware]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
@@ -214,8 +214,8 @@ namespace Conqueror.Eventing.Tests
 
         private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>
         {
-            [TestEventObserverMiddlewareAttribute]
-            [TestEventObserverMiddleware2Attribute]
+            [TestEventObserverMiddleware]
+            [TestEventObserverMiddleware2]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
