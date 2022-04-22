@@ -197,6 +197,35 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenHandlerWithRetryMiddleware_MiddlewaresAreCalledMultipleTimesWithCommand()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithRetryMiddleware>()
+                        .AddTransient<TestCommandRetryMiddleware>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command, command, command, command }));
+            Assert.That(observations.MiddlewareTypes,
+                        Is.EquivalentTo(new[]
+                        {
+                            typeof(TestCommandRetryMiddleware), typeof(TestCommandMiddleware), typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware), typeof(TestCommandMiddleware2),
+                        }));
+        }
+
+        [Test]
         public async Task GivenCancellationToken_MiddlewaresReceiveCancellationTokenWhenCalled()
         {
             var services = new ServiceCollection();
@@ -494,6 +523,27 @@ namespace Conqueror.CQS.Tests
             }
         }
 
+        private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+            private readonly TestObservations observations;
+
+            public TestCommandHandlerWithRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            [TestCommandRetryMiddleware]
+            [TestCommandMiddleware]
+            [TestCommandMiddleware2]
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.CommandsFromHandlers.Add(command);
+                observations.CancellationTokensFromHandlers.Add(cancellationToken);
+                return new(0);
+            }
+        }
+
         private sealed class TestCommandHandlerWithMultipleMutatingMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
         {
             private readonly TestObservations observations;
@@ -542,6 +592,10 @@ namespace Conqueror.CQS.Tests
         {
         }
 
+        private sealed class TestCommandRetryMiddlewareAttribute : CommandMiddlewareConfigurationAttribute
+        {
+        }
+
         private sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareAttribute>
         {
             private readonly TestObservations observations;
@@ -582,6 +636,29 @@ namespace Conqueror.CQS.Tests
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
                 observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
+                return await ctx.Next(ctx.Command, ctx.CancellationToken);
+            }
+        }
+
+        private sealed class TestCommandRetryMiddleware : ICommandMiddleware<TestCommandRetryMiddlewareAttribute>
+        {
+            private readonly TestObservations observations;
+
+            public TestCommandRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandRetryMiddlewareAttribute> ctx)
+                where TCommand : class
+            {
+                await Task.Yield();
+                observations.MiddlewareTypes.Add(GetType());
+                observations.CommandsFromMiddlewares.Add(ctx.Command);
+                observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
+
+                _ = await ctx.Next(ctx.Command, ctx.CancellationToken);
                 return await ctx.Next(ctx.Command, ctx.CancellationToken);
             }
         }

@@ -104,6 +104,35 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenHandlerWithRetryMiddleware_MiddlewaresAreCalledMultipleTimesWithQuery()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithRetryMiddleware>()
+                        .AddTransient<TestQueryRetryMiddleware>()
+                        .AddTransient<TestQueryMiddleware>()
+                        .AddTransient<TestQueryMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var query = new TestQuery(10);
+
+            _ = await handler.ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query, query, query, query }));
+            Assert.That(observations.MiddlewareTypes,
+                        Is.EquivalentTo(new[]
+                        {
+                            typeof(TestQueryRetryMiddleware), typeof(TestQueryMiddleware), typeof(TestQueryMiddleware2), typeof(TestQueryMiddleware), typeof(TestQueryMiddleware2),
+                        }));
+        }
+
+        [Test]
         public async Task GivenCancellationToken_MiddlewaresReceiveCancellationTokenWhenCalled()
         {
             var services = new ServiceCollection();
@@ -299,6 +328,27 @@ namespace Conqueror.CQS.Tests
             }
         }
 
+        private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+            private readonly TestObservations observations;
+
+            public TestQueryHandlerWithRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            [TestQueryRetryMiddleware]
+            [TestQueryMiddleware]
+            [TestQueryMiddleware2]
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.QueriesFromHandlers.Add(query);
+                observations.CancellationTokensFromHandlers.Add(cancellationToken);
+                return new(0);
+            }
+        }
+
         private sealed class TestQueryHandlerWithMultipleMutatingMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
         {
             private readonly TestObservations observations;
@@ -325,6 +375,10 @@ namespace Conqueror.CQS.Tests
         }
 
         private sealed class TestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute
+        {
+        }
+
+        private sealed class TestQueryRetryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
         {
         }
 
@@ -368,6 +422,29 @@ namespace Conqueror.CQS.Tests
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
                 observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
+                return await ctx.Next(ctx.Query, ctx.CancellationToken);
+            }
+        }
+
+        private sealed class TestQueryRetryMiddleware : IQueryMiddleware<TestQueryRetryMiddlewareAttribute>
+        {
+            private readonly TestObservations observations;
+
+            public TestQueryRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryRetryMiddlewareAttribute> ctx)
+                where TQuery : class
+            {
+                await Task.Yield();
+                observations.MiddlewareTypes.Add(GetType());
+                observations.QueriesFromMiddlewares.Add(ctx.Query);
+                observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
+
+                _ = await ctx.Next(ctx.Query, ctx.CancellationToken);
                 return await ctx.Next(ctx.Query, ctx.CancellationToken);
             }
         }

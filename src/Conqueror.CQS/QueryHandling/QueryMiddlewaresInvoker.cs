@@ -14,22 +14,21 @@ namespace Conqueror.CQS.QueryHandling
                                                                           CancellationToken cancellationToken)
             where TQuery : class
         {
-            var index = 0;
             var attributes = metadata.MiddlewareConfigurationAttributes.ToList();
 
-            return await ExecuteNextMiddleware(command, cancellationToken);
+            return await ExecuteNextMiddleware(0, command, cancellationToken);
 
-            async Task<TResponse> ExecuteNextMiddleware(TQuery cmd, CancellationToken token)
+            async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, CancellationToken token)
             {
                 if (index >= attributes.Count)
                 {
-                    return await handler.ExecuteQuery(cmd, token);
+                    return await handler.ExecuteQuery(query, token);
                 }
 
-                var attribute = attributes[index++];
+                var attribute = attributes[index];
                 var invoker = (IQueryMiddlewareInvoker)serviceProvider.GetService(typeof(QueryMiddlewareInvoker<>).MakeGenericType(attribute.GetType()))!;
 
-                return await invoker.Invoke(cmd, ExecuteNextMiddleware, metadata, attribute, serviceProvider, token);
+                return await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, t), metadata, attribute, serviceProvider, token);
             }
         }
     }
