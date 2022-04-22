@@ -28,6 +28,7 @@ namespace Conqueror.CQS.CommandHandling
             {
                 handlerType.ValidateNoInvalidCommandHandlerInterface();
                 RegisterMetadata(handlerType);
+                RegisterPlainInterfaces(handlerType);
                 RegisterCustomerInterfaces(handlerType);
             }
 
@@ -50,6 +51,21 @@ namespace Conqueror.CQS.CommandHandling
                 foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
                 {
                     _ = services.AddSingleton(new CommandHandlerMetadata(commandType, responseType, handlerType));
+                }
+            }
+
+            void RegisterPlainInterfaces(Type handlerType)
+            {
+                foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
+                {
+                    if (responseType is null)
+                    {
+                        _ = services.AddTransient(typeof(ICommandHandler<>).MakeGenericType(commandType), typeof(CommandHandlerProxy<>).MakeGenericType(commandType));
+                    }
+                    else
+                    {
+                        _ = services.AddTransient(typeof(ICommandHandler<,>).MakeGenericType(commandType, responseType), typeof(CommandHandlerProxy<,>).MakeGenericType(commandType, responseType));
+                    }
                 }
             }
 

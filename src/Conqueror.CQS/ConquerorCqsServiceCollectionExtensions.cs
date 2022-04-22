@@ -15,14 +15,11 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddConquerorCQS(this IServiceCollection services)
         {
-            services.TryAddTransient(typeof(IQueryHandler<,>), typeof(QueryHandlerProxy<,>));
             services.TryAddSingleton(typeof(QueryMiddlewareInvoker<>));
             services.TryAddSingleton<QueryHandlerRegistry>();
             services.TryAddSingleton<QueryMiddlewaresInvoker>();
             services.TryAddSingleton(new QueryServiceCollectionConfigurator());
 
-            services.TryAddTransient(typeof(ICommandHandler<,>), typeof(CommandHandlerProxy<,>));
-            services.TryAddTransient(typeof(ICommandHandler<>), typeof(CommandHandlerProxy<>));
             services.TryAddSingleton(typeof(CommandMiddlewareInvoker<>));
             services.TryAddSingleton<CommandHandlerRegistry>();
             services.TryAddSingleton<CommandMiddlewaresInvoker>();

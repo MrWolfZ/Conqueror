@@ -28,6 +28,7 @@ namespace Conqueror.CQS.QueryHandling
             {
                 handlerType.ValidateNoInvalidQueryHandlerInterface();
                 RegisterHandlerMetadata(handlerType);
+                RegisterPlainInterfaces(handlerType);
                 RegisterCustomerInterfaces(handlerType);
             }
 
@@ -50,6 +51,14 @@ namespace Conqueror.CQS.QueryHandling
                 foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
                 {
                     _ = services.AddSingleton(new QueryHandlerMetadata(queryType, responseType, handlerType));
+                }
+            }
+
+            void RegisterPlainInterfaces(Type handlerType)
+            {
+                foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
+                {
+                    _ = services.AddTransient(typeof(IQueryHandler<,>).MakeGenericType(queryType, responseType), typeof(QueryHandlerProxy<,>).MakeGenericType(queryType, responseType));
                 }
             }
 
