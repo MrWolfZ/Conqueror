@@ -28,6 +28,7 @@ namespace Conqueror.Eventing
             foreach (var observerType in observerTypes)
             {
                 RegisterMetadata(observerType);
+                RegisterPlainInterfaces(observerType);
                 RegisterCustomerInterfaces(observerType);
             }
 
@@ -38,6 +39,16 @@ namespace Conqueror.Eventing
                     var eventType = plainInterfaceType.GetGenericArguments().First();
 
                     _ = services.AddSingleton(new EventObserverMetadata(eventType, observerType, new()));
+                }
+            }
+
+            void RegisterPlainInterfaces(Type observerType)
+            {
+                foreach (var plainInterfaceType in observerType.GetEventObserverInterfaceTypes())
+                {
+                    var eventType = plainInterfaceType.GetGenericArguments().First();
+                    
+                    _ = services.AddTransient(typeof(IEventObserver<>).MakeGenericType(eventType), typeof(EventObserverProxy<>).MakeGenericType(eventType));
                 }
             }
 
