@@ -17,7 +17,7 @@ namespace Conqueror.Eventing.Tests
             var observations = new TestObservations();
 
             _ = services.AddConquerorEventing()
-                        .AddTransient<TestEventObserverWithoutMiddleware>()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
                         .AddTransient<TestEventObserverMiddleware>()
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
@@ -41,7 +41,7 @@ namespace Conqueror.Eventing.Tests
             var observations = new TestObservations();
 
             _ = services.AddConquerorEventing()
-                        .AddTransient<TestEventObserverWithoutMiddleware>()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
                         .AddTransient<TestEventObserverMiddleware>()
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
@@ -83,6 +83,27 @@ namespace Conqueror.Eventing.Tests
         }
 
         [Test]
+        public async Task GivenObserverWithSingleAppliedObserverMiddlewareWithParameter_MiddlewareIsCalledWithParameterViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithSingleMiddlewareWithParameter>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            await observer.HandleEvent(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.That(observations.AttributesFromMiddlewares, Is.EquivalentTo(new[] { new TestEventObserverMiddlewareAttribute { Parameter = 10 } }));
+        }
+
+        [Test]
         public async Task GivenObserverWithSingleAppliedObserverMiddleware_MiddlewareIsCalledWithEventViaPublisher()
         {
             var services = new ServiceCollection();
@@ -104,6 +125,27 @@ namespace Conqueror.Eventing.Tests
 
             Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt }));
             Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestEventObserverMiddleware) }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithSingleAppliedObserverMiddlewareWithParameter_MiddlewareIsCalledWithParameterViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithSingleMiddlewareWithParameter>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            await publisher.PublishEvent(new TestEvent { Payload = 10 }, CancellationToken.None);
+
+            Assert.That(observations.AttributesFromMiddlewares, Is.EquivalentTo(new[] { new TestEventObserverMiddlewareAttribute { Parameter = 10 } }));
         }
 
         [Test]
@@ -529,14 +571,6 @@ namespace Conqueror.Eventing.Tests
             public int Payload { get; init; }
         }
 
-        private sealed class TestEventObserverWithoutMiddleware : IEventObserver<TestEvent>
-        {
-            public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
-            {
-                await Task.Yield();
-            }
-        }
-
         private sealed class TestEventObserverWithSingleMiddleware : IEventObserver<TestEvent>
         {
             private readonly TestObservations observations;
@@ -547,6 +581,24 @@ namespace Conqueror.Eventing.Tests
             }
 
             [TestEventObserverMiddleware]
+            public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.EventsFromObservers.Add(evt);
+                observations.CancellationTokensFromObservers.Add(cancellationToken);
+            }
+        }
+
+        private sealed class TestEventObserverWithSingleMiddlewareWithParameter : IEventObserver<TestEvent>
+        {
+            private readonly TestObservations observations;
+
+            public TestEventObserverWithSingleMiddlewareWithParameter(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            [TestEventObserverMiddleware(Parameter = 10)]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
@@ -612,6 +664,7 @@ namespace Conqueror.Eventing.Tests
 
         private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<TestEventObserverMiddleware>
         {
+            public int Parameter { get; set; }
         }
 
         private sealed class TestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute, IEventObserverMiddlewareConfiguration<TestEventObserverMiddleware2>
@@ -634,6 +687,7 @@ namespace Conqueror.Eventing.Tests
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
             }
@@ -655,6 +709,7 @@ namespace Conqueror.Eventing.Tests
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
             }
@@ -686,6 +741,7 @@ namespace Conqueror.Eventing.Tests
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 var testEvent = (TestEvent)(object)ctx.Event;
                 var modifiedEvent = testEvent with { Payload = testEvent.Payload + 4 };
@@ -712,6 +768,7 @@ namespace Conqueror.Eventing.Tests
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 var testEvent = (TestEvent)(object)ctx.Event;
                 var modifiedEvent = testEvent with { Payload = testEvent.Payload + 8 };
@@ -841,6 +898,8 @@ namespace Conqueror.Eventing.Tests
             public List<CancellationToken> CancellationTokensFromObservers { get; } = new();
 
             public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
+
+            public List<EventObserverMiddlewareConfigurationAttribute> AttributesFromMiddlewares { get; } = new();
         }
 
         private sealed class CancellationTokensToUse
