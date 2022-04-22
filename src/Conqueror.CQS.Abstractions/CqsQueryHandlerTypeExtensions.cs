@@ -7,43 +7,41 @@ namespace Conqueror.CQS
 {
     internal static class CqsQueryHandlerTypeExtensions
     {
-        public static (Type QueryType, Type ResponseType) GetQueryAndResponseType(this Type type)
+        public static IReadOnlyCollection<(Type QueryType, Type ResponseType)> GetQueryAndResponseTypes(this Type type)
         {
-            var interfaceType = GetQueryHandlerInterfaceType(type);
-            var queryType = interfaceType.GetGenericArguments().First();
-            var responseType = interfaceType.GetGenericArguments().Skip(1).First();
-            return (queryType, responseType);
-        }
-
-        public static Type GetQueryHandlerInterfaceType(this Type type)
-        {
-            var interfaces = type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsQueryHandlerInterfaceType()).ToList();
-
-            return interfaces.Count switch
+            return GetQueryHandlerInterfaceTypes(type).Select(t =>
             {
-                < 1 => throw new ArgumentException($"type {type.Name} does not implement a generic query handler interface"),
-                > 1 => throw new ArgumentException($"type {type.Name} implements more than one query handler interface"),
-                _ => interfaces.Single(),
-            };
+                var queryType = t.GetGenericArguments().First();
+                var responseType = t.GetGenericArguments().Skip(1).First();
+                return (queryType, responseType);
+            }).ToList();
         }
 
-        public static Type? GetCustomQueryHandlerInterfaceType(this Type type)
+        public static IReadOnlyCollection<Type> GetQueryHandlerInterfaceTypes(this Type type)
+        {
+            return type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsQueryHandlerInterfaceType()).ToList();
+        }
+
+        public static IReadOnlyCollection<Type> GetCustomQueryHandlerInterfaceTypes(this Type type)
         {
             var interfaces = type.GetInterfaces().Where(i => i.IsCustomQueryHandlerInterfaceType()).ToList();
 
-            var customInterface = interfaces.Count switch
+            var invalidInterface = interfaces.FirstOrDefault(i => i.AllMethods().Count() > 1);
+            if (invalidInterface is not null)
             {
-                < 1 => null,
-                > 1 => throw new ArgumentException($"type {type.Name} implements more than one custom query handler interface"),
-                _ => interfaces.Single(),
-            };
-
-            if (customInterface != null && customInterface.AllMethods().Count() > 1)
-            {
-                throw new ArgumentException($"type {type.Name} implements custom interface {customInterface.Name} that has extra methods");
+                throw new ArgumentException($"type {type.Name} implements custom interface {invalidInterface.Name} that has extra methods");
             }
 
-            return customInterface;
+            return interfaces;
+        }
+
+        public static void ValidateNoInvalidQueryHandlerInterface(this Type type)
+        {
+            var interfaces = type.GetInterfaces();
+            if (interfaces.Length == 1 && interfaces[0] == typeof(IQueryHandler))
+            {
+                throw new ArgumentException($"type {type.Name} implements non-generic query handler interface {nameof(IQueryHandler)}");
+            }
         }
 
         public static bool IsCustomQueryHandlerInterfaceType(this Type t) => t.IsInterface && t.GetInterfaces().Any(IsQueryHandlerInterfaceType);

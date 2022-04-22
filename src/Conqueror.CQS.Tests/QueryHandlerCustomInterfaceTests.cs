@@ -62,6 +62,25 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public void GivenHandlerWithMultipleCustomInterfaces_HandlerCanBeResolvedFromAllInterfaces()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithMultipleInterfaces>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestQueryHandler>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestQueryHandler2>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
+        }
+
+        [Test]
         public void GivenHandlerWithCustomInterfaceWithExtraMethods_RegisteringHandlerThrowsArgumentException()
         {
             var services = new ServiceCollection();
@@ -73,10 +92,22 @@ namespace Conqueror.CQS.Tests
 #pragma warning disable CA1034
 
         public sealed record TestQuery;
-        
+
         public sealed record TestQueryResponse;
 
+        public sealed record TestQuery2;
+
+        public sealed record TestQueryResponse2;
+
+        public sealed record TestCommand;
+
+        public sealed record TestCommandResponse;
+
         public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+        }
+
+        public interface ITestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
         {
         }
 
@@ -95,6 +126,39 @@ namespace Conqueror.CQS.Tests
             }
 
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.Instances.Add(this);
+                return new();
+            }
+        }
+
+        private sealed class TestQueryHandlerWithMultipleInterfaces : ITestQueryHandler,
+                                                                      ITestQueryHandler2,
+                                                                      ICommandHandler<TestCommand, TestCommandResponse>
+        {
+            private readonly TestObservations observations;
+
+            public TestQueryHandlerWithMultipleInterfaces(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.Instances.Add(this);
+                return new();
+            }
+
+            public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.Instances.Add(this);
+                return new();
+            }
+
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.Instances.Add(this);

@@ -32,9 +32,12 @@ namespace Conqueror.CQS
             return success && attribute != null;
         }
 
-        private static IEnumerable<QueryMiddlewareConfigurationAttribute> GetConfigurationAttribute(Type handlerType)
+        private IEnumerable<QueryMiddlewareConfigurationAttribute> GetConfigurationAttribute(Type handlerType)
         {
-            var executeMethod = handlerType.GetMethod(nameof(IQueryHandler<object, object>.ExecuteQuery), BindingFlags.Instance | BindingFlags.Public);
+            var executeQueryMethodName = nameof(IQueryHandler<object, object>.ExecuteQuery);
+            var executeMethod = handlerType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                                           .FirstOrDefault(m => m.Name == executeQueryMethodName && m.GetParameters().FirstOrDefault()?.ParameterType == QueryType);
+            
             return executeMethod?.GetCustomAttributes().OfType<QueryMiddlewareConfigurationAttribute>() ?? Enumerable.Empty<QueryMiddlewareConfigurationAttribute>();
         }
     }

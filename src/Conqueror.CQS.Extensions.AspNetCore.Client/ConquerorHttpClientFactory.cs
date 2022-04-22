@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using Conqueror.Common;
 
@@ -18,7 +19,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
         public TQueryHandler CreateQueryHttpClient<TQueryHandler>()
             where TQueryHandler : class, IQueryHandler
         {
-            var (queryType, responseType) = typeof(TQueryHandler).GetQueryAndResponseType();
+            var (queryType, responseType) = typeof(TQueryHandler).GetQueryAndResponseTypes().Single();
             queryType.AssertQueryIsHttpQuery();
 
             var method = typeof(ConquerorHttpClientFactory).GetMethod(nameof(CreateTypedQueryClientGeneric), BindingFlags.Instance | BindingFlags.NonPublic);
@@ -30,7 +31,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
         public TCommandHandler CreateCommandHttpClient<TCommandHandler>()
             where TCommandHandler : class, ICommandHandler
         {
-            var (commandType, responseType) = typeof(TCommandHandler).GetCommandAndResponseType();
+            var (commandType, responseType) = typeof(TCommandHandler).GetCommandAndResponseTypes().Single();
             commandType.AssertCommandIsHttpCommand();
 
             var result = GetMethod()?.Invoke(this, Array.Empty<object>());

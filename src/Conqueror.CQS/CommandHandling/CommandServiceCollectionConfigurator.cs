@@ -25,19 +25,24 @@ namespace Conqueror.CQS.CommandHandling
 
             foreach (var handlerType in handlerTypes)
             {
-                var (commandType, responseType) = handlerType.GetCommandAndResponseType();
-
-                var metadata = new CommandHandlerMetadata(commandType, responseType, handlerType);
-
-                _ = services.AddSingleton(metadata);
-
-                var customInterfaceType = handlerType.GetCustomCommandHandlerInterfaceType();
-                var plainInterfaceType = handlerType.GetCommandHandlerInterfaceType();
-
-                if (customInterfaceType is not null)
+                handlerType.ValidateNoInvalidCommandHandlerInterface();
+                
+                foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
                 {
-                    var dynamicType = DynamicType.Create(customInterfaceType, plainInterfaceType);
-                    _ = services.AddTransient(customInterfaceType, dynamicType);
+                    var metadata = new CommandHandlerMetadata(commandType, responseType, handlerType);
+
+                    _ = services.AddSingleton(metadata);
+                }
+                
+                var customInterfaceTypes = handlerType.GetCustomCommandHandlerInterfaceTypes();
+
+                foreach (var customInterfaceType in customInterfaceTypes)
+                {
+                    foreach (var plainInterfaceType in customInterfaceType.GetCommandHandlerInterfaceTypes())
+                    {
+                        var dynamicType = DynamicType.Create(customInterfaceType, plainInterfaceType);
+                        _ = services.AddTransient(customInterfaceType, dynamicType);
+                    }   
                 }
             }
         }

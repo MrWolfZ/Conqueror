@@ -33,7 +33,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1 }));
         }
-        
+
         [Test]
         public async Task GivenTransientHandlerWithoutResponse_ResolvingHandlerCreatesNewInstanceEveryTime()
         {
@@ -85,7 +85,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1 }));
         }
-        
+
         [Test]
         public async Task GivenScopedHandlerWithoutResponse_ResolvingHandlerCreatesNewInstanceForEveryScope()
         {
@@ -137,7 +137,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
         }
-        
+
         [Test]
         public async Task GivenSingletonHandlerWithoutResponse_ResolvingHandlerReturnsSameInstanceEveryTime()
         {
@@ -164,11 +164,44 @@ namespace Conqueror.CQS.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
         }
 
+        [Test]
+        public async Task GivenSingletonHandlerWithMultipleHandlerInterfaces_ResolvingHandlerViaEitherInterfaceReturnsSameInstanceEveryTime()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddSingleton<TestCommandHandlerWithMultipleInterfaces>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler1 = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = provider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
+            var handler3 = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+            var handler4 = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+            await handler3.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4 }));
+        }
+
         private sealed record TestCommand;
 
         private sealed record TestCommandResponse;
 
+        private sealed record TestCommand2;
+
+        private sealed record TestCommandResponse2;
+
         private sealed record TestCommandWithoutResponse;
+
+        private sealed record TestQuery;
+
+        private sealed record TestQueryResponse;
 
         private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
@@ -204,6 +237,51 @@ namespace Conqueror.CQS.Tests
                 invocationCount += 1;
                 await Task.Yield();
                 observations.InvocationCounts.Add(invocationCount);
+            }
+        }
+
+        private sealed class TestCommandHandlerWithMultipleInterfaces : ICommandHandler<TestCommand, TestCommandResponse>, 
+                                                                        ICommandHandler<TestCommand2, TestCommandResponse2>,
+                                                                        ICommandHandler<TestCommandWithoutResponse>,
+                                                                        IQueryHandler<TestQuery, TestQueryResponse>
+        {
+            private readonly TestObservations observations;
+            private int invocationCount;
+
+            public TestCommandHandlerWithMultipleInterfaces(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            {
+                invocationCount += 1;
+                await Task.Yield();
+                observations.InvocationCounts.Add(invocationCount);
+                return new();
+            }
+
+            public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken)
+            {
+                invocationCount += 1;
+                await Task.Yield();
+                observations.InvocationCounts.Add(invocationCount);
+                return new();
+            }
+
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            {
+                invocationCount += 1;
+                await Task.Yield();
+                observations.InvocationCounts.Add(invocationCount);
+            }
+
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                invocationCount += 1;
+                await Task.Yield();
+                observations.InvocationCounts.Add(invocationCount);
+                return new();
             }
         }
 

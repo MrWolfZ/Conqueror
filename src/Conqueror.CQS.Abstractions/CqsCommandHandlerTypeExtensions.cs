@@ -7,43 +7,41 @@ namespace Conqueror.CQS
 {
     internal static class CqsCommandHandlerTypeExtensions
     {
-        public static (Type CommandType, Type? ResponseType) GetCommandAndResponseType(this Type type)
+        public static IReadOnlyCollection<(Type CommandType, Type? ResponseType)> GetCommandAndResponseTypes(this Type type)
         {
-            var interfaceType = GetCommandHandlerInterfaceType(type);
-            var queryType = interfaceType.GetGenericArguments().First();
-            var responseType = interfaceType.GetGenericArguments().Skip(1).FirstOrDefault();
-            return (queryType, responseType);
-        }
-
-        public static Type GetCommandHandlerInterfaceType(this Type type)
-        {
-            var interfaces = type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsCommandHandlerInterfaceType()).ToList();
-
-            return interfaces.Count switch
+            return GetCommandHandlerInterfaceTypes(type).Select(t =>
             {
-                < 1 => throw new ArgumentException($"type {type.Name} does not implement a generic command handler interface"),
-                > 1 => throw new ArgumentException($"type {type.Name} implements more than one command handler interface"),
-                _ => interfaces.Single(),
-            };
+                var queryType = t.GetGenericArguments().First();
+                var responseType = t.GetGenericArguments().Skip(1).FirstOrDefault();
+                return (queryType, responseType);
+            }).ToList();
         }
 
-        public static Type? GetCustomCommandHandlerInterfaceType(this Type type)
+        public static IReadOnlyCollection<Type> GetCommandHandlerInterfaceTypes(this Type type)
+        {
+            return type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsCommandHandlerInterfaceType()).ToList();
+        }
+
+        public static IReadOnlyCollection<Type> GetCustomCommandHandlerInterfaceTypes(this Type type)
         {
             var interfaces = type.GetInterfaces().Where(i => i.IsCustomCommandHandlerInterfaceType()).ToList();
 
-            var customInterface = interfaces.Count switch
+            var invalidInterface = interfaces.FirstOrDefault(i => i.AllMethods().Count() > 1);
+            if (invalidInterface is not null)
             {
-                < 1 => null,
-                > 1 => throw new ArgumentException($"type {type.Name} implements more than one custom command handler interface"),
-                _ => interfaces.Single(),
-            };
-
-            if (customInterface != null && customInterface.AllMethods().Count() > 1)
-            {
-                throw new ArgumentException($"type {type.Name} implements custom interface {customInterface.Name} that has extra methods");
+                throw new ArgumentException($"type {type.Name} implements custom interface {invalidInterface.Name} that has extra methods");
             }
 
-            return customInterface;
+            return interfaces;
+        }
+
+        public static void ValidateNoInvalidCommandHandlerInterface(this Type type)
+        {
+            var interfaces = type.GetInterfaces();
+            if (interfaces.Length == 1 && interfaces[0] == typeof(ICommandHandler))
+            {
+                throw new ArgumentException($"type {type.Name} implements non-generic command handler interface {nameof(ICommandHandler)}");
+            }
         }
 
         public static bool IsCustomCommandHandlerInterfaceType(this Type t) => t.IsInterface && t.GetInterfaces().Any(IsCommandHandlerInterfaceType);

@@ -28,10 +28,10 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                                          Action<ConquerorHttpClientOptions>? configure = null)
             where TCommandHandler : class, ICommandHandler
         {
-            var (commandType, _) = typeof(TCommandHandler).GetCommandAndResponseType();
+            var (commandType, _) = typeof(TCommandHandler).GetCommandAndResponseTypes().Single();
             commandType.AssertCommandIsHttpCommand();
 
-            var plainHandlerInterfaceType = typeof(TCommandHandler).GetCommandHandlerInterfaceType();
+            var plainHandlerInterfaceType = typeof(TCommandHandler).GetCommandHandlerInterfaceTypes().Single();
 
             if (builder.Services.Any(d => d.ServiceType == plainHandlerInterfaceType))
             {
@@ -59,10 +59,10 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                                      Action<ConquerorHttpClientOptions>? configure = null)
             where TQueryHandler : class, IQueryHandler
         {
-            var (queryType, _) = typeof(TQueryHandler).GetQueryAndResponseType();
+            var (queryType, _) = typeof(TQueryHandler).GetQueryAndResponseTypes().Single();
             queryType.AssertQueryIsHttpQuery();
 
-            var plainHandlerInterfaceType = typeof(TQueryHandler).GetQueryHandlerInterfaceType();
+            var plainHandlerInterfaceType = typeof(TQueryHandler).GetQueryHandlerInterfaceTypes().Single();
 
             if (builder.Services.Any(d => d.ServiceType == plainHandlerInterfaceType))
             {

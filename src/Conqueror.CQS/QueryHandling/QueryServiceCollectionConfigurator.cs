@@ -25,19 +25,24 @@ namespace Conqueror.CQS.QueryHandling
 
             foreach (var handlerType in handlerTypes)
             {
-                var (queryType, responseType) = handlerType.GetQueryAndResponseType();
+                handlerType.ValidateNoInvalidQueryHandlerInterface();
 
-                var metadata = new QueryHandlerMetadata(queryType, responseType, handlerType);
-
-                _ = services.AddSingleton(metadata);
-
-                var customInterfaceType = handlerType.GetCustomQueryHandlerInterfaceType();
-                var plainInterfaceType = handlerType.GetQueryHandlerInterfaceType();
-
-                if (customInterfaceType is not null)
+                foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
                 {
-                    var dynamicType = DynamicType.Create(customInterfaceType, plainInterfaceType);
-                    _ = services.AddTransient(customInterfaceType, dynamicType);
+                    var metadata = new QueryHandlerMetadata(queryType, responseType, handlerType);
+
+                    _ = services.AddSingleton(metadata);
+                }
+                
+                var customInterfaceTypes = handlerType.GetCustomQueryHandlerInterfaceTypes();
+
+                foreach (var customInterfaceType in customInterfaceTypes)
+                {
+                    foreach (var plainInterfaceType in customInterfaceType.GetQueryHandlerInterfaceTypes())
+                    {
+                        var dynamicType = DynamicType.Create(customInterfaceType, plainInterfaceType);
+                        _ = services.AddTransient(customInterfaceType, dynamicType);
+                    }   
                 }
             }
         }

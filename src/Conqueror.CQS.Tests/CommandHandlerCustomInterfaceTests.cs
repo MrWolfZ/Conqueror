@@ -23,7 +23,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
         }
-        
+
         [Test]
         public void GivenHandlerWithoutResponseWithCustomInterface_HandlerCanBeResolvedFromPlainInterface()
         {
@@ -53,7 +53,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler>());
         }
-        
+
         [Test]
         public void GivenHandlerWithoutResponseWithCustomInterface_HandlerCanBeResolvedFromCustomInterface()
         {
@@ -112,6 +112,27 @@ namespace Conqueror.CQS.Tests
             Assert.AreEqual(2, observations.Instances.Count);
             Assert.AreSame(observations.Instances[0], observations.Instances[1]);
         }
+        
+        [Test]
+        public void GivenHandlerWithMultipleCustomInterfaces_HandlerCanBeResolvedFromAllInterfaces()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithMultipleInterfaces>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler2>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandlerWithoutResponse>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
+        }
 
         [Test]
         public void GivenHandlerWithCustomInterfaceWithExtraMethods_RegisteringHandlerThrowsArgumentException()
@@ -125,12 +146,24 @@ namespace Conqueror.CQS.Tests
 #pragma warning disable CA1034
 
         public sealed record TestCommand;
-        
+
         public sealed record TestCommandResponse;
+
+        public sealed record TestCommand2;
+
+        public sealed record TestCommandResponse2;
 
         public sealed record TestCommandWithoutResponse;
 
+        private sealed record TestQuery;
+
+        private sealed record TestQueryResponse;
+
         public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+        }
+
+        public interface ITestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
         {
         }
 
@@ -173,6 +206,46 @@ namespace Conqueror.CQS.Tests
             {
                 await Task.Yield();
                 observations.Instances.Add(this);
+            }
+        }
+
+        private sealed class TestCommandHandlerWithMultipleInterfaces : ITestCommandHandler,
+                                                                        ITestCommandHandler2,
+                                                                        ITestCommandHandlerWithoutResponse,
+                                                                        IQueryHandler<TestQuery, TestQueryResponse>
+        {
+            private readonly TestObservations observations;
+
+            public TestCommandHandlerWithMultipleInterfaces(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.Instances.Add(this);
+                return new();
+            }
+
+            public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.Instances.Add(this);
+                return new();
+            }
+
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.Instances.Add(this);
+            }
+
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.Instances.Add(this);
+                return new();
             }
         }
 
