@@ -15,35 +15,33 @@ namespace Conqueror.Eventing
                                                     CancellationToken cancellationToken)
             where TEvent : class
         {
-            evt = await ExecutePublisherMiddlewares(serviceProvider, evt, cancellationToken);
+            var publisherMiddlewareInvokers = serviceProvider.GetRequiredService<IEnumerable<IEventPublisherMiddlewareInvoker>>().ToList();
 
+            await ExecuteNextPublisherMiddleware(0, evt, cancellationToken);
+
+            async Task ExecuteNextPublisherMiddleware(int index, TEvent e, CancellationToken token)
+            {
+                if (index >= publisherMiddlewareInvokers.Count)
+                {
+                    await ExecuteEventObserverMiddlewares(serviceProvider, eventObservers, e, cancellationToken);
+                    return;
+                }
+
+                var publisherMiddlewareInvoker = publisherMiddlewareInvokers[index];
+                await publisherMiddlewareInvoker.Invoke(e, (e2, t) => ExecuteNextPublisherMiddleware(index + 1, e2, t), serviceProvider, token);
+            }
+        }
+
+        private static async Task ExecuteEventObserverMiddlewares<TEvent>(IServiceProvider serviceProvider,
+                                                                          IReadOnlyCollection<(IEventObserver<TEvent> Observer, EventObserverMetadata Metadata)> eventObservers,
+                                                                          TEvent evt,
+                                                                          CancellationToken cancellationToken)
+            where TEvent : class
+        {
             // TODO: configurable strategy for order
             foreach (var (observer, metadata) in eventObservers)
             {
                 await ExecuteObserverMiddlewares(serviceProvider, observer, metadata, evt, cancellationToken);
-            }
-        }
-
-        private static async Task<TEvent> ExecutePublisherMiddlewares<TEvent>(IServiceProvider serviceProvider, TEvent evt, CancellationToken cancellationToken)
-            where TEvent : class
-        {
-            var index = 0;
-            var invokers = serviceProvider.GetRequiredService<IEnumerable<IEventPublisherMiddlewareInvoker>>().ToList();
-            var result = evt;
-
-            await ExecuteNextMiddleware(evt, cancellationToken);
-            return result;
-
-            async Task ExecuteNextMiddleware(TEvent e, CancellationToken token)
-            {
-                if (index >= invokers.Count)
-                {
-                    result = e;
-                    return;
-                }
-
-                var publisherMiddlewareInvoker = invokers[index++];
-                await publisherMiddlewareInvoker.Invoke(e, ExecuteNextMiddleware, serviceProvider, token);
             }
         }
 
@@ -54,23 +52,22 @@ namespace Conqueror.Eventing
                                                                      CancellationToken cancellationToken)
             where TEvent : class
         {
-            var index = 0;
             var attributes = metadata.MiddlewareConfigurationAttributes.ToList();
 
-            await ExecuteNextMiddleware(evt, cancellationToken);
+            await ExecuteNextMiddleware(0, evt, cancellationToken);
 
-            async Task ExecuteNextMiddleware(TEvent e, CancellationToken token)
+            async Task ExecuteNextMiddleware(int index, TEvent e, CancellationToken token)
             {
                 if (index >= attributes.Count)
                 {
                     await observer.HandleEvent(e, token);
                     return;
                 }
-                
-                var attribute = attributes[index++];
+
+                var attribute = attributes[index];
                 var invoker = (IEventObserverMiddlewareInvoker)serviceProvider.GetService(typeof(EventObserverMiddlewareInvoker<>).MakeGenericType(attribute.GetType()))!;
 
-                await invoker.Invoke(e, ExecuteNextMiddleware, metadata, attribute, serviceProvider, token);
+                await invoker.Invoke(e, (e2, t) => ExecuteNextMiddleware(index + 1, e2, t), metadata, attribute, serviceProvider, token);
             }
         }
     }

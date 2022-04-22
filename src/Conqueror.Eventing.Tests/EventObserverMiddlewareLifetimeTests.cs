@@ -201,6 +201,87 @@ namespace Conqueror.Eventing.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 3 }));
         }
 
+        [Test]
+        public async Task GivenTransientMiddlewareWithRetryMiddleware_EachMiddlewareExecutionGetsNewInstance()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithRetryMiddleware>()
+                        .AddTransient<TestEventObserverRetryMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var observer1 = scope1.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+            var observer2 = scope2.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            await observer1.HandleEvent(new(), CancellationToken.None);
+            await observer2.HandleEvent(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
+        }
+
+        [Test]
+        public async Task GivenScopedMiddlewareWithRetryMiddleware_EachMiddlewareExecutionUsesInstanceFromScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithRetryMiddleware>()
+                        .AddTransient<TestEventObserverRetryMiddleware>()
+                        .AddScoped<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var observer1 = scope1.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+            var observer2 = scope2.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            await observer1.HandleEvent(new(), CancellationToken.None);
+            await observer2.HandleEvent(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 1, 1, 2, 1 }));
+        }
+
+        [Test]
+        public async Task GivenSingletonMiddlewareWithRetryMiddleware_EachMiddlewareExecutionUsesInstanceFromScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithRetryMiddleware>()
+                        .AddTransient<TestEventObserverRetryMiddleware>()
+                        .AddSingleton<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var observer1 = scope1.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+            var observer2 = scope2.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            await observer1.HandleEvent(new(), CancellationToken.None);
+            await observer2.HandleEvent(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 3, 1, 4, 1 }));
+        }
+
         private sealed record TestEvent;
 
         private sealed class TestEventObserver : IEventObserver<TestEvent>
@@ -222,11 +303,26 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
+        private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>
+        {
+            [TestEventObserverRetryMiddleware]
+            [TestEventObserverMiddleware]
+            [TestEventObserverMiddleware2]
+            public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+            }
+        }
+
         private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
         {
         }
 
         private sealed class TestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute
+        {
+        }
+
+        private sealed class TestEventObserverRetryMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
         {
         }
 
@@ -268,6 +364,28 @@ namespace Conqueror.Eventing.Tests
                 await Task.Yield();
                 observations.InvocationCounts.Add(invocationCount);
 
+                await ctx.Next(ctx.Event, ctx.CancellationToken);
+            }
+        }
+
+        private sealed class TestEventObserverRetryMiddleware : IEventObserverMiddleware<TestEventObserverRetryMiddlewareAttribute>
+        {
+            private readonly TestObservations observations;
+            private int invocationCount;
+
+            public TestEventObserverRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverRetryMiddlewareAttribute> ctx)
+                where TEvent : class
+            {
+                invocationCount += 1;
+                await Task.Yield();
+                observations.InvocationCounts.Add(invocationCount);
+
+                await ctx.Next(ctx.Event, ctx.CancellationToken);
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
             }
         }

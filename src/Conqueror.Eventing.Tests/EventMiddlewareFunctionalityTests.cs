@@ -451,6 +451,222 @@ namespace Conqueror.Eventing.Tests
         }
 
         [Test]
+        public async Task GivenObserverWithRetryMiddleware_MiddlewaresAreCalledMultipleTimesViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithRetryMiddleware>()
+                        .AddTransient<TestEventObserverRetryMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await observer.HandleEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt, evt, evt, evt }));
+            Assert.That(observations.MiddlewareTypes,
+                        Is.EquivalentTo(new[]
+                        {
+                            typeof(TestEventObserverRetryMiddleware),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                        }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithRetryMiddleware_MiddlewaresAreCalledMultipleTimesViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithRetryMiddleware>()
+                        .AddTransient<TestEventObserverRetryMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await publisher.PublishEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt, evt, evt, evt }));
+            Assert.That(observations.MiddlewareTypes,
+                        Is.EquivalentTo(new[]
+                        {
+                            typeof(TestEventObserverRetryMiddleware),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                        }));
+        }
+
+        [Test]
+        public async Task GivenPublisherRetryMiddleware_MiddlewaresAreCalledMultipleTimesViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddTransient<TestEventPublisherRetryMiddleware>()
+                        .AddTransient<TestEventPublisherMiddleware>()
+                        .AddTransient<TestEventPublisherMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await observer.HandleEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt, evt, evt, evt }));
+            Assert.That(observations.MiddlewareTypes,
+                        Is.EquivalentTo(new[]
+                        {
+                            typeof(TestEventPublisherRetryMiddleware),
+                            typeof(TestEventPublisherMiddleware),
+                            typeof(TestEventPublisherMiddleware2),
+                            typeof(TestEventPublisherMiddleware),
+                            typeof(TestEventPublisherMiddleware2),
+                        }));
+        }
+
+        [Test]
+        public async Task GivenPublisherRetryMiddleware_MiddlewaresAreCalledMultipleTimesViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddTransient<TestEventPublisherRetryMiddleware>()
+                        .AddTransient<TestEventPublisherMiddleware>()
+                        .AddTransient<TestEventPublisherMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await publisher.PublishEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt, evt, evt, evt }));
+            Assert.That(observations.MiddlewareTypes,
+                        Is.EquivalentTo(new[]
+                        {
+                            typeof(TestEventPublisherRetryMiddleware),
+                            typeof(TestEventPublisherMiddleware),
+                            typeof(TestEventPublisherMiddleware2),
+                            typeof(TestEventPublisherMiddleware),
+                            typeof(TestEventPublisherMiddleware2),
+                        }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithRetryMiddlewareAndPublisherRetryMiddleware_MiddlewaresAreCalledMultipleTimesViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithRetryMiddleware>()
+                        .AddTransient<TestEventObserverRetryMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddTransient<TestEventPublisherRetryMiddleware>()
+                        .AddTransient<TestEventPublisherMiddleware>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await observer.HandleEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.MiddlewareTypes,
+                        Is.EquivalentTo(new[]
+                        {
+                            typeof(TestEventPublisherRetryMiddleware),
+                            typeof(TestEventPublisherMiddleware),
+                            typeof(TestEventObserverRetryMiddleware),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                            typeof(TestEventPublisherMiddleware),
+                            typeof(TestEventObserverRetryMiddleware),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                        }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithRetryMiddlewareAndPublisherRetryMiddleware_MiddlewaresAreCalledMultipleTimesViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithRetryMiddleware>()
+                        .AddTransient<TestEventObserverRetryMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddTransient<TestEventPublisherRetryMiddleware>()
+                        .AddTransient<TestEventPublisherMiddleware>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await publisher.PublishEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.MiddlewareTypes,
+                        Is.EquivalentTo(new[]
+                        {
+                            typeof(TestEventPublisherRetryMiddleware),
+                            typeof(TestEventPublisherMiddleware),
+                            typeof(TestEventObserverRetryMiddleware),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                            typeof(TestEventPublisherMiddleware),
+                            typeof(TestEventObserverRetryMiddleware),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                            typeof(TestEventObserverMiddleware),
+                            typeof(TestEventObserverMiddleware2),
+                        }));
+        }
+
+        [Test]
         public async Task GivenObserverAndPublisherMiddlewares_MiddlewaresCanChangeTheEvent()
         {
             var services = new ServiceCollection();
@@ -643,6 +859,26 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
+        private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>
+        {
+            private readonly TestObservations observations;
+
+            public TestEventObserverWithRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            [TestEventObserverRetryMiddleware]
+            [TestEventObserverMiddleware]
+            [TestEventObserverMiddleware2]
+            public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                observations.EventsFromObservers.Add(evt);
+                observations.CancellationTokensFromObservers.Add(cancellationToken);
+            }
+        }
+
         private sealed class TestEventObserverWithMultipleMutatingMiddlewares : IEventObserver<TestEvent>
         {
             private readonly TestObservations observations;
@@ -711,6 +947,33 @@ namespace Conqueror.Eventing.Tests
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
                 observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
+                await ctx.Next(ctx.Event, ctx.CancellationToken);
+            }
+        }
+
+        private sealed class TestEventObserverRetryMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
+        {
+        }
+
+        private sealed class TestEventObserverRetryMiddleware : IEventObserverMiddleware<TestEventObserverRetryMiddlewareAttribute>
+        {
+            private readonly TestObservations observations;
+
+            public TestEventObserverRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverRetryMiddlewareAttribute> ctx)
+                where TEvent : class
+            {
+                await Task.Yield();
+                observations.MiddlewareTypes.Add(GetType());
+                observations.EventsFromMiddlewares.Add(ctx.Event);
+                observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
+
+                await ctx.Next(ctx.Event, ctx.CancellationToken);
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
             }
         }
@@ -815,6 +1078,28 @@ namespace Conqueror.Eventing.Tests
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
 
+                await ctx.Next(ctx.Event, ctx.CancellationToken);
+            }
+        }
+
+        private sealed class TestEventPublisherRetryMiddleware : IEventPublisherMiddleware
+        {
+            private readonly TestObservations observations;
+
+            public TestEventPublisherRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
+                where TEvent : class
+            {
+                await Task.Yield();
+                observations.MiddlewareTypes.Add(GetType());
+                observations.EventsFromMiddlewares.Add(ctx.Event);
+                observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+
+                await ctx.Next(ctx.Event, ctx.CancellationToken);
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
             }
         }
