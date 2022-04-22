@@ -27,6 +27,7 @@ A set of libraries to powercharge your .NET development.
   - allow overriding options of aggregation attribute with explicit attribute
 - during configuration phase validate that all referenced middlewares are present, and that query handlers only have query middlewares and command handlers only have command middlewares
 - add support for .NET standard 2.0
+- use `.ConfigureAwait(false)` everywhere
 - add null checks to public API methods
 - add trace IDs to commands and queries
   - integrate trace ID from ASP Core if using HTTP package
