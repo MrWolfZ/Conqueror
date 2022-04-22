@@ -65,6 +65,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Extensions.AspNetCore.Server.Tests.TopLevelProgram", "src\Conqueror.CQS.Extensions.AspNetCore.Server.Tests.TopLevelProgram\Conqueror.CQS.Extensions.AspNetCore.Server.Tests.TopLevelProgram.csproj", "{BC284CFD-4289-42E2-87AE-7F73F372ABEC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".docs", ".docs", "{AB627029-9D1F-4317-ADC5-288956A1286A}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
