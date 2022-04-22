@@ -6,19 +6,11 @@ A set of libraries to powercharge your .NET development.
 
 - edge cases (i.e. write tests)
   - core
-    - registering same handler multiple times
-    - registering different handlers with same signature
-    - resolving singleton handler via interface, self, and IXHandler should return same instance
-    - custom handler interface with extra methods
-  - http client
-    - complex query objects for GET
-    - custom serializer settings for read/write
-    - null properties
-    - null GET parameters
-    - throw error on double http service registration
+    - registering handler as singleton instance
 - pass through custom interface extra methods to backing instance
 - reduce use of open generics in DI
 - remove middleware config interfaces
+- allow middlewares to implement multiple interfaces
 - ensure middlewares can call next middleware multiple times
 - specify middleware order through pipeline builder
   - make config attribute on context nullable
@@ -36,6 +28,12 @@ A set of libraries to powercharge your .NET development.
 - allow registering all custom interfaces in assembly as HTTP client (allow specifying options for all those clients)
 - pull some logic for HTTP into a `Http.Common` package
   - for example default strategy for routes
+- http client edge cases (i.e. write tests)
+  - complex query objects for GET
+  - custom serializer settings for read/write
+  - null properties
+  - null GET parameters
+  - throw error on double http service registration
 - event handling
 
   - make event publishing strategy customizable
@@ -43,6 +41,9 @@ A set of libraries to powercharge your .NET development.
     - make them available as service collection extension methods
   - sequential strategy as default
   - handle cancellation in strategy
+  - edge cases (i.e. write tests)
+    - core
+      - registering same observer multiple times
 
 - for some features provide code snippets in documentation instead of library (e.g. common middlewares etc.)
 - add analyzer package that ensures a set of given middlewares is applied to all command and query handlers

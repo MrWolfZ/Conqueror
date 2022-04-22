@@ -115,11 +115,9 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenHandlerWithInvalidInterface_RegisteringHandlerThrowsArgumentException()
         {
-            var services = new ServiceCollection();
-
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestCommandHandlerWithoutValidInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddScoped<TestCommandHandlerWithoutValidInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddSingleton<TestCommandHandlerWithoutValidInterfaces>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddTransient<TestCommandHandlerWithoutValidInterfaces>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddScoped<TestCommandHandlerWithoutValidInterfaces>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddSingleton<TestCommandHandlerWithoutValidInterfaces>().ConfigureConqueror());
         }
 
         private sealed record TestCommand(int Payload);

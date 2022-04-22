@@ -109,6 +109,27 @@ namespace Conqueror.CQS.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
         }
 
+        [Test]
+        public async Task GivenSingletonHandler_ResolvingHandlerViaConcreteClassReturnsSameInstanceAsResolvingViaInterface()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddSingleton<TestQueryHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler1 = provider.GetRequiredService<TestQueryHandler>();
+            var handler2 = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2 }));
+        }
+
         private sealed record TestQuery;
 
         private sealed record TestQueryResponse;
