@@ -19,29 +19,35 @@ namespace Conqueror.Eventing
 
         private static void ConfigureEventObservers(IServiceCollection services)
         {
-            var observerTypes = services.Where(d => d.ServiceType == d.ImplementationType)
-                                        .Select(d => d.ImplementationType)
+            var observerTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
+                                        .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
                                         .OfType<Type>()
                                         .Where(t => t.IsAssignableTo(typeof(IEventObserver)))
                                         .ToList();
 
             foreach (var observerType in observerTypes)
             {
-                var customInterfaceTypes = observerType.GetCustomEventObserverInterfaceTypes();
-                var plainInterfaceTypes = observerType.GetEventObserverInterfaceTypes();
+                RegisterMetadata(observerType);
+                RegisterCustomerInterfaces(observerType);
+            }
 
-                foreach (var type in plainInterfaceTypes)
+            void RegisterMetadata(Type observerType)
+            {
+                foreach (var plainInterfaceType in observerType.GetEventObserverInterfaceTypes())
                 {
-                    var eventType = type.GetGenericArguments().First();
+                    var eventType = plainInterfaceType.GetGenericArguments().First();
 
                     _ = services.AddSingleton(new EventObserverMetadata(eventType, observerType, new()));
                 }
+            }
 
-                foreach (var customInterfaceType in customInterfaceTypes)
+            void RegisterCustomerInterfaces(Type observerType)
+            {
+                foreach (var customInterfaceType in observerType.GetCustomEventObserverInterfaceTypes())
                 {
-                    foreach (var i in customInterfaceType.GetEventObserverInterfaceTypes())
+                    foreach (var plainInterfaceType in customInterfaceType.GetEventObserverInterfaceTypes())
                     {
-                        var dynamicType = DynamicType.Create(customInterfaceType, i);
+                        var dynamicType = DynamicType.Create(customInterfaceType, plainInterfaceType);
                         _ = services.AddTransient(customInterfaceType, dynamicType);
                     }
                 }

@@ -236,6 +236,31 @@ namespace Conqueror.Eventing.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2 }));
         }
 
+        [Test]
+        public async Task GivenSingletonObserverInstance_ResolvingObserverReturnsSameInstanceEveryTime()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddSingleton(new TestEventObserver(observations));
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var observer1 = scope1.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+            var observer2 = scope1.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+            var observer3 = scope2.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            await observer1.HandleEvent(new(), CancellationToken.None);
+            await observer2.HandleEvent(new(), CancellationToken.None);
+            await observer3.HandleEvent(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
+        }
+
         private sealed record TestEvent;
 
         private sealed record TestEvent2;
