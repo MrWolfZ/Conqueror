@@ -4,10 +4,6 @@ A set of libraries to powercharge your .NET development.
 
 ## Open points
 
-- edge cases (i.e. write tests)
-  - core
-    - registering handler as singleton instance
-- pass through custom interface extra methods to backing instance
 - reduce use of open generics in DI
 - remove middleware config interfaces
 - allow middlewares to implement multiple interfaces
@@ -18,6 +14,7 @@ A set of libraries to powercharge your .NET development.
 - allow creating aggregation middleware attributes that apply a specific set of middlewares at once
   - allow overriding options of aggregation attribute with explicit attribute
 - during configuration phase validate that all referenced middlewares are present, and that query handlers only have query middlewares and command handlers only have command middlewares
+- pass through custom interface extra methods to backing instance
 - add support for .NET standard 2.0
 - use `.ConfigureAwait(false)` everywhere
 - add null checks to public API methods

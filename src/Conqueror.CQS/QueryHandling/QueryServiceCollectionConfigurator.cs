@@ -17,8 +17,8 @@ namespace Conqueror.CQS.QueryHandling
 
         private static void ConfigureHandlers(IServiceCollection services)
         {
-            var handlerTypes = services.Where(d => d.ServiceType == d.ImplementationType)
-                                       .Select(d => d.ImplementationType)
+            var handlerTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
+                                       .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
                                        .OfType<Type>()
                                        .Where(t => t.IsAssignableTo(typeof(IQueryHandler)))
                                        .Distinct()
