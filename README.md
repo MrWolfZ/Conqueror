@@ -4,7 +4,6 @@ A set of libraries to powercharge your .NET development.
 
 ## Open points
 
-- remove middleware config interfaces
 - allow middlewares to implement multiple interfaces
 - ensure middlewares can call next middleware multiple times
 - specify middleware order through pipeline builder
