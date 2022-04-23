@@ -1,5 +1,7 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Concurrent;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,29 +9,35 @@ namespace Conqueror.CQS.QueryHandling
 {
     internal sealed class QueryMiddlewaresInvoker
     {
+        private readonly ConcurrentDictionary<Type, Action<IQueryPipelineBuilder>> pipelineConfigurationMethodByHandlerType = new();
+
         public async Task<TResponse> InvokeMiddlewares<TQuery, TResponse>(IServiceProvider serviceProvider,
-                                                                          IQueryHandler<TQuery, TResponse> handler,
                                                                           QueryHandlerMetadata metadata,
-                                                                          TQuery command,
+                                                                          TQuery query,
                                                                           CancellationToken cancellationToken)
             where TQuery : class
         {
-            var attributes = metadata.MiddlewareConfigurationAttributes.ToList();
+            var configurationMethod = pipelineConfigurationMethodByHandlerType.GetOrAdd(metadata.HandlerType, CreatePublishFunction);
 
-            return await ExecuteNextMiddleware(0, command, cancellationToken);
+            var pipelineBuilder = new QueryPipelineBuilder();
 
-            async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, CancellationToken token)
-            {
-                if (index >= attributes.Count)
-                {
-                    return await handler.ExecuteQuery(query, token);
-                }
+            configurationMethod(pipelineBuilder);
 
-                var attribute = attributes[index];
-                var invoker = (IQueryMiddlewareInvoker)serviceProvider.GetService(typeof(QueryMiddlewareInvoker<>).MakeGenericType(attribute.GetType()))!;
+            var pipeline = pipelineBuilder.Build();
 
-                return await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, t), metadata, attribute, serviceProvider, token);
-            }
+            return await pipeline.Execute<TQuery, TResponse>(serviceProvider, metadata, query, cancellationToken);
+        }
+
+        private static Action<IQueryPipelineBuilder> CreatePublishFunction(Type handlerType)
+        {
+            // TODO: validate signature
+            var pipelineConfigurationMethod = handlerType.GetMethod("ConfigurePipeline", BindingFlags.Public | BindingFlags.Static);
+
+            var builderParam = Expression.Parameter(typeof(IQueryPipelineBuilder));
+            var body = pipelineConfigurationMethod is null ? (Expression)Expression.Block() : Expression.Call(null, pipelineConfigurationMethod, builderParam);
+            var lambda = Expression.Lambda(body, builderParam);
+            var compiled = lambda.Compile();
+            return (Action<IQueryPipelineBuilder>)compiled;
         }
     }
 }

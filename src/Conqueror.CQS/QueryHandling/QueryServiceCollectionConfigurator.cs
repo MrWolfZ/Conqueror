@@ -80,7 +80,7 @@ namespace Conqueror.CQS.QueryHandling
             var middlewareTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
                                           .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
                                           .OfType<Type>()
-                                          .Where(t => t.IsAssignableTo(typeof(IQueryMiddleware)))
+                                          .Where(HasQueryMiddlewareInterface)
                                           .Distinct()
                                           .ToList();
 
@@ -94,31 +94,24 @@ namespace Conqueror.CQS.QueryHandling
                         continue;
 
                     case > 1:
-                        throw new ArgumentException($"type {middlewareType.Name} implements {typeof(IQueryMiddleware<>).Name} more than once");
+                        throw new ArgumentException($"type {middlewareType.Name} implements {nameof(IQueryMiddleware)} more than once");
                 }
             }
 
             foreach (var middlewareType in middlewareTypes)
             {
                 RegisterMetadata(middlewareType);
-                RegisterInvoker(middlewareType);
             }
 
             void RegisterMetadata(Type middlewareType)
             {
-                var attributeType = middlewareType.GetInterfaces().First(IsQueryMiddlewareInterface).GetGenericArguments().First();
+                var configurationType = middlewareType.GetInterfaces().First(IsQueryMiddlewareInterface).GetGenericArguments().FirstOrDefault();
 
-                _ = services.AddSingleton(new QueryMiddlewareMetadata(middlewareType, attributeType));
+                _ = services.AddSingleton(new QueryMiddlewareMetadata(middlewareType, configurationType));
             }
 
-            void RegisterInvoker(Type middlewareType)
-            {
-                var attributeType = middlewareType.GetInterfaces().First(IsQueryMiddlewareInterface).GetGenericArguments().First();
-
-                _ = services.AddTransient(typeof(QueryMiddlewareInvoker<>).MakeGenericType(attributeType));
-            }
-
-            static bool IsQueryMiddlewareInterface(Type i) => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryMiddleware<>);
+            static bool HasQueryMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsQueryMiddlewareInterface);
+            static bool IsQueryMiddlewareInterface(Type i) => i == typeof(IQueryMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryMiddleware<>));
         }
     }
 }

@@ -1,21 +1,21 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class RequiresQueryPermissionAttribute : QueryMiddlewareConfigurationAttribute
-{
-    public RequiresQueryPermissionAttribute(string permission)
-    {
-        Permission = permission;
-    }
+public sealed record QueryAuthorizationMiddlewareConfiguration(string Permission);
 
-    public string Permission { get; }
-}
-
-public sealed class QueryAuthorizationMiddleware : IQueryMiddleware<RequiresQueryPermissionAttribute>
+public sealed class QueryAuthorizationMiddleware : IQueryMiddleware<QueryAuthorizationMiddlewareConfiguration>
 {
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, RequiresQueryPermissionAttribute> ctx)
+    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, QueryAuthorizationMiddlewareConfiguration> ctx)
         where TQuery : class
     {
         // .. in a real application you would place the logic here
         return await ctx.Next(ctx.Query, ctx.CancellationToken);
+    }
+}
+
+public static class AuthorizationQueryPipelineBuilderExtensions
+{
+    public static IQueryPipelineBuilder UsePermission(this IQueryPipelineBuilder pipeline, string permission)
+    {
+        return pipeline.Use<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(new(permission));
     }
 }

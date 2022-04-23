@@ -327,71 +327,78 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            [TestQueryMiddleware]
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
         }
 
         private sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
         {
-            [TestQueryMiddleware]
             public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
         }
 
         private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            [TestQueryMiddleware]
-            [TestQueryMiddleware2]
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestQueryMiddleware>()
+                            .Use<TestQueryMiddleware2>();
             }
         }
 
         private sealed class TestQueryHandlerWithMultipleMiddlewares2 : IQueryHandler<TestQuery2, TestQueryResponse2>
         {
-            [TestQueryMiddleware]
-            [TestQueryMiddleware2]
             public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestQueryMiddleware>()
+                            .Use<TestQueryMiddleware2>();
+            }
         }
 
         private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            [TestQueryRetryMiddleware]
-            [TestQueryMiddleware]
-            [TestQueryMiddleware2]
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestQueryRetryMiddleware>()
+                            .Use<TestQueryMiddleware>()
+                            .Use<TestQueryMiddleware2>();
+            }
         }
 
-        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestQueryRetryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareAttribute>
+        private sealed class TestQueryMiddleware : IQueryMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -401,7 +408,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareAttribute> ctx)
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class
             {
                 invocationCount += 1;
@@ -412,7 +419,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryMiddleware2 : IQueryMiddleware<TestQueryMiddleware2Attribute>
+        private sealed class TestQueryMiddleware2 : IQueryMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -422,7 +429,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddleware2Attribute> ctx)
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class
             {
                 invocationCount += 1;
@@ -433,7 +440,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryRetryMiddleware : IQueryMiddleware<TestQueryRetryMiddlewareAttribute>
+        private sealed class TestQueryRetryMiddleware : IQueryMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -443,7 +450,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryRetryMiddlewareAttribute> ctx)
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class
             {
                 invocationCount += 1;

@@ -76,7 +76,7 @@ namespace Conqueror.CQS.Tests
 
             _ = await handler.ExecuteQuery(new(10), CancellationToken.None);
 
-            Assert.That(observations.AttributesFromMiddlewares, Is.EquivalentTo(new[] { new TestQueryMiddlewareAttribute { Parameter = 10 } }));
+            Assert.That(observations.ConfigurationFromMiddlewares, Is.EquivalentTo(new[] { new TestQueryMiddlewareConfiguration { Parameter = 10 } }));
         }
 
         [Test]
@@ -242,10 +242,6 @@ namespace Conqueror.CQS.Tests
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestQueryMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddScoped<TestQueryMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddSingleton<TestQueryMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
-
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestQueryMiddlewareWithoutInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddScoped<TestQueryMiddlewareWithoutInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddSingleton<TestQueryMiddlewareWithoutInterfaces>().ConfigureConqueror());
         }
 
         private sealed record TestQuery(int Payload);
@@ -261,13 +257,18 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            [TestQueryMiddleware]
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
                 return new(query.Payload + 1);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
             }
         }
 
@@ -280,13 +281,18 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            [TestQueryMiddleware(Parameter = 10)]
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
                 return new(query.Payload + 1);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 });
             }
         }
 
@@ -299,14 +305,19 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            [TestQueryMiddleware]
-            [TestQueryMiddleware2]
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
                 return new(0);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                            .Use<TestQueryMiddleware2>();
             }
         }
 
@@ -337,15 +348,20 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            [TestQueryRetryMiddleware]
-            [TestQueryMiddleware]
-            [TestQueryMiddleware2]
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
                 return new(0);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestQueryRetryMiddleware>()
+                            .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                            .Use<TestQueryMiddleware2>();
             }
         }
 
@@ -358,8 +374,6 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            [MutatingTestQueryMiddleware]
-            [MutatingTestQueryMiddleware2]
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
@@ -367,22 +381,21 @@ namespace Conqueror.CQS.Tests
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
                 return new(0);
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<MutatingTestQueryMiddleware>()
+                            .Use<MutatingTestQueryMiddleware2>();
+            }
         }
 
-        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
+        private sealed record TestQueryMiddlewareConfiguration
         {
             public int Parameter { get; set; }
         }
 
-        private sealed class TestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestQueryRetryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareAttribute>
+        private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
         {
             private readonly TestObservations observations;
 
@@ -391,20 +404,20 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareAttribute> ctx)
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
                 where TQuery : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.QueriesFromMiddlewares.Add(ctx.Query);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
+                observations.ConfigurationFromMiddlewares.Add(ctx.Configuration);
 
                 return await ctx.Next(ctx.Query, ctx.CancellationToken);
             }
         }
 
-        private sealed class TestQueryMiddleware2 : IQueryMiddleware<TestQueryMiddleware2Attribute>
+        private sealed class TestQueryMiddleware2 : IQueryMiddleware
         {
             private readonly TestObservations observations;
 
@@ -413,20 +426,19 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddleware2Attribute> ctx)
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.QueriesFromMiddlewares.Add(ctx.Query);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 return await ctx.Next(ctx.Query, ctx.CancellationToken);
             }
         }
 
-        private sealed class TestQueryRetryMiddleware : IQueryMiddleware<TestQueryRetryMiddlewareAttribute>
+        private sealed class TestQueryRetryMiddleware : IQueryMiddleware
         {
             private readonly TestObservations observations;
 
@@ -435,29 +447,20 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryRetryMiddlewareAttribute> ctx)
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.QueriesFromMiddlewares.Add(ctx.Query);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 _ = await ctx.Next(ctx.Query, ctx.CancellationToken);
                 return await ctx.Next(ctx.Query, ctx.CancellationToken);
             }
         }
 
-        private sealed class MutatingTestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class MutatingTestQueryMiddleware2Attribute : QueryMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class MutatingTestQueryMiddleware : IQueryMiddleware<MutatingTestQueryMiddlewareAttribute>
+        private sealed class MutatingTestQueryMiddleware : IQueryMiddleware
         {
             private readonly CancellationTokensToUse cancellationTokensToUse;
             private readonly TestObservations observations;
@@ -468,14 +471,13 @@ namespace Conqueror.CQS.Tests
                 this.cancellationTokensToUse = cancellationTokensToUse;
             }
 
-            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, MutatingTestQueryMiddlewareAttribute> ctx)
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.QueriesFromMiddlewares.Add(ctx.Query);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 var query = ctx.Query;
 
@@ -497,7 +499,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class MutatingTestQueryMiddleware2 : IQueryMiddleware<MutatingTestQueryMiddleware2Attribute>
+        private sealed class MutatingTestQueryMiddleware2 : IQueryMiddleware
         {
             private readonly CancellationTokensToUse cancellationTokensToUse;
             private readonly TestObservations observations;
@@ -508,14 +510,13 @@ namespace Conqueror.CQS.Tests
                 this.cancellationTokensToUse = cancellationTokensToUse;
             }
 
-            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, MutatingTestQueryMiddleware2Attribute> ctx)
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.QueriesFromMiddlewares.Add(ctx.Query);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 var query = ctx.Query;
 
@@ -537,20 +538,16 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryMiddlewareWithMultipleInterfaces : IQueryMiddleware<TestQueryMiddlewareAttribute>,
-                                                                           IQueryMiddleware<TestQueryMiddleware2Attribute>
+        private sealed class TestQueryMiddlewareWithMultipleInterfaces : IQueryMiddleware<TestQueryMiddlewareConfiguration>,
+                                                                         IQueryMiddleware
         {
-            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddleware2Attribute> ctx)
+            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class =>
                 throw new InvalidOperationException("this middleware should never be called");
 
-            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareAttribute> ctx)
+            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
                 where TQuery : class =>
                 throw new InvalidOperationException("this middleware should never be called");
-        }
-
-        private sealed class TestQueryMiddlewareWithoutInterfaces : IQueryMiddleware
-        {
         }
 
         private sealed class TestObservations
@@ -567,7 +564,7 @@ namespace Conqueror.CQS.Tests
 
             public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
 
-            public List<QueryMiddlewareConfigurationAttribute> AttributesFromMiddlewares { get; } = new();
+            public List<object> ConfigurationFromMiddlewares { get; } = new();
         }
 
         private sealed class CancellationTokensToUse

@@ -20,8 +20,8 @@ namespace Conqueror.CQS.QueryHandling
 
         public Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken)
         {
-            var (queryHandler, metadata) = registry.GetQueryHandler<TQuery, TResponse>(serviceProvider);
-            return invoker.InvokeMiddlewares(serviceProvider, queryHandler, metadata, query, cancellationToken);
+            var metadata = registry.GetQueryHandlerMetadata<TQuery, TResponse>();
+            return invoker.InvokeMiddlewares<TQuery, TResponse>(serviceProvider, metadata, query, cancellationToken);
         }
     }
 }

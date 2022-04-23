@@ -4,14 +4,14 @@ namespace Conqueror.CQS
 {
     internal sealed class QueryMiddlewareMetadata
     {
-        public QueryMiddlewareMetadata(Type middlewareType, Type attributeType)
+        public QueryMiddlewareMetadata(Type middlewareType, Type? configurationType)
         {
             MiddlewareType = middlewareType;
-            AttributeType = attributeType;
+            ConfigurationType = configurationType;
         }
 
         public Type MiddlewareType { get; }
 
-        public Type AttributeType { get; }
+        public Type? ConfigurationType { get; }
     }
 }

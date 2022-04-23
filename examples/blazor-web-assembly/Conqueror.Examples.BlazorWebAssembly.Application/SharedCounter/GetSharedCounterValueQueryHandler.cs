@@ -9,15 +9,18 @@ internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValue
         this.counter = counter;
     }
 
-    [LogQuery]
-    [RequiresQueryPermission(Permissions.UseSharedCounter)]
-    [ValidateQuery]
-    [CacheQueryResult(invalidateResultsAfterSeconds: 60, InvalidateResultsOnEventTypes = new []{ typeof(SharedCounterIncrementedEvent) })]
-    [QueryTimeout(TimeoutAfterSeconds = 10)]
-    [GatherQueryMetrics]
     public async Task<GetSharedCounterValueQueryResponse> ExecuteQuery(GetSharedCounterValueQuery query, CancellationToken cancellationToken)
     {
         await Task.CompletedTask;
         return new(counter.GetValue());
     }
+
+    // ReSharper disable once UnusedMember.Global
+    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
+        pipeline.UseMetrics()
+                .UseLogging()
+                .UsePermission(Permissions.UseSharedCounter)
+                .UseValidation()
+                .UseCaching(TimeSpan.FromMinutes(1), invalidateResultsOnEventTypes: new[] { typeof(SharedCounterIncrementedEvent) })
+                .UseTimeout(TimeSpan.FromSeconds(10));
 }

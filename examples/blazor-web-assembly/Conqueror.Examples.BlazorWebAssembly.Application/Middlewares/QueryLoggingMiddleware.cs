@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class LogQueryAttribute : QueryMiddlewareConfigurationAttribute
+public sealed record QueryLoggingMiddlewareConfiguration
 {
     public bool LogException { get; init; } = true;
 
@@ -9,7 +9,7 @@ public sealed class LogQueryAttribute : QueryMiddlewareConfigurationAttribute
     public bool LogResponsePayload { get; init; } = true;
 }
 
-public sealed class QueryLoggingMiddleware : IQueryMiddleware<LogQueryAttribute>
+public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddlewareConfiguration>
 {
     private readonly JsonSerializerOptions jsonSerializerOptions;
     private readonly ILoggerFactory loggerFactory;
@@ -20,7 +20,7 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware<LogQueryAttribute>
         this.jsonSerializerOptions = jsonSerializerOptions;
     }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, LogQueryAttribute> ctx)
+    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, QueryLoggingMiddlewareConfiguration> ctx)
         where TQuery : class
     {
         var logger = loggerFactory.CreateLogger($"QueryHandler[{typeof(TQuery).Name},{typeof(TResponse).Name}]");
@@ -65,4 +65,22 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware<LogQueryAttribute>
     }
 
     private string Serialize<T>(T value) => JsonSerializer.Serialize(value, jsonSerializerOptions);
+}
+
+public static class LoggingQueryPipelineBuilderExtensions
+{
+    public static IQueryPipelineBuilder UseLogging(this IQueryPipelineBuilder pipeline,
+                                                   bool logException = true,
+                                                   bool logQueryPayload = true,
+                                                   bool logResponsePayload = true)
+    {
+        var configuration = new QueryLoggingMiddlewareConfiguration
+        {
+            LogException = logException,
+            LogQueryPayload = logQueryPayload,
+            LogResponsePayload = logResponsePayload,
+        };
+
+        return pipeline.Use<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>(configuration);
+    }
 }

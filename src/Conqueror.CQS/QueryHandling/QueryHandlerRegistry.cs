@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling
 {
@@ -14,7 +13,7 @@ namespace Conqueror.CQS.QueryHandling
             metadataLookup = metadata.ToDictionary(m => (m.QueryType, m.ResponseType));
         }
 
-        public (IQueryHandler<TQuery, TResponse> Handler, QueryHandlerMetadata Metadata) GetQueryHandler<TQuery, TResponse>(IServiceProvider serviceProvider)
+        public QueryHandlerMetadata GetQueryHandlerMetadata<TQuery, TResponse>()
             where TQuery : class
         {
             if (!metadataLookup.TryGetValue((typeof(TQuery), typeof(TResponse)), out var metadata))
@@ -22,8 +21,7 @@ namespace Conqueror.CQS.QueryHandling
                 throw new ArgumentException($"there is no registered query handler for query type {typeof(TQuery).Name} and response type {typeof(TResponse).Name}");
             }
 
-            var handler = (IQueryHandler<TQuery, TResponse>)serviceProvider.GetRequiredService(metadata.HandlerType);
-            return (handler, metadata);
+            return metadata;
         }
     }
 }

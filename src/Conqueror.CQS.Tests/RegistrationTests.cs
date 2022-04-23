@@ -17,7 +17,6 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection().AddConquerorCQS().AddConquerorCQS();
 
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryMiddlewareRegistry)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryMiddlewaresInvoker)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryServiceCollectionConfigurator)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandHandlerRegistry)));
@@ -94,6 +93,14 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsQueryMiddlewareWithoutConfigurationAsTransient()
+        {
+            var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
+
+            Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
+        }
+
+        [Test]
         public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsCommandMiddlewareAsTransient()
         {
             var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
@@ -152,13 +159,20 @@ namespace Conqueror.CQS.Tests
             public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken) => Task.FromResult(new TestQueryResponse());
         }
 
-        private sealed class TestQueryMiddlewareAttribute : QueryMiddlewareConfigurationAttribute
+        private sealed class TestQueryMiddlewareConfiguration
         {
         }
 
-        private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareAttribute>
+        private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
         {
-            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareAttribute> ctx)
+            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
+                where TQuery : class =>
+                ctx.Next(ctx.Query, ctx.CancellationToken);
+        }
+
+        private sealed class TestQueryMiddlewareWithoutConfiguration : IQueryMiddleware
+        {
+            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
                 where TQuery : class =>
                 ctx.Next(ctx.Query, ctx.CancellationToken);
         }
