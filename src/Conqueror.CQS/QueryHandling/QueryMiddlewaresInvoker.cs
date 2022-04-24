@@ -21,7 +21,7 @@ namespace Conqueror.CQS.QueryHandling
                                                                           CancellationToken cancellationToken)
             where TQuery : class
         {
-            var pipelineBuilder = new QueryPipelineBuilder();
+            var pipelineBuilder = new QueryPipelineBuilder(serviceProvider);
 
             if (pipelineConfigurationMethodByHandlerType.TryGetValue(metadata.HandlerType, out var configurationMethod))
             {

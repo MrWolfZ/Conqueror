@@ -4,6 +4,8 @@ namespace Conqueror.CQS
 {
     public interface IQueryPipelineBuilder
     {
+        IServiceProvider ServiceProvider { get; }
+        
         IQueryPipelineBuilder Use<TMiddleware>()
             where TMiddleware : IQueryMiddleware;
         

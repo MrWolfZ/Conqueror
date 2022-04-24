@@ -294,6 +294,38 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenPipelineThatResolvesScopedService_EachExecutionGetsInstanceFromScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+            var observedInstances = new List<TestService>();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
+                        .AddScoped<TestService>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler1.ExecuteQuery(new(10), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(10), CancellationToken.None);
+            _ = await handler3.ExecuteQuery(new(10), CancellationToken.None);
+
+            Assert.That(observedInstances, Has.Count.EqualTo(3));
+            Assert.AreNotSame(observedInstances[0], observedInstances[1]);
+            Assert.AreSame(observedInstances[0], observedInstances[2]);
+        }
+
+        [Test]
         public void InvalidMiddlewares()
         {
             var services = new ServiceCollection();
@@ -629,6 +661,10 @@ namespace Conqueror.CQS.Tests
         private sealed class CancellationTokensToUse
         {
             public List<CancellationToken> CancellationTokens { get; } = new();
+        }
+
+        private sealed class TestService
+        {
         }
     }
 }

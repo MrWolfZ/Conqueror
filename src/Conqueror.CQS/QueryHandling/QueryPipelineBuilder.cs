@@ -7,6 +7,13 @@ namespace Conqueror.CQS.QueryHandling
     {
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares = new();
 
+        public QueryPipelineBuilder(IServiceProvider serviceProvider)
+        {
+            ServiceProvider = serviceProvider;
+        }
+
+        public IServiceProvider ServiceProvider { get; }
+
         public IQueryPipelineBuilder Use<TMiddleware>()
             where TMiddleware : IQueryMiddleware
         {
