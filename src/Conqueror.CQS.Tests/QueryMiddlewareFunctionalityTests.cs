@@ -326,6 +326,52 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public void GivenPipelineThatUsesUnregisteredMiddleware_PipelineExecutionThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline => pipeline.Use<TestQueryMiddleware2>());
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+
+            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring(nameof(TestQueryMiddleware2)));
+            Assert.That(exception?.Message, Contains.Substring("has been registered"));
+        }
+
+        [Test]
+        public void GivenPipelineThatUsesUnregisteredMiddlewareWithConfiguration_PipelineExecutionThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline => pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+
+            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring(nameof(TestQueryMiddleware)));
+            Assert.That(exception?.Message, Contains.Substring("has been registered"));
+        }
+
+        [Test]
         public void InvalidMiddlewares()
         {
             var services = new ServiceCollection();
