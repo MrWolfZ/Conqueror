@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class CommandMiddlewaresInvoker
     {
         public async Task<TResponse> InvokeMiddlewares<TCommand, TResponse>(IServiceProvider serviceProvider,
-                                                                            ICommandHandler<TCommand, TResponse> handler,
                                                                             CommandHandlerMetadata metadata,
                                                                             TCommand command,
                                                                             CancellationToken cancellationToken)
@@ -22,7 +22,14 @@ namespace Conqueror.CQS.CommandHandling
             {
                 if (index >= attributes.Count)
                 {
-                    return await handler.ExecuteCommand(cmd, token);
+                    var handler = serviceProvider.GetRequiredService(metadata.HandlerType);
+
+                    if (typeof(TResponse) == typeof(UnitCommandResponse))
+                    {
+                        handler = new Adapter<TCommand>((ICommandHandler<TCommand>)handler);
+                    }
+                    
+                    return await ((ICommandHandler<TCommand, TResponse>)handler).ExecuteCommand(cmd, token);
                 }
                 
                 var attribute = attributes[index];
@@ -33,13 +40,12 @@ namespace Conqueror.CQS.CommandHandling
         }
 
         public Task InvokeMiddlewares<TCommand>(IServiceProvider serviceProvider,
-                                                ICommandHandler<TCommand> handler,
                                                 CommandHandlerMetadata metadata,
                                                 TCommand command,
                                                 CancellationToken cancellationToken)
             where TCommand : class
         {
-            return InvokeMiddlewares(serviceProvider, new Adapter<TCommand>(handler), metadata, command, cancellationToken);
+            return InvokeMiddlewares<TCommand, UnitCommandResponse>(serviceProvider, metadata, command, cancellationToken);
         }
 
         private sealed class Adapter<TCommand> : ICommandHandler<TCommand, UnitCommandResponse>

@@ -352,6 +352,87 @@ namespace Conqueror.CQS.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 3, 1, 4, 1 }));
         }
 
+        [Test]
+        public async Task GivenTransientHandlerWithRetryMiddleware_EachRetryGetsNewHandlerInstance()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithRetryMiddleware>()
+                        .AddTransient<TestCommandRetryMiddleware>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1 }));
+        }
+
+        [Test]
+        public async Task GivenScopedHandlerWithRetryMiddleware_EachRetryGetsHandlerInstanceFromScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddScoped<TestCommandHandlerWithRetryMiddleware>()
+                        .AddTransient<TestCommandRetryMiddleware>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 2 }));
+        }
+
+        [Test]
+        public async Task GivenSingletonHandlerWithRetryMiddleware_EachRetryGetsSameInstance()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddSingleton<TestCommandHandlerWithRetryMiddleware>()
+                        .AddTransient<TestCommandRetryMiddleware>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4 }));
+        }
+
         private sealed record TestCommand;
 
         private sealed record TestCommandResponse;
@@ -425,12 +506,22 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
         {
+            private readonly TestObservations observations;
+            private int invocationCount;
+
+            public TestCommandHandlerWithRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
             [TestCommandRetryMiddleware]
             [TestCommandMiddleware]
             [TestCommandMiddleware2]
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
+                invocationCount += 1;
                 await Task.Yield();
+                observations.HandlerInvocationCounts.Add(invocationCount);
                 return new();
             }
         }
@@ -513,6 +604,8 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestObservations
         {
+            public List<int> HandlerInvocationCounts { get; } = new();
+
             public List<int> InvocationCounts { get; } = new();
         }
     }

@@ -23,8 +23,8 @@ namespace Conqueror.CQS.CommandHandling
 
         public Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken)
         {
-            var (commandHandler, metadata) = registry.GetCommandHandler<TCommand, TResponse>(serviceProvider);
-            return invoker.InvokeMiddlewares(serviceProvider, commandHandler, metadata, command, cancellationToken);
+            var metadata = registry.GetCommandHandlerMetadata<TCommand, TResponse>();
+            return invoker.InvokeMiddlewares<TCommand, TResponse>(serviceProvider, metadata, command, cancellationToken);
         }
     }
 
@@ -44,8 +44,8 @@ namespace Conqueror.CQS.CommandHandling
 
         public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken)
         {
-            var (commandHandler, metadata) = registry.GetCommandHandler<TCommand>(serviceProvider);
-            return invoker.InvokeMiddlewares(serviceProvider, commandHandler, metadata, command, cancellationToken);
+            var metadata = registry.GetCommandHandlerMetadata<TCommand>();
+            return invoker.InvokeMiddlewares(serviceProvider, metadata, command, cancellationToken);
         }
     }
 }

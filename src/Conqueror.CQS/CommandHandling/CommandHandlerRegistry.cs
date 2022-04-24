@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
 {
@@ -14,7 +13,7 @@ namespace Conqueror.CQS.CommandHandling
             metadataLookup = metadata.ToDictionary(m => (m.CommandType, m.ResponseType));
         }
 
-        public (ICommandHandler<TCommand, TResponse> Handler, CommandHandlerMetadata Metadata) GetCommandHandler<TCommand, TResponse>(IServiceProvider serviceProvider)
+        public CommandHandlerMetadata GetCommandHandlerMetadata<TCommand, TResponse>()
             where TCommand : class
         {
             if (!metadataLookup.TryGetValue((typeof(TCommand), typeof(TResponse)), out var metadata))
@@ -22,11 +21,10 @@ namespace Conqueror.CQS.CommandHandling
                 throw new ArgumentException($"there is no registered command handler for command type {typeof(TCommand).Name} and response type {typeof(TResponse).Name}");
             }
 
-            var handler = (ICommandHandler<TCommand, TResponse>)serviceProvider.GetRequiredService(metadata.HandlerType);
-            return (handler, metadata);
+            return metadata;
         }
 
-        public (ICommandHandler<TCommand> Handler, CommandHandlerMetadata Metadata) GetCommandHandler<TCommand>(IServiceProvider serviceProvider)
+        public CommandHandlerMetadata GetCommandHandlerMetadata<TCommand>()
             where TCommand : class
         {
             if (!metadataLookup.TryGetValue((typeof(TCommand), null), out var metadata))
@@ -34,8 +32,7 @@ namespace Conqueror.CQS.CommandHandling
                 throw new ArgumentException($"there is no registered command handler for command type {typeof(TCommand).Name}");
             }
 
-            var handler = (ICommandHandler<TCommand>)serviceProvider.GetRequiredService(metadata.HandlerType);
-            return (handler, metadata);
+            return metadata;
         }
     }
 }

@@ -317,6 +317,87 @@ namespace Conqueror.CQS.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 3, 1, 4, 1 }));
         }
 
+        [Test]
+        public async Task GivenTransientHandlerWithRetryMiddleware_EachRetryGetsNewHandlerInstance()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithRetryMiddleware>()
+                        .AddTransient<TestQueryRetryMiddleware>()
+                        .AddTransient<TestQueryMiddleware>()
+                        .AddTransient<TestQueryMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1 }));
+        }
+
+        [Test]
+        public async Task GivenScopedHandlerWithRetryMiddleware_EachRetryGetsHandlerInstanceFromScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddScoped<TestQueryHandlerWithRetryMiddleware>()
+                        .AddTransient<TestQueryRetryMiddleware>()
+                        .AddTransient<TestQueryMiddleware>()
+                        .AddTransient<TestQueryMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 2 }));
+        }
+
+        [Test]
+        public async Task GivenSingletonHandlerWithRetryMiddleware_EachRetryGetsSameInstance()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddSingleton<TestQueryHandlerWithRetryMiddleware>()
+                        .AddTransient<TestQueryRetryMiddleware>()
+                        .AddTransient<TestQueryMiddleware>()
+                        .AddTransient<TestQueryMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4 }));
+        }
+
         private sealed record TestQuery;
 
         private sealed record TestQueryResponse;
@@ -383,9 +464,19 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
         {
+            private readonly TestObservations observations;
+            private int invocationCount;
+
+            public TestQueryHandlerWithRetryMiddleware(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
+                invocationCount += 1;
                 await Task.Yield();
+                observations.HandlerInvocationCounts.Add(invocationCount);
                 return new();
             }
 
@@ -464,6 +555,8 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestObservations
         {
+            public List<int> HandlerInvocationCounts { get; } = new();
+            
             public List<int> InvocationCounts { get; } = new();
         }
     }
