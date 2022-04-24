@@ -5,23 +5,19 @@ A set of libraries to powercharge your .NET development.
 ## Open points
 
 - allow middlewares to implement multiple interfaces
-- specify middleware order through pipeline builder
-  - make config attribute on context nullable
-- allow skipping middleware through option on base attribute
-- allow creating aggregation middleware attributes that apply a specific set of middlewares at once
-  - allow overriding options of aggregation attribute with explicit attribute
-- during configuration phase validate that all referenced middlewares are present, and that query handlers only have query middlewares and command handlers only have command middlewares
+- validate pipeline configuration method signature
 - pass through custom interface extra methods to backing instance
 - add support for .NET standard 2.0
 - use `.ConfigureAwait(false)` everywhere
 - add null checks to public API methods
-- add trace IDs to commands and queries
-  - integrate trace ID from ASP Core if using HTTP package
 - allow accessing command and query context via accessor interface (async local)
+  - add trace IDs to commands and query contexts
+    - integrate trace ID from ASP Core if using HTTP package
 - change HTTP client options to expose provider through options object instead of using factory properties
 - allow registering all custom interfaces in assembly as HTTP client (allow specifying options for all those clients)
 - pull some logic for HTTP into a `Http.Common` package
   - for example default strategy for routes
+- add analyzer that ensures the `ConfigurePipeline` method is present on all handlers (including code fix)
 - eventing
   - make event publishing strategy customizable
   - ship two strategies out of the box (parallel and sequential)
@@ -36,5 +32,4 @@ A set of libraries to powercharge your .NET development.
   - throw error on double http service registration
 
 - for some features provide code snippets in documentation instead of library (e.g. common middlewares etc.)
-- add analyzer package that ensures a set of given middlewares is applied to all command and query handlers
 - create `Conqueror` and `Conqueror.Abstractions` entry packages that combine CQS and Eventing
