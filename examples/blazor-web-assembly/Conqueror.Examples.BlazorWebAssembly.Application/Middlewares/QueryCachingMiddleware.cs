@@ -24,12 +24,31 @@ public static class CachingQueryPipelineBuilderExtensions
                                                    int? maxCacheSizeInMegabytes = null,
                                                    Type[]? invalidateResultsOnEventTypes = null)
     {
-        var configuration = new QueryCachingMiddlewareConfiguration(invalidateResultsAfter)
-        {
-            MaxCacheSizeInMegabytes = maxCacheSizeInMegabytes ?? 10,
-            InvalidateResultsOnEventTypes = invalidateResultsOnEventTypes ?? Array.Empty<Type>(),
-        };
+        var configuration = new QueryCachingMiddlewareConfiguration(invalidateResultsAfter);
+        return pipeline.Use<QueryCachingMiddleware, QueryCachingMiddlewareConfiguration>(configuration)
+                       .ConfigureCaching(invalidateResultsAfter, maxCacheSizeInMegabytes, invalidateResultsOnEventTypes);
+    }
 
-        return pipeline.Use<QueryCachingMiddleware, QueryCachingMiddlewareConfiguration>(configuration);
+    public static IQueryPipelineBuilder ConfigureCaching(this IQueryPipelineBuilder pipeline,
+                                                         TimeSpan invalidateResultsAfter,
+                                                         int? maxCacheSizeInMegabytes = null,
+                                                         Type[]? invalidateResultsOnEventTypes = null)
+    {
+        return pipeline.Configure<QueryCachingMiddleware, QueryCachingMiddlewareConfiguration>(c =>
+        {
+            c = c with { InvalidateResultsAfter = invalidateResultsAfter };
+            
+            if (maxCacheSizeInMegabytes is not null)
+            {
+                c = c with { MaxCacheSizeInMegabytes = maxCacheSizeInMegabytes.Value };
+            }
+            
+            if (invalidateResultsOnEventTypes is not null)
+            {
+                c = c with { InvalidateResultsOnEventTypes = invalidateResultsOnEventTypes };
+            }
+            
+            return c;
+        });
     }
 }

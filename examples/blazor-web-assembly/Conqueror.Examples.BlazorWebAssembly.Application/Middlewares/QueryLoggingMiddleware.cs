@@ -70,17 +70,15 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddle
 public static class LoggingQueryPipelineBuilderExtensions
 {
     public static IQueryPipelineBuilder UseLogging(this IQueryPipelineBuilder pipeline,
-                                                   bool logException = true,
-                                                   bool logQueryPayload = true,
-                                                   bool logResponsePayload = true)
+                                                   Func<QueryLoggingMiddlewareConfiguration, QueryLoggingMiddlewareConfiguration>? configure = null)
     {
-        var configuration = new QueryLoggingMiddlewareConfiguration
-        {
-            LogException = logException,
-            LogQueryPayload = logQueryPayload,
-            LogResponsePayload = logResponsePayload,
-        };
+        return pipeline.Use<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>(new())
+                       .ConfigureLogging(configure ?? (c => c));
+    }
 
-        return pipeline.Use<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>(configuration);
+    public static IQueryPipelineBuilder ConfigureLogging(this IQueryPipelineBuilder pipeline,
+                                                         Func<QueryLoggingMiddlewareConfiguration, QueryLoggingMiddlewareConfiguration> configure)
+    {
+        return pipeline.Configure<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>(configure);
     }
 }

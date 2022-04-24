@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed record QueryAuthorizationMiddlewareConfiguration(string Permission);
+public sealed record QueryAuthorizationMiddlewareConfiguration(string? Permission);
 
 public sealed class QueryAuthorizationMiddleware : IQueryMiddleware<QueryAuthorizationMiddlewareConfiguration>
 {
@@ -14,8 +14,18 @@ public sealed class QueryAuthorizationMiddleware : IQueryMiddleware<QueryAuthori
 
 public static class AuthorizationQueryPipelineBuilderExtensions
 {
+    public static IQueryPipelineBuilder UseAuthorization(this IQueryPipelineBuilder pipeline)
+    {
+        return pipeline.Use<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(new(null));
+    }
+
     public static IQueryPipelineBuilder UsePermission(this IQueryPipelineBuilder pipeline, string permission)
     {
         return pipeline.Use<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(new(permission));
+    }
+
+    public static IQueryPipelineBuilder RequirePermission(this IQueryPipelineBuilder pipeline, string permission)
+    {
+        return pipeline.Configure<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(c => c with { Permission = permission });
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,6 +32,7 @@ namespace Conqueror.CQS.QueryHandling
                 RegisterHandlerMetadata(handlerType);
                 RegisterPlainInterfaces(handlerType);
                 RegisterCustomerInterfaces(handlerType);
+                RegisterPipelineConfiguration(handlerType);
             }
 
             ValidateNoDuplicateQueryTypes();
@@ -72,6 +75,34 @@ namespace Conqueror.CQS.QueryHandling
                         _ = services.AddTransient(customInterfaceType, dynamicType);
                     }
                 }
+            }
+
+            void RegisterPipelineConfiguration(Type handlerType)
+            {
+                var configure = CreatePipelineConfigurationFunction(handlerType);
+
+                if (configure is null)
+                {
+                    return;
+                }
+
+                _ = services.ConfigureQueryPipeline(handlerType, configure);
+            }
+
+            static Action<IQueryPipelineBuilder>? CreatePipelineConfigurationFunction(Type handlerType)
+            {
+                // TODO: validate signature
+                var pipelineConfigurationMethod = handlerType.GetMethod("ConfigurePipeline", BindingFlags.Public | BindingFlags.Static);
+
+                if (pipelineConfigurationMethod is null)
+                {
+                    return null;
+                }
+
+                var builderParam = Expression.Parameter(typeof(IQueryPipelineBuilder));
+                var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
+                var lambda = Expression.Lambda(body, builderParam).Compile();
+                return (Action<IQueryPipelineBuilder>)lambda;
             }
         }
 

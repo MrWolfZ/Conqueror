@@ -15,12 +15,9 @@ internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValue
         return new(counter.GetValue());
     }
 
-    // ReSharper disable once UnusedMember.Global
     public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
-        pipeline.UseMetrics()
-                .UseLogging()
-                .UsePermission(Permissions.UseSharedCounter)
-                .UseValidation()
+        pipeline.UseDefault()
                 .UseCaching(TimeSpan.FromMinutes(1), invalidateResultsOnEventTypes: new[] { typeof(SharedCounterIncrementedEvent) })
-                .UseTimeout(TimeSpan.FromSeconds(10));
+                .ConfigureTimeout(TimeSpan.FromSeconds(10))
+                .RequirePermission(Permissions.UseSharedCounter);
 }

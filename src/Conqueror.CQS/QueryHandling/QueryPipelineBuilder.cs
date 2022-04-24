@@ -21,6 +21,36 @@ namespace Conqueror.CQS.QueryHandling
             return this;
         }
 
+        public IQueryPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
+            where TMiddleware : IQueryMiddleware<TConfiguration>
+        {
+            return Configure<TMiddleware, TConfiguration>(_ => configuration);
+        }
+
+        public IQueryPipelineBuilder Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configure)
+            where TMiddleware : IQueryMiddleware<TConfiguration>
+        {
+            return Configure<TMiddleware, TConfiguration>(c =>
+            {
+                configure(c);
+                return c;
+            });
+        }
+
+        public IQueryPipelineBuilder Configure<TMiddleware, TConfiguration>(Func<TConfiguration, TConfiguration> configure)
+            where TMiddleware : IQueryMiddleware<TConfiguration>
+        {
+            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+            if (index < 0)
+            {
+                throw new InvalidOperationException($"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used");
+            }
+            
+            middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!));
+            return this;
+        }
+
         public QueryPipeline Build()
         {
             return new(middlewares);
