@@ -10,6 +10,9 @@ namespace Conqueror.CQS
         IQueryPipelineBuilder Use<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : IQueryMiddleware<TConfiguration>;
         
+        IQueryPipelineBuilder Without<TMiddleware>()
+            where TMiddleware : IQueryMiddleware;
+        
         IQueryPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : IQueryMiddleware<TConfiguration>;
         

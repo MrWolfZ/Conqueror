@@ -397,6 +397,26 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4 }));
         }
+        
+        [Test]
+        public async Task GivenTransientMiddlewareThatIsAppliedMultipleTimes_EachExecutionGetsNewInstance()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithSameMiddlewareMultipleTimes>()
+                        .AddTransient<TestQueryMiddleware>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
+        }
 
         private sealed record TestQuery;
 
@@ -460,6 +480,18 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Use<TestQueryMiddleware>()
                             .Use<TestQueryMiddleware2>();
             }
+        }
+
+        private sealed class TestQueryHandlerWithSameMiddlewareMultipleTimes : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new();
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>();
         }
 
         private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
