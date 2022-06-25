@@ -432,6 +432,46 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4 }));
         }
+        
+        [Test]
+        public async Task GivenTransientMiddlewareThatIsAppliedMultipleTimes_EachExecutionGetsNewInstance()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithSameMiddlewareMultipleTimes>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
+        }
+        
+        [Test]
+        public async Task GivenTransientMiddlewareThatIsAppliedMultipleTimesForHandlerWithoutResponse_EachExecutionGetsNewInstance()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutResponseWithSameMiddlewareMultipleTimes>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand>>();
+
+            await handler.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
+        }
 
         private sealed record TestCommand;
 
@@ -445,63 +485,107 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            [TestCommandMiddleware]
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
         }
 
         private sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
         {
-            [TestCommandMiddleware]
             public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
         }
 
         private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
         {
-            [TestCommandMiddleware]
             public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
         }
 
         private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            [TestCommandMiddleware]
-            [TestCommandMiddleware2]
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestCommandMiddleware>()
+                            .Use<TestCommandMiddleware2>();
             }
         }
 
         private sealed class TestCommandHandlerWithMultipleMiddlewares2 : ICommandHandler<TestCommand2, TestCommandResponse2>
         {
-            [TestCommandMiddleware]
-            [TestCommandMiddleware2]
             public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestCommandMiddleware>()
+                            .Use<TestCommandMiddleware2>();
+            }
         }
 
         private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>
         {
-            [TestCommandMiddleware]
-            [TestCommandMiddleware2]
             public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestCommandMiddleware>()
+                            .Use<TestCommandMiddleware2>();
+            }
+        }
+
+        private sealed class TestCommandHandlerWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new();
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
+        }
+
+        private sealed class TestCommandHandlerWithoutResponseWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand>
+        {
+            public async Task ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
         }
 
         private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
@@ -514,9 +598,6 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            [TestCommandRetryMiddleware]
-            [TestCommandMiddleware]
-            [TestCommandMiddleware2]
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 invocationCount += 1;
@@ -524,21 +605,17 @@ namespace Conqueror.CQS.Tests
                 observations.HandlerInvocationCounts.Add(invocationCount);
                 return new();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestCommandRetryMiddleware>()
+                            .Use<TestCommandMiddleware>()
+                            .Use<TestCommandMiddleware2>();
+            }
         }
 
-        private sealed class TestCommandMiddlewareAttribute : CommandMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestCommandMiddleware2Attribute : CommandMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestCommandRetryMiddlewareAttribute : CommandMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareAttribute>
+        private sealed class TestCommandMiddleware : ICommandMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -548,7 +625,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareAttribute> ctx)
+            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
                 where TCommand : class
             {
                 invocationCount += 1;
@@ -559,7 +636,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandMiddleware2 : ICommandMiddleware<TestCommandMiddleware2Attribute>
+        private sealed class TestCommandMiddleware2 : ICommandMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -569,7 +646,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddleware2Attribute> ctx)
+            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
                 where TCommand : class
             {
                 invocationCount += 1;
@@ -580,7 +657,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandRetryMiddleware : ICommandMiddleware<TestCommandRetryMiddlewareAttribute>
+        private sealed class TestCommandRetryMiddleware : ICommandMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -590,7 +667,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandRetryMiddlewareAttribute> ctx)
+            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
                 where TCommand : class
             {
                 invocationCount += 1;

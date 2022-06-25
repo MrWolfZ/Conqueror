@@ -11,17 +11,18 @@ internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementShar
         this.eventObserver = eventObserver;
     }
 
-    [LogCommand]
-    [RequiresCommandPermission(Permissions.UseSharedCounter)]
-    [ValidateCommand]
-    [ExecuteInTransaction(EnlistInAmbientTransaction = false)]
-    [RetryCommand(MaxNumberOfAttempts = 2, RetryIntervalInSeconds = 2)]
-    [CommandTimeout]
-    [GatherCommandMetrics]
     public async Task<IncrementSharedCounterValueCommandResponse> ExecuteCommand(IncrementSharedCounterValueCommand command, CancellationToken cancellationToken)
     {
         var valueAfterIncrement = counter.IncrementBy(command.IncrementBy);
         await eventObserver.HandleEvent(new(valueAfterIncrement, command.IncrementBy), cancellationToken);
         return new(valueAfterIncrement);
     }
+
+    // ReSharper disable once UnusedMember.Global
+    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+        pipeline.UseDefault()
+                .ConfigureTimeout(TimeSpan.FromSeconds(10))
+                .RequirePermission(Permissions.UseSharedCounter)
+                .ConfigureRetry(2, TimeSpan.FromSeconds(2))
+                .OutsideOfAmbientTransaction();
 }

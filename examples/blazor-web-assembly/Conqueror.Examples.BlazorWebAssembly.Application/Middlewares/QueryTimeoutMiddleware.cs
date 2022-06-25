@@ -1,14 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class QueryTimeoutMiddlewareConfiguration
-{
-    public QueryTimeoutMiddlewareConfiguration(TimeSpan timeoutAfter)
-    {
-        TimeoutAfter = timeoutAfter;
-    }
-
-    public TimeSpan TimeoutAfter { get; }
-}
+public sealed record QueryTimeoutMiddlewareConfiguration(TimeSpan TimeoutAfter);
 
 public sealed class QueryTimeoutMiddleware : IQueryMiddleware<QueryTimeoutMiddlewareConfiguration>
 {

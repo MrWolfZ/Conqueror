@@ -31,7 +31,7 @@ namespace Conqueror.CQS.QueryHandling
                 handlerType.ValidateNoInvalidQueryHandlerInterface();
                 RegisterHandlerMetadata(handlerType);
                 RegisterPlainInterfaces(handlerType);
-                RegisterCustomerInterfaces(handlerType);
+                RegisterCustomInterfaces(handlerType);
                 RegisterPipelineConfiguration(handlerType);
             }
 
@@ -65,7 +65,7 @@ namespace Conqueror.CQS.QueryHandling
                 }
             }
 
-            void RegisterCustomerInterfaces(Type handlerType)
+            void RegisterCustomInterfaces(Type handlerType)
             {
                 foreach (var customInterfaceType in handlerType.GetCustomQueryHandlerInterfaceTypes())
                 {

@@ -7,10 +7,11 @@ namespace Conqueror.CQS
 {
     public interface ICommandMiddleware
     {
+        Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+            where TCommand : class;
     }
 
-    public interface ICommandMiddleware<TConfiguration> : ICommandMiddleware
-        where TConfiguration : CommandMiddlewareConfigurationAttribute
+    public interface ICommandMiddleware<TConfiguration>
     {
         Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TConfiguration> ctx)
             where TCommand : class;

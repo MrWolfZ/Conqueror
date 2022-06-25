@@ -20,7 +20,6 @@ namespace Conqueror.CQS.Tests
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryMiddlewaresInvoker)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryServiceCollectionConfigurator)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandHandlerRegistry)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandMiddlewareRegistry)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandMiddlewaresInvoker)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandServiceCollectionConfigurator)));
         }
@@ -106,6 +105,14 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
             Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandMiddleware) && d.Lifetime == ServiceLifetime.Transient));
+        }
+
+        [Test]
+        public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsCommandMiddlewareWithoutConfigurationAsTransient()
+        {
+            var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
+
+            Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
         }
 
         [Test]
@@ -219,13 +226,20 @@ namespace Conqueror.CQS.Tests
             public Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
         }
 
-        private sealed class TestCommandMiddlewareAttribute : CommandMiddlewareConfigurationAttribute
+        private sealed class TestCommandMiddlewareConfiguration
         {
         }
 
-        private sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareAttribute>
+        private sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
         {
-            public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareAttribute> ctx)
+            public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareConfiguration> ctx)
+                where TCommand : class =>
+                ctx.Next(ctx.Command, ctx.CancellationToken);
+        }
+
+        private sealed class TestCommandMiddlewareWithoutConfiguration : ICommandMiddleware
+        {
+            public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
                 where TCommand : class =>
                 ctx.Next(ctx.Command, ctx.CancellationToken);
         }

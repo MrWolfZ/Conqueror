@@ -1,27 +1,51 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.CQS.QueryHandling;
 using Microsoft.Extensions.DependencyInjection;
+
+// these classes belong together
+#pragma warning disable SA1402
 
 namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class CommandMiddlewareInvoker<TConfiguration> : ICommandMiddlewareInvoker
-        where TConfiguration : CommandMiddlewareConfigurationAttribute
     {
         public async Task<TResponse> Invoke<TCommand, TResponse>(TCommand command,
                                                                  CommandMiddlewareNext<TCommand, TResponse> next,
-                                                                 CommandHandlerMetadata metadata,
-                                                                 CommandMiddlewareConfigurationAttribute middlewareConfigurationAttribute,
+                                                                 Type middlewareType,
+                                                                 object? middlewareConfiguration,
                                                                  IServiceProvider serviceProvider,
                                                                  CancellationToken cancellationToken)
             where TCommand : class
         {
-            var configurationAttribute = (TConfiguration)middlewareConfigurationAttribute;
+            if (middlewareConfiguration is null)
+            {
+                throw new ArgumentNullException(nameof(middlewareConfiguration));
+            }
 
-            var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration>(command, next, configurationAttribute, cancellationToken);
+            var configuration = (TConfiguration)middlewareConfiguration;
 
-            var middleware = serviceProvider.GetRequiredService<CommandMiddlewareRegistry>().GetMiddleware<TConfiguration>(serviceProvider);
+            var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration>(command, next, configuration, cancellationToken);
+
+            var middleware = (ICommandMiddleware<TConfiguration>)serviceProvider.GetRequiredService(middlewareType);
+
+            return await middleware.Execute(ctx);
+        }
+    }
+    
+    internal sealed class CommandMiddlewareInvoker : ICommandMiddlewareInvoker
+    {
+        public async Task<TResponse> Invoke<TCommand, TResponse>(TCommand command,
+                                                                 CommandMiddlewareNext<TCommand, TResponse> next,
+                                                                 Type middlewareType,
+                                                                 object? middlewareConfiguration,
+                                                                 IServiceProvider serviceProvider,
+                                                                 CancellationToken cancellationToken)
+            where TCommand : class
+        {
+            var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse>(command, next, cancellationToken);
+
+            var middleware = (ICommandMiddleware)serviceProvider.GetRequiredService(middlewareType);
 
             return await middleware.Execute(ctx);
         }

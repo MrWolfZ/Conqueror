@@ -20,7 +20,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton(new QueryServiceCollectionConfigurator());
 
             services.TryAddSingleton<CommandHandlerRegistry>();
-            services.TryAddSingleton<CommandMiddlewareRegistry>();
             services.TryAddSingleton<CommandMiddlewaresInvoker>();
             services.TryAddSingleton(new CommandServiceCollectionConfigurator());
 
@@ -54,7 +53,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
 
             static bool IsQueryMiddlewareInterface(Type i) => i == typeof(IQueryMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryMiddleware<>));
-            static bool IsCommandMiddlewareInterface(Type i) => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>);
+            static bool IsCommandMiddlewareInterface(Type i) => i == typeof(ICommandMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>));
         }
 
         public static IServiceCollection AddConquerorCQSTypesFromExecutingAssembly(this IServiceCollection services)

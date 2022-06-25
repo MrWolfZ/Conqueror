@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,7 +31,8 @@ namespace Conqueror.CQS.CommandHandling
                 handlerType.ValidateNoInvalidCommandHandlerInterface();
                 RegisterMetadata(handlerType);
                 RegisterPlainInterfaces(handlerType);
-                RegisterCustomerInterfaces(handlerType);
+                RegisterCustomInterfaces(handlerType);
+                RegisterPipelineConfiguration(handlerType);
             }
 
             ValidateNoDuplicateCommandTypes();
@@ -69,7 +72,7 @@ namespace Conqueror.CQS.CommandHandling
                 }
             }
 
-            void RegisterCustomerInterfaces(Type handlerType)
+            void RegisterCustomInterfaces(Type handlerType)
             {
                 foreach (var customInterfaceType in handlerType.GetCustomCommandHandlerInterfaceTypes())
                 {
@@ -80,6 +83,34 @@ namespace Conqueror.CQS.CommandHandling
                     }
                 }
             }
+
+            void RegisterPipelineConfiguration(Type handlerType)
+            {
+                var configure = CreatePipelineConfigurationFunction(handlerType);
+
+                if (configure is null)
+                {
+                    return;
+                }
+
+                _ = services.ConfigureCommandPipeline(handlerType, configure);
+            }
+
+            static Action<ICommandPipelineBuilder>? CreatePipelineConfigurationFunction(Type handlerType)
+            {
+                // TODO: validate signature
+                var pipelineConfigurationMethod = handlerType.GetMethod("ConfigurePipeline", BindingFlags.Public | BindingFlags.Static);
+
+                if (pipelineConfigurationMethod is null)
+                {
+                    return null;
+                }
+
+                var builderParam = Expression.Parameter(typeof(ICommandPipelineBuilder));
+                var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
+                var lambda = Expression.Lambda(body, builderParam).Compile();
+                return (Action<ICommandPipelineBuilder>)lambda;
+            }
         }
 
         private static void ConfigureMiddlewares(IServiceCollection services)
@@ -87,7 +118,7 @@ namespace Conqueror.CQS.CommandHandling
             var middlewareTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
                                           .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
                                           .OfType<Type>()
-                                          .Where(t => t.IsAssignableTo(typeof(ICommandMiddleware)))
+                                          .Where(HasCommandMiddlewareInterface)
                                           .Distinct()
                                           .ToList();
 
@@ -101,31 +132,25 @@ namespace Conqueror.CQS.CommandHandling
                         continue;
 
                     case > 1:
-                        throw new ArgumentException($"type {middlewareType.Name} implements {typeof(ICommandMiddleware<>).Name} more than once");
+                        throw new ArgumentException($"type {middlewareType.Name} implements {nameof(ICommandMiddleware)} more than once");
                 }
             }
 
             foreach (var middlewareType in middlewareTypes)
             {
                 RegisterMetadata(middlewareType);
-                RegisterInvoker(middlewareType);
             }
 
             void RegisterMetadata(Type middlewareType)
             {
-                var attributeType = middlewareType.GetInterfaces().First(IsCommandMiddlewareInterface).GetGenericArguments().First();
+                var configurationType = middlewareType.GetInterfaces().First(IsCommandMiddlewareInterface).GetGenericArguments().FirstOrDefault();
 
-                _ = services.AddSingleton(new CommandMiddlewareMetadata(middlewareType, attributeType));
+                _ = services.AddSingleton(new CommandMiddlewareMetadata(middlewareType, configurationType));
             }
 
-            void RegisterInvoker(Type middlewareType)
-            {
-                var attributeType = middlewareType.GetInterfaces().First(IsCommandMiddlewareInterface).GetGenericArguments().First();
-
-                _ = services.AddTransient(typeof(CommandMiddlewareInvoker<>).MakeGenericType(attributeType));
-            }
-
-            static bool IsCommandMiddlewareInterface(Type i) => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>);
+            static bool HasCommandMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsCommandMiddlewareInterface);
+            
+            static bool IsCommandMiddlewareInterface(Type i) => i == typeof(ICommandMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>));
         }
     }
 }

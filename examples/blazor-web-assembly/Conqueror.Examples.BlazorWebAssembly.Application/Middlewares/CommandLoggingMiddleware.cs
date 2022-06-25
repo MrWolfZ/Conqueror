@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class LogCommandAttribute : CommandMiddlewareConfigurationAttribute
+public sealed record CommandLoggingMiddlewareConfiguration
 {
     public bool LogException { get; init; } = true;
 
@@ -9,7 +9,7 @@ public sealed class LogCommandAttribute : CommandMiddlewareConfigurationAttribut
     public bool LogResponsePayload { get; init; } = true;
 }
 
-public sealed class CommandLoggingMiddleware : ICommandMiddleware<LogCommandAttribute>
+public sealed class CommandLoggingMiddleware : ICommandMiddleware<CommandLoggingMiddlewareConfiguration>
 {
     private readonly JsonSerializerOptions jsonSerializerOptions;
     private readonly ILoggerFactory loggerFactory;
@@ -20,7 +20,7 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware<LogCommandAttr
         this.jsonSerializerOptions = jsonSerializerOptions;
     }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, LogCommandAttribute> ctx)
+    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, CommandLoggingMiddlewareConfiguration> ctx)
         where TCommand : class
     {
         var logger = loggerFactory.CreateLogger($"CommandHandler[{typeof(TCommand).Name},{typeof(TResponse).Name}]");
@@ -65,4 +65,20 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware<LogCommandAttr
     }
 
     private string Serialize<T>(T value) => JsonSerializer.Serialize(value, jsonSerializerOptions);
+}
+
+public static class LoggingCommandPipelineBuilderExtensions
+{
+    public static ICommandPipelineBuilder UseLogging(this ICommandPipelineBuilder pipeline,
+                                                     Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration>? configure = null)
+    {
+        return pipeline.Use<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>(new())
+                       .ConfigureLogging(configure ?? (c => c));
+    }
+
+    public static ICommandPipelineBuilder ConfigureLogging(this ICommandPipelineBuilder pipeline,
+                                                           Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration> configure)
+    {
+        return pipeline.Configure<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>(configure);
+    }
 }

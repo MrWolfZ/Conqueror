@@ -18,11 +18,11 @@ namespace Conqueror.CQS.QueryHandling
 
         public async Task<TResponse> Execute<TQuery, TResponse>(IServiceProvider serviceProvider,
                                                                 QueryHandlerMetadata metadata,
-                                                                TQuery command,
+                                                                TQuery initialQuery,
                                                                 CancellationToken cancellationToken)
             where TQuery : class
         {
-            return await ExecuteNextMiddleware(0, command, cancellationToken);
+            return await ExecuteNextMiddleware(0, initialQuery, cancellationToken);
 
             async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, CancellationToken token)
             {
