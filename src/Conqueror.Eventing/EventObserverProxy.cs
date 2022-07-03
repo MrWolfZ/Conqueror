@@ -20,8 +20,8 @@ namespace Conqueror.Eventing
 
         public Task HandleEvent(TEvent evt, CancellationToken cancellationToken)
         {
-            var observers = registry.GetEventObservers<TEvent>(serviceProvider);
-            return invoker.InvokeMiddlewares(serviceProvider, observers, evt, cancellationToken);
+            var metadataCol = registry.GetEventObserversMetadata<TEvent>();
+            return invoker.InvokeMiddlewares(serviceProvider, metadataCol, evt, cancellationToken);
         }
     }
 }

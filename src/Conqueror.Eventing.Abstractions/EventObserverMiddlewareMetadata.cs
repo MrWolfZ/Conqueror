@@ -4,14 +4,14 @@ namespace Conqueror.Eventing
 {
     internal sealed class EventObserverMiddlewareMetadata
     {
-        public EventObserverMiddlewareMetadata(Type middlewareType, Type attributeType)
+        public EventObserverMiddlewareMetadata(Type middlewareType, Type? configurationType)
         {
             MiddlewareType = middlewareType;
-            AttributeType = attributeType;
+            ConfigurationType = configurationType;
         }
 
         public Type MiddlewareType { get; }
-
-        public Type AttributeType { get; }
+        
+        public Type? ConfigurationType { get; }
     }
 }

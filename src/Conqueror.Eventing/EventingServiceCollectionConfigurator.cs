@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using Conqueror.Common;
 using Conqueror.Eventing.Util;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +11,7 @@ namespace Conqueror.Eventing
     internal sealed class EventingServiceCollectionConfigurator : IServiceCollectionConfigurator
     {
         public int ConfigurationPhase => 1;
-        
+
         public void Configure(IServiceCollection services)
         {
             ConfigureEventObservers(services);
@@ -29,7 +31,8 @@ namespace Conqueror.Eventing
             {
                 RegisterMetadata(observerType);
                 RegisterPlainInterfaces(observerType);
-                RegisterCustomerInterfaces(observerType);
+                RegisterCustomInterfaces(observerType);
+                RegisterPipelineConfiguration(observerType);
             }
 
             void RegisterMetadata(Type observerType)
@@ -47,12 +50,12 @@ namespace Conqueror.Eventing
                 foreach (var plainInterfaceType in observerType.GetEventObserverInterfaceTypes())
                 {
                     var eventType = plainInterfaceType.GetGenericArguments().First();
-                    
+
                     _ = services.AddTransient(typeof(IEventObserver<>).MakeGenericType(eventType), typeof(EventObserverProxy<>).MakeGenericType(eventType));
                 }
             }
 
-            void RegisterCustomerInterfaces(Type observerType)
+            void RegisterCustomInterfaces(Type observerType)
             {
                 foreach (var customInterfaceType in observerType.GetCustomEventObserverInterfaceTypes())
                 {
@@ -63,6 +66,34 @@ namespace Conqueror.Eventing
                     }
                 }
             }
+
+            void RegisterPipelineConfiguration(Type observerType)
+            {
+                var configure = CreatePipelineConfigurationFunction(observerType);
+
+                if (configure is null)
+                {
+                    return;
+                }
+
+                _ = services.ConfigureEventObserverPipeline(observerType, configure);
+            }
+
+            static Action<IEventObserverPipelineBuilder>? CreatePipelineConfigurationFunction(Type observerType)
+            {
+                // TODO: validate signature
+                var pipelineConfigurationMethod = observerType.GetMethod("ConfigurePipeline", BindingFlags.Public | BindingFlags.Static);
+
+                if (pipelineConfigurationMethod is null)
+                {
+                    return null;
+                }
+
+                var builderParam = Expression.Parameter(typeof(IEventObserverPipelineBuilder));
+                var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
+                var lambda = Expression.Lambda(body, builderParam).Compile();
+                return (Action<IEventObserverPipelineBuilder>)lambda;
+            }
         }
 
         private static void ConfigureEventObserverMiddlewares(IServiceCollection services)
@@ -70,10 +101,10 @@ namespace Conqueror.Eventing
             var middlewareTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
                                           .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
                                           .OfType<Type>()
-                                          .Where(t => t.IsAssignableTo(typeof(IEventObserverMiddleware)))
+                                          .Where(HasEventObserverMiddlewareInterface)
                                           .Distinct()
                                           .ToList();
-            
+
             foreach (var middlewareType in middlewareTypes)
             {
                 var middlewareInterfaces = middlewareType.GetInterfaces().Where(IsEventObserverMiddlewareInterface).ToList();
@@ -84,31 +115,25 @@ namespace Conqueror.Eventing
                         continue;
 
                     case > 1:
-                        throw new ArgumentException($"type {middlewareType.Name} implements {typeof(IEventObserverMiddleware<>).Name} more than once");
+                        throw new ArgumentException($"type {middlewareType.Name} implements {nameof(IEventObserverMiddleware)} more than once");
                 }
             }
 
             foreach (var middlewareType in middlewareTypes)
             {
                 RegisterMetadata(middlewareType);
-                RegisterInvoker(middlewareType);
             }
 
             void RegisterMetadata(Type middlewareType)
             {
-                var attributeType = middlewareType.GetInterfaces().First(IsEventObserverMiddlewareInterface).GetGenericArguments().First();
+                var configurationType = middlewareType.GetInterfaces().First(IsEventObserverMiddlewareInterface).GetGenericArguments().FirstOrDefault();
 
-                _ = services.AddSingleton(new EventObserverMiddlewareMetadata(middlewareType, attributeType));
+                _ = services.AddSingleton(new EventObserverMiddlewareMetadata(middlewareType, configurationType));
             }
 
-            void RegisterInvoker(Type middlewareType)
-            {
-                var attributeType = middlewareType.GetInterfaces().First(IsEventObserverMiddlewareInterface).GetGenericArguments().First();
+            static bool HasEventObserverMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsEventObserverMiddlewareInterface);
 
-                _ = services.AddTransient(typeof(EventObserverMiddlewareInvoker<>).MakeGenericType(attributeType));
-            }
-
-            static bool IsEventObserverMiddlewareInterface(Type i) => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventObserverMiddleware<>);
+            static bool IsEventObserverMiddlewareInterface(Type i) => i == typeof(IEventObserverMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventObserverMiddleware<>));
         }
 
         private static void ConfigureEventPublisherMiddlewares(IServiceCollection services)

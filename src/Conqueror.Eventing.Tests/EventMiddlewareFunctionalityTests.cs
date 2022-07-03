@@ -100,7 +100,7 @@ namespace Conqueror.Eventing.Tests
 
             await observer.HandleEvent(new() { Payload = 10 }, CancellationToken.None);
 
-            Assert.That(observations.AttributesFromMiddlewares, Is.EquivalentTo(new[] { new TestEventObserverMiddlewareAttribute { Parameter = 10 } }));
+            Assert.That(observations.ConfigurationFromMiddlewares, Is.EquivalentTo(new[] { new TestEventObserverMiddlewareConfiguration { Parameter = 10 } }));
         }
 
         [Test]
@@ -145,7 +145,7 @@ namespace Conqueror.Eventing.Tests
 
             await publisher.PublishEvent(new TestEvent { Payload = 10 }, CancellationToken.None);
 
-            Assert.That(observations.AttributesFromMiddlewares, Is.EquivalentTo(new[] { new TestEventObserverMiddlewareAttribute { Parameter = 10 } }));
+            Assert.That(observations.ConfigurationFromMiddlewares, Is.EquivalentTo(new[] { new TestEventObserverMiddlewareConfiguration { Parameter = 10 } }));
         }
 
         [Test]
@@ -448,6 +448,124 @@ namespace Conqueror.Eventing.Tests
                         {
                             typeof(TestEventPublisherMiddleware), typeof(TestEventObserverMiddleware), typeof(TestEventObserverMiddleware), typeof(TestEventObserverMiddleware2),
                         }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithSameMiddlewareAppliedMultipleTimes_MiddlewareIsCalledWithEventMultipleTimesViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestEventObserverMiddleware2>()
+                                        .Use<TestEventObserverMiddleware2>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await observer.HandleEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestEventObserverMiddleware2), typeof(TestEventObserverMiddleware2) }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithSameMiddlewareAppliedMultipleTimes_MiddlewareIsCalledWithEventMultipleTimesViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestEventObserverMiddleware2>()
+                                        .Use<TestEventObserverMiddleware2>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await publisher.PublishEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestEventObserverMiddleware2), typeof(TestEventObserverMiddleware2) }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithAppliedAndThenRemovedMiddleware_MiddlewareIsNotCalledViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
+                                        .Use<TestEventObserverMiddleware2>()
+                                        .Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
+                                        .Without<TestEventObserverMiddleware2>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await observer.HandleEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestEventObserverMiddleware), typeof(TestEventObserverMiddleware) }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithAppliedAndThenRemovedMiddleware_MiddlewareIsNotCalledViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
+                                        .Use<TestEventObserverMiddleware2>()
+                                        .Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
+                                        .Without<TestEventObserverMiddleware2>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await publisher.PublishEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestEventObserverMiddleware), typeof(TestEventObserverMiddleware) }));
         }
 
         [Test]
@@ -769,6 +887,162 @@ namespace Conqueror.Eventing.Tests
         }
 
         [Test]
+        public async Task GivenObserverPipelineThatResolvesScopedService_EachExecutionGetsInstanceFromScopeViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+            var observedInstances = new List<TestService>();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddScoped<TestService>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var observer1 = scope1.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+            var observer2 = scope2.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+            var observer3 = scope1.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            await observer1.HandleEvent(new() { Payload = 10 }, CancellationToken.None);
+            await observer2.HandleEvent(new() { Payload = 10 }, CancellationToken.None);
+            await observer3.HandleEvent(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.That(observedInstances, Has.Count.EqualTo(3));
+            Assert.AreNotSame(observedInstances[0], observedInstances[1]);
+            Assert.AreSame(observedInstances[0], observedInstances[2]);
+        }
+
+        [Test]
+        public async Task GivenObserverPipelineThatResolvesScopedService_EachExecutionGetsInstanceFromScopeViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+            var observedInstances = new List<TestService>();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddScoped<TestService>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var publisher1 = scope1.ServiceProvider.GetRequiredService<IEventPublisher>();
+            var publisher2 = scope2.ServiceProvider.GetRequiredService<IEventPublisher>();
+            var publisher3 = scope1.ServiceProvider.GetRequiredService<IEventPublisher>();
+
+            await publisher1.PublishEvent(new TestEvent { Payload = 10 }, CancellationToken.None);
+            await publisher2.PublishEvent(new TestEvent { Payload = 10 }, CancellationToken.None);
+            await publisher3.PublishEvent(new TestEvent { Payload = 10 }, CancellationToken.None);
+
+            Assert.That(observedInstances, Has.Count.EqualTo(3));
+            Assert.AreNotSame(observedInstances[0], observedInstances[1]);
+            Assert.AreSame(observedInstances[0], observedInstances[2]);
+        }
+
+        [Test]
+        public void GivenObserverPipelineThatUsesUnregisteredMiddleware_PipelineExecutionThrowsInvalidOperationExceptionViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => pipeline.Use<TestEventObserverMiddleware2>());
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(() => observer.HandleEvent(new(), CancellationToken.None));
+
+            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring(nameof(TestEventObserverMiddleware2)));
+            Assert.That(exception?.Message, Contains.Substring("has been registered"));
+        }
+
+        [Test]
+        public void GivenObserverPipelineThatUsesUnregisteredMiddleware_PipelineExecutionThrowsInvalidOperationExceptionViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => pipeline.Use<TestEventObserverMiddleware2>());
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(() => publisher.PublishEvent(new TestEvent(), CancellationToken.None));
+
+            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring(nameof(TestEventObserverMiddleware2)));
+            Assert.That(exception?.Message, Contains.Substring("has been registered"));
+        }
+
+        [Test]
+        public void GivenObserverPipelineThatUsesUnregisteredMiddlewareWithConfiguration_PipelineExecutionThrowsInvalidOperationExceptionViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new()));
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(() => observer.HandleEvent(new(), CancellationToken.None));
+
+            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring(nameof(TestEventObserverMiddleware)));
+            Assert.That(exception?.Message, Contains.Substring("has been registered"));
+        }
+
+        [Test]
+        public void GivenObserverPipelineThatUsesUnregisteredMiddlewareWithConfiguration_PipelineExecutionThrowsInvalidOperationExceptionViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddSingleton(observations);
+
+            _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new()));
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(() => publisher.PublishEvent(new TestEvent(), CancellationToken.None));
+
+            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring(nameof(TestEventObserverMiddleware)));
+            Assert.That(exception?.Message, Contains.Substring("has been registered"));
+        }
+
+        [Test]
         public void InvalidMiddlewares()
         {
             var services = new ServiceCollection();
@@ -776,10 +1050,6 @@ namespace Conqueror.Eventing.Tests
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddScoped<TestEventObserverMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddSingleton<TestEventObserverMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
-
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverMiddlewareWithoutInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddScoped<TestEventObserverMiddlewareWithoutInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddSingleton<TestEventObserverMiddlewareWithoutInterfaces>().ConfigureConqueror());
         }
 
         private sealed record TestEvent
@@ -796,12 +1066,17 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            [TestEventObserverMiddleware]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.EventsFromObservers.Add(evt);
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new());
             }
         }
 
@@ -814,12 +1089,17 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            [TestEventObserverMiddleware(Parameter = 10)]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.EventsFromObservers.Add(evt);
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new() { Parameter = 10 });
             }
         }
 
@@ -832,13 +1112,18 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            [TestEventObserverMiddleware]
-            [TestEventObserverMiddleware2]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.EventsFromObservers.Add(evt);
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
+                            .Use<TestEventObserverMiddleware2>();
             }
         }
 
@@ -868,14 +1153,19 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            [TestEventObserverRetryMiddleware]
-            [TestEventObserverMiddleware]
-            [TestEventObserverMiddleware2]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.EventsFromObservers.Add(evt);
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestEventObserverRetryMiddleware>()
+                            .Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
+                            .Use<TestEventObserverMiddleware2>();
             }
         }
 
@@ -888,26 +1178,27 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            [MutatingTestEventObserverMiddleware]
-            [MutatingTestEventObserverMiddleware2]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 observations.EventsFromObservers.Add(evt);
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<MutatingTestEventObserverMiddleware>()
+                            .Use<MutatingTestEventObserverMiddleware2>();
+            }
         }
 
-        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
+        private sealed record TestEventObserverMiddlewareConfiguration
         {
             public int Parameter { get; set; }
         }
 
-        private sealed class TestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareAttribute>
+        private sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
         {
             private readonly TestObservations observations;
 
@@ -916,20 +1207,20 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareAttribute> ctx)
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
                 where TEvent : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
+                observations.ConfigurationFromMiddlewares.Add(ctx.Configuration);
 
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
             }
         }
 
-        private sealed class TestEventObserverMiddleware2 : IEventObserverMiddleware<TestEventObserverMiddleware2Attribute>
+        private sealed class TestEventObserverMiddleware2 : IEventObserverMiddleware
         {
             private readonly TestObservations observations;
 
@@ -938,24 +1229,19 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddleware2Attribute> ctx)
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
             }
         }
 
-        private sealed class TestEventObserverRetryMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestEventObserverRetryMiddleware : IEventObserverMiddleware<TestEventObserverRetryMiddlewareAttribute>
+        private sealed class TestEventObserverRetryMiddleware : IEventObserverMiddleware
         {
             private readonly TestObservations observations;
 
@@ -964,29 +1250,20 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverRetryMiddlewareAttribute> ctx)
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
                 await ctx.Next(ctx.Event, ctx.CancellationToken);
             }
         }
 
-        private sealed class MutatingTestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class MutatingTestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class MutatingTestEventObserverMiddleware : IEventObserverMiddleware<MutatingTestEventObserverMiddlewareAttribute>
+        private sealed class MutatingTestEventObserverMiddleware : IEventObserverMiddleware
         {
             private readonly CancellationTokensToUse cancellationTokensToUse;
             private readonly TestObservations observations;
@@ -997,14 +1274,13 @@ namespace Conqueror.Eventing.Tests
                 this.cancellationTokensToUse = cancellationTokensToUse;
             }
 
-            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, MutatingTestEventObserverMiddlewareAttribute> ctx)
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 var testEvent = (TestEvent)(object)ctx.Event;
                 var modifiedEvent = testEvent with { Payload = testEvent.Payload + 4 };
@@ -1013,7 +1289,7 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class MutatingTestEventObserverMiddleware2 : IEventObserverMiddleware<MutatingTestEventObserverMiddleware2Attribute>
+        private sealed class MutatingTestEventObserverMiddleware2 : IEventObserverMiddleware
         {
             private readonly CancellationTokensToUse cancellationTokensToUse;
             private readonly TestObservations observations;
@@ -1024,14 +1300,13 @@ namespace Conqueror.Eventing.Tests
                 this.cancellationTokensToUse = cancellationTokensToUse;
             }
 
-            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, MutatingTestEventObserverMiddleware2Attribute> ctx)
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class
             {
                 await Task.Yield();
                 observations.MiddlewareTypes.Add(GetType());
                 observations.EventsFromMiddlewares.Add(ctx.Event);
                 observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                observations.AttributesFromMiddlewares.Add(ctx.Configuration);
 
                 var testEvent = (TestEvent)(object)ctx.Event;
                 var modifiedEvent = testEvent with { Payload = testEvent.Payload + 8 };
@@ -1156,20 +1431,16 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverMiddlewareWithMultipleInterfaces : IEventObserverMiddleware<TestEventObserverMiddlewareAttribute>,
-                                                                                 IEventObserverMiddleware<TestEventObserverMiddleware2Attribute>
+        private sealed class TestEventObserverMiddlewareWithMultipleInterfaces : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>,
+                                                                                 IEventObserverMiddleware
         {
-            public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddleware2Attribute> ctx)
+            public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class =>
                 throw new InvalidOperationException("this middleware should never be called");
 
-            public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareAttribute> ctx)
+            public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
                 where TEvent : class =>
                 throw new InvalidOperationException("this middleware should never be called");
-        }
-
-        private sealed class TestEventObserverMiddlewareWithoutInterfaces : IEventObserverMiddleware
-        {
         }
 
         private sealed class TestObservations
@@ -1184,12 +1455,16 @@ namespace Conqueror.Eventing.Tests
 
             public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
 
-            public List<EventObserverMiddlewareConfigurationAttribute> AttributesFromMiddlewares { get; } = new();
+            public List<object> ConfigurationFromMiddlewares { get; } = new();
         }
 
         private sealed class CancellationTokensToUse
         {
             public List<CancellationToken> CancellationTokens { get; } = new();
+        }
+
+        private sealed class TestService
+        {
         }
     }
 }

@@ -7,10 +7,11 @@ namespace Conqueror.Eventing
 {
     public interface IEventObserverMiddleware
     {
+        Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
+            where TEvent : class;
     }
 
-    public interface IEventObserverMiddleware<TConfiguration> : IEventObserverMiddleware
-        where TConfiguration : EventObserverMiddlewareConfigurationAttribute
+    public interface IEventObserverMiddleware<TConfiguration>
     {
         Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TConfiguration> ctx)
             where TEvent : class;

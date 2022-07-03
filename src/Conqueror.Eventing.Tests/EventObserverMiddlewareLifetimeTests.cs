@@ -286,47 +286,47 @@ namespace Conqueror.Eventing.Tests
 
         private sealed class TestEventObserver : IEventObserver<TestEvent>
         {
-            [TestEventObserverMiddleware]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline) => pipeline.Use<TestEventObserverMiddleware>();
         }
 
         private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>
         {
-            [TestEventObserverMiddleware]
-            [TestEventObserverMiddleware2]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestEventObserverMiddleware>()
+                            .Use<TestEventObserverMiddleware2>();
             }
         }
 
         private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>
         {
-            [TestEventObserverRetryMiddleware]
-            [TestEventObserverMiddleware]
-            [TestEventObserverMiddleware2]
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
             }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestEventObserverRetryMiddleware>()
+                            .Use<TestEventObserverMiddleware>()
+                            .Use<TestEventObserverMiddleware2>();
+            }
         }
 
-        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestEventObserverMiddleware2Attribute : EventObserverMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestEventObserverRetryMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
-        {
-        }
-
-        private sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareAttribute>
+        private sealed class TestEventObserverMiddleware : IEventObserverMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -336,7 +336,7 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareAttribute> ctx)
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class
             {
                 invocationCount += 1;
@@ -347,7 +347,7 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverMiddleware2 : IEventObserverMiddleware<TestEventObserverMiddleware2Attribute>
+        private sealed class TestEventObserverMiddleware2 : IEventObserverMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -357,7 +357,7 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddleware2Attribute> ctx)
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class
             {
                 invocationCount += 1;
@@ -368,7 +368,7 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverRetryMiddleware : IEventObserverMiddleware<TestEventObserverRetryMiddlewareAttribute>
+        private sealed class TestEventObserverRetryMiddleware : IEventObserverMiddleware
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -378,7 +378,7 @@ namespace Conqueror.Eventing.Tests
                 this.observations = observations;
             }
 
-            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverRetryMiddlewareAttribute> ctx)
+            public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class
             {
                 invocationCount += 1;

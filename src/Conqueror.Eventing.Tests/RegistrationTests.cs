@@ -17,7 +17,6 @@ namespace Conqueror.Eventing.Tests
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IEventPublisher)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IEventObserver<>)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventObserverRegistry)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventObserverMiddlewareRegistry)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventMiddlewaresInvoker)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventingServiceCollectionConfigurator)));
         }
@@ -85,6 +84,15 @@ namespace Conqueror.Eventing.Tests
             var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
             Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverMiddleware) && d.Lifetime == ServiceLifetime.Transient));
+        }
+
+        [Test]
+        public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsEventObserverMiddlewareWithoutConfigurationAsTransient()
+        {
+            var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
+
+            Assert.IsTrue(
+                services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
         }
 
         [Test]
@@ -157,9 +165,8 @@ namespace Conqueror.Eventing.Tests
 
         private sealed class TestEventObserverWithMultipleMixedInterfaces : ITestEventObserver, IEventObserver<TestEvent2>
         {
-            public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
-
             public Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
         }
 
         private abstract class AbstractTestEventObserver : IEventObserver<TestEvent>
@@ -167,13 +174,20 @@ namespace Conqueror.Eventing.Tests
             public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
         }
 
-        private sealed class TestEventObserverMiddlewareAttribute : EventObserverMiddlewareConfigurationAttribute
+        private sealed class TestEventObserverMiddlewareConfiguration
         {
         }
 
-        private sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareAttribute>
+        private sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
         {
-            public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareAttribute> ctx)
+            public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
+                where TEvent : class =>
+                ctx.Next(ctx.Event, ctx.CancellationToken);
+        }
+
+        private sealed class TestEventObserverMiddlewareWithoutConfiguration : IEventObserverMiddleware
+        {
+            public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
                 where TEvent : class =>
                 ctx.Next(ctx.Event, ctx.CancellationToken);
         }

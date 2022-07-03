@@ -16,9 +16,13 @@ namespace Conqueror.Eventing
         public abstract Task Next(TEvent evt, CancellationToken cancellationToken);
     }
 
+    public abstract class EventObserverMiddlewareContext<TEvent> : EventMiddlewareContext<TEvent>
+        where TEvent : class
+    {
+    }
+
     public abstract class EventObserverMiddlewareContext<TEvent, TConfiguration> : EventMiddlewareContext<TEvent>
         where TEvent : class
-        where TConfiguration : EventObserverMiddlewareConfigurationAttribute
     {
         public abstract TConfiguration Configuration { get; }
     }

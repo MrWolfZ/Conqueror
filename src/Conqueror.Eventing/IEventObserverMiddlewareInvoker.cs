@@ -10,8 +10,8 @@ namespace Conqueror.Eventing
     {
         Task Invoke<TEvent>(TEvent evt,
                             EventObserverMiddlewareNext<TEvent> next,
-                            EventObserverMetadata metadata,
-                            EventObserverMiddlewareConfigurationAttribute middlewareConfigurationAttribute,
+                            Type middlewareType,
+                            object? middlewareConfiguration,
                             IServiceProvider serviceProvider,
                             CancellationToken cancellationToken)
             where TEvent : class;

@@ -9,8 +9,15 @@ namespace Conqueror.Eventing
 {
     internal sealed class EventMiddlewaresInvoker
     {
+        private readonly Dictionary<Type, Action<IEventObserverPipelineBuilder>> pipelineConfigurationMethodByObserverType;
+
+        public EventMiddlewaresInvoker(IEnumerable<EventObserverPipelineConfiguration> observerPipelineConfigurations)
+        {
+            pipelineConfigurationMethodByObserverType = observerPipelineConfigurations.ToDictionary(c => c.ObserverType, c => c.Configure);
+        }
+
         public async Task InvokeMiddlewares<TEvent>(IServiceProvider serviceProvider,
-                                                    IReadOnlyCollection<(IEventObserver<TEvent> Observer, EventObserverMetadata Metadata)> eventObservers,
+                                                    IReadOnlyCollection<EventObserverMetadata> metadataCol,
                                                     TEvent evt,
                                                     CancellationToken cancellationToken)
             where TEvent : class
@@ -23,7 +30,7 @@ namespace Conqueror.Eventing
             {
                 if (index >= publisherMiddlewareInvokers.Count)
                 {
-                    await ExecuteEventObserverMiddlewares(serviceProvider, eventObservers, e, cancellationToken);
+                    await ExecuteEventObserverMiddlewares(serviceProvider, metadataCol, e, cancellationToken);
                     return;
                 }
 
@@ -32,43 +39,35 @@ namespace Conqueror.Eventing
             }
         }
 
-        private static async Task ExecuteEventObserverMiddlewares<TEvent>(IServiceProvider serviceProvider,
-                                                                          IReadOnlyCollection<(IEventObserver<TEvent> Observer, EventObserverMetadata Metadata)> eventObservers,
-                                                                          TEvent evt,
-                                                                          CancellationToken cancellationToken)
+        private async Task ExecuteEventObserverMiddlewares<TEvent>(IServiceProvider serviceProvider,
+                                                                   IReadOnlyCollection<EventObserverMetadata> metadataCol,
+                                                                   TEvent evt,
+                                                                   CancellationToken cancellationToken)
             where TEvent : class
         {
             // TODO: configurable strategy for order
-            foreach (var (observer, metadata) in eventObservers)
+            foreach (var metadata in metadataCol)
             {
-                await ExecuteObserverMiddlewares(serviceProvider, observer, metadata, evt, cancellationToken);
+                await ExecuteObserverMiddlewares(serviceProvider, metadata, evt, cancellationToken);
             }
         }
 
-        private static async Task ExecuteObserverMiddlewares<TEvent>(IServiceProvider serviceProvider,
-                                                                     IEventObserver<TEvent> observer,
-                                                                     EventObserverMetadata metadata,
-                                                                     TEvent evt,
-                                                                     CancellationToken cancellationToken)
+        private async Task ExecuteObserverMiddlewares<TEvent>(IServiceProvider serviceProvider,
+                                                              EventObserverMetadata metadata,
+                                                              TEvent evt,
+                                                              CancellationToken cancellationToken)
             where TEvent : class
         {
-            var attributes = metadata.MiddlewareConfigurationAttributes.ToList();
+            var pipelineBuilder = new EventObserverPipelineBuilder(serviceProvider);
 
-            await ExecuteNextMiddleware(0, evt, cancellationToken);
-
-            async Task ExecuteNextMiddleware(int index, TEvent e, CancellationToken token)
+            if (pipelineConfigurationMethodByObserverType.TryGetValue(metadata.ObserverType, out var configurationMethod))
             {
-                if (index >= attributes.Count)
-                {
-                    await observer.HandleEvent(e, token);
-                    return;
-                }
-
-                var attribute = attributes[index];
-                var invoker = (IEventObserverMiddlewareInvoker)serviceProvider.GetService(typeof(EventObserverMiddlewareInvoker<>).MakeGenericType(attribute.GetType()))!;
-
-                await invoker.Invoke(e, (e2, t) => ExecuteNextMiddleware(index + 1, e2, t), metadata, attribute, serviceProvider, token);
+                configurationMethod(pipelineBuilder);
             }
+
+            var pipeline = pipelineBuilder.Build();
+
+            await pipeline.Execute(serviceProvider, metadata, evt, cancellationToken);
         }
     }
 }
