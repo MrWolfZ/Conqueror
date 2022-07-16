@@ -43,6 +43,21 @@ namespace Conqueror.CQS.CommandHandling
             return this;
         }
 
+        public ICommandPipelineBuilder Without<TMiddleware, TConfiguration>()
+            where TMiddleware : ICommandMiddleware<TConfiguration>
+        {
+            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+            if (index < 0)
+            {
+                return this;
+            }
+            
+            middlewares.RemoveAt(index);
+            
+            return this;
+        }
+
         public ICommandPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : ICommandMiddleware<TConfiguration>
         {

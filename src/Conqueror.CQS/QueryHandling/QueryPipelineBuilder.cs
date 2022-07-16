@@ -43,6 +43,21 @@ namespace Conqueror.CQS.QueryHandling
             return this;
         }
 
+        public IQueryPipelineBuilder Without<TMiddleware, TConfiguration>()
+            where TMiddleware : IQueryMiddleware<TConfiguration>
+        {
+            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+            if (index < 0)
+            {
+                return this;
+            }
+            
+            middlewares.RemoveAt(index);
+            
+            return this;
+        }
+
         public IQueryPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : IQueryMiddleware<TConfiguration>
         {

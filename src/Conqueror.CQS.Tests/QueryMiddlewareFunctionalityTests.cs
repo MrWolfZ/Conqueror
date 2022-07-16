@@ -163,6 +163,37 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenHandlerWithAppliedAndThenRemovedMiddlewareWithConfiguration_MiddlewareIsNotCalled()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
+                        .AddTransient<TestQueryMiddleware>()
+                        .AddTransient<TestQueryMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestQueryMiddleware2>()
+                                        .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                        .Use<TestQueryMiddleware2>()
+                                        .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var query = new TestQuery(10);
+
+            _ = await handler.ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2), typeof(TestQueryMiddleware2) }));
+        }
+
+        [Test]
         public async Task GivenHandlerWithRetryMiddleware_MiddlewaresAreCalledMultipleTimesWithQuery()
         {
             var services = new ServiceCollection();

@@ -256,6 +256,37 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenHandlerWithAppliedAndThenRemovedMiddlewareWithConfiguration_MiddlewareIsNotCalled()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestCommandMiddleware2>()
+                                        .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .Use<TestCommandMiddleware2>()
+                                        .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware2) }));
+        }
+
+        [Test]
         public async Task GivenHandlerWithRetryMiddleware_MiddlewaresAreCalledMultipleTimesWithCommand()
         {
             var services = new ServiceCollection();
