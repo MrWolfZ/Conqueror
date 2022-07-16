@@ -43,6 +43,21 @@ namespace Conqueror.Eventing
             return this;
         }
 
+        public IEventObserverPipelineBuilder Without<TMiddleware, TConfiguration>()
+            where TMiddleware : IEventObserverMiddleware<TConfiguration>
+        {
+            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+            if (index < 0)
+            {
+                return this;
+            }
+            
+            middlewares.RemoveAt(index);
+            
+            return this;
+        }
+
         public IEventObserverPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : IEventObserverMiddleware<TConfiguration>
         {

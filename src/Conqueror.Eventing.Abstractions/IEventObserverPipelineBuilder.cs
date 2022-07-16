@@ -15,6 +15,9 @@ namespace Conqueror.Eventing
         IEventObserverPipelineBuilder Without<TMiddleware>()
             where TMiddleware : IEventObserverMiddleware;
         
+        IEventObserverPipelineBuilder Without<TMiddleware, TConfiguration>()
+            where TMiddleware : IEventObserverMiddleware<TConfiguration>;
+        
         IEventObserverPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : IEventObserverMiddleware<TConfiguration>;
         

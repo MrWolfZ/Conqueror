@@ -569,6 +569,68 @@ namespace Conqueror.Eventing.Tests
         }
 
         [Test]
+        public async Task GivenObserverWithAppliedAndThenRemovedMiddlewareWithConfiguration_MiddlewareIsNotCalledViaDirectObserver()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestEventObserverMiddleware2>()
+                                        .Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
+                                        .Use<TestEventObserverMiddleware2>()
+                                        .Without<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await observer.HandleEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestEventObserverMiddleware2), typeof(TestEventObserverMiddleware2) }));
+        }
+
+        [Test]
+        public async Task GivenObserverWithAppliedAndThenRemovedMiddlewareWithConfiguration_MiddlewareIsNotCalledViaPublisher()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithoutMiddlewares>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddTransient<TestEventObserverMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestEventObserverMiddleware2>()
+                                        .Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
+                                        .Use<TestEventObserverMiddleware2>()
+                                        .Without<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await publisher.PublishEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.EventsFromMiddlewares, Is.EquivalentTo(new[] { evt, evt }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestEventObserverMiddleware2), typeof(TestEventObserverMiddleware2) }));
+        }
+
+        [Test]
         public async Task GivenObserverWithRetryMiddleware_MiddlewaresAreCalledMultipleTimesViaDirectObserver()
         {
             var services = new ServiceCollection();
