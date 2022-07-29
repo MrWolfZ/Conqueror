@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Conqueror.CQS.Tests
 {
     [TestFixture]
-    public sealed class CommandHandlerServiceCollectionConfigurationTests
+    public sealed class CommandServiceCollectionConfigurationTests
     {
         [Test]
         public void GivenMultipleRegisteredIdenticalHandlerTypes_ConfiguringServiceCollectionDoesNotThrow()
@@ -28,7 +28,7 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
         }
-        
+
         [Test]
         public void GivenMultipleRegisteredHandlerTypesForSameCommandAndDifferentResponseTypes_ConfiguringServiceCollectionThrowsInvalidOperationException()
         {
@@ -38,7 +38,7 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
         }
-        
+
         [Test]
         public void GivenMultipleRegisteredHandlerTypesWithoutResponseForSameCommandType_ConfiguringServiceCollectionThrowsInvalidOperationException()
         {
@@ -47,6 +47,29 @@ namespace Conqueror.CQS.Tests
                                                   .AddTransient<DuplicateTestCommandWithoutResponseHandler>();
 
             _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+
+        [Test]
+        public void GivenHandlerTypeWithInstanceFactory_ConfiguringServiceCollectionRecognizesHandler()
+        {
+            var provider = new ServiceCollection().AddConquerorCQS()
+                                                  .AddTransient(_ => new TestCommandHandler())
+                                                  .ConfigureConqueror()
+                                                  .BuildServiceProvider();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
+        }
+
+        [Test]
+        public void GivenMiddlewareTypeWithInstanceFactory_ConfiguringServiceCollectionRecognizesHandler()
+        {
+            var provider = new ServiceCollection().AddConquerorCQS()
+                                                  .AddTransient<TestCommandHandlerWithMiddleware>()
+                                                  .AddTransient(_ => new TestCommandMiddleware())
+                                                  .ConfigureConqueror()
+                                                  .BuildServiceProvider();
+
+            Assert.DoesNotThrowAsync(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new(), CancellationToken.None));
         }
 
         private sealed record TestCommand;
@@ -80,6 +103,23 @@ namespace Conqueror.CQS.Tests
         private sealed class DuplicateTestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
         {
             public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken) => Task.CompletedTask;
+        }
+
+        private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.FromResult(new TestCommandResponse());
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
+        }
+
+        private sealed class TestCommandMiddleware : ICommandMiddleware
+        {
+            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+                where TCommand : class
+            {
+                return await ctx.Next(ctx.Command, ctx.CancellationToken);
+            }
         }
     }
 }

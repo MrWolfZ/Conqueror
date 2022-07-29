@@ -21,6 +21,7 @@ namespace Conqueror.CQS.QueryHandling
         {
             var handlerTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
                                        .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
+                                       .Concat(services.Where(d => !d.ServiceType.IsInterface && !d.ServiceType.IsAbstract && d.ImplementationFactory != null).Select(d => d.ServiceType))
                                        .OfType<Type>()
                                        .Where(t => t.IsAssignableTo(typeof(IQueryHandler)))
                                        .Distinct()
@@ -110,6 +111,7 @@ namespace Conqueror.CQS.QueryHandling
         {
             var middlewareTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
                                           .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
+                                          .Concat(services.Where(d => !d.ServiceType.IsInterface && !d.ServiceType.IsAbstract && d.ImplementationFactory != null).Select(d => d.ServiceType))
                                           .OfType<Type>()
                                           .Where(HasQueryMiddlewareInterface)
                                           .Distinct()
