@@ -1,8 +1,8 @@
 <Project>
 
     <PropertyGroup>
-        <ConquerorVersion>0.1.0-beta.7</ConquerorVersion>
-        <ConquerorAssemblyVersion>0.1.0.7</ConquerorAssemblyVersion>
+        <ConquerorVersion>0.1.0-beta.8</ConquerorVersion>
+        <ConquerorAssemblyVersion>0.1.0.8</ConquerorAssemblyVersion>
     </PropertyGroup>
 
 </Project>
