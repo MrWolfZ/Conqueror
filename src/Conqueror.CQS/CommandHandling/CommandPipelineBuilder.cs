@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
 {
@@ -90,7 +91,7 @@ namespace Conqueror.CQS.CommandHandling
 
         public CommandPipeline Build()
         {
-            return new(middlewares);
+            return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(), middlewares);
         }
     }
 }

@@ -9,10 +9,12 @@ namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class CommandPipeline
     {
+        private readonly CommandContextAccessor commandContextAccessor;
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares;
 
-        public CommandPipeline(IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
+        public CommandPipeline(CommandContextAccessor commandContextAccessor, IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
         {
+            this.commandContextAccessor = commandContextAccessor;
             this.middlewares = middlewares.ToList();
         }
 
@@ -22,20 +24,34 @@ namespace Conqueror.CQS.CommandHandling
                                                                   CancellationToken cancellationToken)
             where TCommand : class
         {
+            var commandContext = new DefaultCommandContext(initialCommand);
+
+            if (commandContextAccessor.CommandContext is { } ctx)
+            {
+                commandContext.TransferrableItems = ctx.TransferrableItems;
+            }
+            
+            commandContextAccessor.CommandContext = commandContext;
+
             return await ExecuteNextMiddleware(0, initialCommand, cancellationToken);
 
             async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, CancellationToken token)
             {
+                commandContext.SetCommand(command);
+
                 if (index >= middlewares.Count)
                 {
                     var handler = serviceProvider.GetRequiredService(metadata.HandlerType);
 
                     if (handler is ICommandHandler<TCommand, TResponse> h)
                     {
-                        return await h.ExecuteCommand(command, token);
+                        var responseFromHandler = await h.ExecuteCommand(command, token);
+                        commandContext.SetResponse(responseFromHandler!);
+                        return responseFromHandler;
                     }
 
                     await ((ICommandHandler<TCommand>)handler).ExecuteCommand(command, token);
+                    commandContext.SetResponse(UnitCommandResponse.Instance);
                     return (TResponse)(object)UnitCommandResponse.Instance;
                 }
 
@@ -43,7 +59,9 @@ namespace Conqueror.CQS.CommandHandling
                 var invokerType = middlewareConfiguration is null ? typeof(CommandMiddlewareInvoker) : typeof(CommandMiddlewareInvoker<>).MakeGenericType(middlewareConfiguration.GetType());
                 var invoker = (ICommandMiddlewareInvoker)Activator.CreateInstance(invokerType)!;
 
-                return await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, t), middlewareType, middlewareConfiguration, serviceProvider, token);
+                var response = await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, t), middlewareType, middlewareConfiguration, serviceProvider, token);
+                commandContext.SetResponse(response!);
+                return response;
             }
         }
     }
