@@ -35,7 +35,7 @@ namespace Conqueror.CQS
         {
             foreach (var p in source)
             {
-                Items.Add(p);
+                Items[p.Key] = p.Value;
             }
         }
 
@@ -47,7 +47,7 @@ namespace Conqueror.CQS
         {
             foreach (var p in source)
             {
-                TransferrableItems.Add(p);
+                TransferrableItems[p.Key] = p.Value;
             }
         }
 

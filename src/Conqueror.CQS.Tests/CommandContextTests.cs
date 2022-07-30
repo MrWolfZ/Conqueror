@@ -16,7 +16,7 @@ namespace Conqueror.CQS.Tests
         {
             var command = new TestCommand(10);
 
-            var handler = GetCommandHandler((cmd, ctx) =>
+            var provider = Setup((cmd, ctx) =>
             {
                 Assert.AreEqual(command, cmd);
                 Assert.IsNotNull(ctx);
@@ -26,7 +26,7 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -34,7 +34,7 @@ namespace Conqueror.CQS.Tests
         {
             var command = new TestCommandWithoutResponse(10);
 
-            var handler = GetCommandHandlerWithoutResponse((cmd, ctx) =>
+            var provider = SetupWithoutResponse((cmd, ctx) =>
             {
                 Assert.AreEqual(command, cmd);
                 Assert.IsNotNull(ctx);
@@ -42,7 +42,7 @@ namespace Conqueror.CQS.Tests
                 Assert.IsNull(ctx.Response);
             });
 
-            await handler.ExecuteCommand(command, CancellationToken.None);
+            await provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -51,7 +51,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var response = new TestCommandResponse(11);
 
-            var handler = GetCommandHandler((_, _) => response, middlewareFn: async (middlewareCtx, ctx, next) =>
+            var provider = Setup((_, _) => response, middlewareFn: async (middlewareCtx, ctx, next) =>
             {
                 Assert.AreEqual(command, middlewareCtx.Command);
                 Assert.IsNotNull(ctx);
@@ -66,7 +66,7 @@ namespace Conqueror.CQS.Tests
                 return resp;
             });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -74,7 +74,7 @@ namespace Conqueror.CQS.Tests
         {
             var command = new TestCommand(10);
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 nestedClassFn: ctx =>
                 {
                     Assert.IsNotNull(ctx);
@@ -83,7 +83,7 @@ namespace Conqueror.CQS.Tests
                 },
                 nestedClassLifetime: ServiceLifetime.Scoped);
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -93,7 +93,7 @@ namespace Conqueror.CQS.Tests
             var modifiedCommand = new TestCommand(11);
             var response = new TestCommandResponse(11);
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (_, ctx) =>
                 {
                     Assert.AreSame(modifiedCommand, ctx!.Command);
@@ -101,7 +101,7 @@ namespace Conqueror.CQS.Tests
                 },
                 middlewareFn: async (_, _, next) => await next(modifiedCommand));
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -111,7 +111,7 @@ namespace Conqueror.CQS.Tests
             var response = new TestCommandResponse(11);
             var modifiedResponse = new TestCommandResponse(12);
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (_, _) => response,
                 middlewareFn: async (middlewareCtx, _2, next) =>
                 {
@@ -125,7 +125,7 @@ namespace Conqueror.CQS.Tests
                     return result;
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -141,7 +141,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var observedContexts = new List<ICommandContext>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     observedContexts.Add(ctx!);
@@ -159,7 +159,7 @@ namespace Conqueror.CQS.Tests
                 middlewareLifetime,
                 nestedClassLifetime);
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedContexts, Has.Count.EqualTo(3));
             Assert.IsNotNull(observedContexts[0]);
@@ -178,7 +178,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var observedContexts = new List<ICommandContext>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     observedContexts.Add(ctx!);
@@ -192,7 +192,7 @@ namespace Conqueror.CQS.Tests
                 handlerLifetime: handlerLifetime,
                 nestedHandlerLifetime: nestedHandlerLifetime);
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedContexts, Has.Count.EqualTo(2));
             Assert.IsNotNull(observedContexts[0]);
@@ -206,7 +206,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var observedContexts = new List<ICommandContext>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     observedContexts.Add(ctx!);
@@ -222,7 +222,7 @@ namespace Conqueror.CQS.Tests
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
                 ctx => observedContexts.Add(ctx!));
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedContexts, Has.Count.EqualTo(3));
             Assert.IsNotNull(observedContexts[0]);
@@ -236,7 +236,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var observedItems = new List<IDictionary<object, object?>>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     observedItems.Add(ctx!.Items);
@@ -251,7 +251,7 @@ namespace Conqueror.CQS.Tests
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
                 ctx => observedItems.Add(ctx!.Items));
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedItems, Has.Count.EqualTo(3));
             Assert.AreSame(observedItems[0], observedItems[1]);
@@ -264,7 +264,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var observedItems = new List<IDictionary<object, object?>>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     observedItems.Add(ctx!.Items);
@@ -276,7 +276,7 @@ namespace Conqueror.CQS.Tests
                     return new(cmd.Payload);
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedItems, Has.Count.EqualTo(2));
             Assert.AreNotSame(observedItems[0], observedItems[1]);
@@ -288,7 +288,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var observedItems = new List<IDictionary<string, string>>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     observedItems.Add(ctx!.TransferrableItems);
@@ -303,7 +303,7 @@ namespace Conqueror.CQS.Tests
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
                 ctx => observedItems.Add(ctx!.TransferrableItems));
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedItems, Has.Count.EqualTo(3));
             Assert.AreSame(observedItems[0], observedItems[1]);
@@ -316,7 +316,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var observedItems = new List<IDictionary<string, string>>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     observedItems.Add(ctx!.TransferrableItems);
@@ -328,7 +328,7 @@ namespace Conqueror.CQS.Tests
                     return new(cmd.Payload);
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedItems, Has.Count.EqualTo(2));
             Assert.AreSame(observedItems[0], observedItems[1]);
@@ -341,7 +341,7 @@ namespace Conqueror.CQS.Tests
             var items = new Dictionary<object, object?> { { new object(), new object() } };
             var observedKeys = new List<object>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     ctx!.AddItems(items);
@@ -358,7 +358,38 @@ namespace Conqueror.CQS.Tests
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
                 ctx => observedKeys.AddRange(ctx!.Items.Keys));
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedKeys, Has.Count.EqualTo(2));
+            Assert.AreSame(observedKeys[0], observedKeys[1]);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSourceWithDuplicates()
+        {
+            var command = new TestCommand(10);
+            var items = new Dictionary<object, object?> { { new object(), new object() } };
+            var observedKeys = new List<object>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    ctx!.AddItems(items);
+                    return new(cmd.Payload);
+                },
+                (cmd, _) => new(cmd.Payload),
+                async (middlewareCtx, ctx, next) =>
+                {
+                    observedKeys.AddRange(ctx!.Items.Keys);
+                    ctx.AddItems(items);
+                    var r = await next(middlewareCtx.Command);
+                    observedKeys.AddRange(ctx.Items.Keys);
+                    return r;
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Command),
+                ctx => observedKeys.AddRange(ctx!.Items.Keys));
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedKeys, Has.Count.EqualTo(2));
             Assert.AreSame(observedKeys[0], observedKeys[1]);
@@ -371,7 +402,7 @@ namespace Conqueror.CQS.Tests
             var key = new object();
             var observedItems = new List<object?>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     ctx!.Items[key] = key;
@@ -388,7 +419,7 @@ namespace Conqueror.CQS.Tests
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
                 ctx => observedItems.Add(ctx!.Items.TryGetValue(key, out var k) ? k : null));
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedItems, Has.Count.EqualTo(3));
             Assert.IsNull(observedItems[0]);
@@ -403,7 +434,7 @@ namespace Conqueror.CQS.Tests
             var key = new object();
             var items = new Dictionary<object, object?> { { key, new object() } };
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     ctx!.AddItems(items);
@@ -415,7 +446,7 @@ namespace Conqueror.CQS.Tests
                     return new(cmd.Payload);
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -424,7 +455,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var key = new object();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     ctx!.Items[key] = key;
@@ -436,7 +467,7 @@ namespace Conqueror.CQS.Tests
                     return new(cmd.Payload);
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -446,7 +477,7 @@ namespace Conqueror.CQS.Tests
             var key = new object();
             var items = new Dictionary<object, object?> { { key, new object() } };
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 nestedHandlerFn: (cmd, ctx) =>
                 {
                     ctx!.AddItems(items);
@@ -460,7 +491,7 @@ namespace Conqueror.CQS.Tests
                     return r;
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -469,7 +500,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var key = new object();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 nestedHandlerFn: (cmd, ctx) =>
                 {
                     ctx!.Items[key] = key;
@@ -483,7 +514,7 @@ namespace Conqueror.CQS.Tests
                     return r;
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -493,7 +524,7 @@ namespace Conqueror.CQS.Tests
             var items = new Dictionary<string, string> { { "key", "value" } };
             var observedKeys = new List<string>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     ctx!.AddTransferrableItems(items);
@@ -510,7 +541,38 @@ namespace Conqueror.CQS.Tests
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
                 ctx => observedKeys.AddRange(ctx!.TransferrableItems.Keys));
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedKeys, Has.Count.EqualTo(2));
+            Assert.AreSame(observedKeys[0], observedKeys[1]);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_ContextTransferrableItemsCanBeAddedFromSourceWithDuplicates()
+        {
+            var command = new TestCommand(10);
+            var items = new Dictionary<string, string> { { "key", "value" } };
+            var observedKeys = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    ctx!.AddTransferrableItems(items);
+                    return new(cmd.Payload);
+                },
+                (cmd, _) => new(cmd.Payload),
+                async (middlewareCtx, ctx, next) =>
+                {
+                    observedKeys.AddRange(ctx!.TransferrableItems.Keys);
+                    ctx.AddTransferrableItems(items);
+                    var r = await next(middlewareCtx.Command);
+                    observedKeys.AddRange(ctx.TransferrableItems.Keys);
+                    return r;
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Command),
+                ctx => observedKeys.AddRange(ctx!.TransferrableItems.Keys));
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedKeys, Has.Count.EqualTo(2));
             Assert.AreSame(observedKeys[0], observedKeys[1]);
@@ -523,7 +585,7 @@ namespace Conqueror.CQS.Tests
             var key = "test";
             var observedItems = new List<string?>();
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     ctx!.TransferrableItems[key] = key;
@@ -540,7 +602,7 @@ namespace Conqueror.CQS.Tests
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
                 ctx => observedItems.Add(ctx!.TransferrableItems.TryGetValue(key, out var k) ? k : null));
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedItems, Has.Count.EqualTo(3));
             Assert.IsNull(observedItems[0]);
@@ -555,7 +617,7 @@ namespace Conqueror.CQS.Tests
             var key = "key";
             var items = new Dictionary<string, string> { { key, "value" } };
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     ctx!.AddTransferrableItems(items);
@@ -567,7 +629,7 @@ namespace Conqueror.CQS.Tests
                     return new(cmd.Payload);
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -576,7 +638,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var key = "test";
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 (cmd, ctx) =>
                 {
                     ctx!.TransferrableItems[key] = key;
@@ -588,7 +650,7 @@ namespace Conqueror.CQS.Tests
                     return new(cmd.Payload);
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -598,7 +660,7 @@ namespace Conqueror.CQS.Tests
             var key = "key";
             var items = new Dictionary<string, string> { { key, "value" } };
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 nestedHandlerFn: (cmd, ctx) =>
                 {
                     ctx!.AddTransferrableItems(items);
@@ -612,7 +674,7 @@ namespace Conqueror.CQS.Tests
                     return r;
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -621,7 +683,7 @@ namespace Conqueror.CQS.Tests
             var command = new TestCommand(10);
             var key = "test";
 
-            var handler = GetCommandHandler(
+            var provider = Setup(
                 nestedHandlerFn: (cmd, ctx) =>
                 {
                     ctx!.TransferrableItems[key] = key;
@@ -635,7 +697,7 @@ namespace Conqueror.CQS.Tests
                     return r;
                 });
 
-            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
@@ -650,16 +712,152 @@ namespace Conqueror.CQS.Tests
             provider.GetRequiredService<NestedClass>().Execute();
         }
 
+        [Test]
+        public async Task GivenClientContextItems_ContextItemsAreAvailableInHandler()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                Assert.IsFalse(ctx!.Items.ContainsKey(key));
+                Assert.AreEqual(value, ctx.TransferrableItems[key]);
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            clientContext.Items[key] = value;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenClientContextItems_ContextItemsAreAvailableInNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
+            {
+                Assert.IsFalse(ctx!.Items.ContainsKey(key));
+                Assert.AreEqual(value, ctx.TransferrableItems[key]);
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            clientContext.Items[key] = value;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenClientContextItems_ContextItemsAreNotOverwrittenForNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+            var newValue = "newValue";
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    Assert.AreEqual(value, ctx!.TransferrableItems[key]);
+                    ctx.TransferrableItems[key] = newValue;
+                    return new(cmd.Payload);
+                },
+                (cmd, ctx) =>
+                {
+                    Assert.AreEqual(newValue, ctx!.TransferrableItems[key]);
+                    return new(cmd.Payload);
+                });
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            clientContext.Items[key] = value;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenClientContext_ItemsFromHandlerAreNotAvailableInClientContext()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                ctx!.Items[key] = value;
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            clientContext.CaptureResponseItems();
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.IsFalse(clientContext.ResponseItems.ContainsKey(key));
+        }
+
+        [Test]
+        public async Task GivenClientContext_TransferrableItemsFromHandlerAreAvailableInClientContext()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                ctx!.TransferrableItems[key] = value;
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            clientContext.CaptureResponseItems();
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.AreEqual(value, clientContext.ResponseItems[key]);
+        }
+
+        [Test]
+        public async Task GivenClientContext_TransferrableItemsFromHandlerAreNotAvailableInClientContextIfNotCaptured()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                ctx!.TransferrableItems[key] = value;
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            clientContext.Items[key] = value;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.IsFalse(clientContext.ResponseItems.ContainsKey(key));
+        }
+
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-        private ICommandHandler<TestCommand, TestCommandResponse> GetCommandHandler(Func<TestCommand, ICommandContext?, TestCommandResponse>? handlerFn = null,
-                                                                                    Func<NestedTestCommand, ICommandContext?, NestedTestCommandResponse>? nestedHandlerFn = null,
-                                                                                    MiddlewareFn? middlewareFn = null,
-                                                                                    MiddlewareFn? outerMiddlewareFn = null,
-                                                                                    Action<ICommandContext?>? nestedClassFn = null,
-                                                                                    ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
-                                                                                    ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
-                                                                                    ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
-                                                                                    ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
+        private IServiceProvider Setup(Func<TestCommand, ICommandContext?, TestCommandResponse>? handlerFn = null,
+                                       Func<NestedTestCommand, ICommandContext?, NestedTestCommandResponse>? nestedHandlerFn = null,
+                                       MiddlewareFn? middlewareFn = null,
+                                       MiddlewareFn? outerMiddlewareFn = null,
+                                       Action<ICommandContext?>? nestedClassFn = null,
+                                       ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
+                                       ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
+                                       ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
+                                       ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
         {
             handlerFn ??= (cmd, _) => new(cmd.Payload);
             nestedHandlerFn ??= (cmd, _) => new(cmd.Payload);
@@ -697,16 +895,16 @@ namespace Conqueror.CQS.Tests
             _ = provider.GetRequiredService<TestCommandMiddleware>();
             _ = provider.GetRequiredService<OuterTestCommandMiddleware>();
 
-            return provider.CreateScope().ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            return provider.CreateScope().ServiceProvider;
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-        private ICommandHandler<TestCommandWithoutResponse> GetCommandHandlerWithoutResponse(Action<TestCommandWithoutResponse, ICommandContext?>? handlerFn = null,
-                                                                                             MiddlewareFn? middlewareFn = null,
-                                                                                             Action<ICommandContext?>? nestedClassFn = null,
-                                                                                             ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
-                                                                                             ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
-                                                                                             ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
+        private IServiceProvider SetupWithoutResponse(Action<TestCommandWithoutResponse, ICommandContext?>? handlerFn = null,
+                                                      MiddlewareFn? middlewareFn = null,
+                                                      Action<ICommandContext?>? nestedClassFn = null,
+                                                      ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
+                                                      ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
+                                                      ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
         {
             handlerFn ??= (_, _) => { };
             middlewareFn ??= (middlewareCtx, _, next) => next(middlewareCtx.Command);
@@ -730,7 +928,7 @@ namespace Conqueror.CQS.Tests
             _ = provider.GetRequiredService<TestCommandHandlerWithoutResponse>();
             _ = provider.GetRequiredService<TestCommandMiddleware>();
 
-            return provider.CreateScope().ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+            return provider.CreateScope().ServiceProvider;
         }
 
         private delegate Task<TestCommandResponse> MiddlewareFn(CommandMiddlewareContext<TestCommand, TestCommandResponse> middlewareCtx,

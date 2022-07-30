@@ -9,12 +9,16 @@ namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class CommandPipeline
     {
+        private readonly CommandClientContext commandClientContext;
         private readonly CommandContextAccessor commandContextAccessor;
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares;
 
-        public CommandPipeline(CommandContextAccessor commandContextAccessor, IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
+        public CommandPipeline(CommandContextAccessor commandContextAccessor,
+                               CommandClientContext commandClientContext,
+                               IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
         {
             this.commandContextAccessor = commandContextAccessor;
+            this.commandClientContext = commandClientContext;
             this.middlewares = middlewares.ToList();
         }
 
@@ -30,10 +34,21 @@ namespace Conqueror.CQS.CommandHandling
             {
                 commandContext.TransferrableItems = ctx.TransferrableItems;
             }
-            
+            else if (commandClientContext.HasItems)
+            {
+                ((ICommandContext)commandContext).AddTransferrableItems(commandClientContext.Items);
+            }
+
             commandContextAccessor.CommandContext = commandContext;
 
-            return await ExecuteNextMiddleware(0, initialCommand, cancellationToken);
+            var finalResponse = await ExecuteNextMiddleware(0, initialCommand, cancellationToken);
+
+            if (commandClientContext.CaptureIsEnabled)
+            {
+                commandClientContext.AddResponseItems(commandContext.TransferrableItems);
+            }
+
+            return finalResponse;
 
             async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, CancellationToken token)
             {

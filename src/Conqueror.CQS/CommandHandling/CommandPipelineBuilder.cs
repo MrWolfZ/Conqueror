@@ -91,7 +91,7 @@ namespace Conqueror.CQS.CommandHandling
 
         public CommandPipeline Build()
         {
-            return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(), middlewares);
+            return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(), ServiceProvider.GetRequiredService<CommandClientContext>(), middlewares);
         }
     }
 }
