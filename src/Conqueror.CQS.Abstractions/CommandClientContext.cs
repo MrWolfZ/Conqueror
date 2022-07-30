@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 
-namespace Conqueror.CQS.CommandHandling
+namespace Conqueror.CQS
 {
     /// <inheritdoc />
     internal sealed class CommandClientContext : ICommandClientContext
