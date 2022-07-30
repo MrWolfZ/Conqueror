@@ -26,102 +26,74 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         };
 
         [Test]
-        public async Task GivenClientContextCaptureEnabledAndTransferrableCommandContextItemsInHandler_ItemsAreReturnedInClientContext()
+        public async Task GivenClientContextAndTransferrableCommandContextItemsInHandler_ItemsAreReturnedInClientContext()
         {
             Resolve<TestObservations>().ShouldAddTransferrableItems = true;
 
             var clientContext = ResolveOnClient<ICommandClientContext>();
 
-            clientContext.CaptureResponseItems();
+            var responseItems = clientContext.Activate();
 
             var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
 
             _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-            CollectionAssert.AreEquivalent(ContextItems, clientContext.ResponseItems);
+            CollectionAssert.AreEquivalent(ContextItems, responseItems);
         }
 
         [Test]
-        public async Task GivenClientContextCaptureEnabledAndTransferrableCommandContextItemsInHandlerWithoutResponse_ItemsAreReturnedInClientContext()
+        public async Task GivenClientContextAndTransferrableCommandContextItemsInHandlerWithoutResponse_ItemsAreReturnedInClientContext()
         {
             Resolve<TestObservations>().ShouldAddTransferrableItems = true;
 
             var clientContext = ResolveOnClient<ICommandClientContext>();
 
-            clientContext.CaptureResponseItems();
+            var responseItems = clientContext.Activate();
 
             var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
 
             await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-            CollectionAssert.AreEquivalent(ContextItems, clientContext.ResponseItems);
+            CollectionAssert.AreEquivalent(ContextItems, responseItems);
         }
 
         [Test]
-        public async Task GivenClientContextCaptureEnabledAndNonTransferrableCommandContextItemsInHandler_ItemsAreNotReturnedInClientContext()
+        public async Task GivenClientContextAndNonTransferrableCommandContextItemsInHandler_ItemsAreNotReturnedInClientContext()
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
             var clientContext = ResolveOnClient<ICommandClientContext>();
 
-            clientContext.CaptureResponseItems();
+            var responseItems = clientContext.Activate();
 
             var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
 
             _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-            Assert.That(clientContext.ResponseItems, Is.Empty);
+            Assert.That(responseItems, Is.Empty);
         }
 
         [Test]
-        public async Task GivenClientContextCaptureEnabledAndNonTransferrableCommandContextItemsInHandlerWithoutResponse_ItemsAreNotReturnedInClientContext()
+        public async Task GivenClientContextAndNonTransferrableCommandContextItemsInHandlerWithoutResponse_ItemsAreNotReturnedInClientContext()
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
             var clientContext = ResolveOnClient<ICommandClientContext>();
 
-            clientContext.CaptureResponseItems();
+            var responseItems = clientContext.Activate();
 
             var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
 
             await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-            Assert.That(clientContext.ResponseItems, Is.Empty);
-        }
-
-        [Test]
-        public async Task GivenClientContextCaptureIsNotEnabledAndTransferrableCommandContextItemsInHandler_ItemsAreNotReturnedInClientContext()
-        {
-            Resolve<TestObservations>().ShouldAddTransferrableItems = true;
-
-            var clientContext = ResolveOnClient<ICommandClientContext>();
-
-            var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
-
-            Assert.That(clientContext.ResponseItems, Is.Empty);
-        }
-
-        [Test]
-        public async Task GivenClientContextCaptureIsNotEnabledAndTransferrableCommandContextItemsInHandlerWithoutResponse_ItemsAreNotReturnedInClientContext()
-        {
-            Resolve<TestObservations>().ShouldAddTransferrableItems = true;
-
-            var clientContext = ResolveOnClient<ICommandClientContext>();
-
-            var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
-
-            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
-
-            Assert.That(clientContext.ResponseItems, Is.Empty);
+            Assert.That(responseItems, Is.Empty);
         }
 
         [Test]
         public async Task GivenClientContextItems_ContextIsReceivedInHandler()
         {
-            var clientContext = ResolveOnClient<ICommandClientContext>();
-            clientContext.Items.SetRange(ContextItems);
+            var clientContextItems = ResolveOnClient<ICommandClientContext>().Activate();
+            clientContextItems.SetRange(ContextItems);
 
             var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -133,10 +105,43 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         }
 
         [Test]
+        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+        public async Task GivenClientContextItems_ContextIsReceivedInHandlerAcrossMultipleInvocations()
+        {
+            var clientContextItems = ResolveOnClient<ICommandClientContext>().Activate();
+            clientContextItems.Add(ContextItems.First());
+
+            var observations = Resolve<TestObservations>();
+
+            observations.ShouldAddTransferrableItems = true;
+
+            var allReceivedKeys = new List<string>();
+
+            var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextItems.Count * 2 + 1));
+        }
+
+        [Test]
         public async Task GivenClientContextItems_ContextIsReceivedInHandlerWithoutResponse()
         {
-            var clientContext = ResolveOnClient<ICommandClientContext>();
-            clientContext.Items.SetRange(ContextItems);
+            var clientContextItems = ResolveOnClient<ICommandClientContext>().Activate();
+            clientContextItems.SetRange(ContextItems);
 
             var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -145,6 +150,73 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
             var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
 
             CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+        }
+
+        [Test]
+        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+        public async Task GivenClientContextItems_ContextIsReceivedInHandlerWithoutResponseAcrossMultipleInvocations()
+        {
+            var clientContextItems = ResolveOnClient<ICommandClientContext>().Activate();
+            clientContextItems.Add(ContextItems.First());
+
+            var observations = Resolve<TestObservations>();
+
+            observations.ShouldAddTransferrableItems = true;
+
+            var allReceivedKeys = new List<string>();
+
+            var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+
+            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextItems.Count * 2 + 1));
+        }
+
+        [Test]
+        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+        public async Task GivenClientContextItems_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
+        {
+            var clientContextItems = ResolveOnClient<ICommandClientContext>().Activate();
+            clientContextItems.Add(ContextItems.First());
+
+            var observations = Resolve<TestObservations>();
+
+            observations.ShouldAddTransferrableItems = true;
+
+            var allReceivedKeys = new List<string>();
+
+            var handler1 = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+            var handler2 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            _ = await handler2.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextItems.Count * 2 + 1));
         }
 
         [Test]
@@ -400,7 +472,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
             private readonly ICommandHandler<TestCommandWithoutResponse> nestedHandler;
             private readonly TestObservations testObservations;
 
-            public OuterTestCommandWithoutResponseHandler(ICommandContextAccessor commandContextAccessor, 
+            public OuterTestCommandWithoutResponseHandler(ICommandContextAccessor commandContextAccessor,
                                                           TestObservations testObservations,
                                                           ICommandHandler<TestCommandWithoutResponse> nestedHandler)
             {

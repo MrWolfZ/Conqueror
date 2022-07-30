@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Conqueror.CQS
@@ -8,41 +9,49 @@ namespace Conqueror.CQS
     {
         private static readonly AsyncLocal<CommandClientContextHolder> ContextCurrent = new();
 
-        /// <inheritdoc />
-        public IDictionary<string, string> Items => ContextHolder.Items;
+        public bool HasItems => IsActive && ContextCurrent.Value!.Items.Count > 0;
 
-        /// <inheritdoc />
-        public IReadOnlyDictionary<string, string> ResponseItems => ContextHolder.ResponseItems;
-        
-        // null check to prevent unnecessary creation of async local
-        public bool HasItems => ContextCurrent.Value != null && ContextHolder.Items.Count > 0;
-        
-        // null check to prevent unnecessary creation of async local
-        public bool CaptureIsEnabled => ContextCurrent.Value != null && ContextHolder.CaptureIsEnabled;
-
-        private CommandClientContextHolder ContextHolder => ContextCurrent.Value ?? (ContextCurrent.Value = new());
-
-        /// <inheritdoc />
-        public void CaptureResponseItems()
+        public IDictionary<string, string> GetItems()
         {
-            ContextHolder.CaptureIsEnabled = true;
+            if (!IsActive)
+            {
+                throw new InvalidOperationException("client context is not active");
+            }
+            
+            return ContextCurrent.Value!.Items;
         }
 
-        public void AddResponseItems(IEnumerable<KeyValuePair<string, string>> source)
+        /// <inheritdoc />
+        public IDictionary<string, string> Activate()
         {
+            if (IsActive)
+            {
+                throw new InvalidOperationException("client context is already active");
+            }
+            
+            ContextCurrent.Value = new();
+            return ContextCurrent.Value.Items;
+        }
+
+        /// <inheritdoc />
+        public bool IsActive => ContextCurrent.Value != null;
+
+        public void SetItems(IEnumerable<KeyValuePair<string, string>> source)
+        {
+            if (!IsActive)
+            {
+                throw new InvalidOperationException("client context is not active");
+            }
+            
             foreach (var p in source)
             {
-                ContextHolder.ResponseItems[p.Key] = p.Value;
+                ContextCurrent.Value!.Items[p.Key] = p.Value;
             }
         }
 
         private sealed class CommandClientContextHolder
         {
-            public bool CaptureIsEnabled { get; set; }
-            
             public Dictionary<string, string> Items { get; } = new();
-
-            public Dictionary<string, string> ResponseItems { get; } = new();
         }
     }
 }

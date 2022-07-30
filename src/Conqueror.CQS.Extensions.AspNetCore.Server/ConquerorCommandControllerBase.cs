@@ -76,7 +76,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
         protected async Task<TResponse> ExecuteCommandWithContext<TResponse>(Func<Task<TResponse>> executeFn)
         {
             var commandClientContext = Request.HttpContext.RequestServices.GetRequiredService<ICommandClientContext>();
-            commandClientContext.CaptureResponseItems();
+            var clientContextItems = commandClientContext.Activate();
 
             if (Request.Headers.TryGetValue(HttpConstants.CommandContextHeaderName, out var values))
             {
@@ -86,7 +86,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
 
                     foreach (var (key, value) in parsedValue)
                     {
-                        commandClientContext.Items[key] = value;
+                        clientContextItems[key] = value;
                     }
                 }
                 catch
@@ -97,9 +97,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
 
             var response = await executeFn();
 
-            if (commandClientContext.ResponseItems.Count > 0)
+            if (clientContextItems.Count > 0)
             {
-                Response.Headers.Add(HttpConstants.CommandContextHeaderName, ContextValueFormatter.Format(commandClientContext.ResponseItems));
+                Response.Headers.Add(HttpConstants.CommandContextHeaderName, ContextValueFormatter.Format(clientContextItems));
             }
 
             return response;

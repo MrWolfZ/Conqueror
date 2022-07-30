@@ -36,16 +36,16 @@ namespace Conqueror.CQS.CommandHandling
             }
             else if (commandClientContext.HasItems)
             {
-                ((ICommandContext)commandContext).AddTransferrableItems(commandClientContext.Items);
+                ((ICommandContext)commandContext).AddTransferrableItems(commandClientContext.GetItems());
             }
 
             commandContextAccessor.CommandContext = commandContext;
 
             var finalResponse = await ExecuteNextMiddleware(0, initialCommand, cancellationToken);
 
-            if (commandClientContext.CaptureIsEnabled)
+            if (commandClientContext.IsActive)
             {
-                commandClientContext.AddResponseItems(commandContext.TransferrableItems);
+                commandClientContext.SetItems(commandContext.TransferrableItems);
             }
             
             commandContextAccessor.ClearContext();

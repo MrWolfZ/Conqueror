@@ -760,7 +760,7 @@ namespace Conqueror.CQS.Tests
 
             var clientContext = provider.GetRequiredService<ICommandClientContext>();
 
-            clientContext.Items[key] = value;
+            clientContext.Activate()[key] = value;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
@@ -781,7 +781,7 @@ namespace Conqueror.CQS.Tests
 
             var clientContext = provider.GetRequiredService<ICommandClientContext>();
 
-            clientContext.Items[key] = value;
+            clientContext.Activate()[key] = value;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
@@ -809,7 +809,7 @@ namespace Conqueror.CQS.Tests
 
             var clientContext = provider.GetRequiredService<ICommandClientContext>();
 
-            clientContext.Items[key] = value;
+            clientContext.Activate()[key] = value;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
@@ -829,11 +829,11 @@ namespace Conqueror.CQS.Tests
 
             var clientContext = provider.GetRequiredService<ICommandClientContext>();
 
-            clientContext.CaptureResponseItems();
+            var contextItems = clientContext.Activate();
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
-            Assert.IsFalse(clientContext.ResponseItems.ContainsKey(key));
+            Assert.IsFalse(contextItems.ContainsKey(key));
         }
 
         [Test]
@@ -851,17 +851,16 @@ namespace Conqueror.CQS.Tests
 
             var clientContext = provider.GetRequiredService<ICommandClientContext>();
 
-            clientContext.CaptureResponseItems();
+            var contextItems = clientContext.Activate();
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
-            Assert.AreEqual(value, clientContext.ResponseItems[key]);
+            Assert.AreEqual(value, contextItems[key]);
         }
 
         [Test]
-        public async Task GivenClientContext_TransferrableItemsFromHandlerAreNotAvailableInClientContextIfNotCaptured()
+        public void GivenExistingClientContext_ActivatingContextAgainThrowsException()
         {
-            var command = new TestCommand(10);
             var key = "key";
             var value = "value";
 
@@ -873,11 +872,76 @@ namespace Conqueror.CQS.Tests
 
             var clientContext = provider.GetRequiredService<ICommandClientContext>();
 
-            clientContext.Items[key] = value;
+            _ = clientContext.Activate();
+
+            _ = Assert.Throws<InvalidOperationException>(() => clientContext.Activate());
+        }
+
+        [Test]
+        public async Task GivenNoActiveClientContext_ExecutingCommandDoesNotCreateContext()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                ctx!.TransferrableItems[key] = value;
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<CommandClientContext>();
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
-            Assert.IsFalse(clientContext.ResponseItems.ContainsKey(key));
+            Assert.IsFalse(clientContext.IsActive);
+        }
+
+        [Test]
+        public async Task GivenClientContextItems_ContextItemsFlowAcrossMultipleHandlerExecutions()
+        {
+            var command = new TestCommand(10);
+            var invocationCount = 0;
+            var key1 = "key 1";
+            var key2 = "key 2";
+            var value1 = "value 1";
+            var value2 = "value 2";
+            var value3 = "value 3";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                if (invocationCount == 0)
+                {
+                    Assert.AreEqual(value1, ctx!.TransferrableItems[key1]);
+                    Assert.IsFalse(ctx.TransferrableItems.ContainsKey(key2));
+                    ctx.TransferrableItems[key2] = value2;
+                }
+                else if (invocationCount == 1)
+                {
+                    Assert.AreEqual(value1, ctx!.TransferrableItems[key1]);
+                    Assert.AreEqual(value2, ctx.TransferrableItems[key2]);
+                    ctx.TransferrableItems[key1] = value3;
+                }
+                else if (invocationCount == 2)
+                {
+                    Assert.AreEqual(value3, ctx!.TransferrableItems[key1]);
+                    Assert.AreEqual(value2, ctx.TransferrableItems[key2]);
+                }
+
+                invocationCount += 1;
+
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            clientContext.Activate()[key1] = value1;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+            
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+            
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]

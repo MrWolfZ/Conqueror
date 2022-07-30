@@ -41,7 +41,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
 
             if (commandClientContext.HasItems)
             {
-                contextItems.SetRange(commandClientContext.Items);
+                contextItems.SetRange(commandClientContext.GetItems());
             }
 
             contextItems.SetRange(commandContextAccessor?.CommandContext?.TransferrableItems ?? Enumerable.Empty<KeyValuePair<string, string>>());
@@ -65,9 +65,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             {
                 var parsedContextItems = ContextValueFormatter.Parse(values);
 
-                if (commandClientContext.CaptureIsEnabled)
+                if (commandClientContext.IsActive)
                 {
-                    commandClientContext.AddResponseItems(parsedContextItems);
+                    commandClientContext.SetItems(parsedContextItems);
                 }
 
                 if (commandContextAccessor?.CommandContext is { } ctx)
@@ -105,7 +105,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
 
             if (commandClientContext.HasItems)
             {
-                contextItems.SetRange(commandClientContext.Items);
+                contextItems.SetRange(commandClientContext.GetItems());
             }
 
             contextItems.SetRange(commandContextAccessor?.CommandContext?.TransferrableItems ?? Enumerable.Empty<KeyValuePair<string, string>>());
@@ -129,9 +129,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             {
                 var parsedContextItems = ContextValueFormatter.Parse(values);
 
-                if (commandClientContext.CaptureIsEnabled)
+                if (commandClientContext.IsActive)
                 {
-                    commandClientContext.AddResponseItems(parsedContextItems);
+                    commandClientContext.SetItems(parsedContextItems);
                 }
 
                 if (commandContextAccessor?.CommandContext is { } ctx)

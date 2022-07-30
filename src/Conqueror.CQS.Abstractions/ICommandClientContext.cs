@@ -8,21 +8,17 @@ namespace Conqueror.CQS
     public interface ICommandClientContext
     {
         /// <summary>
-        ///     Gets a key/value collection that can be used to set contextual data for a command execution. The
-        ///     data will flow across transport boundaries.
+        ///     Makes the command client context active. The returned key/value collection can be used
+        ///     to share contextual data for command executions. Command executions will have access to
+        ///     the items and can also update the items with their own contextual response information.
+        ///     The context can be used for multiple successive command executions, and contextual data
+        ///     will flow across them. The data will also flow across transport boundaries (e.g HTTP).
         /// </summary>
-        IDictionary<string, string> Items { get; }
+        IDictionary<string, string> Activate();
         
         /// <summary>
-        ///     Gets a key/value collection that contains contextual response data from a command execution. Note
-        ///     that this collection will only be populated if <see cref="CaptureResponseItems" /> was called before
-        ///     the command execution.
+        ///     Returns whether the command client context is currently active.
         /// </summary>
-        IReadOnlyDictionary<string, string> ResponseItems { get; }
-
-        /// <summary>
-        ///     Signals to the context that it should capture contextual response data from a command execution.
-        /// </summary>
-        void CaptureResponseItems();
+        bool IsActive { get; }
     }
 }
