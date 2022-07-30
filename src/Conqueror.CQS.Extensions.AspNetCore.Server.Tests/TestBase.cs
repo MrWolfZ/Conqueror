@@ -60,7 +60,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
         public void TearDown()
         {
             host?.Dispose();
-            HttpClient.Dispose();
+            client?.Dispose();
         }
 
         protected abstract void ConfigureServices(IServiceCollection services);

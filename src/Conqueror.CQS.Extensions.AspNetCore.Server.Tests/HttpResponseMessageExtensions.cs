@@ -29,5 +29,26 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
                 }
             }
         }
+        
+        public static async Task AssertSuccessStatusCode(this HttpResponseMessage response)
+        {
+            if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
+            {
+                throw new($"expected response to have success status but it had {response.StatusCode}\nproblem details:\n{await FormatResponse()}");
+
+                async Task<string> FormatResponse()
+                {
+                    try
+                    {
+                        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+                        return $"title: {problemDetails?.Title}\ndetail: {problemDetails?.Detail}\nextensions: {JsonSerializer.Serialize(problemDetails?.Extensions)}";
+                    }
+                    catch
+                    {
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                }
+            }
+        }
     }
 }
