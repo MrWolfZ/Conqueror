@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -134,7 +135,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
-                testObservations.AddItems(commandContextAccessor.CommandContext!.TransferrableItems);
+                testObservations.ReceivedContextItems.SetRange(commandContextAccessor.CommandContext!.TransferrableItems);
 
                 if (testObservations.ShouldAddItems)
                 {
@@ -163,7 +164,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
             public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
             {
-                testObservations.AddItems(commandContextAccessor.CommandContext!.TransferrableItems);
+                testObservations.ReceivedContextItems.SetRange(commandContextAccessor.CommandContext!.TransferrableItems);
 
                 if (testObservations.ShouldAddItems)
                 {
@@ -192,7 +193,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
             public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken)
             {
-                testObservations.AddItems(commandContextAccessor.CommandContext!.TransferrableItems);
+                testObservations.ReceivedContextItems.SetRange(commandContextAccessor.CommandContext!.TransferrableItems);
 
                 if (testObservations.ShouldAddItems)
                 {
@@ -221,7 +222,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
             public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken)
             {
-                testObservations.AddItems(commandContextAccessor.CommandContext!.TransferrableItems);
+                testObservations.ReceivedContextItems.SetRange(commandContextAccessor.CommandContext!.TransferrableItems);
 
                 if (testObservations.ShouldAddItems)
                 {
@@ -244,14 +245,6 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
             public bool ShouldAddTransferrableItems { get; set; }
 
             public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
-
-            public void AddItems(IEnumerable<KeyValuePair<string, string>> source)
-            {
-                foreach (var p in source)
-                {
-                    ReceivedContextItems[p.Key] = p.Value;
-                }
-            }
         }
     }
 }
