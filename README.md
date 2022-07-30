@@ -15,9 +15,9 @@ A set of libraries to powercharge your .NET development.
 - validate pipeline configuration method signature
 - pass through custom interface extra methods to backing instance
 - add support for .NET standard 2.0
-- allow accessing command and query context via accessor interface (async local)
-  - add trace IDs to commands and query contexts
-    - integrate trace ID from ASP Core if using HTTP package
+- allow accessing query context via accessor interface (async local)
+- add trace IDs to commands and query contexts
+  - integrate trace ID from ASP Core if using HTTP package
 - allow registering all custom interfaces in assembly as HTTP client (allow specifying options for all those clients)
 - pull some logic for HTTP into a `Http.Common` package
   - for example default strategy for routes
@@ -35,6 +35,8 @@ A set of libraries to powercharge your .NET development.
   - null properties
   - null GET parameters
   - throw error on double http service registration
+- http server edge cases
+  - throw error when duplicate command name is found
 
 - for some features provide code snippets in documentation instead of library (e.g. common middlewares etc.)
 - create `Conqueror` and `Conqueror.Abstractions` entry packages that combine CQS and Eventing
