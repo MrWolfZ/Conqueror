@@ -14,6 +14,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
     {
         private HttpClient? client;
         private IHost? host;
+        private ServiceProvider? clientServiceProvider;
 
         protected HttpClient HttpClient
         {
@@ -41,6 +42,19 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
             }
         }
 
+        protected IServiceProvider ClientServiceProvider
+        {
+            get
+            {
+                if (clientServiceProvider == null)
+                {
+                    throw new InvalidOperationException("test fixture must be initialized before using client service provider");
+                }
+
+                return clientServiceProvider;
+            }
+        }
+
         [SetUp]
         public async Task SetUp()
         {
@@ -54,13 +68,18 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
             host = await hostBuilder.StartAsync();
             client = host.GetTestClient();
+            
+            var services = new ServiceCollection();
+            ConfigureClientServices(services);
+            clientServiceProvider = services.BuildServiceProvider();
         }
 
         [TearDown]
         public void TearDown()
         {
             host?.Dispose();
-            HttpClient.Dispose();
+            client?.Dispose();
+            clientServiceProvider?.Dispose();
         }
 
         protected abstract void ConfigureServerServices(IServiceCollection services);
@@ -75,10 +94,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         protected T ResolveOnClient<T>()
             where T : notnull
         {
-            var services = new ServiceCollection();
-            ConfigureClientServices(services);
-            var provider = services.BuildServiceProvider();
-            return provider.GetRequiredService<T>();
+            return ClientServiceProvider.GetRequiredService<T>();
         }
     }
 }

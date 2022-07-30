@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using Conqueror.Common;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
 {
@@ -54,7 +55,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             where TCommandHandler : class, ICommandHandler
             where TCommand : class
         {
-            var handler = new HttpCommandHandler<TCommand, TResponse>(configurationProvider.GetOptions<TCommandHandler>(serviceProvider));
+            var handler = new HttpCommandHandler<TCommand, TResponse>(configurationProvider.GetOptions<TCommandHandler>(serviceProvider),
+                                                                      serviceProvider.GetRequiredService<CommandClientContext>(),
+                                                                      serviceProvider.GetService<ICommandContextAccessor>());
 
             if (!typeof(TCommandHandler).IsCustomCommandHandlerInterfaceType())
             {
@@ -69,7 +72,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             where TCommandHandler : class, ICommandHandler
             where TCommand : class
         {
-            var handler = new HttpCommandHandler<TCommand>(configurationProvider.GetOptions<TCommandHandler>(serviceProvider));
+            var handler = new HttpCommandHandler<TCommand>(configurationProvider.GetOptions<TCommandHandler>(serviceProvider),
+                                                           serviceProvider.GetRequiredService<CommandClientContext>(),
+                                                           serviceProvider.GetService<ICommandContextAccessor>());
 
             if (!typeof(TCommandHandler).IsCustomCommandHandlerInterfaceType())
             {

@@ -294,6 +294,14 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorHttpClients().AddCommandHttpClient<ITestCommandHandler>());
         }
+        
+        [Test]
+        public void GivenClient_CanResolveCommandClientContext()
+        {
+            using var provider = RegisterClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandClientContext>());
+        }
 
         private ServiceProvider RegisterClient<TCommandHandler>()
             where TCommandHandler : class, ICommandHandler
