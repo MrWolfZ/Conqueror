@@ -47,6 +47,8 @@ namespace Conqueror.CQS.CommandHandling
             {
                 commandClientContext.AddResponseItems(commandContext.TransferrableItems);
             }
+            
+            commandContextAccessor.ClearContext();
 
             return finalResponse;
 

@@ -87,6 +87,37 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenCommandExecution_CommandContextIsAvailableInNestedHandler()
+        {
+            var command = new TestCommand(10);
+
+            var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
+            {
+                Assert.IsNotNull(ctx);
+                Assert.AreNotEqual(command, ctx!.Command);
+                Assert.IsNull(ctx.Response);
+
+                return new(cmd.Payload);
+            });
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_CommandContextIsAvailableInHandlerAfterExecutionOfNestedHandler()
+        {
+            var command = new TestCommand(10);
+
+            var provider = Setup(handlerPreReturnFn: ctx =>
+            {
+                Assert.IsNotNull(ctx);
+                Assert.AreEqual(command, ctx!.Command);
+            });
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
         public async Task GivenCommandExecution_CommandContextReturnsCurrentCommandIfCommandIsChangedInMiddleware()
         {
             var command = new TestCommand(10);
@@ -155,6 +186,7 @@ namespace Conqueror.CQS.Tests
                 },
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
                 ctx => observedContexts.Add(ctx!),
+                _ => { },
                 handlerLifetime,
                 middlewareLifetime,
                 nestedClassLifetime);
@@ -854,6 +886,7 @@ namespace Conqueror.CQS.Tests
                                        MiddlewareFn? middlewareFn = null,
                                        MiddlewareFn? outerMiddlewareFn = null,
                                        Action<ICommandContext?>? nestedClassFn = null,
+                                       Action<ICommandContext?>? handlerPreReturnFn = null,
                                        ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
                                        ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
                                        ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
@@ -864,6 +897,7 @@ namespace Conqueror.CQS.Tests
             middlewareFn ??= (middlewareCtx, _, next) => next(middlewareCtx.Command);
             outerMiddlewareFn ??= (middlewareCtx, _, next) => next(middlewareCtx.Command);
             nestedClassFn ??= _ => { };
+            handlerPreReturnFn ??= _ => { };
 
             var services = new ServiceCollection();
 
@@ -871,6 +905,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandHandler),
                                                         p => new TestCommandHandler(handlerFn,
+                                                                                    handlerPreReturnFn,
                                                                                     p.GetRequiredService<ICommandContextAccessor>(),
                                                                                     p.GetRequiredService<NestedClass>(),
                                                                                     p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
@@ -951,8 +986,10 @@ namespace Conqueror.CQS.Tests
             private readonly Func<TestCommand, ICommandContext?, TestCommandResponse> handlerFn;
             private readonly NestedClass nestedClass;
             private readonly ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler;
+            private readonly Action<ICommandContext?> preReturnFn;
 
             public TestCommandHandler(Func<TestCommand, ICommandContext?, TestCommandResponse> handlerFn,
+                                      Action<ICommandContext?> preReturnFn,
                                       ICommandContextAccessor commandContextAccessor,
                                       NestedClass nestedClass,
                                       ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
@@ -961,6 +998,7 @@ namespace Conqueror.CQS.Tests
                 this.commandContextAccessor = commandContextAccessor;
                 this.nestedClass = nestedClass;
                 this.nestedCommandHandler = nestedCommandHandler;
+                this.preReturnFn = preReturnFn;
             }
 
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
@@ -969,6 +1007,7 @@ namespace Conqueror.CQS.Tests
                 var response = handlerFn(command, commandContextAccessor.CommandContext);
                 nestedClass.Execute();
                 _ = await nestedCommandHandler.ExecuteCommand(new(command.Payload), cancellationToken);
+                preReturnFn(commandContextAccessor.CommandContext);
                 return response;
             }
 

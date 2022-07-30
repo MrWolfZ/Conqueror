@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 
 namespace Conqueror.CQS.CommandHandling
 {
@@ -15,20 +16,25 @@ namespace Conqueror.CQS.CommandHandling
             get => CommandContextCurrent.Value?.Context;
             set
             {
-                var holder = CommandContextCurrent.Value;
-                
-                if (holder != null)
+                if (value == null)
                 {
-                    // Clear current CommandContext trapped in the AsyncLocals, as it's done.
-                    holder.Context = null;
+                    throw new ArgumentNullException(nameof(value), "command context must not be null");
                 }
 
-                if (value != null)
-                {
-                    // Use an object indirection to hold the CommandContext in the AsyncLocal,
-                    // so it can be cleared in all ExecutionContexts when its cleared.
-                    CommandContextCurrent.Value = new() { Context = value };
-                }
+                // Use an object indirection to hold the CommandContext in the AsyncLocal,
+                // so it can be cleared in all ExecutionContexts when its cleared.
+                CommandContextCurrent.Value = new() { Context = value };
+            }
+        }
+
+        public void ClearContext()
+        {
+            var holder = CommandContextCurrent.Value;
+
+            if (holder != null)
+            {
+                // Clear current CommandContext trapped in the AsyncLocals, as it's done.
+                holder.Context = null;
             }
         }
 
