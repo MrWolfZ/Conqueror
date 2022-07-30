@@ -3,7 +3,8 @@ using System.Collections.Generic;
 
 namespace Conqueror.CQS.CommandHandling
 {
-    internal sealed class DefaultCommandContext : CommandContext
+    /// <inheritdoc />
+    internal sealed class DefaultCommandContext : ICommandContext
     {
         private object command;
         private object? response;
@@ -13,13 +14,17 @@ namespace Conqueror.CQS.CommandHandling
             this.command = command;
         }
 
-        public override object Command => command;
+        /// <inheritdoc />
+        public object Command => command;
 
-        public override object? Response => response;
+        /// <inheritdoc />
+        public object? Response => response;
 
-        public override IDictionary<object, object?> Items { get; set; } = new ConcurrentDictionary<object, object?>();
+        /// <inheritdoc />
+        public IDictionary<object, object?> Items { get; } = new ConcurrentDictionary<object, object?>();
 
-        public override IDictionary<string, string> TransferrableItems { get; set; } = new ConcurrentDictionary<string, string>();
+        /// <inheritdoc />
+        public IDictionary<string, string> TransferrableItems { get; set; } = new ConcurrentDictionary<string, string>();
 
         public void SetCommand(object cmd)
         {

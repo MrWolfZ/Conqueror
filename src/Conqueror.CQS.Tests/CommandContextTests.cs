@@ -139,7 +139,7 @@ namespace Conqueror.CQS.Tests
             ServiceLifetime nestedClassLifetime)
         {
             var command = new TestCommand(10);
-            var observedContexts = new List<CommandContext>();
+            var observedContexts = new List<ICommandContext>();
 
             var handler = GetCommandHandler(
                 (cmd, ctx) =>
@@ -176,7 +176,7 @@ namespace Conqueror.CQS.Tests
             ServiceLifetime nestedHandlerLifetime)
         {
             var command = new TestCommand(10);
-            var observedContexts = new List<CommandContext>();
+            var observedContexts = new List<ICommandContext>();
 
             var handler = GetCommandHandler(
                 (cmd, ctx) =>
@@ -198,6 +198,36 @@ namespace Conqueror.CQS.Tests
             Assert.IsNotNull(observedContexts[0]);
             Assert.IsNotNull(observedContexts[1]);
             Assert.AreNotSame(observedContexts[0], observedContexts[1]);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_CommandContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
+        {
+            var command = new TestCommand(10);
+            var observedContexts = new List<ICommandContext>();
+
+            var handler = GetCommandHandler(
+                (cmd, ctx) =>
+                {
+                    observedContexts.Add(ctx!);
+                    return new(cmd.Payload);
+                },
+                (cmd, _) => new(cmd.Payload),
+                async (middlewareCtx, ctx, next) =>
+                {
+                    await Task.Delay(10).ConfigureAwait(false);
+                    observedContexts.Add(ctx!);
+                    return await next(middlewareCtx.Command);
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Command),
+                ctx => observedContexts.Add(ctx!));
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedContexts, Has.Count.EqualTo(3));
+            Assert.IsNotNull(observedContexts[0]);
+            Assert.AreSame(observedContexts[0], observedContexts[1]);
+            Assert.AreSame(observedContexts[0], observedContexts[2]);
         }
 
         [Test]
@@ -305,35 +335,33 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextItemsCanBeSetWhole()
+        public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSource()
         {
             var command = new TestCommand(10);
-            var items = new Dictionary<object, object?>();
-            var observedItems = new List<IDictionary<object, object?>>();
+            var items = new Dictionary<object, object?> { { new object(), new object() } };
+            var observedKeys = new List<object>();
 
             var handler = GetCommandHandler(
                 (cmd, ctx) =>
                 {
-                    ctx!.Items = items;
+                    ctx!.AddItems(items);
                     return new(cmd.Payload);
                 },
                 (cmd, _) => new(cmd.Payload),
                 async (middlewareCtx, ctx, next) =>
                 {
-                    observedItems.Add(ctx!.Items);
+                    observedKeys.AddRange(ctx!.Items.Keys);
                     var r = await next(middlewareCtx.Command);
-                    observedItems.Add(ctx.Items);
+                    observedKeys.AddRange(ctx.Items.Keys);
                     return r;
                 },
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
-                ctx => observedItems.Add(ctx!.Items));
+                ctx => observedKeys.AddRange(ctx!.Items.Keys));
 
             _ = await handler.ExecuteCommand(command, CancellationToken.None);
 
-            Assert.That(observedItems, Has.Count.EqualTo(3));
-            Assert.AreNotSame(items, observedItems[0]);
-            Assert.AreSame(items, observedItems[1]);
-            Assert.AreSame(items, observedItems[2]);
+            Assert.That(observedKeys, Has.Count.EqualTo(2));
+            Assert.AreSame(observedKeys[0], observedKeys[1]);
         }
 
         [Test]
@@ -369,20 +397,21 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextItemsCannotBeSetWholeForNestedHandler()
+        public async Task GivenCommandExecution_ContextItemsCannotBeAddedFromSourceForNestedHandler()
         {
             var command = new TestCommand(10);
-            var items = new Dictionary<object, object?>();
+            var key = new object();
+            var items = new Dictionary<object, object?> { { key, new object() } };
 
             var handler = GetCommandHandler(
                 (cmd, ctx) =>
                 {
-                    ctx!.Items = items;
+                    ctx!.AddItems(items);
                     return new(cmd.Payload);
                 },
                 (cmd, ctx) =>
                 {
-                    Assert.AreNotSame(items, ctx?.Items);
+                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
                     return new(cmd.Payload);
                 });
 
@@ -411,35 +440,80 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextTransferrableItemsCanBeSetWhole()
+        public async Task GivenCommandExecution_ContextItemsCannotBeAddedFromSourceFromNestedHandler()
         {
             var command = new TestCommand(10);
-            var items = new Dictionary<string, string>();
-            var observedItems = new List<IDictionary<string, string>>();
+            var key = new object();
+            var items = new Dictionary<object, object?> { { key, new object() } };
+
+            var handler = GetCommandHandler(
+                nestedHandlerFn: (cmd, ctx) =>
+                {
+                    ctx!.AddItems(items);
+                    return new(cmd.Payload);
+                },
+                middlewareFn: async (middlewareCtx, ctx, next) =>
+                {
+                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                    var r = await next(middlewareCtx.Command);
+                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                    return r;
+                });
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_ContextItemsCannotBeSetFromNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var key = new object();
+
+            var handler = GetCommandHandler(
+                nestedHandlerFn: (cmd, ctx) =>
+                {
+                    ctx!.Items[key] = key;
+                    return new(cmd.Payload);
+                },
+                middlewareFn: async (middlewareCtx, ctx, next) =>
+                {
+                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                    var r = await next(middlewareCtx.Command);
+                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                    return r;
+                });
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_ContextTransferrableItemsCanBeAddedFromSource()
+        {
+            var command = new TestCommand(10);
+            var items = new Dictionary<string, string> { { "key", "value" } };
+            var observedKeys = new List<string>();
 
             var handler = GetCommandHandler(
                 (cmd, ctx) =>
                 {
-                    ctx!.TransferrableItems = items;
+                    ctx!.AddTransferrableItems(items);
                     return new(cmd.Payload);
                 },
                 (cmd, _) => new(cmd.Payload),
                 async (middlewareCtx, ctx, next) =>
                 {
-                    observedItems.Add(ctx!.TransferrableItems);
+                    observedKeys.AddRange(ctx!.TransferrableItems.Keys);
                     var r = await next(middlewareCtx.Command);
-                    observedItems.Add(ctx.TransferrableItems);
+                    observedKeys.AddRange(ctx.TransferrableItems.Keys);
                     return r;
                 },
                 (middlewareCtx, _, next) => next(middlewareCtx.Command),
-                ctx => observedItems.Add(ctx!.TransferrableItems));
+                ctx => observedKeys.AddRange(ctx!.TransferrableItems.Keys));
 
             _ = await handler.ExecuteCommand(command, CancellationToken.None);
 
-            Assert.That(observedItems, Has.Count.EqualTo(3));
-            Assert.AreNotSame(items, observedItems[0]);
-            Assert.AreSame(items, observedItems[1]);
-            Assert.AreSame(items, observedItems[2]);
+            Assert.That(observedKeys, Has.Count.EqualTo(2));
+            Assert.AreSame(observedKeys[0], observedKeys[1]);
         }
 
         [Test]
@@ -475,20 +549,21 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextTransferrableItemsCanBeSetWholeForNestedHandler()
+        public async Task GivenCommandExecution_ContextTransferrableItemsCanBeAddedFromSourceForNestedHandler()
         {
             var command = new TestCommand(10);
-            var items = new Dictionary<string, string>();
+            var key = "key";
+            var items = new Dictionary<string, string> { { key, "value" } };
 
             var handler = GetCommandHandler(
                 (cmd, ctx) =>
                 {
-                    ctx!.TransferrableItems = items;
+                    ctx!.AddTransferrableItems(items);
                     return new(cmd.Payload);
                 },
                 (cmd, ctx) =>
                 {
-                    Assert.AreSame(items, ctx?.TransferrableItems);
+                    Assert.IsTrue(ctx?.TransferrableItems.ContainsKey(key));
                     return new(cmd.Payload);
                 });
 
@@ -517,6 +592,53 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenCommandExecution_ContextTransferrableItemsCanBeAddedFromSourceFromNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var items = new Dictionary<string, string> { { key, "value" } };
+
+            var handler = GetCommandHandler(
+                nestedHandlerFn: (cmd, ctx) =>
+                {
+                    ctx!.AddTransferrableItems(items);
+                    return new(cmd.Payload);
+                },
+                middlewareFn: async (middlewareCtx, ctx, next) =>
+                {
+                    Assert.IsFalse(ctx?.TransferrableItems.ContainsKey(key));
+                    var r = await next(middlewareCtx.Command);
+                    Assert.IsTrue(ctx?.TransferrableItems.ContainsKey(key));
+                    return r;
+                });
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_ContextTransferrableItemsCanBeSetFromNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var key = "test";
+
+            var handler = GetCommandHandler(
+                nestedHandlerFn: (cmd, ctx) =>
+                {
+                    ctx!.TransferrableItems[key] = key;
+                    return new(cmd.Payload);
+                },
+                middlewareFn: async (middlewareCtx, ctx, next) =>
+                {
+                    Assert.IsFalse(ctx?.TransferrableItems.ContainsKey(key));
+                    var r = await next(middlewareCtx.Command);
+                    Assert.IsTrue(ctx?.TransferrableItems.ContainsKey(key));
+                    return r;
+                });
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
         public void GivenNoCommandExecution_CommandContextIsNotAvailable()
         {
             var services = new ServiceCollection().AddConquerorCQS();
@@ -529,11 +651,11 @@ namespace Conqueror.CQS.Tests
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-        private ICommandHandler<TestCommand, TestCommandResponse> GetCommandHandler(Func<TestCommand, CommandContext?, TestCommandResponse>? handlerFn = null,
-                                                                                    Func<NestedTestCommand, CommandContext?, NestedTestCommandResponse>? nestedHandlerFn = null,
+        private ICommandHandler<TestCommand, TestCommandResponse> GetCommandHandler(Func<TestCommand, ICommandContext?, TestCommandResponse>? handlerFn = null,
+                                                                                    Func<NestedTestCommand, ICommandContext?, NestedTestCommandResponse>? nestedHandlerFn = null,
                                                                                     MiddlewareFn? middlewareFn = null,
                                                                                     MiddlewareFn? outerMiddlewareFn = null,
-                                                                                    Action<CommandContext?>? nestedClassFn = null,
+                                                                                    Action<ICommandContext?>? nestedClassFn = null,
                                                                                     ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
                                                                                     ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
                                                                                     ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
@@ -579,9 +701,9 @@ namespace Conqueror.CQS.Tests
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-        private ICommandHandler<TestCommandWithoutResponse> GetCommandHandlerWithoutResponse(Action<TestCommandWithoutResponse, CommandContext?>? handlerFn = null,
+        private ICommandHandler<TestCommandWithoutResponse> GetCommandHandlerWithoutResponse(Action<TestCommandWithoutResponse, ICommandContext?>? handlerFn = null,
                                                                                              MiddlewareFn? middlewareFn = null,
-                                                                                             Action<CommandContext?>? nestedClassFn = null,
+                                                                                             Action<ICommandContext?>? nestedClassFn = null,
                                                                                              ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
                                                                                              ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
                                                                                              ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
@@ -612,7 +734,7 @@ namespace Conqueror.CQS.Tests
         }
 
         private delegate Task<TestCommandResponse> MiddlewareFn(CommandMiddlewareContext<TestCommand, TestCommandResponse> middlewareCtx,
-                                                                CommandContext? ctx,
+                                                                ICommandContext? ctx,
                                                                 Func<TestCommand, Task<TestCommandResponse>> next);
 
         private sealed record TestCommand(int Payload);
@@ -628,11 +750,11 @@ namespace Conqueror.CQS.Tests
         private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
             private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly Func<TestCommand, CommandContext?, TestCommandResponse> handlerFn;
+            private readonly Func<TestCommand, ICommandContext?, TestCommandResponse> handlerFn;
             private readonly NestedClass nestedClass;
             private readonly ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler;
 
-            public TestCommandHandler(Func<TestCommand, CommandContext?, TestCommandResponse> handlerFn,
+            public TestCommandHandler(Func<TestCommand, ICommandContext?, TestCommandResponse> handlerFn,
                                       ICommandContextAccessor commandContextAccessor,
                                       NestedClass nestedClass,
                                       ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
@@ -660,10 +782,10 @@ namespace Conqueror.CQS.Tests
         private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
         {
             private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly Action<TestCommandWithoutResponse, CommandContext?> handlerFn;
+            private readonly Action<TestCommandWithoutResponse, ICommandContext?> handlerFn;
             private readonly NestedClass nestedClass;
 
-            public TestCommandHandlerWithoutResponse(Action<TestCommandWithoutResponse, CommandContext?> handlerFn, ICommandContextAccessor commandContextAccessor, NestedClass nestedClass)
+            public TestCommandHandlerWithoutResponse(Action<TestCommandWithoutResponse, ICommandContext?> handlerFn, ICommandContextAccessor commandContextAccessor, NestedClass nestedClass)
             {
                 this.handlerFn = handlerFn;
                 this.commandContextAccessor = commandContextAccessor;
@@ -681,9 +803,9 @@ namespace Conqueror.CQS.Tests
         private sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
         {
             private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly Func<NestedTestCommand, CommandContext?, NestedTestCommandResponse> handlerFn;
+            private readonly Func<NestedTestCommand, ICommandContext?, NestedTestCommandResponse> handlerFn;
 
-            public NestedTestCommandHandler(Func<NestedTestCommand, CommandContext?, NestedTestCommandResponse> handlerFn, ICommandContextAccessor commandContextAccessor)
+            public NestedTestCommandHandler(Func<NestedTestCommand, ICommandContext?, NestedTestCommandResponse> handlerFn, ICommandContextAccessor commandContextAccessor)
             {
                 this.handlerFn = handlerFn;
                 this.commandContextAccessor = commandContextAccessor;
@@ -745,9 +867,9 @@ namespace Conqueror.CQS.Tests
         private sealed class NestedClass
         {
             private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly Action<CommandContext?> nestedClassFn;
+            private readonly Action<ICommandContext?> nestedClassFn;
 
-            public NestedClass(Action<CommandContext?> nestedClassFn, ICommandContextAccessor commandContextAccessor)
+            public NestedClass(Action<ICommandContext?> nestedClassFn, ICommandContextAccessor commandContextAccessor)
             {
                 this.nestedClassFn = nestedClassFn;
                 this.commandContextAccessor = commandContextAccessor;

@@ -1,7 +1,7 @@
 ﻿namespace Conqueror.CQS
 {
     /// <summary>
-    ///     Provides access to the current <see cref="CommandContext" />, if one is available.
+    ///     Provides access to the current <see cref="ICommandContext" />, if one is available.
     /// </summary>
     /// <remarks>
     ///     This interface should be used with caution. It relies on <see cref="System.Threading.AsyncLocal{T}" /> which can have a negative performance impact on async calls.
@@ -10,8 +10,8 @@
     public interface ICommandContextAccessor
     {
         /// <summary>
-        ///     Gets the current <see cref="CommandContext" />. Returns <see langword="null" /> if there is no active <see cref="CommandContext" />.
+        ///     Gets the current <see cref="ICommandContext" />. Returns <see langword="null" /> if there is no active <see cref="ICommandContext" />.
         /// </summary>
-        CommandContext? CommandContext { get; }
+        ICommandContext? CommandContext { get; }
     }
 }

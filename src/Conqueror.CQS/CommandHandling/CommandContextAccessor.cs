@@ -10,7 +10,7 @@ namespace Conqueror.CQS.CommandHandling
         private static readonly AsyncLocal<CommandContextHolder> CommandContextCurrent = new();
 
         /// <inheritdoc />
-        public CommandContext? CommandContext
+        public ICommandContext? CommandContext
         {
             get => CommandContextCurrent.Value?.Context;
             set
@@ -34,7 +34,7 @@ namespace Conqueror.CQS.CommandHandling
 
         private sealed class CommandContextHolder
         {
-            public CommandContext? Context { get; set; }
+            public ICommandContext? Context { get; set; }
         }
     }
 }
