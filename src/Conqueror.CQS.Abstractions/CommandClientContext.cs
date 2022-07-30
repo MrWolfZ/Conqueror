@@ -11,13 +11,14 @@ namespace Conqueror.CQS
 
         public bool HasItems => IsActive && ContextCurrent.Value!.Items.Count > 0;
 
+        /// <inheritdoc />
         public IDictionary<string, string> GetItems()
         {
             if (!IsActive)
             {
                 throw new InvalidOperationException("client context is not active");
             }
-            
+
             return ContextCurrent.Value!.Items;
         }
 
@@ -28,7 +29,7 @@ namespace Conqueror.CQS
             {
                 throw new InvalidOperationException("client context is already active");
             }
-            
+
             ContextCurrent.Value = new();
             return ContextCurrent.Value.Items;
         }
@@ -42,7 +43,7 @@ namespace Conqueror.CQS
             {
                 throw new InvalidOperationException("client context is not active");
             }
-            
+
             foreach (var p in source)
             {
                 ContextCurrent.Value!.Items[p.Key] = p.Value;

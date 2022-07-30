@@ -861,20 +861,57 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenExistingClientContext_ActivatingContextAgainThrowsException()
         {
-            var key = "key";
-            var value = "value";
-
-            var provider = Setup((cmd, ctx) =>
-            {
-                ctx!.TransferrableItems[key] = value;
-                return new(cmd.Payload);
-            });
+            var provider = Setup();
 
             var clientContext = provider.GetRequiredService<ICommandClientContext>();
 
             _ = clientContext.Activate();
 
             _ = Assert.Throws<InvalidOperationException>(() => clientContext.Activate());
+        }
+
+        [Test]
+        public void GivenInactiveClientContext_IsActiveReturnsFalse()
+        {
+            var provider = Setup();
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            Assert.IsFalse(clientContext.IsActive);
+        }
+
+        [Test]
+        public void GivenActiveClientContext_IsActiveReturnsTrue()
+        {
+            var provider = Setup();
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+            
+            _ = clientContext.Activate();
+
+            Assert.IsTrue(clientContext.IsActive);
+        }
+
+        [Test]
+        public void GivenInactiveClientContext_GettingContextItemsThrowsException()
+        {
+            var provider = Setup();
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => clientContext.GetItems());
+        }
+
+        [Test]
+        public void GivenActiveClientContext_GettingItemsReturnsSameResultAsActivation()
+        {
+            var provider = Setup();
+
+            var clientContext = provider.GetRequiredService<ICommandClientContext>();
+
+            var itemsFromActivation = clientContext.Activate();
+
+            Assert.AreSame(itemsFromActivation, clientContext.GetItems());
         }
 
         [Test]
