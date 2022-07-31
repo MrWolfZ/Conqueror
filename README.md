@@ -6,18 +6,18 @@ A set of libraries to powercharge your .NET development.
 
 ### Breaking changes
 
+- change root namespace to `Conqueror`
 - make event publisher middleware pipeline configurable
 - change HTTP client options to expose provider through options object instead of using factory properties
 
 ### Enhancements
 
-- change root namespace to `Conqueror`
 - create common abstractions package
+- expose contexts directly on middleware contexts
 - allow middlewares to implement multiple interfaces
 - validate pipeline configuration method signature
 - pass through custom interface extra methods to backing instance
 - add support for .NET standard 2.0
-- allow accessing query context via accessor interface (async local)
 - add trace IDs to commands and query contexts
   - integrate trace ID from ASP Core if using HTTP package
 - allow registering all custom interfaces in assembly as HTTP client (allow specifying options for all those clients)
