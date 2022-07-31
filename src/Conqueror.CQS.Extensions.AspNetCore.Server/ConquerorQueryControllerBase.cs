@@ -9,24 +9,30 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
     [ApiController]
-    public abstract class ConquerorQueryControllerBase<TQuery, TResponse> : ControllerBase
+    public abstract class ConquerorQueryControllerBase<TQuery, TResponse> : ConquerorControllerBase
         where TQuery : class
     {
         protected async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken)
         {
-            var queryHandler = Request.HttpContext.RequestServices.GetRequiredService<IQueryHandler<TQuery, TResponse>>();
-            return await queryHandler.ExecuteQuery(query, cancellationToken);
+            return await ExecuteWithContext(async () =>
+            {
+                var queryHandler = Request.HttpContext.RequestServices.GetRequiredService<IQueryHandler<TQuery, TResponse>>();
+                return await queryHandler.ExecuteQuery(query, cancellationToken);
+            });
         }
     }
 
     [ApiController]
-    public abstract class ConquerorQueryWithoutPayloadControllerBase<TQuery, TResponse> : ControllerBase
+    public abstract class ConquerorQueryWithoutPayloadControllerBase<TQuery, TResponse> : ConquerorControllerBase
         where TQuery : class, new()
     {
         protected async Task<TResponse> ExecuteQuery(CancellationToken cancellationToken)
         {
-            var queryHandler = Request.HttpContext.RequestServices.GetRequiredService<IQueryHandler<TQuery, TResponse>>();
-            return await queryHandler.ExecuteQuery(new(), cancellationToken);
+            return await ExecuteWithContext(async () =>
+            {
+                var queryHandler = Request.HttpContext.RequestServices.GetRequiredService<IQueryHandler<TQuery, TResponse>>();
+                return await queryHandler.ExecuteQuery(new(), cancellationToken);
+            });
         }
     }
 }

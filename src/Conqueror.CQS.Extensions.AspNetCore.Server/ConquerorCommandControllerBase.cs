@@ -1,9 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 
 // it makes sense for these types to be in the same file
@@ -12,12 +9,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
     [ApiController]
-    public abstract class ConquerorCommandControllerBase<TCommand, TResponse> : CommandControllerBase
+    public abstract class ConquerorCommandControllerBase<TCommand, TResponse> : ConquerorControllerBase
         where TCommand : class
     {
         protected async Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken)
         {
-            return await ExecuteCommandWithContext(async () =>
+            return await ExecuteWithContext(async () =>
             {
                 var commandHandler = Request.HttpContext.RequestServices.GetRequiredService<ICommandHandler<TCommand, TResponse>>();
                 return await commandHandler.ExecuteCommand(command, cancellationToken);
@@ -26,13 +23,13 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     }
 
     [ApiController]
-    public abstract class ConquerorCommandControllerBase<TCommand> : CommandControllerBase
+    public abstract class ConquerorCommandControllerBase<TCommand> : ConquerorControllerBase
         where TCommand : class
     {
         [ProducesResponseType(204)]
         protected async Task ExecuteCommand(TCommand command, CancellationToken cancellationToken)
         {
-            _ = await ExecuteCommandWithContext(async () =>
+            _ = await ExecuteWithContext(async () =>
             {
                 var commandHandler = Request.HttpContext.RequestServices.GetRequiredService<ICommandHandler<TCommand>>();
                 await commandHandler.ExecuteCommand(command, cancellationToken);
@@ -42,12 +39,12 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     }
 
     [ApiController]
-    public abstract class ConquerorCommandWithoutPayloadControllerBase<TCommand, TResponse> : CommandControllerBase
+    public abstract class ConquerorCommandWithoutPayloadControllerBase<TCommand, TResponse> : ConquerorControllerBase
         where TCommand : class, new()
     {
         protected async Task<TResponse> ExecuteCommand(CancellationToken cancellationToken)
         {
-            return await ExecuteCommandWithContext(async () =>
+            return await ExecuteWithContext(async () =>
             {
                 var commandHandler = Request.HttpContext.RequestServices.GetRequiredService<ICommandHandler<TCommand, TResponse>>();
                 return await commandHandler.ExecuteCommand(new(), cancellationToken);
@@ -56,71 +53,17 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     }
 
     [ApiController]
-    public abstract class ConquerorCommandWithoutPayloadControllerBase<TCommand> : CommandControllerBase
+    public abstract class ConquerorCommandWithoutPayloadControllerBase<TCommand> : ConquerorControllerBase
         where TCommand : class, new()
     {
         protected async Task ExecuteCommand(CancellationToken cancellationToken)
         {
-            _ = await ExecuteCommandWithContext(async () =>
+            _ = await ExecuteWithContext(async () =>
             {
                 var commandHandler = Request.HttpContext.RequestServices.GetRequiredService<ICommandHandler<TCommand>>();
                 await commandHandler.ExecuteCommand(new(), cancellationToken);
                 return UnitCommandResponse.Instance;
             });
-        }
-    }
-
-    [TypeFilter(typeof(ExceptionHandlerFilter))]
-    public abstract class CommandControllerBase : ControllerBase
-    {
-        protected async Task<TResponse> ExecuteCommandWithContext<TResponse>(Func<Task<TResponse>> executeFn)
-        {
-            using var context = Request.HttpContext.RequestServices.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-            if (Request.Headers.TryGetValue(HttpConstants.ConquerorContextHeaderName, out var values))
-            {
-                try
-                {
-                    var parsedValue = ContextValueFormatter.Parse(values.AsEnumerable());
-
-                    foreach (var (key, value) in parsedValue)
-                    {
-                        context.Items[key] = value;
-                    }
-                }
-                catch
-                {
-                    throw new BadContextException();
-                }
-            }
-
-            var response = await executeFn();
-
-            if (context.Items.Count > 0)
-            {
-                Response.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(context.Items));
-            }
-
-            return response;
-        }
-
-        private sealed class ExceptionHandlerFilter : IExceptionFilter
-        {
-            public void OnException(ExceptionContext context)
-            {
-                if (context.Exception is not BadContextException)
-                {
-                    return;
-                }
-
-                context.Result = new BadRequestObjectResult("invalid command context header");
-            }
-        }
-
-#pragma warning disable
-        private sealed class BadContextException : Exception
-#pragma warning restore
-        {
         }
     }
 }
