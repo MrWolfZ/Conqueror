@@ -442,7 +442,7 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenClientContextItems_ContextItemsAreAvailableInHandler()
+        public async Task GivenManuallyCreatedContextWithItems_ContextItemsAreAvailableInHandler()
         {
             var command = new TestCommand(10);
             var key = "key";
@@ -455,15 +455,15 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-            clientContext.Activate()[key] = value;
+            conquerorContext.Items[key] = value;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
-        public async Task GivenClientContextItems_ContextItemsAreAvailableInNestedHandler()
+        public async Task GivenManuallyCreatedContextWithItems_ContextItemsAreAvailableInNestedHandler()
         {
             var command = new TestCommand(10);
             var key = "key";
@@ -476,15 +476,15 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-            clientContext.Activate()[key] = value;
+            conquerorContext.Items[key] = value;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
-        public async Task GivenClientContextItems_ContextItemsCanBeChangedInHandlerForNestedHandler()
+        public async Task GivenManuallyCreatedContextWithItems_ContextItemsCanBeChangedInHandlerForNestedHandler()
         {
             var command = new TestCommand(10);
             var key = "key";
@@ -504,9 +504,9 @@ namespace Conqueror.CQS.Tests
                     return new(cmd.Payload);
                 });
 
-            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-            clientContext.Activate()[key] = value;
+            conquerorContext.Items[key] = value;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
@@ -524,9 +524,9 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-            var contextItems = clientContext.Activate();
+            var contextItems = conquerorContext.Items;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
@@ -546,9 +546,9 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-            var contextItems = clientContext.Activate();
+            var contextItems = conquerorContext.Items;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
@@ -556,27 +556,7 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenNoActiveClientContext_ExecutingCommandDoesNotCreateContext()
-        {
-            var command = new TestCommand(10);
-            var key = "key";
-            var value = "value";
-
-            var provider = Setup((cmd, ctx) =>
-            {
-                ctx!.Items[key] = value;
-                return new(cmd.Payload);
-            });
-
-            var clientContext = provider.GetRequiredService<ConquerorClientContext>();
-
-            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-            Assert.IsFalse(clientContext.IsActive);
-        }
-
-        [Test]
-        public async Task GivenClientContextItems_ContextItemsFlowAcrossMultipleHandlerExecutions()
+        public async Task GivenManuallyCreatedContextWithItems_ContextItemsFlowAcrossMultipleHandlerExecutions()
         {
             var command = new TestCommand(10);
             var invocationCount = 0;
@@ -611,9 +591,9 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-            clientContext.Activate()[key1] = value1;
+            conquerorContext.Items[key1] = value1;
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 

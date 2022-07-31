@@ -18,14 +18,12 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
     internal sealed class HttpCommandHandler<TCommand, TResponse> : ICommandHandler<TCommand, TResponse>
         where TCommand : class
     {
-        private readonly ConquerorClientContext conquerorClientContext;
         private readonly IConquerorContextAccessor? conquerorContextAccessor;
         private readonly HttpClient httpClient;
         private readonly JsonSerializerOptions? serializerOptions;
 
-        public HttpCommandHandler(ResolvedHttpClientOptions options, ConquerorClientContext conquerorClientContext, IConquerorContextAccessor? conquerorContextAccessor)
+        public HttpCommandHandler(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
         {
-            this.conquerorClientContext = conquerorClientContext;
             this.conquerorContextAccessor = conquerorContextAccessor;
             httpClient = options.HttpClient;
             serializerOptions = options.JsonSerializerOptions;
@@ -37,11 +35,6 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
 
             var contextItems = new Dictionary<string, string>();
 
-            if (conquerorClientContext.HasItems)
-            {
-                contextItems.AddOrReplaceRange(conquerorClientContext.GetItems());
-            }
-
             contextItems.AddOrReplaceRange(conquerorContextAccessor?.ConquerorContext?.Items ?? Enumerable.Empty<KeyValuePair<string, string>>());
 
             if (contextItems.Count > 0)
@@ -59,19 +52,10 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
                 throw new HttpCommandFailedException($"command of type {typeof(TCommand).Name} failed: {responseContent}", response);
             }
 
-            if (response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+            if (conquerorContextAccessor?.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
             {
                 var parsedContextItems = ContextValueFormatter.Parse(values);
-
-                if (conquerorClientContext.IsActive)
-                {
-                    conquerorClientContext.AddOrReplaceItems(parsedContextItems);
-                }
-
-                if (conquerorContextAccessor?.ConquerorContext is { } ctx)
-                {
-                    ctx.AddOrReplaceItems(parsedContextItems);
-                }
+                ctx.AddOrReplaceItems(parsedContextItems);
             }
 
             var result = await response.Content.ReadFromJsonAsync<TResponse>(serializerOptions, cancellationToken);
@@ -82,14 +66,12 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
     internal sealed class HttpCommandHandler<TCommand> : ICommandHandler<TCommand>
         where TCommand : class
     {
-        private readonly ConquerorClientContext conquerorClientContext;
         private readonly IConquerorContextAccessor? conquerorContextAccessor;
         private readonly HttpClient httpClient;
         private readonly JsonSerializerOptions? serializerOptions;
 
-        public HttpCommandHandler(ResolvedHttpClientOptions options, ConquerorClientContext conquerorClientContext, IConquerorContextAccessor? conquerorContextAccessor)
+        public HttpCommandHandler(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
         {
-            this.conquerorClientContext = conquerorClientContext;
             this.conquerorContextAccessor = conquerorContextAccessor;
             httpClient = options.HttpClient;
             serializerOptions = options.JsonSerializerOptions;
@@ -101,11 +83,6 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
 
             var contextItems = new Dictionary<string, string>();
 
-            if (conquerorClientContext.HasItems)
-            {
-                contextItems.AddOrReplaceRange(conquerorClientContext.GetItems());
-            }
-
             contextItems.AddOrReplaceRange(conquerorContextAccessor?.ConquerorContext?.Items ?? Enumerable.Empty<KeyValuePair<string, string>>());
 
             if (contextItems.Count > 0)
@@ -123,19 +100,10 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
                 throw new HttpCommandFailedException($"command of type {typeof(TCommand).Name} failed: {responseContent}", response);
             }
 
-            if (response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+            if (conquerorContextAccessor?.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
             {
                 var parsedContextItems = ContextValueFormatter.Parse(values);
-
-                if (conquerorClientContext.IsActive)
-                {
-                    conquerorClientContext.AddOrReplaceItems(parsedContextItems);
-                }
-
-                if (conquerorContextAccessor?.ConquerorContext is { } ctx)
-                {
-                    ctx.AddOrReplaceItems(parsedContextItems);
-                }
+                ctx.AddOrReplaceItems(parsedContextItems);
             }
         }
     }

@@ -2,7 +2,7 @@
 namespace Conqueror.CQS
 {
     /// <summary>
-    ///     Provides access to the current <see cref="IConquerorContext" />, if one is available.
+    ///     Provides access to the <see cref="IConquerorContext" />.
     /// </summary>
     /// <remarks>
     ///     This interface should be used with caution. It relies on <see cref="System.Threading.AsyncLocal{T}" /> which can have a negative performance impact on async calls.
@@ -14,5 +14,10 @@ namespace Conqueror.CQS
         ///     Gets the current <see cref="IConquerorContext" />. Returns <see langword="null" /> if there is no active <see cref="IConquerorContext" />.
         /// </summary>
         IConquerorContext? ConquerorContext { get; }
+
+        /// <summary>
+        ///     Gets the current <see cref="IConquerorContext" /> if it is active. Otherwise creates a new <see cref="IConquerorContext" /> and returns it.
+        /// </summary>
+        IConquerorContext GetOrCreate();
     }
 }

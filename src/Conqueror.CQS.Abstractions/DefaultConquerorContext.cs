@@ -1,7 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace Conqueror.CQS.CommandHandling
+// TODO: move to common package
+namespace Conqueror.CQS
 {
     /// <inheritdoc />
     internal sealed class DefaultConquerorContext : IConquerorContext

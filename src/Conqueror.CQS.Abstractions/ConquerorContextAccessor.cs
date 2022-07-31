@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading;
 
-namespace Conqueror.CQS.CommandHandling
+// TODO: move to common package
+namespace Conqueror.CQS
 {
     /// <summary>
     ///     Provides an implementation of <see cref="IConquerorContextAccessor" /> based on the current execution context.
@@ -26,6 +27,9 @@ namespace Conqueror.CQS.CommandHandling
                 ConquerorContextCurrent.Value = new() { Context = value };
             }
         }
+
+        /// <inheritdoc />
+        public IConquerorContext GetOrCreate() => ConquerorContext ??= new DefaultConquerorContext();
 
         public void ClearContext()
         {

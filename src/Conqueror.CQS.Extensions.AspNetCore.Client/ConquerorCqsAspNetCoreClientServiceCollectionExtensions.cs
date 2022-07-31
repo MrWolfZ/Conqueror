@@ -12,8 +12,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<ConfigurationProvider>();
             services.TryAddTransient<IConquerorHttpClientFactory, ConquerorHttpClientFactory>();
             
-            services.TryAddSingleton<ConquerorClientContext>();
-            services.TryAddSingleton<IConquerorClientContext>(p => p.GetRequiredService<ConquerorClientContext>());
+            services.TryAddSingleton<ConquerorContextAccessor>();
+            services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
 
             return new ConquerorHttpClientsBuilder(services);
         }

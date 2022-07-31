@@ -10,17 +10,14 @@ namespace Conqueror.CQS.CommandHandling
     internal sealed class CommandPipeline
     {
         private readonly CommandContextAccessor commandContextAccessor;
-        private readonly ConquerorClientContext conquerorClientContext;
         private readonly ConquerorContextAccessor conquerorContextAccessor;
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares;
 
         public CommandPipeline(CommandContextAccessor commandContextAccessor,
                                ConquerorContextAccessor conquerorContextAccessor,
-                               ConquerorClientContext conquerorClientContext,
                                IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
         {
             this.commandContextAccessor = commandContextAccessor;
-            this.conquerorClientContext = conquerorClientContext;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.middlewares = middlewares.ToList();
         }
@@ -42,20 +39,10 @@ namespace Conqueror.CQS.CommandHandling
             if (conquerorContext is null)
             {
                 createdConquerorContext = true;
-                conquerorContext = conquerorContextAccessor.ConquerorContext = new DefaultConquerorContext();
-                
-                if (conquerorClientContext.HasItems)
-                {
-                    conquerorContext.AddOrReplaceItems(conquerorClientContext.GetItems());
-                }
+                conquerorContextAccessor.ConquerorContext = new DefaultConquerorContext();
             }
 
             var finalResponse = await ExecuteNextMiddleware(0, initialCommand, cancellationToken);
-
-            if (conquerorClientContext.IsActive)
-            {
-                conquerorClientContext.AddOrReplaceItems(conquerorContext.Items);
-            }
 
             commandContextAccessor.ClearContext();
 

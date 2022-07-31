@@ -26,42 +26,38 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         };
 
         [Test]
-        public async Task GivenActiveClientContextAndContextItemsInHandler_ItemsAreReturnedInClientContext()
+        public async Task GivenManuallyCreatedContextOnClientAndContextItemsInHandler_ItemsAreReturnedInClientContext()
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
-            var clientContext = ResolveOnClient<IConquerorClientContext>();
-
-            var responseItems = clientContext.Activate();
+            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
             var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
 
             _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-            CollectionAssert.AreEquivalent(ContextItems, responseItems);
+            CollectionAssert.AreEquivalent(ContextItems, context.Items);
         }
 
         [Test]
-        public async Task GivenActiveClientContextAndContextItemsInHandlerWithoutResponse_ItemsAreReturnedInClientContext()
+        public async Task GivenManuallyCreatedContextOnClientAndContextItemsInHandlerWithoutResponse_ItemsAreReturnedInClientContext()
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
-            var clientContext = ResolveOnClient<IConquerorClientContext>();
-
-            var responseItems = clientContext.Activate();
+            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
             var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
 
             await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-            CollectionAssert.AreEquivalent(ContextItems, responseItems);
+            CollectionAssert.AreEquivalent(ContextItems,  context.Items);
         }
 
         [Test]
-        public async Task GivenClientContextItems_ContextIsReceivedInHandler()
+        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandler()
         {
-            var clientContextItems = ResolveOnClient<IConquerorClientContext>().Activate();
-            clientContextItems.AddOrReplaceRange(ContextItems);
+            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            context.AddOrReplaceItems(ContextItems);
 
             var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -74,10 +70,10 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         [Test]
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-        public async Task GivenClientContextItems_ContextIsReceivedInHandlerAcrossMultipleInvocations()
+        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerAcrossMultipleInvocations()
         {
-            var clientContextItems = ResolveOnClient<IConquerorClientContext>().Activate();
-            clientContextItems.Add(ContextItems.First());
+            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            context.Items.Add(ContextItems.First());
 
             var observations = Resolve<TestObservations>();
 
@@ -106,10 +102,10 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         }
 
         [Test]
-        public async Task GivenClientContextItems_ContextIsReceivedInHandlerWithoutResponse()
+        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerWithoutResponse()
         {
-            var clientContextItems = ResolveOnClient<IConquerorClientContext>().Activate();
-            clientContextItems.AddOrReplaceRange(ContextItems);
+            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            context.AddOrReplaceItems(ContextItems);
 
             var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -122,10 +118,10 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         [Test]
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-        public async Task GivenClientContextItems_ContextIsReceivedInHandlerWithoutResponseAcrossMultipleInvocations()
+        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerWithoutResponseAcrossMultipleInvocations()
         {
-            var clientContextItems = ResolveOnClient<IConquerorClientContext>().Activate();
-            clientContextItems.Add(ContextItems.First());
+            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            context.Items.Add(ContextItems.First());
 
             var observations = Resolve<TestObservations>();
 
@@ -155,10 +151,10 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         [Test]
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-        public async Task GivenClientContextItems_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
+        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
         {
-            var clientContextItems = ResolveOnClient<IConquerorClientContext>().Activate();
-            clientContextItems.Add(ContextItems.First());
+            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            context.Items.Add(ContextItems.First());
 
             var observations = Resolve<TestObservations>();
 

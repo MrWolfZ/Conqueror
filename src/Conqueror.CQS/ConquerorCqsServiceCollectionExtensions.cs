@@ -27,8 +27,6 @@ namespace Microsoft.Extensions.DependencyInjection
             
             services.TryAddSingleton<ConquerorContextAccessor>();
             services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
-            services.TryAddSingleton<ConquerorClientContext>();
-            services.TryAddSingleton<IConquerorClientContext>(p => p.GetRequiredService<ConquerorClientContext>());
 
             return services;
         }
