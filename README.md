@@ -11,6 +11,8 @@ A set of libraries to powercharge your .NET development.
 
 ### Enhancements
 
+- change root namespace to `Conqueror`
+- create common abstractions package
 - allow middlewares to implement multiple interfaces
 - validate pipeline configuration method signature
 - pass through custom interface extra methods to backing instance
