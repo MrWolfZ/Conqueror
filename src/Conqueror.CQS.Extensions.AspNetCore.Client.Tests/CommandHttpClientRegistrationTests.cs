@@ -296,11 +296,11 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         }
         
         [Test]
-        public void GivenClient_CanResolveCommandClientContext()
+        public void GivenClient_CanResolveConquerorClientContext()
         {
             using var provider = RegisterClient<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandClientContext>());
+            Assert.DoesNotThrow(() => provider.GetRequiredService<IConquerorClientContext>());
         }
 
         private ServiceProvider RegisterClient<TCommandHandler>()

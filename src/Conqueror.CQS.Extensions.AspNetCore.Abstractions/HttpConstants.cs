@@ -2,6 +2,6 @@
 {
     public static class HttpConstants
     {
-        public const string CommandContextHeaderName = "conqueror-command-context";
+        public const string ConquerorContextHeaderName = "conqueror-context";
     }
 }

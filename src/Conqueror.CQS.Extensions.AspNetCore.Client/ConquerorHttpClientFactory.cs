@@ -56,8 +56,8 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             where TCommand : class
         {
             var handler = new HttpCommandHandler<TCommand, TResponse>(configurationProvider.GetOptions<TCommandHandler>(serviceProvider),
-                                                                      serviceProvider.GetRequiredService<CommandClientContext>(),
-                                                                      serviceProvider.GetService<ICommandContextAccessor>());
+                                                                      serviceProvider.GetRequiredService<ConquerorClientContext>(),
+                                                                      serviceProvider.GetService<IConquerorContextAccessor>());
 
             if (!typeof(TCommandHandler).IsCustomCommandHandlerInterfaceType())
             {
@@ -73,8 +73,8 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             where TCommand : class
         {
             var handler = new HttpCommandHandler<TCommand>(configurationProvider.GetOptions<TCommandHandler>(serviceProvider),
-                                                           serviceProvider.GetRequiredService<CommandClientContext>(),
-                                                           serviceProvider.GetService<ICommandContextAccessor>());
+                                                           serviceProvider.GetRequiredService<ConquerorClientContext>(),
+                                                           serviceProvider.GetService<IConquerorContextAccessor>());
 
             if (!typeof(TCommandHandler).IsCustomCommandHandlerInterfaceType())
             {

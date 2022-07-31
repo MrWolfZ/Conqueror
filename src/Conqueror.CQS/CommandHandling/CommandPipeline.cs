@@ -9,16 +9,19 @@ namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class CommandPipeline
     {
-        private readonly CommandClientContext commandClientContext;
         private readonly CommandContextAccessor commandContextAccessor;
+        private readonly ConquerorClientContext conquerorClientContext;
+        private readonly ConquerorContextAccessor conquerorContextAccessor;
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares;
 
         public CommandPipeline(CommandContextAccessor commandContextAccessor,
-                               CommandClientContext commandClientContext,
+                               ConquerorContextAccessor conquerorContextAccessor,
+                               ConquerorClientContext conquerorClientContext,
                                IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
         {
             this.commandContextAccessor = commandContextAccessor;
-            this.commandClientContext = commandClientContext;
+            this.conquerorClientContext = conquerorClientContext;
+            this.conquerorContextAccessor = conquerorContextAccessor;
             this.middlewares = middlewares.ToList();
         }
 
@@ -30,25 +33,36 @@ namespace Conqueror.CQS.CommandHandling
         {
             var commandContext = new DefaultCommandContext(initialCommand);
 
-            if (commandContextAccessor.CommandContext is { } ctx)
-            {
-                commandContext.TransferrableItems = ctx.TransferrableItems;
-            }
-            else if (commandClientContext.HasItems)
-            {
-                ((ICommandContext)commandContext).AddTransferrableItems(commandClientContext.GetItems());
-            }
-
             commandContextAccessor.CommandContext = commandContext;
+
+            var createdConquerorContext = false;
+
+            var conquerorContext = conquerorContextAccessor.ConquerorContext;
+
+            if (conquerorContext is null)
+            {
+                createdConquerorContext = true;
+                conquerorContext = conquerorContextAccessor.ConquerorContext = new DefaultConquerorContext();
+                
+                if (conquerorClientContext.HasItems)
+                {
+                    conquerorContext.AddOrReplaceItems(conquerorClientContext.GetItems());
+                }
+            }
 
             var finalResponse = await ExecuteNextMiddleware(0, initialCommand, cancellationToken);
 
-            if (commandClientContext.IsActive)
+            if (conquerorClientContext.IsActive)
             {
-                commandClientContext.SetItems(commandContext.TransferrableItems);
+                conquerorClientContext.AddOrReplaceItems(conquerorContext.Items);
             }
-            
+
             commandContextAccessor.ClearContext();
+
+            if (createdConquerorContext)
+            {
+                conquerorContextAccessor.ClearContext();
+            }
 
             return finalResponse;
 

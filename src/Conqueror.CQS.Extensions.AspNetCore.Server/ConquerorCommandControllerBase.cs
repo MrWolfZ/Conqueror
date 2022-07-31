@@ -75,10 +75,10 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     {
         protected async Task<TResponse> ExecuteCommandWithContext<TResponse>(Func<Task<TResponse>> executeFn)
         {
-            var commandClientContext = Request.HttpContext.RequestServices.GetRequiredService<ICommandClientContext>();
-            var clientContextItems = commandClientContext.Activate();
+            var clientContext = Request.HttpContext.RequestServices.GetRequiredService<IConquerorClientContext>();
+            var clientContextItems = clientContext.Activate();
 
-            if (Request.Headers.TryGetValue(HttpConstants.CommandContextHeaderName, out var values))
+            if (Request.Headers.TryGetValue(HttpConstants.ConquerorContextHeaderName, out var values))
             {
                 try
                 {
@@ -99,7 +99,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
 
             if (clientContextItems.Count > 0)
             {
-                Response.Headers.Add(HttpConstants.CommandContextHeaderName, ContextValueFormatter.Format(clientContextItems));
+                Response.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(clientContextItems));
             }
 
             return response;

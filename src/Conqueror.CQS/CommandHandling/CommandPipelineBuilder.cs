@@ -7,7 +7,7 @@ namespace Conqueror.CQS.CommandHandling
     internal sealed class CommandPipelineBuilder : ICommandPipelineBuilder
     {
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares = new();
-        
+
         public CommandPipelineBuilder(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
@@ -38,9 +38,9 @@ namespace Conqueror.CQS.CommandHandling
             {
                 return this;
             }
-            
+
             middlewares.RemoveAt(index);
-            
+
             return this;
         }
 
@@ -53,9 +53,9 @@ namespace Conqueror.CQS.CommandHandling
             {
                 return this;
             }
-            
+
             middlewares.RemoveAt(index);
-            
+
             return this;
         }
 
@@ -84,14 +84,17 @@ namespace Conqueror.CQS.CommandHandling
             {
                 throw new InvalidOperationException($"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used");
             }
-            
+
             middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!));
             return this;
         }
 
         public CommandPipeline Build()
         {
-            return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(), ServiceProvider.GetRequiredService<CommandClientContext>(), middlewares);
+            return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(),
+                       ServiceProvider.GetRequiredService<ConquerorContextAccessor>(), 
+                       ServiceProvider.GetRequiredService<ConquerorClientContext>(),
+                       middlewares);
         }
     }
 }

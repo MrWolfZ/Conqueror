@@ -7,21 +7,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NUnit.Framework;
 
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
+
 namespace Conqueror.CQS.Tests
 {
-    public sealed class CommandContextTests
+    public sealed class ConquerorContextCommandTests
     {
         [Test]
-        public async Task GivenCommandExecution_CommandContextIsAvailableInHandler()
+        public async Task GivenCommandExecution_ConquerorContextIsAvailableInHandler()
         {
             var command = new TestCommand(10);
 
             var provider = Setup((cmd, ctx) =>
             {
-                Assert.AreEqual(command, cmd);
                 Assert.IsNotNull(ctx);
-                Assert.AreEqual(command, ctx!.Command);
-                Assert.IsNull(ctx.Response);
 
                 return new(cmd.Payload);
             });
@@ -30,72 +29,51 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_CommandContextIsAvailableInHandlerWithoutResponse()
+        public async Task GivenCommandExecution_ConquerorContextIsAvailableInHandlerWithoutResponse()
         {
             var command = new TestCommandWithoutResponse(10);
 
-            var provider = SetupWithoutResponse((cmd, ctx) =>
-            {
-                Assert.AreEqual(command, cmd);
-                Assert.IsNotNull(ctx);
-                Assert.AreEqual(command, ctx!.Command);
-                Assert.IsNull(ctx.Response);
-            });
+            var provider = SetupWithoutResponse((_, ctx) => { Assert.IsNotNull(ctx); });
 
             await provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
-        public async Task GivenCommandExecution_CommandContextIsAvailableInMiddleware()
+        public async Task GivenCommandExecution_ConquerorContextIsAvailableInMiddleware()
         {
             var command = new TestCommand(10);
             var response = new TestCommandResponse(11);
 
             var provider = Setup((_, _) => response, middlewareFn: async (middlewareCtx, ctx, next) =>
             {
-                Assert.AreEqual(command, middlewareCtx.Command);
                 Assert.IsNotNull(ctx);
-                Assert.AreEqual(command, ctx!.Command);
-                Assert.IsNull(ctx.Response);
 
-                var resp = await next(middlewareCtx.Command);
-
-                Assert.AreEqual(response, resp);
-                Assert.AreEqual(response, ctx.Response);
-
-                return resp;
+                return await next(middlewareCtx.Command);
             });
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
-        public async Task GivenCommandExecution_CommandContextIsAvailableInNestedClass()
+        public async Task GivenCommandExecution_ConquerorContextIsAvailableInNestedClass()
         {
             var command = new TestCommand(10);
 
             var provider = Setup(
-                nestedClassFn: ctx =>
-                {
-                    Assert.IsNotNull(ctx);
-                    Assert.AreEqual(command, ctx!.Command);
-                    Assert.IsNull(ctx.Response);
-                },
+                nestedClassFn: Assert.IsNotNull,
                 nestedClassLifetime: ServiceLifetime.Scoped);
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
-        public async Task GivenCommandExecution_CommandContextIsAvailableInNestedHandler()
+        public async Task GivenCommandExecution_ConquerorContextIsAvailableInNestedHandler()
         {
             var command = new TestCommand(10);
 
             var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
             {
                 Assert.IsNotNull(ctx);
-                Assert.AreNotEqual(command, ctx!.Command);
-                Assert.IsNull(ctx.Response);
 
                 return new(cmd.Payload);
             });
@@ -104,64 +82,18 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_CommandContextIsAvailableInHandlerAfterExecutionOfNestedHandler()
+        public async Task GivenCommandExecution_ConquerorContextIsAvailableInHandlerAfterExecutionOfNestedHandler()
         {
             var command = new TestCommand(10);
 
-            var provider = Setup(handlerPreReturnFn: ctx =>
-            {
-                Assert.IsNotNull(ctx);
-                Assert.AreEqual(command, ctx!.Command);
-            });
-
-            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-        }
-
-        [Test]
-        public async Task GivenCommandExecution_CommandContextReturnsCurrentCommandIfCommandIsChangedInMiddleware()
-        {
-            var command = new TestCommand(10);
-            var modifiedCommand = new TestCommand(11);
-            var response = new TestCommandResponse(11);
-
-            var provider = Setup(
-                (_, ctx) =>
-                {
-                    Assert.AreSame(modifiedCommand, ctx!.Command);
-                    return response;
-                },
-                middlewareFn: async (_, _, next) => await next(modifiedCommand));
-
-            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-        }
-
-        [Test]
-        public async Task GivenCommandExecution_CommandContextReturnsCurrentResponseIfResponseIsChangedInMiddleware()
-        {
-            var command = new TestCommand(10);
-            var response = new TestCommandResponse(11);
-            var modifiedResponse = new TestCommandResponse(12);
-
-            var provider = Setup(
-                (_, _) => response,
-                middlewareFn: async (middlewareCtx, _2, next) =>
-                {
-                    _ = await next(middlewareCtx.Command);
-                    return modifiedResponse;
-                },
-                outerMiddlewareFn: async (middlewareCtx, ctx, next) =>
-                {
-                    var result = await next(middlewareCtx.Command);
-                    Assert.AreSame(modifiedResponse, ctx!.Response);
-                    return result;
-                });
+            var provider = Setup(handlerPreReturnFn: Assert.IsNotNull);
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [Test]
         [Combinatorial]
-        public async Task GivenCommandExecution_CommandContextIsTheSameInMiddlewareHandlerAndNestedClassRegardlessOfLifetime(
+        public async Task GivenCommandExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassRegardlessOfLifetime(
             [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
             ServiceLifetime handlerLifetime,
             [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
@@ -170,7 +102,7 @@ namespace Conqueror.CQS.Tests
             ServiceLifetime nestedClassLifetime)
         {
             var command = new TestCommand(10);
-            var observedContexts = new List<ICommandContext>();
+            var observedContexts = new List<IConquerorContext>();
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -201,14 +133,14 @@ namespace Conqueror.CQS.Tests
 
         [Test]
         [Combinatorial]
-        public async Task GivenCommandExecution_CommandContextIsNotTheSameInNestedHandlerRegardlessOfLifetime(
+        public async Task GivenCommandExecution_ConquerorContextIsTheSameInNestedHandlerRegardlessOfLifetime(
             [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
             ServiceLifetime handlerLifetime,
             [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
             ServiceLifetime nestedHandlerLifetime)
         {
             var command = new TestCommand(10);
-            var observedContexts = new List<ICommandContext>();
+            var observedContexts = new List<IConquerorContext>();
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -229,14 +161,14 @@ namespace Conqueror.CQS.Tests
             Assert.That(observedContexts, Has.Count.EqualTo(2));
             Assert.IsNotNull(observedContexts[0]);
             Assert.IsNotNull(observedContexts[1]);
-            Assert.AreNotSame(observedContexts[0], observedContexts[1]);
+            Assert.AreSame(observedContexts[0], observedContexts[1]);
         }
 
         [Test]
-        public async Task GivenCommandExecution_CommandContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
+        public async Task GivenCommandExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
         {
             var command = new TestCommand(10);
-            var observedContexts = new List<ICommandContext>();
+            var observedContexts = new List<IConquerorContext>();
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -266,7 +198,7 @@ namespace Conqueror.CQS.Tests
         public async Task GivenCommandExecution_ContextItemsAreTheSameInHandlerMiddlewareAndNestedClass()
         {
             var command = new TestCommand(10);
-            var observedItems = new List<IDictionary<object, object?>>();
+            var observedItems = new List<IDictionary<string, string>>();
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -291,10 +223,10 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextItemsAreNotTheSameInNestedHandler()
+        public async Task GivenCommandExecution_ContextItemsAreTheSameInNestedHandler()
         {
             var command = new TestCommand(10);
-            var observedItems = new List<IDictionary<object, object?>>();
+            var observedItems = new List<IDictionary<string, string>>();
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -311,15 +243,15 @@ namespace Conqueror.CQS.Tests
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             Assert.That(observedItems, Has.Count.EqualTo(2));
-            Assert.AreNotSame(observedItems[0], observedItems[1]);
+            Assert.AreSame(observedItems[0], observedItems[1]);
         }
 
         [Test]
         public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSource()
         {
             var command = new TestCommand(10);
-            var items = new Dictionary<object, object?> { { new object(), new object() } };
-            var observedKeys = new List<object>();
+            var items = new Dictionary<string, string> { { "key", "value" } };
+            var observedKeys = new List<string>();
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -348,8 +280,8 @@ namespace Conqueror.CQS.Tests
         public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSourceWithDuplicates()
         {
             var command = new TestCommand(10);
-            var items = new Dictionary<object, object?> { { new object(), new object() } };
-            var observedKeys = new List<object>();
+            var items = new Dictionary<string, string> { { "key", "value" } };
+            var observedKeys = new List<string>();
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -379,8 +311,8 @@ namespace Conqueror.CQS.Tests
         public async Task GivenCommandExecution_ContextItemsCanBeSet()
         {
             var command = new TestCommand(10);
-            var key = new object();
-            var observedItems = new List<object?>();
+            var key = "test";
+            var observedItems = new List<string?>();
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -408,11 +340,11 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextItemsCannotBeAddedFromSourceForNestedHandler()
+        public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSourceForNestedHandler()
         {
             var command = new TestCommand(10);
-            var key = new object();
-            var items = new Dictionary<object, object?> { { key, new object() } };
+            var key = "key";
+            var items = new Dictionary<string, string> { { key, "value" } };
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -422,7 +354,7 @@ namespace Conqueror.CQS.Tests
                 },
                 (cmd, ctx) =>
                 {
-                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                    Assert.IsTrue(ctx?.Items.ContainsKey(key));
                     return new(cmd.Payload);
                 });
 
@@ -430,10 +362,10 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextItemsCannotBeSetForNestedHandler()
+        public async Task GivenCommandExecution_ContextItemsCanBeSetForNestedHandler()
         {
             var command = new TestCommand(10);
-            var key = new object();
+            var key = "test";
 
             var provider = Setup(
                 (cmd, ctx) =>
@@ -443,7 +375,7 @@ namespace Conqueror.CQS.Tests
                 },
                 (cmd, ctx) =>
                 {
-                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                    Assert.IsTrue(ctx?.Items.ContainsKey(key));
                     return new(cmd.Payload);
                 });
 
@@ -451,11 +383,11 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextItemsCannotBeAddedFromSourceFromNestedHandler()
+        public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSourceFromNestedHandler()
         {
             var command = new TestCommand(10);
-            var key = new object();
-            var items = new Dictionary<object, object?> { { key, new object() } };
+            var key = "key";
+            var items = new Dictionary<string, string> { { key, "value" } };
 
             var provider = Setup(
                 nestedHandlerFn: (cmd, ctx) =>
@@ -467,7 +399,7 @@ namespace Conqueror.CQS.Tests
                 {
                     Assert.IsFalse(ctx?.Items.ContainsKey(key));
                     var r = await next(middlewareCtx.Command);
-                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                    Assert.IsTrue(ctx?.Items.ContainsKey(key));
                     return r;
                 });
 
@@ -475,10 +407,10 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCommandExecution_ContextItemsCannotBeSetFromNestedHandler()
+        public async Task GivenCommandExecution_ContextItemsCanBeSetFromNestedHandler()
         {
             var command = new TestCommand(10);
-            var key = new object();
+            var key = "test";
 
             var provider = Setup(
                 nestedHandlerFn: (cmd, ctx) =>
@@ -490,20 +422,213 @@ namespace Conqueror.CQS.Tests
                 {
                     Assert.IsFalse(ctx?.Items.ContainsKey(key));
                     var r = await next(middlewareCtx.Command);
-                    Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                    Assert.IsTrue(ctx?.Items.ContainsKey(key));
                     return r;
                 });
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public void GivenNoCommandExecution_ConquerorContextIsNotAvailable()
+        {
+            var services = new ServiceCollection().AddConquerorCQS();
+
+            _ = services.AddTransient(p => new NestedClass(Assert.IsNull, p.GetRequiredService<IConquerorContextAccessor>()));
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            provider.GetRequiredService<NestedClass>().Execute();
+        }
+
+        [Test]
+        public async Task GivenClientContextItems_ContextItemsAreAvailableInHandler()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                Assert.IsTrue(ctx!.Items.ContainsKey(key));
+                Assert.AreEqual(value, ctx.Items[key]);
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+
+            clientContext.Activate()[key] = value;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenClientContextItems_ContextItemsAreAvailableInNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
+            {
+                Assert.IsTrue(ctx!.Items.ContainsKey(key));
+                Assert.AreEqual(value, ctx.Items[key]);
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+
+            clientContext.Activate()[key] = value;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenClientContextItems_ContextItemsCanBeChangedInHandlerForNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+            var newValue = "newValue";
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    Assert.AreEqual(value, ctx!.Items[key]);
+                    ctx.Items[key] = newValue;
+                    return new(cmd.Payload);
+                },
+                (cmd, ctx) =>
+                {
+                    Assert.AreEqual(newValue, ctx!.Items[key]);
+                    return new(cmd.Payload);
+                });
+
+            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+
+            clientContext.Activate()[key] = value;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenClientContext_ItemsFromHandlerAreAvailableInClientContext()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                ctx!.Items[key] = value;
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+
+            var contextItems = clientContext.Activate();
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.AreEqual(value, contextItems[key]);
+        }
+
+        [Test]
+        public async Task GivenClientContext_ItemsFromNestedHandlerAreAvailableInClientContext()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
+            {
+                ctx!.Items[key] = value;
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+
+            var contextItems = clientContext.Activate();
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.AreEqual(value, contextItems[key]);
+        }
+
+        [Test]
+        public async Task GivenNoActiveClientContext_ExecutingCommandDoesNotCreateContext()
+        {
+            var command = new TestCommand(10);
+            var key = "key";
+            var value = "value";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                ctx!.Items[key] = value;
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<ConquerorClientContext>();
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.IsFalse(clientContext.IsActive);
+        }
+
+        [Test]
+        public async Task GivenClientContextItems_ContextItemsFlowAcrossMultipleHandlerExecutions()
+        {
+            var command = new TestCommand(10);
+            var invocationCount = 0;
+            var key1 = "key 1";
+            var key2 = "key 2";
+            var value1 = "value 1";
+            var value2 = "value 2";
+            var value3 = "value 3";
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                if (invocationCount == 0)
+                {
+                    Assert.AreEqual(value1, ctx!.Items[key1]);
+                    Assert.IsFalse(ctx.Items.ContainsKey(key2));
+                    ctx.Items[key2] = value2;
+                }
+                else if (invocationCount == 1)
+                {
+                    Assert.AreEqual(value1, ctx!.Items[key1]);
+                    Assert.AreEqual(value2, ctx.Items[key2]);
+                    ctx.Items[key1] = value3;
+                }
+                else if (invocationCount == 2)
+                {
+                    Assert.AreEqual(value3, ctx!.Items[key1]);
+                    Assert.AreEqual(value2, ctx.Items[key2]);
+                }
+
+                invocationCount += 1;
+
+                return new(cmd.Payload);
+            });
+
+            var clientContext = provider.GetRequiredService<IConquerorClientContext>();
+
+            clientContext.Activate()[key1] = value1;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-        private IServiceProvider Setup(Func<TestCommand, ICommandContext?, TestCommandResponse>? handlerFn = null,
-                                       Func<NestedTestCommand, ICommandContext?, NestedTestCommandResponse>? nestedHandlerFn = null,
+        private IServiceProvider Setup(Func<TestCommand, IConquerorContext?, TestCommandResponse>? handlerFn = null,
+                                       Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse>? nestedHandlerFn = null,
                                        MiddlewareFn? middlewareFn = null,
                                        MiddlewareFn? outerMiddlewareFn = null,
-                                       Action<ICommandContext?>? nestedClassFn = null,
-                                       Action<ICommandContext?>? handlerPreReturnFn = null,
+                                       Action<IConquerorContext?>? nestedClassFn = null,
+                                       Action<IConquerorContext?>? handlerPreReturnFn = null,
                                        ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
                                        ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
                                        ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
@@ -518,26 +643,26 @@ namespace Conqueror.CQS.Tests
 
             var services = new ServiceCollection();
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<ICommandContextAccessor>()), nestedClassLifetime));
+            _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<IConquerorContextAccessor>()), nestedClassLifetime));
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandHandler),
                                                         p => new TestCommandHandler(handlerFn,
                                                                                     handlerPreReturnFn,
-                                                                                    p.GetRequiredService<ICommandContextAccessor>(),
+                                                                                    p.GetRequiredService<IConquerorContextAccessor>(),
                                                                                     p.GetRequiredService<NestedClass>(),
                                                                                     p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
                                                         handlerLifetime));
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(NestedTestCommandHandler),
-                                                        p => new NestedTestCommandHandler(nestedHandlerFn, p.GetRequiredService<ICommandContextAccessor>()),
+                                                        p => new NestedTestCommandHandler(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
                                                         nestedHandlerLifetime));
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandMiddleware),
-                                                        p => new TestCommandMiddleware(middlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
+                                                        p => new TestCommandMiddleware(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
                                                         middlewareLifetime));
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(OuterTestCommandMiddleware),
-                                                        p => new OuterTestCommandMiddleware(outerMiddlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
+                                                        p => new OuterTestCommandMiddleware(outerMiddlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
                                                         middlewareLifetime));
 
             var provider = services.AddConquerorCQS().ConfigureConqueror().BuildServiceProvider();
@@ -551,9 +676,9 @@ namespace Conqueror.CQS.Tests
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-        private IServiceProvider SetupWithoutResponse(Action<TestCommandWithoutResponse, ICommandContext?>? handlerFn = null,
+        private IServiceProvider SetupWithoutResponse(Action<TestCommandWithoutResponse, IConquerorContext?>? handlerFn = null,
                                                       MiddlewareFn? middlewareFn = null,
-                                                      Action<ICommandContext?>? nestedClassFn = null,
+                                                      Action<IConquerorContext?>? nestedClassFn = null,
                                                       ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
                                                       ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
                                                       ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
@@ -564,14 +689,14 @@ namespace Conqueror.CQS.Tests
 
             var services = new ServiceCollection();
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<ICommandContextAccessor>()), nestedClassLifetime));
+            _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<IConquerorContextAccessor>()), nestedClassLifetime));
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandHandlerWithoutResponse),
-                                                        p => new TestCommandHandlerWithoutResponse(handlerFn, p.GetRequiredService<ICommandContextAccessor>(), p.GetRequiredService<NestedClass>()),
+                                                        p => new TestCommandHandlerWithoutResponse(handlerFn, p.GetRequiredService<IConquerorContextAccessor>(), p.GetRequiredService<NestedClass>()),
                                                         handlerLifetime));
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandMiddleware),
-                                                        p => new TestCommandMiddleware(middlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
+                                                        p => new TestCommandMiddleware(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
                                                         middlewareLifetime));
 
             var provider = services.AddConquerorCQS().ConfigureConqueror().BuildServiceProvider();
@@ -584,7 +709,7 @@ namespace Conqueror.CQS.Tests
         }
 
         private delegate Task<TestCommandResponse> MiddlewareFn(CommandMiddlewareContext<TestCommand, TestCommandResponse> middlewareCtx,
-                                                                ICommandContext? ctx,
+                                                                IConquerorContext? ctx,
                                                                 Func<TestCommand, Task<TestCommandResponse>> next);
 
         private sealed record TestCommand(int Payload);
@@ -599,20 +724,20 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly Func<TestCommand, ICommandContext?, TestCommandResponse> handlerFn;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
+            private readonly Func<TestCommand, IConquerorContext?, TestCommandResponse> handlerFn;
             private readonly NestedClass nestedClass;
             private readonly ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler;
-            private readonly Action<ICommandContext?> preReturnFn;
+            private readonly Action<IConquerorContext?> preReturnFn;
 
-            public TestCommandHandler(Func<TestCommand, ICommandContext?, TestCommandResponse> handlerFn,
-                                      Action<ICommandContext?> preReturnFn,
-                                      ICommandContextAccessor commandContextAccessor,
+            public TestCommandHandler(Func<TestCommand, IConquerorContext?, TestCommandResponse> handlerFn,
+                                      Action<IConquerorContext?> preReturnFn,
+                                      IConquerorContextAccessor conquerorContextAccessor,
                                       NestedClass nestedClass,
                                       ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
             {
                 this.handlerFn = handlerFn;
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
                 this.nestedClass = nestedClass;
                 this.nestedCommandHandler = nestedCommandHandler;
                 this.preReturnFn = preReturnFn;
@@ -621,10 +746,10 @@ namespace Conqueror.CQS.Tests
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
-                var response = handlerFn(command, commandContextAccessor.CommandContext);
+                var response = handlerFn(command, conquerorContextAccessor.ConquerorContext);
                 nestedClass.Execute();
                 _ = await nestedCommandHandler.ExecuteCommand(new(command.Payload), cancellationToken);
-                preReturnFn(commandContextAccessor.CommandContext);
+                preReturnFn(conquerorContextAccessor.ConquerorContext);
                 return response;
             }
 
@@ -635,59 +760,59 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly Action<TestCommandWithoutResponse, ICommandContext?> handlerFn;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
+            private readonly Action<TestCommandWithoutResponse, IConquerorContext?> handlerFn;
             private readonly NestedClass nestedClass;
 
-            public TestCommandHandlerWithoutResponse(Action<TestCommandWithoutResponse, ICommandContext?> handlerFn, ICommandContextAccessor commandContextAccessor, NestedClass nestedClass)
+            public TestCommandHandlerWithoutResponse(Action<TestCommandWithoutResponse, IConquerorContext?> handlerFn, IConquerorContextAccessor conquerorContextAccessor, NestedClass nestedClass)
             {
                 this.handlerFn = handlerFn;
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
                 this.nestedClass = nestedClass;
             }
 
             public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
-                handlerFn(command, commandContextAccessor.CommandContext);
+                handlerFn(command, conquerorContextAccessor.ConquerorContext);
                 nestedClass.Execute();
             }
         }
 
         private sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly Func<NestedTestCommand, ICommandContext?, NestedTestCommandResponse> handlerFn;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
+            private readonly Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn;
 
-            public NestedTestCommandHandler(Func<NestedTestCommand, ICommandContext?, NestedTestCommandResponse> handlerFn, ICommandContextAccessor commandContextAccessor)
+            public NestedTestCommandHandler(Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn, IConquerorContextAccessor conquerorContextAccessor)
             {
                 this.handlerFn = handlerFn;
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
             }
 
             public async Task<NestedTestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
-                return handlerFn(command, commandContextAccessor.CommandContext);
+                return handlerFn(command, conquerorContextAccessor.ConquerorContext);
             }
         }
 
         private sealed class OuterTestCommandMiddleware : ICommandMiddleware
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly MiddlewareFn middlewareFn;
 
-            public OuterTestCommandMiddleware(MiddlewareFn middlewareFn, ICommandContextAccessor commandContextAccessor)
+            public OuterTestCommandMiddleware(MiddlewareFn middlewareFn, IConquerorContextAccessor conquerorContextAccessor)
             {
                 this.middlewareFn = middlewareFn;
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
             }
 
             public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
                 where TCommand : class
             {
                 await Task.Yield();
-                return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, commandContextAccessor.CommandContext, async cmd =>
+                return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, conquerorContextAccessor.ConquerorContext, async cmd =>
                 {
                     var response = await ctx.Next((cmd as TCommand)!, ctx.CancellationToken);
                     return (response as TestCommandResponse)!;
@@ -697,20 +822,20 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandMiddleware : ICommandMiddleware
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly MiddlewareFn middlewareFn;
 
-            public TestCommandMiddleware(MiddlewareFn middlewareFn, ICommandContextAccessor commandContextAccessor)
+            public TestCommandMiddleware(MiddlewareFn middlewareFn, IConquerorContextAccessor conquerorContextAccessor)
             {
                 this.middlewareFn = middlewareFn;
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
             }
 
             public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
                 where TCommand : class
             {
                 await Task.Yield();
-                return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, commandContextAccessor.CommandContext, async cmd =>
+                return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, conquerorContextAccessor.ConquerorContext, async cmd =>
                 {
                     var response = await ctx.Next((cmd as TCommand)!, ctx.CancellationToken);
                     return (response as TestCommandResponse)!;
@@ -720,18 +845,18 @@ namespace Conqueror.CQS.Tests
 
         private sealed class NestedClass
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly Action<ICommandContext?> nestedClassFn;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
+            private readonly Action<IConquerorContext?> nestedClassFn;
 
-            public NestedClass(Action<ICommandContext?> nestedClassFn, ICommandContextAccessor commandContextAccessor)
+            public NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
             {
                 this.nestedClassFn = nestedClassFn;
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
             }
 
             public void Execute()
             {
-                nestedClassFn(commandContextAccessor.CommandContext);
+                nestedClassFn(conquerorContextAccessor.ConquerorContext);
             }
         }
     }

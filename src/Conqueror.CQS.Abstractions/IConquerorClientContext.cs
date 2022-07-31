@@ -1,23 +1,24 @@
 ﻿using System.Collections.Generic;
 
+// TODO: move to common abstractions package
 namespace Conqueror.CQS
 {
     /// <summary>
-    ///     Allows setting contextual information for a command execution.
+    ///     Allows setting contextual information for conqueror executions (i.e. commands, queries, and events).
     /// </summary>
-    public interface ICommandClientContext
+    public interface IConquerorClientContext
     {
         /// <summary>
-        ///     Returns whether the command client context is currently active.
+        ///     Returns whether the Conqueror client context is currently active.
         /// </summary>
         bool IsActive { get; }
 
         /// <summary>
-        ///     Makes the command client context active. The returned key/value collection can be used
-        ///     to share contextual data for command executions. Command executions will have access to
-        ///     the items and can also update the items with their own contextual response information.
-        ///     The context can be used for multiple successive command executions, and contextual data
-        ///     will flow across them. The data will also flow across transport boundaries (e.g HTTP).
+        ///     Makes the client context active. The returned key/value collection can be used to share
+        ///     contextual data for command, query, and event handler executions. Executions will have
+        ///     access to the items and can also update the items with their own contextual information.
+        ///     The context can be used for multiple successive executions, and contextual data will
+        ///     flow across them. The data also flows across transport boundaries (e.g HTTP).
         /// </summary>
         /// <exception cref="System.InvalidOperationException">If the client context is already active.</exception>
         IDictionary<string, string> Activate();

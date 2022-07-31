@@ -23,31 +23,14 @@ namespace Conqueror.CQS
         IDictionary<object, object?> Items { get; }
 
         /// <summary>
-        ///     Gets a key/value collection that can be used to share data across different commands or transport boundaries.
-        /// </summary>
-        IDictionary<string, string> TransferrableItems { get; }
-
-        /// <summary>
         ///     Add items from <paramref name="source"/> to <see cref="Items" />.
         /// </summary>
         /// <param name="source">The items to add.</param>
-        void AddItems(IEnumerable<KeyValuePair<object, object?>> source)
+        void AddOrReplaceItems(IEnumerable<KeyValuePair<object, object?>> source)
         {
             foreach (var p in source)
             {
                 Items[p.Key] = p.Value;
-            }
-        }
-
-        /// <summary>
-        ///     Add items from <paramref name="source"/> to <see cref="TransferrableItems" />.
-        /// </summary>
-        /// <param name="source">The items to add.</param>
-        void AddTransferrableItems(IEnumerable<KeyValuePair<string, string>> source)
-        {
-            foreach (var p in source)
-            {
-                TransferrableItems[p.Key] = p.Value;
             }
         }
 

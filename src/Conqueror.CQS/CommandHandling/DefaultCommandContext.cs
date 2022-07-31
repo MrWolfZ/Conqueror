@@ -23,9 +23,6 @@ namespace Conqueror.CQS.CommandHandling
         /// <inheritdoc />
         public IDictionary<object, object?> Items { get; } = new ConcurrentDictionary<object, object?>();
 
-        /// <inheritdoc />
-        public IDictionary<string, string> TransferrableItems { get; set; } = new ConcurrentDictionary<string, string>();
-
         public void SetCommand(object cmd)
         {
             command = cmd;

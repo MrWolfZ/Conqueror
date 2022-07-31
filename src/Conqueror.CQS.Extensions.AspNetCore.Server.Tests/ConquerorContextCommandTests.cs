@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
@@ -15,7 +14,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 {
     [TestFixture]
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
-    public sealed class CommandContextTests : TestBase
+    public sealed class ConquerorContextCommandTests : TestBase
     {
         private static readonly Dictionary<string, string> ContextItems = new()
         {
@@ -31,36 +30,15 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenNonTransferrableCommandContextItems_ItemsAreNotReturnedInHeader(string path, string data)
+        public async Task GivenContextItems_ItemsAreReturnedInHeader(string path, string data)
         {
             Resolve<TestObservations>().ShouldAddItems = true;
-            
-            using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
-            var response = await HttpClient.PostAsync(path, content);
-            await response.AssertSuccessStatusCode();
-
-            var exists = response.Headers.TryGetValues(HttpConstants.CommandContextHeaderName, out var values);
-
-            Assert.IsFalse(exists);
-
-            var receivedItems = ContextValueFormatter.Parse(values ?? new List<string>());
-
-            Assert.That(receivedItems, Is.Empty);
-        }
-
-        [TestCase("/api/commands/test", "{}")]
-        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenTransferrableCommandContextItems_ItemsAreReturnedInHeader(string path, string data)
-        {
-            Resolve<TestObservations>().ShouldAddTransferrableItems = true;
 
             using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
             var response = await HttpClient.PostAsync(path, content);
             await response.AssertSuccessStatusCode();
 
-            var exists = response.Headers.TryGetValues(HttpConstants.CommandContextHeaderName, out var values);
+            var exists = response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values);
 
             Assert.IsTrue(exists);
 
@@ -73,11 +51,11 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenCommandContextRequestHeader_ItemsAreReceivedByHandler(string path, string data)
+        public async Task GivenConquerorContextRequestHeader_ItemsAreReceivedByHandler(string path, string data)
         {
             using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
             {
-                Headers = { { HttpConstants.CommandContextHeaderName, ContextValueFormatter.Format(ContextItems) } },
+                Headers = { { HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(ContextItems) } },
             };
 
             var response = await HttpClient.PostAsync(path, content);
@@ -92,11 +70,11 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenInvalidCommandContextRequestHeader_ReturnsBadRequest(string path, string data)
+        public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path, string data)
         {
             using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
             {
-                Headers = { { HttpConstants.CommandContextHeaderName, "foo=bar" } },
+                Headers = { { HttpConstants.ConquerorContextHeaderName, "foo=bar" } },
             };
 
             var response = await HttpClient.PostAsync(path, content);
@@ -124,27 +102,22 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
         public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandler(ICommandContextAccessor commandContextAccessor, TestObservations testObservations)
+            public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
             {
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
-                testObservations.ReceivedContextItems.SetRange(commandContextAccessor.CommandContext!.TransferrableItems);
+                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
                 {
-                    commandContextAccessor.CommandContext?.AddItems(ContextItems.ToDictionary(p => (object)p.Key, p => (object?)p.Value));
-                }
-
-                if (testObservations.ShouldAddTransferrableItems)
-                {
-                    commandContextAccessor.CommandContext?.AddTransferrableItems(ContextItems);
+                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
 
                 return Task.FromResult(new TestCommandResponse());
@@ -153,27 +126,22 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
         public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandlerWithoutResponse(ICommandContextAccessor commandContextAccessor, TestObservations testObservations)
+            public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
             {
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
             {
-                testObservations.ReceivedContextItems.SetRange(commandContextAccessor.CommandContext!.TransferrableItems);
+                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
                 {
-                    commandContextAccessor.CommandContext?.AddItems(ContextItems.ToDictionary(p => (object)p.Key, p => (object?)p.Value));
-                }
-
-                if (testObservations.ShouldAddTransferrableItems)
-                {
-                    commandContextAccessor.CommandContext?.AddTransferrableItems(ContextItems);
+                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
                 
                 return Task.CompletedTask;
@@ -182,27 +150,22 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
         public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandlerWithoutPayload(ICommandContextAccessor commandContextAccessor, TestObservations testObservations)
+            public TestCommandHandlerWithoutPayload(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
             {
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken)
             {
-                testObservations.ReceivedContextItems.SetRange(commandContextAccessor.CommandContext!.TransferrableItems);
+                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
                 {
-                    commandContextAccessor.CommandContext?.AddItems(ContextItems.ToDictionary(p => (object)p.Key, p => (object?)p.Value));
-                }
-
-                if (testObservations.ShouldAddTransferrableItems)
-                {
-                    commandContextAccessor.CommandContext?.AddTransferrableItems(ContextItems);
+                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
                 
                 return Task.FromResult(new TestCommandResponse());
@@ -211,27 +174,22 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
         public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandlerWithoutResponseWithoutPayload(ICommandContextAccessor commandContextAccessor, TestObservations testObservations)
+            public TestCommandHandlerWithoutResponseWithoutPayload(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
             {
-                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken)
             {
-                testObservations.ReceivedContextItems.SetRange(commandContextAccessor.CommandContext!.TransferrableItems);
+                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
                 {
-                    commandContextAccessor.CommandContext?.AddItems(ContextItems.ToDictionary(p => (object)p.Key, p => (object?)p.Value));
-                }
-
-                if (testObservations.ShouldAddTransferrableItems)
-                {
-                    commandContextAccessor.CommandContext?.AddTransferrableItems(ContextItems);
+                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
                 
                 return Task.CompletedTask;
@@ -241,8 +199,6 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
         public sealed class TestObservations
         {
             public bool ShouldAddItems { get; set; }
-
-            public bool ShouldAddTransferrableItems { get; set; }
 
             public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
         }

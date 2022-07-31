@@ -5,9 +5,9 @@ using System.Threading;
 namespace Conqueror.CQS
 {
     /// <inheritdoc />
-    internal sealed class CommandClientContext : ICommandClientContext
+    internal sealed class ConquerorClientContext : IConquerorClientContext
     {
-        private static readonly AsyncLocal<CommandClientContextHolder> ContextCurrent = new();
+        private static readonly AsyncLocal<ConquerorClientContextHolder> ContextCurrent = new();
 
         public bool HasItems => IsActive && ContextCurrent.Value!.Items.Count > 0;
 
@@ -37,7 +37,7 @@ namespace Conqueror.CQS
         /// <inheritdoc />
         public bool IsActive => ContextCurrent.Value != null;
 
-        public void SetItems(IEnumerable<KeyValuePair<string, string>> source)
+        public void AddOrReplaceItems(IEnumerable<KeyValuePair<string, string>> source)
         {
             if (!IsActive)
             {
@@ -50,7 +50,7 @@ namespace Conqueror.CQS
             }
         }
 
-        private sealed class CommandClientContextHolder
+        private sealed class ConquerorClientContextHolder
         {
             public Dictionary<string, string> Items { get; } = new();
         }
