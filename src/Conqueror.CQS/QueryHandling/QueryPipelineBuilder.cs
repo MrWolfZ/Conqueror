@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling
 {
@@ -90,7 +91,9 @@ namespace Conqueror.CQS.QueryHandling
 
         public QueryPipeline Build()
         {
-            return new(middlewares);
+            return new(ServiceProvider.GetRequiredService<QueryContextAccessor>(),
+                       ServiceProvider.GetRequiredService<ConquerorContextAccessor>(),
+                       middlewares);
         }
     }
 }

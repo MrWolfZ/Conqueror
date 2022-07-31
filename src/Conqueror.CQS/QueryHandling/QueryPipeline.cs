@@ -9,10 +9,16 @@ namespace Conqueror.CQS.QueryHandling
 {
     internal sealed class QueryPipeline
     {
+        private readonly ConquerorContextAccessor conquerorContextAccessor;
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares;
+        private readonly QueryContextAccessor queryContextAccessor;
 
-        public QueryPipeline(IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
+        public QueryPipeline(QueryContextAccessor queryContextAccessor,
+                             ConquerorContextAccessor conquerorContextAccessor,
+                             IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
         {
+            this.queryContextAccessor = queryContextAccessor;
+            this.conquerorContextAccessor = conquerorContextAccessor;
             this.middlewares = middlewares.ToList();
         }
 
@@ -22,21 +28,37 @@ namespace Conqueror.CQS.QueryHandling
                                                                 CancellationToken cancellationToken)
             where TQuery : class
         {
-            return await ExecuteNextMiddleware(0, initialQuery, cancellationToken);
+            var queryContext = new DefaultQueryContext(initialQuery);
+
+            queryContextAccessor.QueryContext = queryContext;
+
+            using var conquerorContext = conquerorContextAccessor.GetOrCreate();
+            
+            var finalResponse = await ExecuteNextMiddleware(0, initialQuery, cancellationToken);
+
+            queryContextAccessor.ClearContext();
+
+            return finalResponse;
 
             async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, CancellationToken token)
             {
+                queryContext.SetQuery(query);
+
                 if (index >= middlewares.Count)
                 {
                     var handler = (IQueryHandler<TQuery, TResponse>)serviceProvider.GetRequiredService(metadata.HandlerType);
-                    return await handler.ExecuteQuery(query, token);
+                    var responseFromHandler = await handler.ExecuteQuery(query, token);
+                    queryContext.SetResponse(responseFromHandler!);
+                    return responseFromHandler;
                 }
 
                 var (middlewareType, middlewareConfiguration) = middlewares[index];
                 var invokerType = middlewareConfiguration is null ? typeof(QueryMiddlewareInvoker) : typeof(QueryMiddlewareInvoker<>).MakeGenericType(middlewareConfiguration.GetType());
                 var invoker = (IQueryMiddlewareInvoker)Activator.CreateInstance(invokerType)!;
 
-                return await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, t), middlewareType, middlewareConfiguration, serviceProvider, token);
+                var response = await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, t), middlewareType, middlewareConfiguration, serviceProvider, token);
+                queryContext.SetResponse(response!);
+                return response;
             }
         }
     }

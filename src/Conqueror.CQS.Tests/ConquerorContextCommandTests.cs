@@ -512,7 +512,7 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenClientContext_ItemsFromHandlerAreAvailableInClientContext()
+        public async Task GivenManuallyCreatedContext_ItemsFromHandlerAreAvailableInClientContext()
         {
             var command = new TestCommand(10);
             var key = "key";
@@ -534,7 +534,7 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenClientContext_ItemsFromNestedHandlerAreAvailableInClientContext()
+        public async Task GivenManuallyCreatedContext_ItemsFromNestedHandlerAreAvailableInClientContext()
         {
             var command = new TestCommand(10);
             var key = "key";
@@ -565,6 +565,7 @@ namespace Conqueror.CQS.Tests
             var value1 = "value 1";
             var value2 = "value 2";
             var value3 = "value 3";
+            var value4 = "value 4";
 
             var provider = Setup((cmd, ctx) =>
             {
@@ -584,6 +585,11 @@ namespace Conqueror.CQS.Tests
                 {
                     Assert.AreEqual(value3, ctx!.Items[key1]);
                     Assert.AreEqual(value2, ctx.Items[key2]);
+                    ctx.Items[key1] = value4;
+                }
+                else
+                {
+                    Assert.Fail("should not reach this");
                 }
 
                 invocationCount += 1;
@@ -600,6 +606,8 @@ namespace Conqueror.CQS.Tests
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.AreSame(value4, conquerorContext.Items[key1]);
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
