@@ -16,11 +16,13 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
         where TQuery : class
     {
         private readonly HttpQueryAttribute attribute;
+        private readonly IConquerorContextAccessor? conquerorContextAccessor;
         private readonly HttpClient httpClient;
         private readonly JsonSerializerOptions? serializerOptions;
 
-        public HttpQueryHandler(ResolvedHttpClientOptions options)
+        public HttpQueryHandler(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
         {
+            this.conquerorContextAccessor = conquerorContextAccessor;
             httpClient = options.HttpClient;
             serializerOptions = options.JsonSerializerOptions;
             attribute = typeof(TQuery).GetCustomAttribute<HttpQueryAttribute>()!;
@@ -28,13 +30,27 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
 
         public async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken)
         {
+            using var requestMessage = new HttpRequestMessage
+            {
+                Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
+            };
+
+            if (conquerorContextAccessor?.ConquerorContext?.Items is { Count: > 0 } contextItems)
+            {
+                requestMessage.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(contextItems));
+            }
+
             // TODO: use service
             var regex = new Regex("Query$");
             var routeQueryName = regex.Replace(typeof(TQuery).Name, string.Empty);
 
             var uriString = $"/api/queries/{routeQueryName}";
 
-            if (!attribute.UsePost)
+            if (attribute.UsePost)
+            {
+                requestMessage.Content = JsonContent.Create(query, null, serializerOptions);
+            }
+            else
             {
                 var queryString = HttpUtility.ParseQueryString(string.Empty);
 
@@ -61,16 +77,20 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
                 }
             }
 
-            var uri = new Uri(uriString, UriKind.Relative);
+            requestMessage.RequestUri = new(uriString, UriKind.Relative);
 
-            var response = attribute.UsePost
-                ? await httpClient.PostAsJsonAsync(uri, query, serializerOptions, cancellationToken)
-                : await httpClient.GetAsync(uri, cancellationToken);
+            var response = await httpClient.SendAsync(requestMessage, cancellationToken);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 var content = await response.BufferAndReadContent();
                 throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed: {content}", response);
+            }
+
+            if (conquerorContextAccessor?.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+            {
+                var parsedContextItems = ContextValueFormatter.Parse(values);
+                ctx.AddOrReplaceItems(parsedContextItems);
             }
 
             var result = await response.Content.ReadFromJsonAsync<TResponse>(serializerOptions, cancellationToken);

@@ -12,7 +12,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 {
     [TestFixture]
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
-    public class ConquerorContextCommandTests : TestBase
+    public class ConquerorContextQueryTests : TestBase
     {
         private static readonly Dictionary<string, string> ContextItems = new()
         {
@@ -31,25 +31,25 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
             using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-            var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             CollectionAssert.AreEquivalent(ContextItems, context.Items);
         }
 
         [Test]
-        public async Task GivenManuallyCreatedContextOnClientAndContextItemsInHandlerWithoutResponse_ItemsAreReturnedInClientContext()
+        public async Task GivenManuallyCreatedContextOnClientAndContextItemsInPostHandler_ItemsAreReturnedInClientContext()
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
             using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-            var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-            CollectionAssert.AreEquivalent(ContextItems,  context.Items);
+            CollectionAssert.AreEquivalent(ContextItems, context.Items);
         }
 
         [Test]
@@ -58,9 +58,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
             using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
             context.AddOrReplaceItems(ContextItems);
 
-            var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
 
@@ -80,19 +80,19 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
             var allReceivedKeys = new List<string>();
 
-            var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
-
-            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-            observations.ReceivedContextItems.Clear();
-
-            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
             observations.ReceivedContextItems.Clear();
 
-            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
             observations.ReceivedContextItems.Clear();
@@ -101,14 +101,14 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         }
 
         [Test]
-        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerWithoutResponse()
+        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInPostHandler()
         {
             using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
             context.AddOrReplaceItems(ContextItems);
 
-            var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
 
@@ -117,7 +117,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         [Test]
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerWithoutResponseAcrossMultipleInvocations()
+        public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInPostHandlerAcrossMultipleInvocations()
         {
             using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
             context.Items.Add(ContextItems.First());
@@ -128,19 +128,19 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
             var allReceivedKeys = new List<string>();
 
-            var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
-
-            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-            observations.ReceivedContextItems.Clear();
-
-            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
             observations.ReceivedContextItems.Clear();
 
-            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
             observations.ReceivedContextItems.Clear();
@@ -161,20 +161,20 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
             var allReceivedKeys = new List<string>();
 
-            var handler1 = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
-            var handler2 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler1 = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
+            var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-            await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
-
-            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-            observations.ReceivedContextItems.Clear();
-
-            _ = await handler2.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
             observations.ReceivedContextItems.Clear();
 
-            await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
+            observations.ReceivedContextItems.Clear();
+
+            _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
             allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
             observations.ReceivedContextItems.Clear();
@@ -187,9 +187,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
-            var handler = ResolveOnClient<ICommandHandler<OuterTestCommand, OuterTestCommandResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<OuterTestQuery, OuterTestQueryResponse>>();
 
-            _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler.ExecuteQuery(new(), CancellationToken.None);
 
             var receivedContextItems = ResolveOnClient<TestObservations>().ReceivedOuterContextItems;
 
@@ -197,13 +197,13 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         }
 
         [Test]
-        public async Task GivenContextItemsInHandlerWithoutResponse_ContextIsReceivedInOuterHandler()
+        public async Task GivenContextItemsInPostHandler_ContextIsReceivedInOuterHandler()
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
-            var handler = ResolveOnClient<ICommandHandler<OuterTestCommandWithoutResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<OuterTestPostQuery, OuterTestQueryResponse>>();
 
-            await handler.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler.ExecuteQuery(new(), CancellationToken.None);
 
             var receivedContextItems = ResolveOnClient<TestObservations>().ReceivedOuterContextItems;
 
@@ -215,9 +215,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         {
             ResolveOnClient<TestObservations>().ShouldAddOuterItems = true;
 
-            var handler = ResolveOnClient<ICommandHandler<OuterTestCommand, OuterTestCommandResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<OuterTestQuery, OuterTestQueryResponse>>();
 
-            _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler.ExecuteQuery(new(), CancellationToken.None);
 
             var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
 
@@ -225,13 +225,13 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         }
 
         [Test]
-        public async Task GivenContextItemsInOuterHandler_ContextIsReceivedInHandlerWithoutResponse()
+        public async Task GivenContextItemsInOuterHandler_ContextIsReceivedInPostHandler()
         {
             ResolveOnClient<TestObservations>().ShouldAddOuterItems = true;
 
-            var handler = ResolveOnClient<ICommandHandler<OuterTestCommandWithoutResponse>>();
+            var handler = ResolveOnClient<IQueryHandler<OuterTestPostQuery, OuterTestQueryResponse>>();
 
-            await handler.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler.ExecuteQuery(new(), CancellationToken.None);
 
             var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
 
@@ -242,8 +242,8 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         {
             _ = services.AddMvc().AddConqueror();
 
-            _ = services.AddTransient<TestCommandHandler>()
-                        .AddTransient<TestCommandHandlerWithoutResponse>()
+            _ = services.AddTransient<TestQueryHandler>()
+                        .AddTransient<TestPostQueryHandler>()
                         .AddSingleton<TestObservations>();
 
             _ = services.AddConquerorCQS().ConfigureConqueror();
@@ -260,11 +260,11 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
                                 PropertyNameCaseInsensitive = true,
                             };
                         })
-                        .AddCommandHttpClient<ICommandHandler<TestCommand, TestCommandResponse>>()
-                        .AddCommandHttpClient<ICommandHandler<TestCommandWithoutResponse>>();
+                        .AddQueryHttpClient<IQueryHandler<TestQuery, TestQueryResponse>>()
+                        .AddQueryHttpClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-            _ = services.AddTransient<OuterTestCommandHandler>()
-                        .AddTransient<OuterTestCommandWithoutResponseHandler>()
+            _ = services.AddTransient<OuterTestQueryHandler>()
+                        .AddTransient<OuterTestPostQueryHandler>()
                         .AddSingleton<TestObservations>();
 
             _ = services.AddConquerorCQS().ConfigureConqueror();
@@ -276,18 +276,18 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
             _ = app.UseEndpoints(b => b.MapControllers());
         }
 
-        public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -296,22 +296,22 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
 
-                return Task.FromResult(new TestCommandResponse());
+                return Task.FromResult(new TestQueryResponse());
             }
         }
 
-        public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+        public sealed class TestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
         {
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
-            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -320,66 +320,67 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
 
-                return Task.FromResult(new TestCommandResponse());
+                return Task.FromResult(new TestQueryResponse());
             }
         }
 
-        public sealed record OuterTestCommand;
+        public sealed record OuterTestQuery;
 
-        public sealed record OuterTestCommandResponse;
+        public sealed record OuterTestQueryResponse;
 
-        public sealed class OuterTestCommandHandler : ICommandHandler<OuterTestCommand, OuterTestCommandResponse>
+        public sealed class OuterTestQueryHandler : IQueryHandler<OuterTestQuery, OuterTestQueryResponse>
         {
             private readonly IConquerorContextAccessor conquerorContextAccessor;
-            private readonly ICommandHandler<TestCommand, TestCommandResponse> nestedHandler;
+            private readonly IQueryHandler<TestQuery, TestQueryResponse> nestedHandler;
             private readonly TestObservations testObservations;
 
-            public OuterTestCommandHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations, ICommandHandler<TestCommand, TestCommandResponse> nestedHandler)
+            public OuterTestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations, IQueryHandler<TestQuery, TestQueryResponse> nestedHandler)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
                 this.nestedHandler = nestedHandler;
             }
 
-            public async Task<OuterTestCommandResponse> ExecuteCommand(OuterTestCommand command, CancellationToken cancellationToken)
+            public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestQuery query, CancellationToken cancellationToken)
             {
                 if (testObservations.ShouldAddOuterItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
 
-                _ = await nestedHandler.ExecuteCommand(new(), cancellationToken);
+                _ = await nestedHandler.ExecuteQuery(new(), cancellationToken);
                 testObservations.ReceivedOuterContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
                 return new();
             }
         }
 
-        public sealed record OuterTestCommandWithoutResponse;
+        public sealed record OuterTestPostQuery;
 
-        public sealed class OuterTestCommandWithoutResponseHandler : ICommandHandler<OuterTestCommandWithoutResponse>
+        public sealed class OuterTestPostQueryHandler : IQueryHandler<OuterTestPostQuery, OuterTestQueryResponse>
         {
             private readonly IConquerorContextAccessor conquerorContextAccessor;
-            private readonly ICommandHandler<TestCommandWithoutResponse> nestedHandler;
+            private readonly IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler;
             private readonly TestObservations testObservations;
 
-            public OuterTestCommandWithoutResponseHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                                          TestObservations testObservations,
-                                                          ICommandHandler<TestCommandWithoutResponse> nestedHandler)
+            public OuterTestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
+                                                        TestObservations testObservations,
+                                                        IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
                 this.nestedHandler = nestedHandler;
             }
 
-            public async Task ExecuteCommand(OuterTestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestPostQuery query, CancellationToken cancellationToken)
             {
                 if (testObservations.ShouldAddOuterItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
 
-                await nestedHandler.ExecuteCommand(new(), cancellationToken);
+                _ = await nestedHandler.ExecuteQuery(new(), cancellationToken);
                 testObservations.ReceivedOuterContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+                return new();
             }
         }
 

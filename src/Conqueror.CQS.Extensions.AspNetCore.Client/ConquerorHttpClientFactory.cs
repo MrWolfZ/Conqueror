@@ -87,7 +87,8 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             where TQueryHandler : class, IQueryHandler
             where TQuery : class
         {
-            var handler = new HttpQueryHandler<TQuery, TResponse>(configurationProvider.GetOptions<TQueryHandler>(serviceProvider));
+            var handler = new HttpQueryHandler<TQuery, TResponse>(configurationProvider.GetOptions<TQueryHandler>(serviceProvider),
+                                                                  serviceProvider.GetService<IConquerorContextAccessor>());
 
             if (!typeof(TQueryHandler).IsCustomQueryHandlerInterfaceType())
             {

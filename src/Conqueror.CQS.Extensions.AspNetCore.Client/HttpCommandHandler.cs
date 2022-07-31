@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -8,7 +7,6 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.Common;
 
 // it makes sense for these classes to be in the same file
 #pragma warning disable SA1402
@@ -33,11 +31,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
         {
             using var content = JsonContent.Create(command, null, serializerOptions);
 
-            var contextItems = new Dictionary<string, string>();
-
-            contextItems.AddOrReplaceRange(conquerorContextAccessor?.ConquerorContext?.Items ?? Enumerable.Empty<KeyValuePair<string, string>>());
-
-            if (contextItems.Count > 0)
+            if (conquerorContextAccessor?.ConquerorContext?.Items is { Count: > 0 } contextItems)
             {
                 content.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(contextItems));
             }
@@ -81,9 +75,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
         {
             using var content = JsonContent.Create(command, null, serializerOptions);
 
-            var contextItems = new Dictionary<string, string>();
-
-            contextItems.AddOrReplaceRange(conquerorContextAccessor?.ConquerorContext?.Items ?? Enumerable.Empty<KeyValuePair<string, string>>());
+            var contextItems = conquerorContextAccessor?.ConquerorContext?.Items ?? new Dictionary<string, string>();
 
             if (contextItems.Count > 0)
             {
