@@ -32,24 +32,11 @@ namespace Conqueror.CQS.CommandHandling
 
             commandContextAccessor.CommandContext = commandContext;
 
-            var createdConquerorContext = false;
-
-            var conquerorContext = conquerorContextAccessor.ConquerorContext;
-
-            if (conquerorContext is null)
-            {
-                createdConquerorContext = true;
-                conquerorContextAccessor.ConquerorContext = new DefaultConquerorContext();
-            }
+            using var conquerorContext = conquerorContextAccessor.GetOrCreate();
 
             var finalResponse = await ExecuteNextMiddleware(0, initialCommand, cancellationToken);
 
             commandContextAccessor.ClearContext();
-
-            if (createdConquerorContext)
-            {
-                conquerorContextAccessor.ClearContext();
-            }
 
             return finalResponse;
 

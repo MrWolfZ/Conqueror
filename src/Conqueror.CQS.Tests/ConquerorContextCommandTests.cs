@@ -455,7 +455,7 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             conquerorContext.Items[key] = value;
 
@@ -476,7 +476,7 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             conquerorContext.Items[key] = value;
 
@@ -504,7 +504,7 @@ namespace Conqueror.CQS.Tests
                     return new(cmd.Payload);
                 });
 
-            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             conquerorContext.Items[key] = value;
 
@@ -524,7 +524,7 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             var contextItems = conquerorContext.Items;
 
@@ -546,7 +546,7 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             var contextItems = conquerorContext.Items;
 
@@ -591,7 +591,7 @@ namespace Conqueror.CQS.Tests
                 return new(cmd.Payload);
             });
 
-            var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             conquerorContext.Items[key1] = value1;
 

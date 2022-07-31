@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 // TODO: move to common abstractions package
@@ -32,5 +33,10 @@ namespace Conqueror.CQS
         /// </summary>
         string TraceIdentifier { get; set; }
         */
+    }
+
+    /// <inheritdoc cref="Conqueror.CQS.IConquerorContext" />
+    public interface IDisposableConquerorContext : IConquerorContext, IDisposable
+    {
     }
 }

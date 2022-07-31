@@ -17,7 +17,8 @@ namespace Conqueror.CQS
 
         /// <summary>
         ///     Gets the current <see cref="IConquerorContext" /> if it is active. Otherwise creates a new <see cref="IConquerorContext" /> and returns it.
+        ///     When the returned object is disposed and it was created by this call, all contextual information is cleared. Otherwise the disposal is a no-op.
         /// </summary>
-        IConquerorContext GetOrCreate();
+        IDisposableConquerorContext GetOrCreate();
     }
 }

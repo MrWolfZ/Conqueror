@@ -29,9 +29,22 @@ namespace Conqueror.CQS
         }
 
         /// <inheritdoc />
-        public IConquerorContext GetOrCreate() => ConquerorContext ??= new DefaultConquerorContext();
+        public IDisposableConquerorContext GetOrCreate()
+        {
+            if (ConquerorContext != null)
+            {
+                // if there already is a context, we just wrap it without any disposal action
+                return new DisposableConquerorContext(ConquerorContext);
+            }
 
-        public void ClearContext()
+            // if we create the context, we make sure that disposing it causes the context to be cleared
+            var context = new DefaultConquerorContext();
+            var disposableContext = new DisposableConquerorContext(context, ClearContext);
+            ConquerorContext = context;
+            return disposableContext;
+        }
+
+        private static void ClearContext()
         {
             var holder = ConquerorContextCurrent.Value;
 

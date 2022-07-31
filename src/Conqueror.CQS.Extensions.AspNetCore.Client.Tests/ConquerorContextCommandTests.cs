@@ -30,7 +30,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
-            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
             var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -44,7 +44,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         {
             Resolve<TestObservations>().ShouldAddItems = true;
 
-            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
             var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -56,7 +56,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         [Test]
         public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandler()
         {
-            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
             context.AddOrReplaceItems(ContextItems);
 
             var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
@@ -72,7 +72,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
         public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerAcrossMultipleInvocations()
         {
-            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
             context.Items.Add(ContextItems.First());
 
             var observations = Resolve<TestObservations>();
@@ -104,7 +104,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         [Test]
         public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerWithoutResponse()
         {
-            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
             context.AddOrReplaceItems(ContextItems);
 
             var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
@@ -120,7 +120,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
         public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerWithoutResponseAcrossMultipleInvocations()
         {
-            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
             context.Items.Add(ContextItems.First());
 
             var observations = Resolve<TestObservations>();
@@ -153,7 +153,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
         public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
         {
-            var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+            using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
             context.Items.Add(ContextItems.First());
 
             var observations = Resolve<TestObservations>();

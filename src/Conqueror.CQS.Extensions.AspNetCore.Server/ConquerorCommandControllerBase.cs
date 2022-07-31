@@ -75,7 +75,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     {
         protected async Task<TResponse> ExecuteCommandWithContext<TResponse>(Func<Task<TResponse>> executeFn)
         {
-            var context = Request.HttpContext.RequestServices.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+            using var context = Request.HttpContext.RequestServices.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             if (Request.Headers.TryGetValue(HttpConstants.ConquerorContextHeaderName, out var values))
             {
