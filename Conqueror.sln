@@ -70,6 +70,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".docs", ".docs", "{AB627029
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Abstractions", "src\Conqueror.Abstractions\Conqueror.Abstractions.csproj", "{69188BAE-7690-42C5-9783-360F7C500E5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror", "src\Conqueror\Conqueror.csproj", "{D7360204-0307-42DE-9C0D-0ED245A88D66}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -151,6 +155,14 @@ Global
 		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69188BAE-7690-42C5-9783-360F7C500E5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69188BAE-7690-42C5-9783-360F7C500E5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69188BAE-7690-42C5-9783-360F7C500E5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69188BAE-7690-42C5-9783-360F7C500E5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7360204-0307-42DE-9C0D-0ED245A88D66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7360204-0307-42DE-9C0D-0ED245A88D66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7360204-0307-42DE-9C0D-0ED245A88D66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7360204-0307-42DE-9C0D-0ED245A88D66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}

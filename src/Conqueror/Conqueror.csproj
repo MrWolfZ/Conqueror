@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Collection package that provides a simple entry point to all Conqueror libraries.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS\Conqueror.CQS.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing\Conqueror.Eventing.csproj" />
+    </ItemGroup>
+
+</Project>
