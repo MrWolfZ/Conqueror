@@ -8,8 +8,8 @@
 
     <ItemGroup>
         <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Client" Version="0.1.0-beta.7" Condition="'$(SolutionFileName)'!='Conqueror.sln'" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.4" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.4" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.10" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>

@@ -18,7 +18,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
             {
                 try
                 {
-                    var parsedValue = ContextValueFormatter.Parse(values.AsEnumerable());
+                    var parsedValue = ContextValueFormatter.Parse(values.AsEnumerable().OfType<string>());
 
                     foreach (var (key, value) in parsedValue)
                     {

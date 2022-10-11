@@ -1,6 +1,7 @@
 ﻿#if NET6_0_OR_GREATER
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -11,6 +12,7 @@ using NUnit.Framework;
 namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Disposed in TearDown")]
     public class TopLevelProgramTests
     {
         [SetUp]
