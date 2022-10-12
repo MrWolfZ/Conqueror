@@ -597,7 +597,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record NestedTestCommandResponse(int Payload);
 
-        private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly ICommandContextAccessor commandContextAccessor;
             private readonly Func<TestCommand, ICommandContext?, TestCommandResponse> handlerFn;
@@ -628,7 +628,6 @@ namespace Conqueror.CQS.Tests
                 return response;
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<OuterTestCommandMiddleware>()
                                                                                               .Use<TestCommandMiddleware>();
         }

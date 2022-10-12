@@ -99,12 +99,23 @@ namespace Conqueror.CQS.CommandHandling
 
             static Action<ICommandPipelineBuilder>? CreatePipelineConfigurationFunction(Type handlerType)
             {
+                if (!handlerType.IsAssignableTo(typeof(IConfigureCommandHandlerPipeline)))
+                {
+                    return null;
+                }
+
+#if NET7_0_OR_GREATER
+                const string configurationMethodName = nameof(IConfigureCommandHandlerPipeline.ConfigurePipeline);
+#else
+                const string configurationMethodName = "ConfigurePipeline";
+#endif
+                
                 // TODO: validate signature
-                var pipelineConfigurationMethod = handlerType.GetMethod("ConfigurePipeline", BindingFlags.Public | BindingFlags.Static);
+                var pipelineConfigurationMethod = handlerType.GetMethod(configurationMethodName, BindingFlags.Public | BindingFlags.Static);
 
                 if (pipelineConfigurationMethod is null)
                 {
-                    return null;
+                    throw new InvalidOperationException($"command handler type '{handlerType.Name}' does not implement a '{configurationMethodName}' method");
                 }
 
                 var builderParam = Expression.Parameter(typeof(ICommandPipelineBuilder));

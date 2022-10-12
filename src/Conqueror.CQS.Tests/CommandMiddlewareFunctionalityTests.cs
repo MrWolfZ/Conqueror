@@ -316,6 +316,42 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenHandlerWithPipelineConfigurationMethodWithoutPipelineConfigurationInterface_MiddlewaresAreNotCalled()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.Empty);
+            Assert.That(observations.MiddlewareTypes, Is.Empty);
+        }
+
+#if !NET7_0_OR_GREATER
+        [Test]
+        public void GivenHandlerWithPipelineConfigurationInterfaceWithoutPipelineConfigurationMethod_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+#endif
+
+        [Test]
         public async Task GivenCancellationToken_MiddlewaresReceiveCancellationTokenWhenCalled()
         {
             var services = new ServiceCollection();
@@ -617,7 +653,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record TestCommandWithoutResponse(int Payload);
 
-        private sealed class TestCommandHandlerWithSingleMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
+        private sealed class TestCommandHandlerWithSingleMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -634,14 +670,13 @@ namespace Conqueror.CQS.Tests
                 return new(command.Payload + 1);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
             }
         }
 
-        private sealed class TestCommandHandlerWithSingleMiddlewareWithParameter : ICommandHandler<TestCommand, TestCommandResponse>
+        private sealed class TestCommandHandlerWithSingleMiddlewareWithParameter : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -658,14 +693,13 @@ namespace Conqueror.CQS.Tests
                 return new(command.Payload + 1);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 });
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithSingleMiddleware : ICommandHandler<TestCommandWithoutResponse>
+        private sealed class TestCommandHandlerWithoutResponseWithSingleMiddleware : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -681,14 +715,13 @@ namespace Conqueror.CQS.Tests
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithSingleMiddlewareWithParameter : ICommandHandler<TestCommandWithoutResponse>
+        private sealed class TestCommandHandlerWithoutResponseWithSingleMiddlewareWithParameter : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -704,14 +737,13 @@ namespace Conqueror.CQS.Tests
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 });
             }
         }
 
-        private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
+        private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -728,7 +760,6 @@ namespace Conqueror.CQS.Tests
                 return new(0);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
@@ -736,7 +767,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>
+        private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -752,7 +783,6 @@ namespace Conqueror.CQS.Tests
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
@@ -795,7 +825,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
+        private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -812,7 +842,6 @@ namespace Conqueror.CQS.Tests
                 return new(0);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestCommandRetryMiddleware>()
@@ -821,7 +850,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithMultipleMutatingMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
+        private sealed class TestCommandHandlerWithMultipleMutatingMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -838,7 +867,6 @@ namespace Conqueror.CQS.Tests
                 return new(0);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<MutatingTestCommandMiddleware>()
@@ -846,7 +874,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithMultipleMutatingMiddlewares : ICommandHandler<TestCommandWithoutResponse>
+        private sealed class TestCommandHandlerWithoutResponseWithMultipleMutatingMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
         {
             private readonly TestObservations observations;
 
@@ -862,13 +890,38 @@ namespace Conqueror.CQS.Tests
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<MutatingTestCommandMiddleware>()
                             .Use<MutatingTestCommandMiddleware2>();
             }
         }
+
+        private sealed class TestCommandHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 });
+            }
+        }
+
+#if !NET7_0_OR_GREATER
+        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+        }
+#endif
 
         private sealed record TestCommandMiddlewareConfiguration
         {

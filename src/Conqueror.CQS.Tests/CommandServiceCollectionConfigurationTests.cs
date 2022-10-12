@@ -105,11 +105,10 @@ namespace Conqueror.CQS.Tests
             public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken) => Task.CompletedTask;
         }
 
-        private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
+        private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
         {
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.FromResult(new TestCommandResponse());
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
         }
 

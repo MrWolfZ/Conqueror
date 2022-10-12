@@ -190,7 +190,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithPipelineConfiguration : ICommandHandler<TestCommand, TestCommandResponse>
+        private sealed class TestCommandHandlerWithPipelineConfiguration : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
             {
@@ -198,7 +198,6 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new(10));
