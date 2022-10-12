@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+#if !NET7_0_OR_GREATER
 using System.Reflection;
+#endif
 using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -105,18 +107,28 @@ namespace Conqueror.CQS.CommandHandling
                 }
 
 #if NET7_0_OR_GREATER
-                const string configurationMethodName = nameof(IConfigureCommandHandlerPipeline.ConfigurePipeline);
+                var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IConfigureCommandHandlerPipeline)).TargetMethods.Single();
 #else
                 const string configurationMethodName = "ConfigurePipeline";
-#endif
-                
-                // TODO: validate signature
+
                 var pipelineConfigurationMethod = handlerType.GetMethod(configurationMethodName, BindingFlags.Public | BindingFlags.Static);
 
                 if (pipelineConfigurationMethod is null)
                 {
-                    throw new InvalidOperationException($"command handler type '{handlerType.Name}' does not implement a '{configurationMethodName}' method");
+                    throw new InvalidOperationException(
+                        $"command handler type '{handlerType.Name}' has implements the interface '{nameof(IConfigureCommandHandlerPipeline)}' but does not have a public method '{configurationMethodName}'");
                 }
+
+                var methodHasInvalidReturnType = pipelineConfigurationMethod.ReturnType != typeof(void);
+                var methodHasInvalidParameterTypes = pipelineConfigurationMethod.GetParameters().Length != 1
+                                                     || pipelineConfigurationMethod.GetParameters().Single().ParameterType != typeof(ICommandPipelineBuilder);
+
+                if (methodHasInvalidReturnType || methodHasInvalidParameterTypes)
+                {
+                    throw new InvalidOperationException(
+                        $"command handler type '{handlerType.Name}' has an invalid method signature for '{configurationMethodName}'; ensure that the signature is 'public static '");
+                }
+#endif
 
                 var builderParam = Expression.Parameter(typeof(ICommandPipelineBuilder));
                 var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
@@ -162,7 +174,7 @@ namespace Conqueror.CQS.CommandHandling
             }
 
             static bool HasCommandMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsCommandMiddlewareInterface);
-            
+
             static bool IsCommandMiddlewareInterface(Type i) => i == typeof(ICommandMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>));
         }
     }

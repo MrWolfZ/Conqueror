@@ -349,6 +349,28 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
         }
+        
+        [Test]
+        public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodReturnType_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+        
+        [Test]
+        public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodParameters_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
 #endif
 
         [Test]
@@ -920,6 +942,30 @@ namespace Conqueror.CQS.Tests
                 await Task.Yield();
                 return new(0);
             }
+        }
+        
+        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static ICommandPipelineBuilder ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline;
+        }
+        
+        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static string ConfigurePipeline(string pipeline) => pipeline;
         }
 #endif
 
