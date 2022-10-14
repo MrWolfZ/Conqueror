@@ -95,181 +95,72 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         }
 
         [Test]
-        public void GivenDefaultHttpClientFactoryAndNoCustomFactory_CallsDefaultFactory()
+        public void GivenRegisteredPlainClient_CanResolvePlainClientWithoutHavingServicesExplicitlyRegistered()
         {
-            var wasCalled = false;
+            var provider = new ServiceCollection().AddConquerorCommandHttpClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new())
+                                                  .BuildServiceProvider();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
+        }
+
+        [Test]
+        public void GivenCustomHttpClientFactory_WhenResolvingHandlerRegisteredWithBaseAddressFactory_CallsCustomHttpClientFactory()
+        {
+            var expectedBaseAddress = new Uri("http://localhost");
+            Uri? seenBaseAddress = null;
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
+            _ = services.AddConquerorCqsHttpClientServices(o =>
                         {
-                            o.HttpClientFactory = _ =>
+                            o.HttpClientFactory = baseAddress =>
                             {
-                                wasCalled = true;
+                                seenBaseAddress = baseAddress;
                                 return new();
                             };
                         })
-                        .AddCommandHttpClient<ITestCommandHandler>();
+                        .AddConquerorCommandHttpClient<ITestCommandHandler>(_ => expectedBaseAddress);
 
             using var provider = services.BuildServiceProvider();
 
             _ = provider.GetRequiredService<ITestCommandHandler>();
 
-            Assert.IsTrue(wasCalled);
+            Assert.AreSame(expectedBaseAddress, seenBaseAddress);
         }
 
         [Test]
-        public void GivenCustomHttpClientFactoryAndNoDefaultFactory_CallsCustomFactory()
+        public void GivenCustomHttpClientFactory_WhenResolvingHandlerRegisteredWithHttpClientFactory_DoesNotCallCustomHttpClientFactory()
         {
-            var wasCalled = false;
-
             var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients()
-                        .AddCommandHttpClient<ITestCommandHandler>(o =>
+            _ = services.AddConquerorCqsHttpClientServices(o =>
                         {
                             o.HttpClientFactory = _ =>
                             {
-                                wasCalled = true;
-                                return new();
-                            };
-                        });
-
-            using var provider = services.BuildServiceProvider();
-
-            _ = provider.GetRequiredService<ITestCommandHandler>();
-
-            Assert.IsTrue(wasCalled);
-        }
-
-        [Test]
-        public void GivenCustomAndDefaultHttpClientFactory_CallsCustomFactory()
-        {
-            var defaultWasCalled = false;
-            var customWasCalled = false;
-
-            var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
-                        {
-                            o.HttpClientFactory = _ =>
-                            {
-                                defaultWasCalled = true;
+                                Assert.Fail("should not have called factory");
                                 return new();
                             };
                         })
-                        .AddCommandHttpClient<ITestCommandHandler>(o =>
-                        {
-                            o.HttpClientFactory = _ =>
-                            {
-                                customWasCalled = true;
-                                return new();
-                            };
-                        });
+                        .AddConquerorCommandHttpClient<ITestCommandHandler>(_ => new());
 
             using var provider = services.BuildServiceProvider();
 
-            _ = provider.GetRequiredService<ITestCommandHandler>();
-
-            Assert.IsFalse(defaultWasCalled);
-            Assert.IsTrue(customWasCalled);
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler>());
         }
 
         [Test]
-        public void GivenDefaultJsonSerializerOptionsFactoryAndNoCustomFactory_CallsDefaultFactory()
-        {
-            var wasCalled = false;
-
-            var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
-                        {
-                            o.JsonSerializerOptionsFactory = _ =>
-                            {
-                                wasCalled = true;
-                                return new();
-                            };
-                        })
-                        .AddCommandHttpClient<ITestCommandHandler>();
-
-            using var provider = services.BuildServiceProvider();
-
-            _ = provider.GetRequiredService<ITestCommandHandler>();
-
-            Assert.IsTrue(wasCalled);
-        }
-
-        [Test]
-        public void GivenCustomJsonSerializerOptionsFactoryAndNoDefaultFactory_CallsCustomFactory()
-        {
-            var wasCalled = false;
-
-            var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients()
-                        .AddCommandHttpClient<ITestCommandHandler>(o =>
-                        {
-                            o.JsonSerializerOptionsFactory = _ =>
-                            {
-                                wasCalled = true;
-                                return new();
-                            };
-                        });
-
-            using var provider = services.BuildServiceProvider();
-
-            _ = provider.GetRequiredService<ITestCommandHandler>();
-
-            Assert.IsTrue(wasCalled);
-        }
-
-        [Test]
-        public void GivenCustomAndDefaultJsonSerializerOptionsFactory_CallsCustomFactory()
-        {
-            var defaultWasCalled = false;
-            var customWasCalled = false;
-
-            var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
-                        {
-                            o.JsonSerializerOptionsFactory = _ =>
-                            {
-                                defaultWasCalled = true;
-                                return new();
-                            };
-                        })
-                        .AddCommandHttpClient<ITestCommandHandler>(o =>
-                        {
-                            o.JsonSerializerOptionsFactory = _ =>
-                            {
-                                customWasCalled = true;
-                                return new();
-                            };
-                        });
-
-            using var provider = services.BuildServiceProvider();
-
-            _ = provider.GetRequiredService<ITestCommandHandler>();
-
-            Assert.IsFalse(defaultWasCalled);
-            Assert.IsTrue(customWasCalled);
-        }
-
-        [Test]
-        public void GivenDefaultHttpClientFactory_CallsDefaultFactoryWithScopedServiceProvider()
+        public void GivenCustomHttpClientFactory_CallsFactoryWithScopedServiceProvider()
         {
             var seenInstances = new HashSet<ScopingTest>();
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
+            _ = services.AddConquerorCqsHttpClientServices(o =>
                         {
-                            o.HttpClientFactory = p =>
+                            o.HttpClientFactory = baseAddress =>
                             {
-                                _ = seenInstances.Add(p.GetRequiredService<ScopingTest>());
+                                _ = seenInstances.Add(o.ServiceProvider.GetRequiredService<ScopingTest>());
                                 return new();
                             };
                         })
-                        .AddCommandHttpClient<ITestCommandHandler>();
+                        .AddConquerorCommandHttpClient<ITestCommandHandler>(_ => new("http://localhost"));
 
             _ = services.AddScoped<ScopingTest>();
 
@@ -277,6 +168,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
             using var scope1 = provider.CreateScope();
 
+            _ = scope1.ServiceProvider.GetRequiredService<ITestCommandHandler>();
             _ = scope1.ServiceProvider.GetRequiredService<ITestCommandHandler>();
 
             using var scope2 = provider.CreateScope();
@@ -290,11 +182,11 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         public void GivenAlreadyRegisteredHandlerWhenRegistering_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients().AddCommandHttpClient<ITestCommandHandler>();
+            _ = services.AddConquerorCqsHttpClientServices().AddConquerorCommandHttpClient<ITestCommandHandler>(_ => new());
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorHttpClients().AddCommandHttpClient<ITestCommandHandler>());
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCqsHttpClientServices().AddConquerorCommandHttpClient<ITestCommandHandler>(_ => new()));
         }
-        
+
         [Test]
         public void GivenClient_CanResolveConquerorContextAccessor()
         {
@@ -306,9 +198,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
         private ServiceProvider RegisterClient<TCommandHandler>()
             where TCommandHandler : class, ICommandHandler
         {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorHttpClients().AddCommandHttpClient<TCommandHandler>();
-            return services.BuildServiceProvider();
+            return new ServiceCollection().AddConquerorCqsHttpClientServices()
+                                          .AddConquerorCommandHttpClient<TCommandHandler>(_ => new())
+                                          .BuildServiceProvider();
         }
 
         private sealed class ScopingTest

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -49,7 +50,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
             await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-            CollectionAssert.AreEquivalent(ContextItems,  context.Items);
+            CollectionAssert.AreEquivalent(ContextItems, context.Items);
         }
 
         [Test]
@@ -251,17 +252,20 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         protected override void ConfigureClientServices(IServiceCollection services)
         {
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
-                        {
-                            o.HttpClientFactory = _ => HttpClient;
-                            o.JsonSerializerOptionsFactory = _ => new()
-                            {
-                                PropertyNameCaseInsensitive = true,
-                            };
-                        })
-                        .AddCommandHttpClient<ICommandHandler<TestCommand, TestCommandResponse>>()
-                        .AddCommandHttpClient<ICommandHandler<TestCommandWithoutResponse>>();
+            _ = services.AddConquerorCqsHttpClientServices(o =>
+            {
+                o.HttpClientFactory = uri =>
+                    throw new InvalidOperationException(
+                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+
+                o.JsonSerializerOptions = new()
+                {
+                    PropertyNameCaseInsensitive = true,
+                };
+            });
+
+            _ = services.AddConquerorCommandHttpClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => HttpClient)
+                        .AddConquerorCommandHttpClient<ICommandHandler<TestCommandWithoutResponse>>(_ => HttpClient);
 
             _ = services.AddTransient<OuterTestCommandHandler>()
                         .AddTransient<OuterTestCommandWithoutResponseHandler>()

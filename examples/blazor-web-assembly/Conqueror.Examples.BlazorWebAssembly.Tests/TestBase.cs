@@ -70,11 +70,10 @@ public abstract class TestBase
 
     protected virtual void ConfigureClientServices(IServiceCollection services)
     {
-        _ = services.AddConquerorHttpClients()
-                    .ConfigureDefaultHttpClientOptions(o =>
+        _ = services.AddConquerorCqsHttpClientServices(o =>
                     {
                         o.HttpClientFactory = _ => HttpClient;
-                        o.JsonSerializerOptionsFactory = _ => JsonSerializerOptions;
+                        o.JsonSerializerOptions = JsonSerializerOptions;
                     });
     }
 

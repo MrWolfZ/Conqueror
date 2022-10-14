@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
 {
+    // TODO: refactor to use cached compiled expressions instead of reflection
     internal sealed class ConquerorHttpClientFactory : IConquerorHttpClientFactory
     {
         private readonly ConfigurationProvider configurationProvider;

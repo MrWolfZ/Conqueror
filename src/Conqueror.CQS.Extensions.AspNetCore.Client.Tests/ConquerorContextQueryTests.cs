@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -251,17 +252,20 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         protected override void ConfigureClientServices(IServiceCollection services)
         {
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
-                        {
-                            o.HttpClientFactory = _ => HttpClient;
-                            o.JsonSerializerOptionsFactory = _ => new()
-                            {
-                                PropertyNameCaseInsensitive = true,
-                            };
-                        })
-                        .AddQueryHttpClient<IQueryHandler<TestQuery, TestQueryResponse>>()
-                        .AddQueryHttpClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
+            _ = services.AddConquerorCqsHttpClientServices(o =>
+            {
+                o.HttpClientFactory = uri =>
+                    throw new InvalidOperationException(
+                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+
+                o.JsonSerializerOptions = new()
+                {
+                    PropertyNameCaseInsensitive = true,
+                };
+            });
+
+            _ = services.AddConquerorQueryHttpClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => HttpClient)
+                        .AddConquerorQueryHttpClient<IQueryHandler<TestPostQuery, TestQueryResponse>>(_ => HttpClient);
 
             _ = services.AddTransient<OuterTestQueryHandler>()
                         .AddTransient<OuterTestPostQueryHandler>()
@@ -363,8 +367,8 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
             private readonly TestObservations testObservations;
 
             public OuterTestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                                        TestObservations testObservations,
-                                                        IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler)
+                                             TestObservations testObservations,
+                                             IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -71,17 +72,20 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         protected override void ConfigureClientServices(IServiceCollection services)
         {
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
-                        {
-                            o.HttpClientFactory = _ => HttpClient;
-                            o.JsonSerializerOptionsFactory = _ => new()
-                            {
-                                PropertyNameCaseInsensitive = true,
-                            };
-                        })
-                        .AddQueryHttpClient<IQueryHandler<TestQuery, TestQueryResponse>>()
-                        .AddCommandHttpClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+            _ = services.AddConquerorCqsHttpClientServices(o =>
+            {
+                o.HttpClientFactory = uri =>
+                    throw new InvalidOperationException(
+                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+
+                o.JsonSerializerOptions = new()
+                {
+                    PropertyNameCaseInsensitive = true,
+                };
+            });
+
+            _ = services.AddConquerorQueryHttpClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => HttpClient)
+                        .AddConquerorCommandHttpClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => HttpClient);
 
             _ = services.AddConquerorCQS().ConfigureConqueror();
         }

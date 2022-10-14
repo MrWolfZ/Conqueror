@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -144,21 +145,27 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         protected override void ConfigureClientServices(IServiceCollection services)
         {
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
+            _ = services.AddConquerorCqsHttpClientServices(o =>
+            {
+                o.HttpClientFactory = uri =>
+                    throw new InvalidOperationException(
+                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+
+                o.JsonSerializerOptions = new()
+                {
+                    PropertyNameCaseInsensitive = true,
+                };
+            });
+
+            _ = services.AddConquerorCommandHttpClient<ITestCommandHandler>(_ => HttpClient)
+                        .AddConquerorCommandHttpClient<ITestCommandWithoutResponseHandler>(_ => HttpClient)
+                        .AddConquerorCommandHttpClient<ITestCommandWithoutPayloadHandler>(_ => HttpClient)
+                        .AddConquerorCommandHttpClient<ITestCommandWithoutResponseWithoutPayloadHandler>(_ => HttpClient)
+                        .AddConquerorCommandHttpClient<ITestCommandWithCustomSerializedPayloadTypeHandler>(_ => HttpClient, o => o.JsonSerializerOptions = new()
                         {
-                            o.HttpClientFactory = _ => HttpClient;
-                            o.JsonSerializerOptionsFactory = _ => new()
-                            {
-                                Converters = { new TestCommandWithCustomSerializedPayloadTypePayloadJsonConverterFactory() },
-                                PropertyNameCaseInsensitive = true,
-                            };
-                        })
-                        .AddCommandHttpClient<ITestCommandHandler>()
-                        .AddCommandHttpClient<ITestCommandWithoutResponseHandler>()
-                        .AddCommandHttpClient<ITestCommandWithoutPayloadHandler>()
-                        .AddCommandHttpClient<ITestCommandWithoutResponseWithoutPayloadHandler>()
-                        .AddCommandHttpClient<ITestCommandWithCustomSerializedPayloadTypeHandler>();
+                            Converters = { new TestCommandWithCustomSerializedPayloadTypePayloadJsonConverterFactory() },
+                            PropertyNameCaseInsensitive = true,
+                        });
         }
 
         protected override void Configure(IApplicationBuilder app)

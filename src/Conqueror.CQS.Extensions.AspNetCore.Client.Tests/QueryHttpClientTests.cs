@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -164,22 +165,28 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         protected override void ConfigureClientServices(IServiceCollection services)
         {
-            _ = services.AddConquerorHttpClients()
-                        .ConfigureDefaultHttpClientOptions(o =>
+            _ = services.AddConquerorCqsHttpClientServices(o =>
+            {
+                o.HttpClientFactory = uri =>
+                    throw new InvalidOperationException(
+                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+
+                o.JsonSerializerOptions = new()
+                {
+                    PropertyNameCaseInsensitive = true,
+                };
+            });
+
+            _ = services.AddConquerorQueryHttpClient<ITestQueryHandler>(_ => HttpClient)
+                        .AddConquerorQueryHttpClient<ITestQueryWithoutPayloadHandler>(_ => HttpClient)
+                        .AddConquerorQueryHttpClient<ITestQueryWithCollectionPayloadHandler>(_ => HttpClient)
+                        .AddConquerorQueryHttpClient<ITestPostQueryHandler>(_ => HttpClient)
+                        .AddConquerorQueryHttpClient<ITestPostQueryWithoutPayloadHandler>(_ => HttpClient)
+                        .AddConquerorQueryHttpClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>(_ => HttpClient, o => o.JsonSerializerOptions = new()
                         {
-                            o.HttpClientFactory = _ => HttpClient;
-                            o.JsonSerializerOptionsFactory = _ => new()
-                            {
-                                Converters = { new TestPostQueryWithCustomSerializedPayloadTypePayloadJsonConverterFactory() },
-                                PropertyNameCaseInsensitive = true,
-                            };
-                        })
-                        .AddQueryHttpClient<ITestQueryHandler>()
-                        .AddQueryHttpClient<ITestQueryWithoutPayloadHandler>()
-                        .AddQueryHttpClient<ITestQueryWithCollectionPayloadHandler>()
-                        .AddQueryHttpClient<ITestPostQueryHandler>()
-                        .AddQueryHttpClient<ITestPostQueryWithoutPayloadHandler>()
-                        .AddQueryHttpClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>();
+                            Converters = { new TestPostQueryWithCustomSerializedPayloadTypePayloadJsonConverterFactory() },
+                            PropertyNameCaseInsensitive = true,
+                        });
         }
 
         protected override void Configure(IApplicationBuilder app)

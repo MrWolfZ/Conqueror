@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../.targets/lib.targets"/>
+    <Import Project="../.targets/lib.targets" />
 
     <!-- for NuGet -->
     <PropertyGroup>
@@ -9,8 +9,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj"/>
-        <ProjectReference Include="..\Conqueror.CQS.Extensions.AspNetCore.Abstractions\Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj"/>
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS.Extensions.AspNetCore.Abstractions\Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj" />
     </ItemGroup>
 
 </Project>

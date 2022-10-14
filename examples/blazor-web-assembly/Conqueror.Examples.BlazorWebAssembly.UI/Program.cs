@@ -8,17 +8,15 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services
-       .AddConquerorHttpClients()
-       .ConfigureDefaultHttpClientOptions(o =>
-       {
-           o.HttpClientFactory = _ =>
-           {
-               var baseAddressFromConfig = builder.Configuration["ApiBaseAddress"];
-               var baseAddress = string.IsNullOrWhiteSpace(baseAddressFromConfig) ? builder.HostEnvironment.BaseAddress : baseAddressFromConfig;
-               return new() { BaseAddress = new(baseAddress) };
-           };
-       })
-       .AddQueryHttpClient<IGetSharedCounterValueQueryHandler>()
-       .AddCommandHttpClient<IIncrementSharedCounterValueCommandHandler>();
+       .AddConquerorCqsHttpClientServices()
+       .AddConquerorQueryHttpClient<IGetSharedCounterValueQueryHandler>(GetConquerorHttpClientAddress)
+       .AddConquerorCommandHttpClient<IIncrementSharedCounterValueCommandHandler>(GetConquerorHttpClientAddress);
 
 await builder.Build().RunAsync();
+
+Uri GetConquerorHttpClientAddress(IServiceProvider serviceProvider)
+{
+    var baseAddressFromConfig = serviceProvider.GetRequiredService<IConfiguration>()["ApiBaseAddress"];
+    var baseAddress = string.IsNullOrWhiteSpace(baseAddressFromConfig) ? serviceProvider.GetRequiredService<IWebAssemblyHostEnvironment>().BaseAddress : baseAddressFromConfig;
+    return new(baseAddress);
+}
