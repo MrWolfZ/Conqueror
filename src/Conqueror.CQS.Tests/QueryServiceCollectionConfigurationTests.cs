@@ -83,11 +83,10 @@ namespace Conqueror.CQS.Tests
             public Task<TestQueryResponse2> ExecuteQuery(TestQuery command, CancellationToken cancellationToken) => throw new NotSupportedException();
         }
 
-        private sealed class TestQueryHandlerWithMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken) => Task.FromResult(new TestQueryResponse());
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
         }
 

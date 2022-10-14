@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
 
-internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValueQueryHandler
+internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValueQueryHandler, IConfigureQueryPipeline
 {
     private readonly SharedCounter counter;
 
@@ -15,6 +15,7 @@ internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValue
         return new(counter.GetValue());
     }
 
+    // ReSharper disable once UnusedMember.Global
     public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
         pipeline.UseDefault()
                 .UseCaching(TimeSpan.FromMinutes(1), invalidateResultsOnEventTypes: new[] { typeof(SharedCounterIncrementedEvent) })

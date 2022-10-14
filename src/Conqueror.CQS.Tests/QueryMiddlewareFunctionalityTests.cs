@@ -223,6 +223,64 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenHandlerWithPipelineConfigurationMethodWithoutPipelineConfigurationInterface_MiddlewaresAreNotCalled()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface>()
+                        .AddTransient<TestQueryMiddleware>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var command = new TestQuery(10);
+
+            _ = await handler.ExecuteQuery(command, CancellationToken.None);
+
+            Assert.That(observations.QueriesFromMiddlewares, Is.Empty);
+            Assert.That(observations.MiddlewareTypes, Is.Empty);
+        }
+
+#if !NET7_0_OR_GREATER
+        [Test]
+        public void GivenHandlerWithPipelineConfigurationInterfaceWithoutPipelineConfigurationMethod_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+        
+        [Test]
+        public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodReturnType_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+        
+        [Test]
+        public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodParameters_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+#endif
+
+        [Test]
         public async Task GivenCancellationToken_MiddlewaresReceiveCancellationTokenWhenCalled()
         {
             var services = new ServiceCollection();
@@ -416,7 +474,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record TestQueryResponse(int Payload);
 
-        private sealed class TestQueryHandlerWithSingleMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithSingleMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             private readonly TestObservations observations;
 
@@ -433,14 +491,13 @@ namespace Conqueror.CQS.Tests
                 return new(query.Payload + 1);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
             }
         }
 
-        private sealed class TestQueryHandlerWithSingleMiddlewareWithParameter : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithSingleMiddlewareWithParameter : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             private readonly TestObservations observations;
 
@@ -457,14 +514,13 @@ namespace Conqueror.CQS.Tests
                 return new(query.Payload + 1);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 });
             }
         }
 
-        private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             private readonly TestObservations observations;
 
@@ -481,7 +537,6 @@ namespace Conqueror.CQS.Tests
                 return new(0);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
@@ -507,7 +562,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             private readonly TestObservations observations;
 
@@ -524,7 +579,6 @@ namespace Conqueror.CQS.Tests
                 return new(0);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestQueryRetryMiddleware>()
@@ -533,7 +587,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryHandlerWithMultipleMutatingMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithMultipleMutatingMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             private readonly TestObservations observations;
 
@@ -550,13 +604,60 @@ namespace Conqueror.CQS.Tests
                 return new(0);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<MutatingTestQueryMiddleware>()
                             .Use<MutatingTestQueryMiddleware2>();
             }
         }
+
+        private sealed class TestQueryHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 });
+            }
+        }
+
+#if !NET7_0_OR_GREATER
+        private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+        }
+        
+        private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+
+            public static IQueryPipelineBuilder ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline;
+        }
+        
+        private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+
+            public static string ConfigurePipeline(string pipeline) => pipeline;
+        }
+#endif
 
         private sealed record TestQueryMiddlewareConfiguration
         {

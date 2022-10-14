@@ -190,7 +190,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryHandlerWithPipelineConfiguration : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithPipelineConfiguration : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
@@ -198,7 +198,6 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new(10));

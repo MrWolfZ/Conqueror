@@ -426,7 +426,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record TestQueryResponse2;
 
-        private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
@@ -434,11 +434,10 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
         }
 
-        private sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
+        private sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>, IConfigureQueryPipeline
         {
             public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken)
             {
@@ -446,11 +445,10 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
         }
 
-        private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
@@ -458,7 +456,6 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestQueryMiddleware>()
@@ -466,7 +463,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryHandlerWithMultipleMiddlewares2 : IQueryHandler<TestQuery2, TestQueryResponse2>
+        private sealed class TestQueryHandlerWithMultipleMiddlewares2 : IQueryHandler<TestQuery2, TestQueryResponse2>, IConfigureQueryPipeline
         {
             public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken)
             {
@@ -474,7 +471,6 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestQueryMiddleware>()
@@ -482,7 +478,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryHandlerWithSameMiddlewareMultipleTimes : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithSameMiddlewareMultipleTimes : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
             {
@@ -490,11 +486,10 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>();
         }
 
-        private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             private readonly TestObservations observations;
             private int invocationCount;
@@ -512,7 +507,6 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestQueryRetryMiddleware>()

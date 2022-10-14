@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+#if !NET7_0_OR_GREATER
 using System.Reflection;
+#endif
 using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -92,13 +94,34 @@ namespace Conqueror.CQS.QueryHandling
 
             static Action<IQueryPipelineBuilder>? CreatePipelineConfigurationFunction(Type handlerType)
             {
-                // TODO: validate signature
-                var pipelineConfigurationMethod = handlerType.GetMethod("ConfigurePipeline", BindingFlags.Public | BindingFlags.Static);
-
-                if (pipelineConfigurationMethod is null)
+                if (!handlerType.IsAssignableTo(typeof(IConfigureQueryPipeline)))
                 {
                     return null;
                 }
+
+#if NET7_0_OR_GREATER
+                var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IConfigureQueryPipeline)).TargetMethods.Single();
+#else
+                const string configurationMethodName = "ConfigurePipeline";
+
+                var pipelineConfigurationMethod = handlerType.GetMethod(configurationMethodName, BindingFlags.Public | BindingFlags.Static);
+
+                if (pipelineConfigurationMethod is null)
+                {
+                    throw new InvalidOperationException(
+                        $"command handler type '{handlerType.Name}' implements the interface '{nameof(IConfigureQueryPipeline)}' but does not have a public method '{configurationMethodName}'");
+                }
+
+                var methodHasInvalidReturnType = pipelineConfigurationMethod.ReturnType != typeof(void);
+                var methodHasInvalidParameterTypes = pipelineConfigurationMethod.GetParameters().Length != 1
+                                                     || pipelineConfigurationMethod.GetParameters().Single().ParameterType != typeof(IQueryPipelineBuilder);
+
+                if (methodHasInvalidReturnType || methodHasInvalidParameterTypes)
+                {
+                    throw new InvalidOperationException(
+                        $"command handler type '{handlerType.Name}' has an invalid method signature for '{configurationMethodName}'; ensure that the signature is 'public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)'");
+                }
+#endif
 
                 var builderParam = Expression.Parameter(typeof(IQueryPipelineBuilder));
                 var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);

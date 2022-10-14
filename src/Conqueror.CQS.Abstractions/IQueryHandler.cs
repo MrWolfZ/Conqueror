@@ -15,4 +15,16 @@ namespace Conqueror.CQS
     {
         Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken);
     }
+    
+    /// <summary>
+    /// Note that this interface cannot be merged into <see cref="IQueryHandler"/> since it would
+    /// disallow that interface to be used as generic parameter (see also this GitHub issue:
+    /// https://github.com/dotnet/csharplang/issues/5955).
+    /// </summary>
+    public interface IConfigureQueryPipeline
+    {
+#if NET7_0_OR_GREATER
+        static abstract void ConfigurePipeline(IQueryPipelineBuilder pipeline);
+#endif
+    }
 }

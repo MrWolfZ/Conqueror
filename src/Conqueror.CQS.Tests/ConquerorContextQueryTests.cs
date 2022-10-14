@@ -665,7 +665,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record NestedTestQueryResponse(int Payload);
 
-        private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly Func<TestQuery, IConquerorContext?, TestQueryResponse> handlerFn;
@@ -696,7 +696,6 @@ namespace Conqueror.CQS.Tests
                 return response;
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<OuterTestQueryMiddleware>()
                                                                                             .Use<TestQueryMiddleware>();
         }
