@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Conqueror.CQS
+namespace Conqueror
 {
     // TODO: move to common package
     internal static class ContextValueFormatter

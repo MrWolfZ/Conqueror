@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 // empty interface used as marker interface for other operations
 #pragma warning disable CA1040
 
-namespace Conqueror.CQS
+namespace Conqueror
 {
     public interface IQueryHandler
     {

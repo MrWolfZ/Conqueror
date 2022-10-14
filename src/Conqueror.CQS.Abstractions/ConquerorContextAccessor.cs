@@ -2,7 +2,7 @@
 using System.Threading;
 
 // TODO: move to common package
-namespace Conqueror.CQS
+namespace Conqueror
 {
     /// <summary>
     ///     Provides an implementation of <see cref="IConquerorContextAccessor" /> based on the current execution context.

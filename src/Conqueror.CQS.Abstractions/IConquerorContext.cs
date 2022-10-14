@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 // TODO: move to common abstractions package
-namespace Conqueror.CQS
+namespace Conqueror
 {
     /// <summary>
     ///     Encapsulates contextual information for conqueror executions (i.e. commands, queries, and events).
@@ -35,7 +35,7 @@ namespace Conqueror.CQS
         */
     }
 
-    /// <inheritdoc cref="Conqueror.CQS.IConquerorContext" />
+    /// <inheritdoc cref="IConquerorContext" />
     public interface IDisposableConquerorContext : IConquerorContext, IDisposable
     {
     }

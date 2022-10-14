@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Conqueror.Eventing
+namespace Conqueror
 {
     public interface IEventObserverPipelineBuilder
     {

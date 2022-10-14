@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Conqueror.CQS
+namespace Conqueror
 {
     internal sealed class DisposableConquerorContext : IDisposableConquerorContext
     {

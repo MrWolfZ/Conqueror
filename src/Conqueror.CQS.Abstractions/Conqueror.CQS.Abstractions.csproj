@@ -8,7 +8,13 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <RootNamespace>Conqueror.CQS</RootNamespace>
+        <!--
+            we are intentionally violating the convention of having the root namespace
+            be the project name in order to provide a consistent experience for users
+            regardless of which Conqueror packages they include (i.e. all packages share
+            the same root namespace that only needs to be imported once via "using") 
+        -->
+        <RootNamespace>Conqueror</RootNamespace>
     </PropertyGroup>
 
 </Project>

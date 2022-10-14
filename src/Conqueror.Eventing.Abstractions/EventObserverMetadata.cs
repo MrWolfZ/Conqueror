@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Conqueror.Eventing
+namespace Conqueror
 {
     internal sealed class EventObserverMetadata
     {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Conqueror;
 using Conqueror.Eventing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

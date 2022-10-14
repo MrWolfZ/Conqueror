@@ -1,4 +1,4 @@
-﻿using Conqueror.CQS;
+﻿using Conqueror;
 using Conqueror.CQS.Extensions.AspNetCore.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

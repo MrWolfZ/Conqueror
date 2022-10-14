@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Conqueror.CQS;
+using Conqueror;
 using Conqueror.CQS.Extensions.AspNetCore.Client;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)

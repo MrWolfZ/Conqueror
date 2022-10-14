@@ -1,4 +1,4 @@
-namespace Conqueror.CQS
+namespace Conqueror
 {
     /// <summary>
     ///     Provides access to the current <see cref="IQueryContext" />, if one is available.

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 // these classes belong together
 #pragma warning disable SA1402
 
-namespace Conqueror.CQS
+namespace Conqueror
 {
     public abstract class QueryMiddlewareContext<TQuery, TResponse>
         where TQuery : class

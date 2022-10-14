@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Conqueror.Eventing
+namespace Conqueror
 {
     public interface IEventPublisherMiddleware
     {

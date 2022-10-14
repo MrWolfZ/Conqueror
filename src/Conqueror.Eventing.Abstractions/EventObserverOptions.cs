@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Eventing
+﻿namespace Conqueror
 {
     public sealed class EventObserverOptions
     {

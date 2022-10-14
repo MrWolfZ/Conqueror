@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using Conqueror.CQS;
+using Conqueror;
 using Conqueror.CQS.CommandHandling;
 using Conqueror.CQS.QueryHandling;
 using Microsoft.Extensions.DependencyInjection.Extensions;

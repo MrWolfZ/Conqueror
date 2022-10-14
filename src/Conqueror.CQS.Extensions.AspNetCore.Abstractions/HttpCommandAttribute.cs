@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Conqueror.CQS
+namespace Conqueror
 {
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class HttpCommandAttribute : Attribute

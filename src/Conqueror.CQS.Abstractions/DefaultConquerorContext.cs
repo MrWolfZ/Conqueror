@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 // TODO: move to common package
-namespace Conqueror.CQS
+namespace Conqueror
 {
     /// <inheritdoc />
     internal sealed class DefaultConquerorContext : IConquerorContext

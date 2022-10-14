@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Conqueror.CQS
+namespace Conqueror
 {
     public interface IQueryMiddleware
     {

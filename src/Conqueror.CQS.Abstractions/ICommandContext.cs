@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Conqueror.CQS
+namespace Conqueror
 {
     /// <summary>
     ///     Encapsulates contextual information for a command execution.
