@@ -190,7 +190,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithPipelineConfiguration : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithPipelineConfiguration : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
             {

@@ -675,7 +675,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record TestCommandWithoutResponse(int Payload);
 
-        private sealed class TestCommandHandlerWithSingleMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithSingleMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -698,7 +698,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithSingleMiddlewareWithParameter : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithSingleMiddlewareWithParameter : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -721,7 +721,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithSingleMiddleware : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithoutResponseWithSingleMiddleware : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -743,7 +743,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithSingleMiddlewareWithParameter : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithoutResponseWithSingleMiddlewareWithParameter : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -765,7 +765,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -789,7 +789,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -847,7 +847,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -872,7 +872,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithMultipleMutatingMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithMultipleMutatingMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -896,7 +896,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithMultipleMutatingMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithoutResponseWithMultipleMutatingMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
 
@@ -921,7 +921,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new(0);
@@ -935,18 +935,18 @@ namespace Conqueror.CQS.Tests
         }
 
 #if !NET7_0_OR_GREATER
-        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new(0);
             }
         }
         
-        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new(0);
@@ -956,9 +956,9 @@ namespace Conqueror.CQS.Tests
             public static ICommandPipelineBuilder ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline;
         }
         
-        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
                 await Task.Yield();
                 return new(0);

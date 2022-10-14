@@ -105,7 +105,7 @@ namespace Conqueror.CQS.Tests
             public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken) => Task.CompletedTask;
         }
 
-        private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.FromResult(new TestCommandResponse());
 

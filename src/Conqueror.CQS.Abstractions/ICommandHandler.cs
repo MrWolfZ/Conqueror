@@ -1,9 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-// false positive warning about static member on generic interface, since member is abstract
-#pragma warning disable CA1000
-
 // empty interface used as marker interface for other operations
 #pragma warning disable CA1040
 
@@ -25,7 +22,12 @@ namespace Conqueror.CQS
         Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken);
     }
     
-    public interface IConfigureCommandHandlerPipeline
+    /// <summary>
+    /// Note that this interface cannot be merged into <see cref="ICommandHandler"/> since it would
+    /// disallow that interface to be used as generic parameter (see also this GitHub issue:
+    /// https://github.com/dotnet/csharplang/issues/5955).
+    /// </summary>
+    public interface IConfigureCommandPipeline
     {
 #if NET7_0_OR_GREATER
         static abstract void ConfigurePipeline(ICommandPipelineBuilder pipeline);

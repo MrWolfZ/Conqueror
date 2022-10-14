@@ -101,13 +101,13 @@ namespace Conqueror.CQS.CommandHandling
 
             static Action<ICommandPipelineBuilder>? CreatePipelineConfigurationFunction(Type handlerType)
             {
-                if (!handlerType.IsAssignableTo(typeof(IConfigureCommandHandlerPipeline)))
+                if (!handlerType.IsAssignableTo(typeof(IConfigureCommandPipeline)))
                 {
                     return null;
                 }
 
 #if NET7_0_OR_GREATER
-                var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IConfigureCommandHandlerPipeline)).TargetMethods.Single();
+                var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IConfigureCommandPipeline)).TargetMethods.Single();
 #else
                 const string configurationMethodName = "ConfigurePipeline";
 
@@ -116,7 +116,7 @@ namespace Conqueror.CQS.CommandHandling
                 if (pipelineConfigurationMethod is null)
                 {
                     throw new InvalidOperationException(
-                        $"command handler type '{handlerType.Name}' has implements the interface '{nameof(IConfigureCommandHandlerPipeline)}' but does not have a public method '{configurationMethodName}'");
+                        $"command handler type '{handlerType.Name}' implements the interface '{nameof(IConfigureCommandPipeline)}' but does not have a public method '{configurationMethodName}'");
                 }
 
                 var methodHasInvalidReturnType = pipelineConfigurationMethod.ReturnType != typeof(void);
@@ -126,7 +126,7 @@ namespace Conqueror.CQS.CommandHandling
                 if (methodHasInvalidReturnType || methodHasInvalidParameterTypes)
                 {
                     throw new InvalidOperationException(
-                        $"command handler type '{handlerType.Name}' has an invalid method signature for '{configurationMethodName}'; ensure that the signature is 'public static '");
+                        $"command handler type '{handlerType.Name}' has an invalid method signature for '{configurationMethodName}'; ensure that the signature is 'public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)'");
                 }
 #endif
 

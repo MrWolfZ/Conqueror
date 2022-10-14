@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
 
-internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementSharedCounterValueCommandHandler, IConfigureCommandHandlerPipeline
+internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementSharedCounterValueCommandHandler, IConfigureCommandPipeline
 {
     private readonly SharedCounter counter;
     private readonly ISharedCounterIncrementedEventObserver eventObserver;

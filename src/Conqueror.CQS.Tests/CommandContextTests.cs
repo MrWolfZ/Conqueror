@@ -597,7 +597,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record NestedTestCommandResponse(int Payload);
 
-        private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             private readonly ICommandContextAccessor commandContextAccessor;
             private readonly Func<TestCommand, ICommandContext?, TestCommandResponse> handlerFn;

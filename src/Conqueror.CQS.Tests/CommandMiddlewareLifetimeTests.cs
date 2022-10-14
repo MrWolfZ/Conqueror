@@ -483,7 +483,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record TestCommandWithoutResponse;
 
-        private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
@@ -494,7 +494,7 @@ namespace Conqueror.CQS.Tests
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
         }
 
-        private sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>, IConfigureCommandPipeline
         {
             public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken)
             {
@@ -505,7 +505,7 @@ namespace Conqueror.CQS.Tests
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
         }
 
-        private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
         {
             public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
             {
@@ -515,7 +515,7 @@ namespace Conqueror.CQS.Tests
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
         }
 
-        private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
             {
@@ -530,7 +530,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithMultipleMiddlewares2 : ICommandHandler<TestCommand2, TestCommandResponse2>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithMultipleMiddlewares2 : ICommandHandler<TestCommand2, TestCommandResponse2>, IConfigureCommandPipeline
         {
             public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken)
             {
@@ -545,7 +545,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
         {
             public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
             {
@@ -559,7 +559,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
             {
@@ -570,7 +570,7 @@ namespace Conqueror.CQS.Tests
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
         }
 
-        private sealed class TestCommandHandlerWithoutResponseWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithoutResponseWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand>, IConfigureCommandPipeline
         {
             public async Task ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
             {
@@ -580,7 +580,7 @@ namespace Conqueror.CQS.Tests
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
         }
 
-        private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandHandlerPipeline
+        private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
             private readonly TestObservations observations;
             private int invocationCount;
