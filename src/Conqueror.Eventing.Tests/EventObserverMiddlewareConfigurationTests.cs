@@ -193,14 +193,13 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverWithPipelineConfiguration : IEventObserver<TestEvent>
+        private sealed class TestEventObserverWithPipelineConfiguration : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             public async Task HandleEvent(TestEvent query, CancellationToken cancellationToken)
             {
                 await Task.Yield();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new(10));

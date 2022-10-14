@@ -284,25 +284,23 @@ namespace Conqueror.Eventing.Tests
 
         private sealed record TestEvent;
 
-        private sealed class TestEventObserver : IEventObserver<TestEvent>
+        private sealed class TestEventObserver : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline) => pipeline.Use<TestEventObserverMiddleware>();
         }
 
-        private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>
+        private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestEventObserverMiddleware>()
@@ -310,14 +308,13 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>
+        private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
             {
                 await Task.Yield();
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestEventObserverRetryMiddleware>()

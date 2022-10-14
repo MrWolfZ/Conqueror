@@ -847,6 +847,63 @@ namespace Conqueror.Eventing.Tests
         }
 
         [Test]
+        public async Task GivenObserverWithPipelineConfigurationMethodWithoutPipelineConfigurationInterface_MiddlewaresAreNotCalled()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithPipelineConfigurationWithoutPipelineConfigurationInterface>()
+                        .AddTransient<TestEventObserverMiddleware>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var publisher = provider.GetRequiredService<IEventPublisher>();
+
+            var evt = new TestEvent { Payload = 10 };
+
+            await publisher.PublishEvent(evt, CancellationToken.None);
+
+            Assert.That(observations.MiddlewareTypes, Is.Empty);
+        }
+
+#if !NET7_0_OR_GREATER
+        [Test]
+        public void GivenObserverWithPipelineConfigurationInterfaceWithoutPipelineConfigurationMethod_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithPipelineConfigurationInterfaceWithoutConfigurationMethod>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+        
+        [Test]
+        public void GivenObserverWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodReturnType_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+        
+        [Test]
+        public void GivenObserverWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodParameters_RegisteringHandlerThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddConquerorEventing()
+                        .AddTransient<TestEventObserverWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+        }
+#endif
+
+        [Test]
         public async Task GivenObserverAndPublisherMiddlewares_MiddlewaresCanChangeTheEvent()
         {
             var services = new ServiceCollection();
@@ -1119,7 +1176,7 @@ namespace Conqueror.Eventing.Tests
             public int Payload { get; init; }
         }
 
-        private sealed class TestEventObserverWithSingleMiddleware : IEventObserver<TestEvent>
+        private sealed class TestEventObserverWithSingleMiddleware : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             private readonly TestObservations observations;
 
@@ -1135,14 +1192,13 @@ namespace Conqueror.Eventing.Tests
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new());
             }
         }
 
-        private sealed class TestEventObserverWithSingleMiddlewareWithParameter : IEventObserver<TestEvent>
+        private sealed class TestEventObserverWithSingleMiddlewareWithParameter : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             private readonly TestObservations observations;
 
@@ -1158,14 +1214,13 @@ namespace Conqueror.Eventing.Tests
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new() { Parameter = 10 });
             }
         }
 
-        private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>
+        private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             private readonly TestObservations observations;
 
@@ -1181,7 +1236,6 @@ namespace Conqueror.Eventing.Tests
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new())
@@ -1206,7 +1260,7 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>
+        private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             private readonly TestObservations observations;
 
@@ -1222,7 +1276,6 @@ namespace Conqueror.Eventing.Tests
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<TestEventObserverRetryMiddleware>()
@@ -1231,7 +1284,7 @@ namespace Conqueror.Eventing.Tests
             }
         }
 
-        private sealed class TestEventObserverWithMultipleMutatingMiddlewares : IEventObserver<TestEvent>
+        private sealed class TestEventObserverWithMultipleMutatingMiddlewares : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
         {
             private readonly TestObservations observations;
 
@@ -1247,13 +1300,56 @@ namespace Conqueror.Eventing.Tests
                 observations.CancellationTokensFromObservers.Add(cancellationToken);
             }
 
-            // ReSharper disable once UnusedMember.Local
             public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
             {
                 _ = pipeline.Use<MutatingTestEventObserverMiddleware>()
                             .Use<MutatingTestEventObserverMiddleware2>();
             }
         }
+
+        private sealed class TestEventObserverWithPipelineConfigurationWithoutPipelineConfigurationInterface : IEventObserver<TestEvent>
+        {
+            public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+            }
+
+            // ReSharper disable once UnusedMember.Local
+            public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new() { Parameter = 10 });
+            }
+        }
+
+#if !NET7_0_OR_GREATER
+        private sealed class TestEventObserverWithPipelineConfigurationInterfaceWithoutConfigurationMethod : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+        {
+            public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+            }
+        }
+        
+        private sealed class TestEventObserverWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+        {
+            public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+            }
+
+            public static IEventObserverPipelineBuilder ConfigurePipeline(IEventObserverPipelineBuilder pipeline) => pipeline;
+        }
+        
+        private sealed class TestEventObserverWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+        {
+            public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+            }
+
+            public static string ConfigurePipeline(string pipeline) => pipeline;
+        }
+#endif
 
         private sealed record TestEventObserverMiddlewareConfiguration
         {
