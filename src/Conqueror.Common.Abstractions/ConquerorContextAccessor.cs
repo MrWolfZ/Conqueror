@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 
-// TODO: move to common package
 namespace Conqueror
 {
     /// <summary>

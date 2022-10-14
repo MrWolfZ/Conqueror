@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-// TODO: move to common abstractions package
 namespace Conqueror
 {
     /// <summary>

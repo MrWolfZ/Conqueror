@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-// TODO: move to common package
 namespace Conqueror
 {
     /// <inheritdoc />

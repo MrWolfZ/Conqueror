@@ -20,6 +20,7 @@ echo packing projects...
 
 mkdir .publish
 dotnet pack %srcDir%\Conqueror.Common -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Common.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Abstractions -c Release -o %publishDir% --include-symbols
