@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Conqueror.CQS.Extensions.AspNetCore.Common;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
 {

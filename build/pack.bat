@@ -24,6 +24,7 @@ dotnet pack %srcDir%\Conqueror.Common.Abstractions -c Release -o %publishDir% --
 dotnet pack %srcDir%\Conqueror.CQS -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Common -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Client -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Server -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Eventing -c Release -o %publishDir% --include-symbols

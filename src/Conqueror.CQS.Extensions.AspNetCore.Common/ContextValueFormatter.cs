@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Conqueror
+namespace Conqueror.CQS.Extensions.AspNetCore.Common
 {
-    // TODO: move to common package
     internal static class ContextValueFormatter
     {
         public static string Format(IEnumerable<KeyValuePair<string, string>> values)

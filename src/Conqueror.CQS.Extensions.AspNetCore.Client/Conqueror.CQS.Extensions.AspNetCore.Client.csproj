@@ -11,6 +11,7 @@
         <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
         <ProjectReference Include="..\Conqueror.CQS.Extensions.AspNetCore.Abstractions\Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS.Extensions.AspNetCore.Common\Conqueror.CQS.Extensions.AspNetCore.Common.csproj" />
     </ItemGroup>
 
 </Project>

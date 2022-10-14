@@ -7,6 +7,7 @@ using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror.Common;
+using Conqueror.CQS.Extensions.AspNetCore.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;

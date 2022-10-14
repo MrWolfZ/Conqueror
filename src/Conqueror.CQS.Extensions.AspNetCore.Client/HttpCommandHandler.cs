@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.CQS.Extensions.AspNetCore.Common;
 
 // it makes sense for these classes to be in the same file
 #pragma warning disable SA1402
