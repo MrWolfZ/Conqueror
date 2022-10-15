@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Make your application event-driven by consuming data streams interactively.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Abstractions\Conqueror.Streaming.Interactive.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+    </ItemGroup>
+
+</Project>

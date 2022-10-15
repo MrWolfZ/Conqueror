@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Make your application event-driven by consuming data streams reactively.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Streaming.Reactive.Abstractions\Conqueror.Streaming.Reactive.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+    </ItemGroup>
+
+</Project>
