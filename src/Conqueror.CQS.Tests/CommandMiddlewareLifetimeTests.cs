@@ -1,9 +1,3 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
-
 namespace Conqueror.CQS.Tests
 {
     public sealed class CommandMiddlewareLifetimeTests

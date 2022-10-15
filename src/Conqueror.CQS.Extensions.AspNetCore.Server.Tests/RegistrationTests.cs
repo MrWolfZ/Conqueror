@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
+﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 {

@@ -1,10 +1,4 @@
-﻿using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
-
-namespace Conqueror.Eventing.Tests
+﻿namespace Conqueror.Eventing.Tests
 {
     [TestFixture]
     public sealed class RegistrationTests

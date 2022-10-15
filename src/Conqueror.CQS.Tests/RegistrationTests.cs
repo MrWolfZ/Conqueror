@@ -1,10 +1,5 @@
-﻿using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Conqueror.CQS.CommandHandling;
+﻿using Conqueror.CQS.CommandHandling;
 using Conqueror.CQS.QueryHandling;
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
 
 namespace Conqueror.CQS.Tests
 {

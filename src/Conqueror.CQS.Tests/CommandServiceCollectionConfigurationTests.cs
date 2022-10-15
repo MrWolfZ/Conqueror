@@ -1,10 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
-
-namespace Conqueror.CQS.Tests
+﻿namespace Conqueror.CQS.Tests
 {
     [TestFixture]
     public sealed class CommandServiceCollectionConfigurationTests

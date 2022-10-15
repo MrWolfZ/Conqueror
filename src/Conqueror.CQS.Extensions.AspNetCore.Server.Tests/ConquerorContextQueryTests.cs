@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
 using System.Net.Mime;
-using System.Threading;
-using System.Threading.Tasks;
 using Conqueror.Common;
 using Conqueror.CQS.Extensions.AspNetCore.Common;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 {

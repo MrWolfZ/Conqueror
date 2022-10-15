@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
-
-namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
+﻿namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 {
     [TestFixture]
     public sealed class QueryHttpClientRegistrationTests

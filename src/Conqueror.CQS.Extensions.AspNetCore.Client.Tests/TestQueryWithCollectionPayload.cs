@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
+﻿namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 {
     [HttpQuery]
     public sealed record TestQueryWithCollectionPayload

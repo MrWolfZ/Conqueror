@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
+﻿namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 {
     [HttpCommand]
     public sealed record TestCommandWithoutResponseWithoutPayload;

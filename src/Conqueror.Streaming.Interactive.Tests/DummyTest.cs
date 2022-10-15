@@ -1,7 +1,4 @@
-﻿using System.Threading.Tasks;
-using NUnit.Framework;
-
-namespace Conqueror.Streaming.Interactive.Tests
+﻿namespace Conqueror.Streaming.Interactive.Tests
 {
     [TestFixture]
     public class DummyTest
