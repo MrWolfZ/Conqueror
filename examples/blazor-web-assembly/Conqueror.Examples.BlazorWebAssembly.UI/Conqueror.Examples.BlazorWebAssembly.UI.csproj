@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
+    <Import Project="../../.targets/common.targets"/>
+
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
@@ -7,14 +9,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Client" Version="0.1.0-beta.7" Condition="'$(SolutionFileName)'!='Conqueror.sln'" />
+        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Client" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.10" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Conqueror.Examples.BlazorWebAssembly.Contracts\Conqueror.Examples.BlazorWebAssembly.Contracts.csproj" />
-        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj" Condition="'$(SolutionFileName)'=='Conqueror.sln'" />
+        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj" Condition="$(ShouldReferenceProject)" />
     </ItemGroup>
 
 </Project>

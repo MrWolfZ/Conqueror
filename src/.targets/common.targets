@@ -3,6 +3,17 @@
     <PropertyGroup>
         <ConquerorVersion>0.1.0-beta.15</ConquerorVersion>
         <ConquerorAssemblyVersion>0.1.0.15</ConquerorAssemblyVersion>
+
+        <LangVersion Condition="'$(TargetFramework)' == 'net6.0'">10</LangVersion>
+        <LangVersion Condition="'$(TargetFramework)' == 'net7.0'">11</LangVersion>
+
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <!-- common dependency versions -->
+    <PropertyGroup>
+        <DependencyInjectionVersion Condition="'$(TargetFramework)' == 'net6.0'">6.0.0</DependencyInjectionVersion>
+        <DependencyInjectionVersion Condition="'$(TargetFramework)' == 'net7.0'">7.0.0-rc.2.22472.3</DependencyInjectionVersion>
     </PropertyGroup>
 
 </Project>

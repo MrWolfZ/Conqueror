@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <Import Project="../../.targets/common.targets"/>
+
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -7,13 +9,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Abstractions" Version="0.1.0-beta.7" Condition="'$(SolutionFileName)'!='Conqueror.sln'" />
-        <PackageReference Include="Conqueror.Eventing.Abstractions" Version="0.1.0-beta.7" Condition="'$(SolutionFileName)'!='Conqueror.sln'" />
+        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Abstractions" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+        <PackageReference Include="Conqueror.Eventing.Abstractions" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Abstractions/Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj" Condition="'$(SolutionFileName)'=='Conqueror.sln'" />
-        <ProjectReference Include="../../../src/Conqueror.Eventing.Abstractions/Conqueror.Eventing.Abstractions.csproj" Condition="'$(SolutionFileName)'=='Conqueror.sln'" />
+        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Abstractions/Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj" Condition="$(ShouldReferenceProject)" />
+        <ProjectReference Include="../../../src/Conqueror.Eventing.Abstractions/Conqueror.Eventing.Abstractions.csproj" Condition="$(ShouldReferenceProject)" />
     </ItemGroup>
 
 </Project>

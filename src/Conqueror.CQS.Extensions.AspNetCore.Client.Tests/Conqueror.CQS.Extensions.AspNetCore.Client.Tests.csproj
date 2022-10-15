@@ -1,18 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../.targets/lib.targets" />
-
-    <PropertyGroup>
-        <IsPackable>false</IsPackable>
-    </PropertyGroup>
+    <Import Project="../.targets/test.targets" />
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
-        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.4" Condition="'$(TargetFramework)' == 'net6.0'" />
-        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="7.0.0-rc.2.22476.2" Condition="'$(TargetFramework)' == 'net7.0'" />
-        <PackageReference Include="NUnit" Version="3.13.1" />
-        <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-        <PackageReference Include="coverlet.collector" Version="3.0.2" />
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="$(MvcTestingVersion)" />
     </ItemGroup>
 
     <ItemGroup>

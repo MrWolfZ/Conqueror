@@ -42,6 +42,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".targets", ".targets", "{76
 		src\.targets\analyzers.targets = src\.targets\analyzers.targets
 		src\.targets\common.targets = src\.targets\common.targets
 		src\.targets\lib.targets = src\.targets\lib.targets
+		src\.targets\test.targets = src\.targets\test.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".analyzer-rulesets", ".analyzer-rulesets", "{8B232544-9F1F-499B-A700-DCB6461DDA2F}"

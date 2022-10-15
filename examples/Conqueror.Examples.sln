@@ -15,6 +15,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.UI", "blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.UI\Conqueror.Examples.BlazorWebAssembly.UI.csproj", "{97E8A70D-9FF5-4E34-8A9B-0F7B85581E15}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".targets", ".targets", "{2645BDD8-9CE8-4DA5-85A8-0669520F4BDD}"
+	ProjectSection(SolutionItems) = preProject
+		.targets\common.targets = .targets\common.targets
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -1,19 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../.targets/lib.targets" />
-
-    <PropertyGroup>
-        <IsPackable>false</IsPackable>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" Condition="'$(TargetFramework)' == 'net6.0'" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0-rc.2.22472.3" Condition="'$(TargetFramework)' == 'net7.0'" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
-        <PackageReference Include="NUnit" Version="3.13.1" />
-        <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-        <PackageReference Include="coverlet.collector" Version="3.0.2" />
-    </ItemGroup>
+    <Import Project="../.targets/test.targets" />
 
     <ItemGroup>
         <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />

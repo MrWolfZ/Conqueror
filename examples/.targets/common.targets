@@ -1,0 +1,12 @@
+<Project>
+
+    <Import Project="../../src/.targets/common.targets"/>
+
+    <PropertyGroup>
+        <ShouldReferencePackage>false</ShouldReferencePackage>
+        <ShouldReferencePackage Condition="'$(SolutionFileName)'!='Conqueror.sln'">true</ShouldReferencePackage>
+        <ShouldReferenceProject>true</ShouldReferenceProject>
+        <ShouldReferenceProject Condition="'$(SolutionFileName)'!='Conqueror.sln'">false</ShouldReferenceProject>
+    </PropertyGroup>
+
+</Project>
