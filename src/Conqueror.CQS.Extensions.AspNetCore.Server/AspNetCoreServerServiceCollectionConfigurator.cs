@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Conqueror.Common;
+using Conqueror.CQS.Common;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 

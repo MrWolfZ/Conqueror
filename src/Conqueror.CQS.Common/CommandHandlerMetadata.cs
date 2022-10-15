@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Conqueror
+namespace Conqueror.CQS.Common
 {
     internal sealed class CommandHandlerMetadata
     {

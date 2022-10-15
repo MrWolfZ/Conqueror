@@ -1,4 +1,4 @@
-﻿namespace Conqueror
+﻿namespace Conqueror.CQS.Common
 {
     internal sealed record UnitCommandResponse
     {

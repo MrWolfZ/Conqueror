@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using Conqueror;
+using Conqueror.CQS.Common;
 using Conqueror.CQS.Extensions.AspNetCore.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

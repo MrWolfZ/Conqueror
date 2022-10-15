@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Conqueror.CQS.Common;
 
 namespace Conqueror.CQS.CommandHandling
 {

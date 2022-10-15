@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.CQS.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Conqueror
+namespace Conqueror.CQS.Common
 {
     internal static class CqsCommandHandlerTypeExtensions
     {

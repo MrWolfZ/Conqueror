@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.CQS.Common;
 
 // these classes belong together
 #pragma warning disable SA1402

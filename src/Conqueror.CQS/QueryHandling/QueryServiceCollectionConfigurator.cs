@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 #endif
 using Conqueror.Common;
+using Conqueror.CQS.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling

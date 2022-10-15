@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using Conqueror.Common;
+using Conqueror.CQS.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
