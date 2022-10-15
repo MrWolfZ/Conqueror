@@ -8,8 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Abstractions\Conqueror.Streaming.Interactive.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Abstractions\Conqueror.Streaming.Interactive.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Common\Conqueror.Streaming.Interactive.Common.csproj" />
     </ItemGroup>
 
 </Project>

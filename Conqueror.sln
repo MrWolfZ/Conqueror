@@ -93,6 +93,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Common", "src\Conqueror.CQS.Common\Conqueror.CQS.Common.csproj", "{3E96926A-9AED-44BB-B67F-0538E62A8599}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Common", "src\Conqueror.Streaming.Interactive.Common\Conqueror.Streaming.Interactive.Common.csproj", "{7D14CDEA-51D7-4E75-9730-8677F3C69ED0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -218,6 +220,10 @@ Global
 		{3E96926A-9AED-44BB-B67F-0538E62A8599}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E96926A-9AED-44BB-B67F-0538E62A8599}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E96926A-9AED-44BB-B67F-0538E62A8599}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D14CDEA-51D7-4E75-9730-8677F3C69ED0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D14CDEA-51D7-4E75-9730-8677F3C69ED0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D14CDEA-51D7-4E75-9730-8677F3C69ED0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D14CDEA-51D7-4E75-9730-8677F3C69ED0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
