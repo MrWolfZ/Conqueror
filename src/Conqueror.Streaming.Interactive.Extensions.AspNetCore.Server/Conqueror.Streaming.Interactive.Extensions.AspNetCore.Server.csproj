@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Automatically generate HTTP endpoints for apps using ASP Core and the Conqueror command-query-separation (CQS) package.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Common\Conqueror.Streaming.Interactive.Common.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Abstractions\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+</Project>
