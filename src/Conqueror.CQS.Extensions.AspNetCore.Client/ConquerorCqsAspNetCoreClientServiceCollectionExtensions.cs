@@ -13,7 +13,8 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddConquerorCqsHttpClientServices(this IServiceCollection services)
         {
             services.TryAddSingleton<ConfigurationProvider>();
-            services.TryAddTransient<IConquerorHttpClientFactory, ConquerorHttpClientFactory>();
+            services.TryAddSingleton<HttpClientFactory>();
+            services.TryAddTransient<IConquerorHttpClientFactory, TransientHttpClientFactory>();
 
             services.TryAddSingleton<ConquerorContextAccessor>();
             services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
@@ -34,10 +35,7 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                                         Func<IServiceProvider, HttpClient> httpClientFactory)
             where TCommandHandler : class, ICommandHandler
         {
-            return services.AddConquerorCommandHttpClient<TCommandHandler>(new HttpClientRegistration(typeof(TCommandHandler))
-            {
-                HttpClientFactory = httpClientFactory,
-            });
+            return services.AddConquerorCommandHttpClient(p => p.CreateCommandHttpClient<TCommandHandler>(httpClientFactory));
         }
 
         public static IServiceCollection AddConquerorCommandHttpClient<TCommandHandler>(this IServiceCollection services,
@@ -45,21 +43,14 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                                         Action<ConquerorCqsHttpClientOptions> configure)
             where TCommandHandler : class, ICommandHandler
         {
-            return services.AddConquerorCommandHttpClient<TCommandHandler>(new HttpClientRegistration(typeof(TCommandHandler))
-            {
-                HttpClientFactory = httpClientFactory,
-                ConfigurationAction = configure,
-            });
+            return services.AddConquerorCommandHttpClient(p => p.CreateCommandHttpClient<TCommandHandler>(httpClientFactory, configure));
         }
 
         public static IServiceCollection AddConquerorCommandHttpClient<TCommandHandler>(this IServiceCollection services,
                                                                                         Func<IServiceProvider, Uri> baseAddressFactory)
             where TCommandHandler : class, ICommandHandler
         {
-            return services.AddConquerorCommandHttpClient<TCommandHandler>(new HttpClientRegistration(typeof(TCommandHandler))
-            {
-                BaseAddressFactory = baseAddressFactory,
-            });
+            return services.AddConquerorCommandHttpClient(p => p.CreateCommandHttpClient<TCommandHandler>(baseAddressFactory));
         }
 
         public static IServiceCollection AddConquerorCommandHttpClient<TCommandHandler>(this IServiceCollection services,
@@ -67,21 +58,14 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                                         Action<ConquerorCqsHttpClientOptions> configure)
             where TCommandHandler : class, ICommandHandler
         {
-            return services.AddConquerorCommandHttpClient<TCommandHandler>(new HttpClientRegistration(typeof(TCommandHandler))
-            {
-                BaseAddressFactory = baseAddressFactory,
-                ConfigurationAction = configure,
-            });
+            return services.AddConquerorCommandHttpClient(p => p.CreateCommandHttpClient<TCommandHandler>(baseAddressFactory, configure));
         }
 
         public static IServiceCollection AddConquerorQueryHttpClient<TQueryHandler>(this IServiceCollection services,
                                                                                     Func<IServiceProvider, HttpClient> httpClientFactory)
             where TQueryHandler : class, IQueryHandler
         {
-            return services.AddConquerorQueryHttpClient<TQueryHandler>(new HttpClientRegistration(typeof(TQueryHandler))
-            {
-                HttpClientFactory = httpClientFactory,
-            });
+            return services.AddConquerorQueryHttpClient(p => p.CreateQueryHttpClient<TQueryHandler>(httpClientFactory));
         }
 
         public static IServiceCollection AddConquerorQueryHttpClient<TQueryHandler>(this IServiceCollection services,
@@ -89,21 +73,14 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                                     Action<ConquerorCqsHttpClientOptions> configure)
             where TQueryHandler : class, IQueryHandler
         {
-            return services.AddConquerorQueryHttpClient<TQueryHandler>(new HttpClientRegistration(typeof(TQueryHandler))
-            {
-                HttpClientFactory = httpClientFactory,
-                ConfigurationAction = configure,
-            });
+            return services.AddConquerorQueryHttpClient(p => p.CreateQueryHttpClient<TQueryHandler>(httpClientFactory, configure));
         }
 
         public static IServiceCollection AddConquerorQueryHttpClient<TQueryHandler>(this IServiceCollection services,
                                                                                     Func<IServiceProvider, Uri> baseAddressFactory)
             where TQueryHandler : class, IQueryHandler
         {
-            return services.AddConquerorQueryHttpClient<TQueryHandler>(new HttpClientRegistration(typeof(TQueryHandler))
-            {
-                BaseAddressFactory = baseAddressFactory,
-            });
+            return services.AddConquerorQueryHttpClient(p => p.CreateQueryHttpClient<TQueryHandler>(baseAddressFactory));
         }
 
         public static IServiceCollection AddConquerorQueryHttpClient<TQueryHandler>(this IServiceCollection services,
@@ -111,18 +88,14 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                                     Action<ConquerorCqsHttpClientOptions> configure)
             where TQueryHandler : class, IQueryHandler
         {
-            return services.AddConquerorQueryHttpClient<TQueryHandler>(new HttpClientRegistration(typeof(TQueryHandler))
-            {
-                BaseAddressFactory = baseAddressFactory,
-                ConfigurationAction = configure,
-            });
+            return services.AddConquerorQueryHttpClient(p => p.CreateQueryHttpClient<TQueryHandler>(baseAddressFactory, configure));
         }
 
-        private static IServiceCollection AddConquerorCommandHttpClient<TCommandHandler>(this IServiceCollection services, HttpClientRegistration registration)
+        private static IServiceCollection AddConquerorCommandHttpClient<TCommandHandler>(this IServiceCollection services, Func<IServiceProvider, TCommandHandler> factory)
             where TCommandHandler : class, ICommandHandler
         {
             services.AddConquerorCqsHttpClientServices();
-            
+
             var (commandType, _) = typeof(TCommandHandler).GetCommandAndResponseTypes().Single();
             commandType.AssertCommandIsHttpCommand();
 
@@ -133,9 +106,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new InvalidOperationException($"an http client for command handler {typeof(TCommandHandler).FullName} is already registered");
             }
 
-            _ = services.AddSingleton(registration);
-
-            _ = services.AddTransient(p => p.CreateCommandHttpClient<TCommandHandler>());
+            _ = services.AddTransient(factory);
 
             if (typeof(TCommandHandler).IsCustomCommandHandlerInterfaceType())
             {
@@ -145,11 +116,11 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
-        private static IServiceCollection AddConquerorQueryHttpClient<TQueryHandler>(this IServiceCollection services, HttpClientRegistration registration)
+        private static IServiceCollection AddConquerorQueryHttpClient<TQueryHandler>(this IServiceCollection services, Func<IServiceProvider, TQueryHandler> factory)
             where TQueryHandler : class, IQueryHandler
         {
             services.AddConquerorCqsHttpClientServices();
-            
+
             var (queryType, _) = typeof(TQueryHandler).GetQueryAndResponseTypes().Single();
             queryType.AssertQueryIsHttpQuery();
 
@@ -160,9 +131,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new InvalidOperationException($"an http client for query handler {typeof(TQueryHandler).FullName} is already registered");
             }
 
-            _ = services.AddSingleton(registration);
-
-            _ = services.AddTransient(p => p.CreateQueryHttpClient<TQueryHandler>());
+            _ = services.AddTransient(factory);
 
             if (typeof(TQueryHandler).IsCustomQueryHandlerInterfaceType())
             {

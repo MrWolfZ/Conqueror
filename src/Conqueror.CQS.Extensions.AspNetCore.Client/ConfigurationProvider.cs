@@ -1,27 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
 {
     internal sealed class ConfigurationProvider
     {
         private readonly Action<ConquerorCqsHttpClientGlobalOptions>? configureGlobalOptions;
-        private readonly IReadOnlyDictionary<Type, HttpClientRegistration> registrationsByHandlerType;
 
-        public ConfigurationProvider(IEnumerable<HttpClientRegistration> clientRegistrations,
-                                     Action<ConquerorCqsHttpClientGlobalOptions>? configureGlobalOptions = null)
+        public ConfigurationProvider(Action<ConquerorCqsHttpClientGlobalOptions>? configureGlobalOptions = null)
         {
             this.configureGlobalOptions = configureGlobalOptions;
-            registrationsByHandlerType = clientRegistrations.ToDictionary(o => o.HandlerType);
         }
 
-        public ResolvedHttpClientOptions GetOptions<THandler>(IServiceProvider provider)
+        public ResolvedHttpClientOptions GetOptions<THandler>(IServiceProvider provider, HttpClientRegistration registration)
         {
-            var registration = registrationsByHandlerType.TryGetValue(typeof(THandler), out var o)
-                ? o
-                : throw new InvalidOperationException($"http handler '{typeof(THandler).Name}' is not registered");
-
             var globalOptions = new ConquerorCqsHttpClientGlobalOptions(provider);
             configureGlobalOptions?.Invoke(globalOptions);
 
