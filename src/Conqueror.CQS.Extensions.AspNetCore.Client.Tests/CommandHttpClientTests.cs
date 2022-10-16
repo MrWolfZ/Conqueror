@@ -123,7 +123,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         protected override void ConfigureServerServices(IServiceCollection services)
         {
-            _ = services.AddMvc().AddConqueror();
+            _ = services.AddMvc().AddConquerorCQS();
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypePayloadJsonConverterFactory()); });
 
             _ = services.AddTransient<TestCommandHandler>()

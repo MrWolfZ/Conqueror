@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
-    internal sealed class AspNetCoreServerServiceCollectionConfigurator : IServiceCollectionConfigurator
+    internal sealed class CqsAspNetCoreServerServiceCollectionConfigurator : IServiceCollectionConfigurator
     {
         public int ConfigurationPhase => 2;
 
@@ -17,7 +17,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
 
             if (applicationPartManager == null)
             {
-                throw new InvalidOperationException("the ASP Core application part manager must be registered before configuring the Conqueror ASP Core Server services");
+                throw new InvalidOperationException("the ASP Core application part manager must be registered before configuring the Conqueror CQS ASP Core Server services");
             }
 
             if (!applicationPartManager.FeatureProviders.Any(p => p is HttpCommandControllerFeatureProvider))

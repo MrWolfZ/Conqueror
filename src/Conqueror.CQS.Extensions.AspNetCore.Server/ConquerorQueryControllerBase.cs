@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
     [ApiController]
-    public abstract class ConquerorQueryControllerBase<TQuery, TResponse> : ConquerorControllerBase
+    public abstract class ConquerorQueryControllerBase<TQuery, TResponse> : ConquerorCqsControllerBase
         where TQuery : class
     {
         protected async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken)
@@ -23,7 +23,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     }
 
     [ApiController]
-    public abstract class ConquerorQueryWithoutPayloadControllerBase<TQuery, TResponse> : ConquerorControllerBase
+    public abstract class ConquerorQueryWithoutPayloadControllerBase<TQuery, TResponse> : ConquerorCqsControllerBase
         where TQuery : class, new()
     {
         protected async Task<TResponse> ExecuteQuery(CancellationToken cancellationToken)

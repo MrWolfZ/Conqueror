@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
     [TypeFilter(typeof(ExceptionHandlerFilter))]
-    public abstract class ConquerorControllerBase : ControllerBase
+    public abstract class ConquerorCqsControllerBase : ControllerBase
     {
         protected async Task<TResponse> ExecuteWithContext<TResponse>(Func<Task<TResponse>> executeFn)
         {

@@ -1,14 +1,16 @@
 ﻿using Conqueror.CQS.Extensions.AspNetCore.Server;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+// ReSharper disable InconsistentNaming
+
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class MvcBuilderExtensions
+    public static class ConquerorCqsMvcBuilderExtensions
     {
-        public static IMvcBuilder AddConqueror(this IMvcBuilder builder)
+        public static IMvcBuilder AddConquerorCQS(this IMvcBuilder builder)
         {
-            builder.Services.TryAddSingleton(new AspNetCoreServerServiceCollectionConfigurator());
+            builder.Services.TryAddSingleton(new CqsAspNetCoreServerServiceCollectionConfigurator());
 
             return builder;
         }

@@ -120,7 +120,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
 
         protected override void ConfigureServices(IServiceCollection services)
         {
-            _ = services.AddMvc().AddConqueror();
+            _ = services.AddMvc().AddConquerorCQS();
 
             _ = services.AddTransient<TestQueryHandler>()
                         .AddTransient<TestQueryHandlerWithoutPayload>()

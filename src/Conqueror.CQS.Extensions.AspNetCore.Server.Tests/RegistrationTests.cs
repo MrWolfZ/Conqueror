@@ -10,9 +10,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
         {
             var services = new ServiceCollection();
 
-            _ = services.AddMvc().AddConqueror();
+            _ = services.AddMvc().AddConquerorCQS();
 
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(AspNetCoreServerServiceCollectionConfigurator)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CqsAspNetCoreServerServiceCollectionConfigurator)));
         }
 
         [Test]
@@ -20,7 +20,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
         {
             var services = new ServiceCollection();
 
-            _ = services.AddMvc().AddConqueror();
+            _ = services.AddMvc().AddConquerorCQS();
 
             _ = services.ConfigureConqueror();
 
@@ -35,7 +35,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server.Tests
         {
             var services = new ServiceCollection();
 
-            _ = services.AddMvc().AddConqueror();
+            _ = services.AddMvc().AddConquerorCQS();
 
             _ = services.ConfigureConqueror();
             _ = services.ConfigureConqueror();

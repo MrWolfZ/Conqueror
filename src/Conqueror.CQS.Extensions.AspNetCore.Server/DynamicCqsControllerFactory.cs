@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
-    internal abstract class DynamicControllerFactory
+    internal abstract class DynamicCqsControllerFactory
     {
         private static readonly AssemblyBuilder DynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new("ConquerorCqsExtensionsAspNetCoreServerDynamic"), AssemblyBuilderAccess.Run);
         private static readonly ModuleBuilder ModuleBuilder = DynamicAssembly.DefineDynamicModule("ConquerorCqsExtensionsAspNetCoreServerDynamicModule");
@@ -20,7 +20,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
 
         protected static TypeBuilder CreateTypeBuilder(string name, string groupName, Type baseControllerType, string route)
         {
-            var typeName = $"{name}`DynamicController";
+            var typeName = $"{name}`ConquerorCqsDynamicController";
             var typeBuilder = ModuleBuilder.DefineType(typeName, TypeAttributes.NotPublic | TypeAttributes.Sealed, baseControllerType);
 
             SetRouteAttribute(typeBuilder, route);
@@ -53,7 +53,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
 
         private static void SetControllerRouteValueAttribute(TypeBuilder typeBuilder, string groupName)
         {
-            var ctor = typeof(ConquerorControllerRouteValueAttribute).GetConstructors().First(c => c.GetParameters().Length == 1 && c.GetParameters().Single().ParameterType == typeof(string));
+            var ctor = typeof(ConquerorCqsControllerRouteValueAttribute).GetConstructors().First(c => c.GetParameters().Length == 1 && c.GetParameters().Single().ParameterType == typeof(string));
             var attributeBuilder = new CustomAttributeBuilder(ctor, new object[] { groupName });
             typeBuilder.SetCustomAttribute(attributeBuilder);
         }

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
-    internal sealed class DynamicQueryControllerFactory : DynamicControllerFactory
+    internal sealed class DynamicQueryControllerFactory : DynamicCqsControllerFactory
     {
         private const string ApiGroupName = "Queries";
 

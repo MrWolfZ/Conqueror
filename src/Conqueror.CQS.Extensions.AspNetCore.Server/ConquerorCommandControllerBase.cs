@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
     [ApiController]
-    public abstract class ConquerorCommandControllerBase<TCommand, TResponse> : ConquerorControllerBase
+    public abstract class ConquerorCommandControllerBase<TCommand, TResponse> : ConquerorCqsControllerBase
         where TCommand : class
     {
         protected async Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken)
@@ -24,7 +24,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     }
 
     [ApiController]
-    public abstract class ConquerorCommandControllerBase<TCommand> : ConquerorControllerBase
+    public abstract class ConquerorCommandControllerBase<TCommand> : ConquerorCqsControllerBase
         where TCommand : class
     {
         [ProducesResponseType(204)]
@@ -40,7 +40,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     }
 
     [ApiController]
-    public abstract class ConquerorCommandWithoutPayloadControllerBase<TCommand, TResponse> : ConquerorControllerBase
+    public abstract class ConquerorCommandWithoutPayloadControllerBase<TCommand, TResponse> : ConquerorCqsControllerBase
         where TCommand : class, new()
     {
         protected async Task<TResponse> ExecuteCommand(CancellationToken cancellationToken)
@@ -54,7 +54,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Server
     }
 
     [ApiController]
-    public abstract class ConquerorCommandWithoutPayloadControllerBase<TCommand> : ConquerorControllerBase
+    public abstract class ConquerorCommandWithoutPayloadControllerBase<TCommand> : ConquerorCqsControllerBase
         where TCommand : class, new()
     {
         protected async Task ExecuteCommand(CancellationToken cancellationToken)

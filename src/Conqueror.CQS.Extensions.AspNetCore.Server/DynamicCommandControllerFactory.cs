@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Server
 {
-    internal sealed class DynamicCommandControllerFactory : DynamicControllerFactory
+    internal sealed class DynamicCommandControllerFactory : DynamicCqsControllerFactory
     {
         private const string ApiGroupName = "Commands";
 
