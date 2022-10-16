@@ -1,23 +1,19 @@
-﻿using System.Diagnostics;
-using System.Net.WebSockets;
-using System.Text.Json;
+﻿using System.Net.WebSockets;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
-namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
+namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
 {
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
     public abstract class TestBase
     {
         private HttpClient? client;
-        private WebSocketClient? webSocketClient;
+        private ServiceProvider? clientServiceProvider;
         private IHost? host;
         private CancellationTokenSource? timeoutCancellationTokenSource;
+        private WebSocketClient? webSocketClient;
 
         protected HttpClient HttpClient
         {
@@ -58,52 +54,18 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
             }
         }
 
-        [SetUp]
-        public async Task SetUp()
+        protected IServiceProvider ClientServiceProvider
         {
-            timeoutCancellationTokenSource = new();
-            
-            var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
-                                               .ConfigureWebHost(webHost =>
-                                               {
-                                                   _ = webHost.UseTestServer();
-
-                                                   _ = webHost.ConfigureServices(ConfigureServices);
-                                                   _ = webHost.Configure(Configure);
-                                               });
-
-            host = await hostBuilder.StartAsync(TestTimeoutToken);
-            client = host.GetTestClient();
-            webSocketClient = host.GetTestServer().CreateWebSocketClient();
-
-            if (!Debugger.IsAttached)
+            get
             {
-                TimeoutCancellationTokenSource.CancelAfter(TestTimeout);
+                if (clientServiceProvider == null)
+                {
+                    throw new InvalidOperationException("test fixture must be initialized before using client service provider");
+                }
+
+                return clientServiceProvider;
             }
         }
-
-        [TearDown]
-        public void TearDown()
-        {
-            timeoutCancellationTokenSource?.Cancel();
-            host?.Dispose();
-            client?.Dispose();
-            timeoutCancellationTokenSource?.Dispose();
-        }
-
-        protected abstract void ConfigureServices(IServiceCollection services);
-
-        protected abstract void Configure(IApplicationBuilder app);
-
-        protected T Resolve<T>()
-            where T : notnull => Host.Services.GetRequiredService<T>();
-
-        protected Task<WebSocket> ConnectToWebSocket(string path, string query)
-        {
-            return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
-        }
-
-        protected JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
         protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(2);
 
@@ -120,6 +82,58 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
 
                 return timeoutCancellationTokenSource;
             }
+        }
+
+        [SetUp]
+        public async Task SetUp()
+        {
+            timeoutCancellationTokenSource = new();
+
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
+
+                _ = webHost.ConfigureServices(ConfigureServerServices);
+                _ = webHost.Configure(Configure);
+            });
+
+            host = await hostBuilder.StartAsync(TestTimeoutToken);
+            client = host.GetTestClient();
+            webSocketClient = host.GetTestServer().CreateWebSocketClient();
+
+            var services = new ServiceCollection();
+            ConfigureClientServices(services);
+            clientServiceProvider = services.BuildServiceProvider();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            timeoutCancellationTokenSource?.Cancel();
+            host?.Dispose();
+            client?.Dispose();
+            clientServiceProvider?.Dispose();
+            timeoutCancellationTokenSource?.Dispose();
+        }
+
+        protected abstract void ConfigureServerServices(IServiceCollection services);
+
+        protected abstract void ConfigureClientServices(IServiceCollection services);
+
+        protected abstract void Configure(IApplicationBuilder app);
+
+        protected T Resolve<T>()
+            where T : notnull => Host.Services.GetRequiredService<T>();
+
+        protected T ResolveOnClient<T>()
+            where T : notnull
+        {
+            return ClientServiceProvider.GetRequiredService<T>();
+        }
+
+        protected Task<WebSocket> ConnectToWebSocket(string path, string query)
+        {
+            return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
         }
     }
 }
