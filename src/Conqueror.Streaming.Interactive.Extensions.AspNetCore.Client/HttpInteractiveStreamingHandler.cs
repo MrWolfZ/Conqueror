@@ -75,14 +75,33 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
 
             await clientWebSocket.RequestNextItem(cancellationToken);
 
-            await foreach (var msg in clientWebSocket.Read(cancellationToken))
+            var enumerator = clientWebSocket.Read(cancellationToken).GetAsyncEnumerator(cancellationToken);
+
+            while (true)
             {
-                if (msg is StreamingMessageEnvelope<TItem> { Message: { } } env)
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        await clientWebSocket.Close(cancellationToken);
+                        yield break;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    await clientWebSocket.Close(CancellationToken.None);
+                    throw;
+                }
+                catch
+                {
+                    await clientWebSocket.Close(cancellationToken);
+                    throw;
+                }
+                
+                if (enumerator.Current is StreamingMessageEnvelope<TItem> { Message: { } } env)
                 {
                     yield return env.Message;
                 }
-
-                await clientWebSocket.RequestNextItem(cancellationToken);
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
@@ -14,7 +15,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
         {
             var handler = ResolveOnClient<ITestStreamingHandler>();
 
-            var result = await handler.ExecuteRequest(new(10), CancellationToken.None).Drain(TestTimeoutToken);
+            var result = await handler.ExecuteRequest(new(10), TestTimeoutToken).Drain(TestTimeoutToken);
 
             Assert.IsNotNull(result);
             CollectionAssert.AreEqual(new[] { 11, 12, 13 }, result.Select(i => i.Payload));
@@ -25,7 +26,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
         {
             var handler = ResolveOnClient<ITestStreamingHandlerWithoutPayload>();
 
-            var result = await handler.ExecuteRequest(new(), CancellationToken.None).Drain(TestTimeoutToken);
+            var result = await handler.ExecuteRequest(new(), TestTimeoutToken).Drain(TestTimeoutToken);
 
             Assert.IsNotNull(result);
             CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.Select(i => i.Payload));
@@ -36,7 +37,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
         {
             var handler = ResolveOnClient<ITestStreamingHandlerWithCustomSerializedItemType>();
 
-            var result = await handler.ExecuteRequest(new(10), CancellationToken.None).Drain(TestTimeoutToken);
+            var result = await handler.ExecuteRequest(new(10), TestTimeoutToken).Drain(TestTimeoutToken);
 
             Assert.IsNotNull(result);
             CollectionAssert.AreEqual(new[] { 11, 12, 13 }, result.Select(i => i.Payload.Payload));
@@ -47,10 +48,37 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
         {
             var handler = ResolveOnClient<ITestStreamingHandlerWithCollectionPayload>();
 
-            var result = await handler.ExecuteRequest(new(new() { 10, 11 }), CancellationToken.None).Drain(TestTimeoutToken);
+            var result = await handler.ExecuteRequest(new(new() { 10, 11 }), TestTimeoutToken).Drain(TestTimeoutToken);
 
             Assert.IsNotNull(result);
             CollectionAssert.AreEqual(new[] { 22, 23, 24 }, result.Select(i => i.Payload));
+        }
+
+        [Test]
+        public async Task GivenStreamingRequest_WhenCancellingRead_CancellationIsPropagatedToServer()
+        {
+            var handler = ResolveOnClient<ITestStreamingHandler>();
+
+            using var cts = new CancellationTokenSource();
+
+            var stream = handler.ExecuteRequest(new(10), TestTimeoutToken);
+
+            var enumerator = stream.GetAsyncEnumerator(cts.Token);
+
+            _ = await enumerator.MoveNextAsync();
+
+            cts.Cancel();
+
+            try
+            {
+                _ = await enumerator.MoveNextAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                // nothing to do
+            }
+
+            Resolve<TestObservations>().CancelledRequests.ShouldReceiveItem(new(10));
         }
 
         protected override void ConfigureServerServices(IServiceCollection services)
@@ -62,7 +90,8 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
                         .AddTransient<TestStreamingHandlerWithoutPayload>()
                         .AddTransient<TestStreamingHandlerWithCollectionPayload>()
                         .AddTransient<TestStreamingHandlerWithCustomSerializedItemType>()
-                        .AddTransient<NonHttpTestStreamingHandler>();
+                        .AddTransient<NonHttpTestStreamingHandler>()
+                        .AddSingleton<TestObservations>();
 
             _ = services.AddConquerorInteractiveStreaming().ConfigureConqueror();
         }
@@ -105,10 +134,18 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
 
         private sealed class TestStreamingHandler : ITestStreamingHandler
         {
+            private readonly TestObservations testObservations;
+
+            public TestStreamingHandler(TestObservations testObservations)
+            {
+                this.testObservations = testObservations;
+            }
+
             public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
             {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
+                // ReSharper disable once MethodSupportsCancellation
+                await using var d = cancellationToken.Register(() => testObservations.CancelledRequests.Add(request));
+
                 yield return new(request.Payload + 1);
                 yield return new(request.Payload + 2);
                 yield return new(request.Payload + 3);
@@ -216,6 +253,11 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
 
         public interface INonHttpTestStreamingHandler : IInteractiveStreamingHandler<NonHttpTestRequest, TestItem>
         {
+        }
+
+        private sealed class TestObservations
+        {
+            public BlockingCollection<TestRequest> CancelledRequests { get; } = new();
         }
     }
 }
