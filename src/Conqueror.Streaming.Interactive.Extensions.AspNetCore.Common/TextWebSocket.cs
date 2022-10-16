@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
 {
-    internal delegate void OnSocketClose();
-
     internal sealed class TextWebSocket : IDisposable
     {
         private readonly WebSocket socket;
+        private readonly CancellationTokenSource cancellationTokenSource = new();
 
         public TextWebSocket(WebSocket socket)
         {
@@ -21,42 +21,57 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
         public void Dispose()
         {
             socket.Dispose();
+            cancellationTokenSource.Dispose();
         }
 
-        public event OnSocketClose? SocketClosed;
-
-        public async Task<string?> Receive(CancellationToken cancellationToken)
+        public async IAsyncEnumerable<string> Read([EnumeratorCancellation] CancellationToken cancellationToken)
         {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
+
             var buffer = new byte[1024 * 4];
-            var receiveResult = await socket.ReceiveAsync(buffer, cancellationToken);
 
-            if (receiveResult.CloseStatus.HasValue)
+            while (true)
             {
-                SocketClosed?.Invoke();
-                return null;
-            }
+                var receiveResult = await socket.ReceiveAsync(buffer, cts.Token);
 
-            if (receiveResult.EndOfMessage)
-            {
-                return Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
-            }
+                if (receiveResult.CloseStatus.HasValue)
+                {
+                    await socket.CloseAsync(
+                        receiveResult.CloseStatus.Value,
+                        receiveResult.CloseStatusDescription,
+                        cancellationToken);
+                    
+                    yield break;
+                }
 
-            var allBytes = new List<byte>();
+                if (receiveResult.MessageType != WebSocketMessageType.Text)
+                {
+                    throw new InvalidOperationException($"expected websocket message type '{WebSocketMessageType.Text}', got '{receiveResult.MessageType}'");
+                }
 
-            allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
+                if (receiveResult.EndOfMessage)
+                {
+                    yield return Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
+                    continue;
+                }
 
-            while (!receiveResult.EndOfMessage)
-            {
-                receiveResult = await socket.ReceiveAsync(buffer, cancellationToken);
+                var allBytes = new List<byte>();
+
                 allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
-            }
 
-            return Encoding.UTF8.GetString(allBytes.ToArray());
+                while (!receiveResult.EndOfMessage)
+                {
+                    receiveResult = await socket.ReceiveAsync(buffer, cts.Token);
+                    allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
+                }
+
+                yield return Encoding.UTF8.GetString(allBytes.ToArray());
+            }
         }
 
         public async Task Send(string message, CancellationToken cancellationToken)
         {
-            if (socket.State != WebSocketState.Open && socket.State != WebSocketState.CloseReceived)
+            if (socket.State is not WebSocketState.Open && socket.State is not WebSocketState.CloseReceived)
             {
                 return;
             }
@@ -72,10 +87,12 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
 
         public async Task Close(CancellationToken cancellationToken)
         {
-            if (socket.State != WebSocketState.Open && socket.State != WebSocketState.CloseReceived && socket.State != WebSocketState.CloseSent)
+            if (socket.State is not WebSocketState.Open && socket.State is not WebSocketState.CloseReceived && socket.State is not WebSocketState.CloseSent)
             {
                 return;
             }
+            
+            cancellationTokenSource.Cancel();
 
             await socket.CloseAsync(
                 WebSocketCloseStatus.NormalClosure,

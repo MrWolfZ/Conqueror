@@ -14,6 +14,9 @@ using Microsoft.Extensions.Options;
 // it makes sense for these types to be in the same file
 #pragma warning disable SA1402
 
+// it makes sense for the file to be named differently
+#pragma warning disable SA1649
+
 namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server
 {
     [ApiController]
@@ -53,8 +56,8 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server
                 var jsonSerializerOptions = HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
                 var textWebSocket = new TextWebSocketWithHeartbeat(new(webSocket), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
                 var jsonWebSocket = new JsonWebSocket(textWebSocket, jsonSerializerOptions);
-                using var streamingServerWebsocket = new StreamingServerWebSocket<T>(jsonWebSocket);
-                await HandleWebSocketConnection(streamingServerWebsocket, enumerable, logger, HttpContext.RequestAborted);
+                using var streamingServerWebsocket = new InteractiveStreamingServerWebSocket<T>(jsonWebSocket);
+                await HandleWebSocketConnection(streamingServerWebsocket, enumerable, logger);
             }
             else
             {
@@ -62,71 +65,73 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server
             }
         }
 
-        private static async Task HandleWebSocketConnection(StreamingServerWebSocket<T> webSocket, IAsyncEnumerable<T> enumerable, ILogger logger, CancellationToken cancellationToken)
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "disposal works correctly")]
+        private static async Task HandleWebSocketConnection(InteractiveStreamingServerWebSocket<T> socket, IAsyncEnumerable<T> enumerable, ILogger logger)
         {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var token = cts.Token;
+            var channel = Channel.CreateBounded<object?>(new BoundedChannelOptions(8));
 
-            // ReSharper disable once AccessToDisposedClosure
-            webSocket.SocketClosed += () => cts.Cancel();
+            using var cts = new CancellationTokenSource();
 
-            var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+            var sourceEnumerator = enumerable.GetAsyncEnumerator(cts.Token);
 
-            var channel = Channel.CreateBounded<int>(new BoundedChannelOptions(128));
+            try
+            {
+                _ = await Task.WhenAny(ReadFromSocket(), ReadFromEnumerable());
+            }
+            finally
+            {
+                cts.Cancel();
 
-            _ = await Task.WhenAny(ReadFromSocket(), ReadFromEnumerable());
-
-            await webSocket.Close(cancellationToken);
+                await socket.Close(CancellationToken.None);
+            }
 
             async Task ReadFromSocket()
             {
-                while (!token.IsCancellationRequested)
+                try
                 {
-                    try
+                    await foreach (var msg in socket.Read(cts.Token))
                     {
-                        var message = await webSocket.Receive(token);
-
-                        switch (message)
-                        {
-                            case RequestNextItemMessage _:
-                                await channel.Writer.WriteAsync(1, token);
-                                break;
-                        }
+                        await channel.Writer.WriteAsync(msg, cts.Token);
                     }
-                    catch (OperationCanceledException)
-                    {
-                        // nothing to do
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, "an error occurred while reading from socket");
-                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // nothing to do
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "an error occurred while reading from socket");
+                }
+                finally
+                {
+                    channel.Writer.Complete();
                 }
             }
 
             async Task ReadFromEnumerable()
             {
-                while (!token.IsCancellationRequested)
+                try
                 {
-                    try
+                    while (await channel.Reader.WaitToReadAsync(cts.Token))
                     {
-                        _ = await channel.Reader.ReadAsync(token);
-
-                        if (!await enumerator.MoveNextAsync())
+                        while (channel.Reader.TryRead(out _))
                         {
-                            return;
-                        }
+                            if (!await sourceEnumerator.MoveNextAsync())
+                            {
+                                return;
+                            }
 
-                        await webSocket.SendMessage(enumerator.Current, token);
+                            await socket.SendMessage(sourceEnumerator.Current, cts.Token);
+                        }
                     }
-                    catch (OperationCanceledException)
-                    {
-                        // nothing to do
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, "an error occurred while reading from enumerable");
-                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // nothing to do
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "an error occurred while reading from enumerable");
                 }
             }
         }

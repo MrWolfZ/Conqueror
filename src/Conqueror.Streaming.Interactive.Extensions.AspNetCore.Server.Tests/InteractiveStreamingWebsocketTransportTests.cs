@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common;
 using Microsoft.AspNetCore.Builder;
@@ -12,58 +11,46 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
     public sealed class InteractiveStreamingWebsocketTransportTests : TestBase
     {
         [Test]
-        public async Task GivenWebSocketConnection_RequestingItems_StreamsItems()
+        public async Task GivenStreamHandlerWebsocketEndpoint_WhenConnectingAndRequestingItems_ThenItemsAreStreamedUntilStreamCompletes()
         {
             var webSocket = await ConnectToWebSocket("api/streams/interactive/test", "?payload=10");
             using var socket = new TextWebSocket(webSocket);
             using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
             using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
-            using var streamingClientWebSocket = new StreamingClientWebSocket<TestItem>(jsonWebSocket);
-
-            using var cts = new CancellationTokenSource();
-            cts.CancelAfter(Debugger.IsAttached ? TimeSpan.FromSeconds(60) : TimeSpan.FromSeconds(1));
+            using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
 
             using var observedItems = new BlockingCollection<TestItem>();
 
-            var receiveLoopTask = RunReceiveLoop();
+            var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
             await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             observedItems.ShouldReceiveItem(new(11));
-            
+
             await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             observedItems.ShouldReceiveItem(new(12));
-            
+
             await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             observedItems.ShouldReceiveItem(new(13));
-            
+
             await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-            observedItems.ShouldNotReceiveAnyItem();
+            observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
 
             await receiveLoopTask;
+        }
+        
+        [Test]
+        public async Task GivenStreamHandlerWebsocketEndpoint_WhenClosingConnectionBeforeEndOfStream_ThenConnectionIsClosedSuccessfully()
+        {
+            var webSocket = await ConnectToWebSocket("api/streams/interactive/test", "?payload=10");
+            using var socket = new TextWebSocket(webSocket);
+            using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+            using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
+            using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
 
-            async Task RunReceiveLoop()
-            {
-                while (!cts.IsCancellationRequested)
-                {
-                    try
-                    {
-                        var message = await streamingClientWebSocket.Receive(cts.Token);
+            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator().MoveNextAsync();
 
-                        if (message is StreamingMessageEnvelope<TestItem> { Message: { } } env)
-                        {
-                            observedItems.Add(env.Message, cts.Token);
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        // nothing to do
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // nothing to do
-                    }
-                }
-            }
+            Assert.DoesNotThrowAsync(() => streamingClientWebSocket.Close(TestTimeoutToken));
         }
 
         protected override void ConfigureServices(IServiceCollection services)
@@ -80,6 +67,17 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
         {
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
+        }
+
+        private async Task ReadFromSocket<T>(InteractiveStreamingClientWebSocket<T> socket, BlockingCollection<T> receivedItems)
+        {
+            await foreach (var msg in socket.Read(TestTimeoutToken))
+            {
+                if (msg is StreamingMessageEnvelope<T> { Message: { } } env)
+                {
+                    receivedItems.Add(env.Message, TestTimeoutToken);
+                }
+            }
         }
 
 // request and response types must be public for dynamic type generation to work

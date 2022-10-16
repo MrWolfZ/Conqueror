@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
@@ -62,19 +63,20 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
         {
             timeoutCancellationTokenSource = new();
             
-            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
-            {
-                _ = webHost.UseTestServer();
+            var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
+                                               .ConfigureWebHost(webHost =>
+                                               {
+                                                   _ = webHost.UseTestServer();
 
-                _ = webHost.ConfigureServices(ConfigureServices);
-                _ = webHost.Configure(Configure);
-            });
+                                                   _ = webHost.ConfigureServices(ConfigureServices);
+                                                   _ = webHost.Configure(Configure);
+                                               });
 
             host = await hostBuilder.StartAsync(TestTimeoutToken);
             client = host.GetTestClient();
             webSocketClient = host.GetTestServer().CreateWebSocketClient();
 
-            if (!Debugger.IsAttached)
+            if (!Debugger.IsAttached || 1 + 1 == 2)
             {
                 TimeoutCancellationTokenSource.CancelAfter(TestTimeout);
             }

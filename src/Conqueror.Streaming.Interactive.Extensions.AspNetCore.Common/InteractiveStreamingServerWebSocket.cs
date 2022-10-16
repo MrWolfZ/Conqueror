@@ -1,15 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
 {
-    internal sealed class StreamingServerWebSocket<T> : IDisposable
+    internal sealed class InteractiveStreamingServerWebSocket<T> : IDisposable
         where T : notnull
     {
         private readonly JsonWebSocket socket;
 
-        public StreamingServerWebSocket(JsonWebSocket socket)
+        public InteractiveStreamingServerWebSocket(JsonWebSocket socket)
         {
             this.socket = socket;
         }
@@ -19,15 +20,9 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             socket.Dispose();
         }
 
-        public event OnSocketClose? SocketClosed
+        public IAsyncEnumerable<object> Read(CancellationToken cancellationToken)
         {
-            add => socket.SocketClosed += value;
-            remove => socket.SocketClosed -= value;
-        }
-
-        public async Task<object?> Receive(CancellationToken cancellationToken)
-        {
-            return await socket.Receive("type", LookupMessageType, cancellationToken);
+            return socket.Read("type", LookupMessageType, cancellationToken);
 
             static Type LookupMessageType(string discriminator) => discriminator switch
             {

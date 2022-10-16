@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,24 +32,19 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             cancellationTokenSource.Dispose();
         }
 
-        public event OnSocketClose? SocketClosed
-        {
-            add => socket.SocketClosed += value;
-            remove => socket.SocketClosed -= value;
-        }
-
-        public async Task<string?> Receive(CancellationToken cancellationToken)
+        public async IAsyncEnumerable<string> Read([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
 
-            var msg = await socket.Receive(cts.Token);
-
-            if (msg == HeartbeatContent && !heartbeatTimeoutTimer.Change(heartbeatTimeout, Timeout.InfiniteTimeSpan))
+            await foreach (var msg in socket.Read(cts.Token))
             {
-                throw new InvalidOperationException("failed to reset heartbeat timeout timer");
-            }
+                if (msg == HeartbeatContent && !heartbeatTimeoutTimer.Change(heartbeatTimeout, Timeout.InfiniteTimeSpan))
+                {
+                    throw new InvalidOperationException("failed to reset heartbeat timeout timer");
+                }
 
-            return msg;
+                yield return msg;
+            }
         }
 
         public async Task Send(string message, CancellationToken cancellationToken)

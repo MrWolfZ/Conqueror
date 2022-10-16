@@ -1,13 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Text.Json;
 
 namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests;
 
 public static class CollectionAssertionExtensions
 {
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new();
-
     public static void ShouldReceiveItem<T>(this BlockingCollection<T> collection, T item, TimeSpan? timeout = null)
         where T : notnull
     {
@@ -19,7 +16,7 @@ public static class CollectionAssertionExtensions
         }
 
         Assert.NotNull(receivedItem);
-        Assert.AreEqual(Serialize(receivedItem!), Serialize(item));
+        Assert.AreEqual(item, receivedItem);
     }
 
     public static void ShouldNotReceiveAnyItem<T>(this BlockingCollection<T> collection, TimeSpan? waitFor = null)
@@ -34,6 +31,4 @@ public static class CollectionAssertionExtensions
             Assert.Fail($"received unexpected item '{item}'");
         }
     }
-
-    private static string Serialize(object o) => o is string s ? s : JsonSerializer.Serialize(o, JsonSerializerOptions);
 }

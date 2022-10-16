@@ -1,27 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
 {
-    internal sealed class StreamingClientWebSocket<T> : IDisposable
+    internal sealed class InteractiveStreamingClientWebSocket<T> : IDisposable
     {
         private readonly JsonWebSocket socket;
 
-        public StreamingClientWebSocket(JsonWebSocket socket)
+        public InteractiveStreamingClientWebSocket(JsonWebSocket socket)
         {
             this.socket = socket;
         }
 
-        public event OnSocketClose? SocketClosed
+        public IAsyncEnumerable<object> Read(CancellationToken cancellationToken)
         {
-            add => socket.SocketClosed += value;
-            remove => socket.SocketClosed -= value;
-        }
-
-        public async Task<object?> Receive(CancellationToken cancellationToken)
-        {
-            return await socket.Receive("type", LookupMessageType, cancellationToken);
+            return socket.Read("type", LookupMessageType, cancellationToken);
 
             static Type LookupMessageType(string discriminator) => discriminator switch
             {

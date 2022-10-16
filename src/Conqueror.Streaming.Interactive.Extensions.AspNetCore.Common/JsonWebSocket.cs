@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -18,37 +20,41 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             this.jsonSerializerOptions = jsonSerializerOptions;
         }
 
-        public event OnSocketClose? SocketClosed
+        public void Dispose()
         {
-            add => socket.SocketClosed += value;
-            remove => socket.SocketClosed -= value;
+            socket.Dispose();
         }
 
-        public async Task<object?> Receive(string discriminatorPropertyName, Func<string, Type> messageTypeLookup, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<object> Read(string discriminatorPropertyName,
+                                                   Func<string, Type> messageTypeLookup,
+                                                   [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var msg = await socket.Receive(cancellationToken);
-
-            if (msg == null)
+            await foreach (var msg in socket.Read(cancellationToken))
             {
-                return null;
+                var parsed = JsonSerializer.Deserialize<JsonObject>(msg, jsonSerializerOptions);
+
+                if (parsed == null)
+                {
+                    throw new InvalidDataException($"message '{msg}' could not be deserialized as json");
+                }
+
+                if (!parsed.TryGetPropertyValue(discriminatorPropertyName, out var discriminatorProperty) || discriminatorProperty is null)
+                {
+                    throw new InvalidDataException($"message '{msg}' does not have discriminator property '{discriminatorPropertyName}'");
+                }
+
+                var discriminatorValue = discriminatorProperty.GetValue<string>();
+                var messageType = messageTypeLookup(discriminatorValue);
+
+                var deserialized = parsed.Deserialize(messageType, jsonSerializerOptions);
+
+                if (deserialized is null)
+                {
+                    throw new InvalidDataException($"message '{msg}' could not be deserialized into message type '{messageType}'");
+                }
+
+                yield return deserialized;
             }
-
-            var parsed = JsonSerializer.Deserialize<JsonObject>(msg, jsonSerializerOptions);
-
-            if (parsed == null)
-            {
-                throw new InvalidDataException($"message '{msg}' could not be deserialized as json");
-            }
-
-            if (!parsed.TryGetPropertyValue(discriminatorPropertyName, out var discriminatorProperty) || discriminatorProperty is null)
-            {
-                throw new InvalidDataException($"message '{msg}' does not have discriminator property '{discriminatorPropertyName}'");
-            }
-
-            var discriminatorValue = discriminatorProperty.GetValue<string>();
-            var messageType = messageTypeLookup(discriminatorValue);
-
-            return parsed.Deserialize(messageType, jsonSerializerOptions);
         }
 
         public async Task Send(object message, CancellationToken cancellationToken)
@@ -59,11 +65,6 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
         public async Task Close(CancellationToken cancellationToken)
         {
             await socket.Close(cancellationToken);
-        }
-
-        public void Dispose()
-        {
-            socket.Dispose();
         }
     }
 }
