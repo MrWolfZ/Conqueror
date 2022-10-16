@@ -69,15 +69,6 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
 
             cts.Cancel();
 
-            try
-            {
-                _ = await enumerator.MoveNextAsync();
-            }
-            catch (OperationCanceledException)
-            {
-                // nothing to do
-            }
-
             Resolve<TestObservations>().CancelledRequests.ShouldReceiveItem(new(10));
         }
 

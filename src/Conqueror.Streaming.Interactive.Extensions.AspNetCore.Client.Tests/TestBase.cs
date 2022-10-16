@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System.Diagnostics;
+using System.Net.WebSockets;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -104,6 +105,11 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
             var services = new ServiceCollection();
             ConfigureClientServices(services);
             clientServiceProvider = services.BuildServiceProvider();
+
+            if (!Debugger.IsAttached)
+            {
+                TimeoutCancellationTokenSource.CancelAfter(TestTimeout);
+            }
         }
 
         [TearDown]

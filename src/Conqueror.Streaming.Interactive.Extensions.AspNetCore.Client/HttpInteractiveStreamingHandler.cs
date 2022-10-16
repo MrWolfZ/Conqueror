@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using Conqueror.CQS.Extensions.AspNetCore.Common;
 using Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common;
@@ -73,31 +74,58 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
             using var jsonWebSocket = new JsonWebSocket(textWebSocketWithHeartbeat, options.JsonSerializerOptions ?? new JsonSerializerOptions());
             using var clientWebSocket = new InteractiveStreamingClientWebSocket<TItem>(jsonWebSocket);
 
+            using var closingSemaphore = new SemaphoreSlim(1);
+
+            async Task Close(CancellationToken ct)
+            {
+                // ReSharper disable AccessToDisposedClosure
+                await closingSemaphore.WaitAsync(ct);
+
+                try
+                {
+                    await clientWebSocket.Close(ct);
+                }
+                finally
+                {
+                    _ = closingSemaphore.Release();
+                }
+                
+                // ReSharper enable AccessToDisposedClosure
+            }
+
+            await using var d = cancellationToken.Register(() => Close(CancellationToken.None).Wait(CancellationToken.None));
+
             await clientWebSocket.RequestNextItem(cancellationToken);
 
             var enumerator = clientWebSocket.Read(cancellationToken).GetAsyncEnumerator(cancellationToken);
 
             while (true)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    await Close(cancellationToken);
+                    yield break;
+                }
+
                 try
                 {
                     if (!await enumerator.MoveNextAsync())
                     {
-                        await clientWebSocket.Close(cancellationToken);
+                        await Close(cancellationToken);
                         yield break;
                     }
                 }
                 catch (OperationCanceledException)
                 {
-                    await clientWebSocket.Close(CancellationToken.None);
+                    await Close(CancellationToken.None);
                     throw;
                 }
                 catch
                 {
-                    await clientWebSocket.Close(cancellationToken);
+                    await Close(cancellationToken);
                     throw;
                 }
-                
+
                 if (enumerator.Current is StreamingMessageEnvelope<TItem> { Message: { } } env)
                 {
                     yield return env.Message;
