@@ -1,8 +1,8 @@
 <Project>
 
     <PropertyGroup>
-        <ConquerorVersion>0.1.0-beta.15</ConquerorVersion>
-        <ConquerorAssemblyVersion>0.1.0.15</ConquerorAssemblyVersion>
+        <ConquerorVersion>0.1.0-beta.16</ConquerorVersion>
+        <ConquerorAssemblyVersion>0.1.0.16</ConquerorAssemblyVersion>
 
         <LangVersion Condition="'$(TargetFramework)' == 'net6.0'">10</LangVersion>
         <LangVersion Condition="'$(TargetFramework)' == 'net7.0'">11</LangVersion>
