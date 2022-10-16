@@ -36,11 +36,6 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
 
                 if (receiveResult.CloseStatus.HasValue)
                 {
-                    await socket.CloseAsync(
-                        receiveResult.CloseStatus.Value,
-                        receiveResult.CloseStatusDescription,
-                        cancellationToken);
-                    
                     yield break;
                 }
 
