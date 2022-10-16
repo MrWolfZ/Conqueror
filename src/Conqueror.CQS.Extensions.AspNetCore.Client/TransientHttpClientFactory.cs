@@ -3,7 +3,7 @@ using System.Net.Http;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
 {
-    internal sealed class TransientHttpClientFactory : IConquerorHttpClientFactory
+    internal sealed class TransientHttpClientFactory : IConquerorCqsHttpClientFactory
     {
         private readonly HttpClientFactory innerFactory;
         private readonly IServiceProvider serviceProvider;

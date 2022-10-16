@@ -3,7 +3,7 @@ using System.Net.Http;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
 {
-    public interface IConquerorHttpClientFactory
+    public interface IConquerorCqsHttpClientFactory
     {
         THandler CreateQueryHttpClient<THandler>(Func<IServiceProvider, HttpClient> httpClientFactory)
             where THandler : class, IQueryHandler;
