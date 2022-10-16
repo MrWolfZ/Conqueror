@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -102,6 +102,8 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
                 {
                     yield return env.Message;
                 }
+                
+                await clientWebSocket.RequestNextItem(cancellationToken);
             }
         }
 
