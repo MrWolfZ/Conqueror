@@ -55,6 +55,22 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
         }
 
         [Test]
+        public async Task GivenStreamingRequest_WhenErrorOccursOnServer_HttpInteractiveStreamingExceptionIsThrown()
+        {
+            var handler = ResolveOnClient<ITestStreamingHandlerWithError>();
+
+            using var cts = new CancellationTokenSource();
+
+            var stream = handler.ExecuteRequest(new(), TestTimeoutToken);
+
+            var enumerator = stream.GetAsyncEnumerator(cts.Token);
+
+            Assert.IsTrue(await enumerator.MoveNextAsync());
+
+            _ = Assert.ThrowsAsync<HttpInteractiveStreamingException>(() => enumerator.MoveNextAsync().AsTask());
+        }
+
+        [Test]
         public async Task GivenStreamingRequest_WhenCancellingRead_CancellationIsPropagatedToServer()
         {
             var handler = ResolveOnClient<ITestStreamingHandler>();
@@ -117,6 +133,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
                         .AddTransient<TestStreamingHandlerWithoutPayload>()
                         .AddTransient<TestStreamingHandlerWithCollectionPayload>()
                         .AddTransient<TestStreamingHandlerWithCustomSerializedItemType>()
+                        .AddTransient<TestStreamingHandlerWithError>()
                         .AddTransient<NonHttpTestStreamingHandler>()
                         .AddSingleton<TestObservations>();
 
@@ -142,7 +159,8 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
                         {
                             Converters = { new TestItemJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
-                        });
+                        })
+                        .AddConquerorInteractiveStreamingHttpClient<ITestStreamingHandlerWithError>(_ => new("http://example"));
         }
 
         protected override void Configure(IApplicationBuilder app)
@@ -266,6 +284,24 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
             {
                 writer.WriteNumberValue(value.Payload);
             }
+        }
+
+        [HttpInteractiveStream]
+        public sealed record TestRequestWithError;
+
+        private sealed class TestStreamingHandlerWithError : ITestStreamingHandlerWithError
+        {
+            public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithError request, [EnumeratorCancellation] CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return new(1);
+                throw new InvalidOperationException("test");
+            }
+        }
+
+        public interface ITestStreamingHandlerWithError : IInteractiveStreamingHandler<TestRequestWithError, TestItem>
+        {
         }
 
         public sealed record NonHttpTestRequest

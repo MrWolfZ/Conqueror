@@ -89,7 +89,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
                 {
                     _ = closingSemaphore.Release();
                 }
-                
+
                 // ReSharper enable AccessToDisposedClosure
             }
 
@@ -126,11 +126,16 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
                     throw;
                 }
 
-                if (enumerator.Current is StreamingMessageEnvelope<TItem> { Message: { } } env)
+                switch (enumerator.Current)
                 {
-                    yield return env.Message;
+                    case StreamingMessageEnvelope<TItem> { Message: { } } env:
+                        yield return env.Message;
+                        break;
+                    
+                    case ErrorMessage { Message: { } } msg:
+                        throw new HttpInteractiveStreamingException(msg.Message);
                 }
-                
+
                 await clientWebSocket.RequestNextItem(cancellationToken);
             }
         }

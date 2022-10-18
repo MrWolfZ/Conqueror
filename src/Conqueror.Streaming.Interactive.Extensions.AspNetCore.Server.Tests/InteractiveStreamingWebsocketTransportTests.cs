@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common;
 using Microsoft.AspNetCore.Builder;
@@ -52,13 +52,40 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
 
             Assert.DoesNotThrowAsync(() => streamingClientWebSocket.Close(TestTimeoutToken));
         }
+        
+        [Test]
+        public async Task GivenStreamHandlerWebsocketEndpoint_WhenExceptionOccursInSourceEnumerable_ThenErrorMessageIsReceivedAndConnectionIsClosed()
+        {
+            var webSocket = await ConnectToWebSocket("api/streams/interactive/testRequestWithError", string.Empty);
+            using var socket = new TextWebSocket(webSocket);
+            using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+            using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
+            using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
 
+            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            
+            var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
+            
+            // successful invocation
+            Assert.IsTrue(await enumerator.MoveNextAsync());
+
+            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            
+            // error
+            Assert.IsTrue(await enumerator.MoveNextAsync());
+            
+            Assert.IsInstanceOf<ErrorMessage>(enumerator.Current);
+            
+            // should finish the enumeration 
+            Assert.IsFalse(await enumerator.MoveNextAsync());
+        }
         protected override void ConfigureServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorInteractiveStreaming();
 
             _ = services.AddTransient<TestStreamingHandler>()
-                        .AddTransient<TestStreamingHandlerWithoutPayload>();
+                        .AddTransient<TestStreamingHandlerWithoutPayload>()
+                        .AddTransient<TestStreamingHandlerWithError>();
 
             _ = services.AddConquerorInteractiveStreaming().ConfigureConqueror();
         }
@@ -107,8 +134,19 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
             {
                 await Task.Yield();
                 yield return new(1);
-                yield return new(2);
-                yield return new(3);
+            }
+        }
+
+        [HttpInteractiveStream]
+        public sealed record TestRequestWithError;
+
+        private sealed class TestStreamingHandlerWithError : IInteractiveStreamingHandler<TestRequestWithError, TestItem>
+        {
+            public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithError request, [EnumeratorCancellation] CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                yield return new(1);
+                throw new InvalidOperationException("test");
             }
         }
     }

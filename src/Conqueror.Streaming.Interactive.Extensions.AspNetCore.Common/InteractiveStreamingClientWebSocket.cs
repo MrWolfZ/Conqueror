@@ -21,6 +21,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             static Type LookupMessageType(string discriminator) => discriminator switch
             {
                 StreamingMessageEnvelope<T>.Discriminator => typeof(StreamingMessageEnvelope<T>),
+                ErrorMessage.Discriminator => typeof(ErrorMessage),
                 _ => throw new ArgumentOutOfRangeException(nameof(discriminator), discriminator, null),
             };
         }
@@ -41,5 +42,10 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
     internal sealed record StreamingMessageEnvelope<T>(string Type, T? Message)
     {
         public const string Discriminator = "envelope";
+    }
+
+    internal sealed record ErrorMessage(string Type, string Message)
+    {
+        public const string Discriminator = "error";
     }
 }
