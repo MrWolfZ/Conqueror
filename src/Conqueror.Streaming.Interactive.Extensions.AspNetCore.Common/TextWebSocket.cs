@@ -5,19 +5,22 @@ using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
 {
     internal sealed class TextWebSocket : IDisposable
     {
-        private readonly WebSocket socket;
         private readonly CancellationTokenSource cancellationTokenSource = new();
+        private readonly WebSocket socket;
 
         public TextWebSocket(WebSocket socket)
         {
             this.socket = socket;
         }
+
+        public WebSocketState State => socket.State;
 
         public void Dispose()
         {
@@ -28,40 +31,71 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
         public async IAsyncEnumerable<string> Read([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
+            var linkedToken = cts.Token;
 
-            var buffer = new byte[1024 * 4];
+            // we receive messages in a separate task so that close messages are processed without
+            // the client needing to continue enumerating the messages; we expect that we will only
+            // ever need to read one message ahead, so we create a bounded channel with capacity 1
+            var channel = Channel.CreateBounded<string>(1);
 
-            while (true)
+            RunReceiveLoop();
+
+            // run foreach loop instead of returning the channel enumerable directly to ensure
+            // the linked cancellation token source has the correct lifetime
+            await foreach (var msg in channel.Reader.ReadAllAsync(linkedToken))
             {
-                var receiveResult = await socket.ReceiveAsync(buffer, cts.Token);
+                yield return msg;
+            }
 
-                if (receiveResult.CloseStatus.HasValue)
+            async void RunReceiveLoop()
+            {
+                var buffer = new byte[1024 * 4];
+
+                try
                 {
-                    yield break;
-                }
+                    while (true)
+                    {
+                        var receiveResult = await socket.ReceiveAsync(buffer, linkedToken);
 
-                if (receiveResult.MessageType != WebSocketMessageType.Text)
+                        if (receiveResult.CloseStatus.HasValue)
+                        {
+                            await socket.CloseAsync(
+                                receiveResult.CloseStatus.Value,
+                                receiveResult.CloseStatusDescription,
+                                cancellationToken);
+
+                            channel.Writer.Complete();
+                            return;
+                        }
+
+                        if (receiveResult.MessageType != WebSocketMessageType.Text)
+                        {
+                            throw new InvalidOperationException($"expected websocket message type '{WebSocketMessageType.Text}', got '{receiveResult.MessageType}'");
+                        }
+
+                        if (receiveResult.EndOfMessage)
+                        {
+                            await channel.Writer.WriteAsync(Encoding.UTF8.GetString(buffer, 0, receiveResult.Count), linkedToken);
+                            continue;
+                        }
+
+                        var allBytes = new List<byte>();
+
+                        allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
+
+                        while (!receiveResult.EndOfMessage)
+                        {
+                            receiveResult = await socket.ReceiveAsync(buffer, linkedToken);
+                            allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
+                        }
+
+                        await channel.Writer.WriteAsync(Encoding.UTF8.GetString(allBytes.ToArray()), linkedToken);
+                    }
+                }
+                catch (Exception e)
                 {
-                    throw new InvalidOperationException($"expected websocket message type '{WebSocketMessageType.Text}', got '{receiveResult.MessageType}'");
+                    channel.Writer.Complete(e);
                 }
-
-                if (receiveResult.EndOfMessage)
-                {
-                    yield return Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
-                    continue;
-                }
-
-                var allBytes = new List<byte>();
-
-                allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
-
-                while (!receiveResult.EndOfMessage)
-                {
-                    receiveResult = await socket.ReceiveAsync(buffer, cts.Token);
-                    allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
-                }
-
-                yield return Encoding.UTF8.GetString(allBytes.ToArray());
             }
         }
 
@@ -87,7 +121,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             {
                 return;
             }
-            
+
             cancellationTokenSource.Cancel();
 
             try

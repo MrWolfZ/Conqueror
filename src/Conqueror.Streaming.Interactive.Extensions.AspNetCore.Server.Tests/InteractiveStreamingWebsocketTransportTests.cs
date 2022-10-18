@@ -1,4 +1,5 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
+using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common;
 using Microsoft.AspNetCore.Builder;
@@ -54,6 +55,24 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
         }
         
         [Test]
+        public async Task GivenStreamHandlerWebsocketEndpoint_WhenCancelingEnumeration_ThenReadingFromSocketIsCanceled()
+        {
+            var webSocket = await ConnectToWebSocket("api/streams/interactive/test", "?payload=10");
+            using var socket = new TextWebSocket(webSocket);
+            using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+            using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
+            using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
+
+            using var cts = new CancellationTokenSource();
+
+            var readTask = streamingClientWebSocket.Read(cts.Token).GetAsyncEnumerator(cts.Token).MoveNextAsync();
+            
+            cts.Cancel();
+
+            _ = Assert.ThrowsAsync<OperationCanceledException>(() => readTask.AsTask());
+        }
+        
+        [Test]
         public async Task GivenStreamHandlerWebsocketEndpoint_WhenExceptionOccursInSourceEnumerable_ThenErrorMessageIsReceivedAndConnectionIsClosed()
         {
             var webSocket = await ConnectToWebSocket("api/streams/interactive/testRequestWithError", string.Empty);
@@ -79,6 +98,32 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
             // should finish the enumeration 
             Assert.IsFalse(await enumerator.MoveNextAsync());
         }
+        
+        [Test]
+        public async Task GivenStreamHandlerWebsocketEndpoint_WhenClientDoesNotReadTheEnumerable_ThenTheServerCanStillSuccessfullyCloseTheConnection()
+        {
+            var webSocket = await ConnectToWebSocket("api/streams/interactive/testRequestWithoutPayload", string.Empty);
+            using var socket = new TextWebSocket(webSocket);
+            using var textWebSocket = new TextWebSocketWithHeartbeat(socket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+            using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
+            using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
+
+            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            
+            var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
+            
+            // successful invocation
+            Assert.IsTrue(await enumerator.MoveNextAsync());
+
+            // this causes the server to close the connection
+            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+
+            // give socket the time to close
+            await Task.Delay(10);
+            
+            Assert.AreEqual(WebSocketState.Closed, socket.State);
+        }
+
         protected override void ConfigureServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorInteractiveStreaming();
@@ -126,7 +171,8 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
             }
         }
 
-        private sealed record TestRequestWithoutPayload;
+        [HttpInteractiveStream]
+        public sealed record TestRequestWithoutPayload;
 
         private sealed class TestStreamingHandlerWithoutPayload : IInteractiveStreamingHandler<TestRequestWithoutPayload, TestItem>
         {
