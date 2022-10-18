@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -89,10 +90,20 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             
             cancellationTokenSource.Cancel();
 
-            await socket.CloseAsync(
-                WebSocketCloseStatus.NormalClosure,
-                nameof(WebSocketCloseStatus.NormalClosure),
-                cancellationToken);
+            try
+            {
+                await socket.CloseAsync(
+                    WebSocketCloseStatus.NormalClosure,
+                    nameof(WebSocketCloseStatus.NormalClosure),
+                    cancellationToken);
+            }
+            catch (Exception ex) when (ex is ObjectDisposedException or IOException { InnerException: ObjectDisposedException })
+            {
+                // if closing the connection fails due to a disposed object, we consider
+                // the closing successful; this can for example happen with the ASP Core
+                // `TestWebSocket` class which can throw this error when server and client
+                // close the connection at the same time
+            }
         }
     }
 }

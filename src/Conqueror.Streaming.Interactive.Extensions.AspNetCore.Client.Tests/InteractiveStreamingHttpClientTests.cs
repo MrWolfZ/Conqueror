@@ -72,6 +72,42 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
             Resolve<TestObservations>().CancelledRequests.ShouldReceiveItem(new(10));
         }
 
+        [Test]
+        public async Task GivenStreamingRequest_WhenCancellingInParallel_DoesNotThrowException()
+        {
+            // empirically 100 attempts seem to be the sweet spot for triggering race conditions
+            for (var i = 0; i < 100; i += 1)
+            {
+                var handler = ResolveOnClient<ITestStreamingHandler>();
+
+                using var cts = new CancellationTokenSource();
+
+                var stream = handler.ExecuteRequest(new(10), TestTimeoutToken);
+
+                var enumerator = stream.GetAsyncEnumerator(cts.Token);
+
+                _ = await enumerator.MoveNextAsync();
+                _ = await enumerator.MoveNextAsync();
+                _ = await enumerator.MoveNextAsync();
+
+                // this move beyond the end of the sequence should cause the server to close the
+                // connection, and in parallel we will try to close the connection on the client
+                // to try and trigger a race condition
+                var lastMoveTask = enumerator.MoveNextAsync();
+
+                Assert.DoesNotThrow(() => cts.Cancel());
+
+                try
+                {
+                    _ = await lastMoveTask;
+                }
+                catch (OperationCanceledException)
+                {
+                    // ignore cancellation
+                }
+            }
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorInteractiveStreaming();
