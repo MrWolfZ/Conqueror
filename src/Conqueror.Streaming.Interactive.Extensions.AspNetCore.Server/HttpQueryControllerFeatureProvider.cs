@@ -24,7 +24,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server
         {
             foreach (var interactiveStream in GetHttpInteractiveStreams())
             {
-                var controllerType = controllerFactory.Create(interactiveStream, interactiveStream.RequestType.GetCustomAttribute<HttpInteractiveStreamAttribute>()!).GetTypeInfo();
+                var controllerType = controllerFactory.Create(interactiveStream, interactiveStream.RequestType.GetCustomAttribute<HttpInteractiveStreamingRequestAttribute>()!).GetTypeInfo();
 
                 if (!feature.Controllers.Contains(controllerType))
                 {
@@ -34,6 +34,6 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server
         }
 
         private IEnumerable<InteractiveStreamingHandlerMetadata> GetHttpInteractiveStreams() =>
-            metadata.Where(m => m.RequestType.GetCustomAttributes(typeof(HttpInteractiveStreamAttribute), true).Any());
+            metadata.Where(m => m.RequestType.GetCustomAttributes(typeof(HttpInteractiveStreamingRequestAttribute), true).Any());
     }
 }

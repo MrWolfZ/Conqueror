@@ -13,12 +13,12 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server
     {
         private const string ApiGroupName = "InteractiveStreams";
 
-        public Type Create(InteractiveStreamingHandlerMetadata metadata, HttpInteractiveStreamAttribute attribute)
+        public Type Create(InteractiveStreamingHandlerMetadata metadata, HttpInteractiveStreamingRequestAttribute attribute)
         {
             return Create(metadata.RequestType.Name, () => CreateType(metadata, attribute));
         }
 
-        private Type CreateType(InteractiveStreamingHandlerMetadata metadata, HttpInteractiveStreamAttribute attribute)
+        private Type CreateType(InteractiveStreamingHandlerMetadata metadata, HttpInteractiveStreamingRequestAttribute attribute)
         {
             var name = metadata.RequestType.Name;
 

@@ -17,7 +17,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
     internal sealed class HttpInteractiveStreamingHandler<TRequest, TItem> : IInteractiveStreamingHandler<TRequest, TItem>
         where TRequest : class
     {
-        private readonly HttpInteractiveStreamAttribute attribute;
+        private readonly HttpInteractiveStreamingRequestAttribute attribute;
         private readonly IConquerorContextAccessor? conquerorContextAccessor;
         private readonly ResolvedHttpClientOptions options;
 
@@ -25,7 +25,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
         {
             this.options = options;
             this.conquerorContextAccessor = conquerorContextAccessor;
-            attribute = typeof(TRequest).GetCustomAttribute<HttpInteractiveStreamAttribute>()!;
+            attribute = typeof(TRequest).GetCustomAttribute<HttpInteractiveStreamingRequestAttribute>()!;
         }
 
         public async IAsyncEnumerable<TItem> ExecuteRequest(TRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)

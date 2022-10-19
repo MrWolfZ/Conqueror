@@ -7,11 +7,11 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
     {
         public static void AssertRequestIsHttpInteractiveStream(this Type requestType)
         {
-            var attribute = requestType.GetCustomAttribute<HttpInteractiveStreamAttribute>();
+            var attribute = requestType.GetCustomAttribute<HttpInteractiveStreamingRequestAttribute>();
 
             if (attribute == null)
             {
-                throw new ArgumentException($"interactive streaming request type '{requestType}' is not an HTTP query; did you forget to add '{nameof(HttpInteractiveStreamAttribute)}'?");
+                throw new ArgumentException($"interactive streaming request type '{requestType}' is not an HTTP query; did you forget to add '{nameof(HttpInteractiveStreamingRequestAttribute)}'?");
             }
         }
     }

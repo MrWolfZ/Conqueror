@@ -164,7 +164,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
 // request, response, and interface types must be public for dynamic type generation to work
 #pragma warning disable CA1034
 
-        [HttpInteractiveStream]
+        [HttpInteractiveStreamingRequest]
         public sealed record TestRequest
         {
             public int Payload { get; init; }

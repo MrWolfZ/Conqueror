@@ -172,7 +172,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
 // request, response, and interface types must be public for dynamic type generation to work
 #pragma warning disable CA1034
 
-        [HttpInteractiveStream]
+        [HttpInteractiveStreamingRequest]
         public sealed record TestRequest(int Payload);
 
         public sealed record TestItem(int Payload);
@@ -201,7 +201,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
         {
         }
 
-        [HttpInteractiveStream]
+        [HttpInteractiveStreamingRequest]
         public sealed record TestRequestWithoutPayload;
 
         private sealed class TestStreamingHandlerWithoutPayload : ITestStreamingHandlerWithoutPayload
@@ -220,7 +220,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
         {
         }
 
-        [HttpInteractiveStream]
+        [HttpInteractiveStreamingRequest]
         public sealed record TestRequestWithCollectionPayload(List<int> Payload);
 
         private sealed class TestStreamingHandlerWithCollectionPayload : ITestStreamingHandlerWithCollectionPayload
@@ -239,7 +239,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
         {
         }
 
-        [HttpInteractiveStream]
+        [HttpInteractiveStreamingRequest]
         public sealed record TestRequestWithCustomSerializedItemType(int Payload);
 
         public sealed record TestItemWithCustomSerializedPayload(TestItemCustomSerializedPayload Payload);
@@ -286,7 +286,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests
             }
         }
 
-        [HttpInteractiveStream]
+        [HttpInteractiveStreamingRequest]
         public sealed record TestRequestWithError;
 
         private sealed class TestStreamingHandlerWithError : ITestStreamingHandlerWithError
