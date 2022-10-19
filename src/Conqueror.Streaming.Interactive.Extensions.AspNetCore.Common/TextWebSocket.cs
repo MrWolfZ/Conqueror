@@ -99,11 +99,11 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             }
         }
 
-        public async Task Send(string message, CancellationToken cancellationToken)
+        public async Task<bool> Send(string message, CancellationToken cancellationToken)
         {
             if (socket.State is not WebSocketState.Open && socket.State is not WebSocketState.CloseReceived)
             {
-                return;
+                return false;
             }
 
             var messageBytes = Encoding.UTF8.GetBytes(message);
@@ -113,6 +113,8 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
                 WebSocketMessageType.Text,
                 true,
                 cancellationToken);
+
+            return true;
         }
 
         public async Task Close(CancellationToken cancellationToken)

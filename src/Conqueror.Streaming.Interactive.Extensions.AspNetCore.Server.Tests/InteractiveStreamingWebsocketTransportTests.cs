@@ -24,16 +24,16 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
 
             var receiveLoopTask = ReadFromSocket(streamingClientWebSocket, observedItems);
 
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             observedItems.ShouldReceiveItem(new(11));
 
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             observedItems.ShouldReceiveItem(new(12));
 
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             observedItems.ShouldReceiveItem(new(13));
 
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             observedItems.ShouldNotReceiveAnyItem(TimeSpan.FromMilliseconds(10));
 
             await receiveLoopTask;
@@ -48,7 +48,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
             using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
             using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
 
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             _ = await streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator().MoveNextAsync();
 
             Assert.DoesNotThrowAsync(() => streamingClientWebSocket.Close(TestTimeoutToken));
@@ -81,14 +81,14 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
             using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
             using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
 
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             
             var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
             
             // successful invocation
             Assert.IsTrue(await enumerator.MoveNextAsync());
 
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             
             // error
             Assert.IsTrue(await enumerator.MoveNextAsync());
@@ -108,7 +108,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
             using var jsonWebSocket = new JsonWebSocket(textWebSocket, JsonSerializerOptions);
             using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
 
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
             
             var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
             
@@ -116,7 +116,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests
             Assert.IsTrue(await enumerator.MoveNextAsync());
 
             // this causes the server to close the connection
-            await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
+            _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
 
             // give socket the time to close
             await Task.Delay(10);

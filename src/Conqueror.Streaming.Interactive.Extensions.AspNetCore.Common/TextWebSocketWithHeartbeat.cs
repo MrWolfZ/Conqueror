@@ -47,11 +47,11 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             }
         }
 
-        public async Task Send(string message, CancellationToken cancellationToken)
+        public async Task<bool> Send(string message, CancellationToken cancellationToken)
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
 
-            await socket.Send(message, cts.Token);
+            return await socket.Send(message, cts.Token);
         }
 
         public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken);

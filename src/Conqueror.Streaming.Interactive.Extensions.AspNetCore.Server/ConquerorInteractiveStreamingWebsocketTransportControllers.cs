@@ -121,7 +121,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server
                                 return;
                             }
 
-                            await socket.SendMessage(sourceEnumerator.Current, cts.Token);
+                            _ = await socket.SendMessage(sourceEnumerator.Current, cts.Token);
                         }
                     }
                 }
@@ -132,7 +132,7 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "an error occurred while reading from enumerable");
-                    await socket.SendError(ex.Message, cts.Token);
+                    _ = await socket.SendError(ex.Message, cts.Token);
                 }
             }
         }

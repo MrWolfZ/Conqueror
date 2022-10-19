@@ -31,14 +31,14 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             };
         }
 
-        public async Task SendMessage(T? message, CancellationToken cancellationToken)
+        public async Task<bool> SendMessage(T? message, CancellationToken cancellationToken)
         {
-            await socket.Send(new StreamingMessageEnvelope<T>(StreamingMessageEnvelope<T>.Discriminator, message), cancellationToken);
+            return await socket.Send(new StreamingMessageEnvelope<T>(StreamingMessageEnvelope<T>.Discriminator, message), cancellationToken);
         }
 
-        public async Task SendError(string message, CancellationToken cancellationToken)
+        public async Task<bool> SendError(string message, CancellationToken cancellationToken)
         {
-            await socket.Send(new ErrorMessage(ErrorMessage.Discriminator, message), cancellationToken);
+            return await socket.Send(new ErrorMessage(ErrorMessage.Discriminator, message), cancellationToken);
         }
 
         public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken);

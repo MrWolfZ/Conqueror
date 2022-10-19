@@ -95,8 +95,6 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
 
             await using var d = cancellationToken.Register(() => Close(CancellationToken.None).Wait(CancellationToken.None));
 
-            await clientWebSocket.RequestNextItem(cancellationToken);
-
             var enumerator = clientWebSocket.Read(cancellationToken).GetAsyncEnumerator(cancellationToken);
 
             while (true)
@@ -109,6 +107,8 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
 
                 try
                 {
+                    _ = await clientWebSocket.RequestNextItem(cancellationToken);
+                    
                     if (!await enumerator.MoveNextAsync())
                     {
                         await Close(cancellationToken);
@@ -135,8 +135,6 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client
                     case ErrorMessage { Message: { } } msg:
                         throw new HttpInteractiveStreamingException(msg.Message);
                 }
-
-                await clientWebSocket.RequestNextItem(cancellationToken);
             }
         }
 

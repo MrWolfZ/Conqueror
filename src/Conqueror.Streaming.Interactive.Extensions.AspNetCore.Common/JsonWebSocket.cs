@@ -57,9 +57,9 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             }
         }
 
-        public async Task Send(object message, CancellationToken cancellationToken)
+        public async Task<bool> Send(object message, CancellationToken cancellationToken)
         {
-            await socket.Send(JsonSerializer.Serialize(message, jsonSerializerOptions), cancellationToken);
+            return await socket.Send(JsonSerializer.Serialize(message, jsonSerializerOptions), cancellationToken);
         }
 
         public async Task Close(CancellationToken cancellationToken)

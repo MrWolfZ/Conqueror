@@ -26,9 +26,9 @@ namespace Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common
             };
         }
 
-        public async Task RequestNextItem(CancellationToken cancellationToken)
+        public async Task<bool> RequestNextItem(CancellationToken cancellationToken)
         {
-            await socket.Send(new RequestNextItemMessage(RequestNextItemMessage.Discriminator), cancellationToken);
+            return await socket.Send(new RequestNextItemMessage(RequestNextItemMessage.Discriminator), cancellationToken);
         }
 
         public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken);
