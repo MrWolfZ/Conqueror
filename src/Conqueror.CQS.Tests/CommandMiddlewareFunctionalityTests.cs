@@ -1,4 +1,4 @@
-﻿namespace Conqueror.CQS.Tests
+namespace Conqueror.CQS.Tests
 {
     public sealed class CommandMiddlewareFunctionalityTests
     {
@@ -200,8 +200,8 @@
                         .AddSingleton(observations)
                         .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
                         {
-                            _ = pipeline.Use<TestCommandMiddleware2>()
-                                        .Use<TestCommandMiddleware2>();
+                            _ = pipeline.UseAllowMultiple<TestCommandMiddleware2>()
+                                        .UseAllowMultiple<TestCommandMiddleware2>();
                         });
 
             var provider = services.ConfigureConqueror().BuildServiceProvider();
@@ -229,9 +229,9 @@
                         .AddSingleton(observations)
                         .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
                         {
-                            _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                            _ = pipeline.UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                                         .Use<TestCommandMiddleware2>()
-                                        .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                                         .Without<TestCommandMiddleware2>();
                         });
 
@@ -260,9 +260,9 @@
                         .AddSingleton(observations)
                         .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
                         {
-                            _ = pipeline.Use<TestCommandMiddleware2>()
+                            _ = pipeline.UseAllowMultiple<TestCommandMiddleware2>()
                                         .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                        .Use<TestCommandMiddleware2>()
+                                        .UseAllowMultiple<TestCommandMiddleware2>()
                                         .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>();
                         });
 
@@ -276,6 +276,216 @@
 
             Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
             Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware2) }));
+        }
+
+        [Test]
+        public async Task GivenHandlerWithMultipleAppliedAndThenRemovedMiddleware_MiddlewareIsNotCalled()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .UseAllowMultiple<TestCommandMiddleware2>()
+                                        .UseAllowMultiple<TestCommandMiddleware2>()
+                                        .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .Without<TestCommandMiddleware2>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware), typeof(TestCommandMiddleware) }));
+        }
+
+        [Test]
+        public async Task GivenHandlerWithMultipleAppliedAndThenRemovedMiddlewareWithConfiguration_MiddlewareIsNotCalled()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.UseAllowMultiple<TestCommandMiddleware2>()
+                                        .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .UseAllowMultiple<TestCommandMiddleware2>()
+                                        .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware2) }));
+        }
+
+        [Test]
+        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgain_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestCommandMiddleware2>()
+                                        .Use<TestCommandMiddleware2>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        }
+
+        [Test]
+        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgain_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        }
+
+        [Test]
+        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgainAsAllowingMultiple_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestCommandMiddleware2>()
+                                        .UseAllowMultiple<TestCommandMiddleware2>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        }
+
+        [Test]
+        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgainAsAllowingMultiple_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        }
+
+        [Test]
+        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_DoesNotThrowInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestCommandMiddleware2>()
+                                        .Without<TestCommandMiddleware2>()
+                                        .Use<TestCommandMiddleware2>();
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        }
+
+        [Test]
+        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_DoesNotThrowInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithoutMiddlewares>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddTransient<TestCommandMiddleware2>()
+                        .AddSingleton(observations)
+                        .ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline =>
+                        {
+                            _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                        .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>()
+                                        .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
+                        });
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(10), CancellationToken.None));
         }
 
         [Test]

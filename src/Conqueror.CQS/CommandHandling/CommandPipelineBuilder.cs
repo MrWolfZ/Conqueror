@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,6 +7,7 @@ namespace Conqueror.CQS.CommandHandling
     internal sealed class CommandPipelineBuilder : ICommandPipelineBuilder
     {
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares = new();
+        private readonly Dictionary<Type, MiddlewareRegistration> registeredMiddlewareTypes = new();
 
         public CommandPipelineBuilder(IServiceProvider serviceProvider)
         {
@@ -18,6 +19,11 @@ namespace Conqueror.CQS.CommandHandling
         public ICommandPipelineBuilder Use<TMiddleware>()
             where TMiddleware : ICommandMiddleware
         {
+            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new()))
+            {
+                throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered");
+            }
+
             middlewares.Add((typeof(TMiddleware), null));
             return this;
         }
@@ -25,6 +31,45 @@ namespace Conqueror.CQS.CommandHandling
         public ICommandPipelineBuilder Use<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : ICommandMiddleware<TConfiguration>
         {
+            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new()))
+            {
+                throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered");
+            }
+
+            middlewares.Add((typeof(TMiddleware), configuration));
+            return this;
+        }
+
+        public ICommandPipelineBuilder UseAllowMultiple<TMiddleware>()
+            where TMiddleware : ICommandMiddleware
+        {
+            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new() { IsExclusive = false }))
+            {
+                if (registeredMiddlewareTypes[typeof(TMiddleware)].IsExclusive)
+                {
+                    throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered as exclusive");
+                }
+
+                registeredMiddlewareTypes[typeof(TMiddleware)].RegistrationCount += 1;
+            }
+
+            middlewares.Add((typeof(TMiddleware), null));
+            return this;
+        }
+
+        public ICommandPipelineBuilder UseAllowMultiple<TMiddleware, TConfiguration>(TConfiguration configuration)
+            where TMiddleware : ICommandMiddleware<TConfiguration>
+        {
+            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new() { IsExclusive = false }))
+            {
+                if (registeredMiddlewareTypes[typeof(TMiddleware)].IsExclusive)
+                {
+                    throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered as exclusive");
+                }
+
+                registeredMiddlewareTypes[typeof(TMiddleware)].RegistrationCount += 1;
+            }
+
             middlewares.Add((typeof(TMiddleware), configuration));
             return this;
         }
@@ -32,31 +77,37 @@ namespace Conqueror.CQS.CommandHandling
         public ICommandPipelineBuilder Without<TMiddleware>()
             where TMiddleware : ICommandMiddleware
         {
-            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+            _ = registeredMiddlewareTypes.Remove(typeof(TMiddleware));
 
-            if (index < 0)
+            while (true)
             {
-                return this;
+                var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+                if (index < 0)
+                {
+                    return this;
+                }
+
+                middlewares.RemoveAt(index);
             }
-
-            middlewares.RemoveAt(index);
-
-            return this;
         }
 
         public ICommandPipelineBuilder Without<TMiddleware, TConfiguration>()
             where TMiddleware : ICommandMiddleware<TConfiguration>
         {
-            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+            _ = registeredMiddlewareTypes.Remove(typeof(TMiddleware));
 
-            if (index < 0)
+            while (true)
             {
-                return this;
+                var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+                if (index < 0)
+                {
+                    return this;
+                }
+
+                middlewares.RemoveAt(index);
             }
-
-            middlewares.RemoveAt(index);
-
-            return this;
         }
 
         public ICommandPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
@@ -94,6 +145,13 @@ namespace Conqueror.CQS.CommandHandling
             return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(),
                        ServiceProvider.GetRequiredService<ConquerorContextAccessor>(),
                        middlewares);
+        }
+
+        private sealed class MiddlewareRegistration
+        {
+            public bool IsExclusive { get; init; } = true;
+
+            public int RegistrationCount { get; set; } = 1;
         }
     }
 }
