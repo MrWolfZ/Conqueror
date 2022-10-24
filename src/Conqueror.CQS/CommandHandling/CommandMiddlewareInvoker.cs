@@ -3,21 +3,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
-// these classes belong together
-#pragma warning disable SA1402
-
 namespace Conqueror.CQS.CommandHandling
 {
-    internal sealed class CommandMiddlewareInvoker<TConfiguration> : ICommandMiddlewareInvoker
+    internal sealed class CommandMiddlewareInvoker<TMiddleware, TConfiguration> : ICommandMiddlewareInvoker
     {
+        public Type MiddlewareType => typeof(TMiddleware);
+
         public async Task<TResponse> Invoke<TCommand, TResponse>(TCommand command,
                                                                  CommandMiddlewareNext<TCommand, TResponse> next,
-                                                                 Type middlewareType,
                                                                  object? middlewareConfiguration,
                                                                  IServiceProvider serviceProvider,
                                                                  CancellationToken cancellationToken)
             where TCommand : class
         {
+            if (typeof(TConfiguration) == typeof(NullMiddlewareConfiguration))
+            {
+                middlewareConfiguration = new NullMiddlewareConfiguration();
+            }
+
             if (middlewareConfiguration is null)
             {
                 throw new ArgumentNullException(nameof(middlewareConfiguration));
@@ -26,28 +29,17 @@ namespace Conqueror.CQS.CommandHandling
             var configuration = (TConfiguration)middlewareConfiguration;
 
             var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration>(command, next, configuration, cancellationToken);
+            
+            if (typeof(TConfiguration) == typeof(NullMiddlewareConfiguration))
+            {
+                var middleware = (ICommandMiddleware)serviceProvider.GetRequiredService(typeof(TMiddleware));
+                return await middleware.Execute(ctx);
+            }
 
-            var middleware = (ICommandMiddleware<TConfiguration>)serviceProvider.GetRequiredService(middlewareType);
-
-            return await middleware.Execute(ctx);
+            var middlewareWithConfiguration = (ICommandMiddleware<TConfiguration>)serviceProvider.GetRequiredService(typeof(TMiddleware));
+            return await middlewareWithConfiguration.Execute(ctx);
         }
     }
-    
-    internal sealed class CommandMiddlewareInvoker : ICommandMiddlewareInvoker
-    {
-        public async Task<TResponse> Invoke<TCommand, TResponse>(TCommand command,
-                                                                 CommandMiddlewareNext<TCommand, TResponse> next,
-                                                                 Type middlewareType,
-                                                                 object? middlewareConfiguration,
-                                                                 IServiceProvider serviceProvider,
-                                                                 CancellationToken cancellationToken)
-            where TCommand : class
-        {
-            var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse>(command, next, cancellationToken);
 
-            var middleware = (ICommandMiddleware)serviceProvider.GetRequiredService(middlewareType);
-
-            return await middleware.Execute(ctx);
-        }
-    }
+    internal sealed record NullMiddlewareConfiguration;
 }

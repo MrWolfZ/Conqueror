@@ -787,9 +787,8 @@ namespace Conqueror.CQS.Tests
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
 
-            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
             Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware2)));
-            Assert.That(exception?.Message, Contains.Substring("has been registered"));
         }
 
         [Test]
@@ -810,9 +809,8 @@ namespace Conqueror.CQS.Tests
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
 
-            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
             Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware2)));
-            Assert.That(exception?.Message, Contains.Substring("has been registered"));
         }
 
         [Test]
@@ -833,9 +831,8 @@ namespace Conqueror.CQS.Tests
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
 
-            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
             Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware)));
-            Assert.That(exception?.Message, Contains.Substring("has been registered"));
         }
 
         [Test]
@@ -856,9 +853,8 @@ namespace Conqueror.CQS.Tests
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
 
-            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
             Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware)));
-            Assert.That(exception?.Message, Contains.Substring("has been registered"));
         }
 
         [Test]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -82,7 +83,7 @@ namespace Conqueror.CQS.CommandHandling
                 {
                     _ = services.AddTransient<ICommandHandler<TCommand>, CommandWithoutResponseAdapter<TCommand>>();
                 }
-                
+
                 _ = services.AddTransient<ICommandHandler<TCommand, TResponse>>(p => new CommandHandlerProxy<TCommand, TResponse>(p, metadata, pipelineConfigurationAction));
             }
 
@@ -193,21 +194,40 @@ namespace Conqueror.CQS.CommandHandling
                 }
             }
 
+            var configurationMethod = typeof(CommandServiceCollectionConfigurator).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
+
+            if (configurationMethod == null)
+            {
+                throw new InvalidOperationException($"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'");
+            }
+
             foreach (var middlewareType in middlewareTypes)
             {
-                RegisterMetadata(middlewareType);
+                var genericConfigurationMethod = configurationMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullMiddlewareConfiguration));
+
+                try
+                {
+                    _ = genericConfigurationMethod.Invoke(null, new object[] { services });
+                }
+                catch (TargetInvocationException ex) when (ex.InnerException != null)
+                {
+                    throw ex.InnerException;
+                }
             }
 
-            void RegisterMetadata(Type middlewareType)
-            {
-                var configurationType = middlewareType.GetInterfaces().First(IsCommandMiddlewareInterface).GetGenericArguments().FirstOrDefault();
-
-                _ = services.AddSingleton(new CommandMiddlewareMetadata(middlewareType, configurationType));
-            }
-
-            static bool HasCommandMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsCommandMiddlewareInterface);
-
-            static bool IsCommandMiddlewareInterface(Type i) => i == typeof(ICommandMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>));
+            _ = services.AddSingleton<IReadOnlyDictionary<Type, ICommandMiddlewareInvoker>>(p => p.GetRequiredService<IEnumerable<ICommandMiddlewareInvoker>>().ToDictionary(i => i.MiddlewareType));
         }
+
+        private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
+        {
+            _ = services.AddSingleton(new CommandMiddlewareMetadata(typeof(TMiddleware), GetMiddlewareConfigurationType(typeof(TMiddleware))));
+            _ = services.AddSingleton<ICommandMiddlewareInvoker, CommandMiddlewareInvoker<TMiddleware, TConfiguration>>();
+        }
+
+        private static Type? GetMiddlewareConfigurationType(Type t) => t.GetInterfaces().First(IsCommandMiddlewareInterface).GetGenericArguments().FirstOrDefault();
+
+        private static bool HasCommandMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsCommandMiddlewareInterface);
+
+        private static bool IsCommandMiddlewareInterface(Type i) => i == typeof(ICommandMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>));
     }
 }

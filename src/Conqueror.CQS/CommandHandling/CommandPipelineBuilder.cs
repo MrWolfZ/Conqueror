@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class CommandPipelineBuilder : ICommandPipelineBuilder
     {
-        private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares = new();
+        private readonly IReadOnlyDictionary<Type, ICommandMiddlewareInvoker> middlewareInvokersByMiddlewareTypes;
+        private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares = new();
         private readonly Dictionary<Type, MiddlewareRegistration> registeredMiddlewareTypes = new();
 
         public CommandPipelineBuilder(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
+            middlewareInvokersByMiddlewareTypes = serviceProvider.GetRequiredService<IReadOnlyDictionary<Type, ICommandMiddlewareInvoker>>();
         }
 
         public IServiceProvider ServiceProvider { get; }
@@ -24,7 +27,7 @@ namespace Conqueror.CQS.CommandHandling
                 throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered");
             }
 
-            middlewares.Add((typeof(TMiddleware), null));
+            middlewares.Add((typeof(TMiddleware), null, GetInvoker<TMiddleware>()));
             return this;
         }
 
@@ -36,7 +39,7 @@ namespace Conqueror.CQS.CommandHandling
                 throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered");
             }
 
-            middlewares.Add((typeof(TMiddleware), configuration));
+            middlewares.Add((typeof(TMiddleware), configuration, GetInvoker<TMiddleware>()));
             return this;
         }
 
@@ -53,7 +56,7 @@ namespace Conqueror.CQS.CommandHandling
                 registeredMiddlewareTypes[typeof(TMiddleware)].RegistrationCount += 1;
             }
 
-            middlewares.Add((typeof(TMiddleware), null));
+            middlewares.Add((typeof(TMiddleware), null, GetInvoker<TMiddleware>()));
             return this;
         }
 
@@ -70,7 +73,7 @@ namespace Conqueror.CQS.CommandHandling
                 registeredMiddlewareTypes[typeof(TMiddleware)].RegistrationCount += 1;
             }
 
-            middlewares.Add((typeof(TMiddleware), configuration));
+            middlewares.Add((typeof(TMiddleware), configuration, GetInvoker<TMiddleware>()));
             return this;
         }
 
@@ -136,7 +139,7 @@ namespace Conqueror.CQS.CommandHandling
                 throw new InvalidOperationException($"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used");
             }
 
-            middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!));
+            middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!), GetInvoker<TMiddleware>());
             return this;
         }
 
@@ -144,7 +147,18 @@ namespace Conqueror.CQS.CommandHandling
         {
             return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(),
                        ServiceProvider.GetRequiredService<ConquerorContextAccessor>(),
-                       middlewares);
+                       middlewares.Select(t => (t.MiddlewareConfiguration, t.Invoker)));
+        }
+
+        private ICommandMiddlewareInvoker GetInvoker<TMiddleware>()
+        {
+            if (!middlewareInvokersByMiddlewareTypes.TryGetValue(typeof(TMiddleware), out var invoker))
+            {
+                throw new InvalidOperationException(
+                    $"trying to use unregistered middleware type '{typeof(TMiddleware).Name}' in pipeline; ensure that the middleware is registered in the DI container");
+            }
+
+            return invoker;
         }
 
         private sealed class MiddlewareRegistration

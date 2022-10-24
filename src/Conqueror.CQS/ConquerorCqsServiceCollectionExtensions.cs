@@ -18,12 +18,12 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<QueryHandlerRegistry>();
             services.TryAddSingleton<QueryMiddlewaresInvoker>();
             services.TryAddSingleton(new QueryServiceCollectionConfigurator());
-            services.TryAddSingleton<CommandContextAccessor>();
-            services.TryAddSingleton<ICommandContextAccessor>(p => p.GetRequiredService<CommandContextAccessor>());
-
-            services.TryAddSingleton(new CommandServiceCollectionConfigurator());
             services.TryAddSingleton<QueryContextAccessor>();
             services.TryAddSingleton<IQueryContextAccessor>(p => p.GetRequiredService<QueryContextAccessor>());
+
+            services.TryAddSingleton(new CommandServiceCollectionConfigurator());
+            services.TryAddSingleton<CommandContextAccessor>();
+            services.TryAddSingleton<ICommandContextAccessor>(p => p.GetRequiredService<CommandContextAccessor>());
             
             services.TryAddSingleton<ConquerorContextAccessor>();
             services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());

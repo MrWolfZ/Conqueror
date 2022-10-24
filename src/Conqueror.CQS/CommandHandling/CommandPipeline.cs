@@ -12,11 +12,11 @@ namespace Conqueror.CQS.CommandHandling
     {
         private readonly CommandContextAccessor commandContextAccessor;
         private readonly ConquerorContextAccessor conquerorContextAccessor;
-        private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares;
+        private readonly List<(object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares;
 
         public CommandPipeline(CommandContextAccessor commandContextAccessor,
                                ConquerorContextAccessor conquerorContextAccessor,
-                               IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
+                               IEnumerable<(object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares)
         {
             this.commandContextAccessor = commandContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
@@ -61,11 +61,8 @@ namespace Conqueror.CQS.CommandHandling
                     return (TResponse)(object)UnitCommandResponse.Instance;
                 }
 
-                var (middlewareType, middlewareConfiguration) = middlewares[index];
-                var invokerType = middlewareConfiguration is null ? typeof(CommandMiddlewareInvoker) : typeof(CommandMiddlewareInvoker<>).MakeGenericType(middlewareConfiguration.GetType());
-                var invoker = (ICommandMiddlewareInvoker)Activator.CreateInstance(invokerType)!;
-
-                var response = await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, t), middlewareType, middlewareConfiguration, serviceProvider, token);
+                var (middlewareConfiguration, invoker) = middlewares[index];
+                var response = await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, t), middlewareConfiguration, serviceProvider, token);
                 commandContext.SetResponse(response!);
                 return response;
             }
