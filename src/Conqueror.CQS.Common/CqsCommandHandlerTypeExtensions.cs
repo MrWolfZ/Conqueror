@@ -22,19 +22,6 @@ namespace Conqueror.CQS.Common
             return type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsCommandHandlerInterfaceType()).ToList();
         }
 
-        public static IReadOnlyCollection<Type> GetCustomCommandHandlerInterfaceTypes(this Type type)
-        {
-            var interfaces = type.GetInterfaces().Where(i => i.IsCustomCommandHandlerInterfaceType()).ToList();
-
-            var invalidInterface = interfaces.FirstOrDefault(i => i.AllMethods().Count() > 1);
-            if (invalidInterface is not null)
-            {
-                throw new ArgumentException($"type {type.Name} implements custom interface {invalidInterface.Name} that has extra methods");
-            }
-
-            return interfaces;
-        }
-
         public static void ValidateNoInvalidCommandHandlerInterface(this Type type)
         {
             var interfaces = type.GetInterfaces();
@@ -46,11 +33,13 @@ namespace Conqueror.CQS.Common
 
         public static bool IsCustomCommandHandlerInterfaceType(this Type t) => t.IsInterface && t.GetInterfaces().Any(IsCommandHandlerInterfaceType);
 
+        public static bool IsCustomCommandHandlerInterfaceType<TCommand, TResponse>(this Type t)
+            where TCommand : class =>
+            t.IsInterface && t.GetInterfaces().Any(i => i == typeof(ICommandHandler<TCommand>) || i == typeof(ICommandHandler<TCommand, TResponse>));
+
         public static bool IsCommandHandlerInterfaceType(this Type t) =>
             t.IsInterface && t.IsGenericType
                           && (t.GetGenericTypeDefinition() == typeof(ICommandHandler<>)
                               || t.GetGenericTypeDefinition() == typeof(ICommandHandler<,>));
-
-        private static IEnumerable<MethodInfo> AllMethods(this Type t) => t.GetInterfaces().Concat(new[] { t }).SelectMany(s => s.GetMethods());
     }
 }

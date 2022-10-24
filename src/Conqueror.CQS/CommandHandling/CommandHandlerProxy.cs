@@ -1,51 +1,33 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-// it makes sense for these classes to be in the same file
-#pragma warning disable SA1402
+using Conqueror.CQS.Common;
 
 namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler<TCommand, TResponse>
         where TCommand : class
     {
-        private readonly CommandMiddlewaresInvoker invoker;
-        private readonly CommandHandlerRegistry registry;
         private readonly IServiceProvider serviceProvider;
+        private readonly CommandHandlerMetadata metadata;
+        private readonly Action<ICommandPipelineBuilder>? configurePipeline;
 
-        public CommandHandlerProxy(CommandHandlerRegistry registry, CommandMiddlewaresInvoker invoker, IServiceProvider serviceProvider)
+        public CommandHandlerProxy(IServiceProvider serviceProvider, CommandHandlerMetadata metadata, Action<ICommandPipelineBuilder>? configurePipeline)
         {
-            this.registry = registry;
-            this.invoker = invoker;
             this.serviceProvider = serviceProvider;
+            this.metadata = metadata;
+            this.configurePipeline = configurePipeline;
         }
 
         public Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken)
         {
-            var metadata = registry.GetCommandHandlerMetadata<TCommand, TResponse>();
-            return invoker.InvokeMiddlewares<TCommand, TResponse>(serviceProvider, metadata, command, cancellationToken);
-        }
-    }
+            var pipelineBuilder = new CommandPipelineBuilder(serviceProvider);
+            
+            configurePipeline?.Invoke(pipelineBuilder);
 
-    internal sealed class CommandHandlerProxy<TCommand> : ICommandHandler<TCommand>
-        where TCommand : class
-    {
-        private readonly CommandMiddlewaresInvoker invoker;
-        private readonly CommandHandlerRegistry registry;
-        private readonly IServiceProvider serviceProvider;
+            var pipeline = pipelineBuilder.Build();
 
-        public CommandHandlerProxy(CommandHandlerRegistry registry, CommandMiddlewaresInvoker invoker, IServiceProvider serviceProvider)
-        {
-            this.registry = registry;
-            this.invoker = invoker;
-            this.serviceProvider = serviceProvider;
-        }
-
-        public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken)
-        {
-            var metadata = registry.GetCommandHandlerMetadata<TCommand>();
-            return invoker.InvokeMiddlewares(serviceProvider, metadata, command, cancellationToken);
+            return pipeline.Execute<TCommand, TResponse>(serviceProvider, metadata, command, cancellationToken);
         }
     }
 }

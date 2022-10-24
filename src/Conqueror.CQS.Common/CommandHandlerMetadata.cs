@@ -4,7 +4,7 @@ namespace Conqueror.CQS.Common
 {
     internal sealed class CommandHandlerMetadata
     {
-        public CommandHandlerMetadata(Type commandType, Type? responseType, Type handlerType)
+        public CommandHandlerMetadata(Type commandType, Type responseType, Type handlerType)
         {
             CommandType = commandType;
             ResponseType = responseType;
@@ -13,7 +13,7 @@ namespace Conqueror.CQS.Common
 
         public Type CommandType { get; }
 
-        public Type? ResponseType { get; }
+        public Type ResponseType { get; }
 
         public Type HandlerType { get; }
     }
