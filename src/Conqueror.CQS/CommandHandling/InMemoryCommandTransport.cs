@@ -17,7 +17,7 @@ namespace Conqueror.CQS.CommandHandling
             this.handlerType = handlerType;
         }
 
-        public async Task<TResponse> Execute<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
             where TCommand : class
         {
             var handler = serviceProvider.GetRequiredService(handlerType);

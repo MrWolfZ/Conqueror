@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using Conqueror.Common;
 
 namespace Conqueror.CQS.Common
 {
@@ -24,10 +24,25 @@ namespace Conqueror.CQS.Common
 
         public static void ValidateNoInvalidCommandHandlerInterface(this Type type)
         {
-            var interfaces = type.GetInterfaces();
-            if (interfaces.Length == 1 && interfaces[0] == typeof(ICommandHandler))
+            if (!type.IsCommandHandlerInterfaceType())
             {
-                throw new ArgumentException($"type {type.Name} implements non-generic command handler interface {nameof(ICommandHandler)}");
+                var interfaces = type.GetInterfaces();
+                if (interfaces.Length == 1 && interfaces[0] == typeof(ICommandHandler))
+                {
+                    throw new ArgumentException($"type {type.Name} implements non-generic command handler interface {nameof(ICommandHandler)}");
+                }
+            }
+
+            var invalidInterface = type
+                                   .GetInterfaces()
+                                   .Concat(new[] { type })
+                                   .Where(i => i.IsCustomCommandHandlerInterfaceType())
+                                   .FirstOrDefault(i => i.AllMethods().Count() > 1);
+
+            if (invalidInterface != null)
+            {
+                throw new ArgumentException(
+                    $"command handler interface type '{invalidInterface.Name}' has extra methods; custom command handler interface types are not allowed to have any additional methods beside the '{nameof(ICommandHandler<object>.ExecuteCommand)}' inherited from '{typeof(ICommandHandler<>).Name}'");
             }
         }
 

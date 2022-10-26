@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using Conqueror;
-using Conqueror.CQS.CommandHandling;
 using Conqueror.CQS.QueryHandling;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -21,9 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<QueryContextAccessor>();
             services.TryAddSingleton<IQueryContextAccessor>(p => p.GetRequiredService<QueryContextAccessor>());
 
-            services.TryAddSingleton(new CommandServiceCollectionConfigurator());
-            services.TryAddSingleton<CommandContextAccessor>();
-            services.TryAddSingleton<ICommandContextAccessor>(p => p.GetRequiredService<CommandContextAccessor>());
+            services.AddConquerorCqsCommandServices();
             
             services.TryAddSingleton<ConquerorContextAccessor>();
             services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());

@@ -5,7 +5,7 @@ namespace Conqueror
 {
     public interface ICommandTransport
     {
-        Task<TResponse> Execute<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+        Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
             where TCommand : class;
     }
 }

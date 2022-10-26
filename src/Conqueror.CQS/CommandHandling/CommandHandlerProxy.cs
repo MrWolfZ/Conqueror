@@ -8,13 +8,13 @@ namespace Conqueror.CQS.CommandHandling
         where TCommand : class
     {
         private readonly IServiceProvider serviceProvider;
-        private readonly ICommandTransport transport;
+        private readonly Func<ICommandTransportBuilder, ICommandTransport> transportFactory;
         private readonly Action<ICommandPipelineBuilder>? configurePipeline;
 
-        public CommandHandlerProxy(IServiceProvider serviceProvider, ICommandTransport transport, Action<ICommandPipelineBuilder>? configurePipeline)
+        public CommandHandlerProxy(IServiceProvider serviceProvider, Func<ICommandTransportBuilder, ICommandTransport> transportFactory, Action<ICommandPipelineBuilder>? configurePipeline)
         {
             this.serviceProvider = serviceProvider;
-            this.transport = transport;
+            this.transportFactory = transportFactory;
             this.configurePipeline = configurePipeline;
         }
 
@@ -26,7 +26,7 @@ namespace Conqueror.CQS.CommandHandling
 
             var pipeline = pipelineBuilder.Build();
 
-            return pipeline.Execute<TCommand, TResponse>(serviceProvider, command, transport, cancellationToken);
+            return pipeline.Execute<TCommand, TResponse>(serviceProvider, command, transportFactory, cancellationToken);
         }
     }
 }
