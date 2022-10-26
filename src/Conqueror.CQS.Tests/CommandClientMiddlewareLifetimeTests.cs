@@ -442,7 +442,7 @@ namespace Conqueror.CQS.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
         }
 
-        private static ICommandTransport CreateTransport(ICommandTransportBuilder builder)
+        private static ICommandTransportClient CreateTransport(ICommandTransportClientBuilder builder)
         {
             return new TestCommandTransport(builder.ServiceProvider.GetRequiredService<TestObservations>());
         }
@@ -521,7 +521,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandTransport : ICommandTransport
+        private sealed class TestCommandTransport : ICommandTransportClient
         {
             private readonly TestObservations observations;
             private int invocationCount;

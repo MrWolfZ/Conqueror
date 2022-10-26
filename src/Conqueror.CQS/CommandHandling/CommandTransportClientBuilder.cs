@@ -2,9 +2,9 @@
 
 namespace Conqueror.CQS.CommandHandling
 {
-    internal sealed class CommandTransportBuilder : ICommandTransportBuilder
+    internal sealed class CommandTransportClientBuilder : ICommandTransportClientBuilder
     {
-        public CommandTransportBuilder(IServiceProvider serviceProvider)
+        public CommandTransportClientBuilder(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
         }

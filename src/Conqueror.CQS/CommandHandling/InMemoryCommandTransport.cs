@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
 {
-    internal sealed class InMemoryCommandTransport : ICommandTransport
+    internal sealed class InMemoryCommandTransport : ICommandTransportClient
     {
         private readonly IServiceProvider serviceProvider;
         private readonly Type handlerType;

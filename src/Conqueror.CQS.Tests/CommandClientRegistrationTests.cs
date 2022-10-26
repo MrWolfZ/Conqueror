@@ -210,7 +210,7 @@
         {
         }
 
-        private sealed class TestCommandTransport : ICommandTransport
+        private sealed class TestCommandTransport : ICommandTransportClient
         {
             public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
                 where TCommand : class

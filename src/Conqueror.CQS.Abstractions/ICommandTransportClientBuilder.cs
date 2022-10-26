@@ -2,7 +2,7 @@
 
 namespace Conqueror
 {
-    public interface ICommandTransportBuilder
+    public interface ICommandTransportClientBuilder
     {
         IServiceProvider ServiceProvider { get; }
     }

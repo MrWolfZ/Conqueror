@@ -13,7 +13,7 @@ namespace Conqueror.CQS.CommandHandling
             this.serviceProvider = serviceProvider;
         }
 
-        public THandler CreateCommandClient<THandler>(Func<ICommandTransportBuilder, ICommandTransport> transportBuilderFn, Action<ICommandPipelineBuilder>? configurePipeline = null)
+        public THandler CreateCommandClient<THandler>(Func<ICommandTransportClientBuilder, ICommandTransportClient> transportBuilderFn, Action<ICommandPipelineBuilder>? configurePipeline = null)
             where THandler : class, ICommandHandler
         {
             return innerFactory.CreateCommandClient<THandler>(serviceProvider, transportBuilderFn, configurePipeline);

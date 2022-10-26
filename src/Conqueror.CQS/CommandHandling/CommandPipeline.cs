@@ -22,7 +22,7 @@ namespace Conqueror.CQS.CommandHandling
 
         public async Task<TResponse> Execute<TCommand, TResponse>(IServiceProvider serviceProvider,
                                                                   TCommand initialCommand,
-                                                                  Func<ICommandTransportBuilder, ICommandTransport> transportFactory,
+                                                                  Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                                   CancellationToken cancellationToken)
             where TCommand : class
         {
@@ -32,7 +32,7 @@ namespace Conqueror.CQS.CommandHandling
 
             using var conquerorContext = conquerorContextAccessor.GetOrCreate();
             
-            var transportBuilder = new CommandTransportBuilder(serviceProvider);
+            var transportBuilder = new CommandTransportClientBuilder(serviceProvider);
 
             try
             {
@@ -49,7 +49,7 @@ namespace Conqueror.CQS.CommandHandling
 
                 if (index >= middlewares.Count)
                 {
-                    var transport = transportFactory(transportBuilder);
+                    var transport = transportClientFactory(transportBuilder);
                     var responseFromHandler = await transport.ExecuteCommand<TCommand, TResponse>(command, token).ConfigureAwait(false);
                     commandContext.SetResponse(responseFromHandler);
                     return responseFromHandler;

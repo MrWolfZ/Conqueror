@@ -10,7 +10,7 @@ namespace Conqueror.CQS.CommandHandling
     internal sealed class CommandClientFactory
     {
         public THandler CreateCommandClient<THandler>(IServiceProvider serviceProvider,
-                                                      Func<ICommandTransportBuilder, ICommandTransport> transportFactory,
+                                                      Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                       Action<ICommandPipelineBuilder>? configurePipeline)
             where THandler : class, ICommandHandler
         {
@@ -45,7 +45,7 @@ namespace Conqueror.CQS.CommandHandling
 
             try
             {
-                var result = genericCreationMethod.Invoke(null, new object?[] { serviceProvider, transportFactory, configurePipeline });
+                var result = genericCreationMethod.Invoke(null, new object?[] { serviceProvider, transportClientFactory, configurePipeline });
 
                 if (result is not THandler handler)
                 {
@@ -61,12 +61,12 @@ namespace Conqueror.CQS.CommandHandling
         }
 
         private static THandler CreateCommandClientInternal<THandler, TCommand, TResponse>(IServiceProvider serviceProvider,
-                                                                                           Func<ICommandTransportBuilder, ICommandTransport> transportFactory,
+                                                                                           Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                                                            Action<ICommandPipelineBuilder>? configurePipeline)
             where THandler : class, ICommandHandler
             where TCommand : class
         {
-            var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, transportFactory, configurePipeline);
+            var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, transportClientFactory, configurePipeline);
 
             if (typeof(THandler) == typeof(ICommandHandler<TCommand>))
             {

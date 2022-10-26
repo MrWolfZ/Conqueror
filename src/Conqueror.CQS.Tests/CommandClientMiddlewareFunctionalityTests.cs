@@ -783,7 +783,7 @@ public sealed class CommandClientMiddlewareFunctionalityTests
         Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware)));
     }
 
-    private static ICommandTransport CreateTransport(ICommandTransportBuilder builder)
+    private static ICommandTransportClient CreateTransport(ICommandTransportClientBuilder builder)
     {
         return new TestCommandTransport(builder.ServiceProvider.GetRequiredService<TestObservations>());
     }
@@ -952,7 +952,7 @@ public sealed class CommandClientMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandTransport : ICommandTransport
+    private sealed class TestCommandTransport : ICommandTransportClient
     {
         private readonly TestObservations observations;
 

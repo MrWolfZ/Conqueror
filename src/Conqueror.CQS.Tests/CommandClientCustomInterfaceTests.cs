@@ -65,7 +65,7 @@ namespace Conqueror.CQS.Tests
         {
         }
 
-        private sealed class TestCommandTransport : ICommandTransport
+        private sealed class TestCommandTransport : ICommandTransportClient
         {
             private readonly TestObservations responses;
 

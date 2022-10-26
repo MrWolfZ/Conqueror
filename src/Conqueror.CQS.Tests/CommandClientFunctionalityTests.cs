@@ -156,7 +156,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed record TestCommandWithoutResponse(int Payload);
 
-        private sealed class TestCommandTransport : ICommandTransport
+        private sealed class TestCommandTransport : ICommandTransportClient
         {
             private readonly TestObservations observations;
 

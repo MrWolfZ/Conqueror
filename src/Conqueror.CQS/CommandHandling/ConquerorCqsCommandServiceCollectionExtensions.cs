@@ -13,16 +13,16 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class ConquerorCqsCommandServiceCollectionExtensions
     {
         public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
-                                                                             Func<ICommandTransportBuilder, ICommandTransport> transportFactory,
+                                                                             Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                                              Action<ICommandPipelineBuilder>? configurePipeline = null)
             where THandler : class, ICommandHandler
         {
-            return services.AddConquerorCommandClient(typeof(THandler), transportFactory, configurePipeline);
+            return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline);
         }
 
         internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
                                                                      Type handlerType,
-                                                                     Func<ICommandTransportBuilder, ICommandTransport> transportFactory,
+                                                                     Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                                      Action<ICommandPipelineBuilder>? configurePipeline)
         {
             handlerType.ValidateNoInvalidCommandHandlerInterface();
@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 try
                 {
-                    _ = genericAddClientMethod.Invoke(null, new object?[] { services, transportFactory, configurePipeline });
+                    _ = genericAddClientMethod.Invoke(null, new object?[] { services, transportClientFactory, configurePipeline });
                 }
                 catch (TargetInvocationException ex) when (ex.InnerException != null)
                 {
@@ -81,7 +81,7 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         private static void AddClient<THandler, TCommand, TResponse>(this IServiceCollection services,
-                                                                     Func<ICommandTransportBuilder, ICommandTransport> transportFactory,
+                                                                     Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                                      Action<ICommandPipelineBuilder>? configurePipeline = null)
             where THandler : class, ICommandHandler
             where TCommand : class
@@ -102,7 +102,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 }
 
                 _ = services.AddTransient<ICommandHandler<TCommand, TResponse>>(
-                    p => new CommandHandlerProxy<TCommand, TResponse>(p, transportFactory, configurePipeline));
+                    p => new CommandHandlerProxy<TCommand, TResponse>(p, transportClientFactory, configurePipeline));
             }
 
             void RegisterCustomInterface()
