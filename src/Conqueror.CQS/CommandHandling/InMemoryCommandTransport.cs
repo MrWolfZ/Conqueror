@@ -24,10 +24,10 @@ namespace Conqueror.CQS.CommandHandling
 
             if (handler is ICommandHandler<TCommand, TResponse> h)
             {
-                return await h.ExecuteCommand(command, cancellationToken);
+                return await h.ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
             }
 
-            await ((ICommandHandler<TCommand>)handler).ExecuteCommand(command, cancellationToken);
+            await ((ICommandHandler<TCommand>)handler).ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
             return (TResponse)(object)UnitCommandResponse.Instance;
         }
     }

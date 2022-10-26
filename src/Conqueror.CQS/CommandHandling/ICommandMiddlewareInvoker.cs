@@ -7,7 +7,7 @@ namespace Conqueror.CQS.CommandHandling
     internal interface ICommandMiddlewareInvoker
     {
         Type MiddlewareType { get; }
-        
+
         Task<TResponse> Invoke<TCommand, TResponse>(TCommand command,
                                                     CommandMiddlewareNext<TCommand, TResponse> next,
                                                     object? middlewareConfiguration,

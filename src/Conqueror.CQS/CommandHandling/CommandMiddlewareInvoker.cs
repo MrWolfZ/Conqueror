@@ -9,11 +9,11 @@ namespace Conqueror.CQS.CommandHandling
     {
         public Type MiddlewareType => typeof(TMiddleware);
 
-        public async Task<TResponse> Invoke<TCommand, TResponse>(TCommand command,
-                                                                 CommandMiddlewareNext<TCommand, TResponse> next,
-                                                                 object? middlewareConfiguration,
-                                                                 IServiceProvider serviceProvider,
-                                                                 CancellationToken cancellationToken)
+        public Task<TResponse> Invoke<TCommand, TResponse>(TCommand command,
+                                                           CommandMiddlewareNext<TCommand, TResponse> next,
+                                                           object? middlewareConfiguration,
+                                                           IServiceProvider serviceProvider,
+                                                           CancellationToken cancellationToken)
             where TCommand : class
         {
             if (typeof(TConfiguration) == typeof(NullMiddlewareConfiguration))
@@ -33,11 +33,11 @@ namespace Conqueror.CQS.CommandHandling
             if (typeof(TConfiguration) == typeof(NullMiddlewareConfiguration))
             {
                 var middleware = (ICommandMiddleware)serviceProvider.GetRequiredService(typeof(TMiddleware));
-                return await middleware.Execute(ctx);
+                return middleware.Execute(ctx);
             }
 
             var middlewareWithConfiguration = (ICommandMiddleware<TConfiguration>)serviceProvider.GetRequiredService(typeof(TMiddleware));
-            return await middlewareWithConfiguration.Execute(ctx);
+            return middlewareWithConfiguration.Execute(ctx);
         }
     }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
@@ -147,7 +146,7 @@ namespace Conqueror.CQS.CommandHandling
         {
             return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(),
                        ServiceProvider.GetRequiredService<ConquerorContextAccessor>(),
-                       middlewares.Select(t => (t.MiddlewareConfiguration, t.Invoker)));
+                       middlewares);
         }
 
         private ICommandMiddlewareInvoker GetInvoker<TMiddleware>()
