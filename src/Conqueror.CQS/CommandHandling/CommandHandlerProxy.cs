@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.CQS.Common;
 
 namespace Conqueror.CQS.CommandHandling
 {
@@ -9,13 +8,13 @@ namespace Conqueror.CQS.CommandHandling
         where TCommand : class
     {
         private readonly IServiceProvider serviceProvider;
-        private readonly CommandHandlerMetadata metadata;
+        private readonly ICommandTransport transport;
         private readonly Action<ICommandPipelineBuilder>? configurePipeline;
 
-        public CommandHandlerProxy(IServiceProvider serviceProvider, CommandHandlerMetadata metadata, Action<ICommandPipelineBuilder>? configurePipeline)
+        public CommandHandlerProxy(IServiceProvider serviceProvider, ICommandTransport transport, Action<ICommandPipelineBuilder>? configurePipeline)
         {
             this.serviceProvider = serviceProvider;
-            this.metadata = metadata;
+            this.transport = transport;
             this.configurePipeline = configurePipeline;
         }
 
@@ -27,7 +26,7 @@ namespace Conqueror.CQS.CommandHandling
 
             var pipeline = pipelineBuilder.Build();
 
-            return pipeline.Execute<TCommand, TResponse>(serviceProvider, metadata, command, cancellationToken);
+            return pipeline.Execute<TCommand, TResponse>(serviceProvider, command, transport, cancellationToken);
         }
     }
 }

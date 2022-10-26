@@ -84,7 +84,8 @@ namespace Conqueror.CQS.CommandHandling
                     _ = services.AddTransient<ICommandHandler<TCommand>, CommandWithoutResponseAdapter<TCommand>>();
                 }
 
-                _ = services.AddTransient<ICommandHandler<TCommand, TResponse>>(p => new CommandHandlerProxy<TCommand, TResponse>(p, metadata, pipelineConfigurationAction));
+                _ = services.AddTransient<ICommandHandler<TCommand, TResponse>>(
+                    p => new CommandHandlerProxy<TCommand, TResponse>(p, new InMemoryCommandTransport(p, metadata.HandlerType), pipelineConfigurationAction));
             }
 
             void RegisterCustomInterface()

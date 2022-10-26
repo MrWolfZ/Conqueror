@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.CQS.Common;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
 {
@@ -24,8 +22,8 @@ namespace Conqueror.CQS.CommandHandling
         }
 
         public async Task<TResponse> Execute<TCommand, TResponse>(IServiceProvider serviceProvider,
-                                                                  CommandHandlerMetadata metadata,
                                                                   TCommand initialCommand,
+                                                                  ICommandTransport transport,
                                                                   CancellationToken cancellationToken)
             where TCommand : class
         {
@@ -47,18 +45,9 @@ namespace Conqueror.CQS.CommandHandling
 
                 if (index >= middlewares.Count)
                 {
-                    var handler = serviceProvider.GetRequiredService(metadata.HandlerType);
-
-                    if (handler is ICommandHandler<TCommand, TResponse> h)
-                    {
-                        var responseFromHandler = await h.ExecuteCommand(command, token);
-                        commandContext.SetResponse(responseFromHandler!);
-                        return responseFromHandler;
-                    }
-
-                    await ((ICommandHandler<TCommand>)handler).ExecuteCommand(command, token);
-                    commandContext.SetResponse(UnitCommandResponse.Instance);
-                    return (TResponse)(object)UnitCommandResponse.Instance;
+                    var responseFromHandler = await transport.Execute<TCommand, TResponse>(command, token);
+                    commandContext.SetResponse(responseFromHandler!);
+                    return responseFromHandler;
                 }
 
                 var (middlewareConfiguration, invoker) = middlewares[index];
