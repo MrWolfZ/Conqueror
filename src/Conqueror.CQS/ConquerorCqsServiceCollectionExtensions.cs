@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using Conqueror;
-using Conqueror.CQS.QueryHandling;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable InconsistentNaming
@@ -14,10 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddConquerorCQS(this IServiceCollection services)
         {
-            services.TryAddSingleton(new QueryServiceCollectionConfigurator());
-            services.TryAddSingleton<QueryContextAccessor>();
-            services.TryAddSingleton<IQueryContextAccessor>(p => p.GetRequiredService<QueryContextAccessor>());
-
+            services.AddConquerorCqsQueryServices();
             services.AddConquerorCqsCommandServices();
             
             services.TryAddSingleton<ConquerorContextAccessor>();

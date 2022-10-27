@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Conqueror.Common;
 
 namespace Conqueror.CQS.Common
 {
@@ -23,10 +24,25 @@ namespace Conqueror.CQS.Common
 
         public static void ValidateNoInvalidQueryHandlerInterface(this Type type)
         {
-            var interfaces = type.GetInterfaces();
-            if (interfaces.Length == 1 && interfaces[0] == typeof(IQueryHandler))
+            if (!type.IsQueryHandlerInterfaceType())
             {
-                throw new ArgumentException($"type {type.Name} implements non-generic query handler interface {nameof(IQueryHandler)}");
+                var interfaces = type.GetInterfaces();
+                if (interfaces.Length == 1 && interfaces[0] == typeof(IQueryHandler))
+                {
+                    throw new ArgumentException($"type {type.Name} implements non-generic query handler interface {nameof(IQueryHandler)}");
+                }
+            }
+
+            var invalidInterface = type
+                                   .GetInterfaces()
+                                   .Concat(new[] { type })
+                                   .Where(i => i.IsCustomQueryHandlerInterfaceType())
+                                   .FirstOrDefault(i => i.AllMethods().Count() > 1);
+
+            if (invalidInterface != null)
+            {
+                throw new ArgumentException(
+                    $"query handler interface type '{invalidInterface.Name}' has extra methods; custom query handler interface types are not allowed to have any additional methods beside the '{nameof(IQueryHandler<object, object>.ExecuteQuery)}' inherited from '{typeof(IQueryHandler<,>).Name}'");
             }
         }
 
