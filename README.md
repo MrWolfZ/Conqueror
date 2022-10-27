@@ -10,16 +10,28 @@ A set of libraries to powercharge your .NET development.
 
 ### CQS
 
-- expose command/query and conqueror context objects directly on middleware contexts
-- pass through custom interface extra methods to backing instance
 - for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
+- rename `CommandHandlerMetadata` to `CommandHandlerRegistration` and make it public in the abstractions to allow external libraries to use it for server transports
+  - same for queries
+- add tests for handlers that throw exceptions to assert contexts are properly cleared
+- expose command/query and conqueror context objects directly on middleware contexts
+- allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
+
+#### CQS middleware
+
+- create projects for common middlewares, e.g.
+  - `Conqueror.CQS.Middleware.Timeout`
+  - `Conqueror.CQS.Middleware.Retry`
 
 #### CQS ASP Core
 
+- rename libraries to `Conqueror.CQS.Transport.Http.Client` and `Conqueror.CQS.Transport.Http.Server.AspNetCore`
 - delegate route path creation to service
-- allow attaching middlewares to http clients (via the configuration action)
-- allow registering all custom interfaces in assembly as HTTP clients with `AddConquerorHttpClientsFromAssembly(Assembly assembly, Func<IServiceProvider, HttpClient> httpClientFactory)`
-- allow path to be set for http commands and queries
+  - in config for client middleware allow setting path convention
+    - instruct users to place their route convention into their contracts module to allow both server and client to use the same convention
+  - allow path to be set for http commands and queries via attribute
+  - allow version to be set for http commands and queries via attribute
+- allow complex objects in GET queries by JSON-serializing them
 
 - add missing tests
   - complex query objects for GET
@@ -45,10 +57,13 @@ A set of libraries to powercharge your .NET development.
 ### Interactive streaming
 
 - implement middleware support
+- implement clients and transport infrastructure
 - for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
 
 #### Interactive streaming ASP Core
 
+- refactor implementation to use transport client
+- ensure api description works
 - add tests for behavior when websocket connection is interrupted (i.e. disconnect without proper close handshake)
   - consider adding explicit message for signaling the end of the stream
 - propagate conqueror context
