@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Conqueror.CQS.CommandHandling;
 using Conqueror.CQS.Extensions.AspNetCore.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;

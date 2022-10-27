@@ -2,9 +2,6 @@
 using System.Threading.Tasks;
 using Conqueror.CQS.Common;
 
-// these classes belong together
-#pragma warning disable SA1402
-
 namespace Conqueror.CQS.CommandHandling
 {
     internal delegate Task<TResponse> CommandMiddlewareNext<in TCommand, TResponse>(TCommand command, CancellationToken cancellationToken);

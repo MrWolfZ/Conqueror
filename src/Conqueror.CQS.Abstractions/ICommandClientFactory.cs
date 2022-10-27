@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Conqueror.CQS.CommandHandling
+namespace Conqueror
 {
     public interface ICommandClientFactory
     {
