@@ -10,7 +10,7 @@
             Uri? seenBaseAddress = null;
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCqsHttpClientServices(o =>
+            _ = services.AddConquerorCQSHttpClientServices(o =>
                         {
                             o.HttpClientFactory = baseAddress =>
                             {
@@ -37,7 +37,7 @@
         public void GivenCustomHttpClientFactory_WhenResolvingHandlerRegisteredWithHttpClientFactory_DoesNotCallCustomHttpClientFactory()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCqsHttpClientServices(o =>
+            _ = services.AddConquerorCQSHttpClientServices(o =>
                         {
                             o.HttpClientFactory = _ =>
                             {
@@ -64,7 +64,7 @@
             var seenInstances = new HashSet<ScopingTest>();
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCqsHttpClientServices(o =>
+            _ = services.AddConquerorCQSHttpClientServices(o =>
                         {
                             o.HttpClientFactory = baseAddress =>
                             {

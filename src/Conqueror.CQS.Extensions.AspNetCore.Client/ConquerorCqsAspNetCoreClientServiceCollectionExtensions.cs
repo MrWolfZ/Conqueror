@@ -3,12 +3,14 @@ using Conqueror;
 using Conqueror.CQS.Extensions.AspNetCore.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+// ReSharper disable InconsistentNaming
+
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ConquerorCqsAspNetCoreClientServiceCollectionExtensions
     {
-        public static IServiceCollection AddConquerorCqsHttpClientServices(this IServiceCollection services)
+        public static IServiceCollection AddConquerorCQSHttpClientServices(this IServiceCollection services)
         {
             services.AddConquerorCQS();
 
@@ -20,10 +22,10 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
-        public static IServiceCollection AddConquerorCqsHttpClientServices(this IServiceCollection services,
+        public static IServiceCollection AddConquerorCQSHttpClientServices(this IServiceCollection services,
                                                                            Action<ConquerorCqsHttpClientGlobalOptions> configure)
         {
-            services.AddConquerorCqsHttpClientServices();
+            services.AddConquerorCQSHttpClientServices();
             services.AddSingleton(configure);
 
             return services;

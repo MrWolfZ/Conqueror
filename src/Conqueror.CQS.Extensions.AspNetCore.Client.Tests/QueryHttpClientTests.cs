@@ -159,7 +159,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
 
         protected override void ConfigureClientServices(IServiceCollection services)
         {
-            _ = services.AddConquerorCqsHttpClientServices(o =>
+            _ = services.AddConquerorCQSHttpClientServices(o =>
             {
                 o.HttpClientFactory = uri =>
                     throw new InvalidOperationException(
