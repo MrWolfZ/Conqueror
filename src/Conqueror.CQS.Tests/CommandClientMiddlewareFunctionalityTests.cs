@@ -783,6 +783,27 @@ public sealed class CommandClientMiddlewareFunctionalityTests
         Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware)));
     }
 
+    [Test]
+    public void GivenMiddlewareThatThrows_InvocationThrowsSameException()
+    {
+        var services = new ServiceCollection();
+        var exception = new Exception();
+
+        _ = services.AddConquerorCQS()
+                    .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(CreateTransport,
+                                                                                                  p => p.Use<ThrowingTestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                    .AddTransient<ThrowingTestCommandMiddleware>()
+                    .AddSingleton(exception);
+
+        var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+
+        Assert.AreSame(exception, thrownException);
+    }
+
     private static ICommandTransportClient CreateTransport(ICommandTransportClientBuilder builder)
     {
         return new TestCommandTransport(builder.ServiceProvider.GetRequiredService<TestObservations>());
@@ -949,6 +970,23 @@ public sealed class CommandClientMiddlewareFunctionalityTests
             }
 
             return response;
+        }
+    }
+
+    private sealed class ThrowingTestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
+    {
+        private readonly Exception exception;
+
+        public ThrowingTestCommandMiddleware(Exception exception)
+        {
+            this.exception = exception;
+        }
+
+        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareConfiguration> ctx)
+            where TCommand : class
+        {
+            await Task.Yield();
+            throw exception;
         }
     }
 

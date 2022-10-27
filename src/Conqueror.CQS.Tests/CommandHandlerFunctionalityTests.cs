@@ -22,7 +22,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
         }
-        
+
         [Test]
         public async Task GivenCommandWithoutResponse_HandlerReceivesCommand()
         {
@@ -63,7 +63,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
         }
-        
+
         [Test]
         public async Task GivenCancellationTokenForHandlerWithoutResponse_HandlerReceivesCommand()
         {
@@ -83,7 +83,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
         }
-        
+
         [Test]
         public async Task GivenCommand_HandlerReturnsResponse()
         {
@@ -103,6 +103,25 @@ namespace Conqueror.CQS.Tests
             var response = await handler.ExecuteCommand(command, CancellationToken.None);
 
             Assert.AreEqual(command.Payload + 1, response.Payload);
+        }
+
+        [Test]
+        public void GivenExceptionInHandler_InvocationThrowsSameException()
+        {
+            var services = new ServiceCollection();
+            var exception = new Exception();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<ThrowingCommandHandler>()
+                        .AddSingleton(exception);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+
+            Assert.AreSame(exception, thrownException);
         }
 
         [Test]
@@ -136,7 +155,7 @@ namespace Conqueror.CQS.Tests
                 return new(command.Payload + 1);
             }
         }
-        
+
         private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
         {
             private readonly TestObservations responses;
@@ -151,6 +170,22 @@ namespace Conqueror.CQS.Tests
                 await Task.Yield();
                 responses.Commands.Add(command);
                 responses.CancellationTokens.Add(cancellationToken);
+            }
+        }
+
+        private sealed class ThrowingCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+            private readonly Exception exception;
+
+            public ThrowingCommandHandler(Exception exception)
+            {
+                this.exception = exception;
+            }
+
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                throw exception;
             }
         }
 

@@ -858,6 +858,26 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public void GivenMiddlewareThatThrows_InvocationThrowsSameException()
+        {
+            var services = new ServiceCollection();
+            var exception = new Exception();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandlerWithThrowingMiddleware>()
+                        .AddTransient<ThrowingTestCommandMiddleware>()
+                        .AddSingleton(exception);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+
+            Assert.AreSame(exception, thrownException);
+        }
+
+        [Test]
         public void InvalidMiddlewares()
         {
             var services = new ServiceCollection();
@@ -1167,6 +1187,20 @@ namespace Conqueror.CQS.Tests
         }
 #endif
 
+        private sealed class TestCommandHandlerWithThrowingMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<ThrowingTestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
+            }
+        }
+
         private sealed record TestCommandMiddlewareConfiguration
         {
             public int Parameter { get; set; }
@@ -1322,6 +1356,23 @@ namespace Conqueror.CQS.Tests
                 }
 
                 return response;
+            }
+        }
+
+        private sealed class ThrowingTestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
+        {
+            private readonly Exception exception;
+
+            public ThrowingTestCommandMiddleware(Exception exception)
+            {
+                this.exception = exception;
+            }
+
+            public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareConfiguration> ctx)
+                where TCommand : class
+            {
+                await Task.Yield();
+                throw exception;
             }
         }
 

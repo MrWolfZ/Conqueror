@@ -150,6 +150,26 @@ namespace Conqueror.CQS.Tests
             Assert.AreNotSame(seenInstances[0], seenInstances[2]);
         }
 
+        [Test]
+        public void GivenExceptionInTransport_InvocationThrowsSameException()
+        {
+            var services = new ServiceCollection();
+            var exception = new Exception();
+
+            _ = services.AddConquerorCQS()
+                        .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<ThrowingTestCommandTransport>())
+                        .AddTransient<ThrowingTestCommandTransport>()
+                        .AddSingleton(exception);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+
+            Assert.AreSame(exception, thrownException);
+        }
+
         private sealed record TestCommand(int Payload);
 
         private sealed record TestCommandResponse(int Payload);
@@ -179,6 +199,23 @@ namespace Conqueror.CQS.Tests
 
                 var cmd = (TestCommand)(object)command;
                 return (TResponse)(object)new TestCommandResponse(cmd.Payload + 1);
+            }
+        }
+
+        private sealed class ThrowingTestCommandTransport : ICommandTransportClient
+        {
+            private readonly Exception exception;
+
+            public ThrowingTestCommandTransport(Exception exception)
+            {
+                this.exception = exception;
+            }
+
+            public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+                where TCommand : class
+            {
+                await Task.Yield();
+                throw exception;
             }
         }
 
