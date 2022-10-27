@@ -661,6 +661,26 @@
         }
 
         [Test]
+        public void GivenMiddlewareThatThrows_InvocationThrowsSameException()
+        {
+            var services = new ServiceCollection();
+            var exception = new Exception();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandlerWithThrowingMiddleware>()
+                        .AddTransient<ThrowingTestQueryMiddleware>()
+                        .AddSingleton(exception);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+
+            Assert.AreSame(exception, thrownException);
+        }
+
+        [Test]
         public void InvalidMiddlewares()
         {
             var services = new ServiceCollection();
@@ -859,6 +879,20 @@
         }
 #endif
 
+        private sealed class TestQueryHandlerWithThrowingMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                return new(0);
+            }
+
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                _ = pipeline.Use<ThrowingTestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
+            }
+        }
+
         private sealed record TestQueryMiddlewareConfiguration
         {
             public int Parameter { get; set; }
@@ -1004,6 +1038,23 @@
                 }
 
                 return response;
+            }
+        }
+
+        private sealed class ThrowingTestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
+        {
+            private readonly Exception exception;
+
+            public ThrowingTestQueryMiddleware(Exception exception)
+            {
+                this.exception = exception;
+            }
+
+            public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
+                where TQuery : class
+            {
+                await Task.Yield();
+                throw exception;
             }
         }
 

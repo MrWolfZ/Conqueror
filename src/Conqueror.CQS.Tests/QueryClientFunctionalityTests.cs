@@ -104,6 +104,26 @@
             Assert.AreNotSame(seenInstances[0], seenInstances[2]);
         }
 
+        [Test]
+        public void GivenExceptionInTransport_InvocationThrowsSameException()
+        {
+            var services = new ServiceCollection();
+            var exception = new Exception();
+
+            _ = services.AddConquerorCQS()
+                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<ThrowingTestQueryTransport>())
+                        .AddTransient<ThrowingTestQueryTransport>()
+                        .AddSingleton(exception);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+
+            Assert.AreSame(exception, thrownException);
+        }
+
         private sealed record TestQuery(int Payload);
 
         private sealed record TestQueryResponse(int Payload);
@@ -126,6 +146,23 @@
 
                 var cmd = (TestQuery)(object)query;
                 return (TResponse)(object)new TestQueryResponse(cmd.Payload + 1);
+            }
+        }
+
+        private sealed class ThrowingTestQueryTransport : IQueryTransportClient
+        {
+            private readonly Exception exception;
+
+            public ThrowingTestQueryTransport(Exception exception)
+            {
+                this.exception = exception;
+            }
+
+            public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+                where TQuery : class
+            {
+                await Task.Yield();
+                throw exception;
             }
         }
 

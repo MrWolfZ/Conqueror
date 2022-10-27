@@ -65,6 +65,25 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public void GivenExceptionInHandler_InvocationThrowsSameException()
+        {
+            var services = new ServiceCollection();
+            var exception = new Exception();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<ThrowingQueryHandler>()
+                        .AddSingleton(exception);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+
+            Assert.AreSame(exception, thrownException);
+        }
+
+        [Test]
         public void GivenHandlerWithInvalidInterface_RegisteringHandlerThrowsArgumentException()
         {
             _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddTransient<TestQueryHandlerWithoutValidInterfaces>().ConfigureConqueror());
@@ -91,6 +110,22 @@ namespace Conqueror.CQS.Tests
                 responses.Queries.Add(query);
                 responses.CancellationTokens.Add(cancellationToken);
                 return new(query.Payload + 1);
+            }
+        }
+
+        private sealed class ThrowingQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+            private readonly Exception exception;
+
+            public ThrowingQueryHandler(Exception exception)
+            {
+                this.exception = exception;
+            }
+
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            {
+                await Task.Yield();
+                throw exception;
             }
         }
 

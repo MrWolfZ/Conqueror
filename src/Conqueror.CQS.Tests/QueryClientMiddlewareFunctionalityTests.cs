@@ -581,6 +581,27 @@ public sealed class QueryClientMiddlewareFunctionalityTests
         Assert.That(exception?.Message, Contains.Substring(nameof(TestQueryMiddleware)));
     }
 
+    [Test]
+    public void GivenMiddlewareThatThrows_InvocationThrowsSameException()
+    {
+        var services = new ServiceCollection();
+        var exception = new Exception();
+
+        _ = services.AddConquerorCQS()
+                    .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
+                                                                                                  p => p.Use<ThrowingTestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                    .AddTransient<ThrowingTestQueryMiddleware>()
+                    .AddSingleton(exception);
+
+        var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+
+        Assert.AreSame(exception, thrownException);
+    }
+
     private static IQueryTransportClient CreateTransport(IQueryTransportClientBuilder builder)
     {
         return new TestQueryTransport(builder.ServiceProvider.GetRequiredService<TestObservations>());
@@ -735,6 +756,23 @@ public sealed class QueryClientMiddlewareFunctionalityTests
             }
 
             return response;
+        }
+    }
+
+    private sealed class ThrowingTestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
+    {
+        private readonly Exception exception;
+
+        public ThrowingTestQueryMiddleware(Exception exception)
+        {
+            this.exception = exception;
+        }
+
+        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
+            where TQuery : class
+        {
+            await Task.Yield();
+            throw exception;
         }
     }
 
