@@ -76,7 +76,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
                 };
             });
 
-            _ = services.AddConquerorQueryHttpClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => HttpClient)
+            _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.UseHttp(HttpClient))
                         .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.UseHttp(HttpClient));
 
             _ = services.AddConquerorCQS().ConfigureConqueror();

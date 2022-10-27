@@ -13,24 +13,24 @@ using Conqueror.CQS.Extensions.AspNetCore.Common;
 
 namespace Conqueror.CQS.Extensions.AspNetCore.Client
 {
-    internal sealed class HttpQueryHandler<TQuery, TResponse> : IQueryHandler<TQuery, TResponse>
-        where TQuery : class
+    internal sealed class HttpQueryTransportClient : IQueryTransportClient
     {
-        private readonly HttpQueryAttribute attribute;
         private readonly IConquerorContextAccessor? conquerorContextAccessor;
         private readonly HttpClient httpClient;
         private readonly JsonSerializerOptions? serializerOptions;
 
-        public HttpQueryHandler(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
+        public HttpQueryTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
             httpClient = options.HttpClient;
             serializerOptions = options.JsonSerializerOptions;
-            attribute = typeof(TQuery).GetCustomAttribute<HttpQueryAttribute>()!;
         }
 
-        public async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken)
+        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+            where TQuery : class
         {
+            var attribute = typeof(TQuery).GetCustomAttribute<HttpQueryAttribute>()!;
+            
             using var requestMessage = new HttpRequestMessage
             {
                 Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,

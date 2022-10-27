@@ -44,7 +44,7 @@ public abstract class TestBase
         where THandler : class, ICommandHandler => ResolveOnClient<ICommandClientFactory>().CreateCommandClient<THandler>(b => b.UseHttp(HttpClient));
 
     protected THandler CreateQueryHttpClient<THandler>()
-        where THandler : class, IQueryHandler => ResolveOnClient<IConquerorCqsHttpClientFactory>().CreateQueryHttpClient<THandler>(_ => HttpClient);
+        where THandler : class, IQueryHandler => ResolveOnClient<IQueryClientFactory>().CreateQueryClient<THandler>(b => b.UseHttp(HttpClient));
 
     [SetUp]
     public void SetUp()

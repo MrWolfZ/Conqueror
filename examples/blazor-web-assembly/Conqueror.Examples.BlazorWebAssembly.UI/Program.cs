@@ -10,7 +10,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services
        .AddConquerorCqsHttpClientServices()
-       .AddConquerorQueryHttpClient<IGetSharedCounterValueQueryHandler>(GetConquerorHttpClientAddress)
+       .AddConquerorQueryClient<IGetSharedCounterValueQueryHandler>(b => b.UseHttp(GetConquerorHttpClientAddress(b.ServiceProvider)))
        .AddConquerorCommandClient<IIncrementSharedCounterValueCommandHandler>(b => b.UseHttp(GetConquerorHttpClientAddress(b.ServiceProvider)));
 
 await builder.Build().RunAsync();

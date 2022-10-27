@@ -171,16 +171,18 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
                 };
             });
 
-            _ = services.AddConquerorQueryHttpClient<ITestQueryHandler>(_ => HttpClient)
-                        .AddConquerorQueryHttpClient<ITestQueryWithoutPayloadHandler>(_ => HttpClient)
-                        .AddConquerorQueryHttpClient<ITestQueryWithCollectionPayloadHandler>(_ => HttpClient)
-                        .AddConquerorQueryHttpClient<ITestPostQueryHandler>(_ => HttpClient)
-                        .AddConquerorQueryHttpClient<ITestPostQueryWithoutPayloadHandler>(_ => HttpClient)
-                        .AddConquerorQueryHttpClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>(_ => HttpClient, o => o.JsonSerializerOptions = new()
+            _ = services.AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestQueryWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestQueryWithCollectionPayloadHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestPostQueryHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestPostQueryWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(HttpClient, o => o.JsonSerializerOptions = new()
                         {
                             Converters = { new TestPostQueryWithCustomSerializedPayloadTypePayloadJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
-                        });
+                        }));
+
+            _ = services.ConfigureConqueror();
         }
 
         protected override void Configure(IApplicationBuilder app)
