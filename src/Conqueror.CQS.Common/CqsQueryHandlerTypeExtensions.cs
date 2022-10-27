@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Conqueror.Common;
 
 namespace Conqueror.CQS.Common
 {
@@ -22,19 +21,6 @@ namespace Conqueror.CQS.Common
             return type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsQueryHandlerInterfaceType()).ToList();
         }
 
-        public static IReadOnlyCollection<Type> GetCustomQueryHandlerInterfaceTypes(this Type type)
-        {
-            var interfaces = type.GetInterfaces().Where(i => i.IsCustomQueryHandlerInterfaceType()).ToList();
-
-            var invalidInterface = interfaces.FirstOrDefault(i => i.AllMethods().Count() > 1);
-            if (invalidInterface is not null)
-            {
-                throw new ArgumentException($"type {type.Name} implements custom interface {invalidInterface.Name} that has extra methods");
-            }
-
-            return interfaces;
-        }
-
         public static void ValidateNoInvalidQueryHandlerInterface(this Type type)
         {
             var interfaces = type.GetInterfaces();
@@ -45,6 +31,10 @@ namespace Conqueror.CQS.Common
         }
 
         public static bool IsCustomQueryHandlerInterfaceType(this Type t) => t.IsInterface && t.GetInterfaces().Any(IsQueryHandlerInterfaceType);
+
+        public static bool IsCustomQueryHandlerInterfaceType<TQuery, TResponse>(this Type t)
+            where TQuery : class =>
+            t.IsInterface && t.GetInterfaces().Any(i => i == typeof(IQueryHandler<TQuery, TResponse>));
 
         public static bool IsQueryHandlerInterfaceType(this Type t) => t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IQueryHandler<,>);
     }

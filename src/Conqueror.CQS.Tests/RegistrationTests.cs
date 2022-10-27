@@ -11,8 +11,6 @@ namespace Conqueror.CQS.Tests
         {
             var services = new ServiceCollection().AddConquerorCQS().AddConquerorCQS();
 
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryMiddlewaresInvoker)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryServiceCollectionConfigurator)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandServiceCollectionConfigurator)));
         }

@@ -144,7 +144,7 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenExternalPipelineConfigurationAndHandlerWithOwnPipelineConfiguration_OwnConfigurationIsUsed()
+        public async Task GivenExternalPipelineConfigurationAndHandlerWithOwnPipelineConfiguration_ExternalConfigurationIsUsed()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
@@ -156,7 +156,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureQueryPipeline<TestQueryHandlerWithPipelineConfiguration>(pipeline =>
             {
-                _ = Assert.Throws<InvalidOperationException>(() => pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new(20)));
+                _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new(20));
             });
 
             var provider = services.ConfigureConqueror().BuildServiceProvider();
@@ -167,7 +167,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Configurations, Has.Count.EqualTo(1));
 
-            Assert.AreEqual(10, observations.Configurations[0].Parameter);
+            Assert.AreEqual(20, observations.Configurations[0].Parameter);
         }
 
         private sealed record TestQuery;
@@ -191,10 +191,7 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
-            {
-                _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new(10));
-            }
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => Assert.Fail("should never be called");
         }
         
         private sealed class TestQueryMiddlewareConfiguration

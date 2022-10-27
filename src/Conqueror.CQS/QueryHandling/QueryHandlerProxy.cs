@@ -1,27 +1,33 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.CQS.Common;
 
 namespace Conqueror.CQS.QueryHandling
 {
     internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuery, TResponse>
         where TQuery : class
     {
-        private readonly QueryMiddlewaresInvoker invoker;
-        private readonly QueryHandlerRegistry registry;
         private readonly IServiceProvider serviceProvider;
+        private readonly QueryHandlerMetadata metadata;
+        private readonly Action<IQueryPipelineBuilder>? configurePipeline;
 
-        public QueryHandlerProxy(QueryHandlerRegistry registry, QueryMiddlewaresInvoker invoker, IServiceProvider serviceProvider)
+        public QueryHandlerProxy(IServiceProvider serviceProvider, QueryHandlerMetadata metadata, Action<IQueryPipelineBuilder>? configurePipeline)
         {
-            this.registry = registry;
-            this.invoker = invoker;
             this.serviceProvider = serviceProvider;
+            this.metadata = metadata;
+            this.configurePipeline = configurePipeline;
         }
 
         public Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken)
         {
-            var metadata = registry.GetQueryHandlerMetadata<TQuery, TResponse>();
-            return invoker.InvokeMiddlewares<TQuery, TResponse>(serviceProvider, metadata, query, cancellationToken);
+            var pipelineBuilder = new QueryPipelineBuilder(serviceProvider);
+            
+            configurePipeline?.Invoke(pipelineBuilder);
+
+            var pipeline = pipelineBuilder.Build();
+
+            return pipeline.Execute<TQuery, TResponse>(serviceProvider, metadata, query, cancellationToken);
         }
     }
 }
