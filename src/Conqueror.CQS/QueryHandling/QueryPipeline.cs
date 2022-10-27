@@ -33,12 +33,15 @@ namespace Conqueror.CQS.QueryHandling
             using var conquerorContext = conquerorContextAccessor.GetOrCreate();
 
             var transportClientBuilder = new QueryTransportClientBuilder(serviceProvider);
-
-            var finalResponse = await ExecuteNextMiddleware(0, initialQuery, cancellationToken);
-
-            queryContextAccessor.ClearContext();
-
-            return finalResponse;
+            
+            try
+            {
+                return await ExecuteNextMiddleware(0, initialQuery, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                queryContextAccessor.ClearContext();
+            }
 
             async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, CancellationToken token)
             {
@@ -47,14 +50,14 @@ namespace Conqueror.CQS.QueryHandling
                 if (index >= middlewares.Count)
                 {
                     var transportClient = transportClientFactory(transportClientBuilder);
-                    var responseFromHandler = await transportClient.ExecuteQuery<TQuery, TResponse>(query, token);
-                    queryContext.SetResponse(responseFromHandler!);
+                    var responseFromHandler = await transportClient.ExecuteQuery<TQuery, TResponse>(query, token).ConfigureAwait(false);
+                    queryContext.SetResponse(responseFromHandler);
                     return responseFromHandler;
                 }
 
                 var (_, middlewareConfiguration, invoker) = middlewares[index];
-                var response = await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, t), middlewareConfiguration, serviceProvider, token);
-                queryContext.SetResponse(response!);
+                var response = await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, t), middlewareConfiguration, serviceProvider, token).ConfigureAwait(false);
+                queryContext.SetResponse(response);
                 return response;
             }
         }

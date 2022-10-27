@@ -31,7 +31,7 @@ namespace Conqueror.CQS.QueryHandling
             query = qry;
         }
 
-        public void SetResponse(object res)
+        public void SetResponse(object? res)
         {
             response = res;
         }
