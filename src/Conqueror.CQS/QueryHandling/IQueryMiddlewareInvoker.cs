@@ -4,13 +4,12 @@ using System.Threading.Tasks;
 
 namespace Conqueror.CQS.QueryHandling
 {
-    internal delegate Task<TResponse> QueryMiddlewareNext<in TQuery, TResponse>(TQuery query, CancellationToken cancellationToken);
-
     internal interface IQueryMiddlewareInvoker
     {
+        Type MiddlewareType { get; }
+
         Task<TResponse> Invoke<TQuery, TResponse>(TQuery query,
                                                   QueryMiddlewareNext<TQuery, TResponse> next,
-                                                  Type middlewareType,
                                                   object? middlewareConfiguration,
                                                   IServiceProvider serviceProvider,
                                                   CancellationToken cancellationToken)

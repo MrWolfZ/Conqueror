@@ -3,21 +3,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
-// these classes belong together
-#pragma warning disable SA1402
-
 namespace Conqueror.CQS.QueryHandling
 {
-    internal sealed class QueryMiddlewareInvoker<TConfiguration> : IQueryMiddlewareInvoker
+    internal sealed class QueryMiddlewareInvoker<TMiddleware, TConfiguration> : IQueryMiddlewareInvoker
     {
+        public Type MiddlewareType => typeof(TMiddleware);
+
         public async Task<TResponse> Invoke<TQuery, TResponse>(TQuery query,
                                                                QueryMiddlewareNext<TQuery, TResponse> next,
-                                                               Type middlewareType,
                                                                object? middlewareConfiguration,
                                                                IServiceProvider serviceProvider,
                                                                CancellationToken cancellationToken)
             where TQuery : class
         {
+            if (typeof(TConfiguration) == typeof(NullQueryMiddlewareConfiguration))
+            {
+                middlewareConfiguration = new NullQueryMiddlewareConfiguration();
+            }
+
             if (middlewareConfiguration is null)
             {
                 throw new ArgumentNullException(nameof(middlewareConfiguration));
@@ -27,27 +30,16 @@ namespace Conqueror.CQS.QueryHandling
 
             var ctx = new DefaultQueryMiddlewareContext<TQuery, TResponse, TConfiguration>(query, next, configuration, cancellationToken);
 
-            var middleware = (IQueryMiddleware<TConfiguration>)serviceProvider.GetRequiredService(middlewareType);
+            if (typeof(TConfiguration) == typeof(NullQueryMiddlewareConfiguration))
+            {
+                var middleware = (IQueryMiddleware)serviceProvider.GetRequiredService(typeof(TMiddleware));
+                return await middleware.Execute(ctx);
+            }
 
-            return await middleware.Execute(ctx);
+            var middlewareWithConfiguration = (IQueryMiddleware<TConfiguration>)serviceProvider.GetRequiredService(typeof(TMiddleware));
+            return await middlewareWithConfiguration.Execute(ctx);
         }
     }
 
-    internal sealed class QueryMiddlewareInvoker : IQueryMiddlewareInvoker
-    {
-        public async Task<TResponse> Invoke<TQuery, TResponse>(TQuery query,
-                                                               QueryMiddlewareNext<TQuery, TResponse> next,
-                                                               Type middlewareType,
-                                                               object? middlewareConfiguration,
-                                                               IServiceProvider serviceProvider,
-                                                               CancellationToken cancellationToken)
-            where TQuery : class
-        {
-            var ctx = new DefaultQueryMiddlewareContext<TQuery, TResponse>(query, next, cancellationToken);
-
-            var middleware = (IQueryMiddleware)serviceProvider.GetRequiredService(middlewareType);
-
-            return await middleware.Execute(ctx);
-        }
-    }
+    internal sealed record NullQueryMiddlewareConfiguration;
 }

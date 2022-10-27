@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -187,21 +188,40 @@ namespace Conqueror.CQS.QueryHandling
                 }
             }
 
+            var configurationMethod = typeof(QueryServiceCollectionConfigurator).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
+
+            if (configurationMethod == null)
+            {
+                throw new InvalidOperationException($"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'");
+            }
+
             foreach (var middlewareType in middlewareTypes)
             {
-                RegisterMetadata(middlewareType);
+                var genericConfigurationMethod = configurationMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullQueryMiddlewareConfiguration));
+
+                try
+                {
+                    _ = genericConfigurationMethod.Invoke(null, new object[] { services });
+                }
+                catch (TargetInvocationException ex) when (ex.InnerException != null)
+                {
+                    throw ex.InnerException;
+                }
             }
 
-            void RegisterMetadata(Type middlewareType)
-            {
-                var configurationType = middlewareType.GetInterfaces().First(IsQueryMiddlewareInterface).GetGenericArguments().FirstOrDefault();
-
-                _ = services.AddSingleton(new QueryMiddlewareMetadata(middlewareType, configurationType));
-            }
-
-            static bool HasQueryMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsQueryMiddlewareInterface);
-
-            static bool IsQueryMiddlewareInterface(Type i) => i == typeof(IQueryMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryMiddleware<>));
+            _ = services.AddSingleton<IReadOnlyDictionary<Type, IQueryMiddlewareInvoker>>(p => p.GetRequiredService<IEnumerable<IQueryMiddlewareInvoker>>().ToDictionary(i => i.MiddlewareType));
         }
+
+        private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
+        {
+            _ = services.AddSingleton(new QueryMiddlewareMetadata(typeof(TMiddleware), GetMiddlewareConfigurationType(typeof(TMiddleware))));
+            _ = services.AddSingleton<IQueryMiddlewareInvoker, QueryMiddlewareInvoker<TMiddleware, TConfiguration>>();
+        }
+
+        private static Type? GetMiddlewareConfigurationType(Type t) => t.GetInterfaces().First(IsQueryMiddlewareInterface).GetGenericArguments().FirstOrDefault();
+
+        private static bool HasQueryMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsQueryMiddlewareInterface);
+
+        private static bool IsQueryMiddlewareInterface(Type i) => i == typeof(IQueryMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryMiddleware<>));
     }
 }

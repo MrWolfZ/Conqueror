@@ -634,9 +634,8 @@
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
 
-            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
             Assert.That(exception?.Message, Contains.Substring(nameof(TestQueryMiddleware2)));
-            Assert.That(exception?.Message, Contains.Substring("has been registered"));
         }
 
         [Test]
@@ -657,9 +656,8 @@
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
 
-            Assert.That(exception?.Message, Contains.Substring("No service for type"));
+            Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
             Assert.That(exception?.Message, Contains.Substring(nameof(TestQueryMiddleware)));
-            Assert.That(exception?.Message, Contains.Substring("has been registered"));
         }
 
         [Test]

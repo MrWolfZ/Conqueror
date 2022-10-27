@@ -26,9 +26,9 @@ namespace Conqueror.CQS.QueryHandling
         /// <inheritdoc />
         public IDictionary<object, object?> Items => itemsLazy.Value;
 
-        public void SetQuery(object cmd)
+        public void SetQuery(object qry)
         {
-            query = cmd;
+            query = qry;
         }
 
         public void SetResponse(object res)
