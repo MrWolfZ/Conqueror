@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
-    <Import Project="../../.targets/common.targets"/>
+    <Import Project="../../.targets/common.targets" />
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -15,7 +15,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Examples.BlazorWebAssembly.Contracts\Conqueror.Examples.BlazorWebAssembly.Contracts.csproj" />
+        <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.Contracts/Conqueror.Examples.BlazorWebAssembly.Contracts.csproj" />
+        <ProjectReference Include="../../../src/Conqueror.CQS/Conqueror.CQS.csproj" Condition="$(ShouldReferenceProject)" />
         <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj" Condition="$(ShouldReferenceProject)" />
     </ItemGroup>
 

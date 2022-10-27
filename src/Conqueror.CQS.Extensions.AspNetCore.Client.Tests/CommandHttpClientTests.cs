@@ -151,15 +151,17 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
                 };
             });
 
-            _ = services.AddConquerorCommandHttpClient<ITestCommandHandler>(_ => HttpClient)
-                        .AddConquerorCommandHttpClient<ITestCommandWithoutResponseHandler>(_ => HttpClient)
-                        .AddConquerorCommandHttpClient<ITestCommandWithoutPayloadHandler>(_ => HttpClient)
-                        .AddConquerorCommandHttpClient<ITestCommandWithoutResponseWithoutPayloadHandler>(_ => HttpClient)
-                        .AddConquerorCommandHttpClient<ITestCommandWithCustomSerializedPayloadTypeHandler>(_ => HttpClient, o => o.JsonSerializerOptions = new()
+            _ = services.AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorCommandClient<ITestCommandWithoutResponseHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorCommandClient<ITestCommandWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorCommandClient<ITestCommandWithoutResponseWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorCommandClient<ITestCommandWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(HttpClient, o => o.JsonSerializerOptions = new()
                         {
                             Converters = { new TestCommandWithCustomSerializedPayloadTypePayloadJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
-                        });
+                        }));
+
+            _ = services.ConfigureConqueror();
         }
 
         protected override void Configure(IApplicationBuilder app)

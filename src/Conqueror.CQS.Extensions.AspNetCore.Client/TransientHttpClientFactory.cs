@@ -37,29 +37,5 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
         {
             return innerFactory.CreateQueryHttpClient<TQueryHandler>(serviceProvider, baseAddressFactory: baseAddressFactory, configureOptions: configure);
         }
-
-        public TCommandHandler CreateCommandHttpClient<TCommandHandler>(Func<IServiceProvider, HttpClient> httpClientFactory)
-            where TCommandHandler : class, ICommandHandler
-        {
-            return innerFactory.CreateCommandHttpClient<TCommandHandler>(serviceProvider, httpClientFactory);
-        }
-
-        public TCommandHandler CreateCommandHttpClient<TCommandHandler>(Func<IServiceProvider, HttpClient> httpClientFactory, Action<ConquerorCqsHttpClientOptions> configure)
-            where TCommandHandler : class, ICommandHandler
-        {
-            return innerFactory.CreateCommandHttpClient<TCommandHandler>(serviceProvider, httpClientFactory, configureOptions: configure);
-        }
-
-        public TCommandHandler CreateCommandHttpClient<TCommandHandler>(Func<IServiceProvider, Uri> baseAddressFactory)
-            where TCommandHandler : class, ICommandHandler
-        {
-            return innerFactory.CreateCommandHttpClient<TCommandHandler>(serviceProvider, baseAddressFactory: baseAddressFactory);
-        }
-
-        public TCommandHandler CreateCommandHttpClient<TCommandHandler>(Func<IServiceProvider, Uri> baseAddressFactory, Action<ConquerorCqsHttpClientOptions> configure)
-            where TCommandHandler : class, ICommandHandler
-        {
-            return innerFactory.CreateCommandHttpClient<TCommandHandler>(serviceProvider, baseAddressFactory: baseAddressFactory, configureOptions: configure);
-        }
     }
 }

@@ -4,102 +4,7 @@
     public sealed class CommandHttpClientRegistrationTests
     {
         [Test]
-        public void GivenRegisteredPlainClient_CanResolvePlainClient()
-        {
-            using var provider = RegisterClient<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
-        }
-
-        [Test]
-        public void GivenRegisteredCustomClient_CanResolvePlainClient()
-        {
-            using var provider = RegisterClient<ITestCommandHandler>();
-
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
-        }
-
-        [Test]
-        public void GivenRegisteredCustomClient_CanResolveCustomClient()
-        {
-            using var provider = RegisterClient<ITestCommandHandler>();
-
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler>());
-        }
-
-        [Test]
-        public void GivenRegisteredPlainClientWithoutResponse_CanResolvePlainClient()
-        {
-            using var provider = RegisterClient<ICommandHandler<TestCommandWithoutResponse>>();
-
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>());
-        }
-
-        [Test]
-        public void GivenRegisteredCustomClientWithoutResponse_CanResolvePlainClient()
-        {
-            using var provider = RegisterClient<ITestCommandWithoutResponseHandler>();
-
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>());
-        }
-
-        [Test]
-        public void GivenRegisteredCustomClientWithoutResponse_CanResolveCustomClient()
-        {
-            using var provider = RegisterClient<ITestCommandWithoutResponseHandler>();
-
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandWithoutResponseHandler>());
-        }
-
-        [Test]
-        public void GivenUnregisteredPlainClient_ThrowsInvalidOperationException()
-        {
-            using var provider = RegisterClient<ITestCommandHandler>();
-            _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<ICommandHandler<NonHttpTestCommand, TestCommandResponse>>());
-        }
-
-        [Test]
-        public void GivenUnregisteredCustomClient_ThrowsInvalidOperationException()
-        {
-            using var provider = RegisterClient<ITestCommandHandler>();
-            _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<INonHttpTestCommandHandler>());
-        }
-
-        [Test]
-        public void GivenNonHttpPlainCommandHandlerType_RegistrationThrowsArgumentException()
-        {
-            _ = Assert.Throws<ArgumentException>(() => RegisterClient<ICommandHandler<NonHttpTestCommand, TestCommandResponse>>());
-        }
-
-        [Test]
-        public void GivenNonHttpCustomCommandHandlerType_RegistrationThrowsArgumentException()
-        {
-            _ = Assert.Throws<ArgumentException>(() => RegisterClient<INonHttpTestCommandHandler>());
-        }
-
-        [Test]
-        public void GivenNonHttpPlainCommandHandlerTypeWithoutResponse_RegistrationThrowsArgumentException()
-        {
-            _ = Assert.Throws<ArgumentException>(() => RegisterClient<ICommandHandler<NonHttpTestCommandWithoutResponse>>());
-        }
-
-        [Test]
-        public void GivenNonHttpCustomCommandHandlerTypeWithoutResponse_RegistrationThrowsArgumentException()
-        {
-            _ = Assert.Throws<ArgumentException>(() => RegisterClient<INonHttpTestCommandWithoutResponseHandler>());
-        }
-
-        [Test]
-        public void GivenRegisteredPlainClient_CanResolvePlainClientWithoutHavingServicesExplicitlyRegistered()
-        {
-            var provider = new ServiceCollection().AddConquerorCommandHttpClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new())
-                                                  .BuildServiceProvider();
-
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
-        }
-
-        [Test]
-        public void GivenCustomHttpClientFactory_WhenResolvingHandlerRegisteredWithBaseAddressFactory_CallsCustomHttpClientFactory()
+        public async Task GivenCustomHttpClientFactory_WhenResolvingHandlerRegisteredWithBaseAddressFactory_CallsCustomHttpClientFactory()
         {
             var expectedBaseAddress = new Uri("http://localhost");
             Uri? seenBaseAddress = null;
@@ -113,11 +18,17 @@
                                 return new();
                             };
                         })
-                        .AddConquerorCommandHttpClient<ITestCommandHandler>(_ => expectedBaseAddress);
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            _ = b.UseHttp(expectedBaseAddress);
+                            return new TestCommandTransport();
+                        });
 
-            using var provider = services.BuildServiceProvider();
+            await using var provider = services.ConfigureConqueror().BuildServiceProvider();
 
-            _ = provider.GetRequiredService<ITestCommandHandler>();
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
 
             Assert.AreSame(expectedBaseAddress, seenBaseAddress);
         }
@@ -134,15 +45,21 @@
                                 return new();
                             };
                         })
-                        .AddConquerorCommandHttpClient<ITestCommandHandler>(_ => new());
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            _ = b.UseHttp(new HttpClient());
+                            return new TestCommandTransport();
+                        });
 
-            using var provider = services.BuildServiceProvider();
+            using var provider = services.ConfigureConqueror().BuildServiceProvider();
 
-            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler>());
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            Assert.DoesNotThrowAsync(() => client.ExecuteCommand(new(), CancellationToken.None));
         }
 
         [Test]
-        public void GivenCustomHttpClientFactory_CallsFactoryWithScopedServiceProvider()
+        public async Task GivenCustomHttpClientFactory_CallsFactoryWithScopedServiceProvider()
         {
             var seenInstances = new HashSet<ScopingTest>();
 
@@ -155,47 +72,40 @@
                                 return new();
                             };
                         })
-                        .AddConquerorCommandHttpClient<ITestCommandHandler>(_ => new("http://localhost"));
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            _ = b.UseHttp(new Uri("http://localhost"));
+                            return new TestCommandTransport();
+                        });
 
             _ = services.AddScoped<ScopingTest>();
 
-            using var provider = services.BuildServiceProvider();
+            await using var provider = services.ConfigureConqueror().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
 
-            _ = scope1.ServiceProvider.GetRequiredService<ITestCommandHandler>();
-            _ = scope1.ServiceProvider.GetRequiredService<ITestCommandHandler>();
+            var client1 = scope1.ServiceProvider.GetRequiredService<ITestCommandHandler>();
+            var client2 = scope1.ServiceProvider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await client2.ExecuteCommand(new(), CancellationToken.None);
 
             using var scope2 = provider.CreateScope();
 
-            _ = scope2.ServiceProvider.GetRequiredService<ITestCommandHandler>();
+            var client3 = scope2.ServiceProvider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client3.ExecuteCommand(new(), CancellationToken.None);
 
             Assert.AreEqual(2, seenInstances.Count);
         }
 
-        [Test]
-        public void GivenAlreadyRegisteredHandlerWhenRegistering_ThrowsInvalidOperationException()
+        private sealed class TestCommandTransport : ICommandTransportClient
         {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCqsHttpClientServices().AddConquerorCommandHttpClient<ITestCommandHandler>(_ => new());
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCqsHttpClientServices().AddConquerorCommandHttpClient<ITestCommandHandler>(_ => new()));
-        }
-
-        [Test]
-        public void GivenClient_CanResolveConquerorContextAccessor()
-        {
-            using var provider = RegisterClient<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-            Assert.DoesNotThrow(() => provider.GetRequiredService<IConquerorContextAccessor>());
-        }
-
-        private ServiceProvider RegisterClient<TCommandHandler>()
-            where TCommandHandler : class, ICommandHandler
-        {
-            return new ServiceCollection().AddConquerorCqsHttpClientServices()
-                                          .AddConquerorCommandHttpClient<TCommandHandler>(_ => new())
-                                          .BuildServiceProvider();
+            public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+                where TCommand : class
+            {
+                return Task.FromResult((TResponse)(object)new TestCommandResponse());
+            }
         }
 
         private sealed class ScopingTest

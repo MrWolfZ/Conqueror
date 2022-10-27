@@ -1,4 +1,5 @@
 global using Conqueror.Examples.BlazorWebAssembly.Contracts;
+using Conqueror.CQS.Extensions.AspNetCore.Client;
 using Conqueror.Examples.BlazorWebAssembly.UI;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -10,7 +11,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services
        .AddConquerorCqsHttpClientServices()
        .AddConquerorQueryHttpClient<IGetSharedCounterValueQueryHandler>(GetConquerorHttpClientAddress)
-       .AddConquerorCommandHttpClient<IIncrementSharedCounterValueCommandHandler>(GetConquerorHttpClientAddress);
+       .AddConquerorCommandClient<IIncrementSharedCounterValueCommandHandler>(b => b.UseHttp(GetConquerorHttpClientAddress(b.ServiceProvider)));
 
 await builder.Build().RunAsync();
 

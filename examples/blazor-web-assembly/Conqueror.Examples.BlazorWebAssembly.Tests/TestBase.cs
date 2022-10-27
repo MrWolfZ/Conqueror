@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Conqueror.CQS.CommandHandling;
 using Conqueror.CQS.Extensions.AspNetCore.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -41,7 +42,7 @@ public abstract class TestBase
     protected JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
     protected THandler CreateCommandHttpClient<THandler>()
-        where THandler : class, ICommandHandler => ResolveOnClient<IConquerorCqsHttpClientFactory>().CreateCommandHttpClient<THandler>(_ => HttpClient);
+        where THandler : class, ICommandHandler => ResolveOnClient<ICommandClientFactory>().CreateCommandClient<THandler>(b => b.UseHttp(HttpClient));
 
     protected THandler CreateQueryHttpClient<THandler>()
         where THandler : class, IQueryHandler => ResolveOnClient<IConquerorCqsHttpClientFactory>().CreateQueryHttpClient<THandler>(_ => HttpClient);
@@ -85,7 +86,7 @@ public abstract class TestBase
     {
         var services = new ServiceCollection();
         ConfigureClientServices(services);
-        var provider = services.BuildServiceProvider();
+        var provider = services.ConfigureConqueror().BuildServiceProvider();
         return provider.GetRequiredService<T>();
     }
 }

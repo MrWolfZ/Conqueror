@@ -8,36 +8,6 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ConquerorCqsAspNetCoreClientServiceProviderExtensions
     {
-        public static TCommandHandler CreateCommandHttpClient<TCommandHandler>(this IServiceProvider provider,
-                                                                               Func<IServiceProvider, HttpClient> httpClientFactory)
-            where TCommandHandler : class, ICommandHandler
-        {
-            return provider.GetRequiredService<IConquerorCqsHttpClientFactory>().CreateCommandHttpClient<TCommandHandler>(httpClientFactory);
-        }
-
-        public static TCommandHandler CreateCommandHttpClient<TCommandHandler>(this IServiceProvider provider,
-                                                                               Func<IServiceProvider, HttpClient> httpClientFactory,
-                                                                               Action<ConquerorCqsHttpClientOptions> configure)
-            where TCommandHandler : class, ICommandHandler
-        {
-            return provider.GetRequiredService<IConquerorCqsHttpClientFactory>().CreateCommandHttpClient<TCommandHandler>(httpClientFactory, configure);
-        }
-
-        public static TCommandHandler CreateCommandHttpClient<TCommandHandler>(this IServiceProvider provider,
-                                                                               Func<IServiceProvider, Uri> baseAddressFactory)
-            where TCommandHandler : class, ICommandHandler
-        {
-            return provider.GetRequiredService<IConquerorCqsHttpClientFactory>().CreateCommandHttpClient<TCommandHandler>(baseAddressFactory);
-        }
-
-        public static TCommandHandler CreateCommandHttpClient<TCommandHandler>(this IServiceProvider provider,
-                                                                               Func<IServiceProvider, Uri> baseAddressFactory,
-                                                                               Action<ConquerorCqsHttpClientOptions> configure)
-            where TCommandHandler : class, ICommandHandler
-        {
-            return provider.GetRequiredService<IConquerorCqsHttpClientFactory>().CreateCommandHttpClient<TCommandHandler>(baseAddressFactory, configure);
-        }
-
         public static TQueryHandler CreateQueryHttpClient<TQueryHandler>(this IServiceProvider provider,
                                                                          Func<IServiceProvider, HttpClient> httpClientFactory)
             where TQueryHandler : class, IQueryHandler

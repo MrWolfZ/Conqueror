@@ -256,8 +256,8 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client.Tests
                 };
             });
 
-            _ = services.AddConquerorCommandHttpClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => HttpClient)
-                        .AddConquerorCommandHttpClient<ICommandHandler<TestCommandWithoutResponse>>(_ => HttpClient);
+            _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.UseHttp(HttpClient))
+                        .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => b.UseHttp(HttpClient));
 
             _ = services.AddTransient<OuterTestCommandHandler>()
                         .AddTransient<OuterTestCommandWithoutResponseHandler>()

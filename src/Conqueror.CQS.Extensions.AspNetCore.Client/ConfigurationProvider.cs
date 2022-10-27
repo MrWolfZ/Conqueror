@@ -11,7 +11,7 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             this.configureGlobalOptions = configureGlobalOptions;
         }
 
-        public ResolvedHttpClientOptions GetOptions<THandler>(IServiceProvider provider, HttpClientRegistration registration)
+        public ResolvedHttpClientOptions GetOptions(IServiceProvider provider, HttpClientRegistration registration)
         {
             var globalOptions = new ConquerorCqsHttpClientGlobalOptions(provider);
             configureGlobalOptions?.Invoke(globalOptions);
@@ -25,10 +25,9 @@ namespace Conqueror.CQS.Extensions.AspNetCore.Client
             {
                 if (registration.BaseAddressFactory is null)
                 {
-                    throw new InvalidOperationException(
-                        $"configuration error while creating options for http handler '{typeof(THandler).Name}': either http client or base address factory must be provided");
+                    throw new InvalidOperationException("configuration error while creating options for http handler: either http client or base address factory must be provided");
                 }
-                
+
                 var baseAddress = registration.BaseAddressFactory(provider);
                 httpClient = globalOptions.HttpClientFactory(baseAddress);
             }
