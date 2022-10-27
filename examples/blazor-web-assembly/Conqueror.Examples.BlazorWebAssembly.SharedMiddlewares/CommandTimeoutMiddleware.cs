@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
+﻿namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 public sealed record CommandTimeoutMiddlewareConfiguration(TimeSpan TimeoutAfter);
 

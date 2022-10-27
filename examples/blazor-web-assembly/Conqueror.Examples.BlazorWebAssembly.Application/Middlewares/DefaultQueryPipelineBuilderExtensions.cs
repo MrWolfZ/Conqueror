@@ -1,4 +1,6 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
+﻿using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
+
+namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
 public static class DefaultQueryPipelineBuilderExtensions
 {
@@ -8,6 +10,7 @@ public static class DefaultQueryPipelineBuilderExtensions
                        .UseLogging()
                        .UseAuthorization()
                        .UseValidation()
-                       .UseTimeout(TimeSpan.FromMinutes(1));
+                       .UseTimeout(TimeSpan.FromMinutes(1))
+                       .UseRetry();
     }
 }

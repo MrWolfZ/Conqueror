@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../../.targets/common.targets" />
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Conqueror.CQS.Abstractions" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+        <PackageReference Include="Conqueror.Eventing.Abstractions" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../../src/Conqueror.CQS.Abstractions/Conqueror.CQS.Abstractions.csproj" Condition="$(ShouldReferenceProject)" />
+        <ProjectReference Include="../../../src/Conqueror.Eventing.Abstractions/Conqueror.Eventing.Abstractions.csproj" Condition="$(ShouldReferenceProject)" />
+    </ItemGroup>
+
+</Project>

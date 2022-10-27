@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application;
 
@@ -12,6 +13,7 @@ public static class ApplicationServiceCollectionExtensions
 
         services.AddConquerorCQS()
                 .AddConquerorCQSTypesFromExecutingAssembly()
+                .AddConquerorCQSTypesFromAssembly(typeof(CommandTimeoutMiddleware).Assembly)
                 .AddConquerorEventing()
                 .AddConquerorEventingTypesFromExecutingAssembly();
 

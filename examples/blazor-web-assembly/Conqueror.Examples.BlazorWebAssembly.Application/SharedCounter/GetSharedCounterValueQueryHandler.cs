@@ -1,4 +1,6 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
+﻿using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
+
+namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
 
 internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValueQueryHandler, IConfigureQueryPipeline
 {

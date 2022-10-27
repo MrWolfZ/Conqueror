@@ -1,5 +1,6 @@
 global using Conqueror.Examples.BlazorWebAssembly.Contracts;
-using Conqueror.CQS.Extensions.AspNetCore.Client;
+using System.Text.Json;
+using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 using Conqueror.Examples.BlazorWebAssembly.UI;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -9,15 +10,13 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services
+       .AddConquerorCQS()
+       .AddConquerorCQSTypesFromExecutingAssembly()
+       .AddConquerorCQSTypesFromAssembly(typeof(CommandTimeoutMiddleware).Assembly)
        .AddConquerorCQSHttpClientServices()
-       .AddConquerorQueryClient<IGetSharedCounterValueQueryHandler>(b => b.UseHttp(GetConquerorHttpClientAddress(b.ServiceProvider)))
-       .AddConquerorCommandClient<IIncrementSharedCounterValueCommandHandler>(b => b.UseHttp(GetConquerorHttpClientAddress(b.ServiceProvider)));
+       .AddConquerorQueryClient<IGetSharedCounterValueQueryHandler>(b => b.UseHttpApi(), pipeline => pipeline.UseDefaultHttpPipeline())
+       .AddConquerorCommandClient<IIncrementSharedCounterValueCommandHandler>(b => b.UseHttpApi(), pipeline => pipeline.UseDefaultHttpPipeline())
+       .AddSingleton(new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+       .ConfigureConqueror();
 
 await builder.Build().RunAsync();
-
-Uri GetConquerorHttpClientAddress(IServiceProvider serviceProvider)
-{
-    var baseAddressFromConfig = serviceProvider.GetRequiredService<IConfiguration>()["ApiBaseAddress"];
-    var baseAddress = string.IsNullOrWhiteSpace(baseAddressFromConfig) ? serviceProvider.GetRequiredService<IWebAssemblyHostEnvironment>().BaseAddress : baseAddressFromConfig;
-    return new(baseAddress);
-}

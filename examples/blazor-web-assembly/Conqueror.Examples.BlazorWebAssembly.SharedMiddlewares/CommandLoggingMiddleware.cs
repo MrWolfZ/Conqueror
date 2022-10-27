@@ -1,4 +1,7 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
+
+namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 public sealed record CommandLoggingMiddlewareConfiguration
 {

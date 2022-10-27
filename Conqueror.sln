@@ -107,6 +107,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests", "src\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests.csproj", "{C2DF1455-7EAE-42F9-B228-78765270DEE9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares\Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares.csproj", "{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -260,6 +262,10 @@ Global
 		{C2DF1455-7EAE-42F9-B228-78765270DEE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2DF1455-7EAE-42F9-B228-78765270DEE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2DF1455-7EAE-42F9-B228-78765270DEE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -268,5 +274,6 @@ Global
 		{BBE79D4A-B281-493A-B109-89D153A090CE} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 		{1F9CB58D-EEEB-44EA-BF3F-7A34E6372C06} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 		{6F100036-6720-477D-9FDA-66E2C45EEEA4} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
+		{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 	EndGlobalSection
 EndGlobal
