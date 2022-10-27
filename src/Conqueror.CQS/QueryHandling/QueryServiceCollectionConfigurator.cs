@@ -79,7 +79,8 @@ namespace Conqueror.CQS.QueryHandling
 
             void RegisterPlainInterface()
             {
-                _ = services.AddTransient<IQueryHandler<TQuery, TResponse>>(p => new QueryHandlerProxy<TQuery, TResponse>(p, metadata, pipelineConfigurationAction));
+                _ = services.AddTransient<IQueryHandler<TQuery, TResponse>>(
+                    p => new QueryHandlerProxy<TQuery, TResponse>(p, new InMemoryQueryTransport(p, metadata.HandlerType), pipelineConfigurationAction));
             }
 
             void RegisterCustomInterface()

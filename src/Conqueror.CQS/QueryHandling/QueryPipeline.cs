@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.CQS.Common;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling
 {
@@ -23,8 +21,8 @@ namespace Conqueror.CQS.QueryHandling
         }
 
         public async Task<TResponse> Execute<TQuery, TResponse>(IServiceProvider serviceProvider,
-                                                                QueryHandlerMetadata metadata,
                                                                 TQuery initialQuery,
+                                                                IQueryTransportClient transportClient,
                                                                 CancellationToken cancellationToken)
             where TQuery : class
         {
@@ -46,8 +44,7 @@ namespace Conqueror.CQS.QueryHandling
 
                 if (index >= middlewares.Count)
                 {
-                    var handler = (IQueryHandler<TQuery, TResponse>)serviceProvider.GetRequiredService(metadata.HandlerType);
-                    var responseFromHandler = await handler.ExecuteQuery(query, token);
+                    var responseFromHandler = await transportClient.ExecuteQuery<TQuery, TResponse>(query, token);
                     queryContext.SetResponse(responseFromHandler!);
                     return responseFromHandler;
                 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.CQS.Common;
 
 namespace Conqueror.CQS.QueryHandling
 {
@@ -9,13 +8,13 @@ namespace Conqueror.CQS.QueryHandling
         where TQuery : class
     {
         private readonly IServiceProvider serviceProvider;
-        private readonly QueryHandlerMetadata metadata;
+        private readonly IQueryTransportClient transportClient;
         private readonly Action<IQueryPipelineBuilder>? configurePipeline;
 
-        public QueryHandlerProxy(IServiceProvider serviceProvider, QueryHandlerMetadata metadata, Action<IQueryPipelineBuilder>? configurePipeline)
+        public QueryHandlerProxy(IServiceProvider serviceProvider, IQueryTransportClient transportClient, Action<IQueryPipelineBuilder>? configurePipeline)
         {
             this.serviceProvider = serviceProvider;
-            this.metadata = metadata;
+            this.transportClient = transportClient;
             this.configurePipeline = configurePipeline;
         }
 
@@ -27,7 +26,7 @@ namespace Conqueror.CQS.QueryHandling
 
             var pipeline = pipelineBuilder.Build();
 
-            return pipeline.Execute<TQuery, TResponse>(serviceProvider, metadata, query, cancellationToken);
+            return pipeline.Execute<TQuery, TResponse>(serviceProvider, query, transportClient, cancellationToken);
         }
     }
 }
