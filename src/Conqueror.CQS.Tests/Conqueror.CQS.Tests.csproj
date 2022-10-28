@@ -3,8 +3,16 @@
     <Import Project="../.targets/test.targets" />
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.NUnit" Version="1.1.1" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.NUnit" Version="1.1.1" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.NUnit" Version="1.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.CQS\Conqueror.CQS.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS.Analyzers\Conqueror.CQS.Analyzers.csproj" />
     </ItemGroup>
 
 </Project>
