@@ -118,19 +118,19 @@
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
     <data name="Analyzer0001Description" xml:space="preserve">
-        <value>Type names should be all uppercase.</value>
+        <value>Command handler types with pipeline configuration interface should implement pipeline configuration method.</value>
         <comment>An optional longer localizable description of the diagnostic.</comment>
-      </data>
+    </data>
     <data name="Analyzer0001MessageFormat" xml:space="preserve">
-        <value>Type name '{0}' contains lowercase letters</value>
+        <value>Command handler type '{0}' with pipeline configuration interface does not implement pipeline configuration method</value>
         <comment>The format-able message the diagnostic displays.</comment>
-      </data>
+    </data>
     <data name="Analyzer0001Title" xml:space="preserve">
-        <value>Type name contains lowercase letters</value>
+        <value>Command handler type with pipeline configuration interface does not implement pipeline configuration method</value>
         <comment>The title of the diagnostic.</comment>
-      </data>
+    </data>
     <data name="Analyzer0001CodeFixTitle" xml:space="preserve">
-        <value>Make uppercase</value>
+        <value>Add command pipeline configuration method</value>
         <comment>The title of the code fix.</comment>
     </data>
 </root>

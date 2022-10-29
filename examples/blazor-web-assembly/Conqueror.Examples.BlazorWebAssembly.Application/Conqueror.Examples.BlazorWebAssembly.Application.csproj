@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="Conqueror.CQS" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+        <PackageReference Include="Conqueror.CQS.Analyzers" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
         <PackageReference Include="Conqueror.Eventing" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
     </ItemGroup>
@@ -19,6 +20,12 @@
         <ProjectReference Include="../../../src/Conqueror.Eventing/Conqueror.Eventing.csproj" Condition="$(ShouldReferenceProject)" />
         <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.Contracts/Conqueror.Examples.BlazorWebAssembly.Contracts.csproj" />
         <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares/Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares.csproj" />
+
+        <ProjectReference Include="../../../src/Conqueror.CQS.Analyzers/Conqueror.CQS.Analyzers.csproj"
+                          Condition="$(ShouldReferenceProject)"
+                          PrivateAssets="all"
+                          ReferenceOutputAssembly="false"
+                          OutputItemType="Analyzer" />
     </ItemGroup>
 
 </Project>

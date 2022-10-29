@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Testing.Verifiers;
 namespace Conqueror.CQS.Tests.Analyzers.Verifiers
 {
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "this is based on analyzer template")]
-    public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
+    public static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
         where TAnalyzer : DiagnosticAnalyzer, new()
         where TCodeFix : CodeFixProvider, new()
     {
@@ -24,18 +24,6 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
         public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor)
             => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, NUnitVerifier>.Diagnostic(descriptor);
 
-        /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyAnalyzerAsync(string, DiagnosticResult[])" />
-        public static async Task VerifyAnalyzerAsync(string source, params DiagnosticResult[] expected)
-        {
-            var test = new Test
-            {
-                TestCode = source,
-            };
-
-            test.ExpectedDiagnostics.AddRange(expected);
-            await test.RunAsync(CancellationToken.None);
-        }
-
         /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, string)" />
         public static async Task VerifyCodeFixAsync(string source, string fixedSource)
             => await VerifyCodeFixAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource);
@@ -49,12 +37,42 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
         {
             var test = new Test
             {
+                TestState =
+                {
+                    AdditionalReferences =
+                    {
+                        MetadataReference.CreateFromFile(typeof(ICommandHandler).Assembly.Location),
+                    },
+                },
                 TestCode = source,
                 FixedCode = fixedSource,
+#if NET7_0
+                ReferenceAssemblies = CSharpVerifierHelper.Net70ReferenceAssemblies,
+#else      
+                ReferenceAssemblies = ReferenceAssemblies.Net.Net60,
+#endif
             };
 
             test.ExpectedDiagnostics.AddRange(expected);
             await test.RunAsync(CancellationToken.None);
+        }
+        
+        private sealed class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, NUnitVerifier>
+        {
+            public Test()
+            {
+                SolutionTransforms.Add((solution, projectId) =>
+                {
+                    var project = solution.GetProject(projectId)!;
+                    
+                    // TODO: set language version and preprocessor symbols correctly for .NET 7 once library supports it
+
+                    var compilationOptions = project.CompilationOptions!.WithSpecificDiagnosticOptions(
+                        project.CompilationOptions!.SpecificDiagnosticOptions.SetItems(CSharpVerifierHelper.NullableWarnings));
+
+                    return solution.WithProjectCompilationOptions(projectId, compilationOptions);
+                });
+            }
         }
     }
 }
