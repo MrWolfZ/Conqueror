@@ -49,6 +49,8 @@ namespace Conqueror.CQS.Analyzers
                 return document.Project.Solution;
             }
 
+            var notImplementedExceptionType = SyntaxFactory.ParseTypeName("System.NotImplementedException");
+
             var methodDeclaration = SyntaxFactory.MethodDeclaration(default,
                                                                     SyntaxTokenList.Create(SyntaxFactory.Token(SyntaxKind.PublicKeyword)).Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword)),
                                                                     SyntaxFactory.ParseTypeName("void"),
@@ -64,16 +66,34 @@ namespace Conqueror.CQS.Analyzers
                                                                                                 null),
                                                                     })),
                                                                     default,
-                                                                    SyntaxFactory.Block(),
-                                                                    null)
+                                                                    null,
+                                                                    SyntaxFactory.ArrowExpressionClause(
+                                                                        SyntaxFactory.ThrowExpression(SyntaxFactory.ObjectCreationExpression(notImplementedExceptionType)
+                                                                                                                   .WithArgumentList(SyntaxFactory.ArgumentList()))))
+                                                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
                                                  .NormalizeWhitespace()
-                                                 .WithAdditionalAnnotations(Formatter.Annotation)
-                                                 .WithLeadingTrivia(SyntaxFactory.LineFeed);
+                                                 .WithAdditionalAnnotations(Formatter.Annotation);
+
+            var newLineText = document.Project.Solution.Workspace.Options.GetOption(FormattingOptions.NewLine, LanguageNames.CSharp);
+
+            var indexOfFirstMethod = typeDecl.Members.Select((m, i) => new { Member = m, Index = i }).FirstOrDefault(a => a.Member is MethodDeclarationSyntax)?.Index ?? typeDecl.Members.Count;
+
+            if (indexOfFirstMethod > 0)
+            {
+                methodDeclaration = methodDeclaration.WithLeadingTrivia(SyntaxFactory.EndOfLine(newLineText));
+            }
+
+            if (indexOfFirstMethod < typeDecl.Members.Count)
+            {
+                methodDeclaration = methodDeclaration.WithTrailingTrivia(SyntaxFactory.EndOfLine(newLineText));
+            }
+
+            var newMembers = typeDecl.Members.Insert(indexOfFirstMethod, methodDeclaration);
 
             return document.WithSyntaxRoot(
                 root.ReplaceNode(
                     typeDecl,
-                    typeDecl.WithMembers(typeDecl.Members.Add(methodDeclaration)))).Project.Solution;
+                    typeDecl.WithMembers(newMembers))).Project.Solution;
         }
     }
 }

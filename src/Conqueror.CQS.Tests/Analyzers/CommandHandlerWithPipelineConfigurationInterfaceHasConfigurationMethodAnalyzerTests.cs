@@ -142,6 +142,12 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestCommandResponse;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
                     {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
                         {
                             await Task.Yield();
@@ -162,14 +168,18 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestCommandResponse;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
                     {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
+                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
                         {
                             await Task.Yield();
                             return new();
-                        }
-
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
                         }
                     }
                 }
@@ -195,6 +205,12 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestCommand;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>, IConfigureCommandPipeline
                     {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
                         {
                             await Task.Yield();
@@ -213,13 +229,17 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestCommand;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>, IConfigureCommandPipeline
                     {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
+                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
                         {
                             await Task.Yield();
-                        }
-
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
                         }
                     }
                 }
@@ -247,6 +267,12 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
                     {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
                         {
                             await Task.Yield();
@@ -268,14 +294,18 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
                     {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
+                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
                         {
                             await Task.Yield();
                             return new();
-                        }
-
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
                         }
                     }
                 }
@@ -302,6 +332,12 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
                     {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
                         {
                             await Task.Yield();
@@ -321,14 +357,111 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
                     {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
+                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
                         {
                             await Task.Yield();
                         }
+                    }
+                }
+            ".Dedent();
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                        }
+            var expected = CodeFixVerifier.Diagnostic(CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+                                          .WithLocation(0)
+                                          .WithArguments("TestCommandHandler");
+            
+            await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
+        }
+
+        [Test]
+        public async Task GivenCommandHandlerWithInterfaceWithoutAnyMembers_CodeFixIsAppliedCorrectly()
+        {
+            var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public sealed record TestCommandResponse;
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    {
+                    }
+                }
+            ".Dedent();
+
+            var fixedSource = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public sealed record TestCommandResponse;
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    {
+                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                    }
+                }
+            ".Dedent();
+
+            var expected = CodeFixVerifier.Diagnostic(CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+                                          .WithLocation(0)
+                                          .WithArguments("TestCommandHandler");
+            
+            await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
+        }
+
+        [Test]
+        public async Task GivenCommandHandlerWithInterfaceWithoutAnyMethods_CodeFixIsAppliedCorrectly()
+        {
+            var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public sealed record TestCommandResponse;
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+                    }
+                }
+            ".Dedent();
+
+            var fixedSource = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public sealed record TestCommandResponse;
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    {
+                        private string field = string.Empty;
+
+                        public TestCommandHandler() {}
+
+                        public string Property { get; set; }
+
+                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
                     }
                 }
             ".Dedent();

@@ -44,6 +44,7 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
                         MetadataReference.CreateFromFile(typeof(ICommandHandler).Assembly.Location),
                     },
                 },
+                CompilerDiagnostics = CompilerDiagnostics.None,
                 TestCode = source,
                 FixedCode = fixedSource,
 #if NET7_0
