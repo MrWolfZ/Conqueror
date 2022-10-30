@@ -1,14 +1,14 @@
 ﻿using Conqueror.CQS.Analyzers;
 using Conqueror.CQS.Tests.Analyzers.Verifiers;
 using AnalyzerVerifier = Conqueror.CQS.Tests.Analyzers.Verifiers.CSharpAnalyzerVerifier<
-    Conqueror.CQS.Analyzers.QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer>;
+    Conqueror.CQS.Analyzers.C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer>;
 using CodeFixVerifier = Conqueror.CQS.Tests.Analyzers.Verifiers.CSharpCodeFixVerifier<
-    Conqueror.CQS.Analyzers.QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer,
-    Conqueror.CQS.Analyzers.QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerCodeFixProvider>;
+    Conqueror.CQS.Analyzers.C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer,
+    Conqueror.CQS.Analyzers.C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerCodeFixProvider>;
 
 namespace Conqueror.CQS.Tests.Analyzers
 {
-    public sealed class QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerTests
+    public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerTests
     {
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
@@ -33,7 +33,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = AnalyzerVerifier.Diagnostic(QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+            var expected = AnalyzerVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                            .WithLocation(0)
                                            .WithArguments("TestQueryHandler");
             
@@ -64,7 +64,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = AnalyzerVerifier.Diagnostic(QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+            var expected = AnalyzerVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                            .WithLocation(0)
                                            .WithArguments("TestQueryHandler");
             
@@ -128,7 +128,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = CodeFixVerifier.Diagnostic(QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+            var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestQueryHandler");
             
@@ -194,7 +194,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = CodeFixVerifier.Diagnostic(QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+            var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestQueryHandler");
             
@@ -235,7 +235,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = CodeFixVerifier.Diagnostic(QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+            var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestQueryHandler");
             
@@ -287,7 +287,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = CodeFixVerifier.Diagnostic(QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+            var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestQueryHandler");
             

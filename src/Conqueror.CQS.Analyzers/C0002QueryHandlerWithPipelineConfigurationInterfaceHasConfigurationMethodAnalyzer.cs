@@ -8,15 +8,15 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace Conqueror.CQS.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer : DiagnosticAnalyzer
+    public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "ConquerorCQS0001";
+        public const string DiagnosticId = "ConquerorCQS0002";
 
         private const string Category = "Design";
 
-        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.Analyzer0001Title), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.Analyzer0001MessageFormat), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.Analyzer0001Description), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.Analyzer0002Title), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.Analyzer0002MessageFormat), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.Analyzer0002Description), Resources.ResourceManager, typeof(Resources));
         private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, true, Description);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
@@ -34,7 +34,7 @@ namespace Conqueror.CQS.Analyzers
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
             var declaredSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-            if (!IsCommandHandlerType(context, declaredSymbol) || !HasConfigurePipelineInterface(context, declaredSymbol))
+            if (!IsQueryHandlerType(context, declaredSymbol) || !HasConfigurePipelineInterface(context, declaredSymbol))
             {
                 return;
             }
@@ -54,29 +54,28 @@ namespace Conqueror.CQS.Analyzers
             context.ReportDiagnostic(diagnostic);
         }
 
-        private static bool IsCommandHandlerType(SyntaxNodeAnalysisContext context, INamedTypeSymbol classDeclarationSymbol)
+        private static bool IsQueryHandlerType(SyntaxNodeAnalysisContext context, INamedTypeSymbol classDeclarationSymbol)
         {
-            return classDeclarationSymbol?.Interfaces.Any(i => IsCommandHandlerInterfaceType(context, i)) ?? false;
+            return classDeclarationSymbol?.Interfaces.Any(i => IsQueryHandlerInterfaceType(context, i)) ?? false;
         }
 
-        private static bool IsCommandHandlerInterfaceType(SyntaxNodeAnalysisContext context, INamedTypeSymbol interfaceTypeSymbol)
+        private static bool IsQueryHandlerInterfaceType(SyntaxNodeAnalysisContext context, INamedTypeSymbol interfaceTypeSymbol)
         {
-            var commandHandlerWithoutResponseInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.ICommandHandler`1");
-            var commandHandlerInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.ICommandHandler`2");
+            var queryHandlerInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IQueryHandler`2");
 
-            if (commandHandlerInterfaceType == null || commandHandlerWithoutResponseInterfaceType == null)
+            if (queryHandlerInterfaceType == null)
             {
                 return false;
             }
             
-            if (AreEquivalent(interfaceTypeSymbol, commandHandlerInterfaceType) || AreEquivalent(interfaceTypeSymbol, commandHandlerWithoutResponseInterfaceType))
+            if (AreEquivalent(interfaceTypeSymbol, queryHandlerInterfaceType))
             {
                 return true;
             }
             
             var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(interfaceTypeSymbol.ToString());
 
-            return IsCommandHandlerType(context, declaredTypeSymbol);
+            return IsQueryHandlerType(context, declaredTypeSymbol);
         }
 
         private static bool HasConfigurePipelineInterface(SyntaxNodeAnalysisContext context, INamedTypeSymbol classDeclarationSymbol)
@@ -86,7 +85,7 @@ namespace Conqueror.CQS.Analyzers
 
         private static bool IsConfigurePipelineInterfaceType(SyntaxNodeAnalysisContext context, INamedTypeSymbol interfaceTypeSymbol)
         {
-            var interfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IConfigureCommandPipeline");
+            var interfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IConfigureQueryPipeline");
 
             if (interfaceType == null)
             {
@@ -100,7 +99,7 @@ namespace Conqueror.CQS.Analyzers
             
             var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(interfaceTypeSymbol.ToString());
 
-            return IsCommandHandlerType(context, declaredTypeSymbol);
+            return IsQueryHandlerType(context, declaredTypeSymbol);
         }
 
         private static bool AreEquivalent(INamedTypeSymbol symbol1, INamedTypeSymbol symbol2)

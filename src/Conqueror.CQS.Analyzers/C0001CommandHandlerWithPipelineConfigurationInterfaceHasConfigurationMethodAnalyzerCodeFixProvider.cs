@@ -13,11 +13,11 @@ using Microsoft.CodeAnalysis.Formatting;
 
 namespace Conqueror.CQS.Analyzers
 {
-    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerCodeFixProvider))]
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerCodeFixProvider))]
     [Shared]
-    public sealed class QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerCodeFixProvider : CodeFixProvider
+    public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerCodeFixProvider : CodeFixProvider
     {
-        public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId);
+        public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId);
 
         public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
@@ -34,9 +34,9 @@ namespace Conqueror.CQS.Analyzers
             // Register a code action that will invoke the fix.
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    Resources.Analyzer0002CodeFixTitle,
+                    Resources.Analyzer0001CodeFixTitle,
                     c => ImplementConfigurationMethod(context.Document, declaration, c),
-                    nameof(Resources.Analyzer0002CodeFixTitle)),
+                    nameof(Resources.Analyzer0001CodeFixTitle)),
                 diagnostic);
         }
 
@@ -61,7 +61,7 @@ namespace Conqueror.CQS.Analyzers
                                                                     {
                                                                         SyntaxFactory.Parameter(default,
                                                                                                 default,
-                                                                                                SyntaxFactory.ParseTypeName("IQueryPipelineBuilder"),
+                                                                                                SyntaxFactory.ParseTypeName("ICommandPipelineBuilder"),
                                                                                                 SyntaxFactory.Identifier("pipeline"),
                                                                                                 null),
                                                                     })),
