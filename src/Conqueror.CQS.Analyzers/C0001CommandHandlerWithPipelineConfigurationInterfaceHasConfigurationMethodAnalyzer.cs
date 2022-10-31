@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Linq;
+using Conqueror.CQS.Analyzers.Util;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -32,9 +33,9 @@ namespace Conqueror.CQS.Analyzers
         private static void CheckClassForInterfaces(SyntaxNodeAnalysisContext context)
         {
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
-            var declaredSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
+            var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-            if (!IsCommandHandlerType(context, declaredSymbol) || !HasConfigurePipelineInterface(context, declaredSymbol))
+            if (!symbol.IsCommandHandlerType(context) || !symbol.HasConfigureCommandPipelineInterface(context))
             {
                 return;
             }
@@ -42,70 +43,16 @@ namespace Conqueror.CQS.Analyzers
             var hasConfigurePipelineMethod = classDeclarationSyntax.Members
                                                                    .OfType<MethodDeclarationSyntax>()
                                                                    .Select(s => context.SemanticModel.GetDeclaredSymbol(s))
-                                                                   .Any(s => s?.Name == "ConfigurePipeline");
+                                                                   .Any(s => s?.Name == Constants.ConfigurePipelineMethodName);
 
             if (hasConfigurePipelineMethod)
             {
                 return;
             }
 
-            var diagnostic = Diagnostic.Create(Rule, declaredSymbol?.Locations[0], declaredSymbol?.Name);
+            var diagnostic = Diagnostic.Create(Rule, symbol?.Locations[0], symbol?.Name);
 
             context.ReportDiagnostic(diagnostic);
-        }
-
-        private static bool IsCommandHandlerType(SyntaxNodeAnalysisContext context, INamedTypeSymbol classDeclarationSymbol)
-        {
-            return classDeclarationSymbol?.Interfaces.Any(i => IsCommandHandlerInterfaceType(context, i)) ?? false;
-        }
-
-        private static bool IsCommandHandlerInterfaceType(SyntaxNodeAnalysisContext context, INamedTypeSymbol interfaceTypeSymbol)
-        {
-            var commandHandlerWithoutResponseInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.ICommandHandler`1");
-            var commandHandlerInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.ICommandHandler`2");
-
-            if (commandHandlerInterfaceType == null || commandHandlerWithoutResponseInterfaceType == null)
-            {
-                return false;
-            }
-            
-            if (AreEquivalent(interfaceTypeSymbol, commandHandlerInterfaceType) || AreEquivalent(interfaceTypeSymbol, commandHandlerWithoutResponseInterfaceType))
-            {
-                return true;
-            }
-            
-            var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(interfaceTypeSymbol.ToString());
-
-            return IsCommandHandlerType(context, declaredTypeSymbol);
-        }
-
-        private static bool HasConfigurePipelineInterface(SyntaxNodeAnalysisContext context, INamedTypeSymbol classDeclarationSymbol)
-        {
-            return classDeclarationSymbol?.Interfaces.Any(i => IsConfigurePipelineInterfaceType(context, i)) ?? false;
-        }
-
-        private static bool IsConfigurePipelineInterfaceType(SyntaxNodeAnalysisContext context, INamedTypeSymbol interfaceTypeSymbol)
-        {
-            var interfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IConfigureCommandPipeline");
-
-            if (interfaceType == null)
-            {
-                return false;
-            }
-            
-            if (AreEquivalent(interfaceTypeSymbol, interfaceType))
-            {
-                return true;
-            }
-            
-            var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(interfaceTypeSymbol.ToString());
-
-            return IsCommandHandlerType(context, declaredTypeSymbol);
-        }
-
-        private static bool AreEquivalent(INamedTypeSymbol symbol1, INamedTypeSymbol symbol2)
-        {
-            return symbol1.MetadataName == symbol2.MetadataName && symbol1.ContainingAssembly.Name == symbol2.ContainingAssembly.Name;
         }
     }
 }

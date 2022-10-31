@@ -4,6 +4,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.CQS.Analyzers.Util;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -49,19 +50,21 @@ namespace Conqueror.CQS.Analyzers
                 return document.Project.Solution;
             }
 
-            var existingBuilderParameter = methodDecl.ParameterList.Parameters.FirstOrDefault(p => p.Type is IdentifierNameSyntax n && n.Identifier.Text == "ICommandPipelineBuilder");
+            var existingBuilderParameter = methodDecl.ParameterList
+                                                     .Parameters
+                                                     .FirstOrDefault(p => p.Type is IdentifierNameSyntax n && n.Identifier.Text == Constants.CommandPipelineBuilderInterfaceName);
 
             var newMethodDeclaration = SyntaxFactory.MethodDeclaration(default,
                                                                        SyntaxTokenList.Create(SyntaxFactory.Token(SyntaxKind.PublicKeyword)).Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword)),
                                                                        SyntaxFactory.ParseTypeName("void"),
                                                                        null,
-                                                                       SyntaxFactory.Identifier("ConfigurePipeline"),
+                                                                       SyntaxFactory.Identifier(Constants.ConfigurePipelineMethodName),
                                                                        null,
                                                                        SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(new List<ParameterSyntax>
                                                                        {
                                                                            SyntaxFactory.Parameter(default,
                                                                                                    default,
-                                                                                                   SyntaxFactory.ParseTypeName("ICommandPipelineBuilder"),
+                                                                                                   SyntaxFactory.ParseTypeName(Constants.CommandPipelineBuilderInterfaceName),
                                                                                                    existingBuilderParameter?.Identifier ?? SyntaxFactory.Identifier("pipeline"),
                                                                                                    null),
                                                                        })),

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Linq;
+using Conqueror.CQS.Analyzers.Util;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -35,7 +36,12 @@ namespace Conqueror.CQS.Analyzers
 
             var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclarationSyntax);
 
-            if (methodSymbol == null || methodSymbol.Name != "ConfigurePipeline")
+            if (methodSymbol == null || methodSymbol.Name != Constants.ConfigurePipelineMethodName)
+            {
+                return;
+            }
+
+            if (IsValidPipelineConfigurationMethod(methodSymbol))
             {
                 return;
             }
@@ -44,23 +50,17 @@ namespace Conqueror.CQS.Analyzers
             {
                 var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-                if (!IsQueryHandlerType(context, classSymbol) || !HasConfigurePipelineInterface(context, classSymbol))
+                // if the containing class is not a query handler, we ignore the method
+                if (!classSymbol.IsQueryHandlerType(context) || !classSymbol.HasConfigureQueryPipelineInterface(context))
                 {
                     return;
                 }
 
-                if (classDeclarationSyntax.Members.OfType<MethodDeclarationSyntax>().Select(m => context.SemanticModel.GetDeclaredSymbol(m)).Any(
-                        m => m != null && m.ReturnsVoid && m.IsStatic && m.TypeParameters.IsEmpty && m.Parameters.Length == 1 && m.Parameters[0].Type.MetadataName == "IQueryPipelineBuilder" &&
-                             m.Parameters[0].Type.ContainingAssembly.Name == "Conqueror.CQS.Abstractions"))
+                // if the containing class has a valid configuration method, we ignore any invalid configuration methods, since they could be overloads etc.
+                if (classDeclarationSyntax.Members.OfType<MethodDeclarationSyntax>().Select(m => context.SemanticModel.GetDeclaredSymbol(m)).Any(IsValidPipelineConfigurationMethod))
                 {
                     return;
                 }
-            }
-
-            if (methodSymbol.ReturnsVoid && methodSymbol.IsStatic && methodSymbol.TypeParameters.IsEmpty && methodSymbol.Parameters.Length == 1 &&
-                methodSymbol.Parameters[0].Type.MetadataName == "IQueryPipelineBuilder" && methodSymbol.Parameters[0].Type.ContainingAssembly.Name == "Conqueror.CQS.Abstractions")
-            {
-                return;
             }
 
             var diagnostic = Diagnostic.Create(Rule, methodSymbol.Locations[0], methodSymbol.Name);
@@ -68,57 +68,15 @@ namespace Conqueror.CQS.Analyzers
             context.ReportDiagnostic(diagnostic);
         }
 
-        private static bool IsQueryHandlerType(SyntaxNodeAnalysisContext context, INamedTypeSymbol classDeclarationSymbol)
+        private static bool IsValidPipelineConfigurationMethod(IMethodSymbol symbol)
         {
-            return classDeclarationSymbol?.Interfaces.Any(i => IsQueryHandlerInterfaceType(context, i)) ?? false;
-        }
-
-        private static bool IsQueryHandlerInterfaceType(SyntaxNodeAnalysisContext context, INamedTypeSymbol interfaceTypeSymbol)
-        {
-            var queryHandlerInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IQueryHandler`2");
-
-            if (queryHandlerInterfaceType == null)
-            {
-                return false;
-            }
-
-            if (AreEquivalent(interfaceTypeSymbol, queryHandlerInterfaceType))
-            {
-                return true;
-            }
-
-            var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(interfaceTypeSymbol.ToString());
-
-            return IsQueryHandlerType(context, declaredTypeSymbol);
-        }
-
-        private static bool HasConfigurePipelineInterface(SyntaxNodeAnalysisContext context, INamedTypeSymbol classDeclarationSymbol)
-        {
-            return classDeclarationSymbol?.Interfaces.Any(i => IsConfigurePipelineInterfaceType(context, i)) ?? false;
-        }
-
-        private static bool IsConfigurePipelineInterfaceType(SyntaxNodeAnalysisContext context, INamedTypeSymbol interfaceTypeSymbol)
-        {
-            var interfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IConfigureQueryPipeline");
-
-            if (interfaceType == null)
-            {
-                return false;
-            }
-
-            if (AreEquivalent(interfaceTypeSymbol, interfaceType))
-            {
-                return true;
-            }
-
-            var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(interfaceTypeSymbol.ToString());
-
-            return IsQueryHandlerType(context, declaredTypeSymbol);
-        }
-
-        private static bool AreEquivalent(ISymbol symbol1, ISymbol symbol2)
-        {
-            return symbol1.MetadataName == symbol2.MetadataName && symbol1.ContainingAssembly.Name == symbol2.ContainingAssembly.Name;
+            return symbol != null &&
+                   symbol.ReturnsVoid &&
+                   symbol.IsStatic &&
+                   symbol.TypeParameters.IsEmpty &&
+                   symbol.Parameters.Length == 1 &&
+                   symbol.Parameters[0].Type.MetadataName == Constants.QueryPipelineBuilderInterfaceName &&
+                   symbol.Parameters[0].Type.ContainingAssembly.Name == Constants.AbstractionsAssemblyName;
         }
     }
 }
