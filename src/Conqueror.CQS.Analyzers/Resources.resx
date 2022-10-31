@@ -165,4 +165,20 @@
         <value>Fix command pipeline configuration method signature</value>
         <comment>The title of the code fix.</comment>
     </data>
+    <data name="Analyzer0004Title" xml:space="preserve">
+        <value>Query handler pipeline configuration method has wrong signature</value>
+        <comment>The title of the diagnostic.</comment>
+    </data>
+    <data name="Analyzer0004Description" xml:space="preserve">
+        <value>Query handler pipeline configuration method must be static, return void, and take a single parameter of type 'IQueryPipelineBuilder'.</value>
+        <comment>An optional longer localizable description of the diagnostic.</comment>
+    </data>
+    <data name="Analyzer0004MessageFormat" xml:space="preserve">
+        <value>Query handler pipeline configuration method has wrong signature, it must be static, return void, and take a single parameter of type 'IQueryPipelineBuilder'</value>
+        <comment>The format-able message the diagnostic displays.</comment>
+    </data>
+    <data name="Analyzer0004CodeFixTitle" xml:space="preserve">
+        <value>Fix query pipeline configuration method signature</value>
+        <comment>The title of the code fix.</comment>
+    </data>
 </root>
