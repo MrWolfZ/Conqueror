@@ -181,4 +181,20 @@
         <value>Fix query pipeline configuration method signature</value>
         <comment>The title of the code fix.</comment>
     </data>
+    <data name="Analyzer0005Title" xml:space="preserve">
+        <value>Command handler type must implement command pipeline configuration interface</value>
+        <comment>The title of the diagnostic.</comment>
+    </data>
+    <data name="Analyzer0005Description" xml:space="preserve">
+        <value>Command handler type must implement command pipeline configuration interface 'IConfigureCommandPipeline'.</value>
+        <comment>An optional longer localizable description of the diagnostic.</comment>
+    </data>
+    <data name="Analyzer0005MessageFormat" xml:space="preserve">
+        <value>Command handler type '{0}' must implement command pipeline configuration interface 'IConfigureCommandPipeline'</value>
+        <comment>The format-able message the diagnostic displays.</comment>
+    </data>
+    <data name="Analyzer0005CodeFixTitle" xml:space="preserve">
+        <value>Implement command pipeline configuration interface</value>
+        <comment>The title of the code fix.</comment>
+    </data>
 </root>
