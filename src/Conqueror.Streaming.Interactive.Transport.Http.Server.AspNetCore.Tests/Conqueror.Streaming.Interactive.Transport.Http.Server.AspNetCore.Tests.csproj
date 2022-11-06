@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/test.targets" />
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(MvcTestingVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Transport.Http.Common\Conqueror.Streaming.Interactive.Transport.Http.Common.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore\Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive\Conqueror.Streaming.Interactive.csproj" />
+    </ItemGroup>
+
+</Project>

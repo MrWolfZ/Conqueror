@@ -95,17 +95,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Common", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Common", "src\Conqueror.Streaming.Interactive.Common\Conqueror.Streaming.Interactive.Common.csproj", "{7D14CDEA-51D7-4E75-9730-8677F3C69ED0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Extensions.AspNetCore.Abstractions", "src\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Abstractions\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Abstractions.csproj", "{958215FB-029D-4887-B9C6-757D02FC1EAC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Transport.Http.Abstractions", "src\Conqueror.Streaming.Interactive.Transport.Http.Abstractions\Conqueror.Streaming.Interactive.Transport.Http.Abstractions.csproj", "{958215FB-029D-4887-B9C6-757D02FC1EAC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common", "src\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common.csproj", "{A422B8D1-8E91-4629-9BA9-E4DD2CF3F1E4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Transport.Http.Common", "src\Conqueror.Streaming.Interactive.Transport.Http.Common\Conqueror.Streaming.Interactive.Transport.Http.Common.csproj", "{A422B8D1-8E91-4629-9BA9-E4DD2CF3F1E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client", "src\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.csproj", "{27B4BCCB-F390-41C3-B308-E6783D18049F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Transport.Http.Client", "src\Conqueror.Streaming.Interactive.Transport.Http.Client\Conqueror.Streaming.Interactive.Transport.Http.Client.csproj", "{27B4BCCB-F390-41C3-B308-E6783D18049F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server", "src\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.csproj", "{2A5AAAFE-7D34-441F-980B-2EABC305E326}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore", "src\Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore\Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.csproj", "{2A5AAAFE-7D34-441F-980B-2EABC305E326}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests", "src\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client.Tests.csproj", "{63A5F902-1BBB-4C40-A88C-787375D1042B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Transport.Http.Client.Tests", "src\Conqueror.Streaming.Interactive.Transport.Http.Client.Tests\Conqueror.Streaming.Interactive.Transport.Http.Client.Tests.csproj", "{63A5F902-1BBB-4C40-A88C-787375D1042B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests", "src\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server.Tests.csproj", "{C2DF1455-7EAE-42F9-B228-78765270DEE9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests", "src\Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests\Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests.csproj", "{C2DF1455-7EAE-42F9-B228-78765270DEE9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares\Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares.csproj", "{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}"
 EndProject

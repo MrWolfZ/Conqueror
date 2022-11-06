@@ -34,10 +34,10 @@ dotnet pack %srcDir%\Conqueror.Eventing.Abstractions -c Release -o %publishDir% 
 dotnet pack %srcDir%\Conqueror.Streaming.Interactive -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Common -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Abstractions -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Common -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Client -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Extensions.AspNetCore.Server -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Transport.Http.Common -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Transport.Http.Client -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Reactive -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Reactive.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Abstractions -c Release -o %publishDir% --include-symbols
