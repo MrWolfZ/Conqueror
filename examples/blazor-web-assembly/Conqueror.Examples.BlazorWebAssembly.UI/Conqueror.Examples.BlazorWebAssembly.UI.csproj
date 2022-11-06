@@ -17,7 +17,7 @@
     <ItemGroup>
         <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.Contracts/Conqueror.Examples.BlazorWebAssembly.Contracts.csproj" />
         <ProjectReference Include="../../../src/Conqueror.CQS/Conqueror.CQS.csproj" Condition="$(ShouldReferenceProject)" />
-        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Client/Conqueror.CQS.Extensions.AspNetCore.Client.csproj" Condition="$(ShouldReferenceProject)" />
+        <ProjectReference Include="..\..\..\src\Conqueror.CQS.Transport.Http.Client\Conqueror.CQS.Transport.Http.Client.csproj" Condition="$(ShouldReferenceProject)" />
         <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares/Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares.csproj" />
     </ItemGroup>
 

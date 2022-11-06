@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../../.targets/common.targets"/>
+    <Import Project="../../.targets/common.targets" />
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../../../src/Conqueror.CQS.Extensions.AspNetCore.Abstractions/Conqueror.CQS.Extensions.AspNetCore.Abstractions.csproj" Condition="$(ShouldReferenceProject)" />
+        <ProjectReference Include="..\..\..\src\Conqueror.CQS.Transport.Http.Abstractions\Conqueror.CQS.Transport.Http.Abstractions.csproj" Condition="$(ShouldReferenceProject)" />
         <ProjectReference Include="../../../src/Conqueror.Eventing.Abstractions/Conqueror.Eventing.Abstractions.csproj" Condition="$(ShouldReferenceProject)" />
     </ItemGroup>
 

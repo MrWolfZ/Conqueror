@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Create HTTP clients for servers using the Conqueror command-query-separation (CQS) package.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS\Conqueror.CQS.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS.Common\Conqueror.CQS.Common.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS.Transport.Http.Abstractions\Conqueror.CQS.Transport.Http.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS.Transport.Http.Common\Conqueror.CQS.Transport.Http.Common.csproj" />
+    </ItemGroup>
+
+</Project>

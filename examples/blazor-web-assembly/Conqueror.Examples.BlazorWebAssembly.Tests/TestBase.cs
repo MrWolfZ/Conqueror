@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using Conqueror.CQS.Extensions.AspNetCore.Client;
+using Conqueror.CQS.Transport.Http.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection.Extensions;

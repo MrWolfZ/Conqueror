@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using Conqueror.CQS.Extensions.AspNetCore.Client;
+using Conqueror.CQS.Transport.Http.Client;
 using Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
 
 namespace Conqueror.Examples.BlazorWebAssembly.API.Tests;

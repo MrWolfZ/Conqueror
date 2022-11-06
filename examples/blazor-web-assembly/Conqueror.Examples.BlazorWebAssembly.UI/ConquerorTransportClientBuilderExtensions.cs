@@ -1,4 +1,4 @@
-﻿using Conqueror.CQS.Extensions.AspNetCore.Client;
+﻿using Conqueror.CQS.Transport.Http.Client;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 namespace Conqueror.Examples.BlazorWebAssembly.UI;

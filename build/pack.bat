@@ -25,10 +25,10 @@ dotnet pack %srcDir%\Conqueror.CQS -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Analyzers -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Common -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Abstractions -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Common -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Client -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.CQS.Extensions.AspNetCore.Server -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.CQS.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.CQS.Transport.Http.Common -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.CQS.Transport.Http.Client -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.CQS.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Eventing -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Eventing.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Interactive -c Release -o %publishDir% --include-symbols
