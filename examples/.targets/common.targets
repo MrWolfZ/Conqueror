@@ -4,9 +4,14 @@
 
     <PropertyGroup>
         <ShouldReferencePackage>false</ShouldReferencePackage>
-        <ShouldReferencePackage Condition="'$(SolutionFileName)'!='Conqueror.sln'">true</ShouldReferencePackage>
+        <ShouldReferencePackage Condition="!Exists('$(MSBuildThisFileDirectory)/../../Conqueror.sln')">true</ShouldReferencePackage>
         <ShouldReferenceProject>true</ShouldReferenceProject>
-        <ShouldReferenceProject Condition="'$(SolutionFileName)'!='Conqueror.sln'">false</ShouldReferenceProject>
+        <ShouldReferenceProject Condition="!Exists('$(MSBuildThisFileDirectory)/../../Conqueror.sln')">false</ShouldReferenceProject>
     </PropertyGroup>
+    
+    <Target Name="PostClean" AfterTargets="Clean">
+        <RemoveDir Directories="$(BaseIntermediateOutputPath)" /><!-- obj -->
+        <RemoveDir Directories="$(BaseOutputPath)" /><!-- bin -->
+    </Target>
 
 </Project>
