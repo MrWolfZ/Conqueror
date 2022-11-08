@@ -111,6 +111,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Analyzers", "src\Conqueror.CQS.Analyzers\Conqueror.CQS.Analyzers.csproj", "{F4197CCE-32AA-4D57-A13B-46050A5B1FAF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Domain", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Domain\Conqueror.Examples.BlazorWebAssembly.Domain.csproj", "{1565A63F-25F8-4758-A6B7-6D522125DD33}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -272,6 +274,10 @@ Global
 		{F4197CCE-32AA-4D57-A13B-46050A5B1FAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4197CCE-32AA-4D57-A13B-46050A5B1FAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4197CCE-32AA-4D57-A13B-46050A5B1FAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1565A63F-25F8-4758-A6B7-6D522125DD33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1565A63F-25F8-4758-A6B7-6D522125DD33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1565A63F-25F8-4758-A6B7-6D522125DD33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1565A63F-25F8-4758-A6B7-6D522125DD33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -281,5 +287,6 @@ Global
 		{1F9CB58D-EEEB-44EA-BF3F-7A34E6372C06} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 		{6F100036-6720-477D-9FDA-66E2C45EEEA4} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 		{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
+		{1565A63F-25F8-4758-A6B7-6D522125DD33} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 	EndGlobalSection
 EndGlobal

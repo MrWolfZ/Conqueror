@@ -1,6 +1,6 @@
 ﻿@page "/"
-@inject IGetSharedCounterValueQueryHandler getValueHandler
-@inject IIncrementSharedCounterValueCommandHandler incrementHandler
+@inject IGetSharedCounterValueQueryHandler GetValueHandler
+@inject IIncrementSharedCounterValueCommandHandler IncrementHandler
 
 <PageTitle>Shared Counter</PageTitle>
 
@@ -24,13 +24,13 @@ else
 
     private async Task IncrementCount()
     {
-        var result = await incrementHandler.ExecuteCommand(new() { IncrementBy = 1 }, CancellationToken.None);
+        var result = await IncrementHandler.ExecuteCommand(new() { IncrementBy = 1 }, CancellationToken.None);
         currentCount = result.ValueAfterIncrement;
     }
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await getValueHandler.ExecuteQuery(new(), CancellationToken.None);
+        var result = await GetValueHandler.ExecuteQuery(new(), CancellationToken.None);
         currentCount = result.Value;
     }
 
