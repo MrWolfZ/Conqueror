@@ -3,6 +3,8 @@
     <Import Project="../.targets/lib.targets" />
 
     <PropertyGroup>
+        <!--suppress MsbuildTargetFrameworkTagInspection -->
+        <TargetFrameworks>net6.0</TargetFrameworks>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
