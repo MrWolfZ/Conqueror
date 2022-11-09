@@ -38,6 +38,18 @@ A set of libraries to powercharge your .NET development.
                                                                                   .WithPreprocessorSymbols("NET7_0_OR_GREATER"));
     ```
 
+#### External feedback
+
+- confusing that AddConquerorCQS is duplicate name for adding normal services and HTTP services
+- use source generators to generate partial class to allow custom code while using common infra
+- rename ConfigureConqueror() to make it more clear what it does and that it must be done as the final step (e.g. FinalizeConquerorRegistration)
+- adjust super package description to make it clear that it does not contain any transports
+- add documentation about being able to use pipelines internally for external API calls
+- when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)
+- consider making cancellation token parameter optional (with `= default`)
+- add analyzer that errors (optionally) when a handler is being injected directly instead of an interface
+- add analyzer that errors when `AddConquerorCQS` is being called without registration finalization method being called
+
 #### CQS middleware
 
 - create projects for common middlewares, e.g.
