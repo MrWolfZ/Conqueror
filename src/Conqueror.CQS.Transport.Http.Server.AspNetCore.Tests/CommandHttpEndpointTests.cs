@@ -53,7 +53,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         protected override void ConfigureServices(IServiceCollection services)
         {
-            _ = services.AddMvc().AddConquerorCQS();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
             _ = services.AddTransient<TestCommandHandler>()
                         .AddTransient<TestCommandHandler2>()

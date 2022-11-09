@@ -8,7 +8,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ConquerorCqsMvcBuilderExtensions
     {
-        public static IMvcBuilder AddConquerorCQS(this IMvcBuilder builder)
+        public static IMvcBuilder AddConquerorCQSHttpControllers(this IMvcBuilder builder)
         {
             builder.Services.TryAddSingleton(new CqsAspNetCoreServerServiceCollectionConfigurator());
 

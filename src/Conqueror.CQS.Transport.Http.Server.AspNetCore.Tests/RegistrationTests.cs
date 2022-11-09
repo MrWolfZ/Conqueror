@@ -10,7 +10,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         {
             var services = new ServiceCollection();
 
-            _ = services.AddMvc().AddConquerorCQS();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CqsAspNetCoreServerServiceCollectionConfigurator)));
         }
@@ -20,7 +20,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         {
             var services = new ServiceCollection();
 
-            _ = services.AddMvc().AddConquerorCQS();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
             _ = services.ConfigureConqueror();
 
@@ -35,7 +35,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         {
             var services = new ServiceCollection();
 
-            _ = services.AddMvc().AddConquerorCQS();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
             _ = services.ConfigureConqueror();
             _ = services.ConfigureConqueror();
