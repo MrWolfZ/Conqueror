@@ -123,7 +123,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 

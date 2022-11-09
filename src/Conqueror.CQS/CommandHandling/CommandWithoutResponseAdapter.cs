@@ -14,7 +14,7 @@ internal sealed class CommandWithoutResponseAdapter<TCommand> : ICommandHandler<
         this.wrapped = wrapped;
     }
 
-    public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken)
+    public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
     {
         return wrapped.ExecuteCommand(command, cancellationToken);
     }

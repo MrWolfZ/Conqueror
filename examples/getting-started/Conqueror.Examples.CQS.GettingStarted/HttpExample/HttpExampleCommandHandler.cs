@@ -11,7 +11,7 @@ public interface IHttpExampleQueryHandler : IQueryHandler<HttpExampleQuery, Http
 
 public sealed class HttpExampleQueryHandler : IHttpExampleQueryHandler
 {
-    public async Task<HttpExampleQueryResponse> ExecuteQuery(HttpExampleQuery command, CancellationToken cancellationToken)
+    public async Task<HttpExampleQueryResponse> ExecuteQuery(HttpExampleQuery command, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
         return new(command.Parameter);

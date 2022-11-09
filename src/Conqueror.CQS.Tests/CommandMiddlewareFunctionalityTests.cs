@@ -902,7 +902,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -925,7 +925,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -948,7 +948,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -970,7 +970,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -992,7 +992,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -1016,7 +1016,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -1039,7 +1039,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -1057,7 +1057,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -1074,7 +1074,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -1099,7 +1099,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -1123,7 +1123,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.CommandsFromHandlers.Add(command);
@@ -1139,7 +1139,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);
@@ -1155,7 +1155,7 @@ namespace Conqueror.CQS.Tests
 #if !NET7_0_OR_GREATER
         private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);
@@ -1164,7 +1164,7 @@ namespace Conqueror.CQS.Tests
         
         private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);
@@ -1176,7 +1176,7 @@ namespace Conqueror.CQS.Tests
         
         private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);
@@ -1189,7 +1189,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandlerWithThrowingMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);

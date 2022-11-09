@@ -14,7 +14,7 @@ public sealed class MiddlewaresExampleQueryHandler : IMiddlewaresExampleQueryHan
     public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => 
         pipeline.UseLogging(o => o with { LogQueryPayload = false });
 
-    public async Task<MiddlewaresExampleQueryResponse> ExecuteQuery(MiddlewaresExampleQuery command, CancellationToken cancellationToken)
+    public async Task<MiddlewaresExampleQueryResponse> ExecuteQuery(MiddlewaresExampleQuery command, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
         return new(command.Parameter);

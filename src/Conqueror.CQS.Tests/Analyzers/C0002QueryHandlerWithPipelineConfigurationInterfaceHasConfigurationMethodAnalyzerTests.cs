@@ -24,7 +24,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -55,7 +55,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
                     public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler, IConfigureQueryPipeline
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -91,7 +91,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public string Property { get; set; }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -119,7 +119,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => throw new System.NotImplementedException();
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -156,7 +156,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public string Property { get; set; }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -185,7 +185,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => throw new System.NotImplementedException();
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -308,7 +308,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -339,7 +339,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
                     public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler, IConfigureQueryPipeline
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -369,7 +369,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -401,7 +401,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
                     public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler, IConfigureQueryPipeline
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -432,7 +432,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -458,7 +458,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -489,7 +489,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface IQueryHandler<TQuery, TResponse> {}
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -514,7 +514,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                     public interface IQueryHandler<TQuery> {}
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery>
                     {
-                        public async Task ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }

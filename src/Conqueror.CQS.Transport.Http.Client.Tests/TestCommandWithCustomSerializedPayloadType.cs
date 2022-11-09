@@ -10,7 +10,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
     public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken)
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();

@@ -208,7 +208,7 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();

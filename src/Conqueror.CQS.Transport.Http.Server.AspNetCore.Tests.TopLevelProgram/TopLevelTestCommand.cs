@@ -11,7 +11,7 @@ public interface ITopLevelTestCommandHandler : ICommandHandler<TopLevelTestComma
 
 internal sealed class TopLevelTestCommandHandler : ITopLevelTestCommandHandler
 {
-    public async Task<TopLevelTestCommandResponse> ExecuteCommand(TopLevelTestCommand command, CancellationToken cancellationToken)
+    public async Task<TopLevelTestCommandResponse> ExecuteCommand(TopLevelTestCommand command, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
         return new(command.Payload + 1);

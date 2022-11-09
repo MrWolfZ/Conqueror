@@ -268,7 +268,7 @@ namespace Conqueror.CQS.Tests
         
         private sealed class TestCommandHandler : ITestCommandHandler
         {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         }
 
         private sealed record TestCommandMiddlewareConfiguration;
