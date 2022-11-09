@@ -137,7 +137,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
                         .AddTransient<NonHttpTestStreamingHandler>()
                         .AddSingleton<TestObservations>();
 
-            _ = services.AddConquerorInteractiveStreaming().ConfigureConqueror();
+            _ = services.AddConquerorInteractiveStreaming().FinalizeConquerorRegistrations();
         }
 
         protected override void ConfigureClientServices(IServiceCollection services)

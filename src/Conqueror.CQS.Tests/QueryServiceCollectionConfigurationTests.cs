@@ -10,7 +10,7 @@
                                                   .AddTransient<TestQueryHandler>()
                                                   .AddTransient<TestQueryHandler>();
 
-            Assert.DoesNotThrow(() => services.ConfigureConqueror());
+            Assert.DoesNotThrow(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -20,7 +20,7 @@
                                                   .AddTransient<TestQueryHandler>()
                                                   .AddTransient<DuplicateTestQueryHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -30,7 +30,7 @@
                                                   .AddTransient<TestQueryHandler>()
                                                   .AddTransient<DuplicateTestQueryHandlerWithDifferentResponseType>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -38,7 +38,7 @@
         {
             var provider = new ServiceCollection().AddConquerorCQS()
                                                   .AddTransient(_ => new TestQueryHandler())
-                                                  .ConfigureConqueror()
+                                                  .FinalizeConquerorRegistrations()
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
@@ -50,7 +50,7 @@
             var provider = new ServiceCollection().AddConquerorCQS()
                                                   .AddTransient<TestQueryHandlerWithMiddleware>()
                                                   .AddTransient(_ => new TestQueryMiddleware())
-                                                  .ConfigureConqueror()
+                                                  .FinalizeConquerorRegistrations()
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrowAsync(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new(), CancellationToken.None));

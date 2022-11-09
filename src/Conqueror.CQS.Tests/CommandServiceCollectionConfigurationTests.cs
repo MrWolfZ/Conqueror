@@ -10,7 +10,7 @@
                                                   .AddTransient<TestCommandHandler>()
                                                   .AddTransient<TestCommandHandler>();
 
-            Assert.DoesNotThrow(() => services.ConfigureConqueror());
+            Assert.DoesNotThrow(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -20,7 +20,7 @@
                                                   .AddTransient<TestCommandHandler>()
                                                   .AddTransient<DuplicateTestCommandHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -30,7 +30,7 @@
                                                   .AddTransient<TestCommandHandler>()
                                                   .AddTransient<DuplicateTestCommandHandlerWithDifferentResponseType>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -40,7 +40,7 @@
                                                   .AddTransient<TestCommandWithoutResponseHandler>()
                                                   .AddTransient<DuplicateTestCommandWithoutResponseHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -48,7 +48,7 @@
         {
             var provider = new ServiceCollection().AddConquerorCQS()
                                                   .AddTransient(_ => new TestCommandHandler())
-                                                  .ConfigureConqueror()
+                                                  .FinalizeConquerorRegistrations()
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
@@ -60,7 +60,7 @@
             var provider = new ServiceCollection().AddConquerorCQS()
                                                   .AddTransient<TestCommandHandlerWithMiddleware>()
                                                   .AddTransient(_ => new TestCommandMiddleware())
-                                                  .ConfigureConqueror()
+                                                  .FinalizeConquerorRegistrations()
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrowAsync(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new(), CancellationToken.None));

@@ -10,7 +10,7 @@
                                                   .AddTransient<TestStreamingHandler>()
                                                   .AddTransient<TestStreamingHandler>();
 
-            Assert.DoesNotThrow(() => services.ConfigureConqueror());
+            Assert.DoesNotThrow(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -20,7 +20,7 @@
                                                   .AddTransient<TestStreamingHandler>()
                                                   .AddTransient<DuplicateTestStreamingHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -30,7 +30,7 @@
                                                   .AddTransient<TestStreamingHandler>()
                                                   .AddTransient<DuplicateTestStreamingHandlerWithDifferentItemType>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -38,7 +38,7 @@
         {
             var provider = new ServiceCollection().AddConquerorInteractiveStreaming()
                                                   .AddTransient(_ => new TestStreamingHandler())
-                                                  .ConfigureConqueror()
+                                                  .FinalizeConquerorRegistrations()
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<IInteractiveStreamingHandler<TestRequest, TestItem>>());

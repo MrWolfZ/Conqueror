@@ -85,7 +85,7 @@ public abstract class TestBase
     {
         var services = new ServiceCollection();
         ConfigureClientServices(services);
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
         return provider.GetRequiredService<T>();
     }
 }

@@ -22,7 +22,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
-            _ = services.ConfigureConqueror();
+            _ = services.FinalizeConquerorRegistrations();
 
             var applicationPartManager = services.Select(d => d.ImplementationInstance).OfType<ApplicationPartManager>().Single();
 
@@ -37,8 +37,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
-            _ = services.ConfigureConqueror();
-            _ = services.ConfigureConqueror();
+            _ = services.FinalizeConquerorRegistrations();
+            _ = services.FinalizeConquerorRegistrations();
 
             var applicationPartManager = services.Select(d => d.ImplementationInstance).OfType<ApplicationPartManager>().Single();
 

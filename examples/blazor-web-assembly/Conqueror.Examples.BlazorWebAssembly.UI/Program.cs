@@ -17,6 +17,6 @@ builder.Services
        .AddConquerorQueryClient<IGetSharedCounterValueQueryHandler>(b => b.UseHttpApi(), pipeline => pipeline.UseDefaultHttpPipeline())
        .AddConquerorCommandClient<IIncrementSharedCounterValueCommandHandler>(b => b.UseHttpApi(), pipeline => pipeline.UseDefaultHttpPipeline())
        .AddSingleton(new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-       .ConfigureConqueror();
+       .FinalizeConquerorRegistrations();
 
 await builder.Build().RunAsync();

@@ -12,7 +12,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -33,7 +33,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<GenericTestQueryHandler<string>>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<GenericTestQuery<string>, GenericTestQueryResponse<string>>>();
 
@@ -54,7 +54,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
             using var tokenSource = new CancellationTokenSource();
@@ -74,7 +74,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -93,7 +93,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -114,7 +114,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<ThrowingQueryHandler>()
                         .AddSingleton(exception);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -126,9 +126,9 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenHandlerWithInvalidInterface_RegisteringHandlerThrowsArgumentException()
         {
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddTransient<TestQueryHandlerWithoutValidInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddScoped<TestQueryHandlerWithoutValidInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddSingleton<TestQueryHandlerWithoutValidInterfaces>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddTransient<TestQueryHandlerWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddScoped<TestQueryHandlerWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddSingleton<TestQueryHandlerWithoutValidInterfaces>().FinalizeConquerorRegistrations());
         }
 
         private sealed record TestQuery(int Payload);

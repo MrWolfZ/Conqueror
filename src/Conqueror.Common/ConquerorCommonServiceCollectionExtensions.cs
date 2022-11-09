@@ -6,7 +6,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ConquerorCommonServiceCollectionExtensions
     {
-        public static IServiceCollection ConfigureConqueror(this IServiceCollection services)
+        public static IServiceCollection FinalizeConquerorRegistrations(this IServiceCollection services)
         {
             var configurators = services.Select(d => d.ImplementationInstance)
                                         .OfType<IServiceCollectionConfigurator>()

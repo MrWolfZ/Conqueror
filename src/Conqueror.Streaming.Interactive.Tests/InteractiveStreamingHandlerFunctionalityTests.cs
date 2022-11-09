@@ -14,7 +14,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddTransient<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IInteractiveStreamingHandler<TestRequest, TestItem>>();
 
@@ -35,7 +35,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddTransient<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IInteractiveStreamingHandler<TestRequest, TestItem>>();
             using var tokenSource = new CancellationTokenSource();
@@ -55,7 +55,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddTransient<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IInteractiveStreamingHandler<TestRequest, TestItem>>();
             using var tokenSource = new CancellationTokenSource();
@@ -77,7 +77,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddTransient<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IInteractiveStreamingHandler<TestRequest, TestItem>>();
 
@@ -94,9 +94,9 @@ namespace Conqueror.Streaming.Interactive.Tests
         [Test]
         public void GivenHandlerWithInvalidInterface_RegisteringHandlerThrowsArgumentException()
         {
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorInteractiveStreaming().AddTransient<TestStreamingHandlerWithoutValidInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorInteractiveStreaming().AddScoped<TestStreamingHandlerWithoutValidInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorInteractiveStreaming().AddSingleton<TestStreamingHandlerWithoutValidInterfaces>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorInteractiveStreaming().AddTransient<TestStreamingHandlerWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorInteractiveStreaming().AddScoped<TestStreamingHandlerWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorInteractiveStreaming().AddSingleton<TestStreamingHandlerWithoutValidInterfaces>().FinalizeConquerorRegistrations());
         }
 
         private sealed record TestRequest(int Payload);

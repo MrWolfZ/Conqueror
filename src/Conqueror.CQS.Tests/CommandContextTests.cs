@@ -531,7 +531,7 @@
                                                         p => new OuterTestCommandMiddleware(outerMiddlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
                                                         middlewareLifetime));
 
-            var provider = services.AddConquerorCQS().ConfigureConqueror().BuildServiceProvider();
+            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
 
             _ = provider.GetRequiredService<NestedClass>();
             _ = provider.GetRequiredService<TestCommandHandler>();
@@ -565,7 +565,7 @@
                                                         p => new TestCommandMiddleware(middlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
                                                         middlewareLifetime));
 
-            var provider = services.AddConquerorCQS().ConfigureConqueror().BuildServiceProvider();
+            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
 
             _ = provider.GetRequiredService<NestedClass>();
             _ = provider.GetRequiredService<TestCommandHandlerWithoutResponse>();

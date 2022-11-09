@@ -14,7 +14,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -38,7 +38,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -62,7 +62,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -86,7 +86,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -107,7 +107,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -131,7 +131,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -152,7 +152,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -176,7 +176,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -199,7 +199,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -222,7 +222,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -246,7 +246,7 @@
                         .AddTransient<TestEventPublisherMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -270,7 +270,7 @@
                         .AddTransient<TestEventPublisherMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -295,7 +295,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -320,7 +320,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -345,7 +345,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -370,7 +370,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -396,7 +396,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -426,7 +426,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -458,7 +458,7 @@
                                         .Use<TestEventObserverMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -486,7 +486,7 @@
                                         .Use<TestEventObserverMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -517,7 +517,7 @@
                                         .Without<TestEventObserverMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -548,7 +548,7 @@
                                         .Without<TestEventObserverMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -579,7 +579,7 @@
                                         .Without<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -610,7 +610,7 @@
                                         .Without<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -635,7 +635,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -668,7 +668,7 @@
                         .AddTransient<TestEventObserverMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -701,7 +701,7 @@
                         .AddTransient<TestEventPublisherMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -734,7 +734,7 @@
                         .AddTransient<TestEventPublisherMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -769,7 +769,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -811,7 +811,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -849,7 +849,7 @@
                         .AddTransient<TestEventObserverMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -869,7 +869,7 @@
             _ = services.AddConquerorEventing()
                         .AddTransient<TestEventObserverWithPipelineConfigurationInterfaceWithoutConfigurationMethod>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
         
         [Test]
@@ -880,7 +880,7 @@
             _ = services.AddConquerorEventing()
                         .AddTransient<TestEventObserverWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
         
         [Test]
@@ -891,7 +891,7 @@
             _ = services.AddConquerorEventing()
                         .AddTransient<TestEventObserverWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 #endif
 
@@ -911,7 +911,7 @@
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -939,7 +939,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
             using var tokenSource = new CancellationTokenSource();
@@ -961,7 +961,7 @@
                         .AddTransient<TestEventPublisherMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
             using var tokenSource = new CancellationTokenSource();
@@ -987,7 +987,7 @@
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -1011,7 +1011,7 @@
 
             _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -1043,7 +1043,7 @@
 
             _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -1073,7 +1073,7 @@
 
             _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => pipeline.Use<TestEventObserverMiddleware2>());
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -1096,7 +1096,7 @@
 
             _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => pipeline.Use<TestEventObserverMiddleware2>());
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -1119,7 +1119,7 @@
 
             _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -1142,7 +1142,7 @@
 
             _ = services.ConfigureEventObserverPipeline<TestEventObserverWithoutMiddlewares>(pipeline => pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -1158,9 +1158,9 @@
         {
             var services = new ServiceCollection();
 
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddScoped<TestEventObserverMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddSingleton<TestEventObserverMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddScoped<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddSingleton<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
         }
 
         private sealed record TestEvent

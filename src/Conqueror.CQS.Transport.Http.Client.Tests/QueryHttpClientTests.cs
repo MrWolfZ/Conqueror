@@ -154,7 +154,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddTransient<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
                         .AddTransient<NonHttpTestQueryHandler>();
 
-            _ = services.AddConquerorCQS().ConfigureConqueror();
+            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
 
         protected override void ConfigureClientServices(IServiceCollection services)
@@ -182,7 +182,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             PropertyNameCaseInsensitive = true,
                         }));
 
-            _ = services.ConfigureConqueror();
+            _ = services.FinalizeConquerorRegistrations();
         }
 
         protected override void Configure(IApplicationBuilder app)

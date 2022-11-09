@@ -85,7 +85,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
                         .AddSingleton<TestObservations>();
 
-            _ = services.AddConquerorCQS().ConfigureConqueror();
+            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
 
         protected override void Configure(IApplicationBuilder app)

@@ -89,7 +89,7 @@
         public void GivenRegisteredAndConfiguredHandler_WhenRegisteringPlainClient_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().ConfigureConqueror();
+            _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().FinalizeConquerorRegistrations();
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => new TestQueryTransport()));
         }
@@ -98,7 +98,7 @@
         public void GivenRegisteredAndConfiguredHandler_WhenRegisteringCustomClient_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().ConfigureConqueror();
+            _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().FinalizeConquerorRegistrations();
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<ITestQueryHandler>(_ => new TestQueryTransport()));
         }
@@ -109,7 +109,7 @@
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => new TestQueryTransport());
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -118,7 +118,7 @@
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().AddConquerorQueryClient<ITestQueryHandler>(_ => new TestQueryTransport());
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -134,7 +134,7 @@
         {
             return new ServiceCollection().AddConquerorCQS()
                                           .AddConquerorQueryClient<TQueryHandler>(_ => new TestQueryTransport())
-                                          .ConfigureConqueror()
+                                          .FinalizeConquerorRegistrations()
                                           .BuildServiceProvider();
         }
 

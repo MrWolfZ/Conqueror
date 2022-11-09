@@ -17,7 +17,7 @@ builder.Services.AddTransient(p => p.GetRequiredService<IOptions<JsonOptions>>()
 builder.Services
        .AddConquerorCQS()
        .AddConquerorCQSTypesFromExecutingAssembly()
-       .ConfigureConqueror();
+       .FinalizeConquerorRegistrations();
 
 var app = builder.Build();
 

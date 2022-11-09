@@ -12,7 +12,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ITestCommandHandler>();
 
@@ -33,7 +33,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<GenericTestCommandHandler<string>>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IGenericTestCommandHandler<string>>();
 
@@ -54,7 +54,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ITestCommandHandlerWithoutResponse>();
 
@@ -75,7 +75,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<GenericTestCommandHandlerWithoutResponse<string>>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IGenericTestCommandHandlerWithoutResponse<string>>();
 
@@ -96,7 +96,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ITestCommandHandler>();
             using var tokenSource = new CancellationTokenSource();
@@ -116,7 +116,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ITestCommandHandlerWithoutResponse>();
             using var tokenSource = new CancellationTokenSource();
@@ -136,7 +136,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ITestCommandHandler>();
 
@@ -157,7 +157,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<ThrowingCommandHandler>()
                         .AddSingleton(exception);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IThrowingTestCommandHandler>();
 
@@ -176,7 +176,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
         }
@@ -191,7 +191,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>());
         }
@@ -206,7 +206,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler>());
         }
@@ -221,7 +221,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandlerWithoutResponse>());
         }
@@ -236,7 +236,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var plainInterfaceHandler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
             var customInterfaceHandler = provider.GetRequiredService<ITestCommandHandler>();
@@ -258,7 +258,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var plainInterfaceHandler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
             var customInterfaceHandler = provider.GetRequiredService<ITestCommandHandlerWithoutResponse>();
@@ -280,7 +280,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandlerWithMultipleInterfaces>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
             Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler>());
@@ -296,7 +296,7 @@ namespace Conqueror.CQS.Tests
         {
             var services = new ServiceCollection();
 
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestCommandHandlerWithCustomInterfaceWithExtraMethod>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestCommandHandlerWithCustomInterfaceWithExtraMethod>().FinalizeConquerorRegistrations());
         }
 
 // interface and event types must be public for dynamic type generation to work
