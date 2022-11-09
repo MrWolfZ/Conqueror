@@ -7,7 +7,7 @@
 
     public sealed class NonHttpTestQueryHandler : INonHttpTestQueryHandler
     {
-        public Task<TestQueryResponse> ExecuteQuery(NonHttpTestQuery query, CancellationToken cancellationToken)
+        public Task<TestQueryResponse> ExecuteQuery(NonHttpTestQuery query, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }

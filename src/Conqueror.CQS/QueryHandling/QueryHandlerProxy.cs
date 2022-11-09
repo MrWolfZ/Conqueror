@@ -18,7 +18,7 @@ namespace Conqueror.CQS.QueryHandling
             this.configurePipeline = configurePipeline;
         }
 
-        public Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken)
+        public Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
         {
             var pipelineBuilder = new QueryPipelineBuilder(serviceProvider);
 

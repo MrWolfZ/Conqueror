@@ -703,7 +703,7 @@
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
@@ -726,7 +726,7 @@
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
@@ -749,7 +749,7 @@
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
@@ -773,7 +773,7 @@
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
@@ -791,7 +791,7 @@
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
@@ -816,7 +816,7 @@
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.QueriesFromHandlers.Add(query);
@@ -833,7 +833,7 @@
 
         private sealed class TestQueryHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);
@@ -849,7 +849,7 @@
 #if !NET7_0_OR_GREATER
         private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);
@@ -858,7 +858,7 @@
         
         private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);
@@ -869,7 +869,7 @@
         
         private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);
@@ -881,7 +881,7 @@
 
         private sealed class TestQueryHandlerWithThrowingMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new(0);

@@ -3,6 +3,106 @@ namespace Conqueror.CQS.Tests
     public sealed class QueryHandlerCustomInterfaceTests
     {
         [Test]
+        public async Task GivenQuery_HandlerReceivesQuery()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ITestQueryHandler>();
+
+            var query = new TestQuery();
+
+            _ = await handler.ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
+        }
+
+        [Test]
+        public async Task GivenCancellationToken_HandlerReceivesCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ITestQueryHandler>();
+            using var tokenSource = new CancellationTokenSource();
+
+            _ = await handler.ExecuteQuery(new(), tokenSource.Token);
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
+        }
+
+        [Test]
+        public async Task GivenNoCancellationToken_HandlerReceivesDefaultCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await handler.ExecuteQuery(new());
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        }
+
+        [Test]
+        public async Task GivenQuery_HandlerReturnsResponse()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ITestQueryHandler>();
+
+            var query = new TestQuery(10);
+
+            var response = await handler.ExecuteQuery(query, CancellationToken.None);
+
+            Assert.AreEqual(query.Payload + 1, response.Payload);
+        }
+
+        [Test]
+        public void GivenExceptionInHandler_InvocationThrowsSameException()
+        {
+            var services = new ServiceCollection();
+            var exception = new Exception();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<ThrowingQueryHandler>()
+                        .AddSingleton(exception);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IThrowingQueryHandler>();
+
+            var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+
+            Assert.AreSame(exception, thrownException);
+        }
+
+        [Test]
         public void GivenHandlerWithCustomInterface_HandlerCanBeResolvedFromPlainInterface()
         {
             var services = new ServiceCollection();
@@ -84,9 +184,9 @@ namespace Conqueror.CQS.Tests
 // interface and event types must be public for dynamic type generation to work
 #pragma warning disable CA1034
 
-        public sealed record TestQuery;
+        public sealed record TestQuery(int Payload = 0);
 
-        public sealed record TestQueryResponse;
+        public sealed record TestQueryResponse(int Payload);
 
         public sealed record TestQuery2;
 
@@ -104,6 +204,10 @@ namespace Conqueror.CQS.Tests
         {
         }
 
+        public interface IThrowingQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+        }
+
         public interface ITestQueryHandlerWithExtraMethod : IQueryHandler<TestQuery, TestQueryResponse>
         {
             void ExtraMethod();
@@ -118,11 +222,13 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.Instances.Add(this);
-                return new();
+                observations.Queries.Add(query);
+                observations.CancellationTokens.Add(cancellationToken);
+                return new(query.Payload + 1);
             }
         }
 
@@ -137,17 +243,21 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.Instances.Add(this);
-                return new();
+                observations.Queries.Add(query);
+                observations.CancellationTokens.Add(cancellationToken);
+                return new(query.Payload + 1);
             }
 
-            public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.Instances.Add(this);
+                observations.Queries.Add(query);
+                observations.CancellationTokens.Add(cancellationToken);
                 return new();
             }
 
@@ -159,9 +269,25 @@ namespace Conqueror.CQS.Tests
             }
         }
 
+        private sealed class ThrowingQueryHandler : IThrowingQueryHandler
+        {
+            private readonly Exception exception;
+
+            public ThrowingQueryHandler(Exception exception)
+            {
+                this.exception = exception;
+            }
+
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                throw exception;
+            }
+        }
+
         private sealed class TestQueryHandlerWithCustomInterfaceWithExtraMethod : ITestQueryHandlerWithExtraMethod
         {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
             public void ExtraMethod() => throw new NotSupportedException();
         }
@@ -169,6 +295,10 @@ namespace Conqueror.CQS.Tests
         private sealed class TestObservations
         {
             public List<object> Instances { get; } = new();
+
+            public List<object> Queries { get; } = new();
+
+            public List<CancellationToken> CancellationTokens { get; } = new();
         }
     }
 }

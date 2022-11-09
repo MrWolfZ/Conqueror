@@ -42,6 +42,25 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
         }
+
+        [Test]
+        public async Task GivenNoCancellationToken_HandlerReceivesDefaultCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new(10));
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        }
         
         [Test]
         public async Task GivenQuery_HandlerReturnsResponse()
@@ -97,18 +116,18 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            private readonly TestObservations responses;
+            private readonly TestObservations observations;
 
-            public TestQueryHandler(TestObservations responses)
+            public TestQueryHandler(TestObservations observations)
             {
-                this.responses = responses;
+                this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
-                responses.Queries.Add(query);
-                responses.CancellationTokens.Add(cancellationToken);
+                observations.Queries.Add(query);
+                observations.CancellationTokens.Add(cancellationToken);
                 return new(query.Payload + 1);
             }
         }
@@ -122,7 +141,7 @@ namespace Conqueror.CQS.Tests
                 this.exception = exception;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 throw exception;

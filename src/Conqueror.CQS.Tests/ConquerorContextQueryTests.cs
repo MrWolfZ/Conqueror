@@ -677,7 +677,7 @@ namespace Conqueror.CQS.Tests
                 this.preReturnFn = preReturnFn;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 var response = handlerFn(query, conquerorContextAccessor.ConquerorContext);
@@ -702,7 +702,7 @@ namespace Conqueror.CQS.Tests
                 this.conquerorContextAccessor = conquerorContextAccessor;
             }
 
-            public async Task<NestedTestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken)
+            public async Task<NestedTestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return handlerFn(query, conquerorContextAccessor.ConquerorContext);

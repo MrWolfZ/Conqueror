@@ -5,7 +5,7 @@
 
     public sealed class TestQueryWithoutPayloadHandler : ITestQueryWithoutPayloadHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken)
+        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();

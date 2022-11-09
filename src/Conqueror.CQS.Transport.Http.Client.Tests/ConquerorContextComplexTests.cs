@@ -99,7 +99,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 

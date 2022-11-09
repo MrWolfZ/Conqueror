@@ -283,7 +283,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -307,7 +307,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken)
+            public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -337,7 +337,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.nestedHandler = nestedHandler;
             }
 
-            public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestQuery query, CancellationToken cancellationToken)
+            public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestQuery query, CancellationToken cancellationToken = default)
             {
                 if (testObservations.ShouldAddOuterItems)
                 {
@@ -367,7 +367,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.nestedHandler = nestedHandler;
             }
 
-            public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestPostQuery query, CancellationToken cancellationToken)
+            public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestPostQuery query, CancellationToken cancellationToken = default)
             {
                 if (testObservations.ShouldAddOuterItems)
                 {

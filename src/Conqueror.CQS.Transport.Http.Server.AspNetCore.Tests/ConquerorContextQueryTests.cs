@@ -147,7 +147,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -171,7 +171,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken)
+            public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -195,7 +195,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken)
+            public Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
