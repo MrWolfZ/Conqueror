@@ -2,20 +2,21 @@
 using System.Threading.Tasks;
 using Conqueror.CQS.Common;
 
-namespace Conqueror.CQS.CommandHandling;
-
-internal sealed class CommandWithoutResponseAdapter<TCommand> : ICommandHandler<TCommand>
-    where TCommand : class
+namespace Conqueror.CQS.CommandHandling
 {
-    private readonly ICommandHandler<TCommand, UnitCommandResponse> wrapped;
-
-    public CommandWithoutResponseAdapter(ICommandHandler<TCommand, UnitCommandResponse> wrapped)
+    internal sealed class CommandWithoutResponseAdapter<TCommand> : ICommandHandler<TCommand>
+        where TCommand : class
     {
-        this.wrapped = wrapped;
-    }
+        private readonly ICommandHandler<TCommand, UnitCommandResponse> wrapped;
 
-    public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
-    {
-        return wrapped.ExecuteCommand(command, cancellationToken);
+        public CommandWithoutResponseAdapter(ICommandHandler<TCommand, UnitCommandResponse> wrapped)
+        {
+            this.wrapped = wrapped;
+        }
+
+        public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
+        {
+            return wrapped.ExecuteCommand(command, cancellationToken);
+        }
     }
 }
