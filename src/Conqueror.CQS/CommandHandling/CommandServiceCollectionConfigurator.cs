@@ -29,6 +29,8 @@ namespace Conqueror.CQS.CommandHandling
                                        .Distinct()
                                        .ToList();
 
+            var registrations = new List<CommandHandlerRegistration>();
+
             foreach (var handlerType in handlerTypes)
             {
                 var pipelineConfigurationAction = GetPipelineConfigurationAction(handlerType);
@@ -37,18 +39,21 @@ namespace Conqueror.CQS.CommandHandling
 
                 foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
                 {
-                    _ = services.AddSingleton(new CommandHandlerMetadata(commandType, responseType, handlerType));
+                    registrations.Add(new(commandType, responseType, handlerType));
                 }
             }
 
-            var duplicateMetadata = services.Select(d => d.ImplementationInstance).OfType<CommandHandlerMetadata>().GroupBy(t => t.CommandType).FirstOrDefault(g => g.Count() > 1);
+            var duplicateRegistrations = registrations.GroupBy(t => t.CommandType).FirstOrDefault(g => g.Count() > 1);
 
-            if (duplicateMetadata is not null)
+            if (duplicateRegistrations is not null)
             {
-                var commandType = duplicateMetadata.Key;
-                var duplicateHandlerTypes = duplicateMetadata.Select(h => h.HandlerType);
+                var commandType = duplicateRegistrations.Key;
+                var duplicateHandlerTypes = duplicateRegistrations.Select(h => h.HandlerType);
                 throw new InvalidOperationException($"only a single handler for command type {commandType} is allowed, but found multiple: {string.Join(", ", duplicateHandlerTypes)}");
             }
+
+            _ = services.AddSingleton(new CommandHandlerRegistry(registrations))
+                        .AddSingleton<ICommandHandlerRegistry>(p => p.GetRequiredService<CommandHandlerRegistry>());
 
             Action<ICommandPipelineBuilder>? GetPipelineConfigurationAction(Type handlerType)
             {
@@ -127,8 +132,12 @@ namespace Conqueror.CQS.CommandHandling
                 throw new InvalidOperationException($"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'");
             }
 
+            var registrations = new List<CommandMiddlewareRegistration>();
+
             foreach (var middlewareType in middlewareTypes)
             {
+                registrations.Add(new(middlewareType, GetMiddlewareConfigurationType(middlewareType)));
+
                 var genericConfigurationMethod = configurationMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullMiddlewareConfiguration));
 
                 try
@@ -141,12 +150,14 @@ namespace Conqueror.CQS.CommandHandling
                 }
             }
 
+            _ = services.AddSingleton(new CommandMiddlewareRegistry(registrations))
+                        .AddSingleton<ICommandMiddlewareRegistry>(p => p.GetRequiredService<CommandMiddlewareRegistry>());
+
             _ = services.AddSingleton<IReadOnlyDictionary<Type, ICommandMiddlewareInvoker>>(p => p.GetRequiredService<IEnumerable<ICommandMiddlewareInvoker>>().ToDictionary(i => i.MiddlewareType));
         }
 
         private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
         {
-            _ = services.AddSingleton(new CommandMiddlewareMetadata(typeof(TMiddleware), GetMiddlewareConfigurationType(typeof(TMiddleware))));
             _ = services.AddSingleton<ICommandMiddlewareInvoker, CommandMiddlewareInvoker<TMiddleware, TConfiguration>>();
         }
 

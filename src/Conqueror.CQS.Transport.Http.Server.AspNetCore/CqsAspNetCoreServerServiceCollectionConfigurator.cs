@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Conqueror.Common;
-using Conqueror.CQS.Common;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,14 +21,14 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
             if (!applicationPartManager.FeatureProviders.Any(p => p is HttpCommandControllerFeatureProvider))
             {
-                var commandMetadata = services.Select(d => d.ImplementationInstance).OfType<CommandHandlerMetadata>();
-                applicationPartManager.FeatureProviders.Add(new HttpCommandControllerFeatureProvider(new(), commandMetadata));
+                var commandHandlerRegistry = services.Select(d => d.ImplementationInstance).OfType<ICommandHandlerRegistry>().Single();
+                applicationPartManager.FeatureProviders.Add(new HttpCommandControllerFeatureProvider(new(), commandHandlerRegistry));
             }
 
             if (!applicationPartManager.FeatureProviders.Any(p => p is HttpQueryControllerFeatureProvider))
             {
-                var queryMetadata = services.Select(d => d.ImplementationInstance).OfType<QueryHandlerMetadata>();
-                applicationPartManager.FeatureProviders.Add(new HttpQueryControllerFeatureProvider(new(), queryMetadata));
+                var queryHandlerRegistry = services.Select(d => d.ImplementationInstance).OfType<IQueryHandlerRegistry>().Single();
+                applicationPartManager.FeatureProviders.Add(new HttpQueryControllerFeatureProvider(new(), queryHandlerRegistry));
             }
         }
 
