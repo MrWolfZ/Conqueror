@@ -1,4 +1,3 @@
-using Conqueror.CQS.Transport.Http.Client;
 using Conqueror.Examples.CQS.GettingStarted.HttpExample;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
