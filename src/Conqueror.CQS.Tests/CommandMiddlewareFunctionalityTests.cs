@@ -880,11 +880,9 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void InvalidMiddlewares()
         {
-            var services = new ServiceCollection();
-
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddScoped<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddSingleton<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddTransient<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddScoped<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddSingleton<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
         }
 
         private sealed record TestCommand(int Payload);

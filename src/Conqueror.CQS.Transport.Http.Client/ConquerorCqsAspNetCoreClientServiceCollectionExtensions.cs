@@ -1,5 +1,4 @@
 ﻿using System;
-using Conqueror;
 using Conqueror.CQS.Transport.Http.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -15,9 +14,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddConquerorCQS();
 
             services.TryAddSingleton<ConfigurationProvider>();
-
-            services.TryAddSingleton<ConquerorContextAccessor>();
-            services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
 
             return services;
         }

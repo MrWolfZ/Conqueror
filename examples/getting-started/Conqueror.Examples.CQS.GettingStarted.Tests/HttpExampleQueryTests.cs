@@ -9,6 +9,7 @@ public sealed class HttpExampleQueryTests
 {
     private WebApplicationFactory<Program>? applicationFactory;
     private HttpClient? client;
+    private IServiceProvider? clientServiceProvider;
 
     private HttpClient HttpClient
     {
@@ -23,28 +24,30 @@ public sealed class HttpExampleQueryTests
         }
     }
 
-    private WebApplicationFactory<Program> ApplicationFactory
+    private IServiceProvider ClientServiceProvider
     {
         get
         {
-            if (applicationFactory == null)
+            if (clientServiceProvider == null)
             {
-                throw new InvalidOperationException("test fixture must be initialized before using application factory");
+                throw new InvalidOperationException("test fixture must be initialized before using client service provider");
             }
 
-            return applicationFactory;
+            return clientServiceProvider;
         }
     }
 
-    private IHttpExampleQueryHandler QueryHandler => ApplicationFactory.Services
-                                                                       .GetRequiredService<IQueryClientFactory>()
-                                                                       .CreateQueryClient<IHttpExampleQueryHandler>(b => b.UseHttp(HttpClient));
+    private IHttpExampleQueryHandler QueryHandler => ClientServiceProvider.GetRequiredService<IQueryClientFactory>()
+                                                                          .CreateQueryClient<IHttpExampleQueryHandler>(b => b.UseHttp(HttpClient));
 
     [SetUp]
     public void SetUp()
     {
-        applicationFactory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddConquerorCQSHttpClientServices()));
+        applicationFactory = new();
+
+        clientServiceProvider = new ServiceCollection().AddConquerorCQSHttpClientServices()
+                                                       .FinalizeConquerorRegistrations()
+                                                       .BuildServiceProvider();
 
         client = applicationFactory.CreateClient();
     }

@@ -157,6 +157,33 @@ namespace Conqueror.CQS.Tests
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestQueryMiddleware)));
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestCommandMiddleware)));
         }
+        
+        [Test]
+        public void GivenServiceCollectionWithConquerorCQSRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
+        {
+            var services = new ServiceCollection().AddConquerorCQS();
+
+            var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
+            
+            Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
+            Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
+        }
+        
+        [Test]
+        public void GivenServiceCollectionWithConquerorCQSRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
+        {
+            var services = new ServiceCollection().AddConquerorCQS().FinalizeConquerorRegistrations();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+        }
+        
+        [Test]
+        public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringCQS()
+        {
+            var services = new ServiceCollection().FinalizeConquerorRegistrations();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCQS());
+        }
 
 // types must be public for assembly scanning to work
 #pragma warning disable CA1034

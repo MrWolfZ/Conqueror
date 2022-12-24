@@ -13,6 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddConquerorCQS(this IServiceCollection services)
         {
+            services.AddFinalizationCheck();
             services.AddConquerorCqsQueryServices();
             services.AddConquerorCqsCommandServices();
             

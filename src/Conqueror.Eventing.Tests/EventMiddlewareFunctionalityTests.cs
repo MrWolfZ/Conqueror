@@ -1156,11 +1156,9 @@
         [Test]
         public void InvalidMiddlewares()
         {
-            var services = new ServiceCollection();
-
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddScoped<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddSingleton<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventing().AddTransient<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventing().AddScoped<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventing().AddSingleton<TestEventObserverMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
         }
 
         private sealed record TestEvent

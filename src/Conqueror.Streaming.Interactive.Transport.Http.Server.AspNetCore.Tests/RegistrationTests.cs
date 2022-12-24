@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
+﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.Extensions.Hosting;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 {
@@ -16,7 +20,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
         }
 
         [Test]
-        public void GivenServiceCollectionWithConquerorRegistered_ConfigureConquerorAddsFeatureProviders()
+        public void GivenServiceCollectionWithConquerorRegistered_FinalizeConquerorRegistrationsAddsFeatureProviders()
         {
             var services = new ServiceCollection();
 
@@ -28,20 +32,46 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 
             Assert.IsNotNull(applicationPartManager.FeatureProviders.SingleOrDefault(p => p is HttpQueryControllerFeatureProvider));
         }
-
+        
         [Test]
-        public void GivenServiceCollectionWithConquerorAlreadyConfigured_ConfigureConquerorDoesNotAddFeatureProvidersAgain()
+        public void GivenServiceCollectionWithInteractiveStreamingControllerRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
+        {
+            var services = new ServiceCollection();
+
+            _ = services.AddLogging()
+                        .AddSingleton<IHostEnvironment>(_ => throw new())
+                        .AddSingleton<IWebHostEnvironment>(_ => throw new())
+                        .AddSingleton<DiagnosticListener>(_ => throw new())
+                        .AddControllers()
+                        .AddConquerorInteractiveStreaming();
+
+            // remove some service registrations that fail validation
+            _ = services.RemoveAll<IActionInvokerProvider>();
+
+            var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
+            
+            Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
+            Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
+        }
+        
+        [Test]
+        public void GivenServiceCollectionWithInteractiveStreamingControllerRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
         {
             var services = new ServiceCollection();
 
             _ = services.AddMvc().AddConquerorInteractiveStreaming();
-
+            
             _ = services.FinalizeConquerorRegistrations();
-            _ = services.FinalizeConquerorRegistrations();
 
-            var applicationPartManager = services.Select(d => d.ImplementationInstance).OfType<ApplicationPartManager>().Single();
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+        }
+        
+        [Test]
+        public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringInteractiveStreaming()
+        {
+            var services = new ServiceCollection().FinalizeConquerorRegistrations();
 
-            Assert.That(applicationPartManager.FeatureProviders.Where(p => p is HttpQueryControllerFeatureProvider).ToList(), Has.Count.EqualTo(1));
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddMvc().AddConquerorInteractiveStreaming());
         }
     }
 }
