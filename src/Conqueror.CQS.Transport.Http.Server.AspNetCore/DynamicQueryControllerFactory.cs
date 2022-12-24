@@ -14,10 +14,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
         public Type Create(QueryHandlerRegistration registration, HttpQueryAttribute attribute)
         {
-            return Create(registration.QueryType.Name, () => CreateType(registration, attribute));
+            var typeName = registration.QueryType.FullName ?? registration.QueryType.Name;
+            
+            return Create(typeName, () => CreateType(typeName, registration, attribute));
         }
 
-        private Type CreateType(QueryHandlerRegistration registration, HttpQueryAttribute attribute)
+        private Type CreateType(string typeName, QueryHandlerRegistration registration, HttpQueryAttribute attribute)
         {
             var name = registration.QueryType.Name;
 
@@ -30,7 +32,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             var genericBaseControllerType = hasPayload ? typeof(ConquerorQueryControllerBase<,>) : typeof(ConquerorQueryWithoutPayloadControllerBase<,>);
             var baseControllerType = genericBaseControllerType.MakeGenericType(registration.QueryType, registration.ResponseType);
 
-            var typeBuilder = CreateTypeBuilder(name, ApiGroupName, baseControllerType, route);
+            var typeBuilder = CreateTypeBuilder(typeName, ApiGroupName, baseControllerType, route);
 
             EmitExecuteMethod();
 

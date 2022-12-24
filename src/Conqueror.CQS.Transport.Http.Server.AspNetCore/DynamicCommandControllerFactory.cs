@@ -15,10 +15,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
         public Type Create(CommandHandlerRegistration registration, HttpCommandAttribute attribute)
         {
-            return Create(registration.CommandType.Name, () => CreateType(registration, attribute));
+            var typeName = registration.CommandType.FullName ?? registration.CommandType.Name;
+
+            return Create(typeName, () => CreateType(typeName, registration, attribute));
         }
 
-        private Type CreateType(CommandHandlerRegistration registration, HttpCommandAttribute attribute)
+        private Type CreateType(string typeName, CommandHandlerRegistration registration, HttpCommandAttribute attribute)
         {
             // to be used in the future
             _ = attribute;
@@ -38,7 +40,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 ? genericBaseControllerTypeWithResponse.MakeGenericType(registration.CommandType, registration.ResponseType)
                 : genericBaseControllerTypeWithoutResponse.MakeGenericType(registration.CommandType);
 
-            var typeBuilder = CreateTypeBuilder(name, ApiGroupName, baseControllerType, route);
+            var typeBuilder = CreateTypeBuilder(typeName, ApiGroupName, baseControllerType, route);
 
             EmitExecuteMethod();
 

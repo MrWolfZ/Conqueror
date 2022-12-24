@@ -136,6 +136,17 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             _ = app.UseEndpoints(b => b.MapControllers());
         }
 
+        [HttpQuery]
+        public sealed record TestQuery;
+
+        public sealed record TestQueryResponse;
+    
+        [HttpQuery]
+        public sealed record TestQueryWithoutPayload;
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQuery;
+
         public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
             private readonly IConquerorContextAccessor conquerorContextAccessor;

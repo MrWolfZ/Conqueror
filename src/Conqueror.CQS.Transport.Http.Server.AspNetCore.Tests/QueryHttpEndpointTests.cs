@@ -70,5 +70,92 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
+
+// interface and event types must be public for dynamic type generation to work
+#pragma warning disable CA1034
+    
+        [HttpQuery]
+        public sealed record TestQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestQueryResponse
+        {
+            public int Payload { get; init; }
+        }
+        
+        [HttpQuery]
+        public sealed record TestQuery2;
+
+        public sealed record TestQueryResponse2;
+    
+        [HttpQuery]
+        public sealed record TestQueryWithoutPayload;
+    
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQuery
+        {
+            public int Payload { get; init; }
+        }
+    
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQueryWithoutPayload;
+
+        public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+        }
+
+        public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
+        {
+        }
+
+        public sealed class TestQueryHandler : ITestQueryHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
+        {
+            public Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = 11 };
+            }
+        }
+
+        public sealed class TestPostQueryHandler : ITestPostQueryHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestPostQueryHandlerWithoutPayload : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = 11 };
+            }
+        }
     }
 }
