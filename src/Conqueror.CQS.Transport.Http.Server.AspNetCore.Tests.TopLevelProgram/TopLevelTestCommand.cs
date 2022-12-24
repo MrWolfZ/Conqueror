@@ -1,19 +1,20 @@
-﻿namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests.TopLevelProgram;
-
-[HttpCommand]
-public sealed record TopLevelTestCommand(int Payload);
-
-public sealed record TopLevelTestCommandResponse(int Payload);
-
-public interface ITopLevelTestCommandHandler : ICommandHandler<TopLevelTestCommand, TopLevelTestCommandResponse>
+﻿namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests.TopLevelProgram
 {
-}
+    [HttpCommand]
+    public sealed record TopLevelTestCommand(int Payload);
 
-internal sealed class TopLevelTestCommandHandler : ITopLevelTestCommandHandler
-{
-    public async Task<TopLevelTestCommandResponse> ExecuteCommand(TopLevelTestCommand command, CancellationToken cancellationToken = default)
+    public sealed record TopLevelTestCommandResponse(int Payload);
+
+    public interface ITopLevelTestCommandHandler : ICommandHandler<TopLevelTestCommand, TopLevelTestCommandResponse>
     {
-        await Task.Yield();
-        return new(command.Payload + 1);
+    }
+
+    internal sealed class TopLevelTestCommandHandler : ITopLevelTestCommandHandler
+    {
+        public async Task<TopLevelTestCommandResponse> ExecuteCommand(TopLevelTestCommand command, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            return new(command.Payload + 1);
+        }
     }
 }
