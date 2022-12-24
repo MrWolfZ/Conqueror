@@ -26,20 +26,6 @@ A set of libraries to powercharge your .NET development.
   - same for queries
 - add tests for handlers that throw exceptions to assert contexts are properly cleared
 - allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
-- when .NET 7 is released skip analyzers that are superfluous with .NET 7 (i.e. everything related to pipeline configuration methods)
-  - adjust tests to expect compilation error diagnostic instead of analyzer diagnostic
-
-    ```cs
-    // in analyzer
-    if (context.SemanticModel.SyntaxTree.Options is CSharpParseOptions opt && opt.PreprocessorSymbolNames.Contains("NET7_0_OR_GREATER"))
-    {
-        return;
-    }
-
-    // in verifiers
-    project = project.WithParseOptions(((CSharpParseOptions)project.ParseOptions!).WithLanguageVersion(LanguageVersion.Latest)
-                                                                                  .WithPreprocessorSymbols("NET7_0_OR_GREATER"));
-    ```
 
 #### CQS middleware
 

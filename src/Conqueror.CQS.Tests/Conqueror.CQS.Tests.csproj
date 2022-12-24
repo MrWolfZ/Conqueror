@@ -3,7 +3,7 @@
     <Import Project="../.targets/test.targets" />
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.NUnit" Version="1.1.1" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.NUnit" Version="1.1.1" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.NUnit" Version="1.1.1" />

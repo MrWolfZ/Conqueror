@@ -55,8 +55,6 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
                 {
                     var project = solution.GetProject(projectId)!;
 
-                    // TODO: set language version and preprocessor symbols correctly for .NET 7 once library supports it
-
                     var compilationOptions = project.CompilationOptions!.WithSpecificDiagnosticOptions(
                         project.CompilationOptions!.SpecificDiagnosticOptions.SetItems(CSharpVerifierHelper.NullableWarnings));
 

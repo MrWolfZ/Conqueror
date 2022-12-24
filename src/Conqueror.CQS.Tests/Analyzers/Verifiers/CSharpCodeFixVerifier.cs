@@ -49,7 +49,7 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
                 FixedCode = fixedSource,
 #if NET7_0
                 ReferenceAssemblies = CSharpVerifierHelper.Net70ReferenceAssemblies,
-#else      
+#else
                 ReferenceAssemblies = ReferenceAssemblies.Net.Net60,
 #endif
             };
@@ -57,7 +57,7 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
             test.ExpectedDiagnostics.AddRange(expected);
             await test.RunAsync(CancellationToken.None);
         }
-        
+
         private sealed class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, NUnitVerifier>
         {
             public Test()
@@ -65,8 +65,6 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
                 SolutionTransforms.Add((solution, projectId) =>
                 {
                     var project = solution.GetProject(projectId)!;
-                    
-                    // TODO: set language version and preprocessor symbols correctly for .NET 7 once library supports it
 
                     var compilationOptions = project.CompilationOptions!.WithSpecificDiagnosticOptions(
                         project.CompilationOptions!.SpecificDiagnosticOptions.SetItems(CSharpVerifierHelper.NullableWarnings));
