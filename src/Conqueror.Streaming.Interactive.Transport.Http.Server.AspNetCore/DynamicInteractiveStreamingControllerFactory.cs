@@ -15,10 +15,12 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
 
         public Type Create(InteractiveStreamingHandlerMetadata metadata, HttpInteractiveStreamingRequestAttribute attribute)
         {
-            return Create(metadata.RequestType.Name, () => CreateType(metadata, attribute));
+            var typeName = metadata.RequestType.FullName ?? metadata.RequestType.Name;
+
+            return Create(typeName, () => CreateType(typeName, metadata, attribute));
         }
 
-        private Type CreateType(InteractiveStreamingHandlerMetadata metadata, HttpInteractiveStreamingRequestAttribute attribute)
+        private Type CreateType(string typeName, InteractiveStreamingHandlerMetadata metadata, HttpInteractiveStreamingRequestAttribute attribute)
         {
             var name = metadata.RequestType.Name;
 
@@ -31,7 +33,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
             var genericBaseControllerType = hasPayload ? typeof(ConquerorInteractiveStreamingWithRequestPayloadWebsocketTransportControllerBase<,>) : typeof(ConquerorInteractiveStreamingWithoutRequestPayloadWebsocketTransportControllerBase<,>);
             var baseControllerType = genericBaseControllerType.MakeGenericType(metadata.RequestType, metadata.ItemType);
 
-            var typeBuilder = CreateTypeBuilder(name, ApiGroupName, baseControllerType, route);
+            var typeBuilder = CreateTypeBuilder(typeName, ApiGroupName, baseControllerType, route);
 
             EmitExecuteMethod();
 
