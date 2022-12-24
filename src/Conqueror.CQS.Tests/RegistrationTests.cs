@@ -132,6 +132,19 @@ namespace Conqueror.CQS.Tests
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestQueryHandler)));
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestCommandHandler)));
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestCommandHandlerWithCustomInterface)));
+            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestQueryMiddleware)));
+            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestCommandMiddleware)));
+        }
+
+        [Test]
+        public void GivenServiceCollection_AddingAllTypesFromAssemblyDoesNotAddGenericClasses()
+        {
+            var services = new ServiceCollection().AddSingleton<TestCommandHandler>().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
+
+            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(GenericTestQueryHandler<>)));
+            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(GenericTestCommandHandler<>)));
+            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(GenericTestQueryMiddleware<>)));
+            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(GenericTestCommandMiddleware<>)));
         }
 
         private sealed record TestQuery;
@@ -157,6 +170,12 @@ namespace Conqueror.CQS.Tests
             public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
         }
 
+        private sealed class GenericTestQueryHandler<T> : IQueryHandler<TestQuery, T>
+            where T : new()
+        {
+            public Task<T> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new T());
+        }
+
         private sealed class TestQueryMiddlewareConfiguration
         {
         }
@@ -171,6 +190,20 @@ namespace Conqueror.CQS.Tests
         private sealed class TestQueryMiddlewareWithoutConfiguration : IQueryMiddleware
         {
             public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
+                where TQuery : class =>
+                ctx.Next(ctx.Query, ctx.CancellationToken);
+        }
+
+        private abstract class AbstractTestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
+        {
+            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
+                where TQuery : class =>
+                ctx.Next(ctx.Query, ctx.CancellationToken);
+        }
+
+        private sealed class GenericTestQueryMiddleware<T> : IQueryMiddleware<T>
+        {
+            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, T> ctx)
                 where TQuery : class =>
                 ctx.Next(ctx.Query, ctx.CancellationToken);
         }
@@ -202,6 +235,12 @@ namespace Conqueror.CQS.Tests
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
         }
 
+        private sealed class GenericTestCommandHandler<T> : ICommandHandler<TestCommand, T>
+            where T : new()
+        {
+            public Task<T> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new T());
+        }
+
         private abstract class AbstractTestCommandHandlerWithCustomInterface : ITestCommandHandler
         {
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
@@ -231,6 +270,20 @@ namespace Conqueror.CQS.Tests
         private sealed class TestCommandMiddlewareWithoutConfiguration : ICommandMiddleware
         {
             public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+                where TCommand : class =>
+                ctx.Next(ctx.Command, ctx.CancellationToken);
+        }
+
+        private abstract class AbstractTestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
+        {
+            public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareConfiguration> ctx)
+                where TCommand : class =>
+                ctx.Next(ctx.Command, ctx.CancellationToken);
+        }
+
+        private sealed class GenericTestCommandMiddleware<T> : ICommandMiddleware<T>
+        {
+            public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, T> ctx)
                 where TCommand : class =>
                 ctx.Next(ctx.Command, ctx.CancellationToken);
         }
