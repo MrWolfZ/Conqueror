@@ -70,7 +70,20 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         }
 
         [Test]
-        public async Task GivenHttpQueryWithCustomSerializedPayloadType_WhenCallingEndpoint_ReturnsCorrectResponse()
+        public async Task GivenHttpQueryWithComplexPayload_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            var response = await HttpClient.GetAsync("/api/queries/TestQueryWithComplexPayload?payload.payload=10");
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestQueryResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
+        [Test]
+        public async Task GivenHttpPostQueryWithCustomSerializedPayloadType_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
             using var content = CreateJsonStringContent("{\"payload\":10}");
             var response = await HttpClient.PostAsync("/api/queries/testPostQueryWithCustomSerializedPayloadType", content);
@@ -91,6 +104,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             _ = services.AddTransient<TestQueryHandler>()
                         .AddTransient<TestQueryHandler2>()
                         .AddTransient<TestQueryHandlerWithoutPayload>()
+                        .AddTransient<TestQueryHandlerWithComplexPayload>()
                         .AddTransient<TestPostQueryHandler>()
                         .AddTransient<TestPostQueryHandlerWithoutPayload>()
                         .AddTransient<TestPostQueryWithCustomSerializedPayloadTypeHandler>();
@@ -134,6 +148,11 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [HttpQuery]
         public sealed record TestQueryWithoutPayload;
+
+        [HttpQuery]
+        public sealed record TestQueryWithComplexPayload(TestQueryWithComplexPayloadPayload Payload);
+
+        public sealed record TestQueryWithComplexPayloadPayload(int Payload);
 
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
@@ -188,6 +207,16 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
                 return new() { Payload = 11 };
+            }
+        }
+
+        public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload.Payload + 1 };
             }
         }
 
