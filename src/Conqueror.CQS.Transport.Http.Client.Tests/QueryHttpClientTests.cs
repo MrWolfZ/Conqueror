@@ -166,6 +166,28 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.AreEqual(22, result.Payload);
         }
 
+        [Test]
+        public async Task GivenSuccessfulHttpCallWithOptionalPropertyPresent_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<ITestQueryWithOptionalPropertyHandler>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = 10, OptionalPayload = 5 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(16, result.Payload);
+        }
+
+        [Test]
+        public async Task GivenSuccessfulHttpCallWithOptionalPropertyAbsent_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<ITestQueryWithOptionalPropertyHandler>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
@@ -178,6 +200,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddTransient<TestQueryWithCollectionPayloadHandler>()
                         .AddTransient<TestQueryWithComplexPayloadHandler>()
                         .AddTransient<TestQueryWithComplexPayloadWithCollectionPropertyHandler>()
+                        .AddTransient<TestQueryWithOptionalPropertyHandler>()
                         .AddTransient<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
                         .AddTransient<NonHttpTestQueryHandler>();
 
@@ -203,6 +226,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddConquerorQueryClient<ITestQueryWithCollectionPayloadHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestQueryWithComplexPayloadHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestQueryWithComplexPayloadWithCollectionPropertyHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestQueryWithOptionalPropertyHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestPostQueryHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestPostQueryWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(HttpClient, o => o.JsonSerializerOptions = new()
@@ -269,6 +293,14 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed record TestQueryWithComplexPayloadWithCollectionPropertyPayload(List<int> Payload);
 
+        [HttpQuery]
+        public sealed record TestQueryWithOptionalProperty
+        {
+            public int Payload { get; init; }
+
+            public int? OptionalPayload { get; init; }
+        }
+
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
         {
@@ -307,6 +339,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         public interface ITestQueryWithComplexPayloadWithCollectionPropertyHandler : IQueryHandler<TestQueryWithComplexPayloadWithCollectionProperty, TestQueryResponse>
+        {
+        }
+
+        public interface ITestQueryWithOptionalPropertyHandler : IQueryHandler<TestQueryWithOptionalProperty, TestQueryResponse>
         {
         }
 
@@ -373,6 +409,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
                 return new() { Payload = query.Payload.Payload.Sum() + 1 };
+            }
+        }
+
+        public sealed class TestQueryWithOptionalPropertyHandler : ITestQueryWithOptionalPropertyHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithOptionalProperty query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + (query.OptionalPayload ?? 0) + 1 };
             }
         }
 
