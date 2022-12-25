@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Specialized;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -30,7 +32,7 @@ namespace Conqueror.CQS.Transport.Http.Client
             where TQuery : class
         {
             var attribute = typeof(TQuery).GetCustomAttribute<HttpQueryAttribute>()!;
-            
+
             using var requestMessage = new HttpRequestMessage
             {
                 Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
@@ -53,29 +55,7 @@ namespace Conqueror.CQS.Transport.Http.Client
             }
             else
             {
-                var queryString = HttpUtility.ParseQueryString(string.Empty);
-
-                foreach (var property in typeof(TQuery).GetProperties())
-                {
-                    var value = property.GetValue(query);
-
-                    if (value is IEnumerable e)
-                    {
-                        foreach (var v in e)
-                        {
-                            queryString.Add(property.Name, v?.ToString());
-                        }
-                    }
-                    else if (value is not null)
-                    {
-                        queryString[property.Name] = value.ToString();
-                    }
-                }
-
-                if (queryString.HasKeys())
-                {
-                    uriString += $"?{queryString}";
-                }
+                uriString += BuildQueryString(query);
             }
 
             requestMessage.RequestUri = new(uriString, UriKind.Relative);
@@ -96,6 +76,52 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             var result = await response.Content.ReadFromJsonAsync<TResponse>(serializerOptions, cancellationToken);
             return result!;
+        }
+
+        private static string BuildQueryString<TQuery>(TQuery query)
+            where TQuery : class
+        {
+            var queryString = BuildQuery(query);
+
+            return queryString.HasKeys() ? $"?{queryString}" : string.Empty;
+
+            static bool IsPrimitive(object? o) => o?.GetType().IsPrimitive ?? true;
+
+            static NameValueCollection BuildQuery(object o)
+            {
+                var queryString = HttpUtility.ParseQueryString(string.Empty);
+
+                foreach (var property in o.GetType().GetProperties())
+                {
+                    var value = property.GetValue(o);
+
+                    if (value is IEnumerable e)
+                    {
+                        foreach (var v in e)
+                        {
+                            queryString.Add(property.Name, v?.ToString());
+                        }
+                    }
+                    else if (value is not null && !IsPrimitive(value))
+                    {
+                        var subQuery = BuildQuery(value);
+
+                        foreach (var subProp in subQuery.AllKeys)
+                        {
+                            foreach (var subVal in subQuery.GetValues(subProp) ?? Enumerable.Empty<object>())
+                            {
+                                queryString.Add($"{property.Name}.{subProp}", subVal.ToString());
+                            }
+                        }
+                    }
+                    else if (value is not null)
+                    {
+                        queryString[property.Name] = value.ToString();
+                    }
+                }
+
+                return queryString;
+            }
         }
     }
 }
