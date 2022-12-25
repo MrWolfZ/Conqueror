@@ -1,27 +1,39 @@
 ﻿using System.Net;
-using System.Net.Http.Json;
+#if NET7_0_OR_GREATER
+using System.Net.Http.Headers;
+#endif
+using System.Net.Mime;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public sealed class CommandHttpEndpointTests : TestBase
     {
         [Test]
-        public async Task HttpCommandTest()
+        public async Task GivenHttpCommand_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
-            var response = await HttpClient.PostAsJsonAsync("/api/commands/test", new TestCommand { Payload = 10 });
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/commands/test", content);
             await response.AssertStatusCode(HttpStatusCode.OK);
-            var result = await response.Content.ReadFromJsonAsync<TestCommandResponse>();
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
 
+            Assert.AreEqual("{\"payload\":11}", resultString);
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload);
         }
 
         [Test]
-        public async Task HttpCommandWithoutResponseTest()
+        public async Task GivenHttpCommandWithoutResponse_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
-            var response = await HttpClient.PostAsJsonAsync("/api/commands/testCommandWithoutResponse", new TestCommand { Payload = 10 });
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithoutResponse", content);
             await response.AssertStatusCode(HttpStatusCode.OK);
             var result = await response.Content.ReadAsStringAsync();
 
@@ -29,19 +41,21 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         }
 
         [Test]
-        public async Task HttpCommandWithoutPayloadTest()
+        public async Task GivenHttpCommandWithoutPayload_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
             using var content = new StringContent(string.Empty);
             var response = await HttpClient.PostAsync("/api/commands/testCommandWithoutPayload", content);
             await response.AssertStatusCode(HttpStatusCode.OK);
-            var result = await response.Content.ReadFromJsonAsync<TestCommandResponse>();
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
 
+            Assert.AreEqual("{\"payload\":11}", resultString);
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload);
         }
 
         [Test]
-        public async Task HttpCommandWithoutResponseWithoutPayloadTest()
+        public async Task GivenHttpCommandWithoutResponseWithoutPayload_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
             using var content = new StringContent(string.Empty);
             var response = await HttpClient.PostAsync("/api/commands/testCommandWithoutResponseWithoutPayload", content);
@@ -51,15 +65,33 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsEmpty(result);
         }
 
+        [Test]
+        public async Task GivenHttpCommandWithCustomSerializedPayloadType_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithCustomSerializedPayloadType", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestCommandWithCustomSerializedPayloadTypeResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload.Payload);
+        }
+
+        private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
+
         protected override void ConfigureServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
+            _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
             _ = services.AddTransient<TestCommandHandler>()
                         .AddTransient<TestCommandHandler2>()
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddTransient<TestCommandHandlerWithoutPayload>()
-                        .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>();
+                        .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
+                        .AddTransient<TestCommandWithCustomSerializedPayloadTypeHandler>();
 
             _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
@@ -70,9 +102,16 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             _ = app.UseEndpoints(b => b.MapControllers());
         }
 
-// interface and event types must be public for dynamic type generation to work
-#pragma warning disable CA1034
-        
+        private static StringContent CreateJsonStringContent(string content)
+        {
+#if NET7_0_OR_GREATER
+            var stringContent = new StringContent(content, new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
+#else
+            var stringContent = new StringContent(content, null, MediaTypeNames.Application.Json);
+#endif
+            return stringContent;
+        }
+
         [HttpCommand]
         public sealed record TestCommand
         {
@@ -83,12 +122,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         {
             public int Payload { get; init; }
         }
-        
+
         [HttpCommand]
         public sealed record TestCommand2;
 
         public sealed record TestCommandResponse2;
-        
+
         [HttpCommand]
         public sealed record TestCommandWithoutPayload;
 
@@ -97,11 +136,22 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         {
             public int Payload { get; init; }
         }
-    
+
         [HttpCommand]
         public sealed record TestCommandWithoutResponseWithoutPayload;
 
+        [HttpCommand]
+        public sealed record TestCommandWithCustomSerializedPayloadType(TestCommandWithCustomSerializedPayloadTypePayload Payload);
+
+        public sealed record TestCommandWithCustomSerializedPayloadTypeResponse(TestCommandWithCustomSerializedPayloadTypePayload Payload);
+
+        public sealed record TestCommandWithCustomSerializedPayloadTypePayload(int Payload);
+
         public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+        }
+
+        public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandWithCustomSerializedPayloadTypeResponse>
         {
         }
 
@@ -148,6 +198,39 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler
+        {
+            public async Task<TestCommandWithCustomSerializedPayloadTypeResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new(new(query.Payload.Payload + 1));
+            }
+
+            internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
+            {
+                public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestCommandWithCustomSerializedPayloadTypePayload);
+
+                public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+                {
+                    return Activator.CreateInstance(typeof(PayloadJsonConverter)) as JsonConverter;
+                }
+            }
+
+            internal sealed class PayloadJsonConverter : JsonConverter<TestCommandWithCustomSerializedPayloadTypePayload>
+            {
+                public override TestCommandWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+                {
+                    return new(reader.GetInt32());
+                }
+
+                public override void Write(Utf8JsonWriter writer, TestCommandWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
+                {
+                    writer.WriteNumberValue(value.Payload);
+                }
             }
         }
     }
