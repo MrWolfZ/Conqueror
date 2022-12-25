@@ -1,4 +1,5 @@
 ﻿using Conqueror.CQS.Transport.Http.Server.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable InconsistentNaming
@@ -13,6 +14,11 @@ namespace Microsoft.Extensions.DependencyInjection
             _ = builder.Services.AddFinalizationCheck();
             
             builder.Services.TryAddSingleton(new CqsAspNetCoreServerServiceCollectionConfigurator());
+            
+            _ = builder.Services.PostConfigure<MvcOptions>(options =>
+            {
+                _ = options.Filters.Add<BadContextExceptionHandlerFilter>();
+            });
 
             return builder;
         }

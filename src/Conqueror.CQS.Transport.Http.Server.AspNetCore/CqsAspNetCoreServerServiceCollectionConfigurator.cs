@@ -19,23 +19,14 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 throw new InvalidOperationException("the ASP Core application part manager must be registered before configuring the Conqueror CQS ASP Core Server services");
             }
 
-            if (!applicationPartManager.FeatureProviders.Any(p => p is HttpCommandControllerFeatureProvider))
+            if (!applicationPartManager.FeatureProviders.Any(p => p is HttpEndpointControllerFeatureProvider))
             {
                 var commandHandlerRegistry = services.Select(d => d.ImplementationInstance).OfType<ICommandHandlerRegistry>().SingleOrDefault();
-
-                if (commandHandlerRegistry is not null)
-                {
-                    applicationPartManager.FeatureProviders.Add(new HttpCommandControllerFeatureProvider(new(), commandHandlerRegistry));
-                }
-            }
-
-            if (!applicationPartManager.FeatureProviders.Any(p => p is HttpQueryControllerFeatureProvider))
-            {
                 var queryHandlerRegistry = services.Select(d => d.ImplementationInstance).OfType<IQueryHandlerRegistry>().SingleOrDefault();
-                
-                if (queryHandlerRegistry is not null)
+
+                if (commandHandlerRegistry is not null && queryHandlerRegistry is not null)
                 {
-                    applicationPartManager.FeatureProviders.Add(new HttpQueryControllerFeatureProvider(new(), queryHandlerRegistry));
+                    applicationPartManager.FeatureProviders.Add(new HttpEndpointControllerFeatureProvider(new(commandHandlerRegistry, queryHandlerRegistry)));
                 }
             }
         }

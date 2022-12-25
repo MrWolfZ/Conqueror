@@ -13,7 +13,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsCommandDescriptors()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "commands.Test");
+            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommand).FullName);
 
             Assert.IsNotNull(commandApiDescription);
             Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
@@ -26,7 +26,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutResponse()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "commands.TestCommandWithoutResponse");
+            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutResponse).FullName);
 
             Assert.IsNotNull(commandApiDescription);
             Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
@@ -39,7 +39,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutPayload()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "commands.TestCommandWithoutPayload");
+            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutPayload).FullName);
 
             Assert.IsNotNull(commandApiDescription);
             Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
@@ -52,7 +52,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutResponseWithoutPayload()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "commands.TestCommandWithoutResponseWithoutPayload");
+            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutResponseWithoutPayload).FullName);
 
             Assert.IsNotNull(commandApiDescription);
             Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
@@ -65,7 +65,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsQueryDescriptors()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "queries.Test");
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQuery).FullName);
 
             Assert.IsNotNull(queryApiDescription);
             Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
@@ -78,7 +78,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsPostQueryDescriptors()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "queries.TestPost");
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQuery).FullName);
 
             Assert.IsNotNull(queryApiDescription);
             Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
@@ -91,7 +91,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithoutPayload()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "queries.TestQueryWithoutPayload");
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithoutPayload).FullName);
 
             Assert.IsNotNull(queryApiDescription);
             Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
@@ -104,7 +104,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithComplexPayload()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "queries.TestQueryWithComplexPayload");
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithComplexPayload).FullName);
 
             Assert.IsNotNull(queryApiDescription);
             Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
@@ -117,7 +117,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithoutPayload()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "queries.TestPostQueryWithoutPayload");
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithoutPayload).FullName);
 
             Assert.IsNotNull(queryApiDescription);
             Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
