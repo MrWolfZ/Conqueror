@@ -1,4 +1,6 @@
 ﻿using System.Net.Mime;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public sealed class CommandHttpClientTests : TestBase
     {
         private const string ErrorPayload = "{\"Message\":\"this is an error\"}";
@@ -124,7 +127,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
-            _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypePayloadJsonConverterFactory()); });
+            _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
             _ = services.AddTransient<TestCommandHandler>()
                         .AddTransient<TestCommandWithoutResponseHandler>()
@@ -157,7 +160,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddConquerorCommandClient<ITestCommandWithoutResponseWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorCommandClient<ITestCommandWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(HttpClient, o => o.JsonSerializerOptions = new()
                         {
-                            Converters = { new TestCommandWithCustomSerializedPayloadTypePayloadJsonConverterFactory() },
+                            Converters = { new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
                         }));
 
@@ -182,6 +185,159 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
+        }
+
+        [HttpCommand]
+        public sealed record TestCommand
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestCommandResponse
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpCommand]
+        public sealed record TestCommandWithoutPayload;
+
+        [HttpCommand]
+        public sealed record TestCommandWithoutResponse
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpCommand]
+        public sealed record TestCommandWithoutResponseWithoutPayload;
+
+        [HttpCommand]
+        public sealed record TestCommandWithCustomSerializedPayloadType(TestCommandWithCustomSerializedPayloadTypePayload Payload);
+
+        public sealed record TestCommandWithCustomSerializedPayloadTypePayload(int Payload);
+    
+        public sealed record NonHttpTestCommand
+        {
+            public int Payload { get; init; }
+        }
+    
+        public sealed record NonHttpTestCommandWithoutResponse
+        {
+            public int Payload { get; init; }
+        }
+
+        public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+        }
+
+        public interface ITestCommandWithoutPayloadHandler : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
+        {
+        }
+
+        public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
+        {
+        }
+
+        public interface ITestCommandWithoutResponseWithoutPayloadHandler : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
+        {
+        }
+
+        public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandResponse>
+        {
+        }
+
+        public interface INonHttpTestCommandHandler : ICommandHandler<NonHttpTestCommand, TestCommandResponse>
+        {
+        }
+
+        public interface INonHttpTestCommandWithoutResponseHandler : ICommandHandler<NonHttpTestCommandWithoutResponse>
+        {
+        }
+
+        public sealed class TestCommandHandler : ITestCommandHandler
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
+        }
+
+        public sealed class TestCommandWithoutPayloadHandler : ITestCommandWithoutPayloadHandler
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = 11 };
+            }
+        }
+
+        public sealed class TestCommandWithoutResponseHandler : ITestCommandWithoutResponseHandler
+        {
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        public sealed class TestCommandWithoutResponseWithoutPayloadHandler : ITestCommandWithoutResponseWithoutPayloadHandler
+        {
+            public async Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload.Payload + 1 };
+            }
+
+            internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
+            {
+                public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestCommandWithCustomSerializedPayloadTypePayload);
+
+                public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+                {
+                    return Activator.CreateInstance(typeof(PayloadJsonConverter)) as JsonConverter;
+                }
+            }
+
+            internal sealed class PayloadJsonConverter : JsonConverter<TestCommandWithCustomSerializedPayloadTypePayload>
+            {
+                public override TestCommandWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+                {
+                    return new(reader.GetInt32());
+                }
+
+                public override void Write(Utf8JsonWriter writer, TestCommandWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
+                {
+                    writer.WriteNumberValue(value.Payload);
+                }
+            }
+        }
+
+        public sealed class NonHttpTestCommandHandler : INonHttpTestCommandHandler
+        {
+            public Task<TestCommandResponse> ExecuteCommand(NonHttpTestCommand command, CancellationToken cancellationToken = default)
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        public sealed class NonHttpTestCommandWithoutResponseHandler : INonHttpTestCommandWithoutResponseHandler
+        {
+            public Task ExecuteCommand(NonHttpTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+            {
+                throw new NotSupportedException();
+            }
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System.Net.Mime;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public sealed class QueryHttpClientTests : TestBase
     {
         private const string ErrorPayload = "{\"Message\":\"this is an error\"}";
@@ -144,7 +147,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
-            _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypePayloadJsonConverterFactory()); });
+            _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
             _ = services.AddTransient<TestQueryHandler>()
                         .AddTransient<TestPostQueryHandler>()
@@ -178,7 +181,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddConquerorQueryClient<ITestPostQueryWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(HttpClient, o => o.JsonSerializerOptions = new()
                         {
-                            Converters = { new TestPostQueryWithCustomSerializedPayloadTypePayloadJsonConverterFactory() },
+                            Converters = { new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
                         }));
 
@@ -203,6 +206,169 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
+        }
+
+        [HttpQuery]
+        public sealed record TestQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestQueryResponse
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery]
+        public sealed record TestQueryWithoutPayload;
+
+        [HttpQuery]
+        public sealed record TestQueryWithCollectionPayload
+        {
+            public List<int> Payload { get; init; } = new();
+        }
+
+        public sealed record TestQueryWithCollectionPayloadResponse
+        {
+            public List<int> Payload { get; init; } = new();
+        }
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQueryWithoutPayload;
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQueryWithCustomSerializedPayloadType(TestPostQueryWithCustomSerializedPayloadTypePayload Payload);
+
+        public sealed record TestPostQueryWithCustomSerializedPayloadTypePayload(int Payload);
+
+        public sealed record NonHttpTestQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+        }
+
+        public interface ITestQueryWithoutPayloadHandler : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
+        {
+        }
+
+        public interface ITestQueryWithCollectionPayloadHandler : IQueryHandler<TestQueryWithCollectionPayload, TestQueryWithCollectionPayloadResponse>
+        {
+        }
+
+        public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
+        {
+        }
+
+        public interface ITestPostQueryWithoutPayloadHandler : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>
+        {
+        }
+
+        public interface ITestPostQueryWithCustomSerializedPayloadTypeHandler : IQueryHandler<TestPostQueryWithCustomSerializedPayloadType, TestQueryResponse>
+        {
+        }
+
+        public interface INonHttpTestQueryHandler : IQueryHandler<NonHttpTestQuery, TestQueryResponse>
+        {
+        }
+
+        public sealed class TestQueryHandler : ITestQueryHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestQueryWithoutPayloadHandler : ITestQueryWithoutPayloadHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = 11 };
+            }
+        }
+
+        public sealed class TestQueryWithCollectionPayloadHandler : ITestQueryWithCollectionPayloadHandler
+        {
+            public async Task<TestQueryWithCollectionPayloadResponse> ExecuteQuery(TestQueryWithCollectionPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = new(query.Payload) { 1 } };
+            }
+        }
+
+        public sealed class TestPostQueryHandler : ITestPostQueryHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestPostQueryWithoutPayloadHandler : ITestPostQueryWithoutPayloadHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = 11 };
+            }
+        }
+
+        public sealed class TestPostQueryWithCustomSerializedPayloadTypeHandler : ITestPostQueryWithCustomSerializedPayloadTypeHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload.Payload + 1 };
+            }
+
+            internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
+            {
+                public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TestPostQueryWithCustomSerializedPayloadTypePayload);
+
+                public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+                {
+                    return Activator.CreateInstance(typeof(PayloadJsonConverter)) as JsonConverter;
+                }
+            }
+
+            internal sealed class PayloadJsonConverter : JsonConverter<TestPostQueryWithCustomSerializedPayloadTypePayload>
+            {
+                public override TestPostQueryWithCustomSerializedPayloadTypePayload Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+                {
+                    return new(reader.GetInt32());
+                }
+
+                public override void Write(Utf8JsonWriter writer, TestPostQueryWithCustomSerializedPayloadTypePayload value, JsonSerializerOptions options)
+                {
+                    writer.WriteNumberValue(value.Payload);
+                }
+            }
+        }
+
+        public sealed class NonHttpTestQueryHandler : INonHttpTestQueryHandler
+        {
+            public Task<TestQueryResponse> ExecuteQuery(NonHttpTestQuery query, CancellationToken cancellationToken = default)
+            {
+                throw new NotSupportedException();
+            }
         }
     }
 }
