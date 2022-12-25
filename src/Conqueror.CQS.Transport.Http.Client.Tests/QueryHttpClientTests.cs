@@ -127,7 +127,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             var result = await handler.ExecuteQuery(new(new(10)), CancellationToken.None);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(11, result.Payload);
+            Assert.AreEqual(11, result.Payload.Payload);
         }
 
         [Test]
@@ -245,6 +245,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQueryWithCustomSerializedPayloadType(TestPostQueryWithCustomSerializedPayloadTypePayload Payload);
 
+        public sealed record TestPostQueryWithCustomSerializedPayloadTypeResponse(TestPostQueryWithCustomSerializedPayloadTypePayload Payload);
+
         public sealed record TestPostQueryWithCustomSerializedPayloadTypePayload(int Payload);
 
         public sealed record NonHttpTestQuery
@@ -272,7 +274,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
         }
 
-        public interface ITestPostQueryWithCustomSerializedPayloadTypeHandler : IQueryHandler<TestPostQueryWithCustomSerializedPayloadType, TestQueryResponse>
+        public interface ITestPostQueryWithCustomSerializedPayloadTypeHandler : IQueryHandler<TestPostQueryWithCustomSerializedPayloadType, TestPostQueryWithCustomSerializedPayloadTypeResponse>
         {
         }
 
@@ -332,11 +334,11 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestPostQueryWithCustomSerializedPayloadTypeHandler : ITestPostQueryWithCustomSerializedPayloadTypeHandler
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+            public async Task<TestPostQueryWithCustomSerializedPayloadTypeResponse> ExecuteQuery(TestPostQueryWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload.Payload + 1 };
+                return new(new(query.Payload.Payload + 1));
             }
 
             internal sealed class PayloadJsonConverterFactory : JsonConverterFactory

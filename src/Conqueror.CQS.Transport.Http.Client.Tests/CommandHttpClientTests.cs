@@ -121,7 +121,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             var result = await handler.ExecuteCommand(new(new(10)), CancellationToken.None);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(11, result.Payload);
+            Assert.AreEqual(11, result.Payload.Payload);
         }
 
         protected override void ConfigureServerServices(IServiceCollection services)
@@ -213,13 +213,15 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         [HttpCommand]
         public sealed record TestCommandWithCustomSerializedPayloadType(TestCommandWithCustomSerializedPayloadTypePayload Payload);
 
+        public sealed record TestCommandWithCustomSerializedPayloadTypeResponse(TestCommandWithCustomSerializedPayloadTypePayload Payload);
+
         public sealed record TestCommandWithCustomSerializedPayloadTypePayload(int Payload);
-    
+
         public sealed record NonHttpTestCommand
         {
             public int Payload { get; init; }
         }
-    
+
         public sealed record NonHttpTestCommandWithoutResponse
         {
             public int Payload { get; init; }
@@ -241,7 +243,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
         }
 
-        public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandResponse>
+        public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandWithCustomSerializedPayloadTypeResponse>
         {
         }
 
@@ -293,11 +295,11 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+            public async Task<TestCommandWithCustomSerializedPayloadTypeResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload.Payload + 1 };
+                return new(new(query.Payload.Payload + 1));
             }
 
             internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
