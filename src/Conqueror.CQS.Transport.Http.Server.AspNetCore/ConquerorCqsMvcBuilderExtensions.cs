@@ -1,4 +1,5 @@
-﻿using Conqueror.CQS.Transport.Http.Server.AspNetCore;
+﻿using System;
+using Conqueror.CQS.Transport.Http.Server.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -9,16 +10,19 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ConquerorCqsMvcBuilderExtensions
     {
-        public static IMvcBuilder AddConquerorCQSHttpControllers(this IMvcBuilder builder)
+        public static IMvcBuilder AddConquerorCQSHttpControllers(this IMvcBuilder builder, Action<ConquerorCqsHttpTransportServerAspNetCoreOptions>? configureOptions = null)
         {
-            _ = builder.Services.AddFinalizationCheck();
-            
+            _ = builder.Services.AddConquerorCQS().AddFinalizationCheck();
+
             builder.Services.TryAddSingleton(new CqsAspNetCoreServerServiceCollectionConfigurator());
-            
-            _ = builder.Services.PostConfigure<MvcOptions>(options =>
-            {
-                _ = options.Filters.Add<BadContextExceptionHandlerFilter>();
-            });
+
+            _ = builder.Services.PostConfigure<MvcOptions>(options => { _ = options.Filters.Add<BadContextExceptionHandlerFilter>(); });
+
+            var options = new ConquerorCqsHttpTransportServerAspNetCoreOptions();
+
+            configureOptions?.Invoke(options);
+
+            _ = builder.Services.AddSingleton(options);
 
             return builder;
         }

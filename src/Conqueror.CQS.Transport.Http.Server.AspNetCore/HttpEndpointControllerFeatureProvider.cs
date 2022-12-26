@@ -7,18 +7,18 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 {
     internal sealed class HttpEndpointControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
-        private readonly HttpEndpointRegistry endpointRegistry;
+        private readonly IReadOnlyCollection<HttpEndpoint> endpoints;
 
-        public HttpEndpointControllerFeatureProvider(HttpEndpointRegistry endpointRegistry)
+        public HttpEndpointControllerFeatureProvider(IReadOnlyCollection<HttpEndpoint> endpoints)
         {
-            this.endpointRegistry = endpointRegistry;
+            this.endpoints = endpoints;
         }
 
         public void PopulateFeature(
             IEnumerable<ApplicationPart> parts,
             ControllerFeature feature)
         {
-            foreach (var endpoint in endpointRegistry.GetEndpoints())
+            foreach (var endpoint in endpoints)
             {
                 var controllerType = DynamicCqsEndpointControllerFactory.Create(endpoint).GetTypeInfo();
 
