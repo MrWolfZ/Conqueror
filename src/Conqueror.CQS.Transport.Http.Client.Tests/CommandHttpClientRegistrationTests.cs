@@ -1,7 +1,9 @@
-﻿namespace Conqueror.CQS.Transport.Http.Client.Tests
+﻿using System.Text.Json;
+
+namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic interface generation")]
     public sealed class CommandHttpClientRegistrationTests
     {
         [Test]
@@ -99,30 +101,165 @@
 
             Assert.AreEqual(2, seenInstances.Count);
         }
-    
+
+        [Test]
+        public async Task GivenGlobalJsonSerializerOptions_WhenResolvingHandler_UsesGlobalJsonSerializerOptions()
+        {
+            var expectedOptions = new JsonSerializerOptions();
+            JsonSerializerOptions? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = expectedOptions; })
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient()) as HttpCommandTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenClientJsonSerializerOptions_WhenResolvingHandler_UsesClientJsonSerializerOptions()
+        {
+            var expectedOptions = new JsonSerializerOptions();
+            JsonSerializerOptions? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.JsonSerializerOptions = expectedOptions) as HttpCommandTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenGlobalAndClientJsonSerializerOptions_WhenResolvingHandler_UsesClientJsonSerializerOptions()
+        {
+            var globalOptions = new JsonSerializerOptions();
+            var expectedOptions = new JsonSerializerOptions();
+            JsonSerializerOptions? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = globalOptions; })
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.JsonSerializerOptions = expectedOptions) as HttpCommandTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreNotSame(globalOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenGlobalPathConvention_WhenResolvingHandler_UsesGlobalPathConvention()
+        {
+            var expectedOptions = new TestHttpCommandPathConvention();
+            IHttpCommandPathConvention? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.CommandPathConvention = expectedOptions; })
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient()) as HttpCommandTransportClient;
+                            seenOptions = httpTransportClient?.Options.CommandPathConvention;
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
+        {
+            var expectedOptions = new TestHttpCommandPathConvention();
+            IHttpCommandPathConvention? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.PathConvention = expectedOptions) as HttpCommandTransportClient;
+                            seenOptions = httpTransportClient?.Options.CommandPathConvention;
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenGlobalAndClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
+        {
+            var globalOptions = new TestHttpCommandPathConvention();
+            var expectedOptions = new TestHttpCommandPathConvention();
+            IHttpCommandPathConvention? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.CommandPathConvention = globalOptions; })
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.PathConvention = expectedOptions) as HttpCommandTransportClient;
+                            seenOptions = httpTransportClient?.Options.CommandPathConvention;
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreNotSame(globalOptions, seenOptions);
+        }
+
         [HttpCommand]
         public sealed record TestCommand
         {
             public int Payload { get; init; }
         }
 
-        public sealed record TestCommandResponse
-        {
-            public int Payload { get; init; }
-        }
+        public sealed record TestCommandResponse;
 
         public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-        }
-
-        public sealed class TestCommandHandler : ITestCommandHandler
-        {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = command.Payload + 1 };
-            }
         }
 
         private sealed class TestCommandTransport : ICommandTransportClient
@@ -131,6 +268,14 @@
                 where TCommand : class
             {
                 return Task.FromResult((TResponse)(object)new TestCommandResponse());
+            }
+        }
+
+        private sealed class TestHttpCommandPathConvention : IHttpCommandPathConvention
+        {
+            public string? GetCommandPath(Type commandType, HttpCommandAttribute attribute)
+            {
+                return null;
             }
         }
 

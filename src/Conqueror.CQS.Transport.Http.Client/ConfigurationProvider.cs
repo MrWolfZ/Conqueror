@@ -16,8 +16,11 @@ namespace Conqueror.CQS.Transport.Http.Client
             var globalOptions = new ConquerorCqsHttpClientGlobalOptions(provider);
             configureGlobalOptions?.Invoke(globalOptions);
 
-            var clientOptions = new ConquerorCqsHttpClientOptions(provider);
-            registration.ConfigurationAction?.Invoke(clientOptions);
+            var commandOptions = new HttpCommandClientOptions(provider);
+            registration.CommandConfigurationAction?.Invoke(commandOptions);
+
+            var queryOptions = new HttpQueryClientOptions(provider);
+            registration.QueryConfigurationAction?.Invoke(queryOptions);
 
             var httpClient = registration.HttpClientFactory?.Invoke(provider);
 
@@ -32,9 +35,11 @@ namespace Conqueror.CQS.Transport.Http.Client
                 httpClient = globalOptions.HttpClientFactory(baseAddress);
             }
 
-            var jsonSerializerOptions = clientOptions.JsonSerializerOptions ?? globalOptions.JsonSerializerOptions;
-
-            return new(httpClient, jsonSerializerOptions);
+            var jsonSerializerOptions = queryOptions.JsonSerializerOptions ?? commandOptions.JsonSerializerOptions ?? globalOptions.JsonSerializerOptions;
+            var commandPathConvention = commandOptions.PathConvention ?? globalOptions.CommandPathConvention;
+            var queryPathConvention = queryOptions.PathConvention ?? globalOptions.QueryPathConvention;
+            
+            return new(httpClient, jsonSerializerOptions, commandPathConvention, queryPathConvention);
         }
     }
 }

@@ -3,9 +3,9 @@ using System.Text.Json;
 
 namespace Conqueror.CQS.Transport.Http.Client
 {
-    public sealed class ConquerorCqsHttpClientOptions
+    public sealed class HttpCommandClientOptions
     {
-        internal ConquerorCqsHttpClientOptions(IServiceProvider serviceProvider)
+        internal HttpCommandClientOptions(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
         }
@@ -13,5 +13,7 @@ namespace Conqueror.CQS.Transport.Http.Client
         public IServiceProvider ServiceProvider { get; }
 
         public JsonSerializerOptions? JsonSerializerOptions { get; set; }
+
+        public IHttpCommandPathConvention? PathConvention { get; set; }
     }
 }

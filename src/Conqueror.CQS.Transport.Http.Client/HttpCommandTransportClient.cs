@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror.CQS.Common;
@@ -13,30 +11,33 @@ namespace Conqueror.CQS.Transport.Http.Client
 {
     internal sealed class HttpCommandTransportClient : ICommandTransportClient
     {
+        private static readonly DefaultHttpCommandPathConvention DefaultCommandPathConvention = new();
+
         private readonly IConquerorContextAccessor? conquerorContextAccessor;
-        private readonly HttpClient httpClient;
-        private readonly JsonSerializerOptions? serializerOptions;
 
         public HttpCommandTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            httpClient = options.HttpClient;
-            serializerOptions = options.JsonSerializerOptions;
+            Options = options;
         }
+
+        public ResolvedHttpClientOptions Options { get; }
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
             where TCommand : class
         {
-            using var content = JsonContent.Create(command, null, serializerOptions);
+            var attribute = typeof(TCommand).GetCustomAttribute<HttpCommandAttribute>()!;
+
+            using var content = JsonContent.Create(command, null, Options.JsonSerializerOptions);
 
             if (conquerorContextAccessor?.ConquerorContext?.Items is { Count: > 0 } contextItems)
             {
                 content.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(contextItems));
             }
 
-            var regex = new Regex("Command$");
-            var routeCommandName = regex.Replace(typeof(TCommand).Name, string.Empty);
-            var response = await httpClient.PostAsync(new Uri($"/api/commands/{routeCommandName}", UriKind.Relative), content, cancellationToken);
+            var path = Options.CommandPathConvention?.GetCommandPath(typeof(TCommand), attribute) ?? DefaultCommandPathConvention.GetCommandPath(typeof(TCommand), attribute);
+
+            var response = await Options.HttpClient.PostAsync(new Uri(path, UriKind.Relative), content, cancellationToken);
 
             if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.NoContent)
             {
@@ -55,7 +56,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 return (TResponse)(object)UnitCommandResponse.Instance;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<TResponse>(serializerOptions, cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken);
             return result!;
         }
     }
