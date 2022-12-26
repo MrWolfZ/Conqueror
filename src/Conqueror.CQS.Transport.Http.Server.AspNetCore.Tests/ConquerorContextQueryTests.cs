@@ -1,8 +1,12 @@
 ﻿using System.Net;
 using System.Net.Mime;
+using System.Reflection;
 using Conqueror.Common;
 using Conqueror.CQS.Transport.Http.Common;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 {
@@ -22,6 +26,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
+        [TestCase("/api/custom/queries/test?payload=10")]
+        [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenContextItems_ItemsAreReturnedInHeader(string path)
         {
             Resolve<TestObservations>().ShouldAddItems = true;
@@ -58,6 +64,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
+        [TestCase("/api/custom/queries/test?payload=10")]
+        [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenConquerorContextRequestHeader_ItemsAreReceivedByHandler(string path)
         {
             using var msg = new HttpRequestMessage
@@ -93,6 +101,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
+        [TestCase("/api/custom/queries/test?payload=10")]
+        [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path)
         {
             using var msg = new HttpRequestMessage
@@ -120,6 +130,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         protected override void ConfigureServices(IServiceCollection services)
         {
+            var applicationPartManager = new ApplicationPartManager();
+            applicationPartManager.ApplicationParts.Add(new TestControllerApplicationPart());
+            applicationPartManager.FeatureProviders.Add(new TestControllerFeatureProvider());
+
+            _ = services.AddSingleton(applicationPartManager);
+
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
             _ = services.AddTransient<TestQueryHandler>()
@@ -224,6 +240,34 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public bool ShouldAddItems { get; set; }
 
             public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
+        }
+
+        [ApiController]
+        private sealed class TestHttpQueryController : ControllerBase
+        {
+            [HttpGet("/api/custom/queries/test")]
+            public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
+            {
+                return HttpQueryExecutor.ExecuteQuery<TestQuery, TestQueryResponse>(HttpContext, query, cancellationToken);
+            }
+
+            [HttpGet("/api/custom/queries/testQueryWithoutPayload")]
+            public Task<TestQueryResponse> ExecuteTestQueryWithoutPayload(CancellationToken cancellationToken)
+            {
+                return HttpQueryExecutor.ExecuteQuery<TestQueryWithoutPayload, TestQueryResponse>(HttpContext, cancellationToken);
+            }
+        }
+
+        private sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
+        {
+            public override string Name => nameof(TestControllerApplicationPart);
+
+            public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpQueryController).GetTypeInfo() };
+        }
+
+        private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
+        {
+            protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpQueryController);
         }
     }
 }
