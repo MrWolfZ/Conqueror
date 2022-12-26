@@ -5,11 +5,16 @@ namespace Conqueror
 {
     public sealed class DefaultHttpCommandPathConvention : IHttpCommandPathConvention
     {
+        private static readonly Regex StripSuffixRegex = new("Command$");
+
         public string GetCommandPath(Type commandType, HttpCommandAttribute attribute)
         {
-            var regex = new Regex("Command$");
-            var path = $"/api/commands/{regex.Replace(commandType.Name, string.Empty)}";
-            return path;
+            if (attribute.Path != null)
+            {
+                return attribute.Path;
+            }
+            
+            return $"/api/commands/{StripSuffixRegex.Replace(commandType.Name, string.Empty)}";
         }
     }
 }

@@ -6,5 +6,7 @@ namespace Conqueror
     public sealed class HttpQueryAttribute : Attribute
     {
         public bool UsePost { get; set; }
+        
+        public string? Path { get; set; }
     }
 }
