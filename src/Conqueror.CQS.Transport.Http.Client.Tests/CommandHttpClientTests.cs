@@ -146,6 +146,17 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.AreEqual(11, result.Payload);
         }
 
+        [Test]
+        public async Task GivenSuccessfulHttpCallWithVersion_ReturnsCommandResponse()
+        {
+            var handler = ResolveOnClient<ITestCommandWithVersionHandler>();
+
+            var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
@@ -158,6 +169,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddTransient<TestCommandWithCustomSerializedPayloadTypeHandler>()
                         .AddTransient<TestCommandWithCustomPathConventionHandler>()
                         .AddTransient<TestCommandWithCustomPathHandler>()
+                        .AddTransient<TestCommandWithVersionHandler>()
                         .AddTransient<NonHttpTestCommandHandler>()
                         .AddTransient<NonHttpTestCommandWithoutResponseHandler>();
 
@@ -190,7 +202,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             PropertyNameCaseInsensitive = true,
                         }))
                         .AddConquerorCommandClient<ITestCommandWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithCustomPathHandler>(b => b.UseHttp(HttpClient));
+                        .AddConquerorCommandClient<ITestCommandWithCustomPathHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorCommandClient<ITestCommandWithVersionHandler>(b => b.UseHttp(HttpClient));
 
             _ = services.FinalizeConquerorRegistrations();
         }
@@ -257,6 +270,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public int Payload { get; init; }
         }
 
+        [HttpCommand(Version = 2)]
+        public sealed record TestCommandWithVersion
+        {
+            public int Payload { get; init; }
+        }
+
         public sealed record NonHttpTestCommand
         {
             public int Payload { get; init; }
@@ -292,6 +311,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         public interface ITestCommandWithCustomPathHandler : ICommandHandler<TestCommandWithCustomPath, TestCommandResponse>
+        {
+        }
+
+        public interface ITestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>
         {
         }
 
@@ -387,6 +410,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         public sealed class TestCommandWithCustomPathHandler : ITestCommandWithCustomPathHandler
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
+        }
+
+        public sealed class TestCommandWithVersionHandler : ITestCommandWithVersionHandler
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithVersion command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();

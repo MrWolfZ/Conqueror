@@ -232,6 +232,28 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.AreEqual(11, result.Payload);
         }
 
+        [Test]
+        public async Task GivenSuccessfulHttpCallWithVersion_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<ITestQueryWithVersionHandler>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
+        [Test]
+        public async Task GivenSuccessfulPostHttpCallWithVersion_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<ITestPostQueryWithVersionHandler>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
@@ -250,6 +272,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddTransient<TestPostQueryWithCustomPathConventionHandler>()
                         .AddTransient<TestQueryWithCustomPathHandler>()
                         .AddTransient<TestPostQueryWithCustomPathHandler>()
+                        .AddTransient<TestQueryWithVersionHandler>()
+                        .AddTransient<TestPostQueryWithVersionHandler>()
                         .AddTransient<NonHttpTestQueryHandler>();
 
             _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
@@ -287,7 +311,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddConquerorQueryClient<ITestQueryWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestPostQueryWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestQueryWithCustomPathHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestPostQueryWithCustomPathHandler>(b => b.UseHttp(HttpClient));
+                        .AddConquerorQueryClient<ITestPostQueryWithCustomPathHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestQueryWithVersionHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestPostQueryWithVersionHandler>(b => b.UseHttp(HttpClient));
 
             _ = services.FinalizeConquerorRegistrations();
         }
@@ -367,6 +393,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public int Payload { get; init; }
         }
 
+        [HttpQuery(Version = 2)]
+        public sealed record TestQueryWithVersion
+        {
+            public int Payload { get; init; }
+        }
+
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
         {
@@ -391,6 +423,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         [HttpQuery(UsePost = true, Path = "/api/testPostQueryWithCustomPath")]
         public sealed record TestPostQueryWithCustomPath
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(UsePost = true, Version = 2)]
+        public sealed record TestPostQueryWithVersion
         {
             public int Payload { get; init; }
         }
@@ -432,6 +470,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
         }
 
+        public interface ITestQueryWithVersionHandler : IQueryHandler<TestQueryWithVersion, TestQueryResponse>
+        {
+        }
+
         public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
         {
         }
@@ -449,6 +491,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         public interface ITestPostQueryWithCustomPathHandler : IQueryHandler<TestPostQueryWithCustomPath, TestQueryResponse>
+        {
+        }
+
+        public interface ITestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>
         {
         }
 
@@ -536,6 +582,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             }
         }
 
+        public sealed class TestQueryWithVersionHandler : ITestQueryWithVersionHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithVersion query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
         public sealed class TestPostQueryHandler : ITestPostQueryHandler
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
@@ -602,6 +658,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         public sealed class TestPostQueryWithCustomPathHandler : ITestPostQueryWithCustomPathHandler
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestPostQueryWithVersionHandler : ITestPostQueryWithVersionHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();

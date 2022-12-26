@@ -14,7 +14,7 @@ namespace Conqueror
                 return attribute.Path;
             }
 
-            return $"/api/queries/{StripSuffixRegex.Replace(queryType.Name, string.Empty)}";
+            return $"/api/{(attribute.Version > 0 ? $"v{attribute.Version}/" : string.Empty)}queries/{StripSuffixRegex.Replace(queryType.Name, string.Empty)}";
         }
     }
 }
