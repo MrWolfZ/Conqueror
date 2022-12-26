@@ -2,7 +2,7 @@
 
 namespace Conqueror.Examples.BlazorWebAssembly.Contracts;
 
-[HttpCommand]
+[HttpCommand(Version = 1, ApiGroupName = "SharedCounter")]
 public sealed record IncrementSharedCounterValueCommand
 {
     [Required]

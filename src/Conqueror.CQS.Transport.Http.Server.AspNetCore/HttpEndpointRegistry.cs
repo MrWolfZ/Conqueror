@@ -8,6 +8,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 {
     internal sealed class HttpEndpointRegistry
     {
+        private const string DefaultCommandControllerName = "Commands";
+        private const string DefaultQueryControllerName = "Queries";
+
         private readonly ICommandHandlerRegistry commandHandlerRegistry;
         private readonly DefaultHttpCommandPathConvention defaultCommandPathConvention = new();
         private readonly DefaultHttpQueryPathConvention defaultQueryPathConvention = new();
@@ -41,8 +44,6 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
         private IEnumerable<HttpEndpoint> GetCommandEndpoints()
         {
-            const string apiGroupName = "Commands";
-
             foreach (var command in GetHttpCommands())
             {
                 var attribute = command.CommandType.GetCustomAttribute<HttpCommandAttribute>()!;
@@ -54,10 +55,11 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                     EndpointType = HttpEndpointType.Command,
                     Method = HttpMethod.Post,
                     Path = path,
-                    Version = 1,
-                    OperationId = command.CommandType.FullName ?? command.CommandType.Name,
+                    Version = attribute.Version,
                     Name = command.CommandType.Name,
-                    ApiGroupName = apiGroupName,
+                    OperationId = attribute.OperationId ?? command.CommandType.FullName ?? command.CommandType.Name,
+                    ControllerName = attribute.ApiGroupName ?? DefaultCommandControllerName,
+                    ApiGroupName = attribute.ApiGroupName,
                     RequestType = command.CommandType,
                     ResponseType = command.ResponseType,
                 };
@@ -68,8 +70,6 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
         private IEnumerable<HttpEndpoint> GetQueryEndpoints()
         {
-            const string apiGroupName = "Queries";
-
             foreach (var query in GetHttpQueries())
             {
                 var attribute = query.QueryType.GetCustomAttribute<HttpQueryAttribute>()!;
@@ -81,10 +81,11 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                     EndpointType = HttpEndpointType.Query,
                     Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
                     Path = path,
-                    Version = 1,
-                    OperationId = query.QueryType.FullName ?? query.QueryType.Name,
-                    ApiGroupName = apiGroupName,
+                    Version = attribute.Version,
                     Name = query.QueryType.Name,
+                    OperationId = attribute.OperationId ?? query.QueryType.FullName ?? query.QueryType.Name,
+                    ControllerName = attribute.ApiGroupName ?? DefaultQueryControllerName,
+                    ApiGroupName = attribute.ApiGroupName,
                     RequestType = query.QueryType,
                     ResponseType = query.ResponseType,
                 };

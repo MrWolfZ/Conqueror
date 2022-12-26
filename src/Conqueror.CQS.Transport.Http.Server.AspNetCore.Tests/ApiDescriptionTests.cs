@@ -108,6 +108,34 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         }
 
         [Test]
+        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithOperationId()
+        {
+            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-command-op-id");
+
+            Assert.IsNotNull(commandApiDescription);
+            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+            Assert.AreEqual("api/commands/TestCommandWithOperationId", commandApiDescription?.RelativePath);
+            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.IsNull(commandApiDescription?.GroupName);
+            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        }
+
+        [Test]
+        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithApiGroupName()
+        {
+            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithApiGroupName).FullName);
+
+            Assert.IsNotNull(commandApiDescription);
+            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+            Assert.AreEqual("api/commands/TestCommandWithApiGroupName", commandApiDescription?.RelativePath);
+            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.AreEqual("Custom Command Group", commandApiDescription?.GroupName);
+            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        }
+
+        [Test]
         public void ApiDescriptionProvider_ReturnsQueryDescriptors()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
@@ -261,6 +289,62 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
         }
 
+        [Test]
+        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithOperationId()
+        {
+            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-query-op-id");
+
+            Assert.IsNotNull(queryApiDescription);
+            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+            Assert.AreEqual("api/queries/TestQueryWithOperationId", queryApiDescription?.RelativePath);
+            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.IsNull(queryApiDescription?.GroupName);
+            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        }
+
+        [Test]
+        public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithOperationId()
+        {
+            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-post-query-op-id");
+
+            Assert.IsNotNull(queryApiDescription);
+            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+            Assert.AreEqual("api/queries/TestPostQueryWithOperationId", queryApiDescription?.RelativePath);
+            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.IsNull(queryApiDescription?.GroupName);
+            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        }
+
+        [Test]
+        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithApiGroupName()
+        {
+            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithApiGroupName).FullName);
+
+            Assert.IsNotNull(queryApiDescription);
+            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+            Assert.AreEqual("api/queries/TestQueryWithApiGroupName", queryApiDescription?.RelativePath);
+            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.AreEqual("Custom Query Group", queryApiDescription?.GroupName);
+            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        }
+
+        [Test]
+        public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithApiGroupName()
+        {
+            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithApiGroupName).FullName);
+
+            Assert.IsNotNull(queryApiDescription);
+            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+            Assert.AreEqual("api/queries/TestPostQueryWithApiGroupName", queryApiDescription?.RelativePath);
+            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.AreEqual("Custom POST Query Group", queryApiDescription?.GroupName);
+            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        }
+
         protected override void ConfigureServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o =>
@@ -276,7 +360,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddTransient<TestCommandHandlerWithoutPayload>()
                         .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
                         .AddTransient<TestCommandWithCustomPathHandler>()
-                        .AddTransient<TestCommandWithVersionHandler>();
+                        .AddTransient<TestCommandWithVersionHandler>()
+                        .AddTransient<TestCommandWithOperationIdHandler>()
+                        .AddTransient<TestCommandWithApiGroupNameHandler>();
 
             _ = services.AddTransient<TestQueryHandler>()
                         .AddTransient<TestQueryHandler2>()
@@ -285,11 +371,15 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddTransient<TestQueryHandlerWithComplexPayload>()
                         .AddTransient<TestQueryWithCustomPathHandler>()
                         .AddTransient<TestQueryWithVersionHandler>()
+                        .AddTransient<TestQueryWithOperationIdHandler>()
+                        .AddTransient<TestQueryWithApiGroupNameHandler>()
                         .AddTransient<TestPostQueryHandler>()
                         .AddTransient<TestPostQueryHandler2>()
                         .AddTransient<TestPostQueryHandlerWithoutPayload>()
                         .AddTransient<TestPostQueryWithCustomPathHandler>()
-                        .AddTransient<TestPostQueryWithVersionHandler>();
+                        .AddTransient<TestPostQueryWithVersionHandler>()
+                        .AddTransient<TestPostQueryWithOperationIdHandler>()
+                        .AddTransient<TestPostQueryWithApiGroupNameHandler>();
 
             _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
@@ -345,6 +435,18 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public int Payload { get; init; }
         }
 
+        [HttpQuery(OperationId = "custom-query-op-id")]
+        public sealed record TestQueryWithOperationId
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(ApiGroupName = "Custom Query Group")]
+        public sealed record TestQueryWithApiGroupName
+        {
+            public int Payload { get; init; }
+        }
+
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
         {
@@ -368,6 +470,18 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [HttpQuery(UsePost = true, Version = 2)]
         public sealed record TestPostQueryWithVersion
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(UsePost = true, OperationId = "custom-post-query-op-id")]
+        public sealed record TestPostQueryWithOperationId
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(UsePost = true, ApiGroupName = "Custom POST Query Group")]
+        public sealed record TestPostQueryWithApiGroupName
         {
             public int Payload { get; init; }
         }
@@ -446,6 +560,26 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             }
         }
 
+        public sealed class TestQueryWithOperationIdHandler : IQueryHandler<TestQueryWithOperationId, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithOperationId query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestQueryWithApiGroupNameHandler : IQueryHandler<TestQueryWithApiGroupName, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithApiGroupName query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
         public sealed class TestPostQueryHandler : ITestPostQueryHandler
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
@@ -489,6 +623,26 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public sealed class TestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestPostQueryWithOperationIdHandler : IQueryHandler<TestPostQueryWithOperationId, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithOperationId query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestPostQueryWithApiGroupNameHandler : IQueryHandler<TestPostQueryWithApiGroupName, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithApiGroupName query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
@@ -542,6 +696,18 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [HttpCommand(Version = 2)]
         public sealed record TestCommandWithVersion
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpCommand(OperationId = "custom-command-op-id")]
+        public sealed record TestCommandWithOperationId
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpCommand(ApiGroupName = "Custom Command Group")]
+        public sealed record TestCommandWithApiGroupName
         {
             public int Payload { get; init; }
         }
@@ -613,6 +779,26 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public sealed class TestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithVersion command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
+        }
+
+        public sealed class TestCommandWithOperationIdHandler : ICommandHandler<TestCommandWithOperationId, TestCommandResponse>
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithOperationId command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
+        }
+
+        public sealed class TestCommandWithApiGroupNameHandler : ICommandHandler<TestCommandWithApiGroupName, TestCommandResponse>
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithApiGroupName command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
