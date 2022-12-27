@@ -34,10 +34,11 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
                         MetadataReference.CreateFromFile(typeof(ICommandHandler).Assembly.Location),
                     },
                 },
+                CompilerDiagnostics = CompilerDiagnostics.None,
                 TestCode = source,
 #if NET7_0
                 ReferenceAssemblies = CSharpVerifierHelper.Net70ReferenceAssemblies,
-#else      
+#else
                 ReferenceAssemblies = ReferenceAssemblies.Net.Net60,
 #endif
             };
@@ -45,15 +46,16 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
             test.ExpectedDiagnostics.AddRange(expected);
             await test.RunAsync(CancellationToken.None);
         }
-        
+
         public static async Task VerifyAnalyzerWithoutConquerorReferenceAsync(string source, params DiagnosticResult[] expected)
         {
             var test = new Test
             {
+                CompilerDiagnostics = CompilerDiagnostics.None,
                 TestCode = source,
 #if NET7_0
                 ReferenceAssemblies = CSharpVerifierHelper.Net70ReferenceAssemblies,
-#else      
+#else
                 ReferenceAssemblies = ReferenceAssemblies.Net.Net60,
 #endif
             };
@@ -61,7 +63,7 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
             test.ExpectedDiagnostics.AddRange(expected);
             await test.RunAsync(CancellationToken.None);
         }
-        
+
         private sealed class Test : CSharpAnalyzerTest<TAnalyzer, NUnitVerifier>
         {
             public Test()
@@ -69,8 +71,6 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers
                 SolutionTransforms.Add((solution, projectId) =>
                 {
                     var project = solution.GetProject(projectId)!;
-                    
-                    // TODO: set language version and preprocessor symbols correctly for .NET 7 once library supports it
 
                     var compilationOptions = project.CompilationOptions!.WithSpecificDiagnosticOptions(
                         project.CompilationOptions!.SpecificDiagnosticOptions.SetItems(CSharpVerifierHelper.NullableWarnings));
