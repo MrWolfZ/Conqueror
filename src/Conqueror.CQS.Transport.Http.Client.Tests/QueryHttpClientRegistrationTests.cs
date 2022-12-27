@@ -1,7 +1,9 @@
-﻿namespace Conqueror.CQS.Transport.Http.Client.Tests
+﻿using System.Text.Json;
+
+namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic interface generation")]
     public sealed class QueryHttpClientRegistrationTests
     {
         [Test]
@@ -99,30 +101,165 @@
 
             Assert.AreEqual(2, seenInstances.Count);
         }
-    
+
+        [Test]
+        public async Task GivenGlobalJsonSerializerOptions_WhenResolvingHandler_UsesGlobalJsonSerializerOptions()
+        {
+            var expectedOptions = new JsonSerializerOptions();
+            JsonSerializerOptions? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = expectedOptions; })
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient()) as HttpQueryTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenClientJsonSerializerOptions_WhenResolvingHandler_UsesClientJsonSerializerOptions()
+        {
+            var expectedOptions = new JsonSerializerOptions();
+            JsonSerializerOptions? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenGlobalAndClientJsonSerializerOptions_WhenResolvingHandler_UsesClientJsonSerializerOptions()
+        {
+            var globalOptions = new JsonSerializerOptions();
+            var expectedOptions = new JsonSerializerOptions();
+            JsonSerializerOptions? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = globalOptions; })
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreNotSame(globalOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenGlobalPathConvention_WhenResolvingHandler_UsesGlobalPathConvention()
+        {
+            var expectedOptions = new TestHttpQueryPathConvention();
+            IHttpQueryPathConvention? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = expectedOptions; })
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient()) as HttpQueryTransportClient;
+                            seenOptions = httpTransportClient?.Options.QueryPathConvention;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
+        {
+            var expectedOptions = new TestHttpQueryPathConvention();
+            IHttpQueryPathConvention? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.PathConvention = expectedOptions) as HttpQueryTransportClient;
+                            seenOptions = httpTransportClient?.Options.QueryPathConvention;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenGlobalAndClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
+        {
+            var globalOptions = new TestHttpQueryPathConvention();
+            var expectedOptions = new TestHttpQueryPathConvention();
+            IHttpQueryPathConvention? seenOptions = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = globalOptions; })
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.PathConvention = expectedOptions) as HttpQueryTransportClient;
+                            seenOptions = httpTransportClient?.Options.QueryPathConvention;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreNotSame(globalOptions, seenOptions);
+        }
+
         [HttpQuery]
         public sealed record TestQuery
         {
             public int Payload { get; init; }
         }
 
-        public sealed record TestQueryResponse
-        {
-            public int Payload { get; init; }
-        }
+        public sealed record TestQueryResponse;
 
         public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-        }
-
-        public sealed class TestQueryHandler : ITestQueryHandler
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
         }
 
         private sealed class TestQueryTransport : IQueryTransportClient
@@ -131,6 +268,14 @@
                 where TQuery : class
             {
                 return Task.FromResult((TResponse)(object)new TestQueryResponse());
+            }
+        }
+
+        private sealed class TestHttpQueryPathConvention : IHttpQueryPathConvention
+        {
+            public string? GetQueryPath(Type queryType, HttpQueryAttribute attribute)
+            {
+                return null;
             }
         }
 

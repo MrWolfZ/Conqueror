@@ -124,18 +124,30 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.AreEqual(11, result.Payload.Payload);
         }
 
+        [Test]
+        public async Task GivenSuccessfulHttpCallWithCustomPathConvention_ReturnsCommandResponse()
+        {
+            var handler = ResolveOnClient<ITestCommandWithCustomPathConventionHandler>();
+
+            var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
-            _ = services.AddMvc().AddConquerorCQSHttpControllers();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
             _ = services.AddTransient<TestCommandHandler>()
                         .AddTransient<TestCommandWithoutResponseHandler>()
                         .AddTransient<TestCommandWithoutPayloadHandler>()
                         .AddTransient<TestCommandWithoutResponseWithoutPayloadHandler>()
+                        .AddTransient<TestCommandWithCustomSerializedPayloadTypeHandler>()
+                        .AddTransient<TestCommandWithCustomPathConventionHandler>()
                         .AddTransient<NonHttpTestCommandHandler>()
-                        .AddTransient<NonHttpTestCommandWithoutResponseHandler>()
-                        .AddTransient<TestCommandWithCustomSerializedPayloadTypeHandler>();
+                        .AddTransient<NonHttpTestCommandWithoutResponseHandler>();
 
             _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
@@ -152,6 +164,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 {
                     PropertyNameCaseInsensitive = true,
                 };
+
+                o.CommandPathConvention = new TestHttpCommandPathConvention();
             });
 
             _ = services.AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(HttpClient))
@@ -162,7 +176,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         {
                             Converters = { new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
-                        }));
+                        }))
+                        .AddConquerorCommandClient<ITestCommandWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient));
 
             _ = services.FinalizeConquerorRegistrations();
         }
@@ -217,6 +232,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed record TestCommandWithCustomSerializedPayloadTypePayload(int Payload);
 
+        [HttpCommand]
+        public sealed record TestCommandWithCustomPathConvention
+        {
+            public int Payload { get; init; }
+        }
+
         public sealed record NonHttpTestCommand
         {
             public int Payload { get; init; }
@@ -244,6 +265,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandWithCustomSerializedPayloadTypeResponse>
+        {
+        }
+
+        public interface ITestCommandWithCustomPathConventionHandler : ICommandHandler<TestCommandWithCustomPathConvention, TestCommandResponse>
         {
         }
 
@@ -295,11 +320,11 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler
         {
-            public async Task<TestCommandWithCustomSerializedPayloadTypeResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+            public async Task<TestCommandWithCustomSerializedPayloadTypeResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
-                return new(new(query.Payload.Payload + 1));
+                return new(new(command.Payload.Payload + 1));
             }
 
             internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
@@ -326,6 +351,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             }
         }
 
+        public sealed class TestCommandWithCustomPathConventionHandler : ITestCommandWithCustomPathConventionHandler
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPathConvention command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
+        }
+
         public sealed class NonHttpTestCommandHandler : INonHttpTestCommandHandler
         {
             public Task<TestCommandResponse> ExecuteCommand(NonHttpTestCommand command, CancellationToken cancellationToken = default)
@@ -339,6 +374,19 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public Task ExecuteCommand(NonHttpTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 throw new NotSupportedException();
+            }
+        }
+
+        private sealed class TestHttpCommandPathConvention : IHttpCommandPathConvention
+        {
+            public string? GetCommandPath(Type commandType, HttpCommandAttribute attribute)
+            {
+                if (commandType != typeof(TestCommandWithCustomPathConvention))
+                {
+                    return null;
+                }
+
+                return $"/api/commands/{commandType.Name}FromConvention";
             }
         }
     }

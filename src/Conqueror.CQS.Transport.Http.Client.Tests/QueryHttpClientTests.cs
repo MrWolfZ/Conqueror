@@ -188,9 +188,31 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.AreEqual(11, result.Payload);
         }
 
+        [Test]
+        public async Task GivenSuccessfulHttpCallWithCustomPathConvention_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<ITestQueryWithCustomPathConventionHandler>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
+        [Test]
+        public async Task GivenSuccessfulPostHttpCallWithCustomPathConvention_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<ITestPostQueryWithCustomPathConventionHandler>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
-            _ = services.AddMvc().AddConquerorCQSHttpControllers();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
             _ = services.AddTransient<TestQueryHandler>()
@@ -202,6 +224,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddTransient<TestQueryWithComplexPayloadWithCollectionPropertyHandler>()
                         .AddTransient<TestQueryWithOptionalPropertyHandler>()
                         .AddTransient<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
+                        .AddTransient<TestQueryWithCustomPathConventionHandler>()
+                        .AddTransient<TestPostQueryWithCustomPathConventionHandler>()
                         .AddTransient<NonHttpTestQueryHandler>();
 
             _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
@@ -219,6 +243,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 {
                     PropertyNameCaseInsensitive = true,
                 };
+
+                o.QueryPathConvention = new TestHttpQueryPathConvention();
             });
 
             _ = services.AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(HttpClient))
@@ -233,7 +259,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         {
                             Converters = { new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
-                        }));
+                        }))
+                        .AddConquerorQueryClient<ITestQueryWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestPostQueryWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient));
 
             _ = services.FinalizeConquerorRegistrations();
         }
@@ -301,6 +329,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public int? OptionalPayload { get; init; }
         }
 
+        [HttpQuery]
+        public sealed record TestQueryWithCustomPathConvention
+        {
+            public int Payload { get; init; }
+        }
+
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
         {
@@ -316,6 +350,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         public sealed record TestPostQueryWithCustomSerializedPayloadTypeResponse(TestPostQueryWithCustomSerializedPayloadTypePayload Payload);
 
         public sealed record TestPostQueryWithCustomSerializedPayloadTypePayload(int Payload);
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQueryWithCustomPathConvention
+        {
+            public int Payload { get; init; }
+        }
 
         public sealed record NonHttpTestQuery
         {
@@ -346,6 +386,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
         }
 
+        public interface ITestQueryWithCustomPathConventionHandler : IQueryHandler<TestQueryWithCustomPathConvention, TestQueryResponse>
+        {
+        }
+
         public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
         {
         }
@@ -355,6 +399,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         public interface ITestPostQueryWithCustomSerializedPayloadTypeHandler : IQueryHandler<TestPostQueryWithCustomSerializedPayloadType, TestPostQueryWithCustomSerializedPayloadTypeResponse>
+        {
+        }
+
+        public interface ITestPostQueryWithCustomPathConventionHandler : IQueryHandler<TestPostQueryWithCustomPathConvention, TestQueryResponse>
         {
         }
 
@@ -422,6 +470,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             }
         }
 
+        public sealed class TestQueryWithCustomPathConventionHandler : ITestQueryWithCustomPathConventionHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomPathConvention query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
         public sealed class TestPostQueryHandler : ITestPostQueryHandler
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
@@ -475,11 +533,34 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             }
         }
 
+        public sealed class TestPostQueryWithCustomPathConventionHandler : ITestPostQueryWithCustomPathConventionHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomPathConvention query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
         public sealed class NonHttpTestQueryHandler : INonHttpTestQueryHandler
         {
             public Task<TestQueryResponse> ExecuteQuery(NonHttpTestQuery query, CancellationToken cancellationToken = default)
             {
                 throw new NotSupportedException();
+            }
+        }
+
+        private sealed class TestHttpQueryPathConvention : IHttpQueryPathConvention
+        {
+            public string? GetQueryPath(Type queryType, HttpQueryAttribute attribute)
+            {
+                if (queryType != typeof(TestQueryWithCustomPathConvention) && queryType != typeof(TestPostQueryWithCustomPathConvention))
+                {
+                    return null;
+                }
+
+                return $"/api/queries/{queryType.Name}FromConvention";
             }
         }
     }
