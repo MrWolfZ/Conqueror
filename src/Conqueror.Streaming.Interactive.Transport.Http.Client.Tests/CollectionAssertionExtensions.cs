@@ -8,7 +8,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
         public static void ShouldReceiveItem<T>(this BlockingCollection<T> collection, T item, TimeSpan? timeout = null)
             where T : notnull
         {
-            var result = collection.TryTake(out var receivedItem, Debugger.IsAttached ? TimeSpan.FromMinutes(1) : timeout ?? TimeSpan.FromMilliseconds(500));
+            var result = collection.TryTake(out var receivedItem, Debugger.IsAttached ? TimeSpan.FromMinutes(1) : timeout ?? TimeSpan.FromSeconds(2));
 
             if (!result)
             {

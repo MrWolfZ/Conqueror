@@ -119,7 +119,11 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
             _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
 
             // give socket the time to close
-            await Task.Delay(10);
+            var attempts = 0;
+            while (socket.State != WebSocketState.Closed && attempts++ < 20)
+            {
+                await Task.Delay(10);
+            }
             
             Assert.AreEqual(WebSocketState.Closed, socket.State);
         }
