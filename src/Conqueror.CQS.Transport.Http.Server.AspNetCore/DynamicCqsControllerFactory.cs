@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 {
@@ -18,14 +19,15 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             return DynamicTypeDictionary.GetOrAdd(name, _ => new(typeFactory)).Value;
         }
 
-        public static TypeBuilder CreateTypeBuilder(string name, string groupName, string route)
+        public static TypeBuilder CreateTypeBuilder(string name, HttpEndpoint endpoint)
         {
             var typeName = $"{name}`ConquerorCqsDynamicController";
             var typeBuilder = ModuleBuilder.DefineType(typeName, TypeAttributes.NotPublic | TypeAttributes.Sealed, typeof(ControllerBase));
 
             SetApiControllerAttribute(typeBuilder);
-            SetRouteAttribute(typeBuilder, route);
-            SetControllerRouteValueAttribute(typeBuilder, groupName);
+            SetRouteAttribute(typeBuilder, endpoint.Path);
+            SetControllerRouteValueAttribute(typeBuilder, endpoint.ControllerName);
+            SetApiExplorerSettingsAttribute(typeBuilder, endpoint.ApiGroupName);
 
             return typeBuilder;
         }
@@ -33,7 +35,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
         public static void ApplyHttpMethodAttribute(MethodBuilder methodBuilder, Type attributeType, string name)
         {
             var ctor = attributeType.GetConstructors().First(c => c.GetParameters().Length == 0);
-            var nameParam = attributeType.GetProperties().First(p => p.Name == "Name");
+            var nameParam = attributeType.GetProperties().First(p => p.Name == nameof(HttpMethodAttribute.Name));
             var attributeBuilder = new CustomAttributeBuilder(ctor, Array.Empty<object>(), new[] { nameParam }, new object[] { name });
             methodBuilder.SetCustomAttribute(attributeBuilder);
         }
@@ -63,6 +65,19 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
         {
             var ctor = typeof(ConquerorCqsControllerRouteValueAttribute).GetConstructors().First(c => c.GetParameters().Length == 1 && c.GetParameters().Single().ParameterType == typeof(string));
             var attributeBuilder = new CustomAttributeBuilder(ctor, new object[] { groupName });
+            typeBuilder.SetCustomAttribute(attributeBuilder);
+        }
+
+        private static void SetApiExplorerSettingsAttribute(TypeBuilder typeBuilder, string? groupName)
+        {
+            if (groupName is null)
+            {
+                return;
+            }
+            
+            var ctor = typeof(ApiExplorerSettingsAttribute).GetConstructors().First(c => c.GetParameters().Length == 0);
+            var nameParam = typeof(ApiExplorerSettingsAttribute).GetProperties().First(p => p.Name == nameof(ApiExplorerSettingsAttribute.GroupName));
+            var attributeBuilder = new CustomAttributeBuilder(ctor, Array.Empty<object>(), new[] { nameParam }, new object[] { groupName });
             typeBuilder.SetCustomAttribute(attributeBuilder);
         }
 

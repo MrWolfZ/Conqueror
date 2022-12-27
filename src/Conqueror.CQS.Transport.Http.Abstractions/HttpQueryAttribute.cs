@@ -15,5 +15,17 @@ namespace Conqueror
         /// Note that this property cannot be nullable due to compiler limitations.
         /// </summary>
         public uint Version { get; set; }
+        
+        /// <summary>
+        /// The operation ID of this query in API descriptions (which is used in e.g. OpenAPI specifications).
+        /// Defaults to the full type name of the query type.
+        /// </summary>
+        public string? OperationId { get; set; }
+        
+        /// <summary>
+        /// The name of the API group in which this query is contained in API descriptions
+        /// (which is used in e.g. OpenAPI specifications).
+        /// </summary>
+        public string? ApiGroupName { get; set; }
     }
 }

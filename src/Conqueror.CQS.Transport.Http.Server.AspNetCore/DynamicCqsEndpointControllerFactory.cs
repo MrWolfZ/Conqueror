@@ -23,7 +23,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             var hasPayload = endpoint.RequestType.HasAnyProperties() || !endpoint.RequestType.HasDefaultConstructor();
             var hasResponse = endpoint.ResponseType != null;
 
-            var typeBuilder = DynamicCqsControllerFactory.CreateTypeBuilder(typeName, endpoint.ApiGroupName, endpoint.Path);
+            var typeBuilder = DynamicCqsControllerFactory.CreateTypeBuilder(typeName, endpoint);
 
             EmitExecuteMethod();
 
