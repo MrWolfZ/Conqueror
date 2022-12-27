@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 namespace Conqueror
@@ -6,6 +7,7 @@ namespace Conqueror
     public sealed class DefaultHttpCommandPathConvention : IHttpCommandPathConvention
     {
         private static readonly Regex StripSuffixRegex = new("Command$");
+        private static readonly ConcurrentDictionary<Type, string> PathCache = new();
 
         public string GetCommandPath(Type commandType, HttpCommandAttribute attribute)
         {
@@ -13,8 +15,15 @@ namespace Conqueror
             {
                 return attribute.Path;
             }
-            
-            return $"/api/{(attribute.Version > 0 ? $"v{attribute.Version}/" : string.Empty)}commands/{StripSuffixRegex.Replace(commandType.Name, string.Empty)}";
+
+            // in clients this method may be called repeatedly, and since regex is expensive
+            // we cache the result
+            return PathCache.GetOrAdd(commandType, t =>
+            {
+                var versionPart = attribute.Version > 0 ? $"v{attribute.Version}/" : string.Empty;
+                var namePart = StripSuffixRegex.Replace(t.Name, string.Empty);
+                return $"/api/{versionPart}commands/{namePart}";
+            });
         }
     }
 }
