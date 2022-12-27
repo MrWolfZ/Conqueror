@@ -1,78 +1,46 @@
-# Conqueror
+# Conqueror - for building scalable & maintainable .NET applications
 
-A set of libraries to powercharge your .NET development.
+**Conqueror** is a set of libraries that helps you build .NET applications in a structured way (using patterns like [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), [stream processing](https://en.wikipedia.org/wiki/Stream_processing), etc.), while keeping them scalable (both at development time as well as runtime).
 
-## Open points
+See our [quickstart](quickstart) or [example projects](examples) if you want to jump right into using **Conqueror** by code examples. Or head over to our [recipes](#recipes) for more detailed guidance on how you can utilize **Conqueror** to its maximum. Finally, if you want to learn more about the motivation behind this project (including comparisons to similar projects like [MediatR](https://github.com/jbogard/MediatR)), head over to the [motivation](#motivation) section.
 
-- use `SuppressMessage` instead of pragmas everywhere for suppressing diagnostics
-- use file-scoped namespaces everywhere
-- re-order all code so that command comes before query (or even better split files)
-- add documentation about being able to use pipelines internally for external API calls
-- for some features provide code snippets in documentation instead of library (e.g. common middlewares etc.)
-- add null checks to public API methods to support users that do not use nullable reference types
+[![NuGet version (Conqueror.CQS)](https://img.shields.io/nuget/v/Conqueror.CQS?label=Conqueror.CQS)](https://www.nuget.org/packages/Conqueror.CQS/)
+[![NuGet version (Conqueror.Eventing)](https://img.shields.io/nuget/v/Conqueror.Eventing?label=Conqueror.Eventing)](https://www.nuget.org/packages/Conqueror.Eventing/)
+[![NuGet version (Conqueror.Streaming.Interactive)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive?label=Conqueror.Streaming.Interactive)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
+[![NuGet version (Conqueror.Streaming.Reactive)](https://img.shields.io/nuget/v/Conqueror.Streaming.Reactive?label=Conqueror.Streaming.Reactive)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
+[![Build Status](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml/badge.svg)](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml)
+[![license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-### CQS
+## Quickstart
 
-- create analyzers (including code fixes)
-  - when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)
-  - non-empty `ConfigurePipeline` method
-  - enforce `IConfigureCommandPipeline` interface to be present on all handler types that implement `ConfigurePipeline` method
-  - enforce `IConfigureCommandPipeline` interface to only be present on command handler types
-  - custom handler interfaces may not have extra methods
-  - handler must not implement multiple custom interface for same command
-  - middlewares must not implement more than one middleware interface of the same type (i.e. not implement interface with and without configuration)
-  - error (optionally) when a handler is being injected directly instead of an interface
-  - error when `AddConquerorCQS` is being called without registration finalization method being called
-- add tests for handlers that throw exceptions to assert contexts are properly cleared
-- allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
+TODO
 
-#### CQS middleware
+## Recipes
 
-- create projects for common middlewares, e.g.
-  - `Conqueror.CQS.Middleware.Timeout`
-  - `Conqueror.CQS.Middleware.Retry`
+Instead of traditional documentation **Conqueror** has these recipes that will show you how you can utilize it to its maximum. Each recipe will help you solve one particular challenge that you will likely encounter while building a .NET application.
 
-#### CQS ASP Core
+> For every "How do I do X?" you can imagine for this project, you should be able to find a recipe here. If you don't see a recipe for your question, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new) or even better, provide the recipe as a pull request.
 
-- instruct users to place their custom path conventions into their contracts module to allow both server and client to use the same conventions
-- allow registering commands and queries via DI extension instead of attribute
+### Basics
 
-### Eventing
+TODO
 
-- use `.ConfigureAwait(false)` everywhere
-- fix: do not register generic types during assembly scanning
-- fix: do not register nested private types during assembly scanning
-- make event publisher middleware pipeline configurable
-- make event publishing strategy customizable
-  - ship two strategies out of the box (parallel and sequential)
-    - make them available as service collection extension methods
-  - sequential strategy as default
-  - handle cancellation in strategy
-- add tests for service collection configuration
-- for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
+### Advanced
 
-### Interactive streaming
+TODO
 
-- use `.ConfigureAwait(false)` everywhere
-- fix: do not register generic types during assembly scanning
-- fix: do not register nested private types during assembly scanning
-- implement middleware support
-- implement clients and transport infrastructure
-- for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
+### Expert
 
-#### Interactive streaming ASP Core
+TODO
 
-- refactor implementation to use transport client
-- add path convention mechanism
-- ensure api description works
-- add tests for behavior when websocket connection is interrupted (i.e. disconnect without proper close handshake)
-  - consider adding explicit message for signaling the end of the stream
-- propagate conqueror context
-- delegate route path creation to service
-- allow setting prefetch options (e.g. buffer size, prefetch batch size)
-- fix race condition when closing socket in tests (e.g. in `GivenStreamHandlerWebsocketEndpoint_WhenClientDoesNotReadTheEnumerable_ThenTheServerCanStillSuccessfullyCloseTheConnection`)
+## Motivation
 
-### Reactive streaming
+TODO
 
-- implement basic version
-- implement middleware support
+### Design philosophy
+
+TODO
+
+### Comparison with similar projects
+
+TODO
