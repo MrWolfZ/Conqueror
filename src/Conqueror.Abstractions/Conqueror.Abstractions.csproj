@@ -4,7 +4,7 @@
 
     <!-- for NuGet -->
     <PropertyGroup>
-        <Description>Collection package that provides a simple entry point to all abstractions Conqueror libraries.</Description>
+        <Description>Collection package that provides a simple entry point to all abstractions Conqueror packages.</Description>
     </PropertyGroup>
 
     <ItemGroup>
