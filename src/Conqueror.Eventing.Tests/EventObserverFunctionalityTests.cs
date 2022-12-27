@@ -12,7 +12,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -33,7 +33,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -54,7 +54,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
             using var tokenSource = new CancellationTokenSource();
@@ -74,7 +74,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
             using var tokenSource = new CancellationTokenSource();
@@ -93,7 +93,7 @@ namespace Conqueror.Eventing.Tests
             _ = services.AddConquerorEventing()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -111,7 +111,7 @@ namespace Conqueror.Eventing.Tests
             _ = services.AddConquerorEventing()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 
@@ -125,9 +125,9 @@ namespace Conqueror.Eventing.Tests
         {
             var services = new ServiceCollection();
 
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverWithoutValidInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddScoped<TestEventObserverWithoutValidInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddSingleton<TestEventObserverWithoutValidInterfaces>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddScoped<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddSingleton<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
         }
 
         private sealed record TestEvent

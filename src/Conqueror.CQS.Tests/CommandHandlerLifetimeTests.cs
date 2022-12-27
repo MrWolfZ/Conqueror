@@ -12,7 +12,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -38,7 +38,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -64,7 +64,7 @@ namespace Conqueror.CQS.Tests
                         .AddScoped<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -90,7 +90,7 @@ namespace Conqueror.CQS.Tests
                         .AddScoped<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -116,7 +116,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -142,7 +142,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -168,7 +168,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton<TestCommandHandlerWithMultipleInterfaces>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler1 = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
             var handler2 = provider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
@@ -193,7 +193,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler1 = provider.GetRequiredService<TestCommandHandler>();
             var handler2 = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
@@ -213,7 +213,7 @@ namespace Conqueror.CQS.Tests
             _ = services.AddConquerorCQS()
                         .AddSingleton(new TestCommandHandler(observations));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();

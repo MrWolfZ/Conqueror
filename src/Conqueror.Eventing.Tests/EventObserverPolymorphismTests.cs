@@ -12,7 +12,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<PolymorphicTestEventBaseObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<PolymorphicTestEvent>>();
 
@@ -33,7 +33,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<PolymorphicTestEventBaseObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
 

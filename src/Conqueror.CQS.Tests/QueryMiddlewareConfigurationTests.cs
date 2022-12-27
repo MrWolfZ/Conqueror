@@ -17,7 +17,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureQueryPipeline<TestQueryHandler>(pipeline => { _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration); });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -47,7 +47,7 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(overwrittenConfiguration);
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -76,7 +76,7 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(c => c.Parameter += 10);
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -107,7 +107,7 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(c => new(c.Parameter + 10));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -136,7 +136,7 @@ namespace Conqueror.CQS.Tests
                 _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(c => new(c.Parameter + 10)));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -159,7 +159,7 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new(20));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 

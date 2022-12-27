@@ -59,7 +59,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddTransient<TestCommandHandler>()
                         .AddSingleton<TestObservations>();
 
-            _ = services.AddConquerorCQS().ConfigureConqueror();
+            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
 
         protected override void ConfigureClientServices(IServiceCollection services)
@@ -79,7 +79,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.UseHttp(HttpClient))
                         .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.UseHttp(HttpClient));
 
-            _ = services.AddConquerorCQS().ConfigureConqueror();
+            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
 
         protected override void Configure(IApplicationBuilder app)

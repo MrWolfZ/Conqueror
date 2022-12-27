@@ -575,7 +575,7 @@ namespace Conqueror.CQS.Tests
                                                         p => new NestedTestQueryHandler(nestedQueryHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
                                                         nestedQueryHandlerLifetime));
 
-            var provider = services.AddConquerorCQS().ConfigureConqueror().BuildServiceProvider();
+            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
 
             _ = provider.GetRequiredService<TestCommandHandler>();
             _ = provider.GetRequiredService<NestedTestCommandHandler>();

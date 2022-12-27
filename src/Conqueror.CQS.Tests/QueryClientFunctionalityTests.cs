@@ -13,7 +13,7 @@
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var client = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -35,7 +35,7 @@
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var client = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -57,7 +57,7 @@
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var client = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -86,7 +86,7 @@
                         .AddScoped<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -115,7 +115,7 @@
                         .AddTransient<ThrowingTestQueryTransport>()
                         .AddSingleton(exception);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 

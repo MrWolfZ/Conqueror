@@ -417,7 +417,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.AddTransient(p => new NestedClass(Assert.IsNull, p.GetRequiredService<IConquerorContextAccessor>()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             provider.GetRequiredService<NestedClass>().Execute();
         }
@@ -634,7 +634,7 @@ namespace Conqueror.CQS.Tests
                                                         p => new OuterTestQueryMiddleware(outerMiddlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
                                                         middlewareLifetime));
 
-            var provider = services.AddConquerorCQS().ConfigureConqueror().BuildServiceProvider();
+            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
 
             _ = provider.GetRequiredService<NestedClass>();
             _ = provider.GetRequiredService<TestQueryHandler>();

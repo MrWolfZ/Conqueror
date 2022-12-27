@@ -14,7 +14,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddTransient<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<IInteractiveStreamingHandler<TestRequest, TestItem>>());
         }
@@ -29,7 +29,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddTransient<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ITestStreamingHandler>());
         }
@@ -44,7 +44,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddSingleton<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var plainInterfaceHandler = provider.GetRequiredService<IInteractiveStreamingHandler<TestRequest, TestItem>>();
             var customInterfaceHandler = provider.GetRequiredService<ITestStreamingHandler>();
@@ -66,7 +66,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddTransient<TestStreamingHandlerWithMultipleInterfaces>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<IInteractiveStreamingHandler<TestRequest, TestItem>>());
             Assert.DoesNotThrow(() => provider.GetRequiredService<ITestStreamingHandler>());
@@ -79,7 +79,7 @@ namespace Conqueror.Streaming.Interactive.Tests
         {
             var services = new ServiceCollection();
 
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorInteractiveStreaming().AddTransient<TestStreamingHandlerWithCustomInterfaceWithExtraMethod>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorInteractiveStreaming().AddTransient<TestStreamingHandlerWithCustomInterfaceWithExtraMethod>().FinalizeConquerorRegistrations());
         }
 
 // interface and event types must be public for dynamic type generation to work

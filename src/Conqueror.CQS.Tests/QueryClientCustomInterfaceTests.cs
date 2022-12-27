@@ -13,7 +13,7 @@
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 

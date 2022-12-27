@@ -10,7 +10,7 @@ builder.Services.AddControllers().AddConquerorCQSHttpControllers();
 
 builder.Services.AddConquerorCQS();
 builder.Services.AddConquerorCQSTypesFromExecutingAssembly();
-builder.Services.ConfigureConqueror();
+builder.Services.FinalizeConquerorRegistrations();
 
 var app = builder.Build();
 

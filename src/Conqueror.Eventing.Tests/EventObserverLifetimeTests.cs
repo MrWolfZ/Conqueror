@@ -12,7 +12,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -38,7 +38,7 @@ namespace Conqueror.Eventing.Tests
                         .AddScoped<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -64,7 +64,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -91,7 +91,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<TestEventObserver2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -118,7 +118,7 @@ namespace Conqueror.Eventing.Tests
                         .AddScoped<TestEventObserver2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -145,7 +145,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserver2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -172,7 +172,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserver2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -198,7 +198,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserverWithMultipleInterfaces>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer1 = provider.GetRequiredService<IEventObserver<TestEvent>>();
             var observer2 = provider.GetRequiredService<IEventObserver<TestEvent2>>();
@@ -219,7 +219,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
@@ -239,7 +239,7 @@ namespace Conqueror.Eventing.Tests
             _ = services.AddConquerorEventing()
                         .AddSingleton(new TestEventObserver(observations));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();

@@ -12,7 +12,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<IEventObserver<TestEvent>>());
         }
@@ -27,7 +27,7 @@ namespace Conqueror.Eventing.Tests
                         .AddTransient<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ITestEventObserver>());
         }
@@ -42,7 +42,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var plainInterfaceObserver = provider.GetRequiredService<IEventObserver<TestEvent>>();
             var customInterfaceObserver = provider.GetRequiredService<ITestEventObserver>();
@@ -64,7 +64,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserverWithMultipleInterfaces>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer1 = provider.GetRequiredService<ITestEventObserver>();
             var observer2 = provider.GetRequiredService<ITestEventObserver2>();
@@ -86,7 +86,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserverWithMultipleMixedInterfaces>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer1 = provider.GetRequiredService<ITestEventObserver>();
             var observer2 = provider.GetRequiredService<IEventObserver<TestEvent2>>();
@@ -108,7 +108,7 @@ namespace Conqueror.Eventing.Tests
                         .AddSingleton<TestEventObserver>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var publisher = provider.GetRequiredService<IEventPublisher>();
             var observer = provider.GetRequiredService<ITestEventObserver>();
@@ -125,7 +125,7 @@ namespace Conqueror.Eventing.Tests
         {
             var services = new ServiceCollection();
 
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverWithCustomInterfaceWithExtraMethod>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverWithCustomInterfaceWithExtraMethod>().FinalizeConquerorRegistrations());
         }
 
 // interface and event types must be public for dynamic type generation to work

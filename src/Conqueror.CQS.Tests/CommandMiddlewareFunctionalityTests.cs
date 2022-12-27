@@ -14,7 +14,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -38,7 +38,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -62,7 +62,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -86,7 +86,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -107,7 +107,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -131,7 +131,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -152,7 +152,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -176,7 +176,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -204,7 +204,7 @@ namespace Conqueror.CQS.Tests
                                         .UseAllowMultiple<TestCommandMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -235,7 +235,7 @@ namespace Conqueror.CQS.Tests
                                         .Without<TestCommandMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -266,7 +266,7 @@ namespace Conqueror.CQS.Tests
                                         .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -298,7 +298,7 @@ namespace Conqueror.CQS.Tests
                                         .Without<TestCommandMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -330,7 +330,7 @@ namespace Conqueror.CQS.Tests
                                         .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -359,7 +359,7 @@ namespace Conqueror.CQS.Tests
                                         .Use<TestCommandMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -383,7 +383,7 @@ namespace Conqueror.CQS.Tests
                                         .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -407,7 +407,7 @@ namespace Conqueror.CQS.Tests
                                         .UseAllowMultiple<TestCommandMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -431,7 +431,7 @@ namespace Conqueror.CQS.Tests
                                         .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -456,7 +456,7 @@ namespace Conqueror.CQS.Tests
                                         .Use<TestCommandMiddleware2>();
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -481,7 +481,7 @@ namespace Conqueror.CQS.Tests
                                         .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
                         });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -501,7 +501,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -528,7 +528,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -549,7 +549,7 @@ namespace Conqueror.CQS.Tests
             _ = services.AddConquerorCQS()
                         .AddTransient<TestCommandHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
         
         [Test]
@@ -560,7 +560,7 @@ namespace Conqueror.CQS.Tests
             _ = services.AddConquerorCQS()
                         .AddTransient<TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
         
         [Test]
@@ -571,7 +571,7 @@ namespace Conqueror.CQS.Tests
             _ = services.AddConquerorCQS()
                         .AddTransient<TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 #endif
 
@@ -587,7 +587,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
             using var tokenSource = new CancellationTokenSource();
@@ -611,7 +611,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -639,7 +639,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -667,7 +667,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -695,7 +695,7 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -719,7 +719,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -751,7 +751,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureCommandPipeline<TestCommandHandlerWithoutResponseWithoutMiddlewares>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -781,7 +781,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline => pipeline.Use<TestCommandMiddleware2>());
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -803,7 +803,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureCommandPipeline<TestCommandHandlerWithoutResponseWithoutMiddlewares>(pipeline => pipeline.Use<TestCommandMiddleware2>());
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -825,7 +825,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureCommandPipeline<TestCommandHandlerWithoutMiddlewares>(pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -847,7 +847,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureCommandPipeline<TestCommandHandlerWithoutResponseWithoutMiddlewares>(pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -868,7 +868,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<ThrowingTestCommandMiddleware>()
                         .AddSingleton(exception);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -882,9 +882,9 @@ namespace Conqueror.CQS.Tests
         {
             var services = new ServiceCollection();
 
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestCommandMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddScoped<TestCommandMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddSingleton<TestCommandMiddlewareWithMultipleInterfaces>().ConfigureConqueror());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddScoped<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddSingleton<TestCommandMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
         }
 
         private sealed record TestCommand(int Payload);

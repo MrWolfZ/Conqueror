@@ -24,7 +24,7 @@
                             return new TestCommandTransport();
                         });
 
-            await using var provider = services.ConfigureConqueror().BuildServiceProvider();
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestCommandHandler>();
 
@@ -51,7 +51,7 @@
                             return new TestCommandTransport();
                         });
 
-            using var provider = services.ConfigureConqueror().BuildServiceProvider();
+            using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestCommandHandler>();
 
@@ -80,7 +80,7 @@
 
             _ = services.AddScoped<ScopingTest>();
 
-            await using var provider = services.ConfigureConqueror().BuildServiceProvider();
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
 

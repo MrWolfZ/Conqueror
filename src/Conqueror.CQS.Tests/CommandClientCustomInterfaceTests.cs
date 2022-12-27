@@ -15,7 +15,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestCommandHandler>();
 
@@ -37,7 +37,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestCommandWithoutResponseHandler>();
 

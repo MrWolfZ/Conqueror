@@ -22,7 +22,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddMvc().AddConquerorInteractiveStreaming();
 
-            _ = services.ConfigureConqueror();
+            _ = services.FinalizeConquerorRegistrations();
 
             var applicationPartManager = services.Select(d => d.ImplementationInstance).OfType<ApplicationPartManager>().Single();
 
@@ -36,8 +36,8 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddMvc().AddConquerorInteractiveStreaming();
 
-            _ = services.ConfigureConqueror();
-            _ = services.ConfigureConqueror();
+            _ = services.FinalizeConquerorRegistrations();
+            _ = services.FinalizeConquerorRegistrations();
 
             var applicationPartManager = services.Select(d => d.ImplementationInstance).OfType<ApplicationPartManager>().Single();
 

@@ -20,7 +20,7 @@
                 _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(initialConfiguration);
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -50,7 +50,7 @@
                 _ = pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(overwrittenConfiguration);
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -79,7 +79,7 @@
                 _ = pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(c => c.Parameter += 10);
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -110,7 +110,7 @@
                 _ = pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(c => new(c.Parameter + 10));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -140,7 +140,7 @@
                 _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(c => new(c.Parameter + 10)));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
@@ -165,7 +165,7 @@
                         new(20)));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 

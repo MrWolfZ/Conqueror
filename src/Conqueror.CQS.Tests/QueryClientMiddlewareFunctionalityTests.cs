@@ -14,7 +14,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -39,7 +39,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -64,7 +64,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -87,7 +87,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -112,7 +112,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -140,7 +140,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -168,7 +168,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -197,7 +197,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -226,7 +226,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -252,7 +252,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -273,7 +273,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -294,7 +294,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -315,7 +315,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -337,7 +337,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -359,7 +359,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -382,7 +382,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -412,7 +412,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<TestQueryMiddleware2>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         using var tokenSource = new CancellationTokenSource();
@@ -438,7 +438,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddSingleton(observations)
                     .AddSingleton(tokens);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -468,7 +468,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddSingleton(observations)
                     .AddSingleton(tokens);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -498,7 +498,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddSingleton(observations)
                     .AddSingleton(tokens);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -521,7 +521,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddScoped<TestService>()
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         using var scope1 = provider.CreateScope();
         using var scope2 = provider.CreateScope();
@@ -550,7 +550,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                                                                                                   p => p.Use<TestQueryMiddleware2>())
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -571,7 +571,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                                                                                                   p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
                     .AddSingleton(observations);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -593,7 +593,7 @@ public sealed class QueryClientMiddlewareFunctionalityTests
                     .AddTransient<ThrowingTestQueryMiddleware>()
                     .AddSingleton(exception);
 
-        var provider = services.ConfigureConqueror().BuildServiceProvider();
+        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 

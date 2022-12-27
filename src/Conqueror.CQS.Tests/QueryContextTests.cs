@@ -515,7 +515,7 @@
                                                         p => new OuterTestQueryMiddleware(outerMiddlewareFn, p.GetRequiredService<IQueryContextAccessor>()),
                                                         middlewareLifetime));
 
-            var provider = services.AddConquerorCQS().ConfigureConqueror().BuildServiceProvider();
+            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
 
             _ = provider.GetRequiredService<NestedClass>();
             _ = provider.GetRequiredService<TestQueryHandler>();

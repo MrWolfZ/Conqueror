@@ -132,7 +132,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
                         .AddTransient<TestStreamingHandlerWithoutPayload>()
                         .AddTransient<TestStreamingHandlerWithError>();
 
-            _ = services.AddConquerorInteractiveStreaming().ConfigureConqueror();
+            _ = services.AddConquerorInteractiveStreaming().FinalizeConquerorRegistrations();
         }
 
         protected override void Configure(IApplicationBuilder app)

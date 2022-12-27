@@ -127,7 +127,7 @@
         public void GivenRegisteredAndConfiguredHandler_WhenRegisteringPlainClient_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().ConfigureConqueror();
+            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().FinalizeConquerorRegistrations();
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport()));
         }
@@ -136,7 +136,7 @@
         public void GivenRegisteredAndConfiguredHandler_WhenRegisteringCustomClient_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().ConfigureConqueror();
+            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().FinalizeConquerorRegistrations();
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport()));
         }
@@ -147,7 +147,7 @@
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport());
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -156,7 +156,7 @@
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport());
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.ConfigureConqueror());
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -172,7 +172,7 @@
         {
             return new ServiceCollection().AddConquerorCQS()
                                           .AddConquerorCommandClient<TCommandHandler>(_ => new TestCommandTransport())
-                                          .ConfigureConqueror()
+                                          .FinalizeConquerorRegistrations()
                                           .BuildServiceProvider();
         }
 

@@ -17,7 +17,7 @@ namespace Conqueror.CQS.Tests
 
             _ = services.ConfigureCommandPipeline<TestCommandHandler>(pipeline => { _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration); });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -47,7 +47,7 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(overwrittenConfiguration);
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -76,7 +76,7 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(c => c.Parameter += 10);
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -107,7 +107,7 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(c => new(c.Parameter + 10));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -136,7 +136,7 @@ namespace Conqueror.CQS.Tests
                 _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(c => new(c.Parameter + 10)));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -159,7 +159,7 @@ namespace Conqueror.CQS.Tests
                 _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new(20));
             });
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 

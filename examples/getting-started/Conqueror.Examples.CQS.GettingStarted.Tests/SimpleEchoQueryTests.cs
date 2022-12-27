@@ -14,7 +14,7 @@ public sealed class SimpleEchoQueryTests
         services.AddConquerorCQS()
                 .AddTransient<SimpleEchoQueryHandler>();
 
-        serviceProvider = services.ConfigureConqueror().BuildServiceProvider();
+        serviceProvider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
     }
 
     private IQueryHandler<SimpleEchoQuery, SimpleEchoQueryResponse> QueryHandler => 

@@ -14,7 +14,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddTransient<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -40,7 +40,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddScoped<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -66,7 +66,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddSingleton<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -92,7 +92,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddSingleton<TestStreamingHandlerWithMultipleInterfaces>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler1 = provider.GetRequiredService<IInteractiveStreamingHandler<TestStreaming, TestItem>>();
             var handler2 = provider.GetRequiredService<IInteractiveStreamingHandler<TestStreaming2, TestItem2>>();
@@ -113,7 +113,7 @@ namespace Conqueror.Streaming.Interactive.Tests
                         .AddSingleton<TestStreamingHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             var handler1 = provider.GetRequiredService<TestStreamingHandler>();
             var handler2 = provider.GetRequiredService<IInteractiveStreamingHandler<TestStreaming, TestItem>>();
@@ -133,7 +133,7 @@ namespace Conqueror.Streaming.Interactive.Tests
             _ = services.AddConquerorInteractiveStreaming()
                         .AddSingleton(new TestStreamingHandler(observations));
 
-            var provider = services.ConfigureConqueror().BuildServiceProvider();
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
