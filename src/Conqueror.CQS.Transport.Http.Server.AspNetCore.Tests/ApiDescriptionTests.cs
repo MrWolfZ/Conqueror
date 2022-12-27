@@ -137,5 +137,170 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
+
+// interface and event types must be public for dynamic type generation to work
+#pragma warning disable CA1034
+        
+        [HttpQuery]
+        public sealed record TestQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestQueryResponse
+        {
+            public int Payload { get; init; }
+        }
+        
+        [HttpQuery]
+        public sealed record TestQuery2;
+
+        public sealed record TestQueryResponse2;
+    
+        [HttpQuery]
+        public sealed record TestQueryWithoutPayload;
+    
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQuery
+        {
+            public int Payload { get; init; }
+        }
+    
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQueryWithoutPayload;
+
+        public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+        }
+
+        public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
+        {
+        }
+
+        public sealed class TestQueryHandler : ITestQueryHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
+        {
+            public Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = 11 };
+            }
+        }
+
+        public sealed class TestPostQueryHandler : ITestPostQueryHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestPostQueryHandlerWithoutPayload : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = 11 };
+            }
+        }
+        
+        [HttpCommand]
+        public sealed record TestCommand
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestCommandResponse
+        {
+            public int Payload { get; init; }
+        }
+        
+        [HttpCommand]
+        public sealed record TestCommand2;
+
+        public sealed record TestCommandResponse2;
+        
+        [HttpCommand]
+        public sealed record TestCommandWithoutPayload;
+
+        [HttpCommand]
+        public sealed record TestCommandWithoutResponse
+        {
+            public int Payload { get; init; }
+        }
+    
+        [HttpCommand]
+        public sealed record TestCommandWithoutResponseWithoutPayload;
+
+        public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+        }
+
+        public sealed class TestCommandHandler : ITestCommandHandler
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
+        }
+
+        public sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
+        {
+            public Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = 11 };
+            }
+        }
+
+        public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+        {
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
+        {
+            public async Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
     }
 }
