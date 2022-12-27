@@ -197,4 +197,20 @@
         <value>Implement command pipeline configuration interface</value>
         <comment>The title of the code fix.</comment>
     </data>
+    <data name="Analyzer0006Title" xml:space="preserve">
+        <value>Query handler type must implement query pipeline configuration interface</value>
+        <comment>The title of the diagnostic.</comment>
+    </data>
+    <data name="Analyzer0006Description" xml:space="preserve">
+        <value>Query handler type must implement query pipeline configuration interface 'IConfigureQueryPipeline'.</value>
+        <comment>An optional longer localizable description of the diagnostic.</comment>
+    </data>
+    <data name="Analyzer0006MessageFormat" xml:space="preserve">
+        <value>Query handler type '{0}' must implement query pipeline configuration interface 'IConfigureQueryPipeline'</value>
+        <comment>The format-able message the diagnostic displays.</comment>
+    </data>
+    <data name="Analyzer0006CodeFixTitle" xml:space="preserve">
+        <value>Implement query pipeline configuration interface</value>
+        <comment>The title of the code fix.</comment>
+    </data>
 </root>
