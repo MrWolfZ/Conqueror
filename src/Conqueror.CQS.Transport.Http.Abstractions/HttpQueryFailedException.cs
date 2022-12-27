@@ -6,22 +6,22 @@ using System.Runtime.Serialization;
 // the standard constructors don't make sense
 #pragma warning disable CA1032
 
-namespace Conqueror.CQS.Transport.Http.Client
+namespace Conqueror
 {
     [Serializable]
-    public sealed class HttpCommandFailedException : Exception
+    public sealed class HttpQueryFailedException : Exception
     {
-        public HttpCommandFailedException(string message, HttpResponseMessage response, Exception? innerException = null)
+        public HttpQueryFailedException(string message, HttpResponseMessage response, Exception? innerException = null)
             : base(message, innerException)
         {
             Response = response;
         }
 
-        private HttpCommandFailedException()
+        private HttpQueryFailedException()
         {
         }
 
-        private HttpCommandFailedException(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        private HttpQueryFailedException(SerializationInfo serializationInfo, StreamingContext streamingContext)
             : base(serializationInfo, streamingContext)
         {
         }
