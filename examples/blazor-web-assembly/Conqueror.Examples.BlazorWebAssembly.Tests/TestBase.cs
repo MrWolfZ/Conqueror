@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
-namespace Conqueror.Examples.BlazorWebAssembly.API.Tests;
+namespace Conqueror.Examples.BlazorWebAssembly.Tests;
 
 public abstract class TestBase
 {

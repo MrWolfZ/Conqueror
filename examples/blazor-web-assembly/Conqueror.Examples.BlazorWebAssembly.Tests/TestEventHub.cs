@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.API.Tests;
+﻿namespace Conqueror.Examples.BlazorWebAssembly.Tests;
 
 public sealed class TestEventHub : IEventHub
 {

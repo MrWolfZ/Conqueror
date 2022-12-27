@@ -1,6 +1,6 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
+﻿namespace Conqueror.Examples.BlazorWebAssembly.Domain;
 
-internal sealed class SharedCounter
+public sealed class SharedCounter
 {
     private long value;
 

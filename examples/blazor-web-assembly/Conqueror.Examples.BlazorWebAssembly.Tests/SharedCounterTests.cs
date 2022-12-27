@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Conqueror.CQS.Transport.Http.Client;
-using Conqueror.Examples.BlazorWebAssembly.Application.SharedCounter;
+using Conqueror.Examples.BlazorWebAssembly.Domain;
 
-namespace Conqueror.Examples.BlazorWebAssembly.API.Tests;
+namespace Conqueror.Examples.BlazorWebAssembly.Tests;
 
 public sealed class SharedCounterTests : TestBase
 {
@@ -40,12 +40,12 @@ public sealed class SharedCounterTests : TestBase
     {
         var sharedCounter = Resolve<SharedCounter>();
         var eventHub = Resolve<TestEventHub>();
-        
+
         var existingValue = sharedCounter.IncrementBy(10);
         var incrementBy = 5;
 
         await IncrementHandler.ExecuteCommand(new() { IncrementBy = incrementBy }, CancellationToken.None);
-        
+
         Assert.That(eventHub.ObservedEvents, Is.EquivalentTo(new[] { new SharedCounterIncrementedEvent(existingValue + incrementBy, incrementBy) }));
     }
 
@@ -54,12 +54,12 @@ public sealed class SharedCounterTests : TestBase
     {
         var sharedCounter = Resolve<SharedCounter>();
         var eventStore = Resolve<InMemoryEventStore>();
-        
+
         var existingValue = sharedCounter.IncrementBy(10);
         var incrementBy = 5;
 
         await IncrementHandler.ExecuteCommand(new() { IncrementBy = incrementBy }, CancellationToken.None);
-        
+
         Assert.That(eventStore.GetEvents(), Is.EquivalentTo(new[] { new SharedCounterIncrementedEvent(existingValue + incrementBy, incrementBy) }));
     }
 
