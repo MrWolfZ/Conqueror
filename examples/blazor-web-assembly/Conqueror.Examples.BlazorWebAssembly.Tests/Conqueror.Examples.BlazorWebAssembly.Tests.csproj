@@ -15,7 +15,7 @@
         <PackageReference Include="NUnit" Version="3.13.2" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
         <PackageReference Include="coverlet.collector" Version="3.1.2" />
-        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Client" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+        <PackageReference Include="Conqueror.CQS.Transport.Http.Client" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
     </ItemGroup>
 
     <ItemGroup>

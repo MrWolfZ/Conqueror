@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Conqueror.CQS.Extensions.AspNetCore.Server" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+        <PackageReference Include="Conqueror.CQS.Transport.Http.Server.AspNetCore" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 
