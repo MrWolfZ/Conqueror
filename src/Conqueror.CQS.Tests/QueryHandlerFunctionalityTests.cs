@@ -22,6 +22,27 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
         }
+        
+        [Test]
+        public async Task GivenGenericQuery_HandlerReceivesQuery()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<GenericTestQueryHandler<string>>()
+                        .AddSingleton(observations);
+
+            var provider = services.ConfigureConqueror().BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<GenericTestQuery<string>, GenericTestQueryResponse<string>>>();
+
+            var query = new GenericTestQuery<string>("test string");
+
+            _ = await handler.ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
+        }
 
         [Test]
         public async Task GivenCancellationToken_HandlerReceivesCancellationToken()
@@ -114,6 +135,10 @@ namespace Conqueror.CQS.Tests
 
         private sealed record TestQueryResponse(int Payload);
 
+        private sealed record GenericTestQuery<T>(T Payload);
+
+        private sealed record GenericTestQueryResponse<T>(T Payload);
+
         private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
             private readonly TestObservations observations;
@@ -129,6 +154,24 @@ namespace Conqueror.CQS.Tests
                 observations.Queries.Add(query);
                 observations.CancellationTokens.Add(cancellationToken);
                 return new(query.Payload + 1);
+            }
+        }
+
+        private sealed class GenericTestQueryHandler<T> : IQueryHandler<GenericTestQuery<T>, GenericTestQueryResponse<T>>
+        {
+            private readonly TestObservations observations;
+
+            public GenericTestQueryHandler(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public async Task<GenericTestQueryResponse<T>> ExecuteQuery(GenericTestQuery<T> query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                observations.Queries.Add(query);
+                observations.CancellationTokens.Add(cancellationToken);
+                return new(query.Payload);
             }
         }
 
