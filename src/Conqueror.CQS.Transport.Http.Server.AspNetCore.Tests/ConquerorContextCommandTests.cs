@@ -1,8 +1,12 @@
 ﻿using System.Net;
 using System.Net.Mime;
+using System.Reflection;
 using Conqueror.Common;
 using Conqueror.CQS.Transport.Http.Common;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 {
@@ -24,6 +28,10 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
         public async Task GivenContextItems_ItemsAreReturnedInHeader(string path, string data)
         {
             Resolve<TestObservations>().ShouldAddItems = true;
@@ -45,6 +53,10 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
         public async Task GivenConquerorContextRequestHeader_ItemsAreReceivedByHandler(string path, string data)
         {
             using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
@@ -64,6 +76,10 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
         public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path, string data)
         {
             using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
@@ -77,6 +93,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         protected override void ConfigureServices(IServiceCollection services)
         {
+            var applicationPartManager = new ApplicationPartManager();
+            applicationPartManager.ApplicationParts.Add(new TestControllerApplicationPart());
+            applicationPartManager.FeatureProviders.Add(new TestControllerFeatureProvider());
+
+            _ = services.AddSingleton(applicationPartManager);
+
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
             _ = services.AddTransient<TestCommandHandler>()
@@ -209,6 +231,46 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public bool ShouldAddItems { get; set; }
 
             public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
+        }
+
+        [ApiController]
+        private sealed class TestHttpCommandController : ControllerBase
+        {
+            [HttpPost("/api/custom/commands/test")]
+            public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
+            {
+                return HttpCommandExecutor.ExecuteCommand<TestCommand, TestCommandResponse>(HttpContext, command, cancellationToken);
+            }
+
+            [HttpPost("/api/custom/commands/testCommandWithoutPayload")]
+            public Task<TestCommandResponse> ExecuteTestCommandWithoutPayload(CancellationToken cancellationToken)
+            {
+                return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutPayload, TestCommandResponse>(HttpContext, cancellationToken);
+            }
+
+            [HttpPost("/api/custom/commands/testCommandWithoutResponse")]
+            public Task ExecuteTestCommandWithoutResponse(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            {
+                return HttpCommandExecutor.ExecuteCommand(HttpContext, command, cancellationToken);
+            }
+
+            [HttpPost("/api/custom/commands/testCommandWithoutResponseWithoutPayload")]
+            public Task ExecuteTestCommandWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
+            {
+                return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutResponseWithoutPayload>(HttpContext, cancellationToken);
+            }
+        }
+
+        private sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
+        {
+            public override string Name => nameof(TestControllerApplicationPart);
+
+            public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpCommandController).GetTypeInfo() };
+        }
+
+        private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
+        {
+            protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpCommandController);
         }
     }
 }

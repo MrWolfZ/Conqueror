@@ -1,13 +1,16 @@
 ﻿using System.Net;
-#if NET7_0_OR_GREATER
-using System.Net.Http.Headers;
-#endif
 using System.Net.Mime;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
+#if NET7_0_OR_GREATER
+using System.Net.Http.Headers;
+#endif
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 {
@@ -78,7 +81,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload.Payload);
         }
-        
+
         [Test]
         public async Task GivenCustomPathConvention_WhenCallingEndpointsWithPathAccordingToConvention_ReturnsCorrectResponse()
         {
@@ -95,14 +98,70 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.AreEqual("{\"payload\":11}", resultString1);
             Assert.IsNotNull(result1);
             Assert.AreEqual(11, result1!.Payload);
-            
+
             Assert.IsNotNull(result2);
+        }
+        
+        [Test]
+        public async Task GivenHttpCommandWithCustomController_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/custom/commands/test", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
+        [Test]
+        public async Task GivenHttpCommandWithoutResponseWithCustomController_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/custom/commands/testCommandWithoutResponse", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var result = await response.Content.ReadAsStringAsync();
+
+            Assert.IsEmpty(result);
+        }
+
+        [Test]
+        public async Task GivenHttpCommandWithoutPayloadWithCustomController_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = new StringContent(string.Empty);
+            var response = await HttpClient.PostAsync("/api/custom/commands/testCommandWithoutPayload", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
+        [Test]
+        public async Task GivenHttpCommandWithoutResponseWithoutPayloadWithCustomController_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = new StringContent(string.Empty);
+            var response = await HttpClient.PostAsync("/api/custom/commands/testCommandWithoutResponseWithoutPayload", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var result = await response.Content.ReadAsStringAsync();
+
+            Assert.IsEmpty(result);
         }
 
         private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
         protected override void ConfigureServices(IServiceCollection services)
         {
+            var applicationPartManager = new ApplicationPartManager();
+            applicationPartManager.ApplicationParts.Add(new TestControllerApplicationPart());
+            applicationPartManager.FeatureProviders.Add(new TestControllerFeatureProvider());
+
+            _ = services.AddSingleton(applicationPartManager);
+
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
@@ -287,7 +346,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 }
             }
         }
-        
+
         private sealed class TestHttpCommandPathConvention : IHttpCommandPathConvention
         {
             public string? GetCommandPath(Type commandType, HttpCommandAttribute attribute)
@@ -299,6 +358,46 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
                 return $"/api/commands/{commandType.Name}FromConvention";
             }
+        }
+
+        [ApiController]
+        private sealed class TestHttpCommandController : ControllerBase
+        {
+            [HttpPost("/api/custom/commands/test")]
+            public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
+            {
+                return HttpCommandExecutor.ExecuteCommand<TestCommand, TestCommandResponse>(HttpContext, command, cancellationToken);
+            }
+
+            [HttpPost("/api/custom/commands/testCommandWithoutPayload")]
+            public Task<TestCommandResponse> ExecuteTestCommandWithoutPayload(CancellationToken cancellationToken)
+            {
+                return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutPayload, TestCommandResponse>(HttpContext, cancellationToken);
+            }
+
+            [HttpPost("/api/custom/commands/testCommandWithoutResponse")]
+            public Task ExecuteTestCommandWithoutResponse(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            {
+                return HttpCommandExecutor.ExecuteCommand(HttpContext, command, cancellationToken);
+            }
+
+            [HttpPost("/api/custom/commands/testCommandWithoutResponseWithoutPayload")]
+            public Task ExecuteTestCommandWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
+            {
+                return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutResponseWithoutPayload>(HttpContext, cancellationToken);
+            }
+        }
+
+        private sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
+        {
+            public override string Name => nameof(TestControllerApplicationPart);
+
+            public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpCommandController).GetTypeInfo() };
+        }
+
+        private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
+        {
+            protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpCommandController);
         }
     }
 }

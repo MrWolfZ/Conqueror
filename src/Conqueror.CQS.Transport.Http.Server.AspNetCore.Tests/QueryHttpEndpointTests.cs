@@ -1,9 +1,12 @@
 ﻿using System.Net;
 using System.Net.Mime;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
 #if NET7_0_OR_GREATER
 using System.Net.Http.Headers;
@@ -128,9 +131,69 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload);
         }
+        
+        [Test]
+        public async Task GivenCustomHttpQuery_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            var response = await HttpClient.GetAsync("/api/custom/queries/test?payload=10");
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestQueryResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpPostQuery_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/custom/queries/testPost", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestQueryResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpQueryWithoutPayload_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            var response = await HttpClient.GetAsync("/api/custom/queries/testQueryWithoutPayload");
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestQueryResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpPostQueryWithoutPayload_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = new StringContent(string.Empty);
+            var response = await HttpClient.PostAsync("/api/custom/queries/testPostQueryWithoutPayload", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestQueryResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
 
         protected override void ConfigureServices(IServiceCollection services)
         {
+            var applicationPartManager = new ApplicationPartManager();
+            applicationPartManager.ApplicationParts.Add(new TestControllerApplicationPart());
+            applicationPartManager.FeatureProviders.Add(new TestControllerFeatureProvider());
+
+            _ = services.AddSingleton(applicationPartManager);
+
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
@@ -368,6 +431,46 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 
                 return $"/api/queries/{queryType.Name}FromConvention";
             }
+        }
+
+        [ApiController]
+        private sealed class TestHttpQueryController : ControllerBase
+        {
+            [HttpGet("/api/custom/queries/test")]
+            public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
+            {
+                return HttpQueryExecutor.ExecuteQuery<TestQuery, TestQueryResponse>(HttpContext, query, cancellationToken);
+            }
+
+            [HttpGet("/api/custom/queries/testQueryWithoutPayload")]
+            public Task<TestQueryResponse> ExecuteTestQueryWithoutPayload(CancellationToken cancellationToken)
+            {
+                return HttpQueryExecutor.ExecuteQuery<TestQueryWithoutPayload, TestQueryResponse>(HttpContext, cancellationToken);
+            }
+
+            [HttpPost("/api/custom/queries/testPost")]
+            public Task<TestQueryResponse> ExecuteTestQueryWithoutResponse(TestPostQuery query, CancellationToken cancellationToken)
+            {
+                return HttpQueryExecutor.ExecuteQuery<TestPostQuery, TestQueryResponse>(HttpContext, query, cancellationToken);
+            }
+
+            [HttpPost("/api/custom/queries/testPostQueryWithoutPayload")]
+            public Task<TestQueryResponse> ExecuteTestQueryWithoutResponse(CancellationToken cancellationToken)
+            {
+                return HttpQueryExecutor.ExecuteQuery<TestPostQueryWithoutPayload, TestQueryResponse>(HttpContext, cancellationToken);
+            }
+        }
+
+        private sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
+        {
+            public override string Name => nameof(TestControllerApplicationPart);
+
+            public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpQueryController).GetTypeInfo() };
+        }
+
+        private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
+        {
+            protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpQueryController);
         }
     }
 }
