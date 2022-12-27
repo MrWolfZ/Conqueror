@@ -29,6 +29,8 @@ namespace Conqueror.CQS.QueryHandling
                                        .Distinct()
                                        .ToList();
 
+            var registrations = new List<QueryHandlerRegistration>();
+
             foreach (var handlerType in handlerTypes)
             {
                 var pipelineConfigurationAction = GetPipelineConfigurationAction(handlerType);
@@ -37,18 +39,21 @@ namespace Conqueror.CQS.QueryHandling
 
                 foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
                 {
-                    _ = services.AddSingleton(new QueryHandlerMetadata(queryType, responseType, handlerType));
+                    registrations.Add(new(queryType, responseType, handlerType));
                 }
             }
 
-            var duplicateMetadata = services.Select(d => d.ImplementationInstance).OfType<QueryHandlerMetadata>().GroupBy(t => t.QueryType).FirstOrDefault(g => g.Count() > 1);
+            var duplicateRegistrations = registrations.GroupBy(t => t.QueryType).FirstOrDefault(g => g.Count() > 1);
 
-            if (duplicateMetadata is not null)
+            if (duplicateRegistrations is not null)
             {
-                var queryType = duplicateMetadata.Key;
-                var duplicateHandlerTypes = duplicateMetadata.Select(h => h.HandlerType);
+                var queryType = duplicateRegistrations.Key;
+                var duplicateHandlerTypes = duplicateRegistrations.Select(h => h.HandlerType);
                 throw new InvalidOperationException($"only a single handler for query type {queryType} is allowed, but found multiple: {string.Join(", ", duplicateHandlerTypes)}");
             }
+
+            _ = services.AddSingleton(new QueryHandlerRegistry(registrations))
+                        .AddSingleton<IQueryHandlerRegistry>(p => p.GetRequiredService<QueryHandlerRegistry>());
 
             Action<IQueryPipelineBuilder>? GetPipelineConfigurationAction(Type handlerType)
             {
@@ -127,8 +132,12 @@ namespace Conqueror.CQS.QueryHandling
                 throw new InvalidOperationException($"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'");
             }
 
+            var registrations = new List<QueryMiddlewareRegistration>();
+
             foreach (var middlewareType in middlewareTypes)
             {
+                registrations.Add(new(middlewareType, GetMiddlewareConfigurationType(middlewareType)));
+
                 var genericConfigurationMethod = configurationMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullQueryMiddlewareConfiguration));
 
                 try
@@ -141,12 +150,14 @@ namespace Conqueror.CQS.QueryHandling
                 }
             }
 
+            _ = services.AddSingleton(new QueryMiddlewareRegistry(registrations))
+                        .AddSingleton<IQueryMiddlewareRegistry>(p => p.GetRequiredService<QueryMiddlewareRegistry>());
+
             _ = services.AddSingleton<IReadOnlyDictionary<Type, IQueryMiddlewareInvoker>>(p => p.GetRequiredService<IEnumerable<IQueryMiddlewareInvoker>>().ToDictionary(i => i.MiddlewareType));
         }
 
         private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
         {
-            _ = services.AddSingleton(new QueryMiddlewareMetadata(typeof(TMiddleware), GetMiddlewareConfigurationType(typeof(TMiddleware))));
             _ = services.AddSingleton<IQueryMiddlewareInvoker, QueryMiddlewareInvoker<TMiddleware, TConfiguration>>();
         }
 

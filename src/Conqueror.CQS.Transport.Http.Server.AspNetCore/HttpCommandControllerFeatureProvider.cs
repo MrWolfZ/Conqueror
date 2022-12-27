@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Conqueror.CQS.Common;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 
@@ -10,12 +9,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
     internal sealed class HttpCommandControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
         private readonly DynamicCommandControllerFactory controllerFactory;
-        private readonly IReadOnlyCollection<CommandHandlerMetadata> metadata;
+        private readonly ICommandHandlerRegistry commandHandlerRegistry;
 
-        public HttpCommandControllerFeatureProvider(DynamicCommandControllerFactory controllerFactory, IEnumerable<CommandHandlerMetadata> metadata)
+        public HttpCommandControllerFeatureProvider(DynamicCommandControllerFactory controllerFactory, ICommandHandlerRegistry commandHandlerRegistry)
         {
             this.controllerFactory = controllerFactory;
-            this.metadata = metadata.ToList();
+            this.commandHandlerRegistry = commandHandlerRegistry;
         }
 
         public void PopulateFeature(
@@ -33,6 +32,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             }
         }
 
-        private IEnumerable<CommandHandlerMetadata> GetHttpCommands() => metadata.Where(m => m.CommandType.GetCustomAttributes(typeof(HttpCommandAttribute), true).Any());
+        private IEnumerable<CommandHandlerRegistration> GetHttpCommands() => commandHandlerRegistry.GetCommandHandlerRegistrations()
+                                                                                                   .Where(m => m.CommandType.GetCustomAttributes(typeof(HttpCommandAttribute), true).Any());
     }
 }

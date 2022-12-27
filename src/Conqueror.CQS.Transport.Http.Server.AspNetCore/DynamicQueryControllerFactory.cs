@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using Conqueror.Common;
-using Conqueror.CQS.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
@@ -13,23 +12,23 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
     {
         private const string ApiGroupName = "Queries";
 
-        public Type Create(QueryHandlerMetadata metadata, HttpQueryAttribute attribute)
+        public Type Create(QueryHandlerRegistration registration, HttpQueryAttribute attribute)
         {
-            return Create(metadata.QueryType.Name, () => CreateType(metadata, attribute));
+            return Create(registration.QueryType.Name, () => CreateType(registration, attribute));
         }
 
-        private Type CreateType(QueryHandlerMetadata metadata, HttpQueryAttribute attribute)
+        private Type CreateType(QueryHandlerRegistration registration, HttpQueryAttribute attribute)
         {
-            var name = metadata.QueryType.Name;
+            var name = registration.QueryType.Name;
 
             // TODO: use service
             var regex = new Regex("Query$");
             var route = $"/api/queries/{regex.Replace(name, string.Empty)}";
 
-            var hasPayload = metadata.QueryType.HasAnyProperties() || !metadata.QueryType.HasDefaultConstructor();
+            var hasPayload = registration.QueryType.HasAnyProperties() || !registration.QueryType.HasDefaultConstructor();
 
             var genericBaseControllerType = hasPayload ? typeof(ConquerorQueryControllerBase<,>) : typeof(ConquerorQueryWithoutPayloadControllerBase<,>);
-            var baseControllerType = genericBaseControllerType.MakeGenericType(metadata.QueryType, metadata.ResponseType);
+            var baseControllerType = genericBaseControllerType.MakeGenericType(registration.QueryType, registration.ResponseType);
 
             var typeBuilder = CreateTypeBuilder(name, ApiGroupName, baseControllerType, route);
 

@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using Conqueror.Common;
-using Conqueror.CQS.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,30 +13,30 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
     {
         private const string ApiGroupName = "Commands";
 
-        public Type Create(CommandHandlerMetadata metadata, HttpCommandAttribute attribute)
+        public Type Create(CommandHandlerRegistration registration, HttpCommandAttribute attribute)
         {
-            return Create(metadata.CommandType.Name, () => CreateType(metadata, attribute));
+            return Create(registration.CommandType.Name, () => CreateType(registration, attribute));
         }
 
-        private Type CreateType(CommandHandlerMetadata metadata, HttpCommandAttribute attribute)
+        private Type CreateType(CommandHandlerRegistration registration, HttpCommandAttribute attribute)
         {
             // to be used in the future
             _ = attribute;
 
-            var name = metadata.CommandType.Name;
+            var name = registration.CommandType.Name;
 
             // TODO: use service
             var regex = new Regex("Command$");
             var route = $"/api/commands/{regex.Replace(name, string.Empty)}";
 
-            var hasPayload = metadata.CommandType.HasAnyProperties() || !metadata.CommandType.HasDefaultConstructor();
+            var hasPayload = registration.CommandType.HasAnyProperties() || !registration.CommandType.HasDefaultConstructor();
 
             var genericBaseControllerTypeWithResponse = hasPayload ? typeof(ConquerorCommandControllerBase<,>) : typeof(ConquerorCommandWithoutPayloadControllerBase<,>);
             var genericBaseControllerTypeWithoutResponse = hasPayload ? typeof(ConquerorCommandControllerBase<>) : typeof(ConquerorCommandWithoutPayloadControllerBase<>);
 
-            var baseControllerType = metadata.ResponseType != null
-                ? genericBaseControllerTypeWithResponse.MakeGenericType(metadata.CommandType, metadata.ResponseType)
-                : genericBaseControllerTypeWithoutResponse.MakeGenericType(metadata.CommandType);
+            var baseControllerType = registration.ResponseType != null
+                ? genericBaseControllerTypeWithResponse.MakeGenericType(registration.CommandType, registration.ResponseType)
+                : genericBaseControllerTypeWithoutResponse.MakeGenericType(registration.CommandType);
 
             var typeBuilder = CreateTypeBuilder(name, ApiGroupName, baseControllerType, route);
 
@@ -64,7 +63,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                     ApplyParameterSourceAttribute(paramBuilder, typeof(FromBodyAttribute));
                 }
 
-                if (metadata.ResponseType == null)
+                if (registration.ResponseType == null)
                 {
                     ApplyProducesResponseTypeAttribute(methodBuilder, StatusCodes.Status204NoContent);
                 }
