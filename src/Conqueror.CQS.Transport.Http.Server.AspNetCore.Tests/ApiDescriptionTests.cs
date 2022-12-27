@@ -101,6 +101,19 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         }
 
         [Test]
+        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithComplexPayload()
+        {
+            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "queries.TestQueryWithComplexPayload");
+
+            Assert.IsNotNull(queryApiDescription);
+            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.IsNull(queryApiDescription?.GroupName);
+            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        }
+
+        [Test]
         public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithoutPayload()
         {
             var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
@@ -126,6 +139,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             _ = services.AddTransient<TestQueryHandler>()
                         .AddTransient<TestQueryHandler2>()
                         .AddTransient<TestQueryHandlerWithoutPayload>()
+                        .AddTransient<TestQueryHandlerWithComplexPayload>()
                         .AddTransient<TestPostQueryHandler>()
                         .AddTransient<TestPostQueryHandlerWithoutPayload>();
 
@@ -159,6 +173,11 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
     
         [HttpQuery]
         public sealed record TestQueryWithoutPayload;
+
+        [HttpQuery]
+        public sealed record TestQueryWithComplexPayload(TestQueryWithComplexPayloadPayload Payload);
+
+        public sealed record TestQueryWithComplexPayloadPayload(int Payload);
     
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
@@ -202,6 +221,16 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
                 return new() { Payload = 11 };
+            }
+        }
+
+        public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload.Payload + 1 };
             }
         }
 
