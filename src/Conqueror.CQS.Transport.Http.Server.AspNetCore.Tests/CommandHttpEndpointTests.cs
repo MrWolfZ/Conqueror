@@ -151,6 +151,20 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             Assert.IsEmpty(result);
         }
+        
+        [Test]
+        public async Task GivenHttpCommandWithCustomPath_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/testCommandWithCustomPath", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
 
         private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
@@ -172,7 +186,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddTransient<TestCommandHandlerWithoutPayload>()
                         .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
-                        .AddTransient<TestCommandWithCustomSerializedPayloadTypeHandler>();
+                        .AddTransient<TestCommandWithCustomSerializedPayloadTypeHandler>()
+                        .AddTransient<TestCommandWithCustomPathHandler>();
 
             _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
@@ -239,6 +254,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public sealed record TestCommandWithCustomSerializedPayloadTypeResponse(TestCommandWithCustomSerializedPayloadTypePayload Payload);
 
         public sealed record TestCommandWithCustomSerializedPayloadTypePayload(int Payload);
+
+        [HttpCommand(Path = "/api/testCommandWithCustomPath")]
+        public sealed record TestCommandWithCustomPath
+        {
+            public int Payload { get; init; }
+        }
 
         public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
@@ -344,6 +365,16 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 {
                     writer.WriteNumberValue(value.Payload);
                 }
+            }
+        }
+
+        public sealed class TestCommandWithCustomPathHandler : ICommandHandler<TestCommandWithCustomPath, TestCommandResponse>
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
             }
         }
 
