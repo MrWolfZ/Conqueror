@@ -4,6 +4,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ## General
 
+- [ ] link nuget packages for all supporting packages in the libaries section of each core lib in readme (e.g. transports and middlewares)s
 - [ ] use `SuppressMessage` instead of pragmas everywhere for suppressing diagnostics
 - [ ] use file-scoped namespaces everywhere
 - [ ] re-order all code so that command comes before query (or even better split files)
