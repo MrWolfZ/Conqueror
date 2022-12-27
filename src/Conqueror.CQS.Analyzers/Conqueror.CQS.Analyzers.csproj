@@ -9,6 +9,13 @@
         <IsPackable>true</IsPackable>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+
+        <!--
+            This is required because OmniSharp (VSCode) calls the build in a way
+            that will skip resource generation. Without this line, OmniSharp won't
+            find the generated .cs files and analysis will fail.
+        -->
+        <CoreCompileDependsOn>PrepareResources;$(CompileDependsOn)</CoreCompileDependsOn>
     </PropertyGroup>
 
     <!-- for NuGet -->
@@ -29,14 +36,19 @@
 
     <ItemGroup>
         <EmbeddedResource Update="Resources.resx">
-            <Generator>ResXFileCodeGenerator</Generator>
+            <Generator>MSBuild:Compile</Generator>
             <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+            <!-- Put generated files in the 'obj' folder. -->
+            <StronglyTypedFileName>$(IntermediateOutputPath)\Resources.Designer.cs</StronglyTypedFileName>
+            <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+            <StronglyTypedNamespace>Conqueror.CQS.Analyzers</StronglyTypedNamespace>
+            <StronglyTypedClassName>Resources</StronglyTypedClassName>
         </EmbeddedResource>
-        <Compile Update="Resources.Designer.cs">
-            <DesignTime>True</DesignTime>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>Resources.resx</DependentUpon>
-        </Compile>
+
+        <Content Include="$(IntermediateOutputPath)\Resources.Designer.cs">
+            <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
     
     <ItemGroup>

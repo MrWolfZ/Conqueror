@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- ReSharper disable DuplicateResource (Resharper and Rider seem to only detect false positive duplicates, so we disable the warning) -->
 <root>
     <!-- 
       Microsoft ResX Schema 
@@ -149,7 +150,7 @@
         <value>Add query pipeline configuration method</value>
         <comment>The title of the code fix.</comment>
     </data>
-    <data name="Analyzer0003Title" xml:space="preserve">
+    <data name="Analyzer0003Title" xml:space="preserve">s
         <value>Command handler pipeline configuration method has wrong signature</value>
         <comment>The title of the diagnostic.</comment>
     </data>
