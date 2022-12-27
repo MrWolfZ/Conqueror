@@ -123,11 +123,9 @@ namespace Conqueror.Eventing.Tests
         [Test]
         public void GivenObserverWithInvalidInterface_RegisteringObserverThrowsArgumentException()
         {
-            var services = new ServiceCollection();
-
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddScoped<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
-            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddSingleton<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventing().AddTransient<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventing().AddScoped<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventing().AddSingleton<TestEventObserverWithoutValidInterfaces>().FinalizeConquerorRegistrations());
         }
 
         private sealed record TestEvent

@@ -13,6 +13,8 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddConquerorInteractiveStreaming(this IServiceCollection services)
         {
+            services.AddFinalizationCheck();
+            
             services.TryAddSingleton<InteractiveStreamingHandlerRegistry>();
             //// TODO
             //// services.TryAddSingleton<InteractiveStreamingMiddlewaresInvoker>();
