@@ -2,33 +2,34 @@
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Conqueror.CQS.Transport.Http.Client;
-
-public static class ConquerorHttpCommandTransportClientBuilderExtensions
+namespace Conqueror.CQS.Transport.Http.Client
 {
-    public static ICommandTransportClient UseHttp(this ICommandTransportClientBuilder builder, HttpClient httpClient, Action<ConquerorCqsHttpClientOptions>? configure = null)
+    public static class ConquerorHttpCommandTransportClientBuilderExtensions
     {
-        var registration = new HttpClientRegistration
+        public static ICommandTransportClient UseHttp(this ICommandTransportClientBuilder builder, HttpClient httpClient, Action<ConquerorCqsHttpClientOptions>? configure = null)
         {
-            HttpClientFactory = _ => httpClient,
-            BaseAddressFactory = null,
-            ConfigurationAction = configure,
-        };
+            var registration = new HttpClientRegistration
+            {
+                HttpClientFactory = _ => httpClient,
+                BaseAddressFactory = null,
+                ConfigurationAction = configure,
+            };
         
-        var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
-        return new HttpCommandTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration), builder.ServiceProvider.GetService<IConquerorContextAccessor>());
-    }
+            var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
+            return new HttpCommandTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration), builder.ServiceProvider.GetService<IConquerorContextAccessor>());
+        }
 
-    public static ICommandTransportClient UseHttp(this ICommandTransportClientBuilder builder, Uri baseAddress, Action<ConquerorCqsHttpClientOptions>? configure = null)
-    {
-        var registration = new HttpClientRegistration
+        public static ICommandTransportClient UseHttp(this ICommandTransportClientBuilder builder, Uri baseAddress, Action<ConquerorCqsHttpClientOptions>? configure = null)
         {
-            HttpClientFactory = null,
-            BaseAddressFactory = _ => baseAddress,
-            ConfigurationAction = configure,
-        };
+            var registration = new HttpClientRegistration
+            {
+                HttpClientFactory = null,
+                BaseAddressFactory = _ => baseAddress,
+                ConfigurationAction = configure,
+            };
         
-        var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
-        return new HttpCommandTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration), builder.ServiceProvider.GetService<IConquerorContextAccessor>());
+            var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
+            return new HttpCommandTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration), builder.ServiceProvider.GetService<IConquerorContextAccessor>());
+        }
     }
 }

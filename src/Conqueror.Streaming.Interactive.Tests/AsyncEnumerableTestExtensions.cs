@@ -1,16 +1,17 @@
-﻿namespace Conqueror.Streaming.Interactive.Tests;
-
-internal static class AsyncEnumerableTestExtensions
+﻿namespace Conqueror.Streaming.Interactive.Tests
 {
-    public static async Task<IReadOnlyCollection<TItem>> Drain<TItem>(this IAsyncEnumerable<TItem> enumerable)
+    internal static class AsyncEnumerableTestExtensions
     {
-        var items = new List<TItem>();
-        
-        await foreach (var item in enumerable)
+        public static async Task<IReadOnlyCollection<TItem>> Drain<TItem>(this IAsyncEnumerable<TItem> enumerable)
         {
-            items.Add(item);
-        }
+            var items = new List<TItem>();
+        
+            await foreach (var item in enumerable)
+            {
+                items.Add(item);
+            }
 
-        return items;
+            return items;
+        }
     }
 }
