@@ -7,10 +7,12 @@ A set of libraries to powercharge your .NET development.
 - for some features provide code snippets in documentation instead of library (e.g. common middlewares etc.)
 - use `.ConfigureAwait(false)` everywhere
 - add null checks to public API methods to support users that do not use nullable reference types
+- add documentation about being able to use pipelines internally for external API calls
 
 ### CQS
 
 - create analyzers (including code fixes)
+  - when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)
   - non-empty `ConfigurePipeline` method
   - enforce `IConfigureCommandPipeline` interface to be present on all handler types that implement `ConfigurePipeline` method
   - enforce `IConfigureCommandPipeline` interface to be present on all command handler types
@@ -18,10 +20,11 @@ A set of libraries to powercharge your .NET development.
   - custom handler interfaces may not have extra methods
   - handler must not implement multiple custom interface for same command
   - middlewares must not implement more than one middleware interface of the same type (i.e. not implement interface with and without configuration)
+  - error (optionally) when a handler is being injected directly instead of an interface
+  - error when `AddConquerorCQS` is being called without registration finalization method being called
 - rename `CommandHandlerMetadata` to `CommandHandlerRegistration` and make it public in the abstractions to allow external libraries to use it for server transports
   - same for queries
 - add tests for handlers that throw exceptions to assert contexts are properly cleared
-- expose command/query and conqueror context objects directly on middleware contexts
 - allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
 - when .NET 7 is released skip analyzers that are superfluous with .NET 7 (i.e. everything related to pipeline configuration methods)
   - adjust tests to expect compilation error diagnostic instead of analyzer diagnostic
@@ -38,18 +41,6 @@ A set of libraries to powercharge your .NET development.
                                                                                   .WithPreprocessorSymbols("NET7_0_OR_GREATER"));
     ```
 
-#### External feedback
-
-- confusing that AddConquerorCQS is duplicate name for adding normal services and HTTP services
-- use source generators to generate partial class to allow custom code while using common infra
-- rename ConfigureConqueror() to make it more clear what it does and that it must be done as the final step (e.g. FinalizeConquerorRegistration)
-- adjust super package description to make it clear that it does not contain any transports
-- add documentation about being able to use pipelines internally for external API calls
-- when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)
-- consider making cancellation token parameter optional (with `= default`)
-- add analyzer that errors (optionally) when a handler is being injected directly instead of an interface
-- add analyzer that errors when `AddConquerorCQS` is being called without registration finalization method being called
-
 #### CQS middleware
 
 - create projects for common middlewares, e.g.
@@ -58,7 +49,6 @@ A set of libraries to powercharge your .NET development.
 
 #### CQS ASP Core
 
-- rename libraries to `Conqueror.CQS.Transport.Http.Client` and `Conqueror.CQS.Transport.Http.Server.AspNetCore`
 - delegate route path creation to service
   - in config for client middleware allow setting path convention
     - instruct users to place their route convention into their contracts module to allow both server and client to use the same convention
@@ -66,6 +56,7 @@ A set of libraries to powercharge your .NET development.
   - allow version to be set for http commands and queries via attribute
 - allow complex objects in GET queries by JSON-serializing them
 - allow registering commands and queries via DI extension instead of attribute
+- make controller base classes public to allow users to build custom controllers while still having common logic for context propagation etc.
 
 - add missing tests
   - complex query objects for GET
