@@ -16,24 +16,33 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
             if (applicationPartManager is null)
             {
-                throw new InvalidOperationException("the ASP Core application part manager must be registered before configuring the Conqueror CQS ASP Core Server services");
+                throw new InvalidOperationException("the ASP Core application part manager must be registered before finalizing the Conqueror CQS ASP Core Server services");
             }
 
             if (!applicationPartManager.FeatureProviders.Any(p => p is HttpEndpointControllerFeatureProvider))
             {
-                var commandHandlerRegistry = services.Select(d => d.ImplementationInstance).OfType<ICommandHandlerRegistry>().SingleOrDefault();
-                var queryHandlerRegistry = services.Select(d => d.ImplementationInstance).OfType<IQueryHandlerRegistry>().SingleOrDefault();
+                var commandHandlerRegistry = GetServiceFromCollection<ICommandHandlerRegistry>(services);
+                var queryHandlerRegistry = GetServiceFromCollection<IQueryHandlerRegistry>(services);
+                var options = GetServiceFromCollection<ConquerorCqsHttpTransportServerAspNetCoreOptions>(services);
 
-                if (commandHandlerRegistry is not null && queryHandlerRegistry is not null)
+                if (commandHandlerRegistry is null || queryHandlerRegistry is null)
                 {
-                    applicationPartManager.FeatureProviders.Add(new HttpEndpointControllerFeatureProvider(new(commandHandlerRegistry, queryHandlerRegistry)));
+                    throw new InvalidOperationException("the Conqueror CQS services must be registered before finalizing the Conqueror CQS ASP Core Server services");
                 }
+
+                if (options is null)
+                {
+                    throw new InvalidOperationException("the Conqueror CQS ASP Core Server services must be registered before finalizing the Conqueror CQS ASP Core Server services");
+                }
+
+                var endpointRegistry = new HttpEndpointRegistry(commandHandlerRegistry, queryHandlerRegistry, options);
+                applicationPartManager.FeatureProviders.Add(new HttpEndpointControllerFeatureProvider(endpointRegistry.GetEndpoints()));
             }
         }
 
         private static T? GetServiceFromCollection<T>(IServiceCollection services)
         {
-            return (T?)services.LastOrDefault(d => d.ServiceType == typeof(T))?.ImplementationInstance;
+            return (T?)services.LastOrDefault(d => d.ImplementationInstance?.GetType().IsAssignableTo(typeof(T)) ?? false)?.ImplementationInstance;
         }
     }
 }

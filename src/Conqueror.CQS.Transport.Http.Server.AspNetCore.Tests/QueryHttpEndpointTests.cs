@@ -95,17 +95,53 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload.Payload);
         }
+        
+        [Test]
+        public async Task GivenCustomPathConvention_WhenCallingEndpointsWithPathAccordingToConvention_ReturnsCorrectResponse()
+        {
+            var response1 = await HttpClient.GetAsync("/api/queries/testQuery3FromConvention?payload=10");
+            var response2 = await HttpClient.GetAsync("/api/queries/testQuery4FromConvention");
+            await response1.AssertStatusCode(HttpStatusCode.OK);
+            await response2.AssertStatusCode(HttpStatusCode.OK);
+            var resultString1 = await response1.Content.ReadAsStringAsync();
+            var resultString2 = await response2.Content.ReadAsStringAsync();
+            var result1 = JsonSerializer.Deserialize<TestQueryResponse>(resultString1, JsonSerializerOptions);
+            var result2 = JsonSerializer.Deserialize<TestQueryResponse2>(resultString2, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString1);
+            Assert.IsNotNull(result1);
+            Assert.AreEqual(11, result1!.Payload);
+            
+            Assert.IsNotNull(result2);
+        }
+        
+        [Test]
+        public async Task GivenCustomPathConventionAndPostQuery_WhenCallingEndpointsWithPathAccordingToConvention_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/queries/testPostQuery2FromConvention", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestQueryResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
 
         protected override void ConfigureServices(IServiceCollection services)
         {
-            _ = services.AddMvc().AddConquerorCQSHttpControllers();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
             _ = services.AddTransient<TestQueryHandler>()
                         .AddTransient<TestQueryHandler2>()
+                        .AddTransient<TestQueryHandler3>()
+                        .AddTransient<TestQueryHandler4>()
                         .AddTransient<TestQueryHandlerWithoutPayload>()
                         .AddTransient<TestQueryHandlerWithComplexPayload>()
                         .AddTransient<TestPostQueryHandler>()
+                        .AddTransient<TestPostQueryHandler2>()
                         .AddTransient<TestPostQueryHandlerWithoutPayload>()
                         .AddTransient<TestPostQueryWithCustomSerializedPayloadTypeHandler>();
 
@@ -147,6 +183,18 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public sealed record TestQueryResponse2;
 
         [HttpQuery]
+        public sealed record TestQuery3
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery]
+        public sealed record TestQuery4
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery]
         public sealed record TestQueryWithoutPayload;
 
         [HttpQuery]
@@ -156,6 +204,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQuery2
         {
             public int Payload { get; init; }
         }
@@ -200,6 +254,26 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             }
         }
 
+        public sealed class TestQueryHandler3 : IQueryHandler<TestQuery3, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery3 query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestQueryHandler4 : IQueryHandler<TestQuery4, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery4 query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
         public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
@@ -223,6 +297,16 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public sealed class TestPostQueryHandler : ITestPostQueryHandler
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestPostQueryHandler2 : IQueryHandler<TestPostQuery2, TestQueryResponse>
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery2 query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
@@ -270,6 +354,19 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 {
                     writer.WriteNumberValue(value.Payload);
                 }
+            }
+        }
+        
+        private sealed class TestHttpQueryPathConvention : IHttpQueryPathConvention
+        {
+            public string? GetQueryPath(Type queryType, HttpQueryAttribute attribute)
+            {
+                if (queryType != typeof(TestQuery3) && queryType != typeof(TestQuery4) && queryType != typeof(TestPostQuery2))
+                {
+                    return null;
+                }
+                
+                return $"/api/queries/{queryType.Name}FromConvention";
             }
         }
     }

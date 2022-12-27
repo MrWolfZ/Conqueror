@@ -78,16 +78,38 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload.Payload);
         }
+        
+        [Test]
+        public async Task GivenCustomPathConvention_WhenCallingEndpointsWithPathAccordingToConvention_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response1 = await HttpClient.PostAsync("/api/commands/testCommand3FromConvention", content);
+            var response2 = await HttpClient.PostAsync("/api/commands/testCommand4FromConvention", content);
+            await response1.AssertStatusCode(HttpStatusCode.OK);
+            await response2.AssertStatusCode(HttpStatusCode.OK);
+            var resultString1 = await response1.Content.ReadAsStringAsync();
+            var resultString2 = await response2.Content.ReadAsStringAsync();
+            var result1 = JsonSerializer.Deserialize<TestCommandResponse>(resultString1, JsonSerializerOptions);
+            var result2 = JsonSerializer.Deserialize<TestCommandResponse>(resultString2, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString1);
+            Assert.IsNotNull(result1);
+            Assert.AreEqual(11, result1!.Payload);
+            
+            Assert.IsNotNull(result2);
+        }
 
         private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
         protected override void ConfigureServices(IServiceCollection services)
         {
-            _ = services.AddMvc().AddConquerorCQSHttpControllers();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
             _ = services.AddTransient<TestCommandHandler>()
                         .AddTransient<TestCommandHandler2>()
+                        .AddTransient<TestCommandHandler3>()
+                        .AddTransient<TestCommandHandler4>()
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddTransient<TestCommandHandlerWithoutPayload>()
                         .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
@@ -127,6 +149,18 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public sealed record TestCommand2;
 
         public sealed record TestCommandResponse2;
+
+        [HttpCommand]
+        public sealed record TestCommand3
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpCommand]
+        public sealed record TestCommand4
+        {
+            public int Payload { get; init; }
+        }
 
         [HttpCommand]
         public sealed record TestCommandWithoutPayload;
@@ -170,6 +204,26 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
             {
                 throw new NotSupportedException();
+            }
+        }
+
+        public sealed class TestCommandHandler3 : ICommandHandler<TestCommand3, TestCommandResponse>
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand3 command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
+        }
+
+        public sealed class TestCommandHandler4 : ICommandHandler<TestCommand4, TestCommandResponse>
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand4 command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
             }
         }
 
@@ -231,6 +285,19 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 {
                     writer.WriteNumberValue(value.Payload);
                 }
+            }
+        }
+        
+        private sealed class TestHttpCommandPathConvention : IHttpCommandPathConvention
+        {
+            public string? GetCommandPath(Type commandType, HttpCommandAttribute attribute)
+            {
+                if (commandType != typeof(TestCommand3) && commandType != typeof(TestCommand4))
+                {
+                    return null;
+                }
+
+                return $"/api/commands/{commandType.Name}FromConvention";
             }
         }
     }
