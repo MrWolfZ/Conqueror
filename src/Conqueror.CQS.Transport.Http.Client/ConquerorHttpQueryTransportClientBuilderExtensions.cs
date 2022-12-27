@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Net.Http;
+using Conqueror.CQS.Transport.Http.Client;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Conqueror.CQS.Transport.Http.Client
+// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
+namespace Conqueror
 {
     public static class ConquerorHttpQueryTransportClientBuilderExtensions
     {
