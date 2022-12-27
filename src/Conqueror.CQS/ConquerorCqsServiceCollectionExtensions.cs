@@ -24,7 +24,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static IServiceCollection AddConquerorCQSTypesFromAssembly(this IServiceCollection services, Assembly assembly)
         {
-            var validTypes = assembly.GetTypes().Where(t => !t.IsInterface && !t.IsAbstract).ToList();
+            var validTypes = assembly.GetTypes()
+                                     .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false })
+                                     .ToList();
 
             foreach (var queryHandlerType in validTypes.Where(t => t.IsAssignableTo(typeof(IQueryHandler))))
             {
