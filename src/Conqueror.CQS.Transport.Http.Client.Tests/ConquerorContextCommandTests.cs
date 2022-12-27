@@ -233,7 +233,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         protected override void ConfigureServerServices(IServiceCollection services)
         {
-            _ = services.AddMvc().AddConquerorCQS();
+            _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
             _ = services.AddTransient<TestCommandHandler>()
                         .AddTransient<TestCommandHandlerWithoutResponse>()
