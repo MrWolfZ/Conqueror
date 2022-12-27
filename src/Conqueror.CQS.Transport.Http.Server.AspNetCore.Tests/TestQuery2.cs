@@ -7,7 +7,7 @@
 
     public sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
     {
-        public Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken)
+        public Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }

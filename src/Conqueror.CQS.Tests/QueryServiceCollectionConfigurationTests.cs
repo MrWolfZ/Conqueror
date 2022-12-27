@@ -64,22 +64,22 @@
 
         private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         }
 
         private sealed class DuplicateTestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         }
 
         private sealed class DuplicateTestQueryHandlerWithDifferentResponseType : IQueryHandler<TestQuery, TestQueryResponse2>
         {
-            public Task<TestQueryResponse2> ExecuteQuery(TestQuery command, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestQueryResponse2> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         }
 
         private sealed class TestQueryHandlerWithMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken) => Task.FromResult(new TestQueryResponse());
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
 
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
         }

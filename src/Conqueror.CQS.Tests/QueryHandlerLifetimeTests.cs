@@ -171,7 +171,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();
@@ -192,7 +192,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();
@@ -200,7 +200,7 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 command, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();

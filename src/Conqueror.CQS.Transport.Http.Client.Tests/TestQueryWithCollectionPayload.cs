@@ -13,7 +13,7 @@
 
     public sealed class TestQueryWithCollectionPayloadHandler : ITestQueryWithCollectionPayloadHandler
     {
-        public async Task<TestQueryWithCollectionPayloadResponse> ExecuteQuery(TestQueryWithCollectionPayload query, CancellationToken cancellationToken)
+        public async Task<TestQueryWithCollectionPayloadResponse> ExecuteQuery(TestQueryWithCollectionPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();

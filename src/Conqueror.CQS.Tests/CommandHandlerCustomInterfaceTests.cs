@@ -234,7 +234,7 @@ namespace Conqueror.CQS.Tests
                 observations.Instances.Add(this);
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 observations.Instances.Add(this);

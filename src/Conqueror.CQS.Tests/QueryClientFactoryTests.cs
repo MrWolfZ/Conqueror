@@ -220,7 +220,7 @@
         
         private sealed class TestQueryHandler : ITestQueryHandler
         {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         }
 
         private sealed record TestQueryMiddlewareConfiguration;

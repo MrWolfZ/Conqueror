@@ -558,7 +558,7 @@
                 this.preReturnFn = preReturnFn;
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 var response = handlerFn(query, queryContextAccessor.QueryContext);
@@ -583,7 +583,7 @@
                 this.queryContextAccessor = queryContextAccessor;
             }
 
-            public async Task<NestedTestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken)
+            public async Task<NestedTestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return handlerFn(query, queryContextAccessor.QueryContext);

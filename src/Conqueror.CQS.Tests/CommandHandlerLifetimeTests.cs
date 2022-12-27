@@ -316,7 +316,7 @@ namespace Conqueror.CQS.Tests
                 observations.InvocationCounts.Add(invocationCount);
             }
 
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();

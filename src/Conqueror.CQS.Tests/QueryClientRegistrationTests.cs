@@ -177,7 +177,7 @@
 
         private sealed class TestQueryHandler : ITestQueryHandler
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
 

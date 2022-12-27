@@ -13,7 +13,7 @@ namespace Conqueror
     public interface IQueryHandler<in TQuery, TResponse> : IQueryHandler
         where TQuery : class
     {
-        Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken);
+        Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default);
     }
     
     /// <summary>

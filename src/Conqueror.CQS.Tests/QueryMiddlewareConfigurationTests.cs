@@ -176,7 +176,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new();
@@ -185,7 +185,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestQueryHandlerWithPipelineConfiguration : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new();

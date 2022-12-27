@@ -144,17 +144,17 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken) => Task.FromResult(new TestQueryResponse());
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
         }
 
         private sealed class TestQueryHandlerWithCustomInterface : ITestQueryHandler
         {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken) => Task.FromResult(new TestQueryResponse());
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
         }
 
         private abstract class AbstractTestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken) => Task.FromResult(new TestQueryResponse());
+            public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
         }
 
         private sealed class TestQueryMiddlewareConfiguration

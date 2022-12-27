@@ -8,7 +8,7 @@
 
     public sealed class TestPostQueryHandler : ITestPostQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken)
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();

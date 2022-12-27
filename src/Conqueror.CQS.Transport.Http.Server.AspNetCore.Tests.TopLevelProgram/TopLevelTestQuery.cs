@@ -11,7 +11,7 @@ public interface ITopLevelTestQueryHandler : IQueryHandler<TopLevelTestQuery, To
 
 internal sealed class TopLevelTestQueryHandler : ITopLevelTestQueryHandler
 {
-    public async Task<TopLevelTestQueryResponse> ExecuteQuery(TopLevelTestQuery query, CancellationToken cancellationToken)
+    public async Task<TopLevelTestQueryResponse> ExecuteQuery(TopLevelTestQuery query, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
         return new(query.Payload + 1);
