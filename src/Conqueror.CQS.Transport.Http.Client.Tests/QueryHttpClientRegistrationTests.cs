@@ -1,6 +1,7 @@
 ﻿namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public sealed class QueryHttpClientRegistrationTests
     {
         [Test]
@@ -97,6 +98,31 @@
             _ = await client3.ExecuteQuery(new(), CancellationToken.None);
 
             Assert.AreEqual(2, seenInstances.Count);
+        }
+    
+        [HttpQuery]
+        public sealed record TestQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestQueryResponse
+        {
+            public int Payload { get; init; }
+        }
+
+        public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+        }
+
+        public sealed class TestQueryHandler : ITestQueryHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
         }
 
         private sealed class TestQueryTransport : IQueryTransportClient

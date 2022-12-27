@@ -1,6 +1,7 @@
 ﻿namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public sealed class CommandHttpClientRegistrationTests
     {
         [Test]
@@ -97,6 +98,31 @@
             _ = await client3.ExecuteCommand(new(), CancellationToken.None);
 
             Assert.AreEqual(2, seenInstances.Count);
+        }
+    
+        [HttpCommand]
+        public sealed record TestCommand
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestCommandResponse
+        {
+            public int Payload { get; init; }
+        }
+
+        public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+        }
+
+        public sealed class TestCommandHandler : ITestCommandHandler
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
         }
 
         private sealed class TestCommandTransport : ICommandTransportClient

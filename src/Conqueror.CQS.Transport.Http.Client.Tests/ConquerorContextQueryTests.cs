@@ -271,6 +271,23 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
+    
+        [HttpQuery]
+        public sealed record TestQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestQueryResponse
+        {
+            public int Payload { get; init; }
+        }
+    
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQuery
+        {
+            public int Payload { get; init; }
+        }
 
         public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {

@@ -87,6 +87,17 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
+    
+        [HttpQuery]
+        public sealed record TestQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestQueryResponse
+        {
+            public int Payload { get; init; }
+        }
 
         public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
@@ -110,6 +121,17 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
                 return Task.FromResult(new TestQueryResponse());
             }
+        }
+    
+        [HttpCommand]
+        public sealed record TestCommand
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestCommandResponse
+        {
+            public int Payload { get; init; }
         }
 
         public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
