@@ -1,8 +1,10 @@
 # Conqueror - for building scalable & maintainable .NET applications
 
-**Conqueror** is a set of libraries that helps you build .NET applications in a structured way (using patterns like [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as middlewares), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), [data streams](https://en.wikipedia.org/wiki/Data_stream), etc.), while keeping them scalable (both at development time as well as runtime).
+> ATTENTION: This project is currently still undergoing active development and contrary to what some of this README says, everything in here is still subject to change. Therefore please do not yet use this project for any production application.
 
-See our [quickstart](quickstart) or [example projects](examples) if you want to jump right into using **Conqueror** by code examples. Or head over to our [recipes](#recipes) for more detailed guidance on how you can utilize **Conqueror** to its maximum. Finally, if you want to learn more about the motivation behind this project (including comparisons to similar projects like [MediatR](https://github.com/jbogard/MediatR)), head over to the [motivation](#motivation) section.
+**Conqueror** is a set of libraries that helps you build .NET applications in a structured way (using patterns like [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as middlewares), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), [data streams](https://en.wikipedia.org/wiki/Data_stream), etc.), while keeping them scalable (both from the development perspective as well as at runtime).
+
+See our [quickstart](quickstart) or [example projects](examples) if you want to jump right into code examples for using **Conqueror**. Or head over to our [recipes](#recipes) for more detailed guidance on how you can utilize **Conqueror** to its maximum. Finally, if you want to learn more about the motivation behind this project (including comparisons to similar projects like [MediatR](https://github.com/jbogard/MediatR)), head over to the [motivation](#motivation) section.
 
 [![Build Status](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml/badge.svg)](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml)
 [![license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -71,6 +73,17 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [accessing properties of commands and queries in middlewares](recipes/cqs/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 - [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(to-be-written)_
 - [building test assertions that work for HTTP and non-HTTP commands and queries](recipes/cqs/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
+
+### Eventing Introduction
+
+Eventing is a way to refer to the publishing and observing of events via the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Eventing is a good way to decouple or loosely couple different parts of your application by making an event publisher agnostic to the observers of events it publishes. In addition to this basic idea, **Conqueror** allows solving cross-cutting concerns on both the publisher as well as the observer side.
+
+#### Eventing Basics
+
+- [getting started](recipes/eventing/basic/getting-started#readme) _(to-be-written)_
+- [testing event observers](recipes/eventing/basic/testing-observers#readme) _(to-be-written)_
+- [testing code that publishes events](recipes/eventing/basic/testing-publish#readme) _(to-be-written)_
+- [reducing code repetition with custom observer interfaces](recipes/eventing/basic/reducing-code-repetition#readme) _(to-be-written)_
 
 ## Motivation
 
