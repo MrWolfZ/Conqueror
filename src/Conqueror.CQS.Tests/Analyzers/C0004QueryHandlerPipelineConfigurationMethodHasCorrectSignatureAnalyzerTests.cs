@@ -30,7 +30,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public string Property { get; set; }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -63,7 +63,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public string Property { get; set; }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -99,7 +99,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -136,7 +136,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -173,7 +173,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -213,7 +213,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -244,7 +244,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -285,7 +285,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -326,7 +326,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -358,7 +358,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -397,7 +397,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -436,7 +436,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -466,7 +466,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -506,7 +506,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -546,7 +546,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -577,7 +577,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -616,7 +616,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -655,7 +655,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -685,7 +685,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -725,7 +725,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -765,7 +765,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -796,7 +796,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -835,7 +835,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -874,7 +874,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -904,7 +904,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -944,7 +944,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -984,7 +984,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1015,7 +1015,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1054,7 +1054,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1093,7 +1093,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1123,7 +1123,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1163,7 +1163,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1203,7 +1203,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1234,7 +1234,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1271,7 +1271,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public static string {|#0:ConfigurePipeline|}(IQueryPipelineBuilder builder) => string.Empty;
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1299,7 +1299,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public static void ConfigurePipeline(IQueryPipelineBuilder builder) => string.Empty;
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1342,7 +1342,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1374,7 +1374,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
                         public string Property { get; set; }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1410,7 +1410,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                         {
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1447,7 +1447,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1485,7 +1485,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -1521,7 +1521,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                             return string.Empty;
                         }
 
-                        public async Task ExecuteQuery(TestQuery query, CancellationToken cancellationToken)
+                        public async Task ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }

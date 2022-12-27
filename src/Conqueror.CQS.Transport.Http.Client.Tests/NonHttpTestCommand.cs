@@ -7,7 +7,7 @@
 
     public sealed class NonHttpTestCommandHandler : INonHttpTestCommandHandler
     {
-        public Task<TestCommandResponse> ExecuteCommand(NonHttpTestCommand command, CancellationToken cancellationToken)
+        public Task<TestCommandResponse> ExecuteCommand(NonHttpTestCommand command, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }

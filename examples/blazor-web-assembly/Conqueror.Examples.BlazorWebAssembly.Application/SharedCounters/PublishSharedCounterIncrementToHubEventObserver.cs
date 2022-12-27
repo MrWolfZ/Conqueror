@@ -9,7 +9,7 @@ internal sealed class PublishSharedCounterIncrementToHubEventObserver : ISharedC
         this.eventHub = eventHub;
     }
 
-    public async Task HandleEvent(SharedCounterIncrementedEvent evt, CancellationToken cancellationToken)
+    public async Task HandleEvent(SharedCounterIncrementedEvent evt, CancellationToken cancellationToken = default)
     {
         await eventHub.PublishEvent(evt);
     }

@@ -253,7 +253,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();
@@ -272,7 +272,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();
@@ -293,7 +293,7 @@ namespace Conqueror.CQS.Tests
                 this.observations = observations;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();
@@ -301,7 +301,7 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();
@@ -309,7 +309,7 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 invocationCount += 1;
                 await Task.Yield();

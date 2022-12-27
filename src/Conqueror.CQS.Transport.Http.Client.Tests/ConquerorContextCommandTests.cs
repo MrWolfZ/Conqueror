@@ -283,7 +283,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -307,7 +307,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -337,7 +337,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.nestedHandler = nestedHandler;
             }
 
-            public async Task<OuterTestCommandResponse> ExecuteCommand(OuterTestCommand command, CancellationToken cancellationToken)
+            public async Task<OuterTestCommandResponse> ExecuteCommand(OuterTestCommand command, CancellationToken cancellationToken = default)
             {
                 if (testObservations.ShouldAddOuterItems)
                 {
@@ -367,7 +367,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 this.nestedHandler = nestedHandler;
             }
 
-            public async Task ExecuteCommand(OuterTestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(OuterTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 if (testObservations.ShouldAddOuterItems)
                 {

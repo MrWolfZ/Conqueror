@@ -5,7 +5,7 @@
 
     public sealed class TestCommandWithoutPayloadHandler : ITestCommandWithoutPayloadHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken)
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();

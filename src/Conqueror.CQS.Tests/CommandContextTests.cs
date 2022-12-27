@@ -609,7 +609,7 @@
                 this.preReturnFn = preReturnFn;
             }
 
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 var response = handlerFn(command, commandContextAccessor.CommandContext);
@@ -636,7 +636,7 @@
                 this.nestedClass = nestedClass;
             }
 
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 handlerFn(command, commandContextAccessor.CommandContext);
@@ -655,7 +655,7 @@
                 this.commandContextAccessor = commandContextAccessor;
             }
 
-            public async Task<NestedTestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken)
+            public async Task<NestedTestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return handlerFn(command, commandContextAccessor.CommandContext);

@@ -7,7 +7,7 @@
 
     public sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
     {
-        public Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken)
+        public Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }

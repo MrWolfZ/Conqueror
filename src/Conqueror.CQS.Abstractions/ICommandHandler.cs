@@ -13,13 +13,13 @@ namespace Conqueror
     public interface ICommandHandler<in TCommand> : ICommandHandler
         where TCommand : class
     {
-        Task ExecuteCommand(TCommand command, CancellationToken cancellationToken);
+        Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default);
     }
 
     public interface ICommandHandler<in TCommand, TResponse> : ICommandHandler
         where TCommand : class
     {
-        Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken);
+        Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default);
     }
     
     /// <summary>

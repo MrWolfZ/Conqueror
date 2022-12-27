@@ -4,7 +4,7 @@ internal sealed class InMemoryEventStore : ISharedCounterIncrementedEventObserve
 {
     private readonly List<object> events = new();
 
-    public Task HandleEvent(SharedCounterIncrementedEvent evt, CancellationToken cancellationToken)
+    public Task HandleEvent(SharedCounterIncrementedEvent evt, CancellationToken cancellationToken = default)
     {
         events.Add(evt);
         return Task.CompletedTask;

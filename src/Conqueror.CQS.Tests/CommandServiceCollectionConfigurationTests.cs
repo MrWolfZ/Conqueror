@@ -76,32 +76,32 @@
 
         private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         }
 
         private sealed class DuplicateTestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         }
 
         private sealed class DuplicateTestCommandHandlerWithDifferentResponseType : ICommandHandler<TestCommand, TestCommandResponse2>
         {
-            public Task<TestCommandResponse2> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => throw new NotSupportedException();
+            public Task<TestCommandResponse2> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         }
 
         private sealed class TestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
         {
-            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
         }
 
         private sealed class DuplicateTestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
         {
-            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
         }
 
         private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.FromResult(new TestCommandResponse());
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
 
             public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
         }

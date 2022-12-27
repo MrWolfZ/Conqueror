@@ -189,32 +189,32 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.FromResult(new TestCommandResponse());
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
         }
 
         private sealed class TestCommandHandlerWithCustomInterface : ITestCommandHandler
         {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.FromResult(new TestCommandResponse());
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
         }
 
         private abstract class AbstractTestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.FromResult(new TestCommandResponse());
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
         }
 
         private abstract class AbstractTestCommandHandlerWithCustomInterface : ITestCommandHandler
         {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.FromResult(new TestCommandResponse());
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
         }
 
         private sealed class TestCommandWithoutResponseHandler : ICommandHandler<TestCommand>
         {
-            public Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.CompletedTask;
         }
 
         private sealed class TestCommandWithoutResponseHandlerWithCustomInterface : ITestCommandWithoutResponseHandler
         {
-            public Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.CompletedTask;
         }
 
         private sealed class TestCommandMiddlewareConfiguration

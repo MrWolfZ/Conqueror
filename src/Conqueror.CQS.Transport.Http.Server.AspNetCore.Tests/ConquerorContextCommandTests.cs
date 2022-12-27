@@ -105,7 +105,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -129,7 +129,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -153,7 +153,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken)
+            public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
@@ -177,7 +177,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 this.testObservations = testObservations;
             }
 
-            public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken)
+            public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 

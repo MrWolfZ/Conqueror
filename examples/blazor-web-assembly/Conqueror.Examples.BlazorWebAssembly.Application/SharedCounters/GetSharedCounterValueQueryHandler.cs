@@ -12,7 +12,7 @@ internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValue
         this.counter = counter;
     }
 
-    public async Task<GetSharedCounterValueQueryResponse> ExecuteQuery(GetSharedCounterValueQuery query, CancellationToken cancellationToken)
+    public async Task<GetSharedCounterValueQueryResponse> ExecuteQuery(GetSharedCounterValueQuery query, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
         return new(counter.GetValue());

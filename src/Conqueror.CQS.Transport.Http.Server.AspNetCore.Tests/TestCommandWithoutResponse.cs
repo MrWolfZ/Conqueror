@@ -8,7 +8,7 @@
 
     public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken)
+        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();

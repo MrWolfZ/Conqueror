@@ -176,7 +176,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new();
@@ -185,7 +185,7 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandlerWithPipelineConfiguration : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 return new();

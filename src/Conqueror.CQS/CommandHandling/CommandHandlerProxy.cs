@@ -20,7 +20,7 @@ namespace Conqueror.CQS.CommandHandling
             this.configurePipeline = configurePipeline;
         }
 
-        public Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken)
+        public Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
         {
             var pipelineBuilder = new CommandPipelineBuilder(serviceProvider);
 

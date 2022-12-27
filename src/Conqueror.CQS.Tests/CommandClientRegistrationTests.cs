@@ -223,7 +223,7 @@
 
         private sealed class TestCommandHandler : ITestCommandHandler
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken)
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
 
