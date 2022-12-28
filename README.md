@@ -4,7 +4,7 @@
 
 **Conqueror** is a set of libraries that helps you build .NET applications in a structured way (using patterns like [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as middlewares), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), [data streams](https://en.wikipedia.org/wiki/Data_stream), etc.), while keeping them scalable (both from the development perspective as well as at runtime).
 
-See our [quickstart](quickstart) or [example projects](examples) if you want to jump right into code examples for using **Conqueror**. Or head over to our [recipes](#recipes) for more detailed guidance on how you can utilize **Conqueror** to its maximum. Finally, if you want to learn more about the motivation behind this project (including comparisons to similar projects like [MediatR](https://github.com/jbogard/MediatR)), head over to the [motivation](#motivation) section.
+See our [quickstart](#quickstart) or [example projects](examples) if you want to jump right into code examples for using **Conqueror**. Or head over to our [recipes](#recipes) for more detailed guidance on how you can utilize **Conqueror** to its maximum. Finally, if you want to learn more about the motivation behind this project (including comparisons to similar projects like [MediatR](https://github.com/jbogard/MediatR)), head over to the [motivation](#motivation) section.
 
 [![Build Status](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml/badge.svg)](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml)
 [![license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -47,7 +47,89 @@ Head over to our [reactive streaming recipes](#reactive-streaming-introduction) 
 
 ## Quickstart
 
-TODO
+This quickstart guide will let you jump right into the code without lengthy explanations (for more guidance head over to our [recipes](#recipes)). By following this guide you'll add HTTP commands and queries to your ASP.NET Core application. You can also find the [source code](recipes/quickstart) here in the repository.
+
+```sh
+# add server-side CQS packages
+dotnet add package Conqueror.CQS
+dotnet add package Conqueror.CQS.Transport.Http.Server.AspNetCore
+```
+
+```csharp
+// add Conqueror CQS to your services
+builder.Services.AddConquerorCQS().AddConquerorCQSTypesFromExecutingAssembly();
+builder.Services.AddControllers().AddConquerorCQSHttpControllers();
+builder.Services.FinalizeConquerorRegistrations();
+```
+
+In `PrintIntegerCommand.cs` create a command that prints its parameter to stdout and echos it back to the client.
+
+```csharp
+using Conqueror;
+
+namespace Quickstart;
+
+[HttpCommand]
+public record PrintIntegerCommand(int Parameter);
+
+public record PrintIntegerCommandResponse(int Parameter);
+
+public interface IPrintIntegerCommandHandler : ICommandHandler<PrintIntegerCommand,
+                                                               PrintIntegerCommandResponse>
+{
+}
+
+public class PrintIntegerCommandHandler : IPrintIntegerCommandHandler
+{
+    public Task<PrintIntegerCommandResponse> ExecuteCommand(PrintIntegerCommand command,
+                                                            CancellationToken cancellationToken = default)
+    {
+        Console.WriteLine($"Got command parameter {command.Parameter}");
+        return Task.FromResult(new PrintIntegerCommandResponse(command.Parameter));
+    }
+}
+```
+
+In `AddTwoIntegersQuery.cs` create a query that takes two integer parameters and returns their sum.
+
+```csharp
+using Conqueror;
+
+namespace Quickstart;
+
+[HttpQuery]
+public record AddTwoIntegersQuery(int Parameter1, int Parameter2);
+
+public record AddTwoIntegersQueryResponse(int Sum);
+
+public interface IAddTwoIntegersQueryHandler : IQueryHandler<AddTwoIntegersQuery,
+                                                             AddTwoIntegersQueryResponse>
+{
+}
+
+public class AddTwoIntegersQueryHandler : IAddTwoIntegersQueryHandler
+{
+    public Task<AddTwoIntegersQueryResponse> ExecuteQuery(AddTwoIntegersQuery query,
+                                                          CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(new AddTwoIntegersQueryResponse(query.Parameter1 + query.Parameter2));
+    }
+}
+```
+
+Now launch your app and you can call the command and query via HTTP.
+
+```sh
+curl http://localhost:5000/api/commands/printInteger --data '{"parameter": 10}' -H 'Content-Type: application/json'
+# in your server console you will see "Got command parameter 10"
+
+curl http://localhost:5000/api/queries/addTwoIntegers?parameter1=10\&parameter2=5 
+# prints {"sum":15}
+```
+
+If you have swagger UI enabled, it will show the new command and query and they can be called from there.
+
+![Quickstart Swagger](/recipes/quickstart/swagger.gif?raw=true "Quickstart Swagger")
 
 ## Recipes
 
