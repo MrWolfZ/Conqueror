@@ -13,6 +13,8 @@ See our [quickstart](quickstart) or [example projects](examples) if you want to 
 
 **Conqueror.CQS (_stable_)**: Split your business processes into simple-to-maintain and easy-to-test pieces of code using the [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) pattern. Handle cross-cutting concerns like logging, validation, authorization etc. using configurable middlewares. Keep your applications scalable by moving commands and queries from a modular monolith to a distributed application with minimal friction.
 
+Head over to our [CQS recipes](#cqs-introduction) for more guidance on how to use this library.
+
 [![NuGet version (Conqueror.CQS)](https://img.shields.io/nuget/v/Conqueror.CQS?label=Conqueror.CQS)](https://www.nuget.org/packages/Conqueror.CQS/)
 [![NuGet version (Conqueror.CQS.Abstractions)](https://img.shields.io/nuget/v/Conqueror.CQS.Abstractions?label=Conqueror.CQS.Abstractions)](https://www.nuget.org/packages/Conqueror.CQS.Abstractions/)
 [![NuGet version (Conqueror.CQS.Analyzers)](https://img.shields.io/nuget/v/Conqueror.CQS.Analyzers?label=Conqueror.CQS.Analyzers)](https://www.nuget.org/packages/Conqueror.CQS.Analyzers/)
@@ -21,9 +23,14 @@ See our [quickstart](quickstart) or [example projects](examples) if you want to 
 
 **Conqueror.Eventing (_experimental_)**: Decouple your application logic by using in-process event publishing using the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Handle cross-cutting concerns like logging, tracing, filtering etc. using configurable middlewares.
 
+Head over to our [eventing recipes](#eventing-introduction) for more guidance on how to use this library.
+
 [![NuGet version (Conqueror.Eventing)](https://img.shields.io/nuget/v/Conqueror.Eventing?label=Conqueror.Eventing)](https://www.nuget.org/packages/Conqueror.Eventing/)
+[![NuGet version (Conqueror.Eventing.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Eventing.Abstractions?label=Conqueror.Eventing.Abstractions)](https://www.nuget.org/packages/Conqueror.Eventing.Abstractions/)
 
 **Conqueror.Streaming.Interactive (_experimental_)**: Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace using a pull-based interactive approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
+
+Head over to our [interactive streaming recipes](#interactive-streaming-introduction) for more guidance on how to use this library.
 
 [![NuGet version (Conqueror.Streaming.Interactive)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive?label=Conqueror.Streaming.Interactive)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
 [![NuGet version (Conqueror.Streaming.Interactive.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive.Abstractions?label=Conqueror.Streaming.Interactive.Abstractions)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive.Abstractions/)
@@ -31,6 +38,8 @@ See our [quickstart](quickstart) or [example projects](examples) if you want to 
 [![NuGet version (Conqueror.Streaming.Interactive.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive.Transport.Http.Client?label=Conqueror.Streaming.Interactive.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive.Transport.Http.Client/)
 
 **Conqueror.Streaming.Reactive (_early prototype_)**: Allow your applications to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) for which they cannot control the frequency using a push-based reactive approach. Handle cross-cutting concerns like logging, throttling, filtering etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
+
+Head over to our [reactive streaming recipes](#reactive-streaming-introduction) for more guidance on how to use this library.
 
 [![NuGet version (Conqueror.Streaming.Reactive)](https://img.shields.io/nuget/v/Conqueror.Streaming.Reactive?label=Conqueror.Streaming.Reactive)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
 
@@ -70,6 +79,8 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 #### CQS Expert
 
+- [store and access background context information in the scope of a single command or query](recipes/cqs/expert/command-query-context#readme) _(to-be-written)_
+- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/cqs/expert/conqueror-context#readme) _(to-be-written)_
 - [accessing properties of commands and queries in middlewares](recipes/cqs/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 - [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(to-be-written)_
 - [building test assertions that work for HTTP and non-HTTP commands and queries](recipes/cqs/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
@@ -84,6 +95,54 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [testing event observers](recipes/eventing/basic/testing-observers#readme) _(to-be-written)_
 - [testing code that publishes events](recipes/eventing/basic/testing-publish#readme) _(to-be-written)_
 - [reducing code repetition with custom observer interfaces](recipes/eventing/basic/reducing-code-repetition#readme) _(to-be-written)_
+
+#### Eventing Advanced
+
+- [execute event observers with a different strategy (e.g. parallel execution)](recipes/eventing/advanced/publishing-strategy#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/eventing/advanced/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing event observers with pipelines](recipes/eventing/advanced/testing-observers-with-pipelines#readme) _(to-be-written)_
+- [testing event publisher pipeline](recipes/eventing/advanced/testing-publisher-pipeline#readme) _(to-be-written)_
+- [testing middlewares](recipes/eventing/advanced/testing-middlewares#readme) _(to-be-written)_
+- [making observer middleware pipelines reusable](recipes/eventing/advanced/making-observer-pipelines-reusable#readme) _(to-be-written)_
+- [creating a clean architecture with loose coupling via events](recipes/eventing/advanced/clean-architecture#readme) _(to-be-written)_
+
+#### Eventing Expert
+
+- [store and access background context information in the scope of a single event](recipes/eventing/expert/event-context#readme) _(to-be-written)_
+- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/eventing/expert/conqueror-context#readme) _(to-be-written)_
+- [accessing properties of events in middlewares](recipes/eventing/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
+
+### Interactive Streaming Introduction
+
+Interactive streaming is ...
+
+#### Interactive Streaming Basics
+
+- [tbd](recipes/streaming.interactive/basic/tbd#readme) _(to-be-written)_
+
+#### Interactive Streaming Advanced
+
+- [tbd](recipes/streaming.interactive/advanced/tbd#readme) _(to-be-written)_
+
+#### Interactive Streaming Expert
+
+- [tbd](recipes/streaming.interactive/expert/tbd#readme) _(to-be-written)_
+
+### Reactive Streaming Introduction
+
+Reactive streaming is ...
+
+#### Reactive Streaming Basics
+
+- [tbd](recipes/streaming.reactive/basic/tbd#readme) _(to-be-written)_
+
+#### Reactive Streaming Advanced
+
+- [tbd](recipes/streaming.reactive/advanced/tbd#readme) _(to-be-written)_
+
+#### Reactive Streaming Expert
+
+- [tbd](recipes/streaming.reactive/expert/tbd#readme) _(to-be-written)_
 
 ## Motivation
 

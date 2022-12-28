@@ -15,6 +15,9 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] assign each command a random ID
+- [ ] assign each query a random ID
+- [ ] carry a trace ID across commands and queries
 - [ ] create analyzers (including code fixes)
   - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)
   - [ ] non-empty `ConfigurePipeline` method
@@ -31,11 +34,17 @@ This file contains all the open points for extensions and improvements to the **
 ### CQS middleware
 
 - [ ] create projects for common middlewares, e.g.
+  - [ ] `Conqueror.CQS.Middleware.Logging`
+  - [ ] `Conqueror.CQS.Middleware.Tracing`
   - [ ] `Conqueror.CQS.Middleware.Timeout`
   - [ ] `Conqueror.CQS.Middleware.Retry`
 
 ### CQS ASP Core
 
+- [ ] assign each command a random ID and transport it to server
+- [ ] assign each query a random ID and transport it to server
+- [ ] carry a trace ID across commands and queries (read and write trace ID from/to standard HTTP tracing header)
+- [ ] add client option for setting custom HTTP headers (e.g. for authentication)
 - [ ] instruct users to place their custom path conventions into their contracts module to allow both server and client to use the same conventions
 - [ ] allow registering commands and queries via DI extension instead of attribute
 
