@@ -9,6 +9,8 @@ See our [quickstart](quickstart) or [example projects](examples) if you want to 
 [![Build Status](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml/badge.svg)](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml)
 [![license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+> **Conqueror** only supports .NET 6+
+
 ## Libraries
 
 **Conqueror.CQS (_stable_)**: Split your business processes into simple-to-maintain and easy-to-test pieces of code using the [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) pattern. Handle cross-cutting concerns like logging, validation, authorization etc. using configurable middlewares. Keep your applications scalable by moving commands and queries from a modular monolith to a distributed application with minimal friction.
@@ -49,13 +51,13 @@ TODO
 
 ## Recipes
 
-Instead of traditional documentation **Conqueror** has these recipes that will show you how you can utilize it to its maximum. Each recipe will help you solve one particular challenge that you will likely encounter while building a .NET application.
+In addition to code-level API documentation, **Conqueror** provides you with recipes that will guide you in how to utilize it to its maximum. Each recipe will help you solve one particular challenge that you will likely encounter while building a .NET application.
 
 > For every "How do I do X?" you can imagine for this project, you should be able to find a recipe here. If you don't see a recipe for your question, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new) or even better, provide the recipe as a pull request.
 
 ### CQS Introduction
 
-CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation). For a full exploration of why we chose this pattern as the foundation for one of the **Conqueror** libraries see the [motivation](#motivation) section. Here is a short explanation: the core idea behind this pattern is that operations which only read data (i.e. queries) and operations which mutate data or cause side-effects (i.e. commands) have very different characteristics (for a start, in most applications queries are executed much more frequently than commands). In addition, business operations often map very well to commands and queries. By following this separation in our application logic, we gain many benefits. For example, commands and queries represent a natural boundary for encapsulation and cross-cutting concerns can be solved generally according to the nature of the operation (e.g. caching makes sense for queries, but not such much for commands).
+CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) (which is the inspiration for this project and also where the name is derived from: conquer -> **co**mmands a**n**d **quer**ies). For a full exploration of why we chose this pattern as the foundation for one of the **Conqueror** libraries see the [motivation](#motivation) section. Here is a short explanation: the core idea behind this pattern is that operations which only read data (i.e. queries) and operations which mutate data or cause side-effects (i.e. commands) have very different characteristics (for a start, in most applications queries are executed much more frequently than commands). In addition, business operations often map very well to commands and queries. By following this separation in our application logic, we gain many benefits. For example, commands and queries represent a natural boundary for encapsulation and cross-cutting concerns can be solved generally according to the nature of the operation (e.g. caching makes sense for queries, but not such much for commands).
 
 #### CQS Basics
 
@@ -114,23 +116,39 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 
 ### Interactive Streaming Introduction
 
-Interactive streaming is ...
+For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are generally two high-level approaches: interactive / pull-based (i.e. consumer is in control of the pace) and reactive / push-based (i.e. the producer is in control of the pace). Here we focus on interactive streaming, which is a good approach for use cases like paging and event sourcing.
 
 #### Interactive Streaming Basics
 
-- [tbd](recipes/streaming.interactive/basic/tbd#readme) _(to-be-written)_
+- [getting started](recipes/streaming.interactive/basic/getting-started#readme) _(to-be-written)_
+- [testing streaming request handlers](recipes/streaming.interactive/basic/testing-handlers#readme) _(to-be-written)_
+- [reducing code repetition with custom handler interfaces](recipes/streaming.interactive/basic/reducing-code-repetition#readme) _(to-be-written)_
 
 #### Interactive Streaming Advanced
 
-- [tbd](recipes/streaming.interactive/advanced/tbd#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/streaming.interactive/advanced/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing streaming request handlers that have middleware pipelines](recipes/streaming.interactive/advanced/testing-handlers-with-pipelines#readme) _(to-be-written)_
+- [testing middlewares](recipes/streaming.interactive/advanced/testing-middlewares#readme) _(to-be-written)_
+- [making middleware pipelines reusable](recipes/streaming.interactive/advanced/making-pipelines-reusable#readme) _(to-be-written)_
+- [validating streaming requests](recipes/streaming.interactive/advanced/validation#readme) _(to-be-written)_
+- [exposing streams via HTTP](recipes/streaming.interactive/advanced/exposing-via-http#readme) _(to-be-written)_
+- [testing HTTP streams](recipes/streaming.interactive/advanced/testing-http#readme) _(to-be-written)_
+- [consuming HTTP streams from another application](recipes/streaming.interactive/advanced/consuming-http#readme) _(to-be-written)_
+- [using middlewares for interactive streaming HTTP clients](recipes/streaming.interactive/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
+- [optimize HTTP streaming performance with pre-fetching](recipes/streaming.interactive/advanced/optimize-http-performance#readme) _(to-be-written)_
+- [authenticating and authorizing streaming requests](recipes/streaming.interactive/advanced/auth#readme) _(to-be-written)_
 
 #### Interactive Streaming Expert
 
-- [tbd](recipes/streaming.interactive/expert/tbd#readme) _(to-be-written)_
+- [store and access background context information in the scope of a single streaming request](recipes/streaming.interactive/expert/streaming-request-context#readme) _(to-be-written)_
+- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/streaming.interactive/expert/conqueror-context#readme) _(to-be-written)_
+- [accessing properties of streaming requests in middlewares](recipes/streaming.interactive/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
+- [exposing and consuming interactive streams via other transports (e.g. SignalR)](recipes/streaming.interactive/expert/exposing-via-other-transports#readme) _(to-be-written)_
+- [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming.interactive/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
 
 ### Reactive Streaming Introduction
 
-Reactive streaming is ...
+For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are generally two high-level approaches: interactive / pull-based (i.e. consumer is in control of the pace) and reactive / push-based (i.e. the producer is in control of the pace). Here we focus on reactive streaming, which is a good approach when you do not control the source of the stream yourself, and therefore need to handle stream items at whatever pace the producer provides (e.g. handling sensor data from IoT devices).
 
 #### Reactive Streaming Basics
 

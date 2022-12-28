@@ -69,6 +69,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] fix: do not register nested private types during assembly scanning
 - [ ] implement middleware support
 - [ ] implement clients and transport infrastructure
+- [ ] add transport for SignalR
 - [ ] for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
 
 ### Interactive streaming ASP Core
