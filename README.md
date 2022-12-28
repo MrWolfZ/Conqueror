@@ -70,16 +70,16 @@ using Conqueror;
 namespace Quickstart;
 
 [HttpCommand]
-public record PrintIntegerCommand(int Parameter);
+public sealed record PrintIntegerCommand(int Parameter);
 
-public record PrintIntegerCommandResponse(int Parameter);
+public sealed record PrintIntegerCommandResponse(int Parameter);
 
 public interface IPrintIntegerCommandHandler : ICommandHandler<PrintIntegerCommand,
                                                                PrintIntegerCommandResponse>
 {
 }
 
-public class PrintIntegerCommandHandler : IPrintIntegerCommandHandler
+public sealed class PrintIntegerCommandHandler : IPrintIntegerCommandHandler
 {
     public Task<PrintIntegerCommandResponse> ExecuteCommand(PrintIntegerCommand command,
                                                             CancellationToken cancellationToken = default)
@@ -98,16 +98,16 @@ using Conqueror;
 namespace Quickstart;
 
 [HttpQuery]
-public record AddTwoIntegersQuery(int Parameter1, int Parameter2);
+public sealed record AddTwoIntegersQuery(int Parameter1, int Parameter2);
 
-public record AddTwoIntegersQueryResponse(int Sum);
+public sealed record AddTwoIntegersQueryResponse(int Sum);
 
 public interface IAddTwoIntegersQueryHandler : IQueryHandler<AddTwoIntegersQuery,
                                                              AddTwoIntegersQueryResponse>
 {
 }
 
-public class AddTwoIntegersQueryHandler : IAddTwoIntegersQueryHandler
+public sealed class AddTwoIntegersQueryHandler : IAddTwoIntegersQueryHandler
 {
     public Task<AddTwoIntegersQueryResponse> ExecuteQuery(AddTwoIntegersQuery query,
                                                           CancellationToken cancellationToken = default)

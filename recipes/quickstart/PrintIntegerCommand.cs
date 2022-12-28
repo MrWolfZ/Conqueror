@@ -3,16 +3,16 @@
 namespace Quickstart;
 
 [HttpCommand]
-public record PrintIntegerCommand(int Parameter);
+public sealed record PrintIntegerCommand(int Parameter);
 
-public record PrintIntegerCommandResponse(int Parameter);
+public sealed record PrintIntegerCommandResponse(int Parameter);
 
 public interface IPrintIntegerCommandHandler : ICommandHandler<PrintIntegerCommand,
     PrintIntegerCommandResponse>
 {
 }
 
-public class PrintIntegerCommandHandler : IPrintIntegerCommandHandler
+public sealed class PrintIntegerCommandHandler : IPrintIntegerCommandHandler
 {
     public Task<PrintIntegerCommandResponse> ExecuteCommand(PrintIntegerCommand command,
                                                             CancellationToken cancellationToken = default)
