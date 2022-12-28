@@ -68,7 +68,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
             }
         }
 
-        protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(2);
+        protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(IsRunningInContinuousIntegration ? 10 : 2);
 
         protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
 
@@ -84,6 +84,8 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
                 return timeoutCancellationTokenSource;
             }
         }
+
+        private static bool IsRunningInContinuousIntegration => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
 
         [SetUp]
         public async Task SetUp()
