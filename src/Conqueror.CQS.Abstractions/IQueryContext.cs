@@ -18,6 +18,11 @@ namespace Conqueror
         object? Response { get; }
 
         /// <summary>
+        ///     The unique ID of this query (useful e.g. for correlating log entries).
+        /// </summary>
+        string QueryId { get; }
+
+        /// <summary>
         ///     Gets a key/value collection that can be used to share data within the scope of this query.
         /// </summary>
         IDictionary<object, object?> Items { get; }

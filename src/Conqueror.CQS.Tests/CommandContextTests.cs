@@ -12,6 +12,8 @@
                 Assert.AreEqual(command, cmd);
                 Assert.IsNotNull(ctx);
                 Assert.AreEqual(command, ctx!.Command);
+                Assert.IsNotNull(ctx.CommandId);
+                Assert.IsNotEmpty(ctx.CommandId);
                 Assert.IsNull(ctx.Response);
 
                 return new(cmd.Payload);
@@ -30,6 +32,8 @@
                 Assert.AreEqual(command, cmd);
                 Assert.IsNotNull(ctx);
                 Assert.AreEqual(command, ctx!.Command);
+                Assert.IsNotNull(ctx.CommandId);
+                Assert.IsNotEmpty(ctx.CommandId);
                 Assert.IsNull(ctx.Response);
             });
 
@@ -47,6 +51,8 @@
                 Assert.AreEqual(command, middlewareCtx.Command);
                 Assert.IsNotNull(ctx);
                 Assert.AreEqual(command, ctx!.Command);
+                Assert.IsNotNull(ctx.CommandId);
+                Assert.IsNotEmpty(ctx.CommandId);
                 Assert.IsNull(ctx.Response);
 
                 var resp = await next(middlewareCtx.Command);
@@ -70,6 +76,8 @@
                 {
                     Assert.IsNotNull(ctx);
                     Assert.AreEqual(command, ctx!.Command);
+                    Assert.IsNotNull(ctx.CommandId);
+                    Assert.IsNotEmpty(ctx.CommandId);
                     Assert.IsNull(ctx.Response);
                 },
                 nestedClassLifetime: ServiceLifetime.Scoped);
@@ -86,6 +94,8 @@
             {
                 Assert.IsNotNull(ctx);
                 Assert.AreNotEqual(command, ctx!.Command);
+                Assert.IsNotNull(ctx.CommandId);
+                Assert.IsNotEmpty(ctx.CommandId);
                 Assert.IsNull(ctx.Response);
 
                 return new(cmd.Payload);
@@ -103,6 +113,8 @@
             {
                 Assert.IsNotNull(ctx);
                 Assert.AreEqual(command, ctx!.Command);
+                Assert.IsNotNull(ctx.CommandId);
+                Assert.IsNotEmpty(ctx.CommandId);
             });
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
@@ -303,6 +315,58 @@
 
             Assert.That(observedItems, Has.Count.EqualTo(2));
             Assert.AreNotSame(observedItems[0], observedItems[1]);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_CommandIdIsTheSameInHandlerMiddlewareAndNestedClass()
+        {
+            var command = new TestCommand(10);
+            var observedCommandIds = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    observedCommandIds.Add(ctx!.CommandId);
+                    return new(cmd.Payload);
+                },
+                (cmd, _) => new(cmd.Payload),
+                (middlewareCtx, ctx, next) =>
+                {
+                    observedCommandIds.Add(ctx!.CommandId);
+                    return next(middlewareCtx.Command);
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Command),
+                ctx => observedCommandIds.Add(ctx!.CommandId));
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedCommandIds, Has.Count.EqualTo(3));
+            Assert.AreSame(observedCommandIds[0], observedCommandIds[1]);
+            Assert.AreSame(observedCommandIds[0], observedCommandIds[2]);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_CommandIdIsNotTheSameInNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var observedCommandIds = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    observedCommandIds.Add(ctx!.CommandId);
+                    return new(cmd.Payload);
+                },
+                (cmd, ctx) =>
+                {
+                    observedCommandIds.Add(ctx!.CommandId);
+                    return new(cmd.Payload);
+                });
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedCommandIds, Has.Count.EqualTo(2));
+            Assert.AreNotSame(observedCommandIds[0], observedCommandIds[1]);
         }
 
         [Test]

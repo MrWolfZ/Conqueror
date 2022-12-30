@@ -9,31 +9,32 @@ namespace Conqueror.CQS.QueryHandling
     {
         private readonly Lazy<IDictionary<object, object?>> itemsLazy = new(() => new ConcurrentDictionary<object, object?>());
 
-        private object query;
-        private object? response;
-
-        public DefaultQueryContext(object query)
+        public DefaultQueryContext(object query, string queryId)
         {
-            this.query = query;
+            Query = query;
+            QueryId = queryId;
         }
 
         /// <inheritdoc />
-        public object Query => query;
+        public object Query { get; private set; }
 
         /// <inheritdoc />
-        public object? Response => response;
+        public object? Response { get; private set; }
+
+        /// <inheritdoc />
+        public string QueryId { get; }
 
         /// <inheritdoc />
         public IDictionary<object, object?> Items => itemsLazy.Value;
 
-        public void SetQuery(object qry)
+        public void SetQuery(object query)
         {
-            query = qry;
+            Query = query;
         }
 
-        public void SetResponse(object? res)
+        public void SetResponse(object? response)
         {
-            response = res;
+            Response = response;
         }
     }
 }

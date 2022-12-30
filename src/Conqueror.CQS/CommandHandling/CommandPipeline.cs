@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.Common;
 
 namespace Conqueror.CQS.CommandHandling
 {
@@ -26,7 +27,7 @@ namespace Conqueror.CQS.CommandHandling
                                                                   CancellationToken cancellationToken)
             where TCommand : class
         {
-            var commandContext = new DefaultCommandContext(initialCommand);
+            var commandContext = new DefaultCommandContext(initialCommand, IdGenerator.GetNextId());
 
             commandContextAccessor.CommandContext = commandContext;
 

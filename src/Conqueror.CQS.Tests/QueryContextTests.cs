@@ -12,6 +12,8 @@
                 Assert.AreEqual(query, cmd);
                 Assert.IsNotNull(ctx);
                 Assert.AreEqual(query, ctx!.Query);
+                Assert.IsNotNull(ctx.QueryId);
+                Assert.IsNotEmpty(ctx.QueryId);
                 Assert.IsNull(ctx.Response);
 
                 return new(cmd.Payload);
@@ -31,6 +33,8 @@
                 Assert.AreEqual(query, middlewareCtx.Query);
                 Assert.IsNotNull(ctx);
                 Assert.AreEqual(query, ctx!.Query);
+                Assert.IsNotNull(ctx.QueryId);
+                Assert.IsNotEmpty(ctx.QueryId);
                 Assert.IsNull(ctx.Response);
 
                 var resp = await next(middlewareCtx.Query);
@@ -54,6 +58,8 @@
                 {
                     Assert.IsNotNull(ctx);
                     Assert.AreEqual(query, ctx!.Query);
+                    Assert.IsNotNull(ctx.QueryId);
+                    Assert.IsNotEmpty(ctx.QueryId);
                     Assert.IsNull(ctx.Response);
                 },
                 nestedClassLifetime: ServiceLifetime.Scoped);
@@ -70,6 +76,8 @@
             {
                 Assert.IsNotNull(ctx);
                 Assert.AreNotEqual(query, ctx!.Query);
+                Assert.IsNotNull(ctx.QueryId);
+                Assert.IsNotEmpty(ctx.QueryId);
                 Assert.IsNull(ctx.Response);
 
                 return new(cmd.Payload);
@@ -87,6 +95,8 @@
             {
                 Assert.IsNotNull(ctx);
                 Assert.AreEqual(query, ctx!.Query);
+                Assert.IsNotNull(ctx.QueryId);
+                Assert.IsNotEmpty(ctx.QueryId);
             });
 
             _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
@@ -287,6 +297,58 @@
 
             Assert.That(observedItems, Has.Count.EqualTo(2));
             Assert.AreNotSame(observedItems[0], observedItems[1]);
+        }
+
+        [Test]
+        public async Task GivenQueryExecution_QueryIdTheSameInHandlerMiddlewareAndNestedClass()
+        {
+            var query = new TestQuery(10);
+            var observedQueryIds = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    observedQueryIds.Add(ctx!.QueryId);
+                    return new(cmd.Payload);
+                },
+                (cmd, _) => new(cmd.Payload),
+                (middlewareCtx, ctx, next) =>
+                {
+                    observedQueryIds.Add(ctx!.QueryId);
+                    return next(middlewareCtx.Query);
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Query),
+                ctx => observedQueryIds.Add(ctx!.QueryId));
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observedQueryIds, Has.Count.EqualTo(3));
+            Assert.AreSame(observedQueryIds[0], observedQueryIds[1]);
+            Assert.AreSame(observedQueryIds[0], observedQueryIds[2]);
+        }
+
+        [Test]
+        public async Task GivenQueryExecution_QueryIdNotTheSameInNestedHandler()
+        {
+            var query = new TestQuery(10);
+            var observedQueryIds = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    observedQueryIds.Add(ctx!.QueryId);
+                    return new(cmd.Payload);
+                },
+                (cmd, ctx) =>
+                {
+                    observedQueryIds.Add(ctx!.QueryId);
+                    return new(cmd.Payload);
+                });
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observedQueryIds, Has.Count.EqualTo(2));
+            Assert.AreNotSame(observedQueryIds[0], observedQueryIds[1]);
         }
 
         [Test]

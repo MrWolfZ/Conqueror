@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.Common;
 
 namespace Conqueror.CQS.QueryHandling
 {
@@ -26,7 +27,7 @@ namespace Conqueror.CQS.QueryHandling
                                                                 CancellationToken cancellationToken)
             where TQuery : class
         {
-            var queryContext = new DefaultQueryContext(initialQuery);
+            var queryContext = new DefaultQueryContext(initialQuery, IdGenerator.GetNextId());
 
             queryContextAccessor.QueryContext = queryContext;
 

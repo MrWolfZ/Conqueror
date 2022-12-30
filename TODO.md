@@ -15,8 +15,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] assign each command a random ID
-- [ ] assign each query a random ID
 - [ ] carry a trace ID across commands and queries
 - [ ] create analyzers (including code fixes)
   - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)

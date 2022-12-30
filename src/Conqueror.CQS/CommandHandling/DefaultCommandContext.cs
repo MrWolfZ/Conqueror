@@ -9,31 +9,32 @@ namespace Conqueror.CQS.CommandHandling
     {
         private readonly Lazy<IDictionary<object, object?>> itemsLazy = new(() => new ConcurrentDictionary<object, object?>());
 
-        private object command;
-        private object? response;
-
-        public DefaultCommandContext(object command)
+        public DefaultCommandContext(object command, string commandId)
         {
-            this.command = command;
+            Command = command;
+            CommandId = commandId;
         }
 
         /// <inheritdoc />
-        public object Command => command;
+        public object Command { get; private set; }
 
         /// <inheritdoc />
-        public object? Response => response;
+        public object? Response { get; private set; }
+
+        /// <inheritdoc />
+        public string CommandId { get; }
 
         /// <inheritdoc />
         public IDictionary<object, object?> Items => itemsLazy.Value;
 
-        public void SetCommand(object cmd)
+        public void SetCommand(object command)
         {
-            command = cmd;
+            Command = command;
         }
 
-        public void SetResponse(object? res)
+        public void SetResponse(object? response)
         {
-            response = res;
+            Response = response;
         }
     }
 }
