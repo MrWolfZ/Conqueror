@@ -1,4 +1,4 @@
-# Conqueror recipe (Eventing Advanced): testing middlewares
+# Conqueror recipe (Eventing Basics): testing middlewares
 
 _work-in-progress_
 

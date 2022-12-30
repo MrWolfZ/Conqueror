@@ -1,0 +1,3 @@
+# Conqueror recipe (CQS Advanced): using a different dependency injection container (e.g. Autofac or Ninject)
+
+_work-in-progress_

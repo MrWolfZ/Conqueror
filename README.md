@@ -143,23 +143,24 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 #### CQS Basics
 
-- [getting started](recipes/cqs/basic/getting-started#readme) _(to-be-written)_
+- [getting started](recipes/cqs/basic/getting-started#readme)
 - [testing command and query handlers](recipes/cqs/basic/testing-handlers#readme) _(to-be-written)_
-- [reducing code repetition with custom handler interfaces](recipes/cqs/basic/reducing-code-repetition#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/cqs/basic/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing command and query handlers that have middleware pipelines](recipes/cqs/basic/testing-handlers-with-pipelines#readme) _(to-be-written)_
+- [testing middlewares](recipes/cqs/basic/testing-middlewares#readme) _(to-be-written)_
 
 #### CQS Advanced
 
-- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/cqs/advanced/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing command and query handlers that have middleware pipelines](recipes/cqs/advanced/testing-handlers-with-pipelines#readme) _(to-be-written)_
-- [testing middlewares](recipes/cqs/advanced/testing-middlewares#readme) _(to-be-written)_
-- [making middleware pipelines reusable](recipes/cqs/advanced/making-pipelines-reusable#readme) _(to-be-written)_
-- [validating commands and queries](recipes/cqs/advanced/validation#readme) _(to-be-written)_
+- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/cqs/advanced/different-dependency-injection#readme) _(to-be-written)_
 - [creating a clean architecture with commands and queries](recipes/cqs/advanced/clean-architecture#readme) _(to-be-written)_
 - [exposing commands and queries via HTTP](recipes/cqs/advanced/exposing-via-http#readme) _(to-be-written)_
 - [testing HTTP commands and queries](recipes/cqs/advanced/testing-http#readme) _(to-be-written)_
 - [calling HTTP commands and queries from another application](recipes/cqs/advanced/calling-http#readme) _(to-be-written)_
 - [using middlewares for command and query HTTP clients](recipes/cqs/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
 - [authenticating and authorizing commands and queries](recipes/cqs/advanced/auth#readme) _(to-be-written)_
+- [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme) _(to-be-written)_
+- [using commands and queries in a Blazor app (server-side or web-assembly)](recipes/cqs/advanced/blazor-server#readme) _(to-be-written)_
+- [building a CLI using commands and queries](recipes/cqs/advanced/building-cli#readme) _(to-be-written)_
 
 #### CQS Expert
 
@@ -168,6 +169,7 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [accessing properties of commands and queries in middlewares](recipes/cqs/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 - [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(to-be-written)_
 - [building test assertions that work for HTTP and non-HTTP commands and queries](recipes/cqs/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
+- [creating generic command or query handlers](recipes/cqs/expert/generic-handlers#readme) _(to-be-written)_
 
 ### Eventing Introduction
 
@@ -178,17 +180,17 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [getting started](recipes/eventing/basic/getting-started#readme) _(to-be-written)_
 - [testing event observers](recipes/eventing/basic/testing-observers#readme) _(to-be-written)_
 - [testing code that publishes events](recipes/eventing/basic/testing-publish#readme) _(to-be-written)_
-- [reducing code repetition with custom observer interfaces](recipes/eventing/basic/reducing-code-repetition#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/eventing/basic/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing event observers with pipelines](recipes/eventing/basic/testing-observers-with-pipelines#readme) _(to-be-written)_
+- [testing event publisher pipeline](recipes/eventing/basic/testing-publisher-pipeline#readme) _(to-be-written)_
+- [testing middlewares](recipes/eventing/basic/testing-middlewares#readme) _(to-be-written)_
 
 #### Eventing Advanced
 
+- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/eventing/advanced/different-dependency-injection#readme) _(to-be-written)_
 - [execute event observers with a different strategy (e.g. parallel execution)](recipes/eventing/advanced/publishing-strategy#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/eventing/advanced/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing event observers with pipelines](recipes/eventing/advanced/testing-observers-with-pipelines#readme) _(to-be-written)_
-- [testing event publisher pipeline](recipes/eventing/advanced/testing-publisher-pipeline#readme) _(to-be-written)_
-- [testing middlewares](recipes/eventing/advanced/testing-middlewares#readme) _(to-be-written)_
-- [making observer middleware pipelines reusable](recipes/eventing/advanced/making-observer-pipelines-reusable#readme) _(to-be-written)_
 - [creating a clean architecture with loose coupling via events](recipes/eventing/advanced/clean-architecture#readme) _(to-be-written)_
+- [moving from a modular monolith to a distributed system](recipes/eventing/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
 #### Eventing Expert
 
@@ -204,21 +206,21 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 
 - [getting started](recipes/streaming.interactive/basic/getting-started#readme) _(to-be-written)_
 - [testing streaming request handlers](recipes/streaming.interactive/basic/testing-handlers#readme) _(to-be-written)_
-- [reducing code repetition with custom handler interfaces](recipes/streaming.interactive/basic/reducing-code-repetition#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/streaming.interactive/basic/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing streaming request handlers that have middleware pipelines](recipes/streaming.interactive/basic/testing-handlers-with-pipelines#readme) _(to-be-written)_
+- [testing middlewares](recipes/streaming.interactive/basic/testing-middlewares#readme) _(to-be-written)_
 
 #### Interactive Streaming Advanced
 
-- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/streaming.interactive/advanced/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing streaming request handlers that have middleware pipelines](recipes/streaming.interactive/advanced/testing-handlers-with-pipelines#readme) _(to-be-written)_
-- [testing middlewares](recipes/streaming.interactive/advanced/testing-middlewares#readme) _(to-be-written)_
-- [making middleware pipelines reusable](recipes/streaming.interactive/advanced/making-pipelines-reusable#readme) _(to-be-written)_
-- [validating streaming requests](recipes/streaming.interactive/advanced/validation#readme) _(to-be-written)_
+- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/streaming.interactive/advanced/different-dependency-injection#readme) _(to-be-written)_
+- [reading interactive streams from a messaging system (e.g. Kafka or RabbitMQ)](recipes/streaming.interactive/advanced/reading-from-messaging-system#readme) _(to-be-written)_
 - [exposing streams via HTTP](recipes/streaming.interactive/advanced/exposing-via-http#readme) _(to-be-written)_
 - [testing HTTP streams](recipes/streaming.interactive/advanced/testing-http#readme) _(to-be-written)_
 - [consuming HTTP streams from another application](recipes/streaming.interactive/advanced/consuming-http#readme) _(to-be-written)_
 - [using middlewares for interactive streaming HTTP clients](recipes/streaming.interactive/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
 - [optimize HTTP streaming performance with pre-fetching](recipes/streaming.interactive/advanced/optimize-http-performance#readme) _(to-be-written)_
 - [authenticating and authorizing streaming requests](recipes/streaming.interactive/advanced/auth#readme) _(to-be-written)_
+- [moving from a modular monolith to a distributed system](recipes/streaming.interactive/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
 #### Interactive Streaming Expert
 

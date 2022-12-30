@@ -1,4 +1,4 @@
-# Conqueror recipe (CQS Advanced): solving cross-cutting concerns with middlewares (e.g. logging)
+# Conqueror recipe (Interactive Streaming Basics): solving cross-cutting concerns with middlewares (e.g. logging)
 
 _work-in-progress_
 
