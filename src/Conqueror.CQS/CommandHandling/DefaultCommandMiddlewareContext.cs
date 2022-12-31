@@ -5,7 +5,7 @@ using Conqueror.CQS.Common;
 namespace Conqueror.CQS.CommandHandling
 {
     internal delegate Task<TResponse> CommandMiddlewareNext<in TCommand, TResponse>(TCommand command, CancellationToken cancellationToken);
-    
+
     internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration> : CommandMiddlewareContext<TCommand, TResponse, TConfiguration>
         where TCommand : class
     {

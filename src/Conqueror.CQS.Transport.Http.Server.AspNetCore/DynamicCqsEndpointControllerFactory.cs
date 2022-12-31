@@ -36,7 +36,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 executorMethod = hasResponse ? executorMethod.MakeGenericMethod(endpoint.RequestType, endpoint.ResponseType!) : executorMethod.MakeGenericMethod(endpoint.RequestType);
 
                 var httpContextProperty = typeof(ControllerBase).GetProperty(nameof(ControllerBase.HttpContext), BindingFlags.Public | BindingFlags.Instance);
-                
+
                 var parameterTypes = executorMethod.GetParameters().Select(p => p.ParameterType).Skip(1).ToArray();
 
                 var methodBuilder = typeBuilder.DefineMethod(

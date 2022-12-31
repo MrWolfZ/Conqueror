@@ -27,7 +27,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 }
             }
         }
-        
+
         public static async Task AssertSuccessStatusCode(this HttpResponseMessage response)
         {
             if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)

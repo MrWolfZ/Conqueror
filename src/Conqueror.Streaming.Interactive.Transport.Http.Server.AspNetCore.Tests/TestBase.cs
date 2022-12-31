@@ -15,9 +15,9 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
     public abstract class TestBase
     {
         private HttpClient? client;
-        private WebSocketClient? webSocketClient;
         private IHost? host;
         private CancellationTokenSource? timeoutCancellationTokenSource;
+        private WebSocketClient? webSocketClient;
 
         protected HttpClient HttpClient
         {
@@ -58,11 +58,30 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
             }
         }
 
+        protected JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
+
+        protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(2);
+
+        protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
+
+        private CancellationTokenSource TimeoutCancellationTokenSource
+        {
+            get
+            {
+                if (timeoutCancellationTokenSource == null)
+                {
+                    throw new InvalidOperationException("test fixture must be initialized before timeout cancellation token source");
+                }
+
+                return timeoutCancellationTokenSource;
+            }
+        }
+
         [SetUp]
         public async Task SetUp()
         {
             timeoutCancellationTokenSource = new();
-            
+
             var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
                                                .ConfigureWebHost(webHost =>
                                                {
@@ -101,25 +120,6 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
         protected Task<WebSocket> ConnectToWebSocket(string path, string query)
         {
             return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
-        }
-
-        protected JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
-
-        protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(2);
-
-        protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
-
-        private CancellationTokenSource TimeoutCancellationTokenSource
-        {
-            get
-            {
-                if (timeoutCancellationTokenSource == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before timeout cancellation token source");
-                }
-
-                return timeoutCancellationTokenSource;
-            }
         }
     }
 }

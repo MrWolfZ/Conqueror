@@ -38,7 +38,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 
             await receiveLoopTask;
         }
-        
+
         [Test]
         public async Task GivenStreamHandlerWebsocketEndpoint_WhenClosingConnectionBeforeEndOfStream_ThenConnectionIsClosedSuccessfully()
         {
@@ -53,7 +53,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 
             Assert.DoesNotThrowAsync(() => streamingClientWebSocket.Close(TestTimeoutToken));
         }
-        
+
         [Test]
         public async Task GivenStreamHandlerWebsocketEndpoint_WhenCancelingEnumeration_ThenReadingFromSocketIsCanceled()
         {
@@ -66,12 +66,12 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
             using var cts = new CancellationTokenSource();
 
             var readTask = streamingClientWebSocket.Read(cts.Token).GetAsyncEnumerator(cts.Token).MoveNextAsync();
-            
+
             cts.Cancel();
 
             _ = Assert.ThrowsAsync<OperationCanceledException>(() => readTask.AsTask());
         }
-        
+
         [Test]
         public async Task GivenStreamHandlerWebsocketEndpoint_WhenExceptionOccursInSourceEnumerable_ThenErrorMessageIsReceivedAndConnectionIsClosed()
         {
@@ -82,23 +82,23 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
             using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
 
             _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-            
+
             var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
-            
+
             // successful invocation
             Assert.IsTrue(await enumerator.MoveNextAsync());
 
             _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-            
+
             // error
             Assert.IsTrue(await enumerator.MoveNextAsync());
-            
+
             Assert.IsInstanceOf<ErrorMessage>(enumerator.Current);
-            
+
             // should finish the enumeration 
             Assert.IsFalse(await enumerator.MoveNextAsync());
         }
-        
+
         [Test]
         public async Task GivenStreamHandlerWebsocketEndpoint_WhenClientDoesNotReadTheEnumerable_ThenTheServerCanStillSuccessfullyCloseTheConnection()
         {
@@ -109,9 +109,9 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
             using var streamingClientWebSocket = new InteractiveStreamingClientWebSocket<TestItem>(jsonWebSocket);
 
             _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
-            
+
             var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
-            
+
             // successful invocation
             Assert.IsTrue(await enumerator.MoveNextAsync());
 
@@ -124,7 +124,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
             {
                 await Task.Delay(10);
             }
-            
+
             Assert.AreEqual(WebSocketState.Closed, socket.State);
         }
 

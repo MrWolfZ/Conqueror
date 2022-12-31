@@ -162,7 +162,7 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<ITestCommandHandlerWithExtraMethod>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
-        
+
         [Test]
         public void GivenNonGenericCommandHandlerInterface_CreatingClientThrowsArgumentException()
         {
@@ -179,7 +179,7 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<INonGenericCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
-        
+
         [Test]
         public void GivenConcreteCommandHandlerType_CreatingClientThrowsArgumentException()
         {
@@ -196,7 +196,7 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<TestCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
-        
+
         [Test]
         public void GivenCommandHandlerInterfaceThatImplementsMultipleOtherPlainCommandHandlerInterfaces_CreatingClientThrowsArgumentException()
         {
@@ -213,7 +213,7 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<ICombinedCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
-        
+
         [Test]
         public void GivenCommandHandlerInterfaceThatImplementsMultipleOtherCustomCommandHandlerInterfaces_CreatingClientThrowsArgumentException()
         {
@@ -265,7 +265,7 @@ namespace Conqueror.CQS.Tests
         {
             void SomeMethod();
         }
-        
+
         private sealed class TestCommandHandler : ITestCommandHandler
         {
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();

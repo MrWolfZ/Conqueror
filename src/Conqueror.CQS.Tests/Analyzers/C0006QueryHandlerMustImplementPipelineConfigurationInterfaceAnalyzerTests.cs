@@ -41,7 +41,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithoutConfigurationMethod_NoDiagnosticsAreProduced()
         {
@@ -71,10 +71,10 @@ namespace Conqueror.CQS.Tests.Analyzers
                     }
                 }
             ".Dedent();
-            
+
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithConfigurationMethodWithCorrectSignature_NoDiagnosticsAreProduced()
         {
@@ -110,7 +110,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithConfigurationMethodWithCorrectSignature_NoDiagnosticsAreProduced()
         {
@@ -147,7 +147,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithConfigurationMethodWithWrongSignature_NoDiagnosticsAreProduced()
         {
@@ -184,7 +184,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithConfigurationMethodWrongSignature_NoDiagnosticsAreProduced()
         {
@@ -222,7 +222,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithoutConfigurationMethod_DiagnosticsAreProduced()
         {
@@ -322,7 +322,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithConfigurationMethod_DiagnosticsAreProduced()
         {
@@ -432,7 +432,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceWithoutConfigurationInterfaceWithoutConfigurationMethod_DiagnosticsAreProduced()
         {
@@ -535,7 +535,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceWithoutConfigurationInterfaceWithConfigurationMethod_DiagnosticsAreProduced()
         {
@@ -648,7 +648,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
-        
+
         [Test]
         public async Task GivenCustomQueryHandlerInterface_NoDiagnosticsAreProduced()
         {
@@ -667,7 +667,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenTypeWithNonConquerorQueryHandlerInterface_NoDiagnosticsAreProduced()
         {

@@ -19,7 +19,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
 
             var clientOptions = new ConquerorInteractiveStreamingHttpClientOptions(provider);
             registration.ConfigurationAction?.Invoke(clientOptions);
-            
+
             var webSocketClientFactory = globalOptions.WebSocketFactory ?? (async (address, cancellationToken) =>
             {
                 var socket = new ClientWebSocket();

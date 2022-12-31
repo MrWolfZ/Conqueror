@@ -35,11 +35,11 @@ namespace Conqueror.Eventing
                 }
 
                 var (middlewareType, middlewareConfiguration) = middlewares[index];
-                
+
                 var invokerType = middlewareConfiguration is null
                     ? typeof(EventObserverMiddlewareInvoker)
                     : typeof(EventObserverMiddlewareInvoker<>).MakeGenericType(middlewareConfiguration.GetType());
-                
+
                 var invoker = (IEventObserverMiddlewareInvoker)Activator.CreateInstance(invokerType)!;
 
                 await invoker.Invoke(evt, (e, t) => ExecuteNextMiddleware(index + 1, e, t), middlewareType, middlewareConfiguration, serviceProvider, token);

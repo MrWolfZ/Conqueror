@@ -20,12 +20,12 @@ namespace Conqueror.CQS.Analyzers.Util
             {
                 return false;
             }
-            
+
             if (symbol.IsEquivalent(commandHandlerInterfaceType) || symbol.IsEquivalent(commandHandlerWithoutResponseInterfaceType))
             {
                 return true;
             }
-            
+
             var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(symbol.ToString());
 
             return IsCommandHandlerType(declaredTypeSymbol, context);
@@ -47,7 +47,7 @@ namespace Conqueror.CQS.Analyzers.Util
 
             return symbol.IsEquivalent(interfaceType);
         }
-        
+
         public static bool IsQueryHandlerType(this ITypeSymbol symbol, SyntaxNodeAnalysisContext context)
         {
             return symbol?.Interfaces.Any(i => i.IsQueryHandlerInterfaceType(context)) ?? false;
@@ -61,12 +61,12 @@ namespace Conqueror.CQS.Analyzers.Util
             {
                 return false;
             }
-            
+
             if (symbol.IsEquivalent(queryHandlerInterfaceType))
             {
                 return true;
             }
-            
+
             var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(symbol.ToString());
 
             return IsQueryHandlerType(declaredTypeSymbol, context);

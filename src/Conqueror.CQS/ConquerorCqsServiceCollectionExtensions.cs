@@ -16,7 +16,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddFinalizationCheck();
             services.AddConquerorCqsQueryServices();
             services.AddConquerorCqsCommandServices();
-            
+
             services.TryAddSingleton<ConquerorContextAccessor>();
             services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
 

@@ -28,7 +28,7 @@ namespace Conqueror
         IDictionary<object, object?> Items { get; }
 
         /// <summary>
-        ///     Add items from <paramref name="source"/> to <see cref="Items" />.
+        ///     Add items from <paramref name="source" /> to <see cref="Items" />.
         /// </summary>
         /// <param name="source">The items to add.</param>
         void AddOrReplaceItems(IEnumerable<KeyValuePair<object, object?>> source)

@@ -320,7 +320,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             private readonly TestObservations testObservations;
 
             public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                      ICommandContextAccessor commandContextAccessor, 
+                                      ICommandContextAccessor commandContextAccessor,
                                       TestObservations testObservations)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
@@ -350,7 +350,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             private readonly TestObservations testObservations;
 
             public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor,
-                                                     ICommandContextAccessor commandContextAccessor, 
+                                                     ICommandContextAccessor commandContextAccessor,
                                                      TestObservations testObservations)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
@@ -385,8 +385,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             private readonly TestObservations testObservations;
 
             public OuterTestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                           ICommandContextAccessor commandContextAccessor, 
-                                           TestObservations testObservations, 
+                                           ICommandContextAccessor commandContextAccessor,
+                                           TestObservations testObservations,
                                            ICommandHandler<TestCommand, TestCommandResponse> nestedHandler)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
@@ -433,7 +433,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public async Task ExecuteCommand(OuterTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
-                
+
                 if (testObservations.ShouldAddOuterItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);

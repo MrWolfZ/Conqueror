@@ -12,7 +12,7 @@ namespace Conqueror.Streaming.Interactive
         private readonly InteractiveStreamingHandlerRegistry registry;
         private readonly IServiceProvider serviceProvider;
 
-        public InteractiveStreamingHandlerProxy(InteractiveStreamingHandlerRegistry registry, 
+        public InteractiveStreamingHandlerProxy(InteractiveStreamingHandlerRegistry registry,
                                                 //// TODO: InteractiveStreamingMiddlewaresInvoker invoker, 
                                                 IServiceProvider serviceProvider)
         {
@@ -26,7 +26,7 @@ namespace Conqueror.Streaming.Interactive
             var metadata = registry.GetInteractiveStreamingHandlerMetadata<TRequest, TItem>();
             var handler = serviceProvider.GetRequiredService(metadata.HandlerType) as IInteractiveStreamingHandler<TRequest, TItem>;
             return handler!.ExecuteRequest(request, cancellationToken);
-            
+
             //// return invoker.InvokeMiddlewares<TRequest, TItem>(serviceProvider, metadata, request, cancellationToken);
         }
     }

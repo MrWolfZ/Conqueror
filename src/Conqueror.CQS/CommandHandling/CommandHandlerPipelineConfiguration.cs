@@ -11,7 +11,7 @@ namespace Conqueror.CQS.CommandHandling
         }
 
         public Type HandlerType { get; }
-        
+
         public Action<ICommandPipelineBuilder> Configure { get; }
     }
 }

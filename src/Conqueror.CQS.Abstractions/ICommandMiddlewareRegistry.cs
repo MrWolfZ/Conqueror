@@ -7,6 +7,6 @@ namespace Conqueror
     {
         public IReadOnlyCollection<CommandMiddlewareRegistration> GetCommandMiddlewareRegistrations();
     }
-    
+
     public sealed record CommandMiddlewareRegistration(Type MiddlewareType, Type? ConfigurationType);
 }

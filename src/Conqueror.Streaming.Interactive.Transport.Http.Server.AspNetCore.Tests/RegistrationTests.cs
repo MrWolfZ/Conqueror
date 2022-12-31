@@ -32,7 +32,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 
             Assert.IsNotNull(applicationPartManager.FeatureProviders.SingleOrDefault(p => p is HttpQueryControllerFeatureProvider));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithInteractiveStreamingControllerRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
         {
@@ -49,23 +49,23 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
             _ = services.RemoveAll<IActionInvokerProvider>();
 
             var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
-            
+
             Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
             Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithInteractiveStreamingControllerRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
         {
             var services = new ServiceCollection();
 
             _ = services.AddMvc().AddConquerorInteractiveStreaming();
-            
+
             _ = services.FinalizeConquerorRegistrations();
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringInteractiveStreaming()
         {

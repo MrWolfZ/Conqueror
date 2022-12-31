@@ -7,8 +7,8 @@ namespace Conqueror.CQS.QueryHandling
 {
     internal sealed class InMemoryQueryTransport : IQueryTransportClient
     {
-        private readonly IServiceProvider serviceProvider;
         private readonly Type handlerType;
+        private readonly IServiceProvider serviceProvider;
 
         public InMemoryQueryTransport(IServiceProvider serviceProvider, Type handlerType)
         {

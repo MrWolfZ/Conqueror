@@ -11,7 +11,7 @@ namespace Conqueror
         }
 
         public Type MiddlewareType { get; }
-        
+
         public Type? ConfigurationType { get; }
     }
 }

@@ -36,10 +36,10 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = AnalyzerVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                            .WithLocation(0)
                                            .WithArguments("TestQueryHandler");
-            
+
             await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
         {
@@ -67,7 +67,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = AnalyzerVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                            .WithLocation(0)
                                            .WithArguments("TestQueryHandler");
-            
+
             await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
         }
 
@@ -131,7 +131,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestQueryHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
 
@@ -197,7 +197,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestQueryHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
 
@@ -238,7 +238,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestQueryHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
 
@@ -290,10 +290,10 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestQueryHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -323,7 +323,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -354,7 +354,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
         {
@@ -385,7 +385,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
         {
@@ -417,7 +417,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithoutMethod_NoDiagnosticsAreProduced()
         {
@@ -443,7 +443,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -473,7 +473,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenTypeWithNonConquerorQueryHandlerInterface_NoDiagnosticsAreProduced()
         {

@@ -15,10 +15,7 @@
 
             var initialConfiguration = new TestEventObserverMiddlewareConfiguration(10);
 
-            _ = services.ConfigureEventObserverPipeline<TestEventObserver>(pipeline =>
-            {
-                _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(initialConfiguration);
-            });
+            _ = services.ConfigureEventObserverPipeline<TestEventObserver>(pipeline => { _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(initialConfiguration); });
 
             var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 

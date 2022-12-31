@@ -11,7 +11,7 @@ namespace Conqueror.CQS.QueryHandling
         }
 
         public Type HandlerType { get; }
-        
+
         public Action<IQueryPipelineBuilder> Configure { get; }
     }
 }

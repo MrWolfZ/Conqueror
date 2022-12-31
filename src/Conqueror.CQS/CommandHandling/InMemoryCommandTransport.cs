@@ -8,8 +8,8 @@ namespace Conqueror.CQS.CommandHandling
 {
     internal sealed class InMemoryCommandTransport : ICommandTransportClient
     {
-        private readonly IServiceProvider serviceProvider;
         private readonly Type handlerType;
+        private readonly IServiceProvider serviceProvider;
 
         public InMemoryCommandTransport(IServiceProvider serviceProvider, Type handlerType)
         {

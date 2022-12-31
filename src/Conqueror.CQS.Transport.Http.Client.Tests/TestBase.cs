@@ -8,8 +8,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
     public abstract class TestBase
     {
         private HttpClient? client;
-        private IHost? host;
         private ServiceProvider? clientServiceProvider;
+        private IHost? host;
 
         protected HttpClient HttpClient
         {
@@ -63,7 +63,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             host = await hostBuilder.StartAsync();
             client = host.GetTestClient();
-            
+
             var services = new ServiceCollection();
             ConfigureClientServices(services);
             clientServiceProvider = services.BuildServiceProvider();

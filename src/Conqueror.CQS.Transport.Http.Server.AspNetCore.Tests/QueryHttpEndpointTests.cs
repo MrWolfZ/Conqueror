@@ -98,7 +98,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload.Payload);
         }
-        
+
         [Test]
         public async Task GivenCustomPathConvention_WhenCallingEndpointsWithPathAccordingToConvention_ReturnsCorrectResponse()
         {
@@ -114,10 +114,10 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.AreEqual("{\"payload\":11}", resultString1);
             Assert.IsNotNull(result1);
             Assert.AreEqual(11, result1!.Payload);
-            
+
             Assert.IsNotNull(result2);
         }
-        
+
         [Test]
         public async Task GivenCustomPathConventionAndPostQuery_WhenCallingEndpointsWithPathAccordingToConvention_ReturnsCorrectResponse()
         {
@@ -131,7 +131,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload);
         }
-        
+
         [Test]
         public async Task GivenCustomHttpQuery_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
@@ -185,7 +185,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload);
         }
-        
+
         [Test]
         public async Task GivenHttpQueryWithCustomPath_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
@@ -212,7 +212,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload);
         }
-        
+
         [Test]
         public async Task GivenHttpQueryWithVersion_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
@@ -541,7 +541,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 return new() { Payload = query.Payload + 1 };
             }
         }
-        
+
         private sealed class TestHttpQueryPathConvention : IHttpQueryPathConvention
         {
             public string? GetQueryPath(Type queryType, HttpQueryAttribute attribute)
@@ -550,7 +550,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 {
                     return null;
                 }
-                
+
                 return $"/api/queries/{queryType.Name}FromConvention";
             }
         }

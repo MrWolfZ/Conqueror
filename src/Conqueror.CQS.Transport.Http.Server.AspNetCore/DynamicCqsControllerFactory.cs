@@ -74,7 +74,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             {
                 return;
             }
-            
+
             var ctor = typeof(ApiExplorerSettingsAttribute).GetConstructors().First(c => c.GetParameters().Length == 0);
             var nameParam = typeof(ApiExplorerSettingsAttribute).GetProperties().First(p => p.Name == nameof(ApiExplorerSettingsAttribute.GroupName));
             var attributeBuilder = new CustomAttributeBuilder(ctor, Array.Empty<object>(), new[] { nameParam }, new object[] { groupName });

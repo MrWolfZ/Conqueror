@@ -745,7 +745,7 @@
                 {
                     query = (TQuery)(object)(testQuery with { Payload = testQuery.Payload + 2 });
                 }
-            
+
                 var response = await ctx.Next(query, cancellationTokensToUse.CancellationTokens[2]);
 
                 observations.ResponsesFromMiddlewares.Add(response!);
@@ -792,7 +792,7 @@
 
                 observations.QueriesFromTransports.Add(query);
                 observations.CancellationTokensFromTransports.Add(cancellationToken);
-            
+
                 return (TResponse)(object)new TestQueryResponse((query as TestQuery)!.Payload + 1);
             }
         }

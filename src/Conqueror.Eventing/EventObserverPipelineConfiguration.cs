@@ -11,7 +11,7 @@ namespace Conqueror.Eventing
         }
 
         public Type ObserverType { get; }
-        
+
         public Action<IEventObserverPipelineBuilder> Configure { get; }
     }
 }

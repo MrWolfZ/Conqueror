@@ -22,7 +22,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
         }
-        
+
         [Test]
         public async Task GivenGenericCommand_HandlerReceivesCommand()
         {
@@ -64,7 +64,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
         }
-        
+
         [Test]
         public async Task GivenGenericCommandWithoutResponse_HandlerReceivesCommand()
         {
@@ -236,7 +236,7 @@ namespace Conqueror.CQS.Tests
                 return new(command.Payload);
             }
         }
-        
+
         private sealed class GenericTestCommandHandlerWithoutResponse<T> : ICommandHandler<GenericTestCommand<T>>
         {
             private readonly TestObservations responses;

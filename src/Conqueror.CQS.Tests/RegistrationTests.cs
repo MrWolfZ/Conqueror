@@ -157,18 +157,18 @@ namespace Conqueror.CQS.Tests
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestQueryMiddleware)));
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestCommandMiddleware)));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithConquerorCQSRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
         {
             var services = new ServiceCollection().AddConquerorCQS();
 
             var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
-            
+
             Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
             Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithConquerorCQSRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
         {
@@ -176,7 +176,7 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringCQS()
         {
@@ -187,7 +187,7 @@ namespace Conqueror.CQS.Tests
 
 // types must be public for assembly scanning to work
 #pragma warning disable CA1034
-        
+
 // for testing purposes we want to mix public and private classes
 #pragma warning disable SA1202
 

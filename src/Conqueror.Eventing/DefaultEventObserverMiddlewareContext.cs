@@ -24,7 +24,7 @@ namespace Conqueror.Eventing
 
         public override Task Next(TEvent evt, CancellationToken cancellationToken) => next(evt, cancellationToken);
     }
-    
+
     internal sealed class DefaultEventObserverMiddlewareContext<TEvent, TConfiguration> : EventObserverMiddlewareContext<TEvent, TConfiguration>
         where TEvent : class
     {

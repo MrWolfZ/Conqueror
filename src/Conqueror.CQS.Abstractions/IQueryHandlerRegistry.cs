@@ -7,6 +7,6 @@ namespace Conqueror
     {
         public IReadOnlyCollection<QueryHandlerRegistration> GetQueryHandlerRegistrations();
     }
-    
+
     public sealed record QueryHandlerRegistration(Type QueryType, Type ResponseType, Type HandlerType);
 }

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-#if !NET7_0_OR_GREATER
-using System.Reflection;
-#endif
 using Conqueror.Common;
 using Conqueror.Eventing.Util;
 using Microsoft.Extensions.DependencyInjection;
+#if !NET7_0_OR_GREATER
+using System.Reflection;
+#endif
 
 namespace Conqueror.Eventing
 {

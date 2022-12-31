@@ -13,7 +13,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
         public Type HandlerType { get; }
 
         public Func<IServiceProvider, Uri> BaseAddressFactory { get; }
-        
+
         public Action<ConquerorInteractiveStreamingHttpClientOptions>? ConfigurationAction { get; init; }
     }
 }

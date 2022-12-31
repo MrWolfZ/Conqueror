@@ -49,7 +49,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return services;
         }
-        
+
         private sealed class WasFinalized
         {
         }

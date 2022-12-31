@@ -9,7 +9,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IMvcBuilder AddConquerorInteractiveStreaming(this IMvcBuilder builder)
         {
             _ = builder.Services.AddFinalizationCheck();
-            
+
             builder.Services.TryAddSingleton(new InteractiveStreamingAspNetCoreServerServiceCollectionConfigurator());
 
             return builder;

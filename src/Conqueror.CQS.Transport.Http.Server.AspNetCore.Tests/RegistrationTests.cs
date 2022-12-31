@@ -33,7 +33,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             Assert.IsNotNull(applicationPartManager.FeatureProviders.SingleOrDefault(p => p is HttpEndpointControllerFeatureProvider));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithDuplicateCommandName_FinalizeThrowsInvalidOperationException()
         {
@@ -47,7 +47,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithDuplicateQueryName_FinalizeThrowsInvalidOperationException()
         {
@@ -61,7 +61,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithDuplicateCommandPathFromConvention_FinalizeThrowsInvalidOperationException()
         {
@@ -75,7 +75,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithDuplicateQueryPathFromConvention_FinalizeThrowsInvalidOperationException()
         {
@@ -89,7 +89,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithDuplicateCommandAndQueryPathFromConvention_FinalizeThrowsInvalidOperationException()
         {
@@ -148,12 +148,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddMvc().AddConquerorCQSHttpControllers());
         }
-        
+
         [HttpCommand]
         public sealed record TestCommand;
 
         public sealed record TestCommandResponse;
-        
+
         [HttpCommand]
         public sealed record TestCommand2;
 
@@ -178,12 +178,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 return new();
             }
         }
-        
+
         [HttpQuery]
         public sealed record TestQuery;
 
         public sealed record TestQueryResponse;
-        
+
         [HttpQuery]
         public sealed record TestQuery2;
 
@@ -208,7 +208,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 return new();
             }
         }
-        
+
         private sealed class HttpCommandPathConventionWithDuplicates : IHttpCommandPathConvention
         {
             public string GetCommandPath(Type commandType, HttpCommandAttribute attribute)
@@ -216,7 +216,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 return "/duplicate";
             }
         }
-        
+
         private sealed class HttpQueryPathConventionWithDuplicates : IHttpQueryPathConvention
         {
             public string GetQueryPath(Type queryType, HttpQueryAttribute attribute)

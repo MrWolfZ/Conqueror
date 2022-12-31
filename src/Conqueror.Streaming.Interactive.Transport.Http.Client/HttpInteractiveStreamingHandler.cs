@@ -108,7 +108,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
                 try
                 {
                     _ = await clientWebSocket.RequestNextItem(cancellationToken);
-                    
+
                     if (!await enumerator.MoveNextAsync())
                     {
                         await Close(cancellationToken);
@@ -131,7 +131,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
                     case StreamingMessageEnvelope<TItem> { Message: { } } env:
                         yield return env.Message;
                         break;
-                    
+
                     case ErrorMessage { Message: { } } msg:
                         throw new HttpInteractiveStreamingException(msg.Message);
                 }

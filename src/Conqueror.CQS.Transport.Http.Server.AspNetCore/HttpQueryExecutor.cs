@@ -16,7 +16,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 return await queryHandler.ExecuteQuery(query, cancellationToken);
             });
         }
-        
+
         public static Task<TResponse> ExecuteQuery<TQuery, TResponse>(HttpContext httpContext, CancellationToken cancellationToken)
             where TQuery : class, new()
         {

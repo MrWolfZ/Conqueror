@@ -6,7 +6,7 @@ namespace Conqueror.Eventing
     internal sealed class EventObserverPipelineBuilder : IEventObserverPipelineBuilder
     {
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares = new();
-        
+
         public EventObserverPipelineBuilder(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
@@ -37,9 +37,9 @@ namespace Conqueror.Eventing
             {
                 return this;
             }
-            
+
             middlewares.RemoveAt(index);
-            
+
             return this;
         }
 
@@ -52,9 +52,9 @@ namespace Conqueror.Eventing
             {
                 return this;
             }
-            
+
             middlewares.RemoveAt(index);
-            
+
             return this;
         }
 
@@ -83,7 +83,7 @@ namespace Conqueror.Eventing
             {
                 throw new InvalidOperationException($"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used");
             }
-            
+
             middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!));
             return this;
         }

@@ -5,9 +5,9 @@ namespace Conqueror.CQS.Transport.Http.Client
 {
     internal sealed class ResolvedHttpClientOptions
     {
-        public ResolvedHttpClientOptions(HttpClient httpClient, 
-                                         JsonSerializerOptions? jsonSerializerOptions, 
-                                         IHttpCommandPathConvention? commandPathConvention, 
+        public ResolvedHttpClientOptions(HttpClient httpClient,
+                                         JsonSerializerOptions? jsonSerializerOptions,
+                                         IHttpCommandPathConvention? commandPathConvention,
                                          IHttpQueryPathConvention? queryPathConvention)
         {
             HttpClient = httpClient;

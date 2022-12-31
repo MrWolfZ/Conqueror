@@ -13,7 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddConquerorEventing(this IServiceCollection services)
         {
             services.AddFinalizationCheck();
-            
+
             services.TryAddTransient<IEventPublisher, EventPublisher>();
             services.TryAddTransient(typeof(IEventObserver<>), typeof(EventObserverProxy<>));
             services.TryAddSingleton<EventObserverRegistry>();

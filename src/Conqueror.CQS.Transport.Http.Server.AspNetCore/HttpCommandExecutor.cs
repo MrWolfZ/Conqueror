@@ -28,7 +28,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 return UnitCommandResponse.Instance;
             });
         }
-        
+
         public static Task<TResponse> ExecuteCommand<TCommand, TResponse>(HttpContext httpContext, CancellationToken cancellationToken)
             where TCommand : class, new()
         {

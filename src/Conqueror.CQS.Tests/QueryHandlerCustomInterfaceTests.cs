@@ -22,7 +22,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
         }
-        
+
         [Test]
         public async Task GivenGenericQuery_HandlerReceivesQuery()
         {

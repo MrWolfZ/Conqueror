@@ -120,18 +120,18 @@
 
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestEventObserver)));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithConquerorEventingRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
         {
             var services = new ServiceCollection().AddConquerorEventing();
 
             var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
-            
+
             Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
             Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithConquerorEventingRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
         {
@@ -139,7 +139,7 @@
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringEventing()
         {

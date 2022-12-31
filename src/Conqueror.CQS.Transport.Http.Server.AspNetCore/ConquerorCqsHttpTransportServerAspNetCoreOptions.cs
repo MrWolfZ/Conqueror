@@ -3,7 +3,7 @@
     public sealed class ConquerorCqsHttpTransportServerAspNetCoreOptions
     {
         public IHttpCommandPathConvention? CommandPathConvention { get; set; }
-        
+
         public IHttpQueryPathConvention? QueryPathConvention { get; set; }
     }
 }

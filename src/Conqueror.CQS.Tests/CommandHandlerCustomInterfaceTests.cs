@@ -22,7 +22,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
         }
-        
+
         [Test]
         public async Task GivenGenericCommand_HandlerReceivesCommand()
         {
@@ -64,7 +64,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
         }
-        
+
         [Test]
         public async Task GivenGenericCommandWithoutResponse_HandlerReceivesCommand()
         {
@@ -165,7 +165,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.AreSame(exception, thrownException);
         }
-        
+
         [Test]
         public void GivenHandlerWithCustomInterface_HandlerCanBeResolvedFromPlainInterface()
         {
@@ -269,7 +269,7 @@ namespace Conqueror.CQS.Tests
             Assert.AreEqual(2, observations.Instances.Count);
             Assert.AreSame(observations.Instances[0], observations.Instances[1]);
         }
-        
+
         [Test]
         public void GivenHandlerWithMultipleCustomInterfaces_HandlerCanBeResolvedFromAllInterfaces()
         {
@@ -447,7 +447,7 @@ namespace Conqueror.CQS.Tests
                 return new(command.Payload);
             }
         }
-        
+
         private sealed class GenericTestCommandHandlerWithoutResponse<T> : IGenericTestCommandHandlerWithoutResponse<T>
         {
             private readonly TestObservations responses;

@@ -426,7 +426,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.HandlerInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4 }));
         }
-        
+
         [Test]
         public async Task GivenTransientMiddlewareThatIsAppliedMultipleTimes_EachExecutionGetsNewInstance()
         {
@@ -446,7 +446,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
         }
-        
+
         [Test]
         public async Task GivenTransientMiddlewareThatIsAppliedMultipleTimesForHandlerWithoutResponse_EachExecutionGetsNewInstance()
         {

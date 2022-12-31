@@ -11,7 +11,7 @@ namespace Conqueror.CQS.CommandHandling
         private readonly IServiceProvider serviceProvider;
         private readonly Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory;
 
-        public CommandHandlerProxy(IServiceProvider serviceProvider, 
+        public CommandHandlerProxy(IServiceProvider serviceProvider,
                                    Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                    Action<ICommandPipelineBuilder>? configurePipeline)
         {

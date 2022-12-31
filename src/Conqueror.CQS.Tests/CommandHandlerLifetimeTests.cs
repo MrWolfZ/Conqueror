@@ -280,7 +280,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestCommandHandlerWithMultipleInterfaces : ICommandHandler<TestCommand, TestCommandResponse>, 
+        private sealed class TestCommandHandlerWithMultipleInterfaces : ICommandHandler<TestCommand, TestCommandResponse>,
                                                                         ICommandHandler<TestCommand2, TestCommandResponse2>,
                                                                         ICommandHandler<TestCommandWithoutResponse>,
                                                                         IQueryHandler<TestQuery, TestQueryResponse>

@@ -90,7 +90,7 @@ namespace Conqueror.CQS.CommandHandling
                 var dynamicType = DynamicType.Create(typeof(THandler), typeof(ICommandHandler<TCommand, TResponse>));
                 return (THandler)Activator.CreateInstance(dynamicType, proxy)!;
             }
-            
+
             throw new InvalidOperationException($"command handler type '{typeof(THandler).Name}' does not implement a known command handler interface");
         }
     }

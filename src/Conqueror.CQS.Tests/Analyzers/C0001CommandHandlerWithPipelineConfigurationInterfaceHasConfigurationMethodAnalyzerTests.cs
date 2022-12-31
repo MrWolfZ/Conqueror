@@ -36,10 +36,10 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = AnalyzerVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                            .WithLocation(0)
                                            .WithArguments("TestCommandHandler");
-            
+
             await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
         {
@@ -64,10 +64,10 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = AnalyzerVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                            .WithLocation(0)
                                            .WithArguments("TestCommandHandler");
-            
+
             await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
         {
@@ -95,10 +95,10 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = AnalyzerVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                            .WithLocation(0)
                                            .WithArguments("TestCommandHandler");
-            
+
             await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
         {
@@ -124,7 +124,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = AnalyzerVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                            .WithLocation(0)
                                            .WithArguments("TestCommandHandler");
-            
+
             await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
         }
 
@@ -188,7 +188,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestCommandHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
 
@@ -248,7 +248,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestCommandHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
 
@@ -314,7 +314,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestCommandHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
 
@@ -376,7 +376,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestCommandHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
 
@@ -417,7 +417,7 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestCommandHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
 
@@ -469,10 +469,10 @@ namespace Conqueror.CQS.Tests.Analyzers
             var expected = CodeFixVerifier.Diagnostic(C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
                                           .WithLocation(0)
                                           .WithArguments("TestCommandHandler");
-            
+
             await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -502,7 +502,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -530,7 +530,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -561,7 +561,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -590,7 +590,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
         {
@@ -621,7 +621,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
         {
@@ -650,7 +650,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
         {
@@ -682,7 +682,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
         {
@@ -712,7 +712,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceWithoutConfigurationInterfaceWithoutMethod_NoDiagnosticsAreProduced()
         {
@@ -738,7 +738,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceWithoutConfigurationInterfaceWithoutMethod_NoDiagnosticsAreProduced()
         {
@@ -762,7 +762,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceWithoutConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -792,7 +792,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceWithoutConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
         {
@@ -820,7 +820,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenTypeWithNonConquerorCommandHandlerInterface_NoDiagnosticsAreProduced()
         {
@@ -847,7 +847,7 @@ namespace Conqueror.CQS.Tests.Analyzers
 
             await AnalyzerVerifier.VerifyAnalyzerAsync(source);
         }
-        
+
         [Test]
         public async Task GivenTypeWithNonConquerorCommandHandlerInterfaceWithoutResponse_NoDiagnosticsAreProduced()
         {

@@ -154,10 +154,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryMiddleware>()
                         .AddSingleton(observations);
 
-            _ = services.ConfigureQueryPipeline<TestQueryHandlerWithPipelineConfiguration>(pipeline =>
-            {
-                _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new(20));
-            });
+            _ = services.ConfigureQueryPipeline<TestQueryHandlerWithPipelineConfiguration>(pipeline => { _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new(20)); });
 
             var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
 
@@ -193,7 +190,7 @@ namespace Conqueror.CQS.Tests
 
             public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => Assert.Fail("should never be called");
         }
-        
+
         private sealed class TestQueryMiddlewareConfiguration
         {
             public TestQueryMiddlewareConfiguration(int parameter)

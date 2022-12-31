@@ -80,18 +80,18 @@
 
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestStreamingHandler)));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithConquerorInteractiveStreamingRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
         {
             var services = new ServiceCollection().AddConquerorInteractiveStreaming();
 
             var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
-            
+
             Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
             Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithConquerorInteractiveStreamingRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
         {
@@ -99,7 +99,7 @@
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
-        
+
         [Test]
         public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringInteractiveStreaming()
         {

@@ -87,7 +87,7 @@
         public sealed record TestQuery;
 
         public sealed record TestQueryResponse;
-        
+
         public sealed record TestQueryWithCustomInterface;
 
         public sealed record TestQuery2;

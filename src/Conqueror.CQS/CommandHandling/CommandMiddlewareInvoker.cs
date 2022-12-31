@@ -29,7 +29,7 @@ namespace Conqueror.CQS.CommandHandling
             var configuration = (TConfiguration)middlewareConfiguration;
 
             var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration>(command, next, configuration, cancellationToken);
-            
+
             if (typeof(TConfiguration) == typeof(NullMiddlewareConfiguration))
             {
                 var middleware = (ICommandMiddleware)serviceProvider.GetRequiredService(typeof(TMiddleware));

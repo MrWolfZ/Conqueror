@@ -13,7 +13,7 @@
         ///     Gets the current <see cref="ICommandContext" />. Returns <see langword="null" /> if there is no active <see cref="ICommandContext" />.
         /// </summary>
         ICommandContext? CommandContext { get; }
-        
+
         /// <summary>
         ///     Allows setting the <see cref="ICommandContext.CommandId" /> before calling a command handler.
         ///     This method is typically called from a server-side transport implementation and does not need to be called by user-code.

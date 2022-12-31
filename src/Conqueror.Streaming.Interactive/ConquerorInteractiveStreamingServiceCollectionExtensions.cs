@@ -14,7 +14,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddConquerorInteractiveStreaming(this IServiceCollection services)
         {
             services.AddFinalizationCheck();
-            
+
             services.TryAddSingleton<InteractiveStreamingHandlerRegistry>();
             //// TODO
             //// services.TryAddSingleton<InteractiveStreamingMiddlewaresInvoker>();
@@ -22,22 +22,22 @@ namespace Microsoft.Extensions.DependencyInjection
             //// TODO
             //// services.TryAddSingleton<InteractiveStreamingContextAccessor>();
             //// services.TryAddSingleton<IInteractiveStreamingContextAccessor>(p => p.GetRequiredService<InteractiveStreamingContextAccessor>());
-            
+
             services.TryAddSingleton<ConquerorContextAccessor>();
             services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
-            
+
             return services;
         }
 
         public static IServiceCollection AddConquerorInteractiveStreamingTypesFromAssembly(this IServiceCollection services, Assembly assembly)
         {
             var validTypes = assembly.GetTypes().Where(t => !t.IsInterface && !t.IsAbstract).ToList();
-            
+
             foreach (var handlerType in validTypes.Where(t => t.IsAssignableTo(typeof(IInteractiveStreamingHandler))))
             {
                 services.TryAddTransient(handlerType);
             }
-            
+
             // TODO
             // foreach (var middlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsInteractiveStreamingMiddlewareInterface)))
             // {

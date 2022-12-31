@@ -64,7 +64,7 @@
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
             var client = clientFactory.CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
-                                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+                                                                                                      p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
 
             var query = new TestQuery();
 
@@ -89,7 +89,7 @@
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
             var client = clientFactory.CreateQueryClient<ITestQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
-                                                                                p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+                                                                            p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
 
             var query = new TestQuery();
 
@@ -114,7 +114,7 @@
 
             _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<ITestQueryHandlerWithExtraMethod>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
-        
+
         [Test]
         public void GivenNonGenericQueryHandlerInterface_CreatingClientThrowsArgumentException()
         {
@@ -131,7 +131,7 @@
 
             _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<INonGenericQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
-        
+
         [Test]
         public void GivenConcreteQueryHandlerType_CreatingClientThrowsArgumentException()
         {
@@ -148,7 +148,7 @@
 
             _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<TestQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
-        
+
         [Test]
         public void GivenQueryHandlerInterfaceThatImplementsMultipleOtherPlainQueryHandlerInterfaces_CreatingClientThrowsArgumentException()
         {
@@ -165,7 +165,7 @@
 
             _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<ICombinedQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
-        
+
         [Test]
         public void GivenQueryHandlerInterfaceThatImplementsMultipleOtherCustomQueryHandlerInterfaces_CreatingClientThrowsArgumentException()
         {
@@ -217,7 +217,7 @@
         {
             void SomeMethod();
         }
-        
+
         private sealed class TestQueryHandler : ITestQueryHandler
         {
             public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();

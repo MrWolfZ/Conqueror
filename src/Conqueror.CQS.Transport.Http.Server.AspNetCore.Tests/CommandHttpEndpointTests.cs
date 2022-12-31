@@ -101,7 +101,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             Assert.IsNotNull(result2);
         }
-        
+
         [Test]
         public async Task GivenHttpCommandWithCustomController_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
@@ -151,7 +151,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             Assert.IsEmpty(result);
         }
-        
+
         [Test]
         public async Task GivenHttpCommandWithCustomPath_WhenCallingEndpoint_ReturnsCorrectResponse()
         {
@@ -165,7 +165,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(11, result!.Payload);
         }
-        
+
         [Test]
         public async Task GivenHttpCommandWithVersion_WhenCallingEndpoint_ReturnsCorrectResponse()
         {

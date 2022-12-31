@@ -22,7 +22,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
         }
-        
+
         [Test]
         public async Task GivenGenericQuery_HandlerReceivesQuery()
         {
@@ -82,7 +82,7 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
         }
-        
+
         [Test]
         public async Task GivenQuery_HandlerReturnsResponse()
         {

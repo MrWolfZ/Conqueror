@@ -7,6 +7,6 @@ namespace Conqueror
     {
         public IReadOnlyCollection<CommandHandlerRegistration> GetCommandHandlerRegistrations();
     }
-    
+
     public sealed record CommandHandlerRegistration(Type CommandType, Type? ResponseType, Type HandlerType);
 }

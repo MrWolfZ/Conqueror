@@ -32,7 +32,7 @@ namespace Conqueror.Eventing
             await middleware.Execute(ctx);
         }
     }
-    
+
     internal sealed class EventObserverMiddlewareInvoker : IEventObserverMiddlewareInvoker
     {
         public async Task Invoke<TEvent>(TEvent evt,

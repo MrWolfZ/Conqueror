@@ -87,7 +87,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
-    
+
         [HttpQuery]
         public sealed record TestQuery
         {
@@ -122,7 +122,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 return Task.FromResult(new TestQueryResponse());
             }
         }
-    
+
         [HttpCommand]
         public sealed record TestCommand
         {
