@@ -12,12 +12,14 @@ namespace Conqueror.CQS.Transport.Http.Client
     internal sealed class HttpCommandTransportClient : ICommandTransportClient
     {
         private static readonly DefaultHttpCommandPathConvention DefaultCommandPathConvention = new();
+        private readonly ICommandContextAccessor commandContextAccessor;
 
-        private readonly IConquerorContextAccessor? conquerorContextAccessor;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
 
-        public HttpCommandTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
+        public HttpCommandTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor, ICommandContextAccessor commandContextAccessor)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
+            this.commandContextAccessor = commandContextAccessor;
             Options = options;
         }
 
@@ -30,9 +32,14 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             using var content = JsonContent.Create(command, null, Options.JsonSerializerOptions);
 
-            if (conquerorContextAccessor?.ConquerorContext?.Items is { Count: > 0 } contextItems)
+            if (conquerorContextAccessor.ConquerorContext?.Items is { Count: > 0 } contextItems)
             {
                 content.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(contextItems));
+            }
+
+            if (commandContextAccessor.CommandContext?.CommandId is { } commandId)
+            {
+                content.Headers.Add(HttpConstants.ConquerorCommandIdHeaderName, commandId);
             }
 
             var path = Options.CommandPathConvention?.GetCommandPath(typeof(TCommand), attribute) ?? DefaultCommandPathConvention.GetCommandPath(typeof(TCommand), attribute);
@@ -45,7 +52,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 throw new HttpCommandFailedException($"command of type {typeof(TCommand).Name} failed: {responseContent}", response);
             }
 
-            if (conquerorContextAccessor?.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+            if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
             {
                 var parsedContextItems = ContextValueFormatter.Parse(values);
                 ctx.AddOrReplaceItems(parsedContextItems);

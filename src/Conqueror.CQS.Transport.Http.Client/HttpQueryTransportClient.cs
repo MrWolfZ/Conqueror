@@ -17,11 +17,13 @@ namespace Conqueror.CQS.Transport.Http.Client
     {
         private static readonly DefaultHttpQueryPathConvention DefaultQueryPathConvention = new();
 
-        private readonly IConquerorContextAccessor? conquerorContextAccessor;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
+        private readonly IQueryContextAccessor queryContextAccessor;
 
-        public HttpQueryTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
+        public HttpQueryTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor, IQueryContextAccessor queryContextAccessor)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
+            this.queryContextAccessor = queryContextAccessor;
             Options = options;
         }
 
@@ -37,9 +39,14 @@ namespace Conqueror.CQS.Transport.Http.Client
                 Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
             };
 
-            if (conquerorContextAccessor?.ConquerorContext?.Items is { Count: > 0 } contextItems)
+            if (conquerorContextAccessor.ConquerorContext?.Items is { Count: > 0 } contextItems)
             {
                 requestMessage.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(contextItems));
+            }
+
+            if (queryContextAccessor.QueryContext?.QueryId is { } queryId)
+            {
+                requestMessage.Headers.Add(HttpConstants.ConquerorQueryIdHeaderName, queryId);
             }
 
             var uriString = Options.QueryPathConvention?.GetQueryPath(typeof(TQuery), attribute) ?? DefaultQueryPathConvention.GetQueryPath(typeof(TQuery), attribute);
@@ -63,7 +70,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed: {content}", response);
             }
 
-            if (conquerorContextAccessor?.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+            if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
             {
                 var parsedContextItems = ContextValueFormatter.Parse(values);
                 ctx.AddOrReplaceItems(parsedContextItems);

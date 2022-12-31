@@ -10,6 +10,8 @@ namespace Conqueror.CQS.QueryHandling
     {
         private static readonly AsyncLocal<QueryContextHolder> QueryContextCurrent = new();
 
+        private string? externalQueryId;
+
         /// <inheritdoc />
         public IQueryContext? QueryContext
         {
@@ -25,6 +27,19 @@ namespace Conqueror.CQS.QueryHandling
                 // so it can be cleared in all ExecutionContexts when its cleared.
                 QueryContextCurrent.Value = new() { Context = value };
             }
+        }
+
+        /// <inheritdoc />
+        public void SetExternalQueryId(string queryId)
+        {
+            externalQueryId = queryId;
+        }
+
+        public string? DrainExternalQueryId()
+        {
+            var queryId = externalQueryId;
+            externalQueryId = null;
+            return queryId;
         }
 
         public void ClearContext()

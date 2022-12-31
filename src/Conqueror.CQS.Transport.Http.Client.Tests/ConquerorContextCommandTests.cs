@@ -231,6 +231,26 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
         }
 
+        [Test]
+        public async Task GivenCommand_SameCommandIdIsObservedInTransportClientAndHandler()
+        {
+            var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedCommandIds, Resolve<TestObservations>().ReceivedCommandIds);
+        }
+
+        [Test]
+        public async Task GivenCommandWithoutResponse_SameCommandIdIsObservedInTransportClientAndHandler()
+        {
+            var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+
+            await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedCommandIds, Resolve<TestObservations>().ReceivedCommandIds);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
@@ -256,8 +276,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 };
             });
 
-            _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => b.UseHttp(HttpClient));
+            _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => new WrapperCommandTransportClient(b.UseHttp(HttpClient),
+                                                                                                                                             b.ServiceProvider.GetRequiredService<ICommandContextAccessor>(),
+                                                                                                                                             b.ServiceProvider.GetRequiredService<TestObservations>()))
+                        .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => new WrapperCommandTransportClient(b.UseHttp(HttpClient),
+                                                                                                                                       b.ServiceProvider.GetRequiredService<ICommandContextAccessor>(),
+                                                                                                                                       b.ServiceProvider.GetRequiredService<TestObservations>()));
 
             _ = services.AddTransient<OuterTestCommandHandler>()
                         .AddTransient<OuterTestCommandWithoutResponseHandler>()
@@ -271,7 +295,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
-    
+
         [HttpCommand]
         public sealed record TestCommand
         {
@@ -282,7 +306,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             public int Payload { get; init; }
         }
-    
+
         [HttpCommand]
         public sealed record TestCommandWithoutResponse
         {
@@ -291,17 +315,23 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
+            private readonly ICommandContextAccessor commandContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
+                                      ICommandContextAccessor commandContextAccessor, 
+                                      TestObservations testObservations)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
+                this.commandContextAccessor = commandContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -315,17 +345,23 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
         {
+            private readonly ICommandContextAccessor commandContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor,
+                                                     ICommandContextAccessor commandContextAccessor, 
+                                                     TestObservations testObservations)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
+                this.commandContextAccessor = commandContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -343,19 +379,26 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class OuterTestCommandHandler : ICommandHandler<OuterTestCommand, OuterTestCommandResponse>
         {
+            private readonly ICommandContextAccessor commandContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly ICommandHandler<TestCommand, TestCommandResponse> nestedHandler;
             private readonly TestObservations testObservations;
 
-            public OuterTestCommandHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations, ICommandHandler<TestCommand, TestCommandResponse> nestedHandler)
+            public OuterTestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
+                                           ICommandContextAccessor commandContextAccessor, 
+                                           TestObservations testObservations, 
+                                           ICommandHandler<TestCommand, TestCommandResponse> nestedHandler)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
+                this.commandContextAccessor = commandContextAccessor;
                 this.testObservations = testObservations;
                 this.nestedHandler = nestedHandler;
             }
 
             public async Task<OuterTestCommandResponse> ExecuteCommand(OuterTestCommand command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+
                 if (testObservations.ShouldAddOuterItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
@@ -371,21 +414,26 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class OuterTestCommandWithoutResponseHandler : ICommandHandler<OuterTestCommandWithoutResponse>
         {
+            private readonly ICommandContextAccessor commandContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly ICommandHandler<TestCommandWithoutResponse> nestedHandler;
             private readonly TestObservations testObservations;
 
             public OuterTestCommandWithoutResponseHandler(IConquerorContextAccessor conquerorContextAccessor,
+                                                          ICommandContextAccessor commandContextAccessor,
                                                           TestObservations testObservations,
                                                           ICommandHandler<TestCommandWithoutResponse> nestedHandler)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
+                this.commandContextAccessor = commandContextAccessor;
                 this.testObservations = testObservations;
                 this.nestedHandler = nestedHandler;
             }
 
             public async Task ExecuteCommand(OuterTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                
                 if (testObservations.ShouldAddOuterItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
@@ -398,6 +446,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestObservations
         {
+            public List<string?> ReceivedCommandIds { get; } = new();
+
             public bool ShouldAddItems { get; set; }
 
             public bool ShouldAddOuterItems { get; set; }
@@ -405,6 +455,28 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
 
             public IDictionary<string, string> ReceivedOuterContextItems { get; } = new Dictionary<string, string>();
+        }
+
+        private sealed class WrapperCommandTransportClient : ICommandTransportClient
+        {
+            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly TestObservations testObservations;
+            private readonly ICommandTransportClient wrapped;
+
+            public WrapperCommandTransportClient(ICommandTransportClient wrapped, ICommandContextAccessor commandContextAccessor, TestObservations testObservations)
+            {
+                this.wrapped = wrapped;
+                this.commandContextAccessor = commandContextAccessor;
+                this.testObservations = testObservations;
+            }
+
+            public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+                where TCommand : class
+            {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+
+                return wrapped.ExecuteCommand<TCommand, TResponse>(command, cancellationToken);
+            }
         }
     }
 }

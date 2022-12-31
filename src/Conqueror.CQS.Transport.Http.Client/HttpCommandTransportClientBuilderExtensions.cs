@@ -15,9 +15,8 @@ namespace Conqueror
                 HttpClientFactory = _ => httpClient,
                 CommandConfigurationAction = configure,
             };
-        
-            var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
-            return new HttpCommandTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration), builder.ServiceProvider.GetService<IConquerorContextAccessor>());
+
+            return builder.UseHttp(registration);
         }
 
         public static ICommandTransportClient UseHttp(this ICommandTransportClientBuilder builder, Uri baseAddress, Action<HttpCommandClientOptions>? configure = null)
@@ -27,9 +26,16 @@ namespace Conqueror
                 BaseAddressFactory = _ => baseAddress,
                 CommandConfigurationAction = configure,
             };
-        
+
+            return builder.UseHttp(registration);
+        }
+
+        private static ICommandTransportClient UseHttp(this ICommandTransportClientBuilder builder, HttpClientRegistration registration)
+        {
             var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
-            return new HttpCommandTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration), builder.ServiceProvider.GetService<IConquerorContextAccessor>());
+            return new HttpCommandTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration),
+                                                  builder.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
+                                                  builder.ServiceProvider.GetRequiredService<ICommandContextAccessor>());
         }
     }
 }

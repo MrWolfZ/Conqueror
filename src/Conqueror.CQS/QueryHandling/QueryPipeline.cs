@@ -27,14 +27,16 @@ namespace Conqueror.CQS.QueryHandling
                                                                 CancellationToken cancellationToken)
             where TQuery : class
         {
-            var queryContext = new DefaultQueryContext(initialQuery, IdGenerator.GetNextId());
+            var queryId = queryContextAccessor.DrainExternalQueryId() ?? IdGenerator.GetNextId();
+
+            var queryContext = new DefaultQueryContext(initialQuery, queryId);
 
             queryContextAccessor.QueryContext = queryContext;
 
             using var conquerorContext = conquerorContextAccessor.GetOrCreate();
 
             var transportClientBuilder = new QueryTransportClientBuilder(serviceProvider);
-            
+
             try
             {
                 return await ExecuteNextMiddleware(0, initialQuery, cancellationToken).ConfigureAwait(false);

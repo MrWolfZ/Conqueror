@@ -231,6 +231,26 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
         }
 
+        [Test]
+        public async Task GivenQuery_SameQueryIdIsObservedInTransportClientAndHandler()
+        {
+            var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedQueryIds, Resolve<TestObservations>().ReceivedQueryIds);
+        }
+
+        [Test]
+        public async Task GivenPostQuery_SameQueryIdIsObservedInTransportClientAndHandler()
+        {
+            var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedQueryIds, Resolve<TestObservations>().ReceivedQueryIds);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
@@ -256,8 +276,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 };
             });
 
-            _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<IQueryHandler<TestPostQuery, TestQueryResponse>>(b => b.UseHttp(HttpClient));
+            _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(HttpClient),
+                                                                                                                                   b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
+                                                                                                                                   b.ServiceProvider.GetRequiredService<TestObservations>()))
+                        .AddConquerorQueryClient<IQueryHandler<TestPostQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(HttpClient),
+                                                                                                                                       b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
+                                                                                                                                       b.ServiceProvider.GetRequiredService<TestObservations>()));
 
             _ = services.AddTransient<OuterTestQueryHandler>()
                         .AddTransient<OuterTestPostQueryHandler>()
@@ -271,7 +295,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
-    
+
         [HttpQuery]
         public sealed record TestQuery
         {
@@ -282,7 +306,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             public int Payload { get; init; }
         }
-    
+
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
         {
@@ -291,17 +315,20 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
+            private readonly IQueryContextAccessor queryContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, IQueryContextAccessor queryContextAccessor, TestObservations testObservations)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
+                this.queryContextAccessor = queryContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -315,17 +342,20 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
         {
+            private readonly IQueryContextAccessor queryContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor, IQueryContextAccessor queryContextAccessor, TestObservations testObservations)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
+                this.queryContextAccessor = queryContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -343,19 +373,26 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class OuterTestQueryHandler : IQueryHandler<OuterTestQuery, OuterTestQueryResponse>
         {
+            private readonly IQueryContextAccessor queryContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly IQueryHandler<TestQuery, TestQueryResponse> nestedHandler;
             private readonly TestObservations testObservations;
 
-            public OuterTestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations, IQueryHandler<TestQuery, TestQueryResponse> nestedHandler)
+            public OuterTestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, 
+                                         IQueryContextAccessor queryContextAccessor, 
+                                         TestObservations testObservations, 
+                                         IQueryHandler<TestQuery, TestQueryResponse> nestedHandler)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
+                this.queryContextAccessor = queryContextAccessor;
                 this.testObservations = testObservations;
                 this.nestedHandler = nestedHandler;
             }
 
             public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestQuery query, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                
                 if (testObservations.ShouldAddOuterItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
@@ -371,21 +408,26 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class OuterTestPostQueryHandler : IQueryHandler<OuterTestPostQuery, OuterTestQueryResponse>
         {
+            private readonly IQueryContextAccessor queryContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler;
             private readonly TestObservations testObservations;
 
-            public OuterTestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
+            public OuterTestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor, 
+                                             IQueryContextAccessor queryContextAccessor,
                                              TestObservations testObservations,
                                              IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler)
             {
                 this.conquerorContextAccessor = conquerorContextAccessor;
+                this.queryContextAccessor = queryContextAccessor;
                 this.testObservations = testObservations;
                 this.nestedHandler = nestedHandler;
             }
 
             public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestPostQuery query, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                
                 if (testObservations.ShouldAddOuterItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
@@ -399,6 +441,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestObservations
         {
+            public List<string?> ReceivedQueryIds { get; } = new();
+
             public bool ShouldAddItems { get; set; }
 
             public bool ShouldAddOuterItems { get; set; }
@@ -406,6 +450,28 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
 
             public IDictionary<string, string> ReceivedOuterContextItems { get; } = new Dictionary<string, string>();
+        }
+
+        private sealed class WrapperQueryTransportClient : IQueryTransportClient
+        {
+            private readonly IQueryContextAccessor queryContextAccessor;
+            private readonly TestObservations testObservations;
+            private readonly IQueryTransportClient wrapped;
+
+            public WrapperQueryTransportClient(IQueryTransportClient wrapped, IQueryContextAccessor queryContextAccessor, TestObservations testObservations)
+            {
+                this.wrapped = wrapped;
+                this.queryContextAccessor = queryContextAccessor;
+                this.testObservations = testObservations;
+            }
+
+            public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+                where TQuery : class
+            {
+                testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+
+                return wrapped.ExecuteQuery<TQuery, TResponse>(query, cancellationToken);
+            }
         }
     }
 }

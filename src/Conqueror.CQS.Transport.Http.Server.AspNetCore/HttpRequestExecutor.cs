@@ -17,6 +17,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             {
                 try
                 {
+                    // ReSharper disable once RedundantEnumerableCastCall (false positive)
                     var parsedValue = ContextValueFormatter.Parse(values.AsEnumerable().OfType<string>());
 
                     foreach (var (key, value) in parsedValue)
@@ -28,6 +29,16 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 {
                     throw new BadContextException();
                 }
+            }
+
+            if (httpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorCommandIdHeaderName, out var commandIdValues) && commandIdValues.FirstOrDefault() is { } commandId)
+            {
+                httpContext.RequestServices.GetRequiredService<ICommandContextAccessor>().SetExternalCommandId(commandId);
+            }
+
+            if (httpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorQueryIdHeaderName, out var queryIdValues) && queryIdValues.FirstOrDefault() is { } queryId)
+            {
+                httpContext.RequestServices.GetRequiredService<IQueryContextAccessor>().SetExternalQueryId(queryId);
             }
 
             var response = await executeFn();

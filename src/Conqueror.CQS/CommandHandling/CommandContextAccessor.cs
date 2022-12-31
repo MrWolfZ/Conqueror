@@ -10,6 +10,8 @@ namespace Conqueror.CQS.CommandHandling
     {
         private static readonly AsyncLocal<CommandContextHolder> CommandContextCurrent = new();
 
+        private string? externalCommandId;
+
         /// <inheritdoc />
         public ICommandContext? CommandContext
         {
@@ -25,6 +27,19 @@ namespace Conqueror.CQS.CommandHandling
                 // so it can be cleared in all ExecutionContexts when its cleared.
                 CommandContextCurrent.Value = new() { Context = value };
             }
+        }
+
+        /// <inheritdoc />
+        public void SetExternalCommandId(string commandId)
+        {
+            externalCommandId = commandId;
+        }
+
+        public string? DrainExternalCommandId()
+        {
+            var commandId = externalCommandId;
+            externalCommandId = null;
+            return commandId;
         }
 
         public void ClearContext()

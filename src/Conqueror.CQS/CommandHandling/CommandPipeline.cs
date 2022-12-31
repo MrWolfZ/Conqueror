@@ -27,12 +27,14 @@ namespace Conqueror.CQS.CommandHandling
                                                                   CancellationToken cancellationToken)
             where TCommand : class
         {
-            var commandContext = new DefaultCommandContext(initialCommand, IdGenerator.GetNextId());
+            var commandId = commandContextAccessor.DrainExternalCommandId() ?? IdGenerator.GetNextId();
+
+            var commandContext = new DefaultCommandContext(initialCommand, commandId);
 
             commandContextAccessor.CommandContext = commandContext;
 
             using var conquerorContext = conquerorContextAccessor.GetOrCreate();
-            
+
             var transportBuilder = new CommandTransportClientBuilder(serviceProvider);
 
             try

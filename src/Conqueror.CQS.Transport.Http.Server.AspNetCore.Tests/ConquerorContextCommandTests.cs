@@ -91,6 +91,49 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             await response.AssertStatusCode(HttpStatusCode.BadRequest);
         }
 
+        [TestCase("/api/commands/test", "{}")]
+        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+        public async Task GivenCommandIdHeader_CorrectIdIsObservedByHandler(string path, string data)
+        {
+            const string testCommandId = "TestCommandId";
+            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            {
+                Headers = { { HttpConstants.ConquerorCommandIdHeaderName, testCommandId } },
+            };
+
+            var response = await HttpClient.PostAsync(path, content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
+
+            CollectionAssert.AreEquivalent(new[] { testCommandId }, receivedCommandIds);
+        }
+
+        [Test]
+        public async Task GivenCommandIdHeader_CorrectIdsAreObservedByHandlerAndNestedHandler()
+        {
+            const string testCommandId = "TestCommandId";
+            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+            {
+                Headers = { { HttpConstants.ConquerorCommandIdHeaderName, testCommandId } },
+            };
+
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
+
+            Assert.That(receivedCommandIds, Has.Count.EqualTo(2));
+            Assert.AreEqual(testCommandId, receivedCommandIds[0]);
+            Assert.AreNotEqual(testCommandId, receivedCommandIds[1]);
+        }
+
         protected override void ConfigureServices(IServiceCollection services)
         {
             var applicationPartManager = new ApplicationPartManager();
@@ -105,6 +148,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddTransient<TestCommandHandlerWithoutResponse>()
                         .AddTransient<TestCommandHandlerWithoutPayload>()
                         .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
+                        .AddTransient<TestCommandWithNestedCommandHandler>()
+                        .AddTransient<NestedTestCommandHandler>()
                         .AddSingleton<TestObservations>();
 
             _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
@@ -120,29 +165,39 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public sealed record TestCommand;
 
         public sealed record TestCommandResponse;
-        
+
         [HttpCommand]
         public sealed record TestCommandWithoutPayload;
 
         [HttpCommand]
         public sealed record TestCommandWithoutResponse;
-    
+
         [HttpCommand]
         public sealed record TestCommandWithoutResponseWithoutPayload;
 
+        [HttpCommand]
+        public sealed record TestCommandWithNestedCommand;
+
+        public sealed record NestedTestCommand;
+
         public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
+            private readonly ICommandContextAccessor commandContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestCommandHandler(ICommandContextAccessor commandContextAccessor,
+                                      IConquerorContextAccessor conquerorContextAccessor,
+                                      TestObservations testObservations)
             {
+                this.commandContextAccessor = commandContextAccessor;
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -156,78 +211,156 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
         {
+            private readonly ICommandContextAccessor commandContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestCommandHandlerWithoutResponse(ICommandContextAccessor commandContextAccessor,
+                                                     IConquerorContextAccessor conquerorContextAccessor,
+                                                     TestObservations testObservations)
             {
+                this.commandContextAccessor = commandContextAccessor;
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
-                
+
                 return Task.CompletedTask;
             }
         }
 
         public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
         {
+            private readonly ICommandContextAccessor commandContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandlerWithoutPayload(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestCommandHandlerWithoutPayload(ICommandContextAccessor commandContextAccessor,
+                                                    IConquerorContextAccessor conquerorContextAccessor,
+                                                    TestObservations testObservations)
             {
+                this.commandContextAccessor = commandContextAccessor;
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
-                
+
                 return Task.FromResult(new TestCommandResponse());
             }
         }
 
         public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
         {
+            private readonly ICommandContextAccessor commandContextAccessor;
             private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly TestObservations testObservations;
 
-            public TestCommandHandlerWithoutResponseWithoutPayload(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
+            public TestCommandHandlerWithoutResponseWithoutPayload(ICommandContextAccessor commandContextAccessor,
+                                                                   IConquerorContextAccessor conquerorContextAccessor,
+                                                                   TestObservations testObservations)
             {
+                this.commandContextAccessor = commandContextAccessor;
                 this.conquerorContextAccessor = conquerorContextAccessor;
                 this.testObservations = testObservations;
             }
 
             public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
                 {
                     conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
                 }
-                
+
                 return Task.CompletedTask;
+            }
+        }
+
+        public sealed class TestCommandWithNestedCommandHandler : ICommandHandler<TestCommandWithNestedCommand, TestCommandResponse>
+        {
+            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
+            private readonly ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler;
+            private readonly TestObservations testObservations;
+
+            public TestCommandWithNestedCommandHandler(ICommandContextAccessor commandContextAccessor,
+                                                       IConquerorContextAccessor conquerorContextAccessor,
+                                                       ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler,
+                                                       TestObservations testObservations)
+            {
+                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
+                this.testObservations = testObservations;
+                this.nestedHandler = nestedHandler;
+            }
+
+            public Task<TestCommandResponse> ExecuteCommand(TestCommandWithNestedCommand command, CancellationToken cancellationToken = default)
+            {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+
+                if (testObservations.ShouldAddItems)
+                {
+                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                }
+
+                return nestedHandler.ExecuteCommand(new(), cancellationToken);
+            }
+        }
+
+        public sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, TestCommandResponse>
+        {
+            private readonly ICommandContextAccessor commandContextAccessor;
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
+            private readonly TestObservations testObservations;
+
+            public NestedTestCommandHandler(ICommandContextAccessor commandContextAccessor,
+                                            IConquerorContextAccessor conquerorContextAccessor,
+                                            TestObservations testObservations)
+            {
+                this.commandContextAccessor = commandContextAccessor;
+                this.conquerorContextAccessor = conquerorContextAccessor;
+                this.testObservations = testObservations;
+            }
+
+            public Task<TestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
+            {
+                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+
+                if (testObservations.ShouldAddItems)
+                {
+                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                }
+
+                return Task.FromResult(new TestCommandResponse());
             }
         }
 
         public sealed class TestObservations
         {
+            public List<string?> ReceivedCommandIds { get; } = new();
+
             public bool ShouldAddItems { get; set; }
 
             public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
