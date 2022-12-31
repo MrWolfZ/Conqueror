@@ -10,7 +10,7 @@ public static class ConquerorPipelineBuilderExtensions
                        .UseTimeout(TimeSpan.FromMinutes(1))
                        .UseRetry();
     }
-    
+
     public static IQueryPipelineBuilder UseDefaultHttpPipeline(this IQueryPipelineBuilder pipeline)
     {
         return pipeline.UseLogging()

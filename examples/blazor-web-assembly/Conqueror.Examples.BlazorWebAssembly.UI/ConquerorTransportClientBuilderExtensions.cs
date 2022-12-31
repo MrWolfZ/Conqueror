@@ -8,7 +8,7 @@ public static class ConquerorTransportClientBuilderExtensions
     {
         return builder.UseHttp(GetApiBaseAddress(builder.ServiceProvider));
     }
-    
+
     public static IQueryTransportClient UseHttpApi(this IQueryTransportClientBuilder builder)
     {
         return builder.UseHttp(GetApiBaseAddress(builder.ServiceProvider));

@@ -22,10 +22,10 @@
         <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares/Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares.csproj" />
         <ProjectReference Include="..\Conqueror.Examples.BlazorWebAssembly.Domain\Conqueror.Examples.BlazorWebAssembly.Domain.csproj" />
 
-        <ProjectReference Include="../../../src/Conqueror.CQS.Analyzers/Conqueror.CQS.Analyzers.csproj" 
-                          Condition="$(ShouldReferenceProject)" 
-                          PrivateAssets="all" 
-                          ReferenceOutputAssembly="false" 
+        <ProjectReference Include="../../../src/Conqueror.CQS.Analyzers/Conqueror.CQS.Analyzers.csproj"
+                          Condition="$(ShouldReferenceProject)"
+                          PrivateAssets="all"
+                          ReferenceOutputAssembly="false"
                           OutputItemType="Analyzer" />
 
     </ItemGroup>

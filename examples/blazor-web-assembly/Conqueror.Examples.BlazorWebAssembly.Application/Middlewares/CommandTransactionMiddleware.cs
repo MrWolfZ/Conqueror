@@ -18,7 +18,7 @@ public static class TransactionCommandPipelineBuilderExtensions
     {
         return pipeline.Use<CommandTransactionMiddleware, CommandTransactionMiddlewareConfiguration>(new(enlistInAmbientTransaction));
     }
-    
+
     public static ICommandPipelineBuilder OutsideOfAmbientTransaction(this ICommandPipelineBuilder pipeline)
     {
         return pipeline.Configure<CommandTransactionMiddleware, CommandTransactionMiddlewareConfiguration>(c => c with { EnlistInAmbientTransaction = false });

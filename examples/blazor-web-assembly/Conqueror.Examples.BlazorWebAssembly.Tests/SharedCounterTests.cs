@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using Conqueror.CQS.Transport.Http.Client;
 using Conqueror.Examples.BlazorWebAssembly.Domain;
 
 namespace Conqueror.Examples.BlazorWebAssembly.Tests;

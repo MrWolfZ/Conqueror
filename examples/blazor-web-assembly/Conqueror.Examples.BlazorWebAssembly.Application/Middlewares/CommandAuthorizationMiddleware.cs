@@ -1,6 +1,5 @@
 ﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-
 public sealed record CommandAuthorizationMiddlewareConfiguration(string? Permission);
 
 public sealed class CommandAuthorizationMiddleware : ICommandMiddleware<CommandAuthorizationMiddlewareConfiguration>

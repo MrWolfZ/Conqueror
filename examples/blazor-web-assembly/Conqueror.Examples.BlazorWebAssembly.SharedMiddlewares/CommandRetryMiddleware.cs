@@ -22,7 +22,7 @@ public static class RetryCommandPipelineBuilderExtensions
 
         return pipeline.Use<CommandRetryMiddleware, CommandRetryMiddlewareConfiguration>(configuration);
     }
-    
+
     public static ICommandPipelineBuilder ConfigureRetry(this ICommandPipelineBuilder pipeline,
                                                          int? maxNumberOfAttempts = null,
                                                          TimeSpan? retryInterval = null)
@@ -33,12 +33,12 @@ public static class RetryCommandPipelineBuilderExtensions
             {
                 c = c with { MaxNumberOfAttempts = maxNumberOfAttempts.Value };
             }
-            
+
             if (retryInterval is not null)
             {
                 c = c with { RetryInterval = retryInterval.Value };
             }
-            
+
             return c;
         });
     }

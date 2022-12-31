@@ -21,7 +21,7 @@ public sealed class CustomInterfaceExampleQueryTests
         }
     }
 
-    private ICustomInterfaceExampleQueryHandler QueryHandler => 
+    private ICustomInterfaceExampleQueryHandler QueryHandler =>
         ApplicationFactory.Services.GetRequiredService<ICustomInterfaceExampleQueryHandler>();
 
     [SetUp]

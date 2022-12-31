@@ -18,7 +18,7 @@ public static class TimeoutCommandPipelineBuilderExtensions
     {
         return pipeline.Use<CommandTimeoutMiddleware, CommandTimeoutMiddlewareConfiguration>(new(timeoutAfter));
     }
-    
+
     public static ICommandPipelineBuilder ConfigureTimeout(this ICommandPipelineBuilder pipeline, TimeSpan timeoutAfter)
     {
         return pipeline.Configure<CommandTimeoutMiddleware, CommandTimeoutMiddlewareConfiguration>(new CommandTimeoutMiddlewareConfiguration(timeoutAfter));

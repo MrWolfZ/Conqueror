@@ -11,7 +11,7 @@ public interface IMiddlewaresExampleQueryHandler : IQueryHandler<MiddlewaresExam
 public sealed class MiddlewaresExampleQueryHandler : IMiddlewaresExampleQueryHandler, IConfigureQueryPipeline
 {
     // ReSharper disable once UnusedMember.Global
-    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => 
+    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
         pipeline.UseLogging(o => o with { LogQueryPayload = false });
 
     public async Task<MiddlewaresExampleQueryResponse> ExecuteQuery(MiddlewaresExampleQuery command, CancellationToken cancellationToken = default)

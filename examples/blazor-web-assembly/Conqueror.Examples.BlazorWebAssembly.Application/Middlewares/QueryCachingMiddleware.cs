@@ -37,17 +37,17 @@ public static class CachingQueryPipelineBuilderExtensions
         return pipeline.Configure<QueryCachingMiddleware, QueryCachingMiddlewareConfiguration>(c =>
         {
             c = c with { InvalidateResultsAfter = invalidateResultsAfter };
-            
+
             if (maxCacheSizeInMegabytes is not null)
             {
                 c = c with { MaxCacheSizeInMegabytes = maxCacheSizeInMegabytes.Value };
             }
-            
+
             if (invalidateResultsOnEventTypes is not null)
             {
                 c = c with { InvalidateResultsOnEventTypes = invalidateResultsOnEventTypes };
             }
-            
+
             return c;
         });
     }

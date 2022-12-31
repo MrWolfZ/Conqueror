@@ -19,4 +19,3 @@ public static class ValidationCommandPipelineBuilderExtensions
         return pipeline.Use<CommandValidationMiddleware>();
     }
 }
-

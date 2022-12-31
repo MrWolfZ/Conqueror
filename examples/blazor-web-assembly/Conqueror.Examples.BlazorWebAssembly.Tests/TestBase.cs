@@ -70,10 +70,10 @@ public abstract class TestBase
     protected virtual void ConfigureClientServices(IServiceCollection services)
     {
         _ = services.AddConquerorCQSHttpClientServices(o =>
-                    {
-                        o.HttpClientFactory = _ => HttpClient;
-                        o.JsonSerializerOptions = JsonSerializerOptions;
-                    });
+        {
+            o.HttpClientFactory = _ => HttpClient;
+            o.JsonSerializerOptions = JsonSerializerOptions;
+        });
     }
 
     protected T Resolve<T>()

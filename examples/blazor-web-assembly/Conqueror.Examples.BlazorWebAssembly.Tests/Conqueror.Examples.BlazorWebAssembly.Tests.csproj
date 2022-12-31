@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.API/Conqueror.Examples.BlazorWebAssembly.API.csproj" />
+        <ProjectReference Include="../Conqueror.Examples.BlazorWebAssembly.API/Conqueror.Examples.BlazorWebAssembly.API.csproj" />
         <ProjectReference Include="../../../src/Conqueror.CQS/Conqueror.CQS.csproj" Condition="$(ShouldReferenceProject)" />
         <ProjectReference Include="..\..\..\src\Conqueror.CQS.Transport.Http.Client\Conqueror.CQS.Transport.Http.Client.csproj" Condition="$(ShouldReferenceProject)" />
         <ProjectReference Include="..\Conqueror.Examples.BlazorWebAssembly.Domain\Conqueror.Examples.BlazorWebAssembly.Domain.csproj" />

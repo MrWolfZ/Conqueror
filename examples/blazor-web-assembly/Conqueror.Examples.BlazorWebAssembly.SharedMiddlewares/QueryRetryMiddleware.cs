@@ -15,17 +15,17 @@ public sealed class QueryRetryMiddleware : IQueryMiddleware<QueryRetryMiddleware
 public static class RetryQueryPipelineBuilderExtensions
 {
     public static IQueryPipelineBuilder UseRetry(this IQueryPipelineBuilder pipeline,
-                                                   int maxNumberOfAttempts = 3,
-                                                   TimeSpan? retryInterval = null)
+                                                 int maxNumberOfAttempts = 3,
+                                                 TimeSpan? retryInterval = null)
     {
         var configuration = new QueryRetryMiddlewareConfiguration(maxNumberOfAttempts, retryInterval ?? TimeSpan.FromSeconds(1));
 
         return pipeline.Use<QueryRetryMiddleware, QueryRetryMiddlewareConfiguration>(configuration);
     }
-    
+
     public static IQueryPipelineBuilder ConfigureRetry(this IQueryPipelineBuilder pipeline,
-                                                         int? maxNumberOfAttempts = null,
-                                                         TimeSpan? retryInterval = null)
+                                                       int? maxNumberOfAttempts = null,
+                                                       TimeSpan? retryInterval = null)
     {
         return pipeline.Configure<QueryRetryMiddleware, QueryRetryMiddlewareConfiguration>(c =>
         {
@@ -33,12 +33,12 @@ public static class RetryQueryPipelineBuilderExtensions
             {
                 c = c with { MaxNumberOfAttempts = maxNumberOfAttempts.Value };
             }
-            
+
             if (retryInterval is not null)
             {
                 c = c with { RetryInterval = retryInterval.Value };
             }
-            
+
             return c;
         });
     }

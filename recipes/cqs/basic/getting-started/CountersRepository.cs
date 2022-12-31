@@ -11,7 +11,7 @@ internal sealed class CountersRepository
         await Task.CompletedTask;
         return counters;
     }
-    
+
     public async Task<int> GetCounterValue(string counterName)
     {
         await Task.CompletedTask;

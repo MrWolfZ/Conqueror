@@ -18,7 +18,7 @@ public static class TimeoutQueryPipelineBuilderExtensions
     {
         return pipeline.Use<QueryTimeoutMiddleware, QueryTimeoutMiddlewareConfiguration>(new(timeoutAfter));
     }
-    
+
     public static IQueryPipelineBuilder ConfigureTimeout(this IQueryPipelineBuilder pipeline, TimeSpan timeoutAfter)
     {
         return pipeline.Configure<QueryTimeoutMiddleware, QueryTimeoutMiddlewareConfiguration>(new QueryTimeoutMiddlewareConfiguration(timeoutAfter));

@@ -17,7 +17,7 @@ public sealed class SimpleEchoQueryTests
         serviceProvider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
     }
 
-    private IQueryHandler<SimpleEchoQuery, SimpleEchoQueryResponse> QueryHandler => 
+    private IQueryHandler<SimpleEchoQuery, SimpleEchoQueryResponse> QueryHandler =>
         serviceProvider.GetRequiredService<IQueryHandler<SimpleEchoQuery, SimpleEchoQueryResponse>>();
 
     [Test]

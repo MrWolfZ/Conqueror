@@ -5,4 +5,3 @@ public sealed record SharedCounterIncrementedEvent(long NewValue, long Increment
 public interface ISharedCounterIncrementedEventObserver : IEventObserver<SharedCounterIncrementedEvent>
 {
 }
-
