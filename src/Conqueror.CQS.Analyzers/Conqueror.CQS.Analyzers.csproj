@@ -24,10 +24,10 @@
         <PackageTags>$(PackageTags) analyzers</PackageTags>
         <DevelopmentDependency>true</DevelopmentDependency>
         <NoPackageAnalysis>true</NoPackageAnalysis>
-        
+
         <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
     </PropertyGroup>
-  
+
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
@@ -50,7 +50,7 @@
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-    
+
     <ItemGroup>
         <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
         <Content Include="tools/*.ps1" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="tools\" />

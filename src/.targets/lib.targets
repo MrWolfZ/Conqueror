@@ -1,7 +1,7 @@
 <Project>
 
-    <Import Project="common.targets"/>
-    <Import Project="analyzers.targets"/>
+    <Import Project="common.targets" />
+    <Import Project="analyzers.targets" />
 
     <PropertyGroup>
         <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
@@ -22,7 +22,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="../../README.md" Pack="true" PackagePath="\" Visible="false"/>
+        <None Include="../../README.md" Pack="true" PackagePath="\" Visible="false" />
     </ItemGroup>
 
 </Project>

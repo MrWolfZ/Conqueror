@@ -15,3 +15,5 @@ indent_size = 4
 end_of_line = lf
 indent_size = 4
 
+[**]
+ij_html_space_inside_empty_tag = true
