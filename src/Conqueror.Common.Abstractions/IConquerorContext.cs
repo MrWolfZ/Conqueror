@@ -13,6 +13,12 @@ namespace Conqueror
         ///     across transport boundaries, e.g. HTTP).
         /// </summary>
         IDictionary<string, string> Items { get; }
+        
+        /// <summary>
+        ///     Returns true if there are any items in the context. Using this property is preferable to accessing
+        ///     the count of <see cref="Items"/> for performance reasons, since the items may be lazily created.
+        /// </summary>
+        bool HasItems { get; }
 
         /// <summary>
         ///     Add items from <paramref name="source"/> to <see cref="Items" />.

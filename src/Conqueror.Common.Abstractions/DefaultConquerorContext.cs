@@ -11,5 +11,8 @@ namespace Conqueror
 
         /// <inheritdoc />
         public IDictionary<string, string> Items => itemsLazy.Value;
+
+        /// <inheritdoc />
+        public bool HasItems => itemsLazy.IsValueCreated && Items.Count > 0;
     }
 }

@@ -43,7 +43,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
             var response = await executeFn();
 
-            if (context.Items.Count > 0)
+            if (context.HasItems)
             {
                 httpContext.Response.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(context.Items));
             }

@@ -17,6 +17,9 @@ namespace Conqueror
         /// <inheritdoc />
         public IDictionary<string, string> Items => wrappedContext.Items;
 
+        /// <inheritdoc />
+        public bool HasItems => wrappedContext.HasItems;
+
         public void Dispose() => onDispose?.Invoke();
     }
 }

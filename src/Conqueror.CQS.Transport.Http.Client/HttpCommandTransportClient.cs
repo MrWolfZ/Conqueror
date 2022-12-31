@@ -32,9 +32,9 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             using var content = JsonContent.Create(command, null, Options.JsonSerializerOptions);
 
-            if (conquerorContextAccessor.ConquerorContext?.Items is { Count: > 0 } contextItems)
+            if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
             {
-                content.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(contextItems));
+                content.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
             }
 
             if (commandContextAccessor.CommandContext?.CommandId is { } commandId)

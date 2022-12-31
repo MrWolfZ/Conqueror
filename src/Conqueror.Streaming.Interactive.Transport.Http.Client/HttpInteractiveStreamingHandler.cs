@@ -56,9 +56,9 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
                 }
             }
 
-            if (conquerorContextAccessor?.ConquerorContext?.Items is { Count: > 0 } contextItems)
+            if (conquerorContextAccessor?.ConquerorContext?.HasItems ?? false)
             {
-                queryString.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(contextItems));
+                queryString.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
             }
 
             if (queryString.HasKeys())

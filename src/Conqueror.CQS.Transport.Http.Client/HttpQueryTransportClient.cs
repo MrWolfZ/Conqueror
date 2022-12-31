@@ -39,9 +39,9 @@ namespace Conqueror.CQS.Transport.Http.Client
                 Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
             };
 
-            if (conquerorContextAccessor.ConquerorContext?.Items is { Count: > 0 } contextItems)
+            if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
             {
-                requestMessage.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(contextItems));
+                requestMessage.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
             }
 
             if (queryContextAccessor.QueryContext?.QueryId is { } queryId)
