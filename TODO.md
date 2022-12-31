@@ -4,7 +4,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ## General
 
-- [ ] link nuget packages for all supporting packages in the libaries section of each core lib in readme (e.g. transports and middlewares)s
+- [ ] clean up all code
+- [ ] link nuget packages for all supporting packages in the libaries section of each core lib in readme (e.g. transports and middlewares)
 - [ ] use `SuppressMessage` instead of pragmas everywhere for suppressing diagnostics
 - [ ] use file-scoped namespaces everywhere
 - [ ] re-order all code so that command comes before query (or even better split files)
@@ -16,6 +17,7 @@ This file contains all the open points for extensions and improvements to the **
 ## CQS
 
 - [ ] carry a trace ID across commands and queries
+- [ ] make types in `Conqueror.CQS.Common` public to allow third-party packages to use them (e.g. for custom transports)
 - [ ] create analyzers (including code fixes)
   - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)
   - [ ] non-empty `ConfigurePipeline` method
@@ -39,9 +41,10 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
-- [ ] assign each command a random ID and transport it to server
-- [ ] assign each query a random ID and transport it to server
 - [ ] carry a trace ID across commands and queries (read and write trace ID from/to standard HTTP tracing header)
+- [ ] add `string? VersionString` parameter to command and query attribute
+- [ ] add `uint? DefaultCommandVersion` etc. to client and server options
+- [ ] add recipe for customizing OpenAPI specification with swashbuckle
 - [ ] add client option for setting custom HTTP headers (e.g. for authentication)
 - [ ] instruct users to place their custom path conventions into their contracts module to allow both server and client to use the same conventions
 - [ ] allow registering commands and queries via DI extension instead of attribute
