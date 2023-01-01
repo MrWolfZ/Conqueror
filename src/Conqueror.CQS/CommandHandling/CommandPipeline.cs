@@ -27,7 +27,7 @@ namespace Conqueror.CQS.CommandHandling
                                                                   CancellationToken cancellationToken)
             where TCommand : class
         {
-            var commandId = commandContextAccessor.DrainExternalCommandId() ?? IdGenerator.GetNextId();
+            var commandId = commandContextAccessor.DrainExternalCommandId() ?? Guid.NewGuid().ToString("N");
 
             var commandContext = new DefaultCommandContext(initialCommand, commandId);
 

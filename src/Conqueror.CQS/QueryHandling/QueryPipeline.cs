@@ -27,7 +27,7 @@ namespace Conqueror.CQS.QueryHandling
                                                                 CancellationToken cancellationToken)
             where TQuery : class
         {
-            var queryId = queryContextAccessor.DrainExternalQueryId() ?? IdGenerator.GetNextId();
+            var queryId = queryContextAccessor.DrainExternalQueryId() ?? Guid.NewGuid().ToString("N");
 
             var queryContext = new DefaultQueryContext(initialQuery, queryId);
 
