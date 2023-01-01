@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling

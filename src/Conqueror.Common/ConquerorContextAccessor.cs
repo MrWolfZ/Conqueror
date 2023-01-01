@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 
-namespace Conqueror
+namespace Conqueror.Common
 {
     /// <summary>
     ///     Provides an implementation of <see cref="IConquerorContextAccessor" /> based on the current execution context.
@@ -37,7 +38,7 @@ namespace Conqueror
             }
 
             // if we create the context, we make sure that disposing it causes the context to be cleared
-            var context = new DefaultConquerorContext();
+            var context = new DefaultConquerorContext(Activity.Current?.TraceId.ToString() ?? ActivityTraceId.CreateRandom().ToString());
             var disposableContext = new DisposableConquerorContext(context, ClearContext);
             ConquerorContext = context;
             return disposableContext;

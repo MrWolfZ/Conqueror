@@ -1,5 +1,7 @@
 ﻿// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
+using System.Diagnostics;
+
 namespace Conqueror.CQS.Tests
 {
     public sealed class ConquerorContextQueryTests
@@ -204,6 +206,65 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenQueryExecution_TraceIdIsTheSameInHandlerMiddlewareAndNestedClass()
+        {
+            var query = new TestQuery(10);
+            var observedTraceIds = new List<string>();
+
+            var provider = Setup(
+                (q, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(q.Payload);
+                },
+                (q, _) => new(q.Payload),
+                (middlewareCtx, ctx, next) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return next(middlewareCtx.Query);
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Query),
+                ctx => observedTraceIds.Add(ctx!.TraceId));
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observedTraceIds, Has.Count.EqualTo(3));
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[2]);
+        }
+
+        [Test]
+        public async Task GivenQueryExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInHandlerMiddlewareAndNestedClass()
+        {
+            using var activity = StartActivity(nameof(GivenQueryExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInHandlerMiddlewareAndNestedClass));
+
+            var query = new TestQuery(10);
+            var observedTraceIds = new List<string>();
+
+            var provider = Setup(
+                (q, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(q.Payload);
+                },
+                (q, _) => new(q.Payload),
+                (middlewareCtx, ctx, next) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return next(middlewareCtx.Query);
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Query),
+                ctx => observedTraceIds.Add(ctx!.TraceId));
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observedTraceIds, Has.Count.EqualTo(3));
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[2]);
+            Assert.AreSame(activity.TraceId, observedTraceIds[0]);
+        }
+
+        [Test]
         public async Task GivenQueryExecution_ContextItemsAreTheSameInNestedHandler()
         {
             var query = new TestQuery(10);
@@ -225,6 +286,57 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observedItems, Has.Count.EqualTo(2));
             Assert.AreSame(observedItems[0], observedItems[1]);
+        }
+
+        [Test]
+        public async Task GivenQueryExecution_TraceIdIsTheSameInNestedHandler()
+        {
+            var query = new TestQuery(10);
+            var observedTraceIds = new List<string>();
+
+            var provider = Setup(
+                (q, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(q.Payload);
+                },
+                (q, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(q.Payload);
+                });
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+        }
+
+        [Test]
+        public async Task GivenQueryExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInNestedHandler()
+        {
+            using var activity = StartActivity(nameof(GivenQueryExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInNestedHandler));
+
+            var query = new TestQuery(10);
+            var observedTraceIds = new List<string>();
+
+            var provider = Setup(
+                (q, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(q.Payload);
+                },
+                (q, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(q.Payload);
+                });
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+            Assert.AreSame(activity.TraceId, observedTraceIds[0]);
         }
 
         [Test]
@@ -444,6 +556,45 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInHandler()
+        {
+            var query = new TestQuery(10);
+            var expectedTraceId = string.Empty;
+
+            var provider = Setup((q, ctx) =>
+            {
+                // ReSharper disable once AccessToModifiedClosure
+                Assert.AreEqual(expectedTraceId, ctx?.TraceId);
+                return new(q.Payload);
+            });
+
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+
+            expectedTraceId = conquerorContext.TraceId;
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInHandler()
+        {
+            using var activity = StartActivity(nameof(GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInHandler));
+
+            var query = new TestQuery(10);
+
+            var provider = Setup((q, ctx) =>
+            {
+                // ReSharper disable once AccessToDisposedClosure
+                Assert.AreEqual(activity.TraceId, ctx?.TraceId);
+                return new(q.Payload);
+            });
+
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        }
+
+        [Test]
         public async Task GivenManuallyCreatedContextWithItems_ContextItemsAreAvailableInNestedHandler()
         {
             var query = new TestQuery(10);
@@ -460,6 +611,45 @@ namespace Conqueror.CQS.Tests
             using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             conquerorContext.Items[key] = value;
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInNestedHandler()
+        {
+            var query = new TestQuery(10);
+            var expectedTraceId = string.Empty;
+
+            var provider = Setup(nestedHandlerFn: (q, ctx) =>
+            {
+                // ReSharper disable once AccessToModifiedClosure
+                Assert.AreEqual(expectedTraceId, ctx?.TraceId);
+                return new(q.Payload);
+            });
+
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+
+            expectedTraceId = conquerorContext.TraceId;
+
+            _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInNestedHandler()
+        {
+            using var activity = StartActivity(nameof(GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInNestedHandler));
+
+            var query = new TestQuery(10);
+
+            var provider = Setup(nestedHandlerFn: (q, ctx) =>
+            {
+                // ReSharper disable once AccessToDisposedClosure
+                Assert.AreEqual(activity.TraceId, ctx?.TraceId);
+                return new(q.Payload);
+            });
+
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
         }
@@ -642,6 +832,44 @@ namespace Conqueror.CQS.Tests
             _ = provider.GetRequiredService<OuterTestQueryMiddleware>();
 
             return provider.CreateScope().ServiceProvider;
+        }
+
+        private static DisposableActivity StartActivity(string name)
+        {
+            var activitySource = new ActivitySource(name);
+
+            var activityListener = new ActivityListener
+            {
+                ShouldListenTo = _ => true,
+                SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
+                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            };
+
+            ActivitySource.AddActivityListener(activityListener);
+
+            var activity = activitySource.StartActivity()!;
+            return new(activity.TraceId.ToString(), activitySource, activityListener, activity);
+        }
+
+        private sealed class DisposableActivity : IDisposable
+        {
+            private readonly IReadOnlyCollection<IDisposable> disposables;
+
+            public DisposableActivity(string traceId, params IDisposable[] disposables)
+            {
+                TraceId = traceId;
+                this.disposables = disposables;
+            }
+
+            public string TraceId { get; }
+
+            public void Dispose()
+            {
+                foreach (var disposable in disposables.Reverse())
+                {
+                    disposable.Dispose();
+                }
+            }
         }
 
         private delegate Task<TestQueryResponse> MiddlewareFn(QueryMiddlewareContext<TestQuery, TestQueryResponse> middlewareCtx,

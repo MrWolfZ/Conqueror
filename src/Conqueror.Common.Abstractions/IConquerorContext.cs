@@ -21,6 +21,12 @@ namespace Conqueror
         bool HasItems { get; }
 
         /// <summary>
+        ///     Gets a unique identifier to represent all Conqueror operations in trace logs. If there is an active
+        ///     <see cref="System.Diagnostics.Activity" />, its trace ID is returned.
+        /// </summary>
+        string TraceId { get; }
+
+        /// <summary>
         ///     Add items from <paramref name="source" /> to <see cref="Items" />.
         /// </summary>
         /// <param name="source">The items to add.</param>
@@ -31,13 +37,6 @@ namespace Conqueror
                 Items[p.Key] = p.Value;
             }
         }
-
-        /*
-        /// <summary>
-        ///     Gets or sets a unique identifier to represent this command in trace logs.
-        /// </summary>
-        string TraceIdentifier { get; set; }
-        */
     }
 
     /// <inheritdoc cref="IConquerorContext" />

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Conqueror
+namespace Conqueror.Common
 {
     internal sealed class DisposableConquerorContext : IDisposableConquerorContext
     {
@@ -19,6 +19,9 @@ namespace Conqueror
 
         /// <inheritdoc />
         public bool HasItems => wrappedContext.HasItems;
+
+        /// <inheritdoc />
+        public string TraceId => wrappedContext.TraceId;
 
         public void Dispose() => onDispose?.Invoke();
     }

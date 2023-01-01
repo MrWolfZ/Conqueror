@@ -11,4 +11,8 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DependencyInjectionVersion)" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+    </ItemGroup>
+
 </Project>

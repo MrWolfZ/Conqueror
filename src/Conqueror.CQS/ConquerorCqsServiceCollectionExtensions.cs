@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using Conqueror;
+using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable InconsistentNaming

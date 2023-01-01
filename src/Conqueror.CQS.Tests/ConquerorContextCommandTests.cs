@@ -1,5 +1,7 @@
 ﻿// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
+using System.Diagnostics;
+
 namespace Conqueror.CQS.Tests
 {
     public sealed class ConquerorContextCommandTests
@@ -214,6 +216,65 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenCommandExecution_TraceIdIsTheSameInHandlerMiddlewareAndNestedClass()
+        {
+            var command = new TestCommand(10);
+            var observedTraceIds = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(cmd.Payload);
+                },
+                (cmd, _) => new(cmd.Payload),
+                (middlewareCtx, ctx, next) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return next(middlewareCtx.Command);
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Command),
+                ctx => observedTraceIds.Add(ctx!.TraceId));
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedTraceIds, Has.Count.EqualTo(3));
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[2]);
+        }
+
+        [Test]
+        public async Task GivenCommandExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInHandlerMiddlewareAndNestedClass()
+        {
+            using var activity = StartActivity(nameof(GivenCommandExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInHandlerMiddlewareAndNestedClass));
+
+            var command = new TestCommand(10);
+            var observedTraceIds = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(cmd.Payload);
+                },
+                (cmd, _) => new(cmd.Payload),
+                (middlewareCtx, ctx, next) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return next(middlewareCtx.Command);
+                },
+                (middlewareCtx, _, next) => next(middlewareCtx.Command),
+                ctx => observedTraceIds.Add(ctx!.TraceId));
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedTraceIds, Has.Count.EqualTo(3));
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[2]);
+            Assert.AreSame(activity.TraceId, observedTraceIds[0]);
+        }
+
+        [Test]
         public async Task GivenCommandExecution_ContextItemsAreTheSameInNestedHandler()
         {
             var command = new TestCommand(10);
@@ -235,6 +296,57 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observedItems, Has.Count.EqualTo(2));
             Assert.AreSame(observedItems[0], observedItems[1]);
+        }
+
+        [Test]
+        public async Task GivenCommandExecution_TraceIdIsTheSameInNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var observedTraceIds = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(cmd.Payload);
+                },
+                (cmd, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(cmd.Payload);
+                });
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+        }
+
+        [Test]
+        public async Task GivenCommandExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInNestedHandler()
+        {
+            using var activity = StartActivity(nameof(GivenCommandExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInNestedHandler));
+
+            var command = new TestCommand(10);
+            var observedTraceIds = new List<string>();
+
+            var provider = Setup(
+                (cmd, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(cmd.Payload);
+                },
+                (cmd, ctx) =>
+                {
+                    observedTraceIds.Add(ctx!.TraceId);
+                    return new(cmd.Payload);
+                });
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+            Assert.AreSame(activity.TraceId, observedTraceIds[0]);
         }
 
         [Test]
@@ -454,6 +566,45 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInHandler()
+        {
+            var command = new TestCommand(10);
+            var expectedTraceId = string.Empty;
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                // ReSharper disable once AccessToModifiedClosure
+                Assert.AreEqual(expectedTraceId, ctx?.TraceId);
+                return new(cmd.Payload);
+            });
+
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+
+            expectedTraceId = conquerorContext.TraceId;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInHandler()
+        {
+            using var activity = StartActivity(nameof(GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInHandler));
+
+            var command = new TestCommand(10);
+
+            var provider = Setup((cmd, ctx) =>
+            {
+                // ReSharper disable once AccessToDisposedClosure
+                Assert.AreEqual(activity.TraceId, ctx?.TraceId);
+                return new(cmd.Payload);
+            });
+
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
         public async Task GivenManuallyCreatedContextWithItems_ContextItemsAreAvailableInNestedHandler()
         {
             var command = new TestCommand(10);
@@ -470,6 +621,45 @@ namespace Conqueror.CQS.Tests
             using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             conquerorContext.Items[key] = value;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInNestedHandler()
+        {
+            var command = new TestCommand(10);
+            var expectedTraceId = string.Empty;
+
+            var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
+            {
+                // ReSharper disable once AccessToModifiedClosure
+                Assert.AreEqual(expectedTraceId, ctx?.TraceId);
+                return new(cmd.Payload);
+            });
+
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+
+            expectedTraceId = conquerorContext.TraceId;
+
+            _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        }
+
+        [Test]
+        public async Task GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInNestedHandler()
+        {
+            using var activity = StartActivity(nameof(GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInNestedHandler));
+
+            var command = new TestCommand(10);
+
+            var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
+            {
+                // ReSharper disable once AccessToDisposedClosure
+                Assert.AreEqual(activity.TraceId, ctx?.TraceId);
+                return new(cmd.Payload);
+            });
+
+            using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
             _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
         }
@@ -685,6 +875,44 @@ namespace Conqueror.CQS.Tests
             _ = provider.GetRequiredService<TestCommandMiddleware>();
 
             return provider.CreateScope().ServiceProvider;
+        }
+
+        private static DisposableActivity StartActivity(string name)
+        {
+            var activitySource = new ActivitySource(name);
+
+            var activityListener = new ActivityListener
+            {
+                ShouldListenTo = _ => true,
+                SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
+                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            };
+
+            ActivitySource.AddActivityListener(activityListener);
+
+            var activity = activitySource.StartActivity()!;
+            return new(activity.TraceId.ToString(), activitySource, activityListener, activity);
+        }
+
+        private sealed class DisposableActivity : IDisposable
+        {
+            private readonly IReadOnlyCollection<IDisposable> disposables;
+
+            public DisposableActivity(string traceId, params IDisposable[] disposables)
+            {
+                TraceId = traceId;
+                this.disposables = disposables;
+            }
+
+            public string TraceId { get; }
+
+            public void Dispose()
+            {
+                foreach (var disposable in disposables.Reverse())
+                {
+                    disposable.Dispose();
+                }
+            }
         }
 
         private delegate Task<TestCommandResponse> MiddlewareFn(CommandMiddlewareContext<TestCommand, TestCommandResponse> middlewareCtx,
