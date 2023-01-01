@@ -4,20 +4,16 @@ This file contains all the open points for extensions and improvements to the **
 
 ## General
 
-- [ ] clean up all code
 - [ ] link nuget packages for all supporting packages in the libaries section of each core lib in readme (e.g. transports and middlewares)
 - [ ] use `SuppressMessage` instead of pragmas everywhere for suppressing diagnostics
 - [ ] use file-scoped namespaces everywhere
 - [ ] re-order all code so that command comes before query (or even better split files)
 - [ ] add documentation about being able to use pipelines internally for external API calls
-- [ ] for some features provide code snippets in documentation instead of library (e.g. common middlewares etc.)
 - [ ] add code coverage reports and badge
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
 
 ## CQS
 
-- [ ] carry a trace ID across commands and queries
-- [ ] make types in `Conqueror.CQS.Common` public to allow third-party packages to use them (e.g. for custom transports)
 - [ ] create analyzers (including code fixes)
   - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)
   - [ ] non-empty `ConfigurePipeline` method
@@ -41,11 +37,10 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
-- [ ] carry a trace ID across commands and queries (read and write trace ID from/to standard HTTP tracing header)
 - [ ] add `string? VersionString` parameter to command and query attribute
 - [ ] add `uint? DefaultCommandVersion` etc. to client and server options
-- [ ] add recipe for customizing OpenAPI specification with swashbuckle
 - [ ] add client option for setting custom HTTP headers (e.g. for authentication)
+- [ ] add recipe for customizing OpenAPI specification with swashbuckle
 - [ ] instruct users to place their custom path conventions into their contracts module to allow both server and client to use the same conventions
 - [ ] allow registering commands and queries via DI extension instead of attribute
 
@@ -54,6 +49,9 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] use `.ConfigureAwait(false)` everywhere
 - [ ] fix: do not register generic types during assembly scanning
 - [ ] fix: do not register nested private types during assembly scanning
+- [ ] handling and tests for conqueror context
+- [ ] add event context
+- [ ] add handler registry
 - [ ] make event publisher middleware pipeline configurable
 - [ ] make event publishing strategy customizable
   - [ ] ship two strategies out of the box (parallel and sequential)
@@ -70,6 +68,9 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] fix: do not register nested private types during assembly scanning
 - [ ] implement middleware support
 - [ ] implement clients and transport infrastructure
+- [ ] handling and tests for conqueror context
+- [ ] add streaming request context
+- [ ] add handler registry
 - [ ] add transport for SignalR
 - [ ] for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
 
