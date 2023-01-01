@@ -55,7 +55,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         internal static void AddConquerorCqsQueryServices(this IServiceCollection services)
         {
-            services.TryAddSingleton(new QueryServiceCollectionConfigurator());
+            services.TryAddSingleton(new QueryRegistrationFinalizer(services));
             services.TryAddTransient<IQueryClientFactory, TransientQueryClientFactory>();
             services.TryAddSingleton<QueryClientFactory>();
             services.TryAddSingleton<QueryContextAccessor>();

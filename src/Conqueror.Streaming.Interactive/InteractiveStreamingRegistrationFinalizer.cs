@@ -8,11 +8,18 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Streaming.Interactive
 {
-    internal sealed class InteractiveStreamingServiceCollectionConfigurator : IServiceCollectionConfigurator
+    internal sealed class InteractiveStreamingRegistrationFinalizer : IConquerorRegistrationFinalizer
     {
-        public int ConfigurationPhase => 1;
+        private readonly IServiceCollection services;
 
-        public void Configure(IServiceCollection services)
+        public InteractiveStreamingRegistrationFinalizer(IServiceCollection services)
+        {
+            this.services = services;
+        }
+
+        public int ExecutionPhase => 1;
+
+        public void Execute()
         {
             ConfigureHandlers(services);
 

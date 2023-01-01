@@ -1,5 +1,4 @@
-﻿using Conqueror.Common;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 
 namespace Conqueror.CQS.Transport.Http.Client.Tests
 {

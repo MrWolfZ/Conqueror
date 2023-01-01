@@ -11,7 +11,7 @@
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingHandlerRegistry)));
             //// TODO
             //// Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingMiddlewaresInvoker)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingServiceCollectionConfigurator)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingRegistrationFinalizer)));
         }
 
         [Test]

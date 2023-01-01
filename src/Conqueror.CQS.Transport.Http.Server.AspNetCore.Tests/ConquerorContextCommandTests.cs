@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Mime;
 using System.Reflection;
-using Conqueror.Common;
 using Conqueror.CQS.Transport.Http.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;

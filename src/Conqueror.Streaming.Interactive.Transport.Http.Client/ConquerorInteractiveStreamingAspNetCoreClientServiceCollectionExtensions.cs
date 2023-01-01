@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Conqueror;
-using Conqueror.Common;
-using Conqueror.Streaming.Interactive.Common;
 using Conqueror.Streaming.Interactive.Transport.Http.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -13,12 +11,11 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddConquerorInteractiveStreamingHttpClientServices(this IServiceCollection services)
         {
+            services.AddConquerorInteractiveStreaming();
+
             services.TryAddSingleton<ConfigurationProvider>();
             services.TryAddSingleton<HttpClientFactory>();
             services.TryAddTransient<IConquerorInteractiveStreamingHttpClientFactory, TransientHttpClientFactory>();
-
-            services.TryAddSingleton<ConquerorContextAccessor>();
-            services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
 
             return services;
         }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Conqueror.Common
+﻿namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 {
     internal static class CollectionExtensions
     {

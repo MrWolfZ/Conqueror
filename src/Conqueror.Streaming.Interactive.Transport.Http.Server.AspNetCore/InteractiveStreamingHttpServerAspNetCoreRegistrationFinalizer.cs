@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Linq;
-using Conqueror.Common;
 using Conqueror.Streaming.Interactive.Common;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
 {
-    internal sealed class InteractiveStreamingAspNetCoreServerServiceCollectionConfigurator : IServiceCollectionConfigurator
+    internal sealed class InteractiveStreamingHttpServerAspNetCoreRegistrationFinalizer : IConquerorRegistrationFinalizer
     {
-        public int ConfigurationPhase => 2;
+        private readonly IServiceCollection services;
 
-        public void Configure(IServiceCollection services)
+        public InteractiveStreamingHttpServerAspNetCoreRegistrationFinalizer(IServiceCollection services)
+        {
+            this.services = services;
+        }
+
+        public int ExecutionPhase => 2;
+
+        public void Execute()
         {
             var applicationPartManager = GetServiceFromCollection<ApplicationPartManager>(services);
 

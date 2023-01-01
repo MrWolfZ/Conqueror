@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using Conqueror.Common;
-using Conqueror.Streaming.Interactive.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Client

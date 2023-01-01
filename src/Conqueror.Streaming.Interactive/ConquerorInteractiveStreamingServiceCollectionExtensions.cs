@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<InteractiveStreamingHandlerRegistry>();
             //// TODO
             //// services.TryAddSingleton<InteractiveStreamingMiddlewaresInvoker>();
-            services.TryAddSingleton(new InteractiveStreamingServiceCollectionConfigurator());
+            services.TryAddSingleton(new InteractiveStreamingRegistrationFinalizer(services));
             //// TODO
             //// services.TryAddSingleton<InteractiveStreamingContextAccessor>();
             //// services.TryAddSingleton<IInteractiveStreamingContextAccessor>(p => p.GetRequiredService<InteractiveStreamingContextAccessor>());

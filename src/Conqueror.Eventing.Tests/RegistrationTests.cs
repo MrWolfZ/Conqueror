@@ -12,7 +12,7 @@
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IEventObserver<>)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventObserverRegistry)));
             Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventMiddlewaresInvoker)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventingServiceCollectionConfigurator)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventingRegistrationFinalizer)));
         }
 
         [Test]

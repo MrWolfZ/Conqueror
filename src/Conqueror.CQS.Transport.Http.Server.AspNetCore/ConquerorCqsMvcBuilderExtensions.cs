@@ -12,9 +12,9 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IMvcBuilder AddConquerorCQSHttpControllers(this IMvcBuilder builder, Action<ConquerorCqsHttpTransportServerAspNetCoreOptions>? configureOptions = null)
         {
-            _ = builder.Services.AddConquerorCQS().AddFinalizationCheck();
+            _ = builder.Services.AddConquerorCQS();
 
-            builder.Services.TryAddSingleton(new CqsAspNetCoreServerServiceCollectionConfigurator());
+            builder.Services.TryAddSingleton(new CqsHttpServerAspNetCoreRegistrationFinalizer(builder.Services));
 
             _ = builder.Services.PostConfigure<MvcOptions>(options => { _ = options.Filters.Add<BadContextExceptionHandlerFilter>(); });
 

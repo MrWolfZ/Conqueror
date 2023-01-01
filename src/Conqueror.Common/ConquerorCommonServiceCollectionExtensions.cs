@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Conqueror;
-using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
@@ -19,8 +18,8 @@ namespace Microsoft.Extensions.DependencyInjection
             _ = services.AddSingleton<WasFinalized>();
 
             var configurators = services.Select(d => d.ImplementationInstance)
-                                        .OfType<IServiceCollectionConfigurator>()
-                                        .OrderBy(c => c.ConfigurationPhase)
+                                        .OfType<IConquerorRegistrationFinalizer>()
+                                        .OrderBy(c => c.ExecutionPhase)
                                         .ToList();
 
             var finalizationCheck = services.SingleOrDefault(d => d.ServiceType == typeof(DidYouForgetToCallFinalizeConquerorRegistrations));
@@ -32,7 +31,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             foreach (var configurator in configurators)
             {
-                configurator.Configure(services);
+                configurator.Execute();
             }
 
             return services;

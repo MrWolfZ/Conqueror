@@ -10,11 +10,18 @@ using System.Reflection;
 
 namespace Conqueror.Eventing
 {
-    internal sealed class EventingServiceCollectionConfigurator : IServiceCollectionConfigurator
+    internal sealed class EventingRegistrationFinalizer : IConquerorRegistrationFinalizer
     {
-        public int ConfigurationPhase => 1;
+        private readonly IServiceCollection services;
 
-        public void Configure(IServiceCollection services)
+        public EventingRegistrationFinalizer(IServiceCollection services)
+        {
+            this.services = services;
+        }
+
+        public int ExecutionPhase => 1;
+
+        public void Execute()
         {
             ConfigureEventObservers(services);
             ConfigureEventObserverMiddlewares(services);

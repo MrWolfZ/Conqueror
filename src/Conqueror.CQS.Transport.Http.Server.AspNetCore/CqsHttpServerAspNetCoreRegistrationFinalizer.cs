@@ -1,16 +1,22 @@
 ﻿using System;
 using System.Linq;
-using Conqueror.Common;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 {
-    internal sealed class CqsAspNetCoreServerServiceCollectionConfigurator : IServiceCollectionConfigurator
+    internal sealed class CqsHttpServerAspNetCoreRegistrationFinalizer : IConquerorRegistrationFinalizer
     {
-        public int ConfigurationPhase => 2;
+        private readonly IServiceCollection services;
 
-        public void Configure(IServiceCollection services)
+        public CqsHttpServerAspNetCoreRegistrationFinalizer(IServiceCollection services)
+        {
+            this.services = services;
+        }
+
+        public int ExecutionPhase => 2;
+
+        public void Execute()
         {
             var applicationPartManager = GetServiceFromCollection<ApplicationPartManager>(services);
 

@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Conqueror.Common;
 using Conqueror.CQS.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling
 {
-    internal sealed class CommandServiceCollectionConfigurator : IServiceCollectionConfigurator
+    internal sealed class CommandRegistrationFinalizer : IConquerorRegistrationFinalizer
     {
-        public int ConfigurationPhase => 1;
+        private readonly IServiceCollection services;
 
-        public void Configure(IServiceCollection services)
+        public CommandRegistrationFinalizer(IServiceCollection services)
+        {
+            this.services = services;
+        }
+
+        public int ExecutionPhase => 1;
+
+        public void Execute()
         {
             ConfigureHandlers(services);
             ConfigureMiddlewares(services);
@@ -125,7 +131,7 @@ namespace Conqueror.CQS.CommandHandling
                 }
             }
 
-            var configurationMethod = typeof(CommandServiceCollectionConfigurator).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
+            var configurationMethod = typeof(CommandRegistrationFinalizer).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
 
             if (configurationMethod == null)
             {

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Conqueror.Common;
 using Microsoft.AspNetCore.Builder;
 
 namespace Conqueror.CQS.Transport.Http.Client.Tests

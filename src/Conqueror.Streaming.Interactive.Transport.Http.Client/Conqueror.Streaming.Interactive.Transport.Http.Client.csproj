@@ -13,6 +13,7 @@
         <ProjectReference Include="..\Conqueror.Streaming.Interactive.Common\Conqueror.Streaming.Interactive.Common.csproj" />
         <ProjectReference Include="..\Conqueror.Streaming.Interactive.Transport.Http.Abstractions\Conqueror.Streaming.Interactive.Transport.Http.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Streaming.Interactive.Transport.Http.Common\Conqueror.Streaming.Interactive.Transport.Http.Common.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Interactive\Conqueror.Streaming.Interactive.csproj" />
     </ItemGroup>
 
 </Project>

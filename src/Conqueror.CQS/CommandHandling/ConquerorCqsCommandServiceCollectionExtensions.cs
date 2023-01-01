@@ -55,7 +55,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         internal static void AddConquerorCqsCommandServices(this IServiceCollection services)
         {
-            services.TryAddSingleton(new CommandServiceCollectionConfigurator());
+            services.TryAddSingleton(new CommandRegistrationFinalizer(services));
             services.TryAddTransient<ICommandClientFactory, TransientCommandClientFactory>();
             services.TryAddSingleton<CommandClientFactory>();
             services.TryAddSingleton<CommandContextAccessor>();

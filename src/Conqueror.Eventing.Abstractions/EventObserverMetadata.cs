@@ -2,7 +2,7 @@
 
 namespace Conqueror
 {
-    internal sealed class EventObserverMetadata
+    public sealed class EventObserverMetadata
     {
         public EventObserverMetadata(Type eventType, Type observerType, EventObserverOptions options)
         {

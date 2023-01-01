@@ -16,7 +16,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddMvc().AddConquerorInteractiveStreaming();
 
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingAspNetCoreServerServiceCollectionConfigurator)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingHttpServerAspNetCoreRegistrationFinalizer)));
         }
 
         [Test]

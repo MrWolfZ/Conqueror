@@ -15,10 +15,6 @@ namespace Conqueror.Common
 
         public static IEnumerable<MethodInfo> AllMethods(this Type t) => t.GetInterfaces().Concat(new[] { t }).SelectMany(s => s.GetMethods());
 
-        public static bool HasAnyProperties(this Type t) => t.GetProperties().Any();
-
-        public static bool HasDefaultConstructor(this Type t) => t.GetConstructors().Any(c => !c.GetParameters().Any());
-
         private static bool HasParameters(this MethodInfo method, Type[] parameterTypes)
         {
             var methodParameters = method.GetParameters().Select(parameter => parameter.ParameterType).ToArray();

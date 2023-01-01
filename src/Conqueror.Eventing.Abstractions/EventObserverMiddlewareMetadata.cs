@@ -2,7 +2,7 @@
 
 namespace Conqueror
 {
-    internal sealed class EventObserverMiddlewareMetadata
+    public sealed class EventObserverMiddlewareMetadata
     {
         public EventObserverMiddlewareMetadata(Type middlewareType, Type? configurationType)
         {

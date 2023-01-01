@@ -17,7 +17,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddControllers().AddConquerorCQSHttpControllers();
 
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CqsAspNetCoreServerServiceCollectionConfigurator)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CqsHttpServerAspNetCoreRegistrationFinalizer)));
         }
 
         [Test]

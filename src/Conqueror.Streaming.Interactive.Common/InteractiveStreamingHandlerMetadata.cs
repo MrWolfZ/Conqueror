@@ -2,7 +2,7 @@
 
 namespace Conqueror.Streaming.Interactive.Common
 {
-    internal sealed class InteractiveStreamingHandlerMetadata
+    public sealed class InteractiveStreamingHandlerMetadata
     {
         public InteractiveStreamingHandlerMetadata(Type requestType, Type itemType, Type handlerType)
         {
