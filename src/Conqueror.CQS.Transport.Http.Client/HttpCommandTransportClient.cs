@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Reflection;
@@ -31,6 +32,11 @@ namespace Conqueror.CQS.Transport.Http.Client
             var attribute = typeof(TCommand).GetCustomAttribute<HttpCommandAttribute>()!;
 
             using var content = JsonContent.Create(command, null, Options.JsonSerializerOptions);
+
+            if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
+            {
+                content.Headers.Add(HttpConstants.ConquerorTraceIdHeaderName, traceId);
+            }
 
             if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
             {

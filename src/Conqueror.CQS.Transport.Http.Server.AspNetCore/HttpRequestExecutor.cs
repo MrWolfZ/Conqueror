@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Conqueror.CQS.Transport.Http.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Net.Http.Headers;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 {
@@ -39,6 +41,21 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             if (httpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorQueryIdHeaderName, out var queryIdValues) && queryIdValues.FirstOrDefault() is { } queryId)
             {
                 httpContext.RequestServices.GetRequiredService<IQueryContextAccessor>().SetExternalQueryId(queryId);
+            }
+
+            if (Activity.Current is null)
+            {
+                if (httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues) && traceParentValues.FirstOrDefault() is { } traceParent)
+                {
+                    using var a = new Activity(string.Empty);
+                    var traceId = a.SetParentId(traceParent).TraceId.ToString();
+                    context.SetTraceId(traceId);
+                }
+                else if (httpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorTraceIdHeaderName, out var traceIdValues) && traceIdValues.FirstOrDefault() is { } traceId)
+                {
+                    using var a = new Activity(string.Empty);
+                    context.SetTraceId(traceId);
+                }
             }
 
             var response = await executeFn();

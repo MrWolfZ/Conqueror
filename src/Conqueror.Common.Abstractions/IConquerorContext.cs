@@ -37,6 +37,13 @@ namespace Conqueror
                 Items[p.Key] = p.Value;
             }
         }
+
+        /// <summary>
+        ///     Allows setting the <see cref="IConquerorContext.TraceId" />. This method is typically called from
+        ///     a server-side transport implementation and does not need to be called by user-code.
+        /// </summary>
+        /// <param name="traceId">The trace ID to set</param>
+        void SetTraceId(string traceId);
     }
 
     /// <inheritdoc cref="IConquerorContext" />

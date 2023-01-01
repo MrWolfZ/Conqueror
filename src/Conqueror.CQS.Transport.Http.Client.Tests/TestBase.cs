@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Net.Http.Headers;
 
 namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "fields are disposed in test teardown")]
     public abstract class TestBase
     {
         private HttpClient? client;
@@ -62,7 +65,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             });
 
             host = await hostBuilder.StartAsync();
-            client = host.GetTestClient();
+            client = new ActivityAwareTestHttpClient(host.GetTestClient());
 
             var services = new ServiceCollection();
             ConfigureClientServices(services);
@@ -72,9 +75,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         [TearDown]
         public void TearDown()
         {
-            host?.Dispose();
-            client?.Dispose();
             clientServiceProvider?.Dispose();
+            client?.Dispose();
+            host?.Dispose();
         }
 
         protected abstract void ConfigureServerServices(IServiceCollection services);
@@ -90,6 +93,48 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             where T : notnull
         {
             return ClientServiceProvider.GetRequiredService<T>();
+        }
+
+        // the default HTTP test client does not set tracing headers like the real HTTP client does,
+        // so we do this ourselves here
+        private sealed class ActivityAwareTestHttpClient : HttpClient
+        {
+            private readonly HttpClient wrapped;
+
+            public ActivityAwareTestHttpClient(HttpClient wrapped)
+            {
+                this.wrapped = wrapped;
+            }
+
+            public override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                if (Activity.Current?.Id is { } traceParent)
+                {
+                    request.Headers.Add(HeaderNames.TraceParent, traceParent);
+                }
+
+                return wrapped.Send(request, cancellationToken);
+            }
+
+            public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                if (Activity.Current?.Id is { } traceParent)
+                {
+                    request.Headers.Add(HeaderNames.TraceParent, traceParent);
+                }
+
+                return wrapped.SendAsync(request, cancellationToken);
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    wrapped.Dispose();
+                }
+
+                base.Dispose(disposing);
+            }
         }
     }
 }

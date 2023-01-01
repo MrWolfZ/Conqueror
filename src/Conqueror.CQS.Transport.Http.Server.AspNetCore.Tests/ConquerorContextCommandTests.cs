@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Mime;
 using System.Reflection;
 using Conqueror.Common;
@@ -7,10 +8,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Net.Http.Headers;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 {
     [TestFixture]
+    [NonParallelizable]
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public sealed class ConquerorContextCommandTests : TestBase
     {
@@ -23,6 +26,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             { "keyWith=Equals", "value" },
             { "key6", "valueWith=Equals" },
         };
+
+        private DisposableActivity? activity;
 
         [TestCase("/api/commands/test", "{}")]
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
@@ -121,7 +126,10 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             const string testCommandId = "TestCommandId";
             using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
             {
-                Headers = { { HttpConstants.ConquerorCommandIdHeaderName, testCommandId } },
+                Headers =
+                {
+                    { HttpConstants.ConquerorCommandIdHeaderName, testCommandId },
+                },
             };
 
             var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
@@ -132,6 +140,316 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.That(receivedCommandIds, Has.Count.EqualTo(2));
             Assert.AreEqual(testCommandId, receivedCommandIds[0]);
             Assert.AreNotEqual(testCommandId, receivedCommandIds[1]);
+        }
+
+        [TestCase("/api/commands/test", "{}")]
+        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+        public async Task GivenTraceIdInConquerorHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string data)
+        {
+            const string testTraceId = "TestTraceId";
+            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            {
+                Headers = { { HttpConstants.ConquerorTraceIdHeaderName, testTraceId } },
+            };
+
+            var response = await HttpClient.PostAsync(path, content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            CollectionAssert.AreEquivalent(new[] { testTraceId }, receivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenTraceIdInConquerorHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandlerAndNestedHandler()
+        {
+            const string testTraceId = "TestTraceId";
+            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HttpConstants.ConquerorTraceIdHeaderName, testTraceId },
+                },
+            };
+
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreEqual(testTraceId, receivedTraceIds[0]);
+            Assert.AreEqual(testTraceId, receivedTraceIds[1]);
+        }
+
+        [TestCase("/api/commands/test", "{}")]
+        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+        public async Task GivenTraceIdInConquerorHeaderWithActiveActivity_IdFromActivityIsObservedByHandler(string path, string data)
+        {
+            using var a = CreateActivity(nameof(GivenTraceIdInConquerorHeaderWithActiveActivity_IdFromActivityIsObservedByHandler));
+            activity = a;
+
+            const string testTraceId = "TestTraceId";
+            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            {
+                Headers = { { HttpConstants.ConquerorTraceIdHeaderName, testTraceId } },
+            };
+
+            var response = await HttpClient.PostAsync(path, content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            CollectionAssert.AreEquivalent(new[] { a.TraceId }, receivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenTraceIdInConquerorHeaderWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler()
+        {
+            using var a = CreateActivity(nameof(GivenTraceIdInConquerorHeaderWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler));
+            activity = a;
+
+            const string testTraceId = "TestTraceId";
+            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HttpConstants.ConquerorTraceIdHeaderName, testTraceId },
+                },
+            };
+
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreEqual(a.TraceId, receivedTraceIds[0]);
+            Assert.AreEqual(a.TraceId, receivedTraceIds[1]);
+        }
+
+        [TestCase("/api/commands/test", "{}")]
+        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+        public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string data)
+        {
+            const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
+            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+                },
+            };
+
+            var response = await HttpClient.PostAsync(path, content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            CollectionAssert.AreEquivalent(new[] { testTraceId }, receivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandlerAndNestedHandler()
+        {
+            const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
+            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+                },
+            };
+
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreEqual(testTraceId, receivedTraceIds[0]);
+            Assert.AreEqual(testTraceId, receivedTraceIds[1]);
+        }
+
+        [TestCase("/api/commands/test", "{}")]
+        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+        public async Task GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandler(string path, string data)
+        {
+            using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandler));
+            activity = a;
+
+            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+                },
+            };
+
+            var response = await HttpClient.PostAsync(path, content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            CollectionAssert.AreEquivalent(new[] { a.TraceId }, receivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler()
+        {
+            using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler));
+            activity = a;
+
+            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+                },
+            };
+
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreEqual(a.TraceId, receivedTraceIds[0]);
+            Assert.AreEqual(a.TraceId, receivedTraceIds[1]);
+        }
+
+        [TestCase("/api/commands/test", "{}")]
+        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+        public async Task GivenTraceIdInTraceParentAndConquerorHeadersWithoutActiveActivity_IdFromTraceParentHeaderIsObservedByHandler(string path, string data)
+        {
+            const string testTraceId = "TestTraceId";
+            const string testParentTraceId = "80e1a2ed08e019fc1110464cfa66635c";
+            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HttpConstants.ConquerorTraceIdHeaderName, testTraceId },
+                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+                },
+            };
+
+            var response = await HttpClient.PostAsync(path, content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            CollectionAssert.AreEquivalent(new[] { testParentTraceId }, receivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenTraceIdInTraceParentAndConquerorHeadersWithoutActiveActivity_IdFromTraceParentHeaderObservedByHandlerAndNestedHandler()
+        {
+            const string testTraceId = "TestTraceId";
+            const string testParentTraceId = "80e1a2ed08e019fc1110464cfa66635c";
+            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HttpConstants.ConquerorTraceIdHeaderName, testTraceId },
+                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+                },
+            };
+
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreEqual(testParentTraceId, receivedTraceIds[0]);
+            Assert.AreEqual(testParentTraceId, receivedTraceIds[1]);
+        }
+
+        [TestCase("/api/commands/test", "{}")]
+        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/custom/commands/test", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+        public async Task GivenTraceIdInTraceParentAndConquerorHeadersWithActiveActivity_IdFromActivityIsObservedByHandler(string path, string data)
+        {
+            using var a = CreateActivity(nameof(GivenTraceIdInTraceParentAndConquerorHeadersWithActiveActivity_IdFromActivityIsObservedByHandler));
+            activity = a;
+
+            const string testTraceId = "TestTraceId";
+            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HttpConstants.ConquerorTraceIdHeaderName, testTraceId },
+                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+                },
+            };
+
+            var response = await HttpClient.PostAsync(path, content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            CollectionAssert.AreEquivalent(new[] { a.TraceId }, receivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenTraceIdInTraceParentAndConquerorHeadersWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler()
+        {
+            using var a = CreateActivity(nameof(GivenTraceIdInTraceParentAndConquerorHeadersWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler));
+            activity = a;
+
+            const string testTraceId = "TestTraceId";
+            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+            {
+                Headers =
+                {
+                    { HttpConstants.ConquerorTraceIdHeaderName, testTraceId },
+                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+                },
+            };
+
+            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+            await response.AssertSuccessStatusCode();
+
+            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+            Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
+            Assert.AreEqual(a.TraceId, receivedTraceIds[0]);
+            Assert.AreEqual(a.TraceId, receivedTraceIds[1]);
         }
 
         protected override void ConfigureServices(IServiceCollection services)
@@ -157,8 +475,45 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         protected override void Configure(IApplicationBuilder app)
         {
+            _ = app.Use(async (ctx, next) =>
+            {
+                if (activity is not null)
+                {
+                    _ = activity.Activity.Start();
+
+                    try
+                    {
+                        await next();
+                        return;
+                    }
+                    finally
+                    {
+                        activity.Activity.Stop();
+                    }
+                }
+
+                await next();
+            });
+
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
+        }
+
+        private static DisposableActivity CreateActivity(string name)
+        {
+            var activitySource = new ActivitySource(name);
+
+            var activityListener = new ActivityListener
+            {
+                ShouldListenTo = _ => true,
+                SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
+                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            };
+
+            ActivitySource.AddActivityListener(activityListener);
+
+            var a = activitySource.CreateActivity(name, ActivityKind.Server)!;
+            return new(a, activitySource, activityListener, a);
         }
 
         [HttpCommand]
@@ -198,6 +553,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -227,6 +583,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -256,6 +613,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -285,6 +643,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -317,6 +676,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public Task<TestCommandResponse> ExecuteCommand(TestCommandWithNestedCommand command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -346,6 +706,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public Task<TestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -360,6 +721,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         public sealed class TestObservations
         {
             public List<string?> ReceivedCommandIds { get; } = new();
+
+            public List<string?> ReceivedTraceIds { get; } = new();
 
             public bool ShouldAddItems { get; set; }
 
@@ -404,6 +767,29 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
         {
             protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpCommandController);
+        }
+
+        private sealed class DisposableActivity : IDisposable
+        {
+            private readonly IReadOnlyCollection<IDisposable> disposables;
+
+            public DisposableActivity(Activity activity, params IDisposable[] disposables)
+            {
+                Activity = activity;
+                this.disposables = disposables;
+            }
+
+            public Activity Activity { get; }
+
+            public string TraceId => Activity.TraceId.ToString();
+
+            public void Dispose()
+            {
+                foreach (var disposable in disposables.Reverse())
+                {
+                    disposable.Dispose();
+                }
+            }
         }
     }
 }

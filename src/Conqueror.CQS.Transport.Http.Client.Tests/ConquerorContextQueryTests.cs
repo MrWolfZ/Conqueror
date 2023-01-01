@@ -1,9 +1,11 @@
-﻿using Conqueror.Common;
+﻿using System.Diagnostics;
+using Conqueror.Common;
 using Microsoft.AspNetCore.Builder;
 
 namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
+    [NonParallelizable]
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public class ConquerorContextQueryTests : TestBase
     {
@@ -251,6 +253,52 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedQueryIds, Resolve<TestObservations>().ReceivedQueryIds);
         }
 
+        [Test]
+        public async Task GivenQueryWithoutActiveClientSideActivity_SameTraceIdIsObservedInTransportClientAndHandler()
+        {
+            var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenPostQueryWithoutActiveClientSideActivity_SameTraceIdIsObservedInTransportClientAndHandler()
+        {
+            var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenQueryWithActiveClientSideActivity_ActivityTraceIdIsObservedInTransportClientAndHandler()
+        {
+            using var activity = StartActivity(nameof(GivenQueryWithActiveClientSideActivity_ActivityTraceIdIsObservedInTransportClientAndHandler));
+
+            var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+            Assert.AreEqual(activity.TraceId, Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault());
+        }
+
+        [Test]
+        public async Task GivenPostQueryWithActiveClientSideActivity_ActivityTraceIdIsObservedInTransportClientAndHandler()
+        {
+            using var activity = StartActivity(nameof(GivenPostQueryWithActiveClientSideActivity_ActivityTraceIdIsObservedInTransportClientAndHandler));
+
+            var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+            Assert.AreEqual(activity.TraceId, Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault());
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
@@ -277,9 +325,11 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             });
 
             _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(HttpClient),
+                                                                                                                                   b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
                                                                                                                                    b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
                                                                                                                                    b.ServiceProvider.GetRequiredService<TestObservations>()))
                         .AddConquerorQueryClient<IQueryHandler<TestPostQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(HttpClient),
+                                                                                                                                       b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
                                                                                                                                        b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
                                                                                                                                        b.ServiceProvider.GetRequiredService<TestObservations>()));
 
@@ -292,8 +342,32 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         protected override void Configure(IApplicationBuilder app)
         {
+            _ = app.Use(async (_, next) =>
+            {
+                // prevent leaking of client-side activity to server
+                Activity.Current = null;
+                await next();
+            });
+
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
+        }
+
+        private static DisposableActivity StartActivity(string name)
+        {
+            var activitySource = new ActivitySource(name);
+
+            var activityListener = new ActivityListener
+            {
+                ShouldListenTo = _ => true,
+                SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
+                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            };
+
+            ActivitySource.AddActivityListener(activityListener);
+
+            var activity = activitySource.StartActivity()!;
+            return new(activity.TraceId.ToString(), activitySource, activityListener, activity);
         }
 
         [HttpQuery]
@@ -329,6 +403,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -356,6 +431,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -392,6 +468,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
                 if (testObservations.ShouldAddOuterItems)
                 {
@@ -427,6 +504,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestPostQuery query, CancellationToken cancellationToken = default)
             {
                 testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
                 if (testObservations.ShouldAddOuterItems)
                 {
@@ -443,6 +521,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             public List<string?> ReceivedQueryIds { get; } = new();
 
+            public List<string?> ReceivedTraceIds { get; } = new();
+
             public bool ShouldAddItems { get; set; }
 
             public bool ShouldAddOuterItems { get; set; }
@@ -454,13 +534,18 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         private sealed class WrapperQueryTransportClient : IQueryTransportClient
         {
+            private readonly IConquerorContextAccessor conquerorContextAccessor;
             private readonly IQueryContextAccessor queryContextAccessor;
             private readonly TestObservations testObservations;
             private readonly IQueryTransportClient wrapped;
 
-            public WrapperQueryTransportClient(IQueryTransportClient wrapped, IQueryContextAccessor queryContextAccessor, TestObservations testObservations)
+            public WrapperQueryTransportClient(IQueryTransportClient wrapped,
+                                               IConquerorContextAccessor conquerorContextAccessor,
+                                               IQueryContextAccessor queryContextAccessor,
+                                               TestObservations testObservations)
             {
                 this.wrapped = wrapped;
+                this.conquerorContextAccessor = conquerorContextAccessor;
                 this.queryContextAccessor = queryContextAccessor;
                 this.testObservations = testObservations;
             }
@@ -469,8 +554,30 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 where TQuery : class
             {
                 testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
                 return wrapped.ExecuteQuery<TQuery, TResponse>(query, cancellationToken);
+            }
+        }
+
+        private sealed class DisposableActivity : IDisposable
+        {
+            private readonly IReadOnlyCollection<IDisposable> disposables;
+
+            public DisposableActivity(string traceId, params IDisposable[] disposables)
+            {
+                TraceId = traceId;
+                this.disposables = disposables;
+            }
+
+            public string TraceId { get; }
+
+            public void Dispose()
+            {
+                foreach (var disposable in disposables.Reverse())
+                {
+                    disposable.Dispose();
+                }
             }
         }
     }

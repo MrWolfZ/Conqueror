@@ -21,6 +21,12 @@ namespace Conqueror.Common
         public bool HasItems => itemsLazy.IsValueCreated && Items.Count > 0;
 
         /// <inheritdoc />
-        public string TraceId { get; }
+        public string TraceId { get; private set; }
+
+        /// <inheritdoc />
+        public void SetTraceId(string traceId)
+        {
+            TraceId = traceId;
+        }
     }
 }

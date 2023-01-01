@@ -23,6 +23,9 @@ namespace Conqueror.Common
         /// <inheritdoc />
         public string TraceId => wrappedContext.TraceId;
 
+        /// <inheritdoc />
+        public void SetTraceId(string traceId) => wrappedContext.SetTraceId(traceId);
+
         public void Dispose() => onDispose?.Invoke();
     }
 }

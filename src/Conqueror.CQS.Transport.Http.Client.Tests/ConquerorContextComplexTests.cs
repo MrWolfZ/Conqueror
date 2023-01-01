@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
+    [NonParallelizable]
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public class ConquerorContextComplexTests : TestBase
     {
@@ -49,6 +50,25 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             observations.ReceivedContextItems.Clear();
 
             Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextItems.Count * 2 + 1));
+        }
+
+        [Test]
+        public async Task GivenManuallyCreatedContextOnClient_SameTraceIdIsReceivedInDifferentCommandAndQueryHandlersAcrossMultipleInvocations()
+        {
+            using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+            var observations = Resolve<TestObservations>();
+
+            var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(new[] { context.TraceId, context.TraceId, context.TraceId }, observations.ReceivedTraceIds);
         }
 
         protected override void ConfigureServerServices(IServiceCollection services)
@@ -112,6 +132,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -147,6 +168,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
+                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                 testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
                 if (testObservations.ShouldAddItems)
@@ -160,6 +182,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed class TestObservations
         {
+            public List<string?> ReceivedTraceIds { get; } = new();
+
             public bool ShouldAddItems { get; set; }
 
             public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();

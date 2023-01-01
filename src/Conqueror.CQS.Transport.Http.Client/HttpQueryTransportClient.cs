@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -38,6 +39,11 @@ namespace Conqueror.CQS.Transport.Http.Client
             {
                 Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
             };
+
+            if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
+            {
+                requestMessage.Headers.Add(HttpConstants.ConquerorTraceIdHeaderName, traceId);
+            }
 
             if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
             {
