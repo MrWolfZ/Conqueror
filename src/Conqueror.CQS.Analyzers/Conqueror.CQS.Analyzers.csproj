@@ -39,16 +39,13 @@
             <Generator>MSBuild:Compile</Generator>
             <LastGenOutput>Resources.Designer.cs</LastGenOutput>
             <!-- Put generated files in the 'obj' folder. -->
-            <StronglyTypedFileName>$(IntermediateOutputPath)\Resources.Designer.cs</StronglyTypedFileName>
+            <StronglyTypedFileName>Resources.Designer.cs</StronglyTypedFileName>
             <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
             <StronglyTypedNamespace>Conqueror.CQS.Analyzers</StronglyTypedNamespace>
             <StronglyTypedClassName>Resources</StronglyTypedClassName>
         </EmbeddedResource>
 
-        <Content Include="$(IntermediateOutputPath)\Resources.Designer.cs">
-            <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        </Content>
+        <Compile Remove="Resources.Designer.cs" />
     </ItemGroup>
 
     <ItemGroup>
