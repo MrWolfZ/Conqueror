@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Conqueror.CQS.Common;
 
@@ -11,11 +12,16 @@ namespace Conqueror.CQS.CommandHandling
     {
         private readonly CommandMiddlewareNext<TCommand, TResponse> next;
 
-        public DefaultCommandMiddlewareContext(TCommand command, CommandMiddlewareNext<TCommand, TResponse> next, TConfiguration configuration, CancellationToken cancellationToken)
+        public DefaultCommandMiddlewareContext(TCommand command,
+                                               CommandMiddlewareNext<TCommand, TResponse> next,
+                                               TConfiguration configuration,
+                                               IServiceProvider serviceProvider,
+                                               CancellationToken cancellationToken)
         {
             this.next = next;
             Command = command;
             CancellationToken = cancellationToken;
+            ServiceProvider = serviceProvider;
             Configuration = configuration;
         }
 
@@ -24,6 +30,8 @@ namespace Conqueror.CQS.CommandHandling
         public override bool HasUnitResponse { get; } = typeof(TResponse) == typeof(UnitCommandResponse);
 
         public override CancellationToken CancellationToken { get; }
+
+        public override IServiceProvider ServiceProvider { get; }
 
         public override TConfiguration Configuration { get; }
 

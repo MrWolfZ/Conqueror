@@ -467,6 +467,120 @@ namespace Conqueror.CQS.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
         }
 
+        [Test]
+        public async Task GivenTransientMiddleware_ServiceProviderInContextIsFromHandlerResolutionScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandler>()
+                        .AddTransient<TestCommandHandler2>()
+                        .AddTransient<TestCommandHandlerWithoutResponse>()
+                        .AddTransient<TestCommandMiddleware>()
+                        .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+                        .AddSingleton(observations);
+
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
+            var handler4 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
+            var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
+            await handler4.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
+            await handler7.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 1, 2, 3 }));
+        }
+
+        [Test]
+        public async Task GivenScopedMiddleware_ServiceProviderInContextIsFromHandlerResolutionScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandler>()
+                        .AddTransient<TestCommandHandler2>()
+                        .AddTransient<TestCommandHandlerWithoutResponse>()
+                        .AddScoped<TestCommandMiddleware>()
+                        .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+                        .AddSingleton(observations);
+
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
+            var handler4 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
+            var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
+            await handler4.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
+            await handler7.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 1, 2, 3 }));
+        }
+
+        [Test]
+        public async Task GivenSingletonMiddleware_ServiceProviderInContextIsFromHandlerResolutionScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestCommandHandler>()
+                        .AddTransient<TestCommandHandler2>()
+                        .AddTransient<TestCommandHandlerWithoutResponse>()
+                        .AddSingleton<TestCommandMiddleware>()
+                        .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+                        .AddSingleton(observations);
+
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
+            var handler4 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
+            var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
+            await handler4.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
+            await handler7.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 1, 2, 3 }));
+        }
+
         private sealed record TestCommand;
 
         private sealed record TestCommandResponse;
@@ -617,6 +731,8 @@ namespace Conqueror.CQS.Tests
                 await Task.Yield();
                 observations.InvocationCounts.Add(invocationCount);
 
+                ctx.ServiceProvider.GetService<DependencyResolvedDuringMiddlewareExecution>()?.Execute();
+
                 return await ctx.Next(ctx.Command, ctx.CancellationToken);
             }
         }
@@ -637,6 +753,8 @@ namespace Conqueror.CQS.Tests
                 invocationCount += 1;
                 await Task.Yield();
                 observations.InvocationCounts.Add(invocationCount);
+
+                ctx.ServiceProvider.GetService<DependencyResolvedDuringMiddlewareExecution>()?.Execute();
 
                 return await ctx.Next(ctx.Command, ctx.CancellationToken);
             }
@@ -659,8 +777,27 @@ namespace Conqueror.CQS.Tests
                 await Task.Yield();
                 observations.InvocationCounts.Add(invocationCount);
 
+                ctx.ServiceProvider.GetService<DependencyResolvedDuringMiddlewareExecution>()?.Execute();
+
                 _ = await ctx.Next(ctx.Command, ctx.CancellationToken);
                 return await ctx.Next(ctx.Command, ctx.CancellationToken);
+            }
+        }
+
+        private sealed class DependencyResolvedDuringMiddlewareExecution
+        {
+            private readonly TestObservations observations;
+            private int invocationCount;
+
+            public DependencyResolvedDuringMiddlewareExecution(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public void Execute()
+            {
+                invocationCount += 1;
+                observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts.Add(invocationCount);
             }
         }
 
@@ -669,6 +806,8 @@ namespace Conqueror.CQS.Tests
             public List<int> HandlerInvocationCounts { get; } = new();
 
             public List<int> InvocationCounts { get; } = new();
+
+            public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = new();
         }
     }
 }

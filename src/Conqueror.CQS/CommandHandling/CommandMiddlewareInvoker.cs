@@ -28,7 +28,7 @@ namespace Conqueror.CQS.CommandHandling
 
             var configuration = (TConfiguration)middlewareConfiguration;
 
-            var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration>(command, next, configuration, cancellationToken);
+            var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration>(command, next, configuration, serviceProvider, cancellationToken);
 
             if (typeof(TConfiguration) == typeof(NullMiddlewareConfiguration))
             {

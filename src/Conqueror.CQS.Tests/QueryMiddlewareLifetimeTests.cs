@@ -412,6 +412,105 @@ namespace Conqueror.CQS.Tests
             Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
         }
 
+        [Test]
+        public async Task GivenTransientMiddleware_ServiceProviderInContextIsFromHandlerResolutionScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandler>()
+                        .AddTransient<TestQueryHandler2>()
+                        .AddTransient<TestQueryMiddleware>()
+                        .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+                        .AddSingleton(observations);
+
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+            var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
+        }
+
+        [Test]
+        public async Task GivenScopedMiddleware_ServiceProviderInContextIsFromHandlerResolutionScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandler>()
+                        .AddTransient<TestQueryHandler2>()
+                        .AddScoped<TestQueryMiddleware>()
+                        .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+                        .AddSingleton(observations);
+
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+            var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
+        }
+
+        [Test]
+        public async Task GivenSingletonMiddleware_ServiceProviderInContextIsFromHandlerResolutionScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCQS()
+                        .AddTransient<TestQueryHandler>()
+                        .AddTransient<TestQueryHandler2>()
+                        .AddSingleton<TestQueryMiddleware>()
+                        .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
+                        .AddSingleton(observations);
+
+            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+            var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
+        }
+
         private sealed record TestQuery;
 
         private sealed record TestQueryResponse;
@@ -526,6 +625,8 @@ namespace Conqueror.CQS.Tests
                 await Task.Yield();
                 observations.InvocationCounts.Add(invocationCount);
 
+                ctx.ServiceProvider.GetService<DependencyResolvedDuringMiddlewareExecution>()?.Execute();
+
                 return await ctx.Next(ctx.Query, ctx.CancellationToken);
             }
         }
@@ -546,6 +647,8 @@ namespace Conqueror.CQS.Tests
                 invocationCount += 1;
                 await Task.Yield();
                 observations.InvocationCounts.Add(invocationCount);
+
+                ctx.ServiceProvider.GetService<DependencyResolvedDuringMiddlewareExecution>()?.Execute();
 
                 return await ctx.Next(ctx.Query, ctx.CancellationToken);
             }
@@ -568,8 +671,27 @@ namespace Conqueror.CQS.Tests
                 await Task.Yield();
                 observations.InvocationCounts.Add(invocationCount);
 
+                ctx.ServiceProvider.GetService<DependencyResolvedDuringMiddlewareExecution>()?.Execute();
+
                 _ = await ctx.Next(ctx.Query, ctx.CancellationToken);
                 return await ctx.Next(ctx.Query, ctx.CancellationToken);
+            }
+        }
+
+        private sealed class DependencyResolvedDuringMiddlewareExecution
+        {
+            private readonly TestObservations observations;
+            private int invocationCount;
+
+            public DependencyResolvedDuringMiddlewareExecution(TestObservations observations)
+            {
+                this.observations = observations;
+            }
+
+            public void Execute()
+            {
+                invocationCount += 1;
+                observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts.Add(invocationCount);
             }
         }
 
@@ -578,6 +700,8 @@ namespace Conqueror.CQS.Tests
             public List<int> HandlerInvocationCounts { get; } = new();
 
             public List<int> InvocationCounts { get; } = new();
+
+            public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = new();
         }
     }
 }

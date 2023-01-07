@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 // these classes belong together
@@ -14,6 +15,8 @@ namespace Conqueror
         public abstract bool HasUnitResponse { get; }
 
         public abstract CancellationToken CancellationToken { get; }
+
+        public abstract IServiceProvider ServiceProvider { get; }
 
         public abstract Task<TResponse> Next(TCommand command, CancellationToken cancellationToken);
     }

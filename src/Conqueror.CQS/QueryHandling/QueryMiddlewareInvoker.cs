@@ -28,7 +28,7 @@ namespace Conqueror.CQS.QueryHandling
 
             var configuration = (TConfiguration)middlewareConfiguration;
 
-            var ctx = new DefaultQueryMiddlewareContext<TQuery, TResponse, TConfiguration>(query, next, configuration, cancellationToken);
+            var ctx = new DefaultQueryMiddlewareContext<TQuery, TResponse, TConfiguration>(query, next, configuration, serviceProvider, cancellationToken);
 
             if (typeof(TConfiguration) == typeof(NullQueryMiddlewareConfiguration))
             {
