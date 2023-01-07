@@ -1,12 +1,12 @@
 <Project>
 
     <PropertyGroup>
-        <ConquerorBaseVersion>0.2.0</ConquerorBaseVersion>
-        <ConquerorAssemblyVersion>0.2.0.2</ConquerorAssemblyVersion>
+        <ConquerorBaseVersion>0.3.0</ConquerorBaseVersion>
+        <ConquerorPreReleaseVersionCount>.1</ConquerorPreReleaseVersionCount>
         <ConquerorPreReleaseVersion Condition="'$(IsExperimental)' != 'true'">-beta</ConquerorPreReleaseVersion>
         <ConquerorPreReleaseVersion Condition="'$(IsExperimental)' == 'true'">-experimental</ConquerorPreReleaseVersion>
-        <ConquerorPreReleaseVersionCount>.3</ConquerorPreReleaseVersionCount>
         <ConquerorVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorVersion>
+        <ConquerorAssemblyVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorAssemblyVersion>
 
         <LangVersion Condition="'$(TargetFramework)' == 'net6.0'">10</LangVersion>
         <LangVersion Condition="'$(TargetFramework)' == 'net7.0'">11</LangVersion>
