@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/test.targets" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.CQS.Middleware.Logging\Conqueror.CQS.Middleware.Logging.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS\Conqueror.CQS.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" Condition="'$(TargetFramework)' == 'net6.0'" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" Condition="'$(TargetFramework)' == 'net7.0'" />
+    </ItemGroup>
+
+</Project>

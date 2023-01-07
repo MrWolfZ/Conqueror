@@ -157,6 +157,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expert", "expert", "{A1B61F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basic.GettingStarted", "recipes\cqs\basic\getting-started\Conqueror.Recipes.CQS.Basic.GettingStarted.csproj", "{E7802947-DFB4-4C87-B56A-D03AF5618D11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Logging", "src\Conqueror.CQS.Middleware.Logging\Conqueror.CQS.Middleware.Logging.csproj", "{B3522E63-DA56-4760-880D-6DB62DC15785}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Logging.Tests", "src\Conqueror.CQS.Middleware.Logging.Tests\Conqueror.CQS.Middleware.Logging.Tests.csproj", "{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -338,6 +342,14 @@ Global
 		{E7802947-DFB4-4C87-B56A-D03AF5618D11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7802947-DFB4-4C87-B56A-D03AF5618D11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7802947-DFB4-4C87-B56A-D03AF5618D11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3522E63-DA56-4760-880D-6DB62DC15785}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3522E63-DA56-4760-880D-6DB62DC15785}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3522E63-DA56-4760-880D-6DB62DC15785}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3522E63-DA56-4760-880D-6DB62DC15785}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}

@@ -20,6 +20,7 @@ Head over to our [CQS recipes](#cqs-introduction) for more guidance on how to us
 [![NuGet version (Conqueror.CQS)](https://img.shields.io/nuget/v/Conqueror.CQS?label=Conqueror.CQS)](https://www.nuget.org/packages/Conqueror.CQS/)
 [![NuGet version (Conqueror.CQS.Abstractions)](https://img.shields.io/nuget/v/Conqueror.CQS.Abstractions?label=Conqueror.CQS.Abstractions)](https://www.nuget.org/packages/Conqueror.CQS.Abstractions/)
 [![NuGet version (Conqueror.CQS.Analyzers)](https://img.shields.io/nuget/v/Conqueror.CQS.Analyzers?label=Conqueror.CQS.Analyzers)](https://www.nuget.org/packages/Conqueror.CQS.Analyzers/)
+[![NuGet version (Conqueror.CQS.Middleware.Logging)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Logging?label=Conqueror.CQS.Middleware.Logging)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Logging/)
 [![NuGet version (Conqueror.CQS.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Server.AspNetCore?label=Conqueror.CQS.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Server.AspNetCore/)
 [![NuGet version (Conqueror.CQS.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Client?label=Conqueror.CQS.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Client/)
 
