@@ -46,12 +46,17 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
+- [ ] refactor to use transport concept
+  - [ ] publisher uses attribute on event to determine on which transport to publish
+  - [ ] observer requires explicit registration with transport client
+  - [ ] provide HTTP websocket transport
 - [ ] use `.ConfigureAwait(false)` everywhere
 - [ ] fix: do not register generic types during assembly scanning
 - [ ] fix: do not register nested private types during assembly scanning
 - [ ] handling and tests for conqueror context
 - [ ] add event context
 - [ ] add handler registry
+- [ ] expose service provider on middleware context
 - [ ] make event publisher middleware pipeline configurable
 - [ ] make event publishing strategy customizable
   - [ ] ship two strategies out of the box (parallel and sequential)
@@ -68,6 +73,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] fix: do not register nested private types during assembly scanning
 - [ ] implement middleware support
 - [ ] implement clients and transport infrastructure
+- [ ] expose service provider on middleware context
 - [ ] handling and tests for conqueror context
 - [ ] add streaming request context
 - [ ] add handler registry
