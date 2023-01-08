@@ -2,7 +2,7 @@
 
 This recipe shows how simple it is to get started using **Conqueror.CQS**.
 
-> You can see the completed code for this recipe directly in the [repository](.) or explore it interactively in this [.NET Fiddle](https://dotnetfiddle.net/wHWO47).
+> You can see the completed code for this recipe directly in the [repository](.) or explore it interactively in this [.NET Fiddle](https://dotnetfiddle.net/wHWO47). To be able to run the code on your own machine, you need to have [.NET 6 or later](https://dotnet.microsoft.com/en-us/download) installed.
 
 The best way to explore this library is by building a small application. To keep it simple we will write a small interactive console application which manages a set of named counters. Once finished the interaction with the app will look like this:
 
