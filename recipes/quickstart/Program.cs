@@ -1,11 +1,16 @@
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddConquerorCQS().AddConquerorCQSTypesFromExecutingAssembly();
+builder.Services
+       .AddEndpointsApiExplorer()
+       .AddSwaggerGen();
+
+builder.Services
+       .AddConquerorCQS()
+       .AddConquerorCQSTypesFromExecutingAssembly()
+       .AddConquerorCQSLoggingMiddlewares();
+
 builder.Services.AddControllers().AddConquerorCQSHttpControllers();
 builder.Services.FinalizeConquerorRegistrations();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 

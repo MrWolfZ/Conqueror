@@ -4,11 +4,28 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+
+        <ShouldReferencePackage Condition="!Exists('$(MSBuildThisFileDirectory)/../../Conqueror.sln')">true</ShouldReferencePackage>
+        <ShouldReferenceProject Condition="Exists('$(MSBuildThisFileDirectory)/../../Conqueror.sln')">true</ShouldReferenceProject>
     </PropertyGroup>
 
+    <!-- reference the projects if the full repository is checked out (useful for development) -->
     <ItemGroup>
-        <PackageReference Include="Conqueror.CQS" Version="0.2.0-beta.2" />
-        <PackageReference Include="Conqueror.CQS.Transport.Http.Server.AspNetCore" Version="0.2.0-beta.2" />
+        <ProjectReference Include="..\..\src\Conqueror.CQS\Conqueror.CQS.csproj" Condition="$(ShouldReferenceProject) == true" />
+        <ProjectReference Include="..\..\src\Conqueror.CQS.Analyzers\Conqueror.CQS.Analyzers.csproj" Condition="$(ShouldReferenceProject) == true" />
+        <ProjectReference Include="..\..\src\Conqueror.CQS.Middleware.Logging\Conqueror.CQS.Middleware.Logging.csproj" Condition="$(ShouldReferenceProject) == true" />
+        <ProjectReference Include="..\..\src\Conqueror.CQS.Transport.Http.Server.AspNetCore\Conqueror.CQS.Transport.Http.Server.AspNetCore.csproj" Condition="$(ShouldReferenceProject) == true" />
+    </ItemGroup>
+
+    <!-- reference the packages if the project is checked out standalone -->
+    <ItemGroup>
+        <PackageReference Include="Conqueror.CQS" Version="*-*" Condition="$(ShouldReferencePackage) == true" />
+        <PackageReference Include="Conqueror.CQS.Analyzers" Version="*-*" Condition="$(ShouldReferencePackage) == true">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Conqueror.CQS.Middleware.Logging" Version="*-*" Condition="$(ShouldReferencePackage) == true" />
+        <PackageReference Include="Conqueror.CQS.Transport.Http.Server.AspNetCore" Version="*-*" Condition="$(ShouldReferencePackage) == true" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     </ItemGroup>
 

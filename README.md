@@ -51,69 +51,98 @@ Head over to our [reactive streaming recipes](#reactive-streaming-introduction) 
 This quickstart guide will let you jump right into the code without lengthy explanations (for more guidance head over to our [recipes](#recipes)). By following this guide you'll add HTTP commands and queries to your ASP.NET Core application. You can also find the [source code](recipes/quickstart) here in the repository.
 
 ```sh
-# add server-side CQS packages
+# add relevant CQS packages
 dotnet add package Conqueror.CQS
+dotnet add package Conqueror.CQS.Analyzers
+dotnet add package Conqueror.CQS.Middleware.Logging
 dotnet add package Conqueror.CQS.Transport.Http.Server.AspNetCore
 ```
 
 ```csharp
 // add Conqueror CQS to your services
-builder.Services.AddConquerorCQS().AddConquerorCQSTypesFromExecutingAssembly();
+builder.Services
+       .AddConquerorCQS()
+       .AddConquerorCQSTypesFromExecutingAssembly()
+       .AddConquerorCQSLoggingMiddlewares();
+
 builder.Services.AddControllers().AddConquerorCQSHttpControllers();
 builder.Services.FinalizeConquerorRegistrations();
 ```
 
-In `PrintIntegerCommand.cs` create a command that prints its parameter to stdout and echos it back to the client.
+In [IncrementCounterByCommand.cs](recipes/quickstart/IncrementCounterByCommand.cs) create a command that increments a named counter by a given amount (for demonstration purposes the counter is stored in an environment variable instead of a database).
 
 ```csharp
 using Conqueror;
 
 namespace Quickstart;
 
-[HttpCommand]
-public sealed record PrintIntegerCommand(int Parameter);
+[HttpCommand(Version = "v1")]
+public sealed record IncrementCounterByCommand(string CounterName, int IncrementBy);
 
-public sealed record PrintIntegerCommandResponse(int Parameter);
+public sealed record IncrementCounterByCommandResponse(int NewCounterValue);
 
-public interface IPrintIntegerCommandHandler : ICommandHandler<PrintIntegerCommand,
-                                                               PrintIntegerCommandResponse>
+public interface IIncrementCounterByCommandHandler
+    : ICommandHandler<IncrementCounterByCommand, IncrementCounterByCommandResponse>
 {
 }
 
-public sealed class PrintIntegerCommandHandler : IPrintIntegerCommandHandler
+internal sealed class IncrementCounterByCommandHandler
+    : IIncrementCounterByCommandHandler, IConfigureCommandPipeline
 {
-    public Task<PrintIntegerCommandResponse> ExecuteCommand(PrintIntegerCommand command,
-                                                            CancellationToken cancellationToken = default)
+    // add logging to the command pipeline and configure the pre-execution log
+    // level (only for demonstration purposes since the default is the same)
+    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+        pipeline.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Information);
+
+    public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command,
+                                                                        CancellationToken cancellationToken = default)
     {
-        Console.WriteLine($"Got command parameter {command.Parameter}");
-        return Task.FromResult(new PrintIntegerCommandResponse(command.Parameter));
+        // simulate an asynchronous operation
+        await Task.CompletedTask;
+
+        var envVariableName = $"QUICKSTART_COUNTERS_{command.CounterName}";
+        var counterValue = int.Parse(Environment.GetEnvironmentVariable(envVariableName) ?? "0");
+        var newCounterValue = counterValue + command.IncrementBy;
+        Environment.SetEnvironmentVariable(envVariableName, newCounterValue.ToString());
+        return new(newCounterValue);
     }
 }
 ```
 
-In `AddTwoIntegersQuery.cs` create a query that takes two integer parameters and returns their sum.
+In [GetCounterValueQuery.cs](recipes/quickstart/GetCounterValueQuery.cs) create a query that returns the value of a counter with the given name.
 
 ```csharp
 using Conqueror;
 
 namespace Quickstart;
 
-[HttpQuery]
-public sealed record AddTwoIntegersQuery(int Parameter1, int Parameter2);
+[HttpQuery(Version = "v1")]
+public sealed record GetCounterValueQuery(string CounterName);
 
-public sealed record AddTwoIntegersQueryResponse(int Sum);
+public sealed record GetCounterValueQueryResponse(int CounterValue);
 
-public interface IAddTwoIntegersQueryHandler : IQueryHandler<AddTwoIntegersQuery,
-                                                             AddTwoIntegersQueryResponse>
+public interface IGetCounterValueQueryHandler
+    : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>
 {
 }
 
-public sealed class AddTwoIntegersQueryHandler : IAddTwoIntegersQueryHandler
+internal sealed class GetCounterValueQueryHandler
+    : IGetCounterValueQueryHandler, IConfigureQueryPipeline
 {
-    public Task<AddTwoIntegersQueryResponse> ExecuteQuery(AddTwoIntegersQuery query,
-                                                          CancellationToken cancellationToken = default)
+    // add logging to the query pipeline and configure the pre-execution log
+    // level (only for demonstration purposes since the default is the same)
+    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
+        pipeline.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Information);
+
+    public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query,
+                                                                 CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(new AddTwoIntegersQueryResponse(query.Parameter1 + query.Parameter2));
+        // simulate an asynchronous operation
+        await Task.CompletedTask;
+
+        var envVariableName = $"QUICKSTART_COUNTERS_{query.CounterName}";
+        var counterValue = int.Parse(Environment.GetEnvironmentVariable(envVariableName) ?? "0");
+        return new(counterValue);
     }
 }
 ```
@@ -121,11 +150,24 @@ public sealed class AddTwoIntegersQueryHandler : IAddTwoIntegersQueryHandler
 Now launch your app and you can call the command and query via HTTP.
 
 ```sh
-curl http://localhost:5000/api/commands/printInteger --data '{"parameter": 10}' -H 'Content-Type: application/json'
-# in your server console you will see "Got command parameter 10"
+curl http://localhost:5000/api/v1/commands/incrementCounterBy --data '{"counterName":"test","incrementBy":2}' -H 'Content-Type: application/json'
+# prints {"newCounterValue":2}
 
-curl http://localhost:5000/api/queries/addTwoIntegers?parameter1=10\&parameter2=5 
-# prints {"sum":15}
+curl http://localhost:5000/api/v1/queries/getCounterValue?counterName=test
+# prints {"counterValue":2}
+```
+
+Due the logging middleware we added you will see output similar to this in the server console.
+
+```log
+info: Quickstart.IncrementCounterByCommand[0]
+      Executing command with payload {"CounterName":"test","IncrementBy":2} (Command ID: cb9a2563f1fc4965acf1a5f972532e81, Trace ID: fe675fdbf9a987620af31a474bf7ae8c)
+info: Quickstart.IncrementCounterByCommand[0]
+      Executed command and got response {"NewCounterValue":2} in 4.2150ms (Command ID: cb9a2563f1fc4965acf1a5f972532e81, Trace ID: fe675fdbf9a987620af31a474bf7ae8c)
+info: Quickstart.GetCounterValueQuery[0]
+      Executing query with payload {"CounterName":"test"} (Query ID: 802ddda5d6b14a68a725a27a1c0f7a1d, Trace ID: 8fdfa04f8c45ae3174044be0001a6e96)
+info: Quickstart.GetCounterValueQuery[0]
+      Executed query and got response {"CounterValue":2} in 2.9833ms (Query ID: 802ddda5d6b14a68a725a27a1c0f7a1d, Trace ID: 8fdfa04f8c45ae3174044be0001a6e96)
 ```
 
 If you have swagger UI enabled, it will show the new command and query and they can be called from there.
