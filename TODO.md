@@ -30,18 +30,18 @@ This file contains all the open points for extensions and improvements to the **
 ### CQS middleware
 
 - [ ] create projects for common middlewares, e.g.
-  - [ ] `Conqueror.CQS.Middleware.Logging`
   - [ ] `Conqueror.CQS.Middleware.Tracing`
   - [ ] `Conqueror.CQS.Middleware.Timeout`
   - [ ] `Conqueror.CQS.Middleware.Retry`
 
 ### CQS ASP Core
 
-- [ ] add `string? VersionString` parameter to command and query attribute
-- [ ] add `uint? DefaultCommandVersion` etc. to client and server options
+- [ ] in http transport factory that takes http client, throw if client's base address isn't set
+- [ ] add `string? DefaultCommandVersion` etc. to client and server options
 - [ ] add client option for setting custom HTTP headers (e.g. for authentication)
 - [ ] add recipe for customizing OpenAPI specification with swashbuckle
 - [ ] instruct users to place their custom path conventions into their contracts module to allow both server and client to use the same conventions
+- [ ] provide delegating HTTP client handler that takes care of conqueror context propagation to llow custom http clients to be used
 - [ ] allow registering commands and queries via DI extension instead of attribute
 
 ## Eventing
