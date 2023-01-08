@@ -20,7 +20,7 @@ namespace Conqueror
             // we cache the result
             return PathCache.GetOrAdd(commandType, t =>
             {
-                var versionPart = attribute.Version > 0 ? $"v{attribute.Version}/" : string.Empty;
+                var versionPart = attribute.Version is null ? string.Empty : $"{attribute.Version}/";
                 var namePart = StripSuffixRegex.Replace(t.Name, string.Empty);
                 return $"/api/{versionPart}commands/{namePart}";
             });

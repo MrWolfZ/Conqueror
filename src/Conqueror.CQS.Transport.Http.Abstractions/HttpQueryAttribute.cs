@@ -10,10 +10,9 @@ namespace Conqueror
         public string? Path { get; set; }
 
         /// <summary>
-        ///     The version of this query. It is used in the default path convention. A value of 0 (default) is treated as the absence of a version.
-        ///     Note that this property cannot be nullable due to compiler limitations.
+        ///     The version of this query. It is used in the default path convention.
         /// </summary>
-        public uint Version { get; set; }
+        public string? Version { get; set; }
 
         /// <summary>
         ///     The operation ID of this query in API descriptions (which is used in e.g. OpenAPI specifications).

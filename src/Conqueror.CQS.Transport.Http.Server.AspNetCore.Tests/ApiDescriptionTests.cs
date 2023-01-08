@@ -429,7 +429,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public int Payload { get; init; }
         }
 
-        [HttpQuery(Version = 2)]
+        [HttpQuery(Version = "v2")]
         public sealed record TestQueryWithVersion
         {
             public int Payload { get; init; }
@@ -468,7 +468,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public int Payload { get; init; }
         }
 
-        [HttpQuery(UsePost = true, Version = 2)]
+        [HttpQuery(UsePost = true, Version = "v2")]
         public sealed record TestPostQueryWithVersion
         {
             public int Payload { get; init; }
@@ -694,7 +694,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public int Payload { get; init; }
         }
 
-        [HttpCommand(Version = 2)]
+        [HttpCommand(Version = "v2")]
         public sealed record TestCommandWithVersion
         {
             public int Payload { get; init; }

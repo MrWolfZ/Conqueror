@@ -11,7 +11,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
         public string Path { get; init; } = default!;
 
-        public uint Version { get; init; }
+        public string? Version { get; init; }
 
         public string Name { get; init; } = default!;
 
@@ -19,7 +19,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 
         public string ControllerName { get; init; } = default!;
 
-        public string? ApiGroupName { get; init; } = default!;
+        public string? ApiGroupName { get; init; }
 
         public Type RequestType { get; init; } = default!;
 

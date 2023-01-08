@@ -270,7 +270,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public int Payload { get; init; }
         }
 
-        [HttpCommand(Version = 2)]
+        [HttpCommand(Version = "v2")]
         public sealed record TestCommandWithVersion
         {
             public int Payload { get; init; }
