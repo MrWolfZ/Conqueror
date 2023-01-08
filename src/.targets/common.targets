@@ -20,4 +20,10 @@
         <DependencyInjectionVersion Condition="'$(TargetFramework)' == 'net7.0'">7.0.0</DependencyInjectionVersion>
     </PropertyGroup>
 
+    <!-- when we clean the projects we want all output directories to be deleted to prevent erroneous remnants -->
+    <Target Name="PostClean" AfterTargets="Clean">
+        <RemoveDir Directories="$(BaseIntermediateOutputPath)" /><!-- obj -->
+        <RemoveDir Directories="$(BaseOutputPath)" /><!-- bin -->
+    </Target>
+
 </Project>
