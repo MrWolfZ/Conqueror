@@ -13,34 +13,59 @@ See our [quickstart](#quickstart) or [example projects](examples) if you want to
 
 ## Libraries
 
-**Conqueror.CQS (_stable_)**: Split your business processes into simple-to-maintain and easy-to-test pieces of code using the [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) pattern. Handle cross-cutting concerns like logging, validation, authorization etc. using configurable middlewares. Keep your applications scalable by moving commands and queries from a modular monolith to a distributed application with minimal friction.
+### **Conqueror.CQS**
+
+[![status-stable](https://img.shields.io/badge/status-stable-brightgreen)](https://www.nuget.org/packages/Conqueror.CQS/)
+
+Split your business processes into simple-to-maintain and easy-to-test pieces of code using the [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) pattern. Handle cross-cutting concerns like logging, validation, authorization etc. using configurable middlewares. Keep your applications scalable by moving commands and queries from a modular monolith to a distributed application with minimal friction.
 
 Head over to our [CQS recipes](#cqs-introduction) for more guidance on how to use this library.
 
 [![NuGet version (Conqueror.CQS)](https://img.shields.io/nuget/v/Conqueror.CQS?label=Conqueror.CQS)](https://www.nuget.org/packages/Conqueror.CQS/)
 [![NuGet version (Conqueror.CQS.Abstractions)](https://img.shields.io/nuget/v/Conqueror.CQS.Abstractions?label=Conqueror.CQS.Abstractions)](https://www.nuget.org/packages/Conqueror.CQS.Abstractions/)
 [![NuGet version (Conqueror.CQS.Analyzers)](https://img.shields.io/nuget/v/Conqueror.CQS.Analyzers?label=Conqueror.CQS.Analyzers)](https://www.nuget.org/packages/Conqueror.CQS.Analyzers/)
+
+**Middlewares:**
+
 [![NuGet version (Conqueror.CQS.Middleware.Logging)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Logging?label=Conqueror.CQS.Middleware.Logging)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Logging/)
+
+**Transports:**
+
 [![NuGet version (Conqueror.CQS.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Server.AspNetCore?label=Conqueror.CQS.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Server.AspNetCore/)
 [![NuGet version (Conqueror.CQS.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Client?label=Conqueror.CQS.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Client/)
 
-**Conqueror.Eventing (_experimental_)**: Decouple your application logic by using in-process event publishing using the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Handle cross-cutting concerns like logging, tracing, filtering etc. using configurable middlewares.
+### **Conqueror.Eventing**
+
+[![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Eventing/)
+
+Decouple your application logic by using in-process event publishing using the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Handle cross-cutting concerns like logging, tracing, filtering etc. using configurable middlewares. Keep your applications scalable by moving events from a modular monolith to a distributed application with minimal friction.
 
 Head over to our [eventing recipes](#eventing-introduction) for more guidance on how to use this library.
 
 [![NuGet version (Conqueror.Eventing)](https://img.shields.io/nuget/v/Conqueror.Eventing?label=Conqueror.Eventing)](https://www.nuget.org/packages/Conqueror.Eventing/)
 [![NuGet version (Conqueror.Eventing.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Eventing.Abstractions?label=Conqueror.Eventing.Abstractions)](https://www.nuget.org/packages/Conqueror.Eventing.Abstractions/)
 
-**Conqueror.Streaming.Interactive (_experimental_)**: Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace using a pull-based interactive approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
+### **Conqueror.Streaming.Interactive**
+
+[![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
+
+Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace using a pull-based interactive approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
 
 Head over to our [interactive streaming recipes](#interactive-streaming-introduction) for more guidance on how to use this library.
 
 [![NuGet version (Conqueror.Streaming.Interactive)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive?label=Conqueror.Streaming.Interactive)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
 [![NuGet version (Conqueror.Streaming.Interactive.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive.Abstractions?label=Conqueror.Streaming.Interactive.Abstractions)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive.Abstractions/)
+
+**Transports:**
+
 [![NuGet version (Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore?label=Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore/)
 [![NuGet version (Conqueror.Streaming.Interactive.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive.Transport.Http.Client?label=Conqueror.Streaming.Interactive.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive.Transport.Http.Client/)
 
-**Conqueror.Streaming.Reactive (_early prototype_)**: Allow your applications to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) for which they cannot control the frequency using a push-based reactive approach. Handle cross-cutting concerns like logging, throttling, filtering etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
+### **Conqueror.Streaming.Reactive**
+
+[![status-only-concept](https://img.shields.io/badge/status-only%20concept-red)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
+
+Allow your applications to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) for which they cannot control the frequency using a push-based reactive approach. Handle cross-cutting concerns like logging, throttling, filtering etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
 
 Head over to our [reactive streaming recipes](#reactive-streaming-introduction) for more guidance on how to use this library.
 
