@@ -96,7 +96,7 @@ namespace Conqueror.CQS.Middleware.Logging
     /// <summary>
     ///     The context passed to a <see cref="QueryLoggingMiddleware" />'s <see cref="QueryLoggingMiddlewareConfiguration.PreExecutionHook" />.
     /// </summary>
-    public sealed record QueryLoggingPreExecutionContext(ILogger Logger, LogLevel LogLevel, object Query, IServiceProvider ServiceProvider)
+    public sealed record QueryLoggingPreExecutionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
@@ -108,6 +108,16 @@ namespace Conqueror.CQS.Middleware.Logging
         ///     The level at which the message will be logged.
         /// </summary>
         public LogLevel LogLevel { get; init; } = LogLevel;
+
+        /// <summary>
+        ///     The ID of the query that is being logged.
+        /// </summary>
+        public string QueryId { get; } = QueryId;
+
+        /// <summary>
+        ///     The trace ID of the Conqueror operation context.
+        /// </summary>
+        public string TraceId { get; } = TraceId;
 
         /// <summary>
         ///     The query that is being logged.
@@ -123,7 +133,7 @@ namespace Conqueror.CQS.Middleware.Logging
     /// <summary>
     ///     The context passed to a <see cref="QueryLoggingMiddleware" />'s <see cref="QueryLoggingMiddlewareConfiguration.PostExecutionHook" />.
     /// </summary>
-    public sealed record QueryLoggingPostExecutionContext(ILogger Logger, LogLevel LogLevel, object Query, object? Response, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+    public sealed record QueryLoggingPostExecutionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, object? Response, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
@@ -135,6 +145,16 @@ namespace Conqueror.CQS.Middleware.Logging
         ///     The level at which the message will be logged.
         /// </summary>
         public LogLevel LogLevel { get; init; } = LogLevel;
+
+        /// <summary>
+        ///     The ID of the query that is being logged.
+        /// </summary>
+        public string QueryId { get; } = QueryId;
+
+        /// <summary>
+        ///     The trace ID of the Conqueror operation context.
+        /// </summary>
+        public string TraceId { get; } = TraceId;
 
         /// <summary>
         ///     The query that is being logged.
@@ -160,7 +180,7 @@ namespace Conqueror.CQS.Middleware.Logging
     /// <summary>
     ///     The context passed to a <see cref="QueryLoggingMiddleware" />'s <see cref="QueryLoggingMiddlewareConfiguration.ExceptionHook" />.
     /// </summary>
-    public sealed record QueryLoggingExceptionContext(ILogger Logger, LogLevel LogLevel, object Query, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+    public sealed record QueryLoggingExceptionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
@@ -172,6 +192,16 @@ namespace Conqueror.CQS.Middleware.Logging
         ///     The level at which the message will be logged.
         /// </summary>
         public LogLevel LogLevel { get; init; } = LogLevel;
+
+        /// <summary>
+        ///     The ID of the query that is being logged.
+        /// </summary>
+        public string QueryId { get; } = QueryId;
+
+        /// <summary>
+        ///     The trace ID of the Conqueror operation context.
+        /// </summary>
+        public string TraceId { get; } = TraceId;
 
         /// <summary>
         ///     The query that is being logged.

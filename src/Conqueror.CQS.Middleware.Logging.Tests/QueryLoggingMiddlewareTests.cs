@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace Conqueror.CQS.Middleware.Logging.Tests
@@ -16,7 +17,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntry(LogLevel.Information, $"Executing query with payload {{\"Payload\":{testQuery.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}");
         }
 
         [Test]
@@ -26,7 +27,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await HandlerWithoutPayload.ExecuteQuery(testQuery);
 
-            AssertLogEntry(LogLevel.Information, "Executing query");
+            AssertPreExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -34,9 +35,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         {
             var testQuery = new TestQuery(10);
 
-            var response = await Handler.ExecuteQuery(testQuery);
+            _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntryContains(LogLevel.Information, $"Executed query and got response {{\"ResponsePayload\":{response.ResponsePayload}}} in");
+            AssertPostExecutionLogMessage(LogLevel.Information, "{\"ResponsePayload\":10}");
         }
 
         [Test]
@@ -52,6 +53,8 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
             AssertLogEntryContains(LogLevel.Error, "An exception occurred while executing query");
             AssertLogEntryContains(LogLevel.Error, exception.Message);
             AssertLogEntryContains(LogLevel.Error, exception.StackTrace![..exception.StackTrace!.IndexOf("---", StringComparison.Ordinal)]);
+            AssertLogEntryContains(LogLevel.Error, "Query ID: ");
+            AssertLogEntryContains(LogLevel.Error, "Trace ID: ");
         }
 
         [Test]
@@ -63,7 +66,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntry(LogLevel.Debug, $"Executing query with payload {{\"Payload\":{testQuery.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Debug, "{\"Payload\":10}");
         }
 
         [Test]
@@ -75,7 +78,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await HandlerWithoutPayload.ExecuteQuery(testQuery);
 
-            AssertLogEntry(LogLevel.Debug, "Executing query");
+            AssertPreExecutionLogMessage(LogLevel.Debug);
         }
 
         [Test]
@@ -85,9 +88,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             configurePipeline = b => b.UseLogging(o => o.PostExecutionLogLevel = LogLevel.Debug);
 
-            var response = await Handler.ExecuteQuery(testQuery);
+            _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntryContains(LogLevel.Debug, $"Executed query and got response {{\"ResponsePayload\":{response.ResponsePayload}}} in");
+            AssertPostExecutionLogMessage(LogLevel.Debug, "{\"ResponsePayload\":10}");
         }
 
         [Test]
@@ -105,6 +108,8 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
             AssertLogEntryContains(LogLevel.Critical, "An exception occurred while executing query");
             AssertLogEntryContains(LogLevel.Critical, exception.Message);
             AssertLogEntryContains(LogLevel.Critical, exception.StackTrace![..exception.StackTrace!.IndexOf("---", StringComparison.Ordinal)]);
+            AssertLogEntryContains(LogLevel.Critical, "Query ID: ");
+            AssertLogEntryContains(LogLevel.Critical, "Trace ID: ");
         }
 
         [Test]
@@ -116,7 +121,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntry(LogLevel.Information, "Executing query");
+            AssertPreExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -128,7 +133,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await HandlerWithoutPayload.ExecuteQuery(testQuery);
 
-            AssertLogEntry(LogLevel.Information, "Executing query");
+            AssertPreExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -140,7 +145,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntryContains(LogLevel.Information, "Executed query in");
+            AssertPostExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -152,7 +157,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntry($"Custom{testQuery.GetType().Name}", LogLevel.Information, $"Executing query with payload {{\"Payload\":{testQuery.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", $"Custom{testQuery.GetType().Name}");
         }
 
         [Test]
@@ -164,7 +169,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntry(testQuery.GetType().FullName!.Replace("+", "."), LogLevel.Information, $"Executing query with payload {{\"Payload\":{testQuery.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", testQuery.GetType().FullName!.Replace("+", "."));
         }
 
         [Test]
@@ -172,6 +177,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         {
             var testQuery = new TestQuery(10);
             QueryLoggingPreExecutionContext? seenContext = null;
+
+            var queryId = "test-query-id";
+            var traceId = "test-trace-id";
+
+            Resolve<IQueryContextAccessor>().SetExternalQueryId(queryId);
+            Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
             using var scope = Host.Services.CreateScope();
 
@@ -194,10 +205,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             Assert.That(seenContext, Is.Not.Null);
             Assert.AreEqual(LogLevel.Debug, seenContext?.LogLevel);
+            Assert.AreSame(queryId, seenContext?.QueryId);
+            Assert.AreSame(traceId, seenContext?.TraceId);
             Assert.AreSame(testQuery, seenContext?.Query);
             Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
 
-            AssertLogEntry(testQuery.GetType().FullName!.Replace("+", "."), LogLevel.Critical, "validation");
+            AssertLogEntryContains(LogLevel.Critical, "validation", testQuery.GetType().FullName!.Replace("+", "."));
         }
 
         [Test]
@@ -209,7 +222,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertNoLogEntry(LogLevel.Information, $"Executing query with payload {{\"Payload\":{testQuery.Payload}}}");
+            AssertNoLogEntryContains(LogLevel.Information, "Executing query");
         }
 
         [Test]
@@ -217,6 +230,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         {
             var testQuery = new TestQuery(10);
             QueryLoggingPostExecutionContext? seenContext = null;
+
+            var queryId = "test-query-id";
+            var traceId = "test-trace-id";
+
+            Resolve<IQueryContextAccessor>().SetExternalQueryId(queryId);
+            Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
             using var scope = Host.Services.CreateScope();
 
@@ -239,12 +258,14 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             Assert.That(seenContext, Is.Not.Null);
             Assert.AreEqual(LogLevel.Debug, seenContext?.LogLevel);
+            Assert.AreSame(queryId, seenContext?.QueryId);
+            Assert.AreSame(traceId, seenContext?.TraceId);
             Assert.AreSame(testQuery, seenContext?.Query);
             Assert.AreSame(response, seenContext?.Response);
             Assert.IsTrue(seenContext?.ElapsedTime.Ticks > 0);
             Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
 
-            AssertLogEntry(testQuery.GetType().FullName!.Replace("+", "."), LogLevel.Critical, "validation");
+            AssertLogEntryContains(LogLevel.Critical, "validation", testQuery.GetType().FullName!.Replace("+", "."));
         }
 
         [Test]
@@ -254,9 +275,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             configurePipeline = b => b.UseLogging(o => o.PostExecutionHook = _ => false);
 
-            var response = await Handler.ExecuteQuery(testQuery);
+            _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertNoLogEntryContains(LogLevel.Information, $"Executed query and got response {{\"ResponsePayload\":{response.ResponsePayload}}} in");
+            AssertNoLogEntryContains(LogLevel.Information, "Executed query");
         }
 
         [Test]
@@ -265,6 +286,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
             var testQuery = new TestQuery(10);
             var exception = new InvalidOperationException("test exception message");
             QueryLoggingExceptionContext? seenContext = null;
+
+            var queryId = "test-query-id";
+            var traceId = "test-trace-id";
+
+            Resolve<IQueryContextAccessor>().SetExternalQueryId(queryId);
+            Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
             using var scope = Host.Services.CreateScope();
 
@@ -289,12 +316,14 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             Assert.That(seenContext, Is.Not.Null);
             Assert.AreEqual(LogLevel.Critical, seenContext?.LogLevel);
+            Assert.AreSame(queryId, seenContext?.QueryId);
+            Assert.AreSame(traceId, seenContext?.TraceId);
             Assert.AreSame(testQuery, seenContext?.Query);
             Assert.AreSame(exception, seenContext?.Exception);
             Assert.IsTrue(seenContext?.ElapsedTime.Ticks > 0);
             Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
 
-            AssertLogEntry(testQuery.GetType().FullName!.Replace("+", "."), LogLevel.Trace, "validation");
+            AssertLogEntryContains(LogLevel.Trace, "validation", testQuery.GetType().FullName!.Replace("+", "."));
         }
 
         [Test]
@@ -321,7 +350,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntry(LogLevel.Information, $"Executing query with payload {{\"payload\":{testQuery.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Information, "{\"payload\":10}");
         }
 
         [Test]
@@ -331,9 +360,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             configurePipeline = b => b.UseLogging(o => o.JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
-            var response = await Handler.ExecuteQuery(testQuery);
+            _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntryContains(LogLevel.Information, $"Executed query and got response {{\"responsePayload\":{response.ResponsePayload}}} in");
+            AssertPostExecutionLogMessage(LogLevel.Information, "{\"responsePayload\":10}");
         }
 
         [Test]
@@ -371,6 +400,34 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         }
 
         [Test]
+        public async Task GivenTraceId_LogsCorrectTraceId()
+        {
+            var testQuery = new TestQuery(10);
+
+            var traceId = "test-trace-id";
+
+            Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
+
+            _ = await Handler.ExecuteQuery(testQuery);
+
+            AssertLogEntryContains(LogLevel.Information, $"Trace ID: {traceId}", nrOfTimes: 2);
+        }
+
+        [Test]
+        public async Task GivenQueryId_LogsCorrectTraceId()
+        {
+            var testQuery = new TestQuery(10);
+
+            var queryId = "test-query-id";
+
+            Resolve<IQueryContextAccessor>().SetExternalQueryId(queryId);
+
+            _ = await Handler.ExecuteQuery(testQuery);
+
+            AssertLogEntryContains(LogLevel.Information, $"Query ID: {queryId}", nrOfTimes: 2);
+        }
+
+        [Test]
         public async Task GivenPipelineWithLoggingMiddleware_MiddlewareCanBeConfigured()
         {
             var testQuery = new TestQuery(10);
@@ -379,7 +436,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertLogEntry(LogLevel.Debug, $"Executing query with payload {{\"Payload\":{testQuery.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Debug, "{\"Payload\":10}");
         }
 
         [Test]
@@ -391,7 +448,33 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteQuery(testQuery);
 
-            AssertNoLogEntry(LogLevel.Debug, $"Executing query with payload {{\"Payload\":{testQuery.Payload}}}");
+            AssertNoLogEntryContains(LogLevel.Debug, "Executing query");
+        }
+
+        private void AssertPreExecutionLogMessage(LogLevel logLevel, string? expectedSerializedQuery = null, string? loggerName = null)
+        {
+            if (expectedSerializedQuery is null)
+            {
+                var regexWithoutPayload = new Regex(@"Executing query \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+                AssertLogEntryMatches(logLevel, regexWithoutPayload, loggerName);
+                return;
+            }
+
+            var regexWithPayload = new Regex(@"Executing query with payload " + Regex.Escape(expectedSerializedQuery) + @" \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+            AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
+        }
+
+        private void AssertPostExecutionLogMessage(LogLevel logLevel, string? expectedSerializedResponse = null, string? loggerName = null)
+        {
+            if (expectedSerializedResponse is null)
+            {
+                var regexWithoutPayload = new Regex(@"Executed query in [0-9.]+ms \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+                AssertLogEntryMatches(logLevel, regexWithoutPayload, loggerName);
+                return;
+            }
+
+            var regexWithPayload = new Regex(@"Executed query and got response " + Regex.Escape(expectedSerializedResponse) + @" in [0-9.]+ms \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+            AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
         }
 
         private IQueryHandler<TestQuery, TestQueryResponse> Handler => Resolve<IQueryHandler<TestQuery, TestQueryResponse>>();

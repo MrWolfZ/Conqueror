@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -74,31 +75,28 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         protected T Resolve<T>()
             where T : notnull => Host.Services.GetRequiredService<T>();
 
-        protected void AssertLogEntry(LogLevel logLevel, string message)
+        protected void AssertLogEntryMatches(LogLevel logLevel, Regex regex, string? categoryName = null, int nrOfTimes = 1)
         {
-            Assert.That(LogSink.LogEntries, Has.Exactly(1).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && t.Message == message));
+            Assert.That(LogSink.LogEntries, Has.Exactly(nrOfTimes).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => (categoryName is null || t.CategoryName == categoryName) &&
+                                                                                                                                          t.LogLevel == logLevel &&
+                                                                                                                                          regex.IsMatch(t.Message)));
         }
 
-        protected void AssertLogEntry(string categoryName, LogLevel logLevel, string message)
+        protected void AssertLogEntryContains(LogLevel logLevel, string fragment, string? categoryName = null, int nrOfTimes = 1)
         {
-            Assert.That(LogSink.LogEntries, Has.Exactly(1).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.CategoryName == categoryName &&
-                                                                                                                                  t.LogLevel == logLevel &&
-                                                                                                                                  t.Message == message));
+            Assert.That(LogSink.LogEntries, Has.Exactly(nrOfTimes).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => (categoryName is null || t.CategoryName == categoryName) &&
+                                                                                                                                          t.LogLevel == logLevel &&
+                                                                                                                                          t.Message.Contains(fragment)));
         }
 
-        protected void AssertNoLogEntry(LogLevel logLevel, string message)
+        protected void AssertNoLogEntryMatches(LogLevel logLevel, Regex regex)
         {
-            Assert.That(LogSink.LogEntries, Has.Exactly(0).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && t.Message == message));
+            Assert.That(LogSink.LogEntries, Has.Exactly(0).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && regex.IsMatch(t.Message)));
         }
 
-        protected void AssertLogEntryContains(LogLevel logLevel, string message)
+        protected void AssertNoLogEntryContains(LogLevel logLevel, string fragment)
         {
-            Assert.That(LogSink.LogEntries, Has.Exactly(1).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && t.Message.Contains(message)));
-        }
-
-        protected void AssertNoLogEntryContains(LogLevel logLevel, string message)
-        {
-            Assert.That(LogSink.LogEntries, Has.Exactly(0).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && t.Message.Contains(message)));
+            Assert.That(LogSink.LogEntries, Has.Exactly(0).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && t.Message.Contains(fragment)));
         }
     }
 }

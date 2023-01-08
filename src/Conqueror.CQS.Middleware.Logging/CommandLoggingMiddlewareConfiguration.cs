@@ -96,101 +96,131 @@ namespace Conqueror.CQS.Middleware.Logging
     /// <summary>
     ///     The context passed to a <see cref="CommandLoggingMiddleware" />'s <see cref="CommandLoggingMiddlewareConfiguration.PreExecutionHook" />.
     /// </summary>
-    public sealed record CommandLoggingPreExecutionContext(ILogger Logger, LogLevel LogLevel, object Command, IServiceProvider ServiceProvider)
+    public sealed record CommandLoggingPreExecutionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
         ///     yourself.
         /// </summary>
-        public ILogger Logger { get; init; } = Logger;
+        public ILogger Logger { get; } = Logger;
 
         /// <summary>
         ///     The level at which the message will be logged.
         /// </summary>
-        public LogLevel LogLevel { get; init; } = LogLevel;
+        public LogLevel LogLevel { get; } = LogLevel;
+
+        /// <summary>
+        ///     The ID of the command that is being logged.
+        /// </summary>
+        public string CommandId { get; } = CommandId;
+
+        /// <summary>
+        ///     The trace ID of the Conqueror operation context.
+        /// </summary>
+        public string TraceId { get; } = TraceId;
 
         /// <summary>
         ///     The command that is being logged.
         /// </summary>
-        public object Command { get; init; } = Command;
+        public object Command { get; } = Command;
 
         /// <summary>
         ///     The service provider for the scope in which the command is being executed.
         /// </summary>
-        public IServiceProvider ServiceProvider { get; init; } = ServiceProvider;
+        public IServiceProvider ServiceProvider { get; } = ServiceProvider;
     }
 
     /// <summary>
     ///     The context passed to a <see cref="CommandLoggingMiddleware" />'s <see cref="CommandLoggingMiddlewareConfiguration.PostExecutionHook" />.
     /// </summary>
-    public sealed record CommandLoggingPostExecutionContext(ILogger Logger, LogLevel LogLevel, object Command, object? Response, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+    public sealed record CommandLoggingPostExecutionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, object? Response, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
         ///     yourself.
         /// </summary>
-        public ILogger Logger { get; init; } = Logger;
+        public ILogger Logger { get; } = Logger;
 
         /// <summary>
         ///     The level at which the message will be logged.
         /// </summary>
-        public LogLevel LogLevel { get; init; } = LogLevel;
+        public LogLevel LogLevel { get; } = LogLevel;
+
+        /// <summary>
+        ///     The ID of the command that is being logged.
+        /// </summary>
+        public string CommandId { get; } = CommandId;
+
+        /// <summary>
+        ///     The trace ID of the Conqueror operation context.
+        /// </summary>
+        public string TraceId { get; } = TraceId;
 
         /// <summary>
         ///     The command that is being logged.
         /// </summary>
-        public object Command { get; init; } = Command;
+        public object Command { get; } = Command;
 
         /// <summary>
         ///     The response that is being logged (is <c>null</c> if there is no response).
         /// </summary>
-        public object? Response { get; init; } = Response;
+        public object? Response { get; } = Response;
 
         /// <summary>
         ///     The time which has elapsed while executing the command.
         /// </summary>
-        public TimeSpan ElapsedTime { get; init; } = ElapsedTime;
+        public TimeSpan ElapsedTime { get; } = ElapsedTime;
 
         /// <summary>
         ///     The service provider for the scope in which the command is being executed.
         /// </summary>
-        public IServiceProvider ServiceProvider { get; init; } = ServiceProvider;
+        public IServiceProvider ServiceProvider { get; } = ServiceProvider;
     }
 
     /// <summary>
     ///     The context passed to a <see cref="CommandLoggingMiddleware" />'s <see cref="CommandLoggingMiddlewareConfiguration.ExceptionHook" />.
     /// </summary>
-    public sealed record CommandLoggingExceptionContext(ILogger Logger, LogLevel LogLevel, object Command, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+    public sealed record CommandLoggingExceptionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
         ///     yourself.
         /// </summary>
-        public ILogger Logger { get; init; } = Logger;
+        public ILogger Logger { get; } = Logger;
 
         /// <summary>
         ///     The level at which the message will be logged.
         /// </summary>
-        public LogLevel LogLevel { get; init; } = LogLevel;
+        public LogLevel LogLevel { get; } = LogLevel;
+
+        /// <summary>
+        ///     The ID of the command that is being logged.
+        /// </summary>
+        public string CommandId { get; } = CommandId;
+
+        /// <summary>
+        ///     The trace ID of the Conqueror operation context.
+        /// </summary>
+        public string TraceId { get; } = TraceId;
 
         /// <summary>
         ///     The command that is being logged.
         /// </summary>
-        public object Command { get; init; } = Command;
+        public object Command { get; } = Command;
 
         /// <summary>
         ///     The exception which occurred.
         /// </summary>
-        public Exception Exception { get; init; } = Exception;
+        public Exception Exception { get; } = Exception;
 
         /// <summary>
         ///     The time which has elapsed while executing the command.
         /// </summary>
-        public TimeSpan ElapsedTime { get; init; } = ElapsedTime;
+        public TimeSpan ElapsedTime { get; } = ElapsedTime;
 
         /// <summary>
         ///     The service provider for the scope in which the command is being executed.
         /// </summary>
-        public IServiceProvider ServiceProvider { get; init; } = ServiceProvider;
+        public IServiceProvider ServiceProvider { get; } = ServiceProvider;
     }
 }

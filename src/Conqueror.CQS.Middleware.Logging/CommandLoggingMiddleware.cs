@@ -22,90 +22,172 @@ namespace Conqueror.CQS.Middleware.Logging
         public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, CommandLoggingMiddlewareConfiguration> ctx)
             where TCommand : class
         {
-            var loggerFactory = ctx.ServiceProvider.GetRequiredService<ILoggerFactory>();
-            ILogger logger;
+            var logger = GetLogger(ctx);
 
-            if (ctx.Configuration.LoggerNameFactory?.Invoke(ctx.Command) is { } loggerName)
-            {
-                logger = loggerFactory.CreateLogger(loggerName);
-            }
-            else
-            {
-                logger = loggerFactory.CreateLogger<TCommand>();
-            }
+            var commandId = ctx.ServiceProvider.GetRequiredService<ICommandContextAccessor>().CommandContext!.CommandId;
+            var traceId = ctx.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.TraceId;
 
             var sw = Stopwatch.StartNew();
 
             try
             {
-                var shouldLogPreExecution = true;
-
-                if (ctx.Configuration.PreExecutionHook is { } preExecutionHook)
-                {
-                    shouldLogPreExecution = preExecutionHook(new(logger, ctx.Configuration.PreExecutionLogLevel, ctx.Command, ctx.ServiceProvider));
-                }
-
-                // check if the log level is enabled so that we can skip the JSON serialization for performance
-                if (shouldLogPreExecution && logger.IsEnabled(ctx.Configuration.PreExecutionLogLevel))
-                {
-                    if (ctx.Configuration.OmitJsonSerializedCommandPayload || !ctx.Command.GetType().GetProperties().Any())
-                    {
-                        logger.Log(ctx.Configuration.PreExecutionLogLevel, "Executing command");
-                    }
-                    else
-                    {
-                        logger.Log(ctx.Configuration.PreExecutionLogLevel, "Executing command with payload {CommandPayload}", Serialize(ctx.Command, ctx.Configuration.JsonSerializerOptions));
-                    }
-                }
+                PreExecution(logger, commandId, traceId, ctx);
 
                 var response = await ctx.Next(ctx.Command, ctx.CancellationToken);
 
-                var elapsedTime = sw.Elapsed;
-
-                var shouldLogPostExecution = true;
-
-                if (ctx.Configuration.PostExecutionHook is { } postExecutionHook)
-                {
-                    shouldLogPostExecution = postExecutionHook(new(logger, ctx.Configuration.PostExecutionLogLevel, ctx.Command, response, elapsedTime, ctx.ServiceProvider));
-                }
-
-                if (shouldLogPostExecution && logger.IsEnabled(ctx.Configuration.PostExecutionLogLevel))
-                {
-                    if (ctx.Configuration.OmitJsonSerializedResponsePayload || ctx.HasUnitResponse)
-                    {
-                        logger.Log(ctx.Configuration.PostExecutionLogLevel, "Executed command in {ResponseLatency:0.0000}ms", elapsedTime.TotalMilliseconds);
-                    }
-                    else
-                    {
-                        logger.Log(ctx.Configuration.PostExecutionLogLevel,
-                                   "Executed command and got response {ResponsePayload} in {ResponseLatency:0.0000}ms",
-                                   Serialize(response, ctx.Configuration.JsonSerializerOptions),
-                                   elapsedTime.TotalMilliseconds);
-                    }
-                }
+                PostExecution(logger, commandId, traceId, response, sw.Elapsed, ctx);
 
                 return response;
             }
             catch (Exception e)
             {
-                var elapsedTime = sw.Elapsed;
-
-                var shouldLogException = true;
-
-                if (ctx.Configuration.ExceptionHook is { } exceptionHook)
-                {
-                    shouldLogException = exceptionHook(new(logger, ctx.Configuration.ExceptionLogLevel, ctx.Command, e, elapsedTime, ctx.ServiceProvider));
-                }
-
-                if (shouldLogException && logger.IsEnabled(ctx.Configuration.ExceptionLogLevel))
-                {
-                    // ReSharper disable once TemplateIsNotCompileTimeConstantProblem (the exception is already included as metadata, so we just want the message
-                    // to include the full exception without adding it again as metadata)
-                    logger.Log(ctx.Configuration.ExceptionLogLevel, e, $"An exception occurred while executing command after {{ResponseLatency:0.0000}}ms\n{e}", elapsedTime.TotalMilliseconds);
-                }
+                OnException(logger, commandId, traceId, e, sw.Elapsed, ctx);
 
                 throw;
             }
+        }
+
+        private static void PreExecution<TCommand, TResponse>(ILogger logger,
+                                                              string commandId,
+                                                              string traceId,
+                                                              CommandMiddlewareContext<TCommand, TResponse, CommandLoggingMiddlewareConfiguration> ctx)
+            where TCommand : class
+        {
+            if (ctx.Configuration.PreExecutionHook is { } preExecutionHook)
+            {
+                var preExecutionContext = new CommandLoggingPreExecutionContext(logger, ctx.Configuration.PreExecutionLogLevel, commandId, traceId, ctx.Command, ctx.ServiceProvider);
+
+                if (!preExecutionHook(preExecutionContext))
+                {
+                    return;
+                }
+            }
+
+            // check if the log level is enabled so that we can skip the JSON serialization for performance
+            if (!logger.IsEnabled(ctx.Configuration.PreExecutionLogLevel))
+            {
+                return;
+            }
+
+            var hasPayload = ctx.Command.GetType().GetProperties().Any();
+            var shouldOmitPayload = ctx.Configuration.OmitJsonSerializedCommandPayload;
+
+            if (shouldOmitPayload || !hasPayload)
+            {
+                logger.Log(ctx.Configuration.PreExecutionLogLevel, "Executing command (Command ID: {CommandId}, Trace ID: {TraceId})", commandId, traceId);
+                return;
+            }
+
+            logger.Log(ctx.Configuration.PreExecutionLogLevel,
+                       "Executing command with payload {CommandPayload} (Command ID: {CommandId}, Trace ID: {TraceId})",
+                       Serialize(ctx.Command, ctx.Configuration.JsonSerializerOptions),
+                       commandId,
+                       traceId);
+        }
+
+        private static void PostExecution<TCommand, TResponse>(ILogger logger,
+                                                               string commandId,
+                                                               string traceId,
+                                                               object? response,
+                                                               TimeSpan elapsedTime,
+                                                               CommandMiddlewareContext<TCommand, TResponse, CommandLoggingMiddlewareConfiguration> ctx)
+            where TCommand : class
+        {
+            if (ctx.Configuration.PostExecutionHook is { } postExecutionHook)
+            {
+                var postExecutionContext = new CommandLoggingPostExecutionContext(logger,
+                                                                                  ctx.Configuration.PostExecutionLogLevel,
+                                                                                  commandId,
+                                                                                  traceId,
+                                                                                  ctx.Command,
+                                                                                  response,
+                                                                                  elapsedTime,
+                                                                                  ctx.ServiceProvider);
+
+                if (!postExecutionHook(postExecutionContext))
+                {
+                    return;
+                }
+            }
+
+            // check if the log level is enabled so that we can skip the JSON serialization for performance
+            if (!logger.IsEnabled(ctx.Configuration.PostExecutionLogLevel))
+            {
+                return;
+            }
+
+            var shouldOmitPayload = ctx.Configuration.OmitJsonSerializedResponsePayload;
+
+            if (shouldOmitPayload || ctx.HasUnitResponse)
+            {
+                logger.Log(ctx.Configuration.PostExecutionLogLevel,
+                           "Executed command in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
+                           elapsedTime.TotalMilliseconds,
+                           commandId,
+                           traceId);
+
+                return;
+            }
+
+            logger.Log(ctx.Configuration.PostExecutionLogLevel,
+                       "Executed command and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
+                       Serialize(response, ctx.Configuration.JsonSerializerOptions),
+                       elapsedTime.TotalMilliseconds,
+                       commandId,
+                       traceId);
+        }
+
+        private static void OnException<TCommand, TResponse>(ILogger logger,
+                                                             string commandId,
+                                                             string traceId,
+                                                             Exception exception,
+                                                             TimeSpan elapsedTime,
+                                                             CommandMiddlewareContext<TCommand, TResponse, CommandLoggingMiddlewareConfiguration> ctx)
+            where TCommand : class
+        {
+            if (ctx.Configuration.ExceptionHook is { } exceptionHook)
+            {
+                var loggingExceptionContext = new CommandLoggingExceptionContext(logger,
+                                                                                 ctx.Configuration.ExceptionLogLevel,
+                                                                                 commandId,
+                                                                                 traceId,
+                                                                                 ctx.Command,
+                                                                                 exception,
+                                                                                 elapsedTime,
+                                                                                 ctx.ServiceProvider);
+
+                if (!exceptionHook(loggingExceptionContext))
+                {
+                    return;
+                }
+            }
+
+            if (!logger.IsEnabled(ctx.Configuration.ExceptionLogLevel))
+            {
+                return;
+            }
+
+            // ReSharper disable once TemplateIsNotCompileTimeConstantProblem (the exception is already included as metadata, so we just want the message
+            // to include the full exception without adding it again as metadata)
+            logger.Log(ctx.Configuration.ExceptionLogLevel,
+                       exception,
+                       $"An exception occurred while executing command after {{ResponseLatency:0.0000}}ms (Command ID: {{CommandId}}, Trace ID: {{TraceId}})\n{exception}",
+                       elapsedTime.TotalMilliseconds,
+                       commandId,
+                       traceId);
+        }
+
+        private static ILogger GetLogger<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, CommandLoggingMiddlewareConfiguration> ctx)
+            where TCommand : class
+        {
+            var loggerFactory = ctx.ServiceProvider.GetRequiredService<ILoggerFactory>();
+
+            if (ctx.Configuration.LoggerNameFactory?.Invoke(ctx.Command) is { } loggerName)
+            {
+                return loggerFactory.CreateLogger(loggerName);
+            }
+
+            return loggerFactory.CreateLogger<TCommand>();
         }
 
         private static string Serialize<T>(T value, JsonSerializerOptions? jsonSerializerOptions) => JsonSerializer.Serialize(value, jsonSerializerOptions);

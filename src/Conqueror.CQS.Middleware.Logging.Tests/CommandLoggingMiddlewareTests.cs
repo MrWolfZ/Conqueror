@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace Conqueror.CQS.Middleware.Logging.Tests
@@ -16,7 +17,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntry(LogLevel.Information, $"Executing command with payload {{\"Payload\":{testCommand.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}");
         }
 
         [Test]
@@ -26,7 +27,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await HandlerWithoutPayload.ExecuteCommand(testCommand);
 
-            AssertLogEntry(LogLevel.Information, "Executing command");
+            AssertPreExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -34,9 +35,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         {
             var testCommand = new TestCommand(10);
 
-            var response = await Handler.ExecuteCommand(testCommand);
+            _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntryContains(LogLevel.Information, $"Executed command and got response {{\"ResponsePayload\":{response.ResponsePayload}}} in");
+            AssertPostExecutionLogMessage(LogLevel.Information, "{\"ResponsePayload\":10}");
         }
 
         [Test]
@@ -46,7 +47,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             await HandlerWithoutResponse.ExecuteCommand(testCommand);
 
-            AssertLogEntryContains(LogLevel.Information, "Executed command in");
+            AssertPostExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -62,6 +63,8 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
             AssertLogEntryContains(LogLevel.Error, "An exception occurred while executing command");
             AssertLogEntryContains(LogLevel.Error, exception.Message);
             AssertLogEntryContains(LogLevel.Error, exception.StackTrace![..exception.StackTrace!.IndexOf("---", StringComparison.Ordinal)]);
+            AssertLogEntryContains(LogLevel.Error, "Command ID: ");
+            AssertLogEntryContains(LogLevel.Error, "Trace ID: ");
         }
 
         [Test]
@@ -73,7 +76,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntry(LogLevel.Debug, $"Executing command with payload {{\"Payload\":{testCommand.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Debug, "{\"Payload\":10}");
         }
 
         [Test]
@@ -85,7 +88,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await HandlerWithoutPayload.ExecuteCommand(testCommand);
 
-            AssertLogEntry(LogLevel.Debug, "Executing command");
+            AssertPreExecutionLogMessage(LogLevel.Debug);
         }
 
         [Test]
@@ -95,9 +98,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             configurePipeline = b => b.UseLogging(o => o.PostExecutionLogLevel = LogLevel.Debug);
 
-            var response = await Handler.ExecuteCommand(testCommand);
+            _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntryContains(LogLevel.Debug, $"Executed command and got response {{\"ResponsePayload\":{response.ResponsePayload}}} in");
+            AssertPostExecutionLogMessage(LogLevel.Debug, "{\"ResponsePayload\":10}");
         }
 
         [Test]
@@ -109,7 +112,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             await HandlerWithoutResponse.ExecuteCommand(testCommand);
 
-            AssertLogEntryContains(LogLevel.Debug, "Executed command in");
+            AssertPostExecutionLogMessage(LogLevel.Debug);
         }
 
         [Test]
@@ -127,6 +130,8 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
             AssertLogEntryContains(LogLevel.Critical, "An exception occurred while executing command");
             AssertLogEntryContains(LogLevel.Critical, exception.Message);
             AssertLogEntryContains(LogLevel.Critical, exception.StackTrace![..exception.StackTrace!.IndexOf("---", StringComparison.Ordinal)]);
+            AssertLogEntryContains(LogLevel.Critical, "Command ID: ");
+            AssertLogEntryContains(LogLevel.Critical, "Trace ID: ");
         }
 
         [Test]
@@ -138,7 +143,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntry(LogLevel.Information, "Executing command");
+            AssertPreExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -150,7 +155,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await HandlerWithoutPayload.ExecuteCommand(testCommand);
 
-            AssertLogEntry(LogLevel.Information, "Executing command");
+            AssertPreExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -162,7 +167,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntryContains(LogLevel.Information, "Executed command in");
+            AssertPostExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -174,7 +179,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             await HandlerWithoutResponse.ExecuteCommand(testCommand);
 
-            AssertLogEntryContains(LogLevel.Information, "Executed command in");
+            AssertPostExecutionLogMessage(LogLevel.Information);
         }
 
         [Test]
@@ -186,7 +191,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntry($"Custom{testCommand.GetType().Name}", LogLevel.Information, $"Executing command with payload {{\"Payload\":{testCommand.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", $"Custom{testCommand.GetType().Name}");
         }
 
         [Test]
@@ -198,7 +203,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntry(testCommand.GetType().FullName!.Replace("+", "."), LogLevel.Information, $"Executing command with payload {{\"Payload\":{testCommand.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", testCommand.GetType().FullName!.Replace("+", "."));
         }
 
         [Test]
@@ -206,6 +211,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         {
             var testCommand = new TestCommand(10);
             CommandLoggingPreExecutionContext? seenContext = null;
+
+            var commandId = "test-command-id";
+            var traceId = "test-trace-id";
+
+            Resolve<ICommandContextAccessor>().SetExternalCommandId(commandId);
+            Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
             using var scope = Host.Services.CreateScope();
 
@@ -228,10 +239,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             Assert.That(seenContext, Is.Not.Null);
             Assert.AreEqual(LogLevel.Debug, seenContext?.LogLevel);
+            Assert.AreSame(commandId, seenContext?.CommandId);
+            Assert.AreSame(traceId, seenContext?.TraceId);
             Assert.AreSame(testCommand, seenContext?.Command);
             Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
 
-            AssertLogEntry(testCommand.GetType().FullName!.Replace("+", "."), LogLevel.Critical, "validation");
+            AssertLogEntryContains(LogLevel.Critical, "validation", testCommand.GetType().FullName!.Replace("+", "."));
         }
 
         [Test]
@@ -243,7 +256,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertNoLogEntry(LogLevel.Information, $"Executing command with payload {{\"Payload\":{testCommand.Payload}}}");
+            AssertNoLogEntryContains(LogLevel.Information, "Executing command");
         }
 
         [Test]
@@ -251,6 +264,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         {
             var testCommand = new TestCommand(10);
             CommandLoggingPostExecutionContext? seenContext = null;
+
+            var commandId = "test-command-id";
+            var traceId = "test-trace-id";
+
+            Resolve<ICommandContextAccessor>().SetExternalCommandId(commandId);
+            Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
             using var scope = Host.Services.CreateScope();
 
@@ -273,12 +292,14 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             Assert.That(seenContext, Is.Not.Null);
             Assert.AreEqual(LogLevel.Debug, seenContext?.LogLevel);
+            Assert.AreSame(commandId, seenContext?.CommandId);
+            Assert.AreSame(traceId, seenContext?.TraceId);
             Assert.AreSame(testCommand, seenContext?.Command);
             Assert.AreSame(response, seenContext?.Response);
             Assert.IsTrue(seenContext?.ElapsedTime.Ticks > 0);
             Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
 
-            AssertLogEntry(testCommand.GetType().FullName!.Replace("+", "."), LogLevel.Critical, "validation");
+            AssertLogEntryContains(LogLevel.Critical, "validation", testCommand.GetType().FullName!.Replace("+", "."));
         }
 
         [Test]
@@ -288,9 +309,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             configurePipeline = b => b.UseLogging(o => o.PostExecutionHook = _ => false);
 
-            var response = await Handler.ExecuteCommand(testCommand);
+            _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertNoLogEntryContains(LogLevel.Information, $"Executed command and got response {{\"ResponsePayload\":{response.ResponsePayload}}} in");
+            AssertNoLogEntryContains(LogLevel.Information, "Executed command");
         }
 
         [Test]
@@ -299,6 +320,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
             var testCommand = new TestCommand(10);
             var exception = new InvalidOperationException("test exception message");
             CommandLoggingExceptionContext? seenContext = null;
+
+            var commandId = "test-command-id";
+            var traceId = "test-trace-id";
+
+            Resolve<ICommandContextAccessor>().SetExternalCommandId(commandId);
+            Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
             using var scope = Host.Services.CreateScope();
 
@@ -323,12 +350,14 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             Assert.That(seenContext, Is.Not.Null);
             Assert.AreEqual(LogLevel.Critical, seenContext?.LogLevel);
+            Assert.AreSame(commandId, seenContext?.CommandId);
+            Assert.AreSame(traceId, seenContext?.TraceId);
             Assert.AreSame(testCommand, seenContext?.Command);
             Assert.AreSame(exception, seenContext?.Exception);
             Assert.IsTrue(seenContext?.ElapsedTime.Ticks > 0);
             Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
 
-            AssertLogEntry(testCommand.GetType().FullName!.Replace("+", "."), LogLevel.Trace, "validation");
+            AssertLogEntryContains(LogLevel.Trace, "validation", testCommand.GetType().FullName!.Replace("+", "."));
         }
 
         [Test]
@@ -355,7 +384,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntry(LogLevel.Information, $"Executing command with payload {{\"payload\":{testCommand.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Information, "{\"payload\":10}");
         }
 
         [Test]
@@ -365,9 +394,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             configurePipeline = b => b.UseLogging(o => o.JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
-            var response = await Handler.ExecuteCommand(testCommand);
+            _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntryContains(LogLevel.Information, $"Executed command and got response {{\"responsePayload\":{response.ResponsePayload}}} in");
+            AssertPostExecutionLogMessage(LogLevel.Information, "{\"responsePayload\":10}");
         }
 
         [Test]
@@ -405,6 +434,34 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         }
 
         [Test]
+        public async Task GivenTraceId_LogsCorrectTraceId()
+        {
+            var testCommand = new TestCommand(10);
+
+            var traceId = "test-trace-id";
+
+            Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
+
+            _ = await Handler.ExecuteCommand(testCommand);
+
+            AssertLogEntryContains(LogLevel.Information, $"Trace ID: {traceId}", nrOfTimes: 2);
+        }
+
+        [Test]
+        public async Task GivenCommandId_LogsCorrectTraceId()
+        {
+            var testCommand = new TestCommand(10);
+
+            var commandId = "test-command-id";
+
+            Resolve<ICommandContextAccessor>().SetExternalCommandId(commandId);
+
+            _ = await Handler.ExecuteCommand(testCommand);
+
+            AssertLogEntryContains(LogLevel.Information, $"Command ID: {commandId}", nrOfTimes: 2);
+        }
+
+        [Test]
         public async Task GivenPipelineWithLoggingMiddleware_MiddlewareCanBeConfigured()
         {
             var testCommand = new TestCommand(10);
@@ -413,7 +470,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertLogEntry(LogLevel.Debug, $"Executing command with payload {{\"Payload\":{testCommand.Payload}}}");
+            AssertPreExecutionLogMessage(LogLevel.Debug, "{\"Payload\":10}");
         }
 
         [Test]
@@ -425,7 +482,33 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
             _ = await Handler.ExecuteCommand(testCommand);
 
-            AssertNoLogEntry(LogLevel.Debug, $"Executing command with payload {{\"Payload\":{testCommand.Payload}}}");
+            AssertNoLogEntryContains(LogLevel.Debug, "Executing command");
+        }
+
+        private void AssertPreExecutionLogMessage(LogLevel logLevel, string? expectedSerializedCommand = null, string? loggerName = null)
+        {
+            if (expectedSerializedCommand is null)
+            {
+                var regexWithoutPayload = new Regex(@"Executing command \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+                AssertLogEntryMatches(logLevel, regexWithoutPayload, loggerName);
+                return;
+            }
+
+            var regexWithPayload = new Regex(@"Executing command with payload " + Regex.Escape(expectedSerializedCommand) + @" \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+            AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
+        }
+
+        private void AssertPostExecutionLogMessage(LogLevel logLevel, string? expectedSerializedResponse = null, string? loggerName = null)
+        {
+            if (expectedSerializedResponse is null)
+            {
+                var regexWithoutPayload = new Regex(@"Executed command in [0-9.]+ms \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+                AssertLogEntryMatches(logLevel, regexWithoutPayload, loggerName);
+                return;
+            }
+
+            var regexWithPayload = new Regex(@"Executed command and got response " + Regex.Escape(expectedSerializedResponse) + @" in [0-9.]+ms \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+            AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
         }
 
         private ICommandHandler<TestCommand, TestCommandResponse> Handler => Resolve<ICommandHandler<TestCommand, TestCommandResponse>>();
