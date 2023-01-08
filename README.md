@@ -207,6 +207,8 @@ In addition to code-level API documentation, **Conqueror** provides you with rec
 
 ### CQS Introduction
 
+[![library-status-stable](https://img.shields.io/badge/library%20status-stable-brightgreen)](https://www.nuget.org/packages/Conqueror.CQS/)
+
 CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) (which is the inspiration for this project and also where the name is derived from: conquer -> **co**mmands a**n**d **quer**ies). The core idea behind this pattern is that operations which only read data (i.e. queries) and operations which mutate data or cause side-effects (i.e. commands) have very different characteristics (for a start, in most applications queries are executed much more frequently than commands). In addition, business operations often map very well to commands and queries, allowing you to model your application in a way that allows technical and business stakeholders alike to understand the capabilities of the system. There are many other benefits we gain from following this separation in our application logic. For example, commands and queries represent a natural boundary for encapsulation, provide clear contracts for modularization, and allow solving cross-cutting concerns according to the nature of the operation (e.g. caching makes sense for queries, but not so much for commands). With commands and queries, testing often becomes more simple as well, since they provide a clear list of the capabilities that should be tested (allowing more focus to be placed on use-case-driven testing instead of traditional unit testing).
 
 #### CQS Basics
@@ -241,6 +243,8 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 ### Eventing Introduction
 
+[![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Eventing/)
+
 Eventing is a way to refer to the publishing and observing of events via the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Eventing is a good way to decouple or loosely couple different parts of your application by making an event publisher agnostic to the observers of events it publishes. In addition to this basic idea, **Conqueror** allows solving cross-cutting concerns on both the publisher as well as the observer side.
 
 #### Eventing Basics
@@ -267,6 +271,8 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [accessing properties of events in middlewares](recipes/eventing/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 
 ### Interactive Streaming Introduction
+
+[![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
 
 For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are generally two high-level approaches: interactive / pull-based (i.e. consumer is in control of the pace) and reactive / push-based (i.e. the producer is in control of the pace). Here we focus on interactive streaming, which is a good approach for use cases like paging and event sourcing.
 
@@ -299,6 +305,8 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 - [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming.interactive/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
 
 ### Reactive Streaming Introduction
+
+[![library-status-only-concept](https://img.shields.io/badge/library%20status-only%20concept-red)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
 
 For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are generally two high-level approaches: interactive / pull-based (i.e. consumer is in control of the pace) and reactive / push-based (i.e. the producer is in control of the pace). Here we focus on reactive streaming, which is a good approach when you do not control the source of the stream yourself, and therefore need to handle stream items at whatever pace the producer provides (e.g. handling sensor data from IoT devices).
 
