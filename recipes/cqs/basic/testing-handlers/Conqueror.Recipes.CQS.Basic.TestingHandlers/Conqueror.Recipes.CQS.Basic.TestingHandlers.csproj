@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <ShouldReferencePackage Condition="!Exists('$(MSBuildThisFileDirectory)/../../Conqueror.sln')">true</ShouldReferencePackage>
+        <ShouldReferenceProject Condition="Exists('$(MSBuildThisFileDirectory)/../../Conqueror.sln')">true</ShouldReferenceProject>
+    </PropertyGroup>
+
+    <!-- reference the projects if the full repository is checked out (useful for development) -->
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Conqueror.CQS\Conqueror.CQS.csproj" Condition="$(ShouldReferenceProject) == true" />
+    </ItemGroup>
+
+    <!-- reference the packages if the project is checked out standalone -->
+    <ItemGroup>
+        <PackageReference Include="Conqueror.CQS" Version="*-*" Condition="$(ShouldReferencePackage) == true" />
+    </ItemGroup>
+
+    <!-- third-party packages -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
+    </ItemGroup>
+
+</Project>
