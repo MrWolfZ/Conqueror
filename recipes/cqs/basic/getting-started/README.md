@@ -44,7 +44,7 @@ dotnet add package Microsoft.Extensions.DependencyInjection
 
 > If you are using a different dependency injection container (e.g. Autofac or Ninject), see [this recipe](../../advanced/different-dependency-injection#readme) for more details on how to integrate conqueror with your container of choice.
 
-Now we can create the core application loop in [Program.cs](Program.cs):
+Now we can create the core application loop in [Program.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/Program.cs):
 
 ```cs
 global using Conqueror;
@@ -111,7 +111,7 @@ while (true)
 
 Note that this program does not compile yet since it already references a few things we'll only create in the next step.
 
-Now that we have the core application loop, we can create an in-memory repository for managing our counters in [CountersRepository.cs](CountersRepository.cs):
+Now that we have the core application loop, we can create an in-memory repository for managing our counters in [CountersRepository.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/CountersRepository.cs):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basic.GettingStarted;
@@ -164,7 +164,7 @@ public sealed class CounterNotFoundException : Exception
 }
 ```
 
-Let's also add this repository to our services as a singleton in [Program.cs](Program.cs):
+Let's also add this repository to our services as a singleton in [Program.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/Program.cs):
 
 ```diff
 var services = new ServiceCollection();
@@ -182,7 +182,7 @@ Now that we have finished the basic application setup we can implement the comma
 
 > You may notice that the handler classes we are about to create are all `internal`. This is a recommended practice to make it more clear that handlers are meant to be called through their interface and not directly.
 
-We'll start with the query for getting the names of all counters for the `list` operation. In a new file [GetCounterNamesQuery.cs](GetCounterNamesQuery.cs) add the following content:
+We'll start with the query for getting the names of all counters for the `list` operation. In a new file [GetCounterNamesQuery.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/GetCounterNamesQuery.cs) add the following content:
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basic.GettingStarted;
@@ -208,7 +208,7 @@ internal sealed class GetCounterNamesQueryHandler : IQueryHandler<GetCounterName
 }
 ```
 
-To be able to call this query handler, we need to add a few things to the services in [Program.cs](Program.cs):
+To be able to call this query handler, we need to add a few things to the services in [Program.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/Program.cs):
 
 ```diff
 services.AddSingleton<CountersRepository>();
@@ -229,7 +229,7 @@ The method `FinalizeConquerorRegistrations` contains logic that finds all regist
 
 > For ASP.NET Core web applications, you typically do not build the service provider yourself. See [this recipe](../../advanced/exposing-via-http#readme) for more details on how to use **Conqueror.CQS** in such web applications.
 
-Now that we have everything set up, we can finally implement the `list` operation of our application in [Program.cs](Program.cs):
+Now that we have everything set up, we can finally implement the `list` operation of our application in [Program.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/Program.cs):
 
 ```diff
 case "list" when counterName == null:
@@ -253,7 +253,7 @@ q
 shutting down...
 ```
 
-Next, let's add the query for fetching the value of a counter. While doing this, we'll also use a cool feature from **Conqueror.CQS**. As you saw when we implemented the `list` operation, we needed to resolve the query handler using the rather unwieldy and difficult to type interface `IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>`. To make it easier to use your command and query handlers, **Conqueror.CQS** allows you to define your own interface for the handler, which you can then use to resolve or inject your handler. Let's see how that looks like in the query for fetching a counter's value in [GetCounterValueQuery.cs](GetCounterValueQuery.cs):
+Next, let's add the query for fetching the value of a counter. While doing this, we'll also use a cool feature from **Conqueror.CQS**. As you saw when we implemented the `list` operation, we needed to resolve the query handler using the rather unwieldy and difficult to type interface `IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>`. To make it easier to use your command and query handlers, **Conqueror.CQS** allows you to define your own interface for the handler, which you can then use to resolve or inject your handler. Let's see how that looks like in the query for fetching a counter's value in [GetCounterValueQuery.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/GetCounterValueQuery.cs):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basic.GettingStarted;
@@ -286,7 +286,7 @@ internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
 
 > A custom handler interface must not have any additional methods, it just inherits from the generic handler interface. While this limitation does not seem to make much sense on the surface, it is required for advanced use cases like [calling HTTP commands and queries from another application](../../advanced/calling-http#readme). It also encourages you to adhere to the [single-responsibility principle](https://en.wikipedia.org/wiki/Single-responsibility_principle) by ensuring that each handler only has a single public method.
 
-We can now use this handler to implement the `get` operation in [Program.cs](Program.cs):
+We can now use this handler to implement the `get` operation in [Program.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/Program.cs):
 
 ```diff
 services.AddConquerorCQS();
@@ -323,7 +323,7 @@ q
 shutting down...
 ```
 
-To create counters we can use the `inc` operation, which either increments an existing counter by 1 or creates a new counter with value 1 if the counter does not exist yet. Let's create a command for this in [IncrementCounterCommand.cs](IncrementCounterCommand.cs) (using a dedicated handler interface as we did above):
+To create counters we can use the `inc` operation, which either increments an existing counter by 1 or creates a new counter with value 1 if the counter does not exist yet. Let's create a command for this in [IncrementCounterCommand.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/IncrementCounterCommand.cs) (using a dedicated handler interface as we did above):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basic.GettingStarted;
@@ -367,7 +367,7 @@ internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandH
 
 ```
 
-We can now use this handler to implement the `inc` operation in [Program.cs](Program.cs). At this point you may come to the conclusion that it is a bit annoying that you have to add every handler separately to the services. **Conqueror.CQS** provides two convenience extension methods `AddConquerorCQSTypesFromExecutingAssembly()` and `AddConquerorCQSTypesFromAssembly(Assembly assembly)` which discover and add all handlers in an assembly to the services as transient. The methods will not overwrite any handlers that are already added, meaning you can add non-transient handlers yourself (e.g. `services.AddSingleton<GetCounterNamesQueryHandler>()`) and then register all remaining ones automatically with the convenience methods. Let's do that for demonstration purposes:
+We can now use this handler to implement the `inc` operation in [Program.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/Program.cs). At this point you may come to the conclusion that it is a bit annoying that you have to add every handler separately to the services. **Conqueror.CQS** provides two convenience extension methods `AddConquerorCQSTypesFromExecutingAssembly()` and `AddConquerorCQSTypesFromAssembly(Assembly assembly)` which discover and add all handlers in an assembly to the services as transient. The methods will not overwrite any handlers that are already added, meaning you can add non-transient handlers yourself (e.g. `services.AddSingleton<GetCounterNamesQueryHandler>()`) and then register all remaining ones automatically with the convenience methods. Let's do that for demonstration purposes:
 
 ```diff
 services.AddConquerorCQS();
@@ -415,7 +415,7 @@ q
 shutting down...
 ```
 
-As the last step of this recipe we'll create a command for deleting counters. This command uses the "fire-and-forget" approach, i.e. it does not have any return value. **Conqueror.CQS** allows creating commands without or without response. Let's create the new command in [DeleteCounterCommand.cs](DeleteCounterCommand.cs):
+As the last step of this recipe we'll create a command for deleting counters. This command uses the "fire-and-forget" approach, i.e. it does not have any return value. **Conqueror.CQS** allows creating commands without or without response. Let's create the new command in [DeleteCounterCommand.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/DeleteCounterCommand.cs):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basic.GettingStarted;
@@ -443,7 +443,7 @@ internal sealed class DeleteCounterCommandHandler : IDeleteCounterCommandHandler
 }
 ```
 
-And finally we can use this handler to implement the `del` operation in [Program.cs](Program.cs). Since we use the convenience method for adding all handlers automatically, we do not need to add our new handler separately, and we can just start using it immediately:
+And finally we can use this handler to implement the `del` operation in [Program.cs](Conqueror.Recipes.CQS.Basic.GettingStarted/Program.cs). Since we use the convenience method for adding all handlers automatically, we do not need to add our new handler separately, and we can just start using it immediately:
 
 ```diff
 case "del" when counterName != null:
