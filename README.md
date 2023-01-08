@@ -157,7 +157,7 @@ curl http://localhost:5000/api/v1/queries/getCounterValue?counterName=test
 # prints {"counterValue":2}
 ```
 
-Due the logging middleware we added you will see output similar to this in the server console.
+Thanks to the logging middleware we added to the command and query pipelines, you will see output similar to this in the server console.
 
 ```log
 info: Quickstart.IncrementCounterByCommand[0]
