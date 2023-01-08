@@ -180,6 +180,8 @@ At this point you can already run the application and input commands, but they w
 
 Now that we have finished the basic application setup we can implement the commands and queries for managing the counters.
 
+> You may notice that the handler classes we are about to create are all `internal`. This is a recommended practice to make it more clear that handlers are meant to be called through their interface and not directly.
+
 We'll start with the query for getting the names of all counters for the `list` operation. In a new file [GetCounterNamesQuery.cs](GetCounterNamesQuery.cs) add the following content:
 
 ```cs
