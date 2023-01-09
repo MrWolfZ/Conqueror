@@ -475,6 +475,20 @@ q
 shutting down...
 ```
 
-This concludes our recipe for getting started with **Conqueror.CQS**. We recommend that you take a look at the recipe for [testing the command and query handlers](../testing-handlers#readme) we created in this recipe.
+This concludes our recipe for getting started with **Conqueror.CQS**. In summary, you need the following:
+
+- add the [Conqueror.CQS](https://www.nuget.org/packages/Conqueror.CQS/) NuGet package
+- if you are not already writing a web application or using the [generic .NET host](https://learn.microsoft.com/en-us/dotnet/core/extensions/generic-host), add the [Microsoft.Extensions.DependencyInjections](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection) Nuget package
+- add the **Conqueror.CQS** services:
+
+    ```cs
+    services.AddConquerorCQS()
+            .AddConquerorCQSTypesFromExecutingAssembly()
+            .FinalizeConquerorRegistrations();
+    ```
+
+- start creating commands and queries, responses, custom handler interfaces, and handlers
+
+As the next step you can explore how to [test command and query handlers](../testing-handlers#readme).
 
 Or head over to our [other recipes](../../../../README.md#recipes) for more guidance on different topics.
