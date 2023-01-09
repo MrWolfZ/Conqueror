@@ -1,27 +1,31 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 
 namespace Conqueror.Recipes.CQS.Basic.TestingHandlers.Tests;
 
 public abstract class TestBase : IDisposable
 {
-    private readonly IHost host;
+    private readonly ServiceProvider serviceProvider;
 
     protected TestBase()
     {
-        var hostBuilder = new HostBuilder().ConfigureServices(services => services.AddConquerorCQS()
-                                                                                  .AddConquerorCQSTypesFromAssembly(typeof(IncrementCounterCommandHandler).Assembly)
-                                                                                  .AddSingleton<CountersRepository>()
-                                                                                  .FinalizeConquerorRegistrations());
+        var services = new ServiceCollection();
 
-        host = hostBuilder.StartAsync().Result;
+        services.AddApplicationServices();
+
+        services.Replace(ServiceDescriptor.Singleton(AdminNotificationServiceMock.Object));
+
+        serviceProvider = services.BuildServiceProvider();
     }
+
+    protected Mock<IAdminNotificationService> AdminNotificationServiceMock { get; } = new();
 
     public void Dispose()
     {
-        host.Dispose();
+        serviceProvider.Dispose();
     }
 
     protected T Resolve<T>()
-        where T : notnull => host.Services.GetRequiredService<T>();
+        where T : notnull => serviceProvider.GetRequiredService<T>();
 }

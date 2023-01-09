@@ -1,78 +1,63 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Moq;
 using NUnit.Framework;
 
 namespace Conqueror.Recipes.CQS.Basic.TestingHandlers.Tests;
 
 [TestFixture]
-public sealed class IncrementCounterCommandTests
+public sealed class IncrementCounterCommandTests : TestBase
 {
     private const string TestCounterName = "test-counter";
 
+    private IIncrementCounterCommandHandler Handler => Resolve<IIncrementCounterCommandHandler>();
+
+    private CountersRepository CountersRepository => Resolve<CountersRepository>();
+
     [Test]
-    public async Task GivenNonExistingCounter_WhenIncrementingCounter_CounterIsCreatedAndIncremented()
+    public async Task GivenNonExistingCounter_WhenIncrementingCounter_CounterIsCreatedAndInitialValueIsReturned()
     {
-        await using var serviceProvider = BuildServiceProvider();
+        var response = await Handler.ExecuteCommand(new(TestCounterName));
 
-        var handler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
-        var repository = serviceProvider.GetRequiredService<CountersRepository>();
+        // we validate the result of the command by checking the repository directly, which is a small
+        // violation of the black-box testing approach; the alternative would be to fetch the counter's
+        // value with the `GetCounterValueQuery`, but this adds a dependency to this query to the tests
+        // for the command; a third option would be to not test the command and query separately but
+        // instead test the whole counter "domain" together by creating more end-to-end test cases like
+        // `GivenNonExistingCounter_WhenIncrementingCounter_CounterIsCreatedAndValueCanBeFetchedByQuery`;
+        // which of these approaches you choose is up to you to decide, they all have different trade-offs
+        var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
 
-        _ = await handler.ExecuteCommand(new(TestCounterName));
-
-        var storedCounterValue = await repository.GetCounterValue(TestCounterName);
-
-        Assert.That(storedCounterValue, Is.EqualTo(1));
+        Assert.That(storedCounterValue, Is.EqualTo(1).And.EqualTo(response.NewCounterValue));
     }
 
     [Test]
-    public async Task GivenNonExistingCounter_WhenIncrementingCounter_NewCounterValueIsReturned()
+    public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncrementedAndValueIsReturned()
     {
-        await using var serviceProvider = BuildServiceProvider();
+        await CountersRepository.SetCounterValue(TestCounterName, 10);
 
-        var handler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
+        var response = await Handler.ExecuteCommand(new(TestCounterName));
 
-        var response = await handler.ExecuteCommand(new(TestCounterName));
+        var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
 
-        Assert.That(response.NewCounterValue, Is.EqualTo(1));
+        Assert.That(storedCounterValue, Is.EqualTo(11).And.EqualTo(response.NewCounterValue));
     }
 
     [Test]
-    public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncremented()
+    public async Task GivenExistingCounter_WhenIncrementingCounterAboveThreshold_AdminNotificationIsSent()
     {
-        await using var serviceProvider = BuildServiceProvider();
+        await CountersRepository.SetCounterValue(TestCounterName, 999);
 
-        var handler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
-        var repository = serviceProvider.GetRequiredService<CountersRepository>();
+        _ = await Handler.ExecuteCommand(new(TestCounterName));
 
-        await repository.SetCounterValue(TestCounterName, 10);
-
-        _ = await handler.ExecuteCommand(new(TestCounterName));
-
-        var storedCounterValue = await repository.GetCounterValue(TestCounterName);
-
-        Assert.That(storedCounterValue, Is.EqualTo(11));
+        AdminNotificationServiceMock.Verify(s => s.SendCounterIncrementedBeyondThresholdNotification(TestCounterName));
     }
 
     [Test]
-    public async Task GivenExistingCounter_WhenIncrementingCounter_NewCounterValueIsReturned()
+    public async Task GivenExistingCounter_WhenIncrementingCounterBelowThreshold_NoAdminNotificationIsSent()
     {
-        await using var serviceProvider = BuildServiceProvider();
+        await CountersRepository.SetCounterValue(TestCounterName, 10);
 
-        var handler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
-        var repository = serviceProvider.GetRequiredService<CountersRepository>();
+        _ = await Handler.ExecuteCommand(new(TestCounterName));
 
-        await repository.SetCounterValue(TestCounterName, 10);
-
-        var response = await handler.ExecuteCommand(new(TestCounterName));
-
-        Assert.That(response.NewCounterValue, Is.EqualTo(11));
-    }
-
-    private static ServiceProvider BuildServiceProvider()
-    {
-        return new ServiceCollection().AddConquerorCQS()
-                                      .AddTransient<IncrementCounterCommandHandler>()
-                                      .AddSingleton<CountersRepository>()
-                                      .FinalizeConquerorRegistrations()
-                                      .BuildServiceProvider();
+        AdminNotificationServiceMock.Verify(s => s.SendCounterIncrementedBeyondThresholdNotification(TestCounterName), Times.Never);
     }
 }

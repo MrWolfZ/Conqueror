@@ -214,7 +214,7 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 #### CQS Basics
 
 - [getting started](recipes/cqs/basic/getting-started#readme)
-- [testing command and query handlers](recipes/cqs/basic/testing-handlers#readme) _(to-be-written)_
+- [testing command and query handlers](recipes/cqs/basic/testing-handlers#readme)
 - [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/cqs/basic/solving-cross-cutting-concerns#readme) _(to-be-written)_
 - [testing command and query handlers that have middleware pipelines](recipes/cqs/basic/testing-handlers-with-pipelines#readme) _(to-be-written)_
 - [testing middlewares](recipes/cqs/basic/testing-middlewares#readme) _(to-be-written)_
