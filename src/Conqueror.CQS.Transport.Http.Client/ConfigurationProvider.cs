@@ -22,17 +22,22 @@ namespace Conqueror.CQS.Transport.Http.Client
             var queryOptions = new HttpQueryClientOptions(provider);
             registration.QueryConfigurationAction?.Invoke(queryOptions);
 
-            var httpClient = registration.HttpClientFactory?.Invoke(provider);
+            var httpClient = registration.HttpClient;
 
             if (httpClient is null)
             {
-                if (registration.BaseAddressFactory is null)
+                if (registration.BaseAddress is null)
                 {
-                    throw new InvalidOperationException("configuration error while creating options for http handler: either http client or base address factory must be provided");
+                    // should not be possible with public API, since it enforces either one to be provided
+                    throw new InvalidOperationException("configuration error while creating options for Conqueror HTTP transport client: either HTTP client or base address must be provided");
                 }
 
-                var baseAddress = registration.BaseAddressFactory(provider);
-                httpClient = globalOptions.HttpClientFactory(baseAddress);
+                httpClient = globalOptions.HttpClientFactory(registration.BaseAddress);
+            }
+
+            if (httpClient.BaseAddress is null)
+            {
+                throw new InvalidOperationException("configuration error while creating options for Conqueror HTTP transport client: HTTP client base address is not set");
             }
 
             var jsonSerializerOptions = queryOptions.JsonSerializerOptions ?? commandOptions.JsonSerializerOptions ?? globalOptions.JsonSerializerOptions;

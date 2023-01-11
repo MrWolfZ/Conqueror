@@ -18,7 +18,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.HttpClientFactory = baseAddress =>
                             {
                                 seenBaseAddress = baseAddress;
-                                return new();
+                                return new() { BaseAddress = baseAddress };
                             };
                         })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
@@ -50,7 +50,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            _ = b.UseHttp(new HttpClient());
+                            _ = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") });
                             return new TestQueryTransport();
                         });
 
@@ -72,7 +72,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.HttpClientFactory = baseAddress =>
                             {
                                 _ = seenInstances.Add(o.ServiceProvider.GetRequiredService<ScopingTest>());
-                                return new();
+                                return new() { BaseAddress = baseAddress };
                             };
                         })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
@@ -112,7 +112,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = expectedOptions; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient()) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                             return new TestQueryTransport();
                         });
@@ -136,7 +136,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                             return new TestQueryTransport();
                         });
@@ -161,7 +161,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = globalOptions; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                             return new TestQueryTransport();
                         });
@@ -186,7 +186,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = expectedOptions; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient()) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.QueryPathConvention;
                             return new TestQueryTransport();
                         });
@@ -210,7 +210,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.PathConvention = expectedOptions) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedOptions) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.QueryPathConvention;
                             return new TestQueryTransport();
                         });
@@ -225,6 +225,42 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
+        public async Task GivenCustomHttpClientFactoryWhichDoesNotSetClientBaseAddress_WhenResolvingHandler_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.HttpClientFactory = _ => new(); })
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            _ = b.UseHttp(new Uri("http://localhost"));
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteQuery(new(), CancellationToken.None));
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientWhichDoesNotHaveBaseAddressSet_WhenResolvingHandler_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            _ = b.UseHttp(new HttpClient());
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteQuery(new(), CancellationToken.None));
+        }
+
+        [Test]
         public async Task GivenGlobalAndClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
         {
             var globalOptions = new TestHttpQueryPathConvention();
@@ -235,7 +271,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = globalOptions; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.PathConvention = expectedOptions) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedOptions) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.QueryPathConvention;
                             return new TestQueryTransport();
                         });

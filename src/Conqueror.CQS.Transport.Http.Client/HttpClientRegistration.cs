@@ -9,8 +9,8 @@ namespace Conqueror.CQS.Transport.Http.Client
 
         public Action<HttpQueryClientOptions>? QueryConfigurationAction { get; init; }
 
-        public Func<IServiceProvider, HttpClient>? HttpClientFactory { get; init; }
+        public HttpClient? HttpClient { get; init; }
 
-        public Func<IServiceProvider, Uri>? BaseAddressFactory { get; init; }
+        public Uri? BaseAddress { get; init; }
     }
 }

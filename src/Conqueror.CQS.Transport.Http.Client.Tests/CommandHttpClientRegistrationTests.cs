@@ -18,7 +18,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.HttpClientFactory = baseAddress =>
                             {
                                 seenBaseAddress = baseAddress;
-                                return new();
+                                return new() { BaseAddress = baseAddress };
                             };
                         })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
@@ -50,7 +50,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            _ = b.UseHttp(new HttpClient());
+                            _ = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") });
                             return new TestCommandTransport();
                         });
 
@@ -72,7 +72,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.HttpClientFactory = baseAddress =>
                             {
                                 _ = seenInstances.Add(o.ServiceProvider.GetRequiredService<ScopingTest>());
-                                return new();
+                                return new() { BaseAddress = baseAddress };
                             };
                         })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
@@ -112,7 +112,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = expectedOptions; })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient()) as HttpCommandTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }) as HttpCommandTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                             return new TestCommandTransport();
                         });
@@ -136,7 +136,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.JsonSerializerOptions = expectedOptions) as HttpCommandTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.JsonSerializerOptions = expectedOptions) as HttpCommandTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                             return new TestCommandTransport();
                         });
@@ -161,7 +161,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = globalOptions; })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.JsonSerializerOptions = expectedOptions) as HttpCommandTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.JsonSerializerOptions = expectedOptions) as HttpCommandTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                             return new TestCommandTransport();
                         });
@@ -186,7 +186,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.CommandPathConvention = expectedOptions; })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient()) as HttpCommandTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }) as HttpCommandTransportClient;
                             seenOptions = httpTransportClient?.Options.CommandPathConvention;
                             return new TestCommandTransport();
                         });
@@ -210,7 +210,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.PathConvention = expectedOptions) as HttpCommandTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedOptions) as HttpCommandTransportClient;
                             seenOptions = httpTransportClient?.Options.CommandPathConvention;
                             return new TestCommandTransport();
                         });
@@ -235,7 +235,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.CommandPathConvention = globalOptions; })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient(), o => o.PathConvention = expectedOptions) as HttpCommandTransportClient;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedOptions) as HttpCommandTransportClient;
                             seenOptions = httpTransportClient?.Options.CommandPathConvention;
                             return new TestCommandTransport();
                         });
@@ -248,6 +248,42 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             Assert.AreSame(expectedOptions, seenOptions);
             Assert.AreNotSame(globalOptions, seenOptions);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientFactoryWhichDoesNotSetClientBaseAddress_WhenResolvingHandler_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.HttpClientFactory = _ => new(); })
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            _ = b.UseHttp(new Uri("http://localhost"));
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteCommand(new(), CancellationToken.None));
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientWhichDoesNotHaveBaseAddressSet_WhenResolvingHandler_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            _ = b.UseHttp(new HttpClient());
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteCommand(new(), CancellationToken.None));
         }
 
         [HttpCommand]

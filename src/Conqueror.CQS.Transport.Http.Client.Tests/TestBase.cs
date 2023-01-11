@@ -104,6 +104,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public ActivityAwareTestHttpClient(HttpClient wrapped)
             {
                 this.wrapped = wrapped;
+
+                BaseAddress = wrapped.BaseAddress;
             }
 
             public override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)

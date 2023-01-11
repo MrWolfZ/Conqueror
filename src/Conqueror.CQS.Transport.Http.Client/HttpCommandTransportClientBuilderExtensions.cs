@@ -12,7 +12,7 @@ namespace Conqueror
         {
             var registration = new HttpClientRegistration
             {
-                HttpClientFactory = _ => httpClient,
+                HttpClient = httpClient,
                 CommandConfigurationAction = configure,
             };
 
@@ -23,7 +23,7 @@ namespace Conqueror
         {
             var registration = new HttpClientRegistration
             {
-                BaseAddressFactory = _ => baseAddress,
+                BaseAddress = baseAddress,
                 CommandConfigurationAction = configure,
             };
 
