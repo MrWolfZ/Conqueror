@@ -52,7 +52,7 @@ namespace Conqueror.CQS.CommandHandling
 
                 if (index >= middlewares.Count)
                 {
-                    var transport = await transportClientFactory(transportBuilder);
+                    var transport = await transportClientFactory(transportBuilder).ConfigureAwait(false);
                     var responseFromHandler = await transport.ExecuteCommand<TCommand, TResponse>(command, token).ConfigureAwait(false);
                     commandContext.SetResponse(responseFromHandler);
                     return responseFromHandler;

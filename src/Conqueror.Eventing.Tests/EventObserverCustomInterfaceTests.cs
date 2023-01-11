@@ -1,5 +1,6 @@
 namespace Conqueror.Eventing.Tests
 {
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
     public sealed class EventObserverCustomInterfaceTests
     {
         [Test]
@@ -127,9 +128,6 @@ namespace Conqueror.Eventing.Tests
 
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverWithCustomInterfaceWithExtraMethod>().FinalizeConquerorRegistrations());
         }
-
-// interface and event types must be public for dynamic type generation to work
-#pragma warning disable CA1034
 
         public sealed record TestEvent;
 

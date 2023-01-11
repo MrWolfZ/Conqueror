@@ -33,15 +33,15 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
 
         public async Task<bool> SendMessage(T? message, CancellationToken cancellationToken)
         {
-            return await socket.Send(new StreamingMessageEnvelope<T>(StreamingMessageEnvelope<T>.Discriminator, message), cancellationToken);
+            return await socket.Send(new StreamingMessageEnvelope<T>(StreamingMessageEnvelope<T>.Discriminator, message), cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<bool> SendError(string message, CancellationToken cancellationToken)
         {
-            return await socket.Send(new ErrorMessage(ErrorMessage.Discriminator, message), cancellationToken);
+            return await socket.Send(new ErrorMessage(ErrorMessage.Discriminator, message), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken);
+        public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken).ConfigureAwait(false);
     }
 
     internal sealed record RequestNextItemMessage(string Type)

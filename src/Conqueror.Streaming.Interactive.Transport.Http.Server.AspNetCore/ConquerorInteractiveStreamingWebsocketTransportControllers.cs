@@ -11,15 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-// it makes sense for these types to be in the same file
-#pragma warning disable SA1402
-
-// it makes sense for the file to be named differently
-#pragma warning disable SA1649
-
 namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
 {
     [ApiController]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:File name should match first type name", Justification = "the file name makes sense for these related classes")]
     public abstract class ConquerorInteractiveStreamingWithRequestPayloadWebsocketTransportControllerBase<TRequest, TItem> : ConquerorInteractiveStreamingWebsocketTransportControllerBase<TItem>
         where TRequest : class
         where TItem : notnull
@@ -27,7 +22,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
         protected async Task ExecuteRequest(TRequest request, CancellationToken cancellationToken)
         {
             var handler = Request.HttpContext.RequestServices.GetRequiredService<IInteractiveStreamingHandler<TRequest, TItem>>();
-            await HandleWebSocketConnection(handler.ExecuteRequest(request, cancellationToken));
+            await HandleWebSocketConnection(handler.ExecuteRequest(request, cancellationToken)).ConfigureAwait(false);
         }
     }
 
@@ -39,7 +34,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
         protected async Task ExecuteRequest(CancellationToken cancellationToken)
         {
             var handler = Request.HttpContext.RequestServices.GetRequiredService<IInteractiveStreamingHandler<TRequest, TItem>>();
-            await HandleWebSocketConnection(handler.ExecuteRequest(new(), cancellationToken));
+            await HandleWebSocketConnection(handler.ExecuteRequest(new(), cancellationToken)).ConfigureAwait(false);
         }
     }
 
@@ -52,12 +47,12 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
             if (HttpContext.WebSockets.IsWebSocketRequest)
             {
                 var logger = HttpContext.RequestServices.GetRequiredService<ILogger<ConquerorInteractiveStreamingWebsocketTransportControllerBase<T>>>();
-                var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+                var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
                 var jsonSerializerOptions = HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
                 var textWebSocket = new TextWebSocketWithHeartbeat(new(webSocket), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
                 var jsonWebSocket = new JsonWebSocket(textWebSocket, jsonSerializerOptions);
                 using var streamingServerWebsocket = new InteractiveStreamingServerWebSocket<T>(jsonWebSocket);
-                await HandleWebSocketConnection(streamingServerWebsocket, enumerable, logger);
+                await HandleWebSocketConnection(streamingServerWebsocket, enumerable, logger).ConfigureAwait(false);
             }
             else
             {
@@ -76,13 +71,13 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
 
             try
             {
-                _ = await Task.WhenAny(ReadFromSocket(), ReadFromEnumerable());
+                _ = await Task.WhenAny(ReadFromSocket(), ReadFromEnumerable()).ConfigureAwait(false);
             }
             finally
             {
                 cts.Cancel();
 
-                await socket.Close(CancellationToken.None);
+                await socket.Close(CancellationToken.None).ConfigureAwait(false);
             }
 
             async Task ReadFromSocket()
@@ -91,7 +86,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
                 {
                     await foreach (var msg in socket.Read(cts.Token))
                     {
-                        await channel.Writer.WriteAsync(msg, cts.Token);
+                        await channel.Writer.WriteAsync(msg, cts.Token).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)
@@ -112,16 +107,16 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
             {
                 try
                 {
-                    while (await channel.Reader.WaitToReadAsync(cts.Token))
+                    while (await channel.Reader.WaitToReadAsync(cts.Token).ConfigureAwait(false))
                     {
                         while (channel.Reader.TryRead(out _))
                         {
-                            if (!await sourceEnumerator.MoveNextAsync())
+                            if (!await sourceEnumerator.MoveNextAsync().ConfigureAwait(false))
                             {
                                 return;
                             }
 
-                            _ = await socket.SendMessage(sourceEnumerator.Current, cts.Token);
+                            _ = await socket.SendMessage(sourceEnumerator.Current, cts.Token).ConfigureAwait(false);
                         }
                     }
                 }
@@ -132,7 +127,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "an error occurred while reading from enumerable");
-                    _ = await socket.SendError(ex.Message, cts.Token);
+                    _ = await socket.SendError(ex.Message, cts.Token).ConfigureAwait(false);
                 }
             }
         }

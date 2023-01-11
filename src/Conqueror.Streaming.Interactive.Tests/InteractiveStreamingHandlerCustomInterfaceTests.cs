@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Conqueror.Streaming.Interactive.Tests
 {
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for dynamic type generation and assembly scanning to work")]
     public sealed class InteractiveStreamingHandlerCustomInterfaceTests
     {
         [Test]
@@ -81,9 +82,6 @@ namespace Conqueror.Streaming.Interactive.Tests
 
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorInteractiveStreaming().AddTransient<TestStreamingHandlerWithCustomInterfaceWithExtraMethod>().FinalizeConquerorRegistrations());
         }
-
-// interface and event types must be public for dynamic type generation to work
-#pragma warning disable CA1034
 
         public sealed record TestRequest;
 

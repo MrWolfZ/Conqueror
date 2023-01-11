@@ -7,7 +7,7 @@ namespace Conqueror.CQS.Transport.Http.Client
     {
         public static async Task<string> BufferAndReadContent(this HttpResponseMessage response)
         {
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             response.Content = new StringContent(responseContent);
             return responseContent;
         }

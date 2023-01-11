@@ -51,17 +51,17 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
 
-            return await socket.Send(message, cts.Token);
+            return await socket.Send(message, cts.Token).ConfigureAwait(false);
         }
 
-        public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken);
+        public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken).ConfigureAwait(false);
 
-        private async void OnSendHeartbeat(object? state) => await Send(HeartbeatContent, CancellationToken.None);
+        private async void OnSendHeartbeat(object? state) => await Send(HeartbeatContent, CancellationToken.None).ConfigureAwait(false);
 
         private async void OnHeartbeatTimeout(object? state)
         {
             cancellationTokenSource.Cancel();
-            await Close(CancellationToken.None);
+            await Close(CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

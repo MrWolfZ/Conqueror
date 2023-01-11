@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "request, response, and interface types must be public for dynamic type generation to work")]
     public sealed class InteractiveStreamingHttpClientTests : TestBase
     {
         [Test]
@@ -168,9 +169,6 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
-
-// request, response, and interface types must be public for dynamic type generation to work
-#pragma warning disable CA1034
 
         [HttpInteractiveStreamingRequest]
         public sealed record TestRequest(int Payload);

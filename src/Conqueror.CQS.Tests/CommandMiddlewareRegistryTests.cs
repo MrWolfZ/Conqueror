@@ -1,6 +1,7 @@
 ﻿namespace Conqueror.CQS.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for assembly scanning to work")]
     public sealed class CommandMiddlewareRegistryTests
     {
         [Test]
@@ -80,9 +81,6 @@
             Assert.That(registrations, Contains.Item(new CommandMiddlewareRegistration(typeof(TestCommandMiddleware), typeof(TestCommandMiddlewareConfiguration))));
             Assert.That(registrations, Contains.Item(new CommandMiddlewareRegistration(typeof(TestCommandMiddleware2), null)));
         }
-
-// types must be public for assembly scanning to work
-#pragma warning disable CA1034
 
         public sealed class TestCommandMiddlewareConfiguration
         {

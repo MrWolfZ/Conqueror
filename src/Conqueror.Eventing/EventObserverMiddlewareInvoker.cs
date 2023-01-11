@@ -3,9 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
-// these classes belong together
-#pragma warning disable SA1402
-
 namespace Conqueror.Eventing
 {
     internal sealed class EventObserverMiddlewareInvoker<TConfiguration> : IEventObserverMiddlewareInvoker

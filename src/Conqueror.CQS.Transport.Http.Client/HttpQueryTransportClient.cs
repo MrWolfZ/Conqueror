@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -68,11 +68,11 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             requestMessage.RequestUri = new(uriString, UriKind.Relative);
 
-            var response = await Options.HttpClient.SendAsync(requestMessage, cancellationToken);
+            var response = await Options.HttpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                var content = await response.BufferAndReadContent();
+                var content = await response.BufferAndReadContent().ConfigureAwait(false);
                 throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed: {content}", response);
             }
 
@@ -82,7 +82,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 ctx.AddOrReplaceItems(parsedContextItems);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
             return result!;
         }
 

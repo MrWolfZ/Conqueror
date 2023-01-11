@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
@@ -50,17 +50,17 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             var path = Options.CommandPathConvention?.GetCommandPath(typeof(TCommand), attribute) ?? DefaultCommandPathConvention.GetCommandPath(typeof(TCommand), attribute);
 
-            var response = await Options.HttpClient.PostAsync(new Uri(path, UriKind.Relative), content, cancellationToken);
+            var response = await Options.HttpClient.PostAsync(new Uri(path, UriKind.Relative), content, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.NoContent)
             {
-                var responseContent = await response.BufferAndReadContent();
+                var responseContent = await response.BufferAndReadContent().ConfigureAwait(false);
                 throw new HttpCommandFailedException($"command of type {typeof(TCommand).Name} failed: {responseContent}", response);
             }
 
-            if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+            if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var ctxValues))
             {
-                var parsedContextItems = ContextValueFormatter.Parse(values);
+                var parsedContextItems = ContextValueFormatter.Parse(ctxValues);
                 ctx.AddOrReplaceItems(parsedContextItems);
             }
 
@@ -69,7 +69,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 return (TResponse)(object)UnitCommandResponse.Instance;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
             return result!;
         }
     }

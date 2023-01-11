@@ -55,14 +55,14 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
                 {
                     while (true)
                     {
-                        var receiveResult = await socket.ReceiveAsync(buffer, linkedToken);
+                        var receiveResult = await socket.ReceiveAsync(buffer, linkedToken).ConfigureAwait(false);
 
                         if (receiveResult.CloseStatus.HasValue)
                         {
                             await socket.CloseAsync(
                                 receiveResult.CloseStatus.Value,
                                 receiveResult.CloseStatusDescription,
-                                cancellationToken);
+                                cancellationToken).ConfigureAwait(false);
 
                             channel.Writer.Complete();
                             return;
@@ -75,7 +75,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
 
                         if (receiveResult.EndOfMessage)
                         {
-                            await channel.Writer.WriteAsync(Encoding.UTF8.GetString(buffer, 0, receiveResult.Count), linkedToken);
+                            await channel.Writer.WriteAsync(Encoding.UTF8.GetString(buffer, 0, receiveResult.Count), linkedToken).ConfigureAwait(false);
                             continue;
                         }
 
@@ -85,11 +85,11 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
 
                         while (!receiveResult.EndOfMessage)
                         {
-                            receiveResult = await socket.ReceiveAsync(buffer, linkedToken);
+                            receiveResult = await socket.ReceiveAsync(buffer, linkedToken).ConfigureAwait(false);
                             allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
                         }
 
-                        await channel.Writer.WriteAsync(Encoding.UTF8.GetString(allBytes.ToArray()), linkedToken);
+                        await channel.Writer.WriteAsync(Encoding.UTF8.GetString(allBytes.ToArray()), linkedToken).ConfigureAwait(false);
                     }
                 }
                 catch (Exception e)
@@ -112,7 +112,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
                 new(messageBytes, 0, messageBytes.Length),
                 WebSocketMessageType.Text,
                 true,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
             return true;
         }
@@ -131,7 +131,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
                 await socket.CloseAsync(
                     WebSocketCloseStatus.NormalClosure,
                     nameof(WebSocketCloseStatus.NormalClosure),
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is ObjectDisposedException or IOException { InnerException: ObjectDisposedException })
             {

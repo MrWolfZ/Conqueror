@@ -52,7 +52,7 @@ namespace Conqueror.CQS.QueryHandling
 
                 if (index >= middlewares.Count)
                 {
-                    var transportClient = await transportClientFactory(transportClientBuilder);
+                    var transportClient = await transportClientFactory(transportClientBuilder).ConfigureAwait(false);
                     var responseFromHandler = await transportClient.ExecuteQuery<TQuery, TResponse>(query, token).ConfigureAwait(false);
                     queryContext.SetResponse(responseFromHandler);
                     return responseFromHandler;

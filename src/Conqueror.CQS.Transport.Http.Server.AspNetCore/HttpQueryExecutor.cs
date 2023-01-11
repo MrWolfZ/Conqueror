@@ -13,7 +13,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             return HttpRequestExecutor.ExecuteWithContext(httpContext, async () =>
             {
                 var queryHandler = httpContext.RequestServices.GetRequiredService<IQueryHandler<TQuery, TResponse>>();
-                return await queryHandler.ExecuteQuery(query, cancellationToken);
+                return await queryHandler.ExecuteQuery(query, cancellationToken).ConfigureAwait(false);
             });
         }
 
@@ -23,7 +23,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             return HttpRequestExecutor.ExecuteWithContext(httpContext, async () =>
             {
                 var queryHandler = httpContext.RequestServices.GetRequiredService<IQueryHandler<TQuery, TResponse>>();
-                return await queryHandler.ExecuteQuery(new(), cancellationToken);
+                return await queryHandler.ExecuteQuery(new(), cancellationToken).ConfigureAwait(false);
             });
         }
     }

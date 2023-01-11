@@ -58,7 +58,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 }
             }
 
-            var response = await executeFn();
+            var response = await executeFn().ConfigureAwait(false);
 
             if (context.HasItems)
             {

@@ -1,6 +1,7 @@
 ﻿namespace Conqueror.CQS.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for dynamic type generation and assembly scanning to work")]
     public sealed class CommandHandlerRegistryTests
     {
         [Test]
@@ -120,9 +121,6 @@
             Assert.That(registrations, Contains.Item(new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler))));
             Assert.That(registrations, Contains.Item(new CommandHandlerRegistration(typeof(TestCommand2), typeof(TestCommand2Response), typeof(TestCommand2Handler))));
         }
-
-// types must be public for dynamic type generation and assembly scanning to work
-#pragma warning disable CA1034
 
         public sealed record TestCommand;
 

@@ -1,5 +1,6 @@
 ﻿namespace Conqueror.CQS.Tests
 {
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
     public sealed class CommandClientRegistrationTests
     {
         [Test]
@@ -409,9 +410,6 @@
                                           .FinalizeConquerorRegistrations()
                                           .BuildServiceProvider();
         }
-
-// interface and event types must be public for dynamic type generation to work
-#pragma warning disable CA1034
 
         public sealed record TestCommand;
 

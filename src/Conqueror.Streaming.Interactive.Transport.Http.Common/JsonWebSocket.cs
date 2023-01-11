@@ -59,12 +59,12 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
 
         public async Task<bool> Send(object message, CancellationToken cancellationToken)
         {
-            return await socket.Send(JsonSerializer.Serialize(message, jsonSerializerOptions), cancellationToken);
+            return await socket.Send(JsonSerializer.Serialize(message, jsonSerializerOptions), cancellationToken).ConfigureAwait(false);
         }
 
         public async Task Close(CancellationToken cancellationToken)
         {
-            await socket.Close(cancellationToken);
+            await socket.Close(cancellationToken).ConfigureAwait(false);
         }
     }
 }

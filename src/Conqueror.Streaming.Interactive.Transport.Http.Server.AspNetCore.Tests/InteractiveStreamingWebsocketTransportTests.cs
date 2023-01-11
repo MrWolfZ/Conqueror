@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "request and response types must be public for dynamic type generation to work")]
     public sealed class InteractiveStreamingWebsocketTransportTests : TestBase
     {
         [Test]
@@ -95,7 +96,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
 
             Assert.IsInstanceOf<ErrorMessage>(enumerator.Current);
 
-            // should finish the enumeration 
+            // should finish the enumeration
             Assert.IsFalse(await enumerator.MoveNextAsync());
         }
 
@@ -155,9 +156,6 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
                 }
             }
         }
-
-// request and response types must be public for dynamic type generation to work
-#pragma warning disable CA1034
 
         [HttpInteractiveStreamingRequest]
         public sealed record TestRequest(int Payload);

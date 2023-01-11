@@ -33,7 +33,7 @@ namespace Conqueror.CQS.Middleware.Logging
             {
                 PreExecution(logger, commandId, traceId, ctx);
 
-                var response = await ctx.Next(ctx.Command, ctx.CancellationToken);
+                var response = await ctx.Next(ctx.Command, ctx.CancellationToken).ConfigureAwait(false);
 
                 PostExecution(logger, commandId, traceId, response, sw.Elapsed, ctx);
 

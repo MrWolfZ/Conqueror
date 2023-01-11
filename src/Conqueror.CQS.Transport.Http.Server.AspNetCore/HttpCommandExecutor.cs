@@ -14,7 +14,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             return HttpRequestExecutor.ExecuteWithContext(httpContext, async () =>
             {
                 var commandHandler = httpContext.RequestServices.GetRequiredService<ICommandHandler<TCommand, TResponse>>();
-                return await commandHandler.ExecuteCommand(command, cancellationToken);
+                return await commandHandler.ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
             });
         }
 
@@ -24,7 +24,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             return HttpRequestExecutor.ExecuteWithContext(httpContext, async () =>
             {
                 var commandHandler = httpContext.RequestServices.GetRequiredService<ICommandHandler<TCommand>>();
-                await commandHandler.ExecuteCommand(command, cancellationToken);
+                await commandHandler.ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
                 return UnitCommandResponse.Instance;
             });
         }
@@ -35,7 +35,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             return HttpRequestExecutor.ExecuteWithContext(httpContext, async () =>
             {
                 var commandHandler = httpContext.RequestServices.GetRequiredService<ICommandHandler<TCommand, TResponse>>();
-                return await commandHandler.ExecuteCommand(new(), cancellationToken);
+                return await commandHandler.ExecuteCommand(new(), cancellationToken).ConfigureAwait(false);
             });
         }
 
@@ -45,7 +45,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             return HttpRequestExecutor.ExecuteWithContext(httpContext, async () =>
             {
                 var commandHandler = httpContext.RequestServices.GetRequiredService<ICommandHandler<TCommand>>();
-                await commandHandler.ExecuteCommand(new(), cancellationToken);
+                await commandHandler.ExecuteCommand(new(), cancellationToken).ConfigureAwait(false);
                 return UnitCommandResponse.Instance;
             });
         }

@@ -28,10 +28,10 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Common
 
         public async Task<bool> RequestNextItem(CancellationToken cancellationToken)
         {
-            return await socket.Send(new RequestNextItemMessage(RequestNextItemMessage.Discriminator), cancellationToken);
+            return await socket.Send(new RequestNextItemMessage(RequestNextItemMessage.Discriminator), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken);
+        public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken).ConfigureAwait(false);
 
         public void Dispose()
         {

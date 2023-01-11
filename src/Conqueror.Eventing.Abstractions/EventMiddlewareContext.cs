@@ -1,9 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-// these classes belong together
-#pragma warning disable SA1402
-
 namespace Conqueror
 {
     public abstract class EventMiddlewareContext<TEvent>

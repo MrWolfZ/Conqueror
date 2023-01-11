@@ -1,5 +1,6 @@
 namespace Conqueror.CQS.Tests
 {
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
     public sealed class CommandHandlerCustomInterfaceTests
     {
         [Test]
@@ -298,9 +299,6 @@ namespace Conqueror.CQS.Tests
 
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCQS().AddTransient<TestCommandHandlerWithCustomInterfaceWithExtraMethod>().FinalizeConquerorRegistrations());
         }
-
-// interface and event types must be public for dynamic type generation to work
-#pragma warning disable CA1034
 
         public sealed record TestCommand(int Payload = 0);
 

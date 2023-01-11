@@ -2,6 +2,7 @@
 
 namespace Conqueror.CQS.Tests
 {
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
     public abstract class CommandClientFactoryTests
     {
         [Test]
@@ -237,9 +238,6 @@ namespace Conqueror.CQS.Tests
                                                                   Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                                   Action<ICommandPipelineBuilder>? configurePipeline = null)
             where THandler : class, ICommandHandler;
-
-// interface and event types must be public for dynamic type generation to work
-#pragma warning disable CA1034
 
         public sealed record TestCommand;
 

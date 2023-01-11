@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
 {
     [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "request, response, and interface types must be public for dynamic type generation to work")]
     public sealed class InteractiveStreamingHttpClientRegistrationTests
     {
         [Test]
@@ -160,9 +161,6 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
         private sealed class ScopingTest
         {
         }
-
-// request, response, and interface types must be public for dynamic type generation to work
-#pragma warning disable CA1034
 
         [HttpInteractiveStreamingRequest]
         public sealed record TestRequest

@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
 
-// empty interface used as marker interface for other operations
-#pragma warning disable CA1040
-
 namespace Conqueror
 {
     public interface IInteractiveStreamingHandler
