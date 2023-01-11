@@ -26,7 +26,7 @@ namespace Conqueror.Eventing
 
             var middleware = (IEventObserverMiddleware<TConfiguration>)serviceProvider.GetRequiredService(middlewareType);
 
-            await middleware.Execute(ctx);
+            await middleware.Execute(ctx).ConfigureAwait(false);
         }
     }
 
@@ -44,7 +44,7 @@ namespace Conqueror.Eventing
 
             var middleware = (IEventObserverMiddleware)serviceProvider.GetRequiredService(middlewareType);
 
-            await middleware.Execute(ctx);
+            await middleware.Execute(ctx).ConfigureAwait(false);
         }
     }
 }

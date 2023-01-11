@@ -68,7 +68,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
 
             var address = new Uri(options.BaseAddress, uriString);
 
-            using var webSocket = await options.WebSocketFactory(address, cancellationToken);
+            using var webSocket = await options.WebSocketFactory(address, cancellationToken).ConfigureAwait(false);
             using var textWebSocket = new TextWebSocket(webSocket);
             using var textWebSocketWithHeartbeat = new TextWebSocketWithHeartbeat(textWebSocket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
             using var jsonWebSocket = new JsonWebSocket(textWebSocketWithHeartbeat, options.JsonSerializerOptions ?? new JsonSerializerOptions());
@@ -79,11 +79,11 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
             async Task Close(CancellationToken ct)
             {
                 // ReSharper disable AccessToDisposedClosure
-                await closingSemaphore.WaitAsync(ct);
+                await closingSemaphore.WaitAsync(ct).ConfigureAwait(false);
 
                 try
                 {
-                    await clientWebSocket.Close(ct);
+                    await clientWebSocket.Close(ct).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -93,7 +93,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
                 // ReSharper enable AccessToDisposedClosure
             }
 
-            await using var d = cancellationToken.Register(() => Close(CancellationToken.None).Wait(CancellationToken.None));
+            await using var d = cancellationToken.Register(() => Close(CancellationToken.None).Wait(CancellationToken.None)).ConfigureAwait(false);
 
             var enumerator = clientWebSocket.Read(cancellationToken).GetAsyncEnumerator(cancellationToken);
 
@@ -101,28 +101,28 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    await Close(cancellationToken);
+                    await Close(cancellationToken).ConfigureAwait(false);
                     yield break;
                 }
 
                 try
                 {
-                    _ = await clientWebSocket.RequestNextItem(cancellationToken);
+                    _ = await clientWebSocket.RequestNextItem(cancellationToken).ConfigureAwait(false);
 
-                    if (!await enumerator.MoveNextAsync())
+                    if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
                     {
-                        await Close(cancellationToken);
+                        await Close(cancellationToken).ConfigureAwait(false);
                         yield break;
                     }
                 }
                 catch (OperationCanceledException)
                 {
-                    await Close(CancellationToken.None);
+                    await Close(CancellationToken.None).ConfigureAwait(false);
                     throw;
                 }
                 catch
                 {
-                    await Close(cancellationToken);
+                    await Close(cancellationToken).ConfigureAwait(false);
                     throw;
                 }
 

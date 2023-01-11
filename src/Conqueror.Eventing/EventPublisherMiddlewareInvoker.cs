@@ -22,7 +22,7 @@ namespace Conqueror.Eventing
         {
             var middleware = (IEventPublisherMiddleware)serviceProvider.GetRequiredService(middlewareType);
             var ctx = new DefaultEventPublisherMiddlewareContext<TEvent>(evt, next, cancellationToken);
-            await middleware.Execute(ctx);
+            await middleware.Execute(ctx).ConfigureAwait(false);
         }
     }
 }

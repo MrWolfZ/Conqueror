@@ -21,7 +21,7 @@ namespace Conqueror.Eventing
         public async Task PublishEvent(object evt, CancellationToken cancellationToken)
         {
             var publishFn = PublishFunctions.GetOrAdd(evt.GetType(), CreatePublishFunction);
-            await publishFn(this, evt, cancellationToken);
+            await publishFn(this, evt, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task PublishEventGeneric<TEvent>(TEvent evt, CancellationToken cancellationToken)
@@ -34,7 +34,7 @@ namespace Conqueror.Eventing
                 return;
             }
 
-            await observer.HandleEvent(evt, cancellationToken);
+            await observer.HandleEvent(evt, cancellationToken).ConfigureAwait(false);
         }
 
         private Func<EventPublisher, object, CancellationToken, Task> CreatePublishFunction(Type eventType)

@@ -22,7 +22,7 @@ namespace Conqueror.Eventing
                                           CancellationToken cancellationToken)
             where TEvent : class
         {
-            await ExecuteNextMiddleware(0, initialEvent, cancellationToken);
+            await ExecuteNextMiddleware(0, initialEvent, cancellationToken).ConfigureAwait(false);
 
             async Task ExecuteNextMiddleware(int index, TEvent evt, CancellationToken token)
             {
@@ -30,7 +30,7 @@ namespace Conqueror.Eventing
                 {
                     var observer = (IEventObserver<TEvent>)serviceProvider.GetRequiredService(metadata.ObserverType);
 
-                    await observer.HandleEvent(evt, token);
+                    await observer.HandleEvent(evt, token).ConfigureAwait(false);
                     return;
                 }
 
@@ -42,7 +42,7 @@ namespace Conqueror.Eventing
 
                 var invoker = (IEventObserverMiddlewareInvoker)Activator.CreateInstance(invokerType)!;
 
-                await invoker.Invoke(evt, (e, t) => ExecuteNextMiddleware(index + 1, e, t), middlewareType, middlewareConfiguration, serviceProvider, token);
+                await invoker.Invoke(evt, (e, t) => ExecuteNextMiddleware(index + 1, e, t), middlewareType, middlewareConfiguration, serviceProvider, token).ConfigureAwait(false);
             }
         }
     }

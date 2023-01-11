@@ -24,18 +24,18 @@ namespace Conqueror.Eventing
         {
             var publisherMiddlewareInvokers = serviceProvider.GetRequiredService<IEnumerable<IEventPublisherMiddlewareInvoker>>().ToList();
 
-            await ExecuteNextPublisherMiddleware(0, evt, cancellationToken);
+            await ExecuteNextPublisherMiddleware(0, evt, cancellationToken).ConfigureAwait(false);
 
             async Task ExecuteNextPublisherMiddleware(int index, TEvent e, CancellationToken token)
             {
                 if (index >= publisherMiddlewareInvokers.Count)
                 {
-                    await ExecuteEventObserverMiddlewares(serviceProvider, metadataCol, e, cancellationToken);
+                    await ExecuteEventObserverMiddlewares(serviceProvider, metadataCol, e, cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
                 var publisherMiddlewareInvoker = publisherMiddlewareInvokers[index];
-                await publisherMiddlewareInvoker.Invoke(e, (e2, t) => ExecuteNextPublisherMiddleware(index + 1, e2, t), serviceProvider, token);
+                await publisherMiddlewareInvoker.Invoke(e, (e2, t) => ExecuteNextPublisherMiddleware(index + 1, e2, t), serviceProvider, token).ConfigureAwait(false);
             }
         }
 
@@ -48,7 +48,7 @@ namespace Conqueror.Eventing
             // TODO: configurable strategy for order
             foreach (var metadata in metadataCol)
             {
-                await ExecuteObserverMiddlewares(serviceProvider, metadata, evt, cancellationToken);
+                await ExecuteObserverMiddlewares(serviceProvider, metadata, evt, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -67,7 +67,7 @@ namespace Conqueror.Eventing
 
             var pipeline = pipelineBuilder.Build();
 
-            await pipeline.Execute(serviceProvider, metadata, evt, cancellationToken);
+            await pipeline.Execute(serviceProvider, metadata, evt, cancellationToken).ConfigureAwait(false);
         }
     }
 }

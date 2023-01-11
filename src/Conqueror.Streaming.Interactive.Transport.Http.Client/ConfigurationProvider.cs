@@ -24,7 +24,7 @@ namespace Conqueror.Streaming.Interactive.Transport.Http.Client
             {
                 var socket = new ClientWebSocket();
 
-                await socket.ConnectAsync(address, cancellationToken);
+                await socket.ConnectAsync(address, cancellationToken).ConfigureAwait(false);
 
                 return socket;
             });
