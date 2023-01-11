@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Conqueror.CQS.QueryHandling
 {
@@ -13,10 +14,10 @@ namespace Conqueror.CQS.QueryHandling
             this.serviceProvider = serviceProvider;
         }
 
-        public THandler CreateQueryClient<THandler>(Func<IQueryTransportClientBuilder, IQueryTransportClient> transportBuilderFn, Action<IQueryPipelineBuilder>? configurePipeline = null)
+        public THandler CreateQueryClient<THandler>(Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory, Action<IQueryPipelineBuilder>? configurePipeline = null)
             where THandler : class, IQueryHandler
         {
-            return innerFactory.CreateQueryClient<THandler>(serviceProvider, transportBuilderFn, configurePipeline);
+            return innerFactory.CreateQueryClient<THandler>(serviceProvider, transportClientFactory, configurePipeline);
         }
     }
 }

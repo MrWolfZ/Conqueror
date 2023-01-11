@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Conqueror.Common;
 using Conqueror.CQS.Common;
 
@@ -10,7 +11,7 @@ namespace Conqueror.CQS.CommandHandling
     internal sealed class CommandClientFactory
     {
         public THandler CreateCommandClient<THandler>(IServiceProvider serviceProvider,
-                                                      Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                      Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
                                                       Action<ICommandPipelineBuilder>? configurePipeline)
             where THandler : class, ICommandHandler
         {
@@ -61,7 +62,7 @@ namespace Conqueror.CQS.CommandHandling
         }
 
         private static THandler CreateCommandClientInternal<THandler, TCommand, TResponse>(IServiceProvider serviceProvider,
-                                                                                           Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                                                           Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
                                                                                            Action<ICommandPipelineBuilder>? configurePipeline)
             where THandler : class, ICommandHandler
             where TCommand : class

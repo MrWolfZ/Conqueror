@@ -2,7 +2,7 @@
 
 namespace Conqueror.CQS.Tests
 {
-    public sealed class CommandClientFactoryTests
+    public abstract class CommandClientFactoryTests
     {
         [Test]
         public async Task GivenPlainHandlerInterface_ClientCanBeCreated()
@@ -18,7 +18,7 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            var client = clientFactory.CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+            var client = CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
             var command = new TestCommand();
 
@@ -41,7 +41,7 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            var client = clientFactory.CreateCommandClient<ITestCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+            var client = CreateCommandClient<ITestCommandHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
             var command = new TestCommand();
 
@@ -64,7 +64,7 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            var client = clientFactory.CreateCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+            var client = CreateCommandClient<ICommandHandler<TestCommandWithoutResponse>>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
             var command = new TestCommandWithoutResponse();
 
@@ -87,7 +87,7 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            var client = clientFactory.CreateCommandClient<ITestCommandWithoutResponseHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+            var client = CreateCommandClient<ITestCommandWithoutResponseHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
             var command = new TestCommandWithoutResponse();
 
@@ -111,8 +111,9 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            var client = clientFactory.CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>(),
-                                                                                                              p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+            var client = CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(clientFactory,
+                                                                                                b => b.ServiceProvider.GetRequiredService<TestCommandTransport>(),
+                                                                                                p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
 
             var command = new TestCommand();
 
@@ -136,8 +137,9 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            var client = clientFactory.CreateCommandClient<ITestCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>(),
-                                                                                p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+            var client = CreateCommandClient<ITestCommandHandler>(clientFactory,
+                                                                  b => b.ServiceProvider.GetRequiredService<TestCommandTransport>(),
+                                                                  p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
 
             var command = new TestCommand();
 
@@ -160,7 +162,7 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<ITestCommandHandlerWithExtraMethod>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateCommandClient<ITestCommandHandlerWithExtraMethod>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
 
         [Test]
@@ -177,7 +179,7 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<INonGenericCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateCommandClient<INonGenericCommandHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
 
         [Test]
@@ -194,7 +196,7 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<TestCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateCommandClient<TestCommandHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
 
         [Test]
@@ -211,7 +213,7 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<ICombinedCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateCommandClient<ICombinedCommandHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
 
         [Test]
@@ -228,8 +230,13 @@ namespace Conqueror.CQS.Tests
 
             var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateCommandClient<ICombinedCustomCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateCommandClient<ICombinedCustomCommandHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>()));
         }
+
+        protected abstract THandler CreateCommandClient<THandler>(ICommandClientFactory clientFactory,
+                                                                  Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                                  Action<ICommandPipelineBuilder>? configurePipeline = null)
+            where THandler : class, ICommandHandler;
 
 // interface and event types must be public for dynamic type generation to work
 #pragma warning disable CA1034
@@ -321,6 +328,35 @@ namespace Conqueror.CQS.Tests
             public List<object> Commands { get; } = new();
 
             public List<Type> MiddlewareTypes { get; } = new();
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class CommandClientFactoryWithSyncFactoryTests : CommandClientFactoryTests
+    {
+        protected override THandler CreateCommandClient<THandler>(ICommandClientFactory clientFactory,
+                                                                  Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                                  Action<ICommandPipelineBuilder>? configurePipeline = null)
+        {
+            return clientFactory.CreateCommandClient<THandler>(transportClientFactory, configurePipeline);
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class CommandClientFactoryWithAsyncFactoryTests : CommandClientFactoryTests
+    {
+        protected override THandler CreateCommandClient<THandler>(ICommandClientFactory clientFactory,
+                                                                  Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                                  Action<ICommandPipelineBuilder>? configurePipeline = null)
+        {
+            return clientFactory.CreateCommandClient<THandler>(async b =>
+                                                               {
+                                                                   await Task.Delay(1);
+                                                                   return transportClientFactory(b);
+                                                               },
+                                                               configurePipeline);
         }
     }
 }

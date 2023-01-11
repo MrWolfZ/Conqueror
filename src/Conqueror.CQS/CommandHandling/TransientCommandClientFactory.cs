@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Conqueror.CQS.CommandHandling
 {
@@ -13,10 +14,10 @@ namespace Conqueror.CQS.CommandHandling
             this.serviceProvider = serviceProvider;
         }
 
-        public THandler CreateCommandClient<THandler>(Func<ICommandTransportClientBuilder, ICommandTransportClient> transportBuilderFn, Action<ICommandPipelineBuilder>? configurePipeline = null)
+        public THandler CreateCommandClient<THandler>(Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory, Action<ICommandPipelineBuilder>? configurePipeline = null)
             where THandler : class, ICommandHandler
         {
-            return innerFactory.CreateCommandClient<THandler>(serviceProvider, transportBuilderFn, configurePipeline);
+            return innerFactory.CreateCommandClient<THandler>(serviceProvider, transportClientFactory, configurePipeline);
         }
     }
 }

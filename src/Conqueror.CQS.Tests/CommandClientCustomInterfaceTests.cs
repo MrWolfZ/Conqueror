@@ -2,7 +2,7 @@
 
 namespace Conqueror.CQS.Tests
 {
-    public sealed class CommandClientCustomInterfaceTests
+    public abstract class CommandClientCustomInterfaceTests
     {
         [Test]
         public async Task GivenCustomHandlerInterface_ClientCanBeCreated()
@@ -10,8 +10,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddCommandClient<ITestCommandHandler>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ITestCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>())
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
@@ -32,8 +33,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddCommandClient<ITestCommandWithoutResponseHandler>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ITestCommandWithoutResponseHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>())
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
@@ -47,6 +49,11 @@ namespace Conqueror.CQS.Tests
 
             Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
         }
+
+        protected abstract void AddCommandClient<THandler>(IServiceCollection services,
+                                                           Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                           Action<ICommandPipelineBuilder>? configurePipeline = null)
+            where THandler : class, ICommandHandler;
 
 // interface and event types must be public for dynamic type generation to work
 #pragma warning disable CA1034
@@ -92,6 +99,35 @@ namespace Conqueror.CQS.Tests
         private sealed class TestObservations
         {
             public List<object> Commands { get; } = new();
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class CommandClientCustomInterfaceWithSyncFactoryTests : CommandClientCustomInterfaceTests
+    {
+        protected override void AddCommandClient<THandler>(IServiceCollection services,
+                                                           Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                           Action<ICommandPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline);
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class CommandClientCustomInterfaceWithAsyncFactoryTests : CommandClientCustomInterfaceTests
+    {
+        protected override void AddCommandClient<THandler>(IServiceCollection services,
+                                                           Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                           Action<ICommandPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorCommandClient<THandler>(async b =>
+                                                             {
+                                                                 await Task.Delay(1);
+                                                                 return transportClientFactory(b);
+                                                             },
+                                                             configurePipeline);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Conqueror.Common;
 using Conqueror.CQS.Common;
 
@@ -10,7 +11,7 @@ namespace Conqueror.CQS.QueryHandling
     internal sealed class QueryClientFactory
     {
         public THandler CreateQueryClient<THandler>(IServiceProvider serviceProvider,
-                                                    Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                    Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
                                                     Action<IQueryPipelineBuilder>? configurePipeline)
             where THandler : class, IQueryHandler
         {
@@ -61,7 +62,7 @@ namespace Conqueror.CQS.QueryHandling
         }
 
         private static THandler CreateQueryClientInternal<THandler, TQuery, TResponse>(IServiceProvider serviceProvider,
-                                                                                       Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                                                       Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
                                                                                        Action<IQueryPipelineBuilder>? configurePipeline)
             where THandler : class, IQueryHandler
             where TQuery : class

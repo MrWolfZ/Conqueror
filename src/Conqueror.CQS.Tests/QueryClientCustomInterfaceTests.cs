@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.CQS.Tests
 {
-    public sealed class QueryClientCustomInterfaceTests
+    public abstract class QueryClientCustomInterfaceTests
     {
         [Test]
         public async Task GivenCustomHandlerInterface_ClientCanBeCreated()
@@ -8,8 +8,9 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<ITestQueryHandler>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<ITestQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>())
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
@@ -23,6 +24,11 @@
 
             Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
         }
+
+        protected abstract void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+            where THandler : class, IQueryHandler;
 
 // interface and event types must be public for dynamic type generation to work
 #pragma warning disable CA1034
@@ -57,6 +63,35 @@
         private sealed class TestObservations
         {
             public List<object> Queries { get; } = new();
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class QueryClientCustomInterfaceWithSyncFactoryTests : QueryClientCustomInterfaceTests
+    {
+        protected override void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorQueryClient<THandler>(transportClientFactory, configurePipeline);
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class QueryClientCustomInterfaceWithAsyncFactoryTests : QueryClientCustomInterfaceTests
+    {
+        protected override void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorQueryClient<THandler>(async b =>
+                                                           {
+                                                               await Task.Delay(1);
+                                                               return transportClientFactory(b);
+                                                           },
+                                                           configurePipeline);
         }
     }
 }

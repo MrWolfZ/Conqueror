@@ -2,7 +2,7 @@
 
 namespace Conqueror.CQS.Tests
 {
-    public sealed class CommandClientFunctionalityTests
+    public abstract class CommandClientFunctionalityTests
     {
         [Test]
         public async Task GivenCommand_TransportReceivesCommand()
@@ -10,8 +10,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>())
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
@@ -32,8 +33,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>())
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
@@ -54,8 +56,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>())
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
@@ -76,8 +79,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>())
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
@@ -98,8 +102,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>())
                         .AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
@@ -122,13 +127,14 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b =>
+            {
+                var transport = b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                seenInstances.Add(transport);
+                return transport;
+            });
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b =>
-                        {
-                            var transport = b.ServiceProvider.GetRequiredService<TestCommandTransport>();
-                            seenInstances.Add(transport);
-                            return transport;
-                        })
                         .AddScoped<TestCommandTransport>()
                         .AddSingleton(observations);
 
@@ -156,8 +162,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var exception = new Exception();
 
+            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<ThrowingTestCommandTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<ThrowingTestCommandTransport>())
                         .AddTransient<ThrowingTestCommandTransport>()
                         .AddSingleton(exception);
 
@@ -169,6 +176,11 @@ namespace Conqueror.CQS.Tests
 
             Assert.AreSame(exception, thrownException);
         }
+
+        protected abstract void AddCommandClient<THandler>(IServiceCollection services,
+                                                           Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                           Action<ICommandPipelineBuilder>? configurePipeline = null)
+            where THandler : class, ICommandHandler;
 
         private sealed record TestCommand(int Payload);
 
@@ -224,6 +236,35 @@ namespace Conqueror.CQS.Tests
             public List<object> Commands { get; } = new();
 
             public List<CancellationToken> CancellationTokens { get; } = new();
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class CommandClientFunctionalityWithSyncFactoryTests : CommandClientFunctionalityTests
+    {
+        protected override void AddCommandClient<THandler>(IServiceCollection services,
+                                                           Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                           Action<ICommandPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline);
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class CommandClientFunctionalityWithAsyncFactoryTests : CommandClientFunctionalityTests
+    {
+        protected override void AddCommandClient<THandler>(IServiceCollection services,
+                                                           Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                           Action<ICommandPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorCommandClient<THandler>(async b =>
+                                                             {
+                                                                 await Task.Delay(1);
+                                                                 return transportClientFactory(b);
+                                                             },
+                                                             configurePipeline);
         }
     }
 }

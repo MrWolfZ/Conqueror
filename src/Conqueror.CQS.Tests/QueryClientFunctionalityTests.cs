@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.CQS.Tests
 {
-    public sealed class QueryClientFunctionalityTests
+    public abstract class QueryClientFunctionalityTests
     {
         [Test]
         public async Task GivenQuery_TransportReceivesQuery()
@@ -8,8 +8,9 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>())
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
@@ -30,8 +31,9 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>())
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
@@ -52,8 +54,9 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>())
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
@@ -76,13 +79,14 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b =>
+            {
+                var transport = b.ServiceProvider.GetRequiredService<TestQueryTransport>();
+                seenInstances.Add(transport);
+                return transport;
+            });
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b =>
-                        {
-                            var transport = b.ServiceProvider.GetRequiredService<TestQueryTransport>();
-                            seenInstances.Add(transport);
-                            return transport;
-                        })
                         .AddScoped<TestQueryTransport>()
                         .AddSingleton(observations);
 
@@ -110,8 +114,9 @@
             var services = new ServiceCollection();
             var exception = new Exception();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<ThrowingTestQueryTransport>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<ThrowingTestQueryTransport>())
                         .AddTransient<ThrowingTestQueryTransport>()
                         .AddSingleton(exception);
 
@@ -123,6 +128,11 @@
 
             Assert.AreSame(exception, thrownException);
         }
+
+        protected abstract void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+            where THandler : class, IQueryHandler;
 
         private sealed record TestQuery(int Payload);
 
@@ -171,6 +181,35 @@
             public List<object> Queries { get; } = new();
 
             public List<CancellationToken> CancellationTokens { get; } = new();
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class QueryClientFunctionalityWithSyncFactoryTests : QueryClientFunctionalityTests
+    {
+        protected override void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorQueryClient<THandler>(transportClientFactory, configurePipeline);
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class QueryClientFunctionalityWithAsyncFactoryTests : QueryClientFunctionalityTests
+    {
+        protected override void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorQueryClient<THandler>(async b =>
+                                                           {
+                                                               await Task.Delay(1);
+                                                               return transportClientFactory(b);
+                                                           },
+                                                           configurePipeline);
         }
     }
 }

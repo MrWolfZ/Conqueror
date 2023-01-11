@@ -9,9 +9,9 @@ namespace Conqueror.CQS.QueryHandling
     {
         private readonly Action<IQueryPipelineBuilder>? configurePipeline;
         private readonly IServiceProvider serviceProvider;
-        private readonly Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory;
+        private readonly Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory;
 
-        public QueryHandlerProxy(IServiceProvider serviceProvider, Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory, Action<IQueryPipelineBuilder>? configurePipeline)
+        public QueryHandlerProxy(IServiceProvider serviceProvider, Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory, Action<IQueryPipelineBuilder>? configurePipeline)
         {
             this.serviceProvider = serviceProvider;
             this.transportClientFactory = transportClientFactory;

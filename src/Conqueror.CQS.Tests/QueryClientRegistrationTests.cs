@@ -11,9 +11,25 @@
         }
 
         [Test]
+        public void GivenRegisteredPlainClientWithAsyncClientFactory_CanResolvePlainClient()
+        {
+            using var provider = RegisterClientWithAsyncClientFactory<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
+        }
+
+        [Test]
         public void GivenRegisteredCustomClient_CanResolvePlainClient()
         {
             using var provider = RegisterClient<ITestQueryHandler>();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
+        }
+
+        [Test]
+        public void GivenRegisteredCustomClientWithAsyncClientFactory_CanResolvePlainClient()
+        {
+            using var provider = RegisterClientWithAsyncClientFactory<ITestQueryHandler>();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
         }
@@ -27,9 +43,24 @@
         }
 
         [Test]
+        public void GivenRegisteredCustomClientWithAsyncClientFactory_CanResolveCustomClient()
+        {
+            using var provider = RegisterClientWithAsyncClientFactory<ITestQueryHandler>();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestQueryHandler>());
+        }
+
+        [Test]
         public void GivenUnregisteredPlainClient_ThrowsInvalidOperationException()
         {
             using var provider = RegisterClient<ITestQueryHandler>();
+            _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IQueryHandler<UnregisteredTestQuery, TestQueryResponse>>());
+        }
+
+        [Test]
+        public void GivenUnregisteredPlainClientWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            using var provider = RegisterClientWithAsyncClientFactory<ITestQueryHandler>();
             _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IQueryHandler<UnregisteredTestQuery, TestQueryResponse>>());
         }
 
@@ -41,9 +72,29 @@
         }
 
         [Test]
+        public void GivenUnregisteredCustomClientWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            using var provider = RegisterClientWithAsyncClientFactory<ITestQueryHandler>();
+            _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IUnregisteredTestQueryHandler>());
+        }
+
+        [Test]
         public void GivenRegisteredPlainClient_CanResolvePlainClientWithoutHavingServicesExplicitlyRegistered()
         {
             var provider = new ServiceCollection().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => new TestQueryTransport())
+                                                  .BuildServiceProvider();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
+        }
+
+        [Test]
+        public void GivenRegisteredPlainClientWithAsyncClientFactory_CanResolvePlainClientWithoutHavingServicesExplicitlyRegistered()
+        {
+            var provider = new ServiceCollection().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async _ =>
+                                                  {
+                                                      await Task.CompletedTask;
+                                                      return new TestQueryTransport();
+                                                  })
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
@@ -59,12 +110,68 @@
         }
 
         [Test]
+        public void GivenRegisteredCustomClientWithAsyncClientFactory_CanResolveCustomClientWithoutHavingServicesExplicitlyRegistered()
+        {
+            var provider = new ServiceCollection().AddConquerorQueryClient<ITestQueryHandler>(async _ =>
+                                                  {
+                                                      await Task.CompletedTask;
+                                                      return new TestQueryTransport();
+                                                  })
+                                                  .BuildServiceProvider();
+
+            Assert.DoesNotThrow(() => provider.GetRequiredService<ITestQueryHandler>());
+        }
+
+        [Test]
         public void GivenAlreadyRegisteredPlainClient_WhenRegistering_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => new TestQueryTransport());
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => new TestQueryTransport()));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredPlainClientWithAsyncClientFactory_WhenRegistering_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            });
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => new TestQueryTransport()));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredPlainClient_WhenRegisteringWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => new TestQueryTransport());
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            }));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredPlainClientWithAsyncClientFactory_WhenRegisteringWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            });
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            }));
         }
 
         [Test]
@@ -77,6 +184,49 @@
         }
 
         [Test]
+        public void GivenAlreadyRegisteredCustomClientWithAsyncClientFactory_WhenRegistering_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddConquerorQueryClient<ITestQueryHandler>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            });
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<ITestQueryHandler>(_ => new TestQueryTransport()));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredCustomClient_WhenRegisteringWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddConquerorQueryClient<ITestQueryHandler>(_ => new TestQueryTransport());
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<ITestQueryHandler>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            }));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredCustomClientWithAsyncClientFactory_WhenRegisteringWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddConquerorQueryClient<ITestQueryHandler>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            });
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<ITestQueryHandler>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            }));
+        }
+
+        [Test]
         public void GivenCustomInterfaceWithExtraMethods_WhenRegistering_ThrowsArgumentException()
         {
             var services = new ServiceCollection();
@@ -86,7 +236,20 @@
         }
 
         [Test]
-        public void GivenRegisteredAndConfiguredHandler_WhenRegisteringPlainClient_ThrowsInvalidOperationException()
+        public void GivenCustomInterfaceWithExtraMethods_WhenRegisteringWithAsyncClientFactory_ThrowsArgumentException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS();
+
+            _ = Assert.Throws<ArgumentException>(() => services.AddConquerorQueryClient<ITestQueryHandlerWithExtraMethod>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            }));
+        }
+
+        [Test]
+        public void GivenRegisteredAndFinalizedHandler_WhenRegisteringPlainClient_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().FinalizeConquerorRegistrations();
@@ -95,7 +258,20 @@
         }
 
         [Test]
-        public void GivenRegisteredAndConfiguredHandler_WhenRegisteringCustomClient_ThrowsInvalidOperationException()
+        public void GivenRegisteredAndFinalizedHandler_WhenRegisteringPlainClientWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().FinalizeConquerorRegistrations();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            }));
+        }
+
+        [Test]
+        public void GivenRegisteredAndFinalizedHandler_WhenRegisteringCustomClient_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().FinalizeConquerorRegistrations();
@@ -104,7 +280,20 @@
         }
 
         [Test]
-        public void GivenRegisteredHandlerAndPlainClient_WhenConfiguring_ThrowsInvalidOperationException()
+        public void GivenRegisteredAndFinalizedHandler_WhenRegisteringCustomClientWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().FinalizeConquerorRegistrations();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryClient<ITestQueryHandler>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            }));
+        }
+
+        [Test]
+        public void GivenRegisteredHandlerAndPlainClient_WhenFinalizing_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => new TestQueryTransport());
@@ -113,10 +302,36 @@
         }
 
         [Test]
-        public void GivenRegisteredHandlerAndCustomClient_WhenConfiguring_ThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerAndPlainClientWithAsyncClientFactory_WhenFinalizing_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            });
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+        }
+
+        [Test]
+        public void GivenRegisteredHandlerAndCustomClient_WhenFinalizing_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
             _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().AddConquerorQueryClient<ITestQueryHandler>(_ => new TestQueryTransport());
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+        }
+
+        [Test]
+        public void GivenRegisteredHandlerAndCustomClientWithAsyncClientFactory_WhenFinalizing_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQS().AddTransient<TestQueryHandler>().AddConquerorQueryClient<ITestQueryHandler>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestQueryTransport();
+            });
 
             _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
@@ -129,7 +344,16 @@
             Assert.DoesNotThrow(() => provider.GetRequiredService<IConquerorContextAccessor>());
         }
 
-        private ServiceProvider RegisterClient<TQueryHandler>()
+        private static ServiceProvider RegisterClient<TQueryHandler>()
+            where TQueryHandler : class, IQueryHandler
+        {
+            return new ServiceCollection().AddConquerorCQS()
+                                          .AddConquerorQueryClient<TQueryHandler>(_ => new TestQueryTransport())
+                                          .FinalizeConquerorRegistrations()
+                                          .BuildServiceProvider();
+        }
+
+        private static ServiceProvider RegisterClientWithAsyncClientFactory<TQueryHandler>()
             where TQueryHandler : class, IQueryHandler
         {
             return new ServiceCollection().AddConquerorCQS()

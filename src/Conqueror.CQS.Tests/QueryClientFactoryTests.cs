@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.CQS.Tests
 {
-    public sealed class QueryClientFactoryTests
+    public abstract class QueryClientFactoryTests
     {
         [Test]
         public async Task GivenPlainHandlerInterface_ClientCanBeCreated()
@@ -16,7 +16,7 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            var client = clientFactory.CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+            var client = CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
             var query = new TestQuery();
 
@@ -39,7 +39,7 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            var client = clientFactory.CreateQueryClient<ITestQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+            var client = CreateQueryClient<ITestQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
             var query = new TestQuery();
 
@@ -63,8 +63,9 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            var client = clientFactory.CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
-                                                                                                      p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+            var client = CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(clientFactory,
+                                                                                        b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
+                                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
 
             var query = new TestQuery();
 
@@ -88,8 +89,9 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            var client = clientFactory.CreateQueryClient<ITestQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
-                                                                            p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+            var client = CreateQueryClient<ITestQueryHandler>(clientFactory,
+                                                              b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
+                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
 
             var query = new TestQuery();
 
@@ -112,7 +114,7 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<ITestQueryHandlerWithExtraMethod>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ITestQueryHandlerWithExtraMethod>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
 
         [Test]
@@ -129,7 +131,7 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<INonGenericQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<INonGenericQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
 
         [Test]
@@ -146,7 +148,7 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<TestQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<TestQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
 
         [Test]
@@ -163,7 +165,7 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<ICombinedQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ICombinedQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
 
         [Test]
@@ -180,8 +182,13 @@
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-            _ = Assert.Throws<ArgumentException>(() => clientFactory.CreateQueryClient<ICombinedCustomQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+            _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ICombinedCustomQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
         }
+
+        protected abstract THandler CreateQueryClient<THandler>(IQueryClientFactory clientFactory,
+                                                                Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                                Action<IQueryPipelineBuilder>? configurePipeline = null)
+            where THandler : class, IQueryHandler;
 
 // interface and event types must be public for dynamic type generation to work
 #pragma warning disable CA1034
@@ -268,6 +275,35 @@
             public List<object> Queries { get; } = new();
 
             public List<Type> MiddlewareTypes { get; } = new();
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class QueryClientFactoryWithSyncFactoryTests : QueryClientFactoryTests
+    {
+        protected override THandler CreateQueryClient<THandler>(IQueryClientFactory clientFactory,
+                                                                Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                                Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            return clientFactory.CreateQueryClient<THandler>(transportClientFactory, configurePipeline);
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class QueryClientFactoryWithAsyncFactoryTests : QueryClientFactoryTests
+    {
+        protected override THandler CreateQueryClient<THandler>(IQueryClientFactory clientFactory,
+                                                                Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                                Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            return clientFactory.CreateQueryClient<THandler>(async b =>
+                                                             {
+                                                                 await Task.Delay(1);
+                                                                 return transportClientFactory(b);
+                                                             },
+                                                             configurePipeline);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Common;
 using Conqueror.CQS.CommandHandling;
@@ -20,9 +21,25 @@ namespace Microsoft.Extensions.DependencyInjection
             return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline);
         }
 
+        public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
+                                                                             Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
+                                                                             Action<ICommandPipelineBuilder>? configurePipeline = null)
+            where THandler : class, ICommandHandler
+        {
+            return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline);
+        }
+
         internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
                                                                      Type handlerType,
                                                                      Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                                     Action<ICommandPipelineBuilder>? configurePipeline)
+        {
+            return services.AddConquerorCommandClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline);
+        }
+
+        internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
+                                                                     Type handlerType,
+                                                                     Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
                                                                      Action<ICommandPipelineBuilder>? configurePipeline)
         {
             handlerType.ValidateNoInvalidCommandHandlerInterface();
@@ -81,7 +98,7 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         private static void AddClient<THandler, TCommand, TResponse>(this IServiceCollection services,
-                                                                     Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                                     Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
                                                                      Action<ICommandPipelineBuilder>? configurePipeline = null)
             where THandler : class, ICommandHandler
             where TCommand : class

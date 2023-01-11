@@ -23,7 +23,7 @@ namespace Conqueror.CQS.QueryHandling
 
         public async Task<TResponse> Execute<TQuery, TResponse>(IServiceProvider serviceProvider,
                                                                 TQuery initialQuery,
-                                                                Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                                Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
                                                                 CancellationToken cancellationToken)
             where TQuery : class
         {
@@ -52,7 +52,7 @@ namespace Conqueror.CQS.QueryHandling
 
                 if (index >= middlewares.Count)
                 {
-                    var transportClient = transportClientFactory(transportClientBuilder);
+                    var transportClient = await transportClientFactory(transportClientBuilder);
                     var responseFromHandler = await transportClient.ExecuteQuery<TQuery, TResponse>(query, token).ConfigureAwait(false);
                     queryContext.SetResponse(responseFromHandler);
                     return responseFromHandler;

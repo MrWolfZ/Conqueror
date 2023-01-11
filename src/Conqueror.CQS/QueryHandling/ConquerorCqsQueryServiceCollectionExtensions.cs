@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Common;
 using Conqueror.CQS.Common;
@@ -20,9 +21,25 @@ namespace Microsoft.Extensions.DependencyInjection
             return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, configurePipeline);
         }
 
+        public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
+                                                                           Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
+                                                                           Action<IQueryPipelineBuilder>? configurePipeline = null)
+            where THandler : class, IQueryHandler
+        {
+            return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, configurePipeline);
+        }
+
         internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                                    Type handlerType,
                                                                    Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                                   Action<IQueryPipelineBuilder>? configurePipeline)
+        {
+            return services.AddConquerorQueryClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline);
+        }
+
+        internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
+                                                                   Type handlerType,
+                                                                   Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
                                                                    Action<IQueryPipelineBuilder>? configurePipeline)
         {
             handlerType.ValidateNoInvalidQueryHandlerInterface();
@@ -81,7 +98,7 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         private static void AddClient<THandler, TQuery, TResponse>(this IServiceCollection services,
-                                                                   Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                                   Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
                                                                    Action<IQueryPipelineBuilder>? configurePipeline = null)
             where THandler : class, IQueryHandler
             where TQuery : class

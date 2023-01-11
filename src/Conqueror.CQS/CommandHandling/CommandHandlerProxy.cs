@@ -9,10 +9,10 @@ namespace Conqueror.CQS.CommandHandling
     {
         private readonly Action<ICommandPipelineBuilder>? configurePipeline;
         private readonly IServiceProvider serviceProvider;
-        private readonly Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory;
+        private readonly Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory;
 
         public CommandHandlerProxy(IServiceProvider serviceProvider,
-                                   Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                   Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
                                    Action<ICommandPipelineBuilder>? configurePipeline)
         {
             this.serviceProvider = serviceProvider;

@@ -1,6 +1,6 @@
 ﻿namespace Conqueror.CQS.Tests
 {
-    public sealed class QueryClientMiddlewareFunctionalityTests
+    public abstract class QueryClientMiddlewareFunctionalityTests
     {
         [Test]
         public async Task GivenClientWithNoMiddleware_MiddlewareIsNotCalled()
@@ -8,8 +8,9 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport)
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -32,9 +33,11 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -57,9 +60,11 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 }));
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 }))
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -79,10 +84,12 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .Use<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .Use<TestQueryMiddleware2>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -105,10 +112,12 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.UseAllowMultiple<TestQueryMiddleware2>()
+                                                                              .UseAllowMultiple<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.UseAllowMultiple<TestQueryMiddleware2>()
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware2>())
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
@@ -130,12 +139,14 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .Use<TestQueryMiddleware2>()
+                                                                              .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .Without<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .Use<TestQueryMiddleware2>()
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .Without<TestQueryMiddleware2>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -158,12 +169,14 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.UseAllowMultiple<TestQueryMiddleware2>()
+                                                                              .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .UseAllowMultiple<TestQueryMiddleware2>()
+                                                                              .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.UseAllowMultiple<TestQueryMiddleware2>()
-                                                                                                    .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware2>()
-                                                                                                    .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -186,13 +199,15 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .UseAllowMultiple<TestQueryMiddleware2>()
+                                                                              .UseAllowMultiple<TestQueryMiddleware2>()
+                                                                              .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .Without<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware2>()
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware2>()
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .Without<TestQueryMiddleware2>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -215,13 +230,15 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.UseAllowMultiple<TestQueryMiddleware2>()
+                                                                              .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .UseAllowMultiple<TestQueryMiddleware2>()
+                                                                              .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.UseAllowMultiple<TestQueryMiddleware2>()
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware2>()
-                                                                                                    .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -244,10 +261,12 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware2>()
+                                                                              .Use<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware2>()
-                                                                                                    .Use<TestQueryMiddleware2>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -265,10 +284,12 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -286,10 +307,12 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware2>()
+                                                                              .UseAllowMultiple<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware2>()
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware2>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -307,10 +330,12 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -328,11 +353,13 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware2>()
+                                                                              .Without<TestQueryMiddleware2>()
+                                                                              .Use<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware2>()
-                                                                                                    .Without<TestQueryMiddleware2>()
-                                                                                                    .Use<TestQueryMiddleware2>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -350,11 +377,13 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>()
+                                                                              .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>()
-                                                                                                    .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -372,11 +401,13 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryRetryMiddleware>()
+                                                                              .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .Use<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryRetryMiddleware>()
-                                                                                                    .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .Use<TestQueryMiddleware2>())
                         .AddTransient<TestQueryRetryMiddleware>()
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
@@ -404,10 +435,12 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                                                              .Use<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                                                    .Use<TestQueryMiddleware2>())
                         .AddTransient<TestQueryMiddleware>()
                         .AddTransient<TestQueryMiddleware2>()
                         .AddSingleton(observations);
@@ -429,10 +462,12 @@
             var observations = new TestObservations();
             var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<MutatingTestQueryMiddleware>()
+                                                                              .Use<MutatingTestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<MutatingTestQueryMiddleware>()
-                                                                                                    .Use<MutatingTestQueryMiddleware2>())
                         .AddTransient<MutatingTestQueryMiddleware>()
                         .AddTransient<MutatingTestQueryMiddleware2>()
                         .AddSingleton(observations)
@@ -459,10 +494,12 @@
             var observations = new TestObservations();
             var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<MutatingTestQueryMiddleware>()
+                                                                              .Use<MutatingTestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<MutatingTestQueryMiddleware>()
-                                                                                                    .Use<MutatingTestQueryMiddleware2>())
                         .AddTransient<MutatingTestQueryMiddleware>()
                         .AddTransient<MutatingTestQueryMiddleware2>()
                         .AddSingleton(observations)
@@ -489,10 +526,12 @@
             var observations = new TestObservations();
             var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false) } };
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<MutatingTestQueryMiddleware>()
+                                                                              .Use<MutatingTestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<MutatingTestQueryMiddleware>()
-                                                                                                    .Use<MutatingTestQueryMiddleware2>())
                         .AddTransient<MutatingTestQueryMiddleware>()
                         .AddTransient<MutatingTestQueryMiddleware2>()
                         .AddSingleton(observations)
@@ -515,9 +554,11 @@
             var observations = new TestObservations();
             var observedInstances = new List<TestService>();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()));
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
                         .AddScoped<TestService>()
                         .AddSingleton(observations);
 
@@ -545,9 +586,11 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware2>());
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware2>())
                         .AddSingleton(observations);
 
             var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
@@ -566,9 +609,11 @@
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
                         .AddSingleton(observations);
 
             var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
@@ -587,9 +632,11 @@
             var services = new ServiceCollection();
             var exception = new Exception();
 
+            AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
+                                                                        CreateTransport,
+                                                                        p => p.Use<ThrowingTestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+
             _ = services.AddConquerorCQS()
-                        .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(CreateTransport,
-                                                                                              p => p.Use<ThrowingTestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
                         .AddTransient<ThrowingTestQueryMiddleware>()
                         .AddSingleton(exception);
 
@@ -601,6 +648,11 @@
 
             Assert.AreSame(exception, thrownException);
         }
+
+        protected abstract void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+            where THandler : class, IQueryHandler;
 
         private static IQueryTransportClient CreateTransport(IQueryTransportClientBuilder builder)
         {
@@ -821,6 +873,35 @@
 
         private sealed class TestService
         {
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class QueryClientMiddlewareFunctionalityWithSyncFactoryTests : QueryClientMiddlewareFunctionalityTests
+    {
+        protected override void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorQueryClient<THandler>(transportClientFactory, configurePipeline);
+        }
+    }
+
+    [TestFixture]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
+    public sealed class QueryClientMiddlewareFunctionalityWithAsyncFactoryTests : QueryClientMiddlewareFunctionalityTests
+    {
+        protected override void AddQueryClient<THandler>(IServiceCollection services,
+                                                         Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                         Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            _ = services.AddConquerorQueryClient<THandler>(async b =>
+                                                           {
+                                                               await Task.Delay(1);
+                                                               return transportClientFactory(b);
+                                                           },
+                                                           configurePipeline);
         }
     }
 }
