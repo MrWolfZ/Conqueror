@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Threading;
@@ -33,24 +34,39 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             using var content = JsonContent.Create(command, null, Options.JsonSerializerOptions);
 
+            var path = Options.CommandPathConvention?.GetCommandPath(typeof(TCommand), attribute) ?? DefaultCommandPathConvention.GetCommandPath(typeof(TCommand), attribute);
+
+            using var message = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new(path, UriKind.Relative),
+                Content = content,
+            };
+
             if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
             {
-                content.Headers.Add(HttpConstants.ConquerorTraceIdHeaderName, traceId);
+                message.Headers.Add(HttpConstants.ConquerorTraceIdHeaderName, traceId);
             }
 
             if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
             {
-                content.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
+                message.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
             }
 
             if (commandContextAccessor.CommandContext?.CommandId is { } commandId)
             {
-                content.Headers.Add(HttpConstants.ConquerorCommandIdHeaderName, commandId);
+                message.Headers.Add(HttpConstants.ConquerorCommandIdHeaderName, commandId);
             }
 
-            var path = Options.CommandPathConvention?.GetCommandPath(typeof(TCommand), attribute) ?? DefaultCommandPathConvention.GetCommandPath(typeof(TCommand), attribute);
+            if (Options.Headers is { } headers)
+            {
+                foreach (var (headerName, headerValues) in headers)
+                {
+                    message.Headers.Add(headerName, headerValues);
+                }
+            }
 
-            var response = await Options.HttpClient.PostAsync(new Uri(path, UriKind.Relative), content, cancellationToken).ConfigureAwait(false);
+            var response = await Options.HttpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.NoContent)
             {

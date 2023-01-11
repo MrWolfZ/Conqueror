@@ -14,6 +14,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         private const string ErrorPayload = "{\"Message\":\"this is an error\"}";
 
         private int? customResponseStatusCode;
+        private Func<HttpContext, Func<Task>, Task>? middleware;
 
         [Test]
         public async Task GivenSuccessfulHttpCall_ReturnsCommandResponse()
@@ -157,6 +158,28 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.AreEqual(11, result.Payload);
         }
 
+        [Test]
+        public async Task GivenSuccessfulHttpCallWithCustomHeaders_ServerReceivesHeaders()
+        {
+            var handler = ResolveOnClient<ITestCommandWithCustomHeadersHandler>();
+
+            var seenAuthorizationHeader = string.Empty;
+            var seenTestHeaderValues = Array.Empty<string?>();
+
+            middleware = (ctx, next) =>
+            {
+                seenAuthorizationHeader = ctx.Request.Headers.Authorization;
+                seenTestHeaderValues = ctx.Request.Headers["test-header"];
+
+                return next();
+            };
+
+            _ = await handler.ExecuteCommand(new(10), CancellationToken.None);
+
+            Assert.AreEqual("Basic test", seenAuthorizationHeader);
+            CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
@@ -170,6 +193,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddTransient<TestCommandWithCustomPathConventionHandler>()
                         .AddTransient<TestCommandWithCustomPathHandler>()
                         .AddTransient<TestCommandWithVersionHandler>()
+                        .AddTransient<TestCommandWithCustomHeadersHandler>()
                         .AddTransient<NonHttpTestCommandHandler>()
                         .AddTransient<NonHttpTestCommandWithoutResponseHandler>();
 
@@ -203,7 +227,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         }))
                         .AddConquerorCommandClient<ITestCommandWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorCommandClient<ITestCommandWithCustomPathHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithVersionHandler>(b => b.UseHttp(HttpClient));
+                        .AddConquerorCommandClient<ITestCommandWithVersionHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorCommandClient<ITestCommandWithCustomHeadersHandler>(b => b.UseHttp(HttpClient, o =>
+                        {
+                            o.Headers.Authorization = new("Basic", "test");
+                            o.Headers.Add("test-header", new[] { "value1", "value2" });
+                        }));
 
             _ = services.FinalizeConquerorRegistrations();
         }
@@ -223,6 +252,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
                 await next();
             });
+
+            _ = app.Use((ctx, next) => middleware != null ? middleware(ctx, next) : next());
 
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
@@ -276,6 +307,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public int Payload { get; init; }
         }
 
+        [HttpCommand]
+        public sealed record TestCommandWithCustomHeaders(int Payload);
+
         public sealed record NonHttpTestCommand
         {
             public int Payload { get; init; }
@@ -315,6 +349,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         public interface ITestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>
+        {
+        }
+
+        public interface ITestCommandWithCustomHeadersHandler : ICommandHandler<TestCommandWithCustomHeaders, TestCommandResponse>
         {
         }
 
@@ -420,6 +458,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         public sealed class TestCommandWithVersionHandler : ITestCommandWithVersionHandler
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithVersion command, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = command.Payload + 1 };
+            }
+        }
+
+        public sealed class TestCommandWithCustomHeadersHandler : ITestCommandWithCustomHeadersHandler
+        {
+            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomHeaders command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();

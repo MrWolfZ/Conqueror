@@ -14,6 +14,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         private const string ErrorPayload = "{\"Message\":\"this is an error\"}";
 
         private int? customResponseStatusCode;
+        private Func<HttpContext, Func<Task>, Task>? middleware;
 
         [Test]
         public async Task GivenSuccessfulHttpCall_ReturnsQueryResponse()
@@ -254,6 +255,50 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.AreEqual(11, result.Payload);
         }
 
+        [Test]
+        public async Task GivenSuccessfulHttpCallWithCustomHeaders_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<ITestQueryWithCustomHeadersHandler>();
+
+            var seenAuthorizationHeader = string.Empty;
+            var seenTestHeaderValues = Array.Empty<string?>();
+
+            middleware = (ctx, next) =>
+            {
+                seenAuthorizationHeader = ctx.Request.Headers.Authorization;
+                seenTestHeaderValues = ctx.Request.Headers["test-header"];
+
+                return next();
+            };
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.AreEqual("Basic test", seenAuthorizationHeader);
+            CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
+        }
+
+        [Test]
+        public async Task GivenSuccessfulPostHttpCallWithCustomHeaders_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<ITestPostQueryWithCustomHeadersHandler>();
+
+            var seenAuthorizationHeader = string.Empty;
+            var seenTestHeaderValues = Array.Empty<string?>();
+
+            middleware = (ctx, next) =>
+            {
+                seenAuthorizationHeader = ctx.Request.Headers.Authorization;
+                seenTestHeaderValues = ctx.Request.Headers["test-header"];
+
+                return next();
+            };
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.AreEqual("Basic test", seenAuthorizationHeader);
+            CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
@@ -274,6 +319,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddTransient<TestPostQueryWithCustomPathHandler>()
                         .AddTransient<TestQueryWithVersionHandler>()
                         .AddTransient<TestPostQueryWithVersionHandler>()
+                        .AddTransient<TestQueryWithCustomHeadersHandler>()
+                        .AddTransient<TestPostQueryWithCustomHeadersHandler>()
                         .AddTransient<NonHttpTestQueryHandler>();
 
             _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
@@ -313,7 +360,17 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddConquerorQueryClient<ITestQueryWithCustomPathHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestPostQueryWithCustomPathHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestQueryWithVersionHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestPostQueryWithVersionHandler>(b => b.UseHttp(HttpClient));
+                        .AddConquerorQueryClient<ITestPostQueryWithVersionHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestQueryWithCustomHeadersHandler>(b => b.UseHttp(HttpClient, o =>
+                        {
+                            o.Headers.Authorization = new("Basic", "test");
+                            o.Headers.Add("test-header", new[] { "value1", "value2" });
+                        }))
+                        .AddConquerorQueryClient<ITestPostQueryWithCustomHeadersHandler>(b => b.UseHttp(HttpClient, o =>
+                        {
+                            o.Headers.Authorization = new("Basic", "test");
+                            o.Headers.Add("test-header", new[] { "value1", "value2" });
+                        }));
 
             _ = services.FinalizeConquerorRegistrations();
         }
@@ -333,6 +390,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
                 await next();
             });
+
+            _ = app.Use((ctx, next) => middleware != null ? middleware(ctx, next) : next());
 
             _ = app.UseRouting();
             _ = app.UseEndpoints(b => b.MapControllers());
@@ -399,6 +458,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public int Payload { get; init; }
         }
 
+        [HttpQuery]
+        public sealed record TestQueryWithCustomHeaders
+        {
+            public int Payload { get; init; }
+        }
+
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
         {
@@ -429,6 +494,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         [HttpQuery(UsePost = true, Version = "v2")]
         public sealed record TestPostQueryWithVersion
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostQueryWithCustomHeaders
         {
             public int Payload { get; init; }
         }
@@ -474,6 +545,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
         }
 
+        public interface ITestQueryWithCustomHeadersHandler : IQueryHandler<TestQueryWithCustomHeaders, TestQueryResponse>
+        {
+        }
+
         public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
         {
         }
@@ -495,6 +570,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         public interface ITestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>
+        {
+        }
+
+        public interface ITestPostQueryWithCustomHeadersHandler : IQueryHandler<TestPostQueryWithCustomHeaders, TestQueryResponse>
         {
         }
 
@@ -592,6 +671,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             }
         }
 
+        public sealed class TestQueryWithCustomHeadersHandler : ITestQueryWithCustomHeadersHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomHeaders query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
         public sealed class TestPostQueryHandler : ITestPostQueryHandler
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
@@ -668,6 +757,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         public sealed class TestPostQueryWithVersionHandler : ITestPostQueryWithVersionHandler
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestPostQueryWithCustomHeadersHandler : ITestPostQueryWithCustomHeadersHandler
+        {
+            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomHeaders query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();

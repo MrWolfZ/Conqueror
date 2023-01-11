@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -53,6 +53,14 @@ namespace Conqueror.CQS.Transport.Http.Client
             if (queryContextAccessor.QueryContext?.QueryId is { } queryId)
             {
                 requestMessage.Headers.Add(HttpConstants.ConquerorQueryIdHeaderName, queryId);
+            }
+
+            if (Options.Headers is { } headers)
+            {
+                foreach (var (headerName, headerValues) in headers)
+                {
+                    requestMessage.Headers.Add(headerName, headerValues);
+                }
             }
 
             var uriString = Options.QueryPathConvention?.GetQueryPath(typeof(TQuery), attribute) ?? DefaultQueryPathConvention.GetQueryPath(typeof(TQuery), attribute);

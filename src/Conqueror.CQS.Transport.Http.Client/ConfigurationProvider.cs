@@ -38,8 +38,9 @@ namespace Conqueror.CQS.Transport.Http.Client
             var jsonSerializerOptions = queryOptions.JsonSerializerOptions ?? commandOptions.JsonSerializerOptions ?? globalOptions.JsonSerializerOptions;
             var commandPathConvention = commandOptions.PathConvention ?? globalOptions.CommandPathConvention;
             var queryPathConvention = queryOptions.PathConvention ?? globalOptions.QueryPathConvention;
+            var headers = queryOptions.OptionalHeaders ?? commandOptions.OptionalHeaders;
 
-            return new(httpClient, jsonSerializerOptions, commandPathConvention, queryPathConvention);
+            return new(httpClient, jsonSerializerOptions, commandPathConvention, queryPathConvention, headers);
         }
     }
 }
