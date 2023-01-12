@@ -6,8 +6,15 @@ namespace Conqueror
 {
     public sealed class DefaultHttpCommandPathConvention : IHttpCommandPathConvention
     {
+        private static readonly Lazy<DefaultHttpCommandPathConvention> LazyInstance = new(() => new());
         private static readonly Regex StripSuffixRegex = new("Command$");
         private static readonly ConcurrentDictionary<Type, string> PathCache = new();
+
+        private DefaultHttpCommandPathConvention()
+        {
+        }
+
+        public static DefaultHttpCommandPathConvention Instance => LazyInstance.Value;
 
         public string GetCommandPath(Type commandType, HttpCommandAttribute attribute)
         {

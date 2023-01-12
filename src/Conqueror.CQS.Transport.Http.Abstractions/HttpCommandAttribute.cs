@@ -5,6 +5,9 @@ namespace Conqueror
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class HttpCommandAttribute : Attribute
     {
+        /// <summary>
+        ///     A fixed path for this command. If this property is set, any path convention will simply return it.
+        /// </summary>
         public string? Path { get; set; }
 
         /// <summary>

@@ -16,8 +16,6 @@ namespace Conqueror.CQS.Transport.Http.Client
 {
     internal sealed class HttpQueryTransportClient : IQueryTransportClient
     {
-        private static readonly DefaultHttpQueryPathConvention DefaultQueryPathConvention = new();
-
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly IQueryContextAccessor queryContextAccessor;
 
@@ -63,7 +61,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 }
             }
 
-            var uriString = Options.QueryPathConvention?.GetQueryPath(typeof(TQuery), attribute) ?? DefaultQueryPathConvention.GetQueryPath(typeof(TQuery), attribute);
+            var uriString = Options.QueryPathConvention?.GetQueryPath(typeof(TQuery), attribute) ?? DefaultHttpQueryPathConvention.Instance.GetQueryPath(typeof(TQuery), attribute);
 
             if (attribute.UsePost)
             {

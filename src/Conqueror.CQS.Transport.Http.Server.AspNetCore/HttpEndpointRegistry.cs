@@ -12,8 +12,6 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
         private const string DefaultQueryControllerName = "Queries";
 
         private readonly ICommandHandlerRegistry commandHandlerRegistry;
-        private readonly DefaultHttpCommandPathConvention defaultCommandPathConvention = new();
-        private readonly DefaultHttpQueryPathConvention defaultQueryPathConvention = new();
         private readonly ConquerorCqsHttpTransportServerAspNetCoreOptions options;
         private readonly IQueryHandlerRegistry queryHandlerRegistry;
 
@@ -48,7 +46,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             {
                 var attribute = command.CommandType.GetCustomAttribute<HttpCommandAttribute>()!;
 
-                var path = options.CommandPathConvention?.GetCommandPath(command.CommandType, attribute) ?? defaultCommandPathConvention.GetCommandPath(command.CommandType, attribute);
+                var path = options.CommandPathConvention?.GetCommandPath(command.CommandType, attribute) ?? DefaultHttpCommandPathConvention.Instance.GetCommandPath(command.CommandType, attribute);
 
                 var endpoint = new HttpEndpoint
                 {
@@ -74,7 +72,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
             {
                 var attribute = query.QueryType.GetCustomAttribute<HttpQueryAttribute>()!;
 
-                var path = options.QueryPathConvention?.GetQueryPath(query.QueryType, attribute) ?? defaultQueryPathConvention.GetQueryPath(query.QueryType, attribute);
+                var path = options.QueryPathConvention?.GetQueryPath(query.QueryType, attribute) ?? DefaultHttpQueryPathConvention.Instance.GetQueryPath(query.QueryType, attribute);
 
                 var endpoint = new HttpEndpoint
                 {

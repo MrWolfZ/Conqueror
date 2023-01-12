@@ -13,7 +13,6 @@ namespace Conqueror.CQS.Transport.Http.Client
 {
     internal sealed class HttpCommandTransportClient : ICommandTransportClient
     {
-        private static readonly DefaultHttpCommandPathConvention DefaultCommandPathConvention = new();
         private readonly ICommandContextAccessor commandContextAccessor;
 
         private readonly IConquerorContextAccessor conquerorContextAccessor;
@@ -34,7 +33,7 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             using var content = JsonContent.Create(command, null, Options.JsonSerializerOptions);
 
-            var path = Options.CommandPathConvention?.GetCommandPath(typeof(TCommand), attribute) ?? DefaultCommandPathConvention.GetCommandPath(typeof(TCommand), attribute);
+            var path = Options.CommandPathConvention?.GetCommandPath(typeof(TCommand), attribute) ?? DefaultHttpCommandPathConvention.Instance.GetCommandPath(typeof(TCommand), attribute);
 
             using var message = new HttpRequestMessage
             {

@@ -6,8 +6,15 @@ namespace Conqueror
 {
     public sealed class DefaultHttpQueryPathConvention : IHttpQueryPathConvention
     {
+        private static readonly Lazy<DefaultHttpQueryPathConvention> LazyInstance = new(() => new());
         private static readonly Regex StripSuffixRegex = new("Query$");
         private static readonly ConcurrentDictionary<Type, string> PathCache = new();
+
+        private DefaultHttpQueryPathConvention()
+        {
+        }
+
+        public static DefaultHttpQueryPathConvention Instance => LazyInstance.Value;
 
         public string GetQueryPath(Type queryType, HttpQueryAttribute attribute)
         {
