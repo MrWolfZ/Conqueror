@@ -1,4 +1,4 @@
-﻿// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 using System.Diagnostics;
 

@@ -1,4 +1,4 @@
-﻿namespace Conqueror
+namespace Conqueror
 {
     public static class HttpConstants
     {

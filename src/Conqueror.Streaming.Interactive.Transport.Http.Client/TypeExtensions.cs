@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Client

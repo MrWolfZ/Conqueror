@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.CQS.GettingStarted.CustomHandlerInterface;
+namespace Conqueror.Examples.CQS.GettingStarted.CustomHandlerInterface;
 
 public sealed record CustomInterfaceExampleQuery(int Parameter);
 

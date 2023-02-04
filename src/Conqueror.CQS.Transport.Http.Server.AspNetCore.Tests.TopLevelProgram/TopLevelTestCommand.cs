@@ -1,4 +1,4 @@
-﻿namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests.TopLevelProgram
+namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests.TopLevelProgram
 {
     [HttpCommand]
     public sealed record TopLevelTestCommand(int Payload);

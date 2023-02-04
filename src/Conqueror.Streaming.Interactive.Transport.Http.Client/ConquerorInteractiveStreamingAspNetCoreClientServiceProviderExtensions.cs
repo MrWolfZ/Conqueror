@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Conqueror;
 using Conqueror.Streaming.Interactive.Transport.Http.Client;
 

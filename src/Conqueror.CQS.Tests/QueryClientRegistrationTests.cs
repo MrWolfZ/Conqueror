@@ -1,4 +1,4 @@
-﻿namespace Conqueror.CQS.Tests
+namespace Conqueror.CQS.Tests
 {
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
     public sealed class QueryClientRegistrationTests

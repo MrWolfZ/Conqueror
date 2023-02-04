@@ -1,4 +1,4 @@
-﻿using Conqueror.CQS.Analyzers;
+using Conqueror.CQS.Analyzers;
 using Conqueror.CQS.Tests.Analyzers.Verifiers;
 using AnalyzerVerifier = Conqueror.CQS.Tests.Analyzers.Verifiers.CSharpAnalyzerVerifier<
     Conqueror.CQS.Analyzers.C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer>;

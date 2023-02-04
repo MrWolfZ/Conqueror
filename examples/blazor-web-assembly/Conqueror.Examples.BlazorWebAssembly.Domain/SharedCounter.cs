@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Domain;
+namespace Conqueror.Examples.BlazorWebAssembly.Domain;
 
 public sealed class SharedCounter
 {

@@ -1,4 +1,4 @@
-﻿using Conqueror.CQS.Common;
+using Conqueror.CQS.Common;
 
 namespace Conqueror.CQS.Tests
 {

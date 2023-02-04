@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore

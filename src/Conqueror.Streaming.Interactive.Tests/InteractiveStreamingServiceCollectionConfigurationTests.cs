@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Streaming.Interactive.Tests
+namespace Conqueror.Streaming.Interactive.Tests
 {
     [TestFixture]
     public sealed class InteractiveStreamingServiceCollectionConfigurationTests

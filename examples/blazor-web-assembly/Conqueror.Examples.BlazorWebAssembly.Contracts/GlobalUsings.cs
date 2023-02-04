@@ -1,1 +1,1 @@
-﻿global using Conqueror;
+global using Conqueror;

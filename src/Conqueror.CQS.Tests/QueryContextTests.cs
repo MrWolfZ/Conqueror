@@ -1,4 +1,4 @@
-﻿namespace Conqueror.CQS.Tests
+namespace Conqueror.CQS.Tests
 {
     public sealed class QueryContextTests
     {

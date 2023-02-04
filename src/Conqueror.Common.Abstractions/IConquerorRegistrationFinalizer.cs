@@ -1,4 +1,4 @@
-﻿namespace Conqueror
+namespace Conqueror
 {
     /// <summary>
     ///     Registration finalizers are executed before the service provider is built and have

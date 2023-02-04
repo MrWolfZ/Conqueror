@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Conqueror;
 using Microsoft.Extensions.DependencyInjection.Extensions;

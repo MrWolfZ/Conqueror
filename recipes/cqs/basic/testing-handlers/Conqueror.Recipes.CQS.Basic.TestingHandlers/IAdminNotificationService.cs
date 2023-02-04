@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Recipes.CQS.Basic.TestingHandlers;
+namespace Conqueror.Recipes.CQS.Basic.TestingHandlers;
 
 public interface IAdminNotificationService
 {

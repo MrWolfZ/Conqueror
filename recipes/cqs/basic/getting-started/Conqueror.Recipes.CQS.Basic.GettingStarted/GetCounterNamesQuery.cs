@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Recipes.CQS.Basic.GettingStarted;
+namespace Conqueror.Recipes.CQS.Basic.GettingStarted;
 
 public sealed record GetCounterNamesQuery;
 

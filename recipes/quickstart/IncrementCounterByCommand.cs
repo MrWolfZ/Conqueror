@@ -1,4 +1,4 @@
-﻿using Conqueror;
+using Conqueror;
 
 namespace Quickstart;
 

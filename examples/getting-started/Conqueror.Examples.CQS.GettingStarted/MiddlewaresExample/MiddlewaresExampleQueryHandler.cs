@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.CQS.GettingStarted.MiddlewaresExample;
+namespace Conqueror.Examples.CQS.GettingStarted.MiddlewaresExample;
 
 public sealed record MiddlewaresExampleQuery(int Parameter);
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Conqueror.CQS.Transport.Http.Server.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;

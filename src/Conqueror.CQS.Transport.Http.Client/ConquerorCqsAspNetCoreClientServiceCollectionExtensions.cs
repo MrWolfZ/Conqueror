@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Conqueror.CQS.Transport.Http.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

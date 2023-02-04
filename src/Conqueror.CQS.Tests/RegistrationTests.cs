@@ -1,4 +1,4 @@
-﻿using Conqueror.CQS.CommandHandling;
+using Conqueror.CQS.CommandHandling;
 using Conqueror.CQS.QueryHandling;
 
 namespace Conqueror.CQS.Tests

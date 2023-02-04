@@ -1,4 +1,4 @@
-﻿// ReSharper disable once CheckNamespace (we want this type to live in this namespace in exception messages)
+// ReSharper disable once CheckNamespace (we want this type to live in this namespace in exception messages)
 
 namespace Conqueror
 {

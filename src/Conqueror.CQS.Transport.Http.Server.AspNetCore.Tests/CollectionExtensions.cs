@@ -1,4 +1,4 @@
-﻿namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
+namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 {
     internal static class CollectionExtensions
     {

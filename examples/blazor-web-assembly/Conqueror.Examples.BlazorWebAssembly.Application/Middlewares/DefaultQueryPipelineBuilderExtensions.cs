@@ -1,4 +1,4 @@
-﻿using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
+using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 

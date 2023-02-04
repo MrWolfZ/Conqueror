@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Conqueror.Streaming.Interactive.Common;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;

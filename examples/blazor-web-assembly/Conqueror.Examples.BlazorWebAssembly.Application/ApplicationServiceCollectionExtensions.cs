@@ -1,4 +1,4 @@
-﻿using Conqueror.Examples.BlazorWebAssembly.Domain;
+using Conqueror.Examples.BlazorWebAssembly.Domain;
 using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 using Microsoft.Extensions.DependencyInjection;
 

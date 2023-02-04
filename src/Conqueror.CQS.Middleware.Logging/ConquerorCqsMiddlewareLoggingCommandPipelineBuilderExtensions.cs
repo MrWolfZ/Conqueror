@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Conqueror.CQS.Middleware.Logging;
 
 // ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)

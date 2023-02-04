@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application;
+namespace Conqueror.Examples.BlazorWebAssembly.Application;
 
 // in a real application this would publish to an Azure Event Hub or similar
 internal sealed class NullEventHub : IEventHub

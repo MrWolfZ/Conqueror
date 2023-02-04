@@ -1,4 +1,4 @@
-﻿namespace Conqueror.CQS.Analyzers.Util
+namespace Conqueror.CQS.Analyzers.Util
 {
     public static class Constants
     {

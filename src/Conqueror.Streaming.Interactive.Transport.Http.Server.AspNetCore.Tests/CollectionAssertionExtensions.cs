@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests

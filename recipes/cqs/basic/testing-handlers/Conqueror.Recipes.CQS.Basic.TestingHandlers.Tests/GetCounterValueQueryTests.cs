@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 
 namespace Conqueror.Recipes.CQS.Basic.TestingHandlers.Tests;

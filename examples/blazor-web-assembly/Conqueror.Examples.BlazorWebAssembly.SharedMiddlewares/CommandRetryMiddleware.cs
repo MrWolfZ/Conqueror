@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
+namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 public sealed record CommandRetryMiddlewareConfiguration(int MaxNumberOfAttempts, TimeSpan RetryInterval);
 

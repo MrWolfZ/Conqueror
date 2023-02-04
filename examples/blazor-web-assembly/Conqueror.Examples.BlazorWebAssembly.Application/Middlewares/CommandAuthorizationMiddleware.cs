@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
+namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
 public sealed record CommandAuthorizationMiddlewareConfiguration(string? Permission);
 

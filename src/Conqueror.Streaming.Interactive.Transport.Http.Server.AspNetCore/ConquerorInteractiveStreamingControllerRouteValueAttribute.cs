@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore

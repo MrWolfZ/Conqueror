@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
+namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
 {
     internal static class AsyncEnumerableTestExtensions
     {

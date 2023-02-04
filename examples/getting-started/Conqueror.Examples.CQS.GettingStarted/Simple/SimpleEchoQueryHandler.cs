@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.CQS.GettingStarted.Simple;
+namespace Conqueror.Examples.CQS.GettingStarted.Simple;
 
 public sealed record SimpleEchoQuery(int Parameter);
 

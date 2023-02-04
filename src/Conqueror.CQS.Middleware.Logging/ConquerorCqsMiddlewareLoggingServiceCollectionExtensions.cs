@@ -1,4 +1,4 @@
-﻿using Conqueror.CQS.Middleware.Logging;
+using Conqueror.CQS.Middleware.Logging;
 
 // ReSharper disable InconsistentNaming
 

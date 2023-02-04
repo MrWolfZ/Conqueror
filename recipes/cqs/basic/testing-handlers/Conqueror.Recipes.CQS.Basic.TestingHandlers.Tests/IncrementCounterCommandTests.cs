@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using NUnit.Framework;
 
 namespace Conqueror.Recipes.CQS.Basic.TestingHandlers.Tests;

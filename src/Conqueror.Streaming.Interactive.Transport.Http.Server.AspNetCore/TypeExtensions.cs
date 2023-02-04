@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore

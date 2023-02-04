@@ -1,4 +1,4 @@
-﻿namespace Conqueror.CQS.Tests
+namespace Conqueror.CQS.Tests
 {
     [TestFixture]
     public sealed class CommandServiceCollectionConfigurationTests

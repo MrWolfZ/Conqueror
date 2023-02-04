@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application;
+namespace Conqueror.Examples.BlazorWebAssembly.Application;
 
 internal static class Permissions
 {

@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Streaming.Reactive.Tests
+namespace Conqueror.Streaming.Reactive.Tests
 {
     [TestFixture]
     public class DummyTest

@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Eventing.Tests
+namespace Conqueror.Eventing.Tests
 {
     [TestFixture]
     public sealed class RegistrationTests

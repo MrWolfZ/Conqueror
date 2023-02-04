@@ -1,4 +1,4 @@
-﻿namespace Conqueror
+namespace Conqueror
 {
     /// <summary>
     ///     Provides access to the current <see cref="ICommandContext" />, if one is available.

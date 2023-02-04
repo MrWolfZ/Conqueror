@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Contracts;
+namespace Conqueror.Examples.BlazorWebAssembly.Contracts;
 
 [HttpQuery(Version = "v1", ApiGroupName = "SharedCounter")]
 public sealed record GetSharedCounterValueQuery;

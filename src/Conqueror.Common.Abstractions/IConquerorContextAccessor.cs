@@ -1,4 +1,4 @@
-﻿namespace Conqueror
+namespace Conqueror
 {
     /// <summary>
     ///     Provides access to the <see cref="IConquerorContext" />.

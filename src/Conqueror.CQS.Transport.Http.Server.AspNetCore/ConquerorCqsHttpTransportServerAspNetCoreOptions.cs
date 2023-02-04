@@ -1,4 +1,4 @@
-﻿namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
+namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 {
     public sealed class ConquerorCqsHttpTransportServerAspNetCoreOptions
     {

@@ -1,4 +1,4 @@
-﻿namespace Conqueror
+namespace Conqueror
 {
     public sealed class EventObserverOptions
     {

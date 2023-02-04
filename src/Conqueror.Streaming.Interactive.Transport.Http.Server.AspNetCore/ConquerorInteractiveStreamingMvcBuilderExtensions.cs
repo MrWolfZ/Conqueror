@@ -1,4 +1,4 @@
-﻿using Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore;
+using Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)

@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.CQS.GettingStarted.HttpExample;
+namespace Conqueror.Examples.CQS.GettingStarted.HttpExample;
 
 [HttpQuery]
 public sealed record HttpExampleQuery(int Parameter);

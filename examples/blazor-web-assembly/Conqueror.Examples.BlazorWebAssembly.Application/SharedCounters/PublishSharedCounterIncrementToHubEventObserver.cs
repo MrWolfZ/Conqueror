@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounters;
+namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounters;
 
 internal sealed class PublishSharedCounterIncrementToHubEventObserver : ISharedCounterIncrementedEventObserver
 {
