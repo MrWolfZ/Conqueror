@@ -163,13 +163,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "getting-started", "getting-
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testing-handlers", "testing-handlers", "{9922B890-55CA-481D-8A6B-8A29C4136CDC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers", "recipes\cqs\basics\testing-handlers\Conqueror.Recipes.CQS.Basics.TestingHandlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.csproj", "{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests", "recipes\cqs\basics\testing-handlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests.csproj", "{FAD193A3-45C6-4CD7-A302-3D26E85905BF}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{A8D46A17-26E5-467E-9D55-000DDFC66B0E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.GettingStarted", "recipes\cqs\basics\getting-started\.completed\Conqueror.Recipes.CQS.Basics.GettingStarted\Conqueror.Recipes.CQS.Basics.GettingStarted.csproj", "{367CB32F-9B7D-4DD0-8329-1DEA313042AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{BA2466FB-82AA-4005-AAB6-4BF9B70F7C6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers", "recipes\cqs\basics\testing-handlers\Conqueror.Recipes.CQS.Basics.TestingHandlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.csproj", "{BD01F363-9C29-4A87-BDDE-E4234E0D5309}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers", "recipes\cqs\basics\testing-handlers\.completed\Conqueror.Recipes.CQS.Basics.TestingHandlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.csproj", "{CA4A4301-138E-4AE2-A2FB-E2E14199245C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests", "recipes\cqs\basics\testing-handlers\.completed\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests.csproj", "{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -356,18 +360,22 @@ Global
 		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FAD193A3-45C6-4CD7-A302-3D26E85905BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FAD193A3-45C6-4CD7-A302-3D26E85905BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FAD193A3-45C6-4CD7-A302-3D26E85905BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FAD193A3-45C6-4CD7-A302-3D26E85905BF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{367CB32F-9B7D-4DD0-8329-1DEA313042AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{367CB32F-9B7D-4DD0-8329-1DEA313042AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{367CB32F-9B7D-4DD0-8329-1DEA313042AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{367CB32F-9B7D-4DD0-8329-1DEA313042AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD01F363-9C29-4A87-BDDE-E4234E0D5309}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD01F363-9C29-4A87-BDDE-E4234E0D5309}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD01F363-9C29-4A87-BDDE-E4234E0D5309}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD01F363-9C29-4A87-BDDE-E4234E0D5309}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA4A4301-138E-4AE2-A2FB-E2E14199245C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA4A4301-138E-4AE2-A2FB-E2E14199245C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA4A4301-138E-4AE2-A2FB-E2E14199245C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA4A4301-138E-4AE2-A2FB-E2E14199245C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -400,9 +408,11 @@ Global
 		{A1B61F70-A567-4492-9B68-A0DD95674A1C} = {81D39B82-D9FF-4493-978A-5173DA95F230}
 		{5F85F425-9A17-4B7D-9A23-4A31E34E0E1F} = {67D09656-BB2A-42A9-86D1-73178EEA9F16}
 		{9922B890-55CA-481D-8A6B-8A29C4136CDC} = {67D09656-BB2A-42A9-86D1-73178EEA9F16}
-		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49} = {9922B890-55CA-481D-8A6B-8A29C4136CDC}
-		{FAD193A3-45C6-4CD7-A302-3D26E85905BF} = {9922B890-55CA-481D-8A6B-8A29C4136CDC}
 		{A8D46A17-26E5-467E-9D55-000DDFC66B0E} = {5F85F425-9A17-4B7D-9A23-4A31E34E0E1F}
 		{367CB32F-9B7D-4DD0-8329-1DEA313042AF} = {A8D46A17-26E5-467E-9D55-000DDFC66B0E}
+		{BA2466FB-82AA-4005-AAB6-4BF9B70F7C6F} = {9922B890-55CA-481D-8A6B-8A29C4136CDC}
+		{BD01F363-9C29-4A87-BDDE-E4234E0D5309} = {9922B890-55CA-481D-8A6B-8A29C4136CDC}
+		{CA4A4301-138E-4AE2-A2FB-E2E14199245C} = {BA2466FB-82AA-4005-AAB6-4BF9B70F7C6F}
+		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809} = {BA2466FB-82AA-4005-AAB6-4BF9B70F7C6F}
 	EndGlobalSection
 EndGlobal
