@@ -236,7 +236,6 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [testing HTTP commands and queries](recipes/cqs/advanced/testing-http#readme) _(to-be-written)_
 - [calling HTTP commands and queries from another application](recipes/cqs/advanced/calling-http#readme) _(to-be-written)_
 - [using middlewares for command and query HTTP clients](recipes/cqs/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
-- [authenticating and authorizing commands and queries](recipes/cqs/advanced/auth#readme) _(to-be-written)_
 - [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme) _(to-be-written)_
 - [using commands and queries in a Blazor app (server-side or web-assembly)](recipes/cqs/advanced/blazor-server#readme) _(to-be-written)_
 - [building a CLI using commands and queries](recipes/cqs/advanced/building-cli#readme) _(to-be-written)_
@@ -249,6 +248,17 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(to-be-written)_
 - [building test assertions that work for HTTP and non-HTTP commands and queries](recipes/cqs/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
 - [creating generic command or query handlers](recipes/cqs/expert/generic-handlers#readme) _(to-be-written)_
+
+#### CQS Cross-Cutting Concerns
+
+- [authenticating and authorizing commands and queries](recipes/cqs/cross-cutting-concerns/auth#readme) _(to-be-written)_
+- [logging commands and queries](recipes/cqs/cross-cutting-concerns/logging#readme) _(to-be-written)_
+- [validating commands and queries](recipes/cqs/cross-cutting-concerns/validation#readme) _(to-be-written)_
+- [retrying failed commands and queries](recipes/cqs/cross-cutting-concerns/retry#readme) _(to-be-written)_
+- [executing commands and queries in a database transaction](recipes/cqs/cross-cutting-concerns/db-transaction#readme) _(to-be-written)_
+- [timeouts for commands and queries](recipes/cqs/cross-cutting-concerns/timeouts#readme) _(to-be-written)_
+- [metrics for commands and queries](recipes/cqs/cross-cutting-concerns/metrics#readme) _(to-be-written)_
+- [tracing commands and queries](recipes/cqs/cross-cutting-concerns/tracing#readme) _(to-be-written)_
 
 ### Recipes for experimental libraries
 
@@ -284,6 +294,14 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/eventing/expert/conqueror-context#readme) _(to-be-written)_
 - [accessing properties of events in middlewares](recipes/eventing/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 
+#### Eventing Cross-Cutting Concerns
+
+- [logging events](recipes/eventing/cross-cutting-concerns/logging#readme) _(to-be-written)_
+- [retrying failed event observers](recipes/eventing/cross-cutting-concerns/retry#readme) _(to-be-written)_
+- [executing event observers in a database transaction](recipes/eventing/cross-cutting-concerns/db-transaction#readme) _(to-be-written)_
+- [metrics for events](recipes/eventing/cross-cutting-concerns/metrics#readme) _(to-be-written)_
+- [tracing events](recipes/eventing/cross-cutting-concerns/tracing#readme) _(to-be-written)_
+
 ### Interactive Streaming Introduction
 
 [![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
@@ -318,6 +336,16 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 - [exposing and consuming interactive streams via other transports (e.g. SignalR)](recipes/streaming.interactive/expert/exposing-via-other-transports#readme) _(to-be-written)_
 - [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming.interactive/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
 
+#### Interactive Streaming Cross-Cutting Concerns
+
+- [authenticating and authorizing streaming requests](recipes/streaming.interactive/cross-cutting-concerns/auth#readme) _(to-be-written)_
+- [logging streaming requests and items](recipes/streaming.interactive/cross-cutting-concerns/logging#readme) _(to-be-written)_
+- [validating streaming requests](recipes/streaming.interactive/cross-cutting-concerns/validation#readme) _(to-be-written)_
+- [retrying failed streaming requests](recipes/streaming.interactive/cross-cutting-concerns/retry#readme) _(to-be-written)_
+- [timeouts for streaming requests and items](recipes/streaming.interactive/cross-cutting-concerns/timeouts#readme) _(to-be-written)_
+- [metrics for streaming requests and items](recipes/streaming.interactive/cross-cutting-concerns/metrics#readme) _(to-be-written)_
+- [tracing streaming requests and items](recipes/streaming.interactive/cross-cutting-concerns/tracing#readme) _(to-be-written)_
+
 ### Reactive Streaming Introduction
 
 [![library-status-only-concept](https://img.shields.io/badge/library%20status-only%20concept-red)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
@@ -335,6 +363,10 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 #### Reactive Streaming Expert
 
 - [tbd](recipes/streaming.reactive/expert/tbd#readme) _(to-be-written)_
+
+#### Reactive Streaming Cross-Cutting Concerns
+
+- [tbd](recipes/streaming.reactive/cross-cutting-concerns/tbd#readme) _(to-be-written)_
 
 </details>
 
