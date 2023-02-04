@@ -6,9 +6,7 @@ The handlers we are going to test are similar to those we built in the recipe fo
 
 > You can see the completed code for this recipe directly in the [repository](.). We're using the [NUnit](https://nunit.org) framework, but any of the points discussed here apply to other testing frameworks as well.
 
-The application we will be testing is managing a set of named counters, with [one query](Conqueror.Recipes.CQS.Basic.TestingHandlers/GetCounterValueQuery.cs) for getting a counter's value and [one command](Conqueror.Recipes.CQS.Basic.TestingHandlers/IncrementCounterCommand.cs) for incrementing a counter. The counters are stored in an [in-memory repository](Conqueror.Recipes.CQS.Basic.TestingHandlers/CountersRepository.cs).
-
-When you use **Conqueror.CQS**, your commands and queries represent the public API for your application. In code, the API of our application under test is represented with the following types:
+The application we will be testing is managing a set of named counters. When you use **Conqueror.CQS**, your commands and queries represent the public API for your application. In code, the API of our application under test is represented with the following types:
 
 ```cs
 public sealed record GetCounterValueQuery(string CounterName);
@@ -21,6 +19,8 @@ public sealed record IncrementCounterCommandResponse(int NewCounterValue);
 ```
 
 > You can of course also have commands and queries which are only used internally in your application, and are therefore not part of its public API. For this recipe we are only focusing on those that are public.
+
+Feel free to take a look at the full code for [the query](Conqueror.Recipes.CQS.Basic.TestingHandlers/GetCounterValueQuery.cs) and [the command](Conqueror.Recipes.CQS.Basic.TestingHandlers/IncrementCounterCommand.cs). The counters are stored in an [in-memory repository](Conqueror.Recipes.CQS.Basic.TestingHandlers/CountersRepository.cs).
 
 For testing applications written with **Conqueror.CQS**, we recommend the [black-box testing](https://en.wikipedia.org/wiki/Black-box_testing) approach. With this approach you only test the public API of your application without any knowledge about its internal implementation. As discussed above, our commands and queries are a perfect fit for this, since they represent the totality of our application's API without any unnecessary implementation details. For example, this means the repository is not tested directly, since it is an implementation detail.
 
