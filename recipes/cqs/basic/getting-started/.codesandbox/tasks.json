@@ -1,0 +1,10 @@
+{
+  "setupTasks": [],
+  "tasks": {
+    "dotnet run": {
+      "name": "dotnet run",
+      "command": "dotnet run",
+      "runAtStart": true
+    }
+  }
+}
