@@ -11,7 +11,7 @@ services.AddSingleton<CountersRepository>();
 // add the conqueror CQS services
 services.AddConquerorCQS();
 
-// register some handlers manually for demonstration purposes (i.e. they could just be transient)
+// add some handlers manually for demonstration purposes
 services.AddSingleton<GetCounterNamesQueryHandler>()
         .AddScoped<IncrementCounterCommandHandler>();
 

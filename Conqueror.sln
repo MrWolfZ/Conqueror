@@ -161,13 +161,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Lo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "getting-started", "getting-started", "{5F85F425-9A17-4B7D-9A23-4A31E34E0E1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.GettingStarted", "recipes\cqs\basics\getting-started\Conqueror.Recipes.CQS.Basics.GettingStarted\Conqueror.Recipes.CQS.Basics.GettingStarted.csproj", "{3C021BED-0BA7-4203-A8DC-5C5FDA25BF03}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testing-handlers", "testing-handlers", "{9922B890-55CA-481D-8A6B-8A29C4136CDC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers", "recipes\cqs\basics\testing-handlers\Conqueror.Recipes.CQS.Basics.TestingHandlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.csproj", "{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests", "recipes\cqs\basics\testing-handlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests.csproj", "{FAD193A3-45C6-4CD7-A302-3D26E85905BF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{A8D46A17-26E5-467E-9D55-000DDFC66B0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.GettingStarted", "recipes\cqs\basics\getting-started\.completed\Conqueror.Recipes.CQS.Basics.GettingStarted\Conqueror.Recipes.CQS.Basics.GettingStarted.csproj", "{367CB32F-9B7D-4DD0-8329-1DEA313042AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -354,10 +356,6 @@ Global
 		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FA54BE1-48CA-4817-B74F-A0B0516FA0DC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3C021BED-0BA7-4203-A8DC-5C5FDA25BF03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C021BED-0BA7-4203-A8DC-5C5FDA25BF03}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3C021BED-0BA7-4203-A8DC-5C5FDA25BF03}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3C021BED-0BA7-4203-A8DC-5C5FDA25BF03}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -366,6 +364,10 @@ Global
 		{FAD193A3-45C6-4CD7-A302-3D26E85905BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAD193A3-45C6-4CD7-A302-3D26E85905BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAD193A3-45C6-4CD7-A302-3D26E85905BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{367CB32F-9B7D-4DD0-8329-1DEA313042AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{367CB32F-9B7D-4DD0-8329-1DEA313042AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{367CB32F-9B7D-4DD0-8329-1DEA313042AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{367CB32F-9B7D-4DD0-8329-1DEA313042AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -397,9 +399,10 @@ Global
 		{9BDD505B-FBF9-415A-9260-46271557BF67} = {81D39B82-D9FF-4493-978A-5173DA95F230}
 		{A1B61F70-A567-4492-9B68-A0DD95674A1C} = {81D39B82-D9FF-4493-978A-5173DA95F230}
 		{5F85F425-9A17-4B7D-9A23-4A31E34E0E1F} = {67D09656-BB2A-42A9-86D1-73178EEA9F16}
-		{3C021BED-0BA7-4203-A8DC-5C5FDA25BF03} = {5F85F425-9A17-4B7D-9A23-4A31E34E0E1F}
 		{9922B890-55CA-481D-8A6B-8A29C4136CDC} = {67D09656-BB2A-42A9-86D1-73178EEA9F16}
 		{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49} = {9922B890-55CA-481D-8A6B-8A29C4136CDC}
 		{FAD193A3-45C6-4CD7-A302-3D26E85905BF} = {9922B890-55CA-481D-8A6B-8A29C4136CDC}
+		{A8D46A17-26E5-467E-9D55-000DDFC66B0E} = {5F85F425-9A17-4B7D-9A23-4A31E34E0E1F}
+		{367CB32F-9B7D-4DD0-8329-1DEA313042AF} = {A8D46A17-26E5-467E-9D55-000DDFC66B0E}
 	EndGlobalSection
 EndGlobal
