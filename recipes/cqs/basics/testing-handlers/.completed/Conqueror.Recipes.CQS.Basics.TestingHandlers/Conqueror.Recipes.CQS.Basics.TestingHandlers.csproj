@@ -5,13 +5,13 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
 
-        <ShouldReferencePackage Condition="!Exists('$(MSBuildThisFileDirectory)/../../Conqueror.sln')">true</ShouldReferencePackage>
-        <ShouldReferenceProject Condition="Exists('$(MSBuildThisFileDirectory)/../../Conqueror.sln')">true</ShouldReferenceProject>
+        <ShouldReferencePackage Condition="!Exists('$(MSBuildThisFileDirectory)/../../../Conqueror.sln')">true</ShouldReferencePackage>
+        <ShouldReferenceProject Condition="Exists('$(MSBuildThisFileDirectory)/../../../Conqueror.sln')">true</ShouldReferenceProject>
     </PropertyGroup>
 
     <!-- reference the projects if the full repository is checked out (useful for development) -->
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Conqueror.CQS\Conqueror.CQS.csproj" Condition="$(ShouldReferenceProject) == true" />
+        <ProjectReference Include="..\..\..\src\Conqueror.CQS\Conqueror.CQS.csproj" Condition="$(ShouldReferenceProject) == true" />
     </ItemGroup>
 
     <!-- reference the packages if the project is checked out standalone -->
