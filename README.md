@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD033 -->
+
 # Conqueror - for building scalable & maintainable .NET applications
 
 > ATTENTION: This project is currently still undergoing active development and contrary to what some of this README says, everything in here is still subject to change. Therefore please do not yet use this project for any production application.
@@ -33,6 +35,11 @@ Head over to our [CQS recipes](#cqs-introduction) for more guidance on how to us
 
 [![NuGet version (Conqueror.CQS.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Server.AspNetCore?label=Conqueror.CQS.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Server.AspNetCore/)
 [![NuGet version (Conqueror.CQS.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Client?label=Conqueror.CQS.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Client/)
+
+### Experimental Libraries
+
+<details>
+<summary>Click here to see experimental libraries</summary>
 
 ### **Conqueror.Eventing**
 
@@ -70,6 +77,8 @@ Allow your applications to consume [data streams](https://en.wikipedia.org/wiki/
 Head over to our [reactive streaming recipes](#reactive-streaming-introduction) for more guidance on how to use this library.
 
 [![NuGet version (Conqueror.Streaming.Reactive)](https://img.shields.io/nuget/v/Conqueror.Streaming.Reactive?label=Conqueror.Streaming.Reactive)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
+
+</details>
 
 ## Quickstart
 
@@ -241,6 +250,11 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [building test assertions that work for HTTP and non-HTTP commands and queries](recipes/cqs/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
 - [creating generic command or query handlers](recipes/cqs/expert/generic-handlers#readme) _(to-be-written)_
 
+### Recipes for experimental libraries
+
+<details>
+<summary>Click here to see recipes for experimental libraries</summary>
+
 ### Eventing Introduction
 
 [![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Eventing/)
@@ -321,6 +335,8 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 #### Reactive Streaming Expert
 
 - [tbd](recipes/streaming.reactive/expert/tbd#readme) _(to-be-written)_
+
+</details>
 
 ## Motivation
 
