@@ -213,11 +213,11 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 #### CQS Basics
 
-- [getting started](recipes/cqs/basic/getting-started#readme)
-- [testing command and query handlers](recipes/cqs/basic/testing-handlers#readme)
-- [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/cqs/basic/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing command and query handlers that have middleware pipelines](recipes/cqs/basic/testing-handlers-with-pipelines#readme) _(to-be-written)_
-- [testing middlewares](recipes/cqs/basic/testing-middlewares#readme) _(to-be-written)_
+- [getting started](recipes/cqs/basics/getting-started#readme)
+- [testing command and query handlers](recipes/cqs/basics/testing-handlers#readme)
+- [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/cqs/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing command and query handlers that have middleware pipelines](recipes/cqs/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
+- [testing middlewares](recipes/cqs/basics/testing-middlewares#readme) _(to-be-written)_
 
 #### CQS Advanced
 
@@ -249,13 +249,13 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 
 #### Eventing Basics
 
-- [getting started](recipes/eventing/basic/getting-started#readme) _(to-be-written)_
-- [testing event observers](recipes/eventing/basic/testing-observers#readme) _(to-be-written)_
-- [testing code that publishes events](recipes/eventing/basic/testing-publish#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/eventing/basic/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing event observers with pipelines](recipes/eventing/basic/testing-observers-with-pipelines#readme) _(to-be-written)_
-- [testing event publisher pipeline](recipes/eventing/basic/testing-publisher-pipeline#readme) _(to-be-written)_
-- [testing middlewares](recipes/eventing/basic/testing-middlewares#readme) _(to-be-written)_
+- [getting started](recipes/eventing/basics/getting-started#readme) _(to-be-written)_
+- [testing event observers](recipes/eventing/basics/testing-observers#readme) _(to-be-written)_
+- [testing code that publishes events](recipes/eventing/basics/testing-publish#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/eventing/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing event observers with pipelines](recipes/eventing/basics/testing-observers-with-pipelines#readme) _(to-be-written)_
+- [testing event publisher pipeline](recipes/eventing/basics/testing-publisher-pipeline#readme) _(to-be-written)_
+- [testing middlewares](recipes/eventing/basics/testing-middlewares#readme) _(to-be-written)_
 
 #### Eventing Advanced
 
@@ -278,11 +278,11 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 
 #### Interactive Streaming Basics
 
-- [getting started](recipes/streaming.interactive/basic/getting-started#readme) _(to-be-written)_
-- [testing streaming request handlers](recipes/streaming.interactive/basic/testing-handlers#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/streaming.interactive/basic/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing streaming request handlers that have middleware pipelines](recipes/streaming.interactive/basic/testing-handlers-with-pipelines#readme) _(to-be-written)_
-- [testing middlewares](recipes/streaming.interactive/basic/testing-middlewares#readme) _(to-be-written)_
+- [getting started](recipes/streaming.interactive/basics/getting-started#readme) _(to-be-written)_
+- [testing streaming request handlers](recipes/streaming.interactive/basics/testing-handlers#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/streaming.interactive/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing streaming request handlers that have middleware pipelines](recipes/streaming.interactive/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
+- [testing middlewares](recipes/streaming.interactive/basics/testing-middlewares#readme) _(to-be-written)_
 
 #### Interactive Streaming Advanced
 
@@ -312,7 +312,7 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 
 #### Reactive Streaming Basics
 
-- [tbd](recipes/streaming.reactive/basic/tbd#readme) _(to-be-written)_
+- [tbd](recipes/streaming.reactive/basics/tbd#readme) _(to-be-written)_
 
 #### Reactive Streaming Advanced
 
@@ -338,7 +338,7 @@ In summary, these are some of the strengths of **Conqueror**:
 
 - **Excellent use-case-driven documentation:** A lot of effort went into writing our [recipes](#recipes). While most other libraries have documentation that is centered around explaining _what_ they do, our use-case-driven documentation is focused on showing you how **Conqueror** _helps you to solve the concrete challenges_ your are likely to encounter during application development.
 
-- **Strong focus on testability:** Testing is a very important topic that is sadly often neglected. **Conqueror** takes testability very seriously and makes sure that you know how you can test the code you have written using it (you may have noticed that the **Conqueror.CQS** recipe immediately following [getting started](recipes/cqs/basic/getting-started#readme) shows you how you can [test the handlers](recipes/cqs/basic/testing-handlers#readme) we built in the first recipe).
+- **Strong focus on testability:** Testing is a very important topic that is sadly often neglected. **Conqueror** takes testability very seriously and makes sure that you know how you can test the code you have written using it (you may have noticed that the **Conqueror.CQS** recipe immediately following [getting started](recipes/cqs/basics/getting-started#readme) shows you how you can [test the handlers](recipes/cqs/basics/testing-handlers#readme) we built in the first recipe).
 
 <!---
 - **Out-of-the-box solutions for many common yet often complex use-cases:** Many development teams spend valuable time on solving common cross-cutting concerns like validation, logging, error handling etc. over and over again. **Conqueror** provides a variety of pre-built middlewares that help you address those concerns with minimal effort.

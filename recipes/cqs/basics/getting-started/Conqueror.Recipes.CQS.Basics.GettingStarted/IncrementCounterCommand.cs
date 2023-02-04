@@ -1,0 +1,38 @@
+namespace Conqueror.Recipes.CQS.Basics.GettingStarted;
+
+public sealed record IncrementCounterCommand(string CounterName);
+
+public sealed record IncrementCounterCommandResponse(int NewCounterValue);
+
+public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCounterCommand, IncrementCounterCommandResponse>
+{
+}
+
+internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
+{
+    private readonly CountersRepository repository;
+
+    public IncrementCounterCommandHandler(CountersRepository repository)
+    {
+        this.repository = repository;
+    }
+
+    public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
+    {
+        var counterValue = await GetCounterValue(command.CounterName);
+        await repository.SetCounterValue(command.CounterName, counterValue + 1);
+        return new(counterValue + 1);
+    }
+
+    private async Task<int> GetCounterValue(string counterName)
+    {
+        try
+        {
+            return await repository.GetCounterValue(counterName);
+        }
+        catch (CounterNotFoundException)
+        {
+            return 0;
+        }
+    }
+}

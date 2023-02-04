@@ -131,25 +131,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Streaming.Interactive", "St
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Streaming.Reactive", "Streaming.Reactive", "{81D39B82-D9FF-4493-978A-5173DA95F230}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basic", "basic", "{67D09656-BB2A-42A9-86D1-73178EEA9F16}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basics", "basics", "{67D09656-BB2A-42A9-86D1-73178EEA9F16}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "advanced", "advanced", "{C915D274-DCD2-47B2-B4EE-4A38F567063D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expert", "expert", "{90F18F97-1F7A-4FDB-BA9C-19A5B24E2A6A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basic", "basic", "{283C107A-CB09-41DB-A010-E63C2413D35B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basics", "basics", "{283C107A-CB09-41DB-A010-E63C2413D35B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "advanced", "advanced", "{C386C00E-66FC-4182-94FB-C789BF3756C0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expert", "expert", "{EB78F97B-B645-45B0-832C-1E6B60CA67C7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basic", "basic", "{6C73985E-050C-4C01-AA07-FF1F491E0EFD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basics", "basics", "{6C73985E-050C-4C01-AA07-FF1F491E0EFD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "advanced", "advanced", "{FC9FB4E1-262A-4537-B149-7D4DEE13F1E5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expert", "expert", "{95B4DD6F-38E4-4B02-A2D2-1450C7B2FC6A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basic", "basic", "{BDD694F8-B35D-4249-8E2D-24C26721610A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basics", "basics", "{BDD694F8-B35D-4249-8E2D-24C26721610A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "advanced", "advanced", "{9BDD505B-FBF9-415A-9260-46271557BF67}"
 EndProject
@@ -161,13 +161,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Lo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "getting-started", "getting-started", "{5F85F425-9A17-4B7D-9A23-4A31E34E0E1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basic.GettingStarted", "recipes\cqs\basic\getting-started\Conqueror.Recipes.CQS.Basic.GettingStarted\Conqueror.Recipes.CQS.Basic.GettingStarted.csproj", "{3C021BED-0BA7-4203-A8DC-5C5FDA25BF03}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.GettingStarted", "recipes\cqs\basics\getting-started\Conqueror.Recipes.CQS.Basics.GettingStarted\Conqueror.Recipes.CQS.Basics.GettingStarted.csproj", "{3C021BED-0BA7-4203-A8DC-5C5FDA25BF03}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testing-handlers", "testing-handlers", "{9922B890-55CA-481D-8A6B-8A29C4136CDC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basic.TestingHandlers", "recipes\cqs\basic\testing-handlers\Conqueror.Recipes.CQS.Basic.TestingHandlers\Conqueror.Recipes.CQS.Basic.TestingHandlers.csproj", "{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers", "recipes\cqs\basics\testing-handlers\Conqueror.Recipes.CQS.Basics.TestingHandlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.csproj", "{D8F09064-ABA7-4EDD-BDF2-333CC0C61D49}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basic.TestingHandlers.Tests", "recipes\cqs\basic\testing-handlers\Conqueror.Recipes.CQS.Basic.TestingHandlers.Tests\Conqueror.Recipes.CQS.Basic.TestingHandlers.Tests.csproj", "{FAD193A3-45C6-4CD7-A302-3D26E85905BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests", "recipes\cqs\basics\testing-handlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests.csproj", "{FAD193A3-45C6-4CD7-A302-3D26E85905BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
