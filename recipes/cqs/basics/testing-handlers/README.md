@@ -4,7 +4,7 @@ This recipe shows how simple it is to test your command and query handlers with 
 
 The handlers we are going to test are similar to those we built in the recipe for [getting started](../getting-started#readme). If you have not yet read that recipe, we recommend you take a look before you start.
 
-> You can see the completed code for this recipe directly in the [repository](.). We're using the [NUnit](https://nunit.org) framework, but any of the points discussed here apply to other testing frameworks as well.
+> This recipe is designed to allow you to code along. [Download this recipe's folder](https://download-directory.github.io?url=https://github.com/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/testing-handlers) and open the solution file in your IDE (note that you need to have [.NET 6 or later](https://dotnet.microsoft.com/en-us/download) installed). If you prefer to just view the completed code directly, you can do so [in your browser](.completed) or with your IDE in the solution [download as part of the folder](https://download-directory.github.io?url=https://github.com/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/testing-handlers).
 
 The application we will be testing is managing a set of named counters. When you use **Conqueror.CQS**, your commands and queries represent the public API for your application. In code, the API of our application under test is represented with the following types:
 
@@ -28,13 +28,24 @@ For testing applications written with **Conqueror.CQS**, we recommend the [black
 
 Given that we want to test the public application API, it follows naturally that we should not be testing command and query handler classes directly, but instead we should invoke handlers through their interface. This means we need to set up the handlers and their dependencies inside the tests. We'll look at two different ways for doing this.
 
-> If you want to follow along with coding while reading this recipe, you can copy the [recipe directory](.) to your local machine and then delete all `*.cs` files from the `Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests` directory.
+> We're using the [NUnit](https://nunit.org) framework in this recipe, but any of the points discussed here apply to any other testing framework as well.
 
-Let's start with testing the [GetCounterValueQuery](Conqueror.Recipes.CQS.Basics.TestingHandlers/GetCounterValueQuery.cs) by creating a new test class called [GetCounterValueQueryTests.cs](Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/GetCounterValueQueryTests.cs):
+Let's start by creating a new test project and adding the dependencies (if you prefer you can of course create the project via your IDE).
+
+```sh
+dotnet new nunit -n Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests
+
+# add a reference to the implementation project
+dotnet add Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests reference Conqueror.Recipes.CQS.Basics.TestingHandlers
+
+# add the new project to the solution
+dotnet sln Conqueror.Recipes.CQS.Basics.TestingHandlers.sln add Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests
+```
+
+Now we can start testing the [GetCounterValueQuery](Conqueror.Recipes.CQS.Basics.TestingHandlers/GetCounterValueQuery.cs) by creating a new test class called `GetCounterValueQueryTests.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/GetCounterValueQueryTests.cs)):
 
 ```cs
 using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
 
 namespace Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests;
 
@@ -87,68 +98,82 @@ public async Task GivenExistingCounter_WhenGettingCounterValue_CounterValueIsRet
 
     await repository.SetCounterValue("test-counter", 10);
 
-    var response = await handler.ExecuteQuery(new(TestCounterName));
+    var response = await handler.ExecuteQuery(new("test-counter"));
 
     Assert.That(response.CounterValue, Is.EqualTo(10));
 }
 ```
 
-As you can see there are a few repititions, so in accordance with the [DRY principle](https://en.wikipedia.org/wiki/Don't_repeat_yourself), we can extract a constant and method. This leads to the following complete test file:
+As you can see there are a few repititions, so in accordance with the [DRY principle](https://en.wikipedia.org/wiki/Don't_repeat_yourself), we can extract a constant and method:
 
-```cs
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
-
-namespace Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests;
-
+```diff
 [TestFixture]
 public sealed class GetCounterValueQueryTests
 {
-    private const string TestCounterName = "test-counter";
-
++   private const string TestCounterName = "test-counter";
++
     [Test]
     public async Task GivenNonExistingCounter_WhenGettingCounterValue_CounterNotFoundExceptionIsThrown()
     {
-        await using var serviceProvider = BuildServiceProvider();
+-       var services = new ServiceCollection();
+-
+-       services.AddConquerorCQS()
+-               .AddTransient<GetCounterValueQueryHandler>()
+-               .AddSingleton<CountersRepository>()
+-               .FinalizeConquerorRegistrations();
+-
+-       await using var serviceProvider = services.BuildServiceProvider();
++       await using var serviceProvider = BuildServiceProvider();
 
         var handler = serviceProvider.GetRequiredService<IGetCounterValueQueryHandler>();
 
-        Assert.ThrowsAsync<CounterNotFoundException>(() => handler.ExecuteQuery(new(TestCounterName)));
+-       Assert.ThrowsAsync<CounterNotFoundException>(() => handler.ExecuteQuery(new("test-counter")));
++       Assert.ThrowsAsync<CounterNotFoundException>(() => handler.ExecuteQuery(new(TestCounterName)));
     }
 
     [Test]
     public async Task GivenExistingCounter_WhenGettingCounterValue_CounterValueIsReturned()
     {
-        await using var serviceProvider = BuildServiceProvider();
+-       var services = new ServiceCollection();
+-
+-       services.AddConquerorCQS()
+-               .AddTransient<GetCounterValueQueryHandler>()
+-               .AddSingleton<CountersRepository>()
+-               .FinalizeConquerorRegistrations();
+-
+-       await using var serviceProvider = services.BuildServiceProvider();
++       await using var serviceProvider = BuildServiceProvider();
 
         var handler = serviceProvider.GetRequiredService<IGetCounterValueQueryHandler>();
         var repository = serviceProvider.GetRequiredService<CountersRepository>();
 
-        await repository.SetCounterValue(TestCounterName, 10);
+-       await repository.SetCounterValue("test-counter", 10);
++       await repository.SetCounterValue(TestCounterName, 10);
 
-        var response = await handler.ExecuteQuery(new(TestCounterName));
+-       var response = await handler.ExecuteQuery(new("test-counter"));
++       var response = await handler.ExecuteQuery(new(TestCounterName));
 
         Assert.That(response.CounterValue, Is.EqualTo(10));
     }
-
-    private static ServiceProvider BuildServiceProvider()
-    {
-        return new ServiceCollection().AddConquerorCQS()
-                                      .AddTransient<GetCounterValueQueryHandler>()
-                                      .AddSingleton<CountersRepository>()
-                                      .FinalizeConquerorRegistrations()
-                                      .BuildServiceProvider();
-    }
++
++   private static ServiceProvider BuildServiceProvider()
++   {
++       return new ServiceCollection().AddConquerorCQS()
++                                     .AddTransient<GetCounterValueQueryHandler>()
++                                     .AddSingleton<CountersRepository>()
++                                     .FinalizeConquerorRegistrations()
++                                     .BuildServiceProvider();
++   }
 }
 ```
 
-This concludes the tests for the [GetCounterValueQuery](Conqueror.Recipes.CQS.Basics.TestingHandlers/GetCounterValueQuery.cs). We used the approach of creating a service provider with the minimal services required for our tests. This works well, but adds a little bit of noise to the tests. Next, we are going to write tests for [IncrementCounterCommand](Conqueror.Recipes.CQS.Basics.TestingHandlers/IncrementCounterCommand.cs) using a slightly different approach.
+This concludes the tests for the [GetCounterValueQuery](Conqueror.Recipes.CQS.Basics.TestingHandlers/GetCounterValueQuery.cs). We used the approach of creating a service provider with the minimal services required for our tests. This works well, but adds a little bit of noise to the tests. Next, we are going to write tests for the [IncrementCounterCommand](Conqueror.Recipes.CQS.Basics.TestingHandlers/IncrementCounterCommand.cs) using a slightly different approach.
 
 The [IncrementCounterCommand](Conqueror.Recipes.CQS.Basics.TestingHandlers/IncrementCounterCommand.cs) contains something which is quite common for commands: a side-effect. Side-effects are things that happen as the results of calling a command, but are not directly visible in the command's response. In this case the side-effect is sending a notification to an administrator whenever a counter is incremented beyond a threshold of 1000 (through the [IAdminNotificationService](Conqueror.Recipes.CQS.Basics.TestingHandlers/IAdminNotificationService.cs)), which is admittedly not very realistic for such a simple application, but it serves well to illustrate how to deal with such side-effects during testing.
 
-> Note that queries should never have side-effects, they should only return some data. This is important to support certain advanced patterns like caching.
+> Note that _queries_ should never have side-effects, they should only return some data. This is important to support certain advanced patterns like caching.
 
-In contrast to testing our query above, we're going to address the test setup in a base class that our command test class can inherit from. This allows the test class to fully focus on the tests themselves without a lot of boilerplate. Let's create a new file `TestBase.cs` and add the following content:
+In contrast to testing our query above, we're going to address the test setup in a base class that our command's test class can inherit from. This allows the test class to fully focus on the tests themselves without a lot of boilerplate. Let's create a new file `TestBase.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/TestBase.cs)) and add the following content:
 
 ```cs
 using Microsoft.Extensions.DependencyInjection;
@@ -180,13 +205,15 @@ public abstract class TestBase : IDisposable
 
 There are a few things to note here. We are creating a new service collection and create the service provider in the class's constructor. There is also a call to `AddApplicationServices`, which is a method we haven't seen before. This method comes from [ServiceCollectionExtensions.cs](Conqueror.Recipes.CQS.Basics.TestingHandlers/ServiceCollectionExtensions.cs) and registers all services contained in its project. This is a recommended practice for modular system design (there is an [advanced recipe](../../advanced/clean-architecture#readme) which explains more about this).
 
-The class implements `IDisposable` and disposes the service provider. Most testing frameworks will automatically dispose a test class after the test run is finished. For some testing frameworks there is another aspect you need to be careful of: they might re-use the same class instance for multiple tests. This could cause undesired side-effects, and therefore we recommend to configure your test framework to create a new class instance for each test. Since we are using [NUnit](https://nunit.org) in this recipe, we can do this with an assembly attribute as seen in [AssemblyAttributes](Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/AssemblyAttributes.cs).
-
-Now we can use this test base for our command tests. Create a new test class called [IncrementCounterCommandTests.cs](Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/IncrementCounterCommandTests.cs) with some helper contants and properties:
+The class implements `IDisposable` and disposes the service provider. Most testing frameworks will automatically dispose a test class after the test run is finished. For some testing frameworks there is another aspect you need to be careful of: they might re-use the same class instance for multiple tests. This could cause undesired side-effects, and therefore we recommend to configure your test framework to create a new class instance for each test. Since we are using [NUnit](https://nunit.org) in this recipe, we can do this with an assembly attribute in a new file `AssemblyAttributes.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/AssemblyAttributes.cs)).
 
 ```cs
-using NUnit.Framework;
+[assembly: FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+```
 
+Now we can use this test base for our command tests. Create a new test class called `IncrementCounterCommandTests.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/IncrementCounterCommandTests.cs)) with some helper constants and properties:
+
+```cs
 namespace Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests;
 
 [TestFixture]
@@ -241,15 +268,21 @@ Another short and clear test.
 Finally we need to test the side-effect. We want to verify that a notification is sent when a counter is incremented beyond the threshold of 1000. Unfortunately there is no easy way to verify this with the existing production code, so we are going to use a [mock object](https://en.wikipedia.org/wiki/Mock_object). There is a variety of libraries for this out there. For this recipe we'll use [Moq](https://github.com/moq/moq4).
 
 ```sh
-dotnet add package moq
+dotnet add Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests package moq
 ```
 
-Since we resolve the handler from the service provider for testing, we need to register the mock object in the service provider. Here is the full [TestBase.cs](Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/TestBase.cs), where we replace the service descriptor for `IAdminNotificationService` with a mock object:
+Let's also add this as a global using statement to `Usings.cs`([view completed file](.completed/Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/Usings.cs)) so that we don't need to repeatedly add usings for `Moq`:
 
-```cs
+```diff
+global using NUnit.Framework;
++ global using Moq;
+```
+
+Since we resolve the handler from the service provider for testing, we need to register the mock object in the service provider. Apply the following changes to `TestBase.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/TestBase.cs)) to replace `IAdminNotificationService` with a mock object:
+
+```diff
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Moq;
++ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests;
 
@@ -262,13 +295,13 @@ public abstract class TestBase : IDisposable
         var services = new ServiceCollection();
 
         services.AddApplicationServices();
-
-        services.Replace(ServiceDescriptor.Singleton(AdminNotificationServiceMock.Object));
++
++       services.Replace(ServiceDescriptor.Singleton(AdminNotificationServiceMock.Object));
 
         serviceProvider = services.BuildServiceProvider();
     }
-
-    protected Mock<IAdminNotificationService> AdminNotificationServiceMock { get; } = new();
++
++   protected Mock<IAdminNotificationService> AdminNotificationServiceMock { get; } = new();
 
     public void Dispose()
     {
@@ -280,7 +313,7 @@ public abstract class TestBase : IDisposable
 }
 ```
 
-> Our recommended approach is to mock all side-effectul dependencies inside the `TestBase` to ensure that you never accidentally trigger a real side-effect during testing. However, it is possible to delegate the creation of the mocks to the concrete test class by creating a virtual `ConfigureServices` method and creating the service provider lazily. This is left as an exercise for the reader.
+> Our recommended approach is to mock all side-effectful dependencies inside the `TestBase` to ensure that you never accidentally trigger a real side-effect during testing. However, it is possible to delegate the creation of the mocks to the concrete test class by creating a virtual `ConfigureServices` method and creating the service provider lazily. This is left as an exercise for the reader.
 
 With this change we can now write a test to verify that the notification is sent:
 
@@ -319,6 +352,6 @@ And that concludes this recipe for testing command and query handlers with **Con
 - mock dependencies which cause side-effects (e.g. sending a notification), but do not mock your storage layer (i.e. the database)
 - consolidate common setup logic into a base class
 
-As the next step you can explore how to [address cross-cutting concerns like validation](../solving-cross-cutting-concerns#readme) or take a look at how to [expose your command and queries via HTTP](../../advanced/exposing-via-http#readme) and [how to test them](../../advanced/testing-http#readme) (the linked recipe contains an implementation of [TestBase](../../advanced/testing-http/Conqueror.Recipes.CQS.Advanced.TestingHttp.Tests/TestBase.cs) which creates a fully configured HTTP test server).
+As the next step you can explore how to [address cross-cutting concerns like validation](../solving-cross-cutting-concerns#readme) or take a look at how to [expose your command and queries via HTTP](../../advanced/exposing-via-http#readme) and [how to test them](../../advanced/testing-http#readme) (the completed code for the linked recipe contains an implementation of [TestBase](../../advanced/testing-http/.completed/Conqueror.Recipes.CQS.Advanced.TestingHttp.Tests/TestBase.cs) which creates a fully configured HTTP test server).
 
 Or head over to our [other recipes](../../../../README.md#recipes) for more guidance on different topics.

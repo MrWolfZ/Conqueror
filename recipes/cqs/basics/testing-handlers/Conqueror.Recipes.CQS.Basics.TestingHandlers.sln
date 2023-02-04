@@ -5,7 +5,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers", "Conqueror.Recipes.CQS.Basics.TestingHandlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.csproj", "{4DBA8658-14CF-4340-BBDD-5E5209AD3EA0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests", "Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests.csproj", "{7BC59A26-F83B-497C-B8BC-2E78ED71DEFB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{542B54F0-1820-422E-AF5F-FAB1C6A5A87F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers", ".completed\Conqueror.Recipes.CQS.Basics.TestingHandlers\Conqueror.Recipes.CQS.Basics.TestingHandlers.csproj", "{4F029C58-78EC-4C9E-B308-BBC04E69770B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests", ".completed\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests.csproj", "{6F06B77C-7892-431B-AB15-DE4E76FD1FBE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,9 +24,17 @@ Global
 		{4DBA8658-14CF-4340-BBDD-5E5209AD3EA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DBA8658-14CF-4340-BBDD-5E5209AD3EA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DBA8658-14CF-4340-BBDD-5E5209AD3EA0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7BC59A26-F83B-497C-B8BC-2E78ED71DEFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7BC59A26-F83B-497C-B8BC-2E78ED71DEFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7BC59A26-F83B-497C-B8BC-2E78ED71DEFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7BC59A26-F83B-497C-B8BC-2E78ED71DEFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F029C58-78EC-4C9E-B308-BBC04E69770B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F029C58-78EC-4C9E-B308-BBC04E69770B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F029C58-78EC-4C9E-B308-BBC04E69770B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F029C58-78EC-4C9E-B308-BBC04E69770B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F06B77C-7892-431B-AB15-DE4E76FD1FBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F06B77C-7892-431B-AB15-DE4E76FD1FBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F06B77C-7892-431B-AB15-DE4E76FD1FBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F06B77C-7892-431B-AB15-DE4E76FD1FBE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4F029C58-78EC-4C9E-B308-BBC04E69770B} = {542B54F0-1820-422E-AF5F-FAB1C6A5A87F}
+		{6F06B77C-7892-431B-AB15-DE4E76FD1FBE} = {542B54F0-1820-422E-AF5F-FAB1C6A5A87F}
 	EndGlobalSection
 EndGlobal
