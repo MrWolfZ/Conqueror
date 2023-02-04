@@ -4,18 +4,24 @@ This file contains all the open points for extensions and improvements to the **
 
 ## General
 
-- [ ] link nuget packages for all supporting packages in the libaries section of each core lib in readme (e.g. transports and middlewares)
-- [ ] use `SuppressMessage` instead of pragmas everywhere for suppressing diagnostics
+- [ ] transform all recipes to contain a `.completed` folder with the completed recipe and place the starting point into the recipe folder itself to allow coding along
+- [ ] add a direct download link for the completed recipe and its starting point to each recipe
+- [ ] check if it is possible to improve code diff highlighting in recipes
+- [ ] in all docs, link directly to readme file for recipes
+  - [ ] ensure that code repository links from recipe readmes work
 - [ ] use file-scoped namespaces everywhere
 - [ ] re-order all code so that command comes before query (or even better split files)
 - [ ] add documentation about being able to use pipelines internally for external API calls
 - [ ] add code coverage reports and badge
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
+- [ ] use explicit dependency version numbers in all recipes and examples
+- [ ] add a script to bump version number across whole project
 
 ## CQS
 
 - [ ] create analyzers (including code fixes)
-  - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or 8 is being used)
+  - [ ] do not raise analyzer error for missing `ConfigurePipeline` on .NET 7 or higher
+  - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or higher is being used)
   - [ ] non-empty `ConfigurePipeline` method
   - [ ] enforce `IConfigureCommandPipeline` interface to be present on all handler types that implement `ConfigurePipeline` method
   - [ ] enforce `IConfigureCommandPipeline` interface to only be present on command handler types
@@ -26,19 +32,21 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] error when `AddConquerorCQS` is being called without registration finalization method being called
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
+- [ ] allow caching client factory results
 
 ### CQS middleware
 
 - [ ] create projects for common middlewares, e.g.
-  - [ ] `Conqueror.CQS.Middleware.Tracing`
-  - [ ] `Conqueror.CQS.Middleware.Timeout`
+  - [ ] `Conqueror.CQS.Middleware.DataAnnotationValidation`
   - [ ] `Conqueror.CQS.Middleware.Retry`
+  - [ ] `Conqueror.CQS.Middleware.Timeout`
+  - [ ] `Conqueror.CQS.Middleware.Tracing`
+  - [ ] `Conqueror.CQS.Middleware.FluentValidation`
 
 ### CQS ASP Core
 
-- [ ] in http transport factory that takes http client, throw if client's base address isn't set
-- [ ] add `string? DefaultCommandVersion` etc. to client and server options
-- [ ] add client option for setting custom HTTP headers (e.g. for authentication)
+- [ ] create analyzers (including code fixes)
+  - [ ] when command or query does not have a version
 - [ ] add recipe for customizing OpenAPI specification with swashbuckle
 - [ ] instruct users to place their custom path conventions into their contracts module to allow both server and client to use the same conventions
 - [ ] provide delegating HTTP client handler that takes care of conqueror context propagation to llow custom http clients to be used
@@ -50,7 +58,6 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] publisher uses attribute on event to determine on which transport to publish
   - [ ] observer requires explicit registration with transport client
   - [ ] provide HTTP websocket transport
-- [ ] use `.ConfigureAwait(false)` everywhere
 - [ ] fix: do not register generic types during assembly scanning
 - [ ] fix: do not register nested private types during assembly scanning
 - [ ] handling and tests for conqueror context
@@ -68,7 +75,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Interactive streaming
 
-- [ ] use `.ConfigureAwait(false)` everywhere
 - [ ] fix: do not register generic types during assembly scanning
 - [ ] fix: do not register nested private types during assembly scanning
 - [ ] implement middleware support
