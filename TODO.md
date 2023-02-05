@@ -4,21 +4,18 @@ This file contains all the open points for extensions and improvements to the **
 
 ## General
 
-- [ ] transform all recipes to contain a `.completed` folder with the completed recipe and place the starting point into the recipe folder itself to allow coding along
-- [ ] add a direct download link for the completed recipe and its starting point to each recipe
-- [ ] check if it is possible to improve code diff highlighting in recipes
-- [ ] in all docs, link directly to readme file for recipes
-  - [ ] ensure that code repository links from recipe readmes work
+- [ ] in recipes improve language, e.g. replace `Now that ...` with `As the next step ...` etc.
 - [ ] use file-scoped namespaces everywhere
 - [ ] re-order all code so that command comes before query (or even better split files)
-- [ ] add documentation about being able to use pipelines internally for external API calls
 - [ ] add code coverage reports and badge
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
 - [ ] use explicit dependency version numbers in all recipes and examples
-- [ ] add a script to bump version number across whole project
+  - [ ] add a script to bump version number across whole project
 
 ## CQS
 
+- [ ] adjust analyzer to target dedicated framework versions
+  - [ ] reference correct CSharp library versions according to the framework version to prevent compiler warnings when using the analyzers in a .NET 6 project
 - [ ] create analyzers (including code fixes)
   - [ ] do not raise analyzer error for missing `ConfigurePipeline` on .NET 7 or higher
   - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or higher is being used)
@@ -40,6 +37,7 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] `Conqueror.CQS.Middleware.DataAnnotationValidation`
   - [ ] `Conqueror.CQS.Middleware.Retry`
   - [ ] `Conqueror.CQS.Middleware.Timeout`
+  - [ ] `Conqueror.CQS.Middleware.Metrics`
   - [ ] `Conqueror.CQS.Middleware.Tracing`
   - [ ] `Conqueror.CQS.Middleware.FluentValidation`
 
