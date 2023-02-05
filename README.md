@@ -206,7 +206,12 @@ info: Quickstart.GetCounterValueQuery[0]
 
 If you have swagger UI enabled, it will show the new command and query and they can be called from there.
 
-![Quickstart Swagger](/recipes/quickstart/swagger.gif?raw=true "Quickstart Swagger")
+<!--
+  use an HTML image instead of a markdown image to ensure that enough
+  vertical space is reserved even before the image is loaded so that
+  links to anchors in the readme work correctly
+-->
+<img src="./recipes/quickstart/swagger.gif?raw=true" alt="Quickstart Swagger" style="height: 565px" height="565px" />
 
 ## Recipes
 
