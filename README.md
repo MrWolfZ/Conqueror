@@ -236,6 +236,8 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [testing HTTP commands and queries](recipes/cqs/advanced/testing-http#readme) _(to-be-written)_
 - [calling HTTP commands and queries from another application](recipes/cqs/advanced/calling-http#readme) _(to-be-written)_
 - [using middlewares for command and query HTTP clients](recipes/cqs/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
+- [enforce that all command and query handlers declare a pipeline](recipes/cqs/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
+- [re-use middleware pipelines to solve cross-cutting concerns when calling external systems (e.g. logging or retrying failed calls)](recipes/cqs/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
 - [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme) _(to-be-written)_
 - [using commands and queries in a Blazor app (server-side or web-assembly)](recipes/cqs/advanced/blazor-server#readme) _(to-be-written)_
 - [building a CLI using commands and queries](recipes/cqs/advanced/building-cli#readme) _(to-be-written)_
@@ -285,6 +287,7 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 
 - [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/eventing/advanced/different-dependency-injection#readme) _(to-be-written)_
 - [execute event observers with a different strategy (e.g. parallel execution)](recipes/eventing/advanced/publishing-strategy#readme) _(to-be-written)_
+- [enforce that all event observers declare a pipeline](recipes/eventing/advanced/enforce-observer-pipeline#readme) _(to-be-written)_
 - [creating a clean architecture with loose coupling via events](recipes/eventing/advanced/clean-architecture#readme) _(to-be-written)_
 - [moving from a modular monolith to a distributed system](recipes/eventing/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
@@ -325,6 +328,8 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 - [consuming HTTP streams from another application](recipes/streaming.interactive/advanced/consuming-http#readme) _(to-be-written)_
 - [using middlewares for interactive streaming HTTP clients](recipes/streaming.interactive/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
 - [optimize HTTP streaming performance with pre-fetching](recipes/streaming.interactive/advanced/optimize-http-performance#readme) _(to-be-written)_
+- [enforce that all streaming request handlers declare a pipeline](recipes/streaming.interactive/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
+- [re-use middleware pipelines to solve cross-cutting concerns when consuming interactive streams from external systems (e.g. logging or retrying failed calls)](recipes/streaming.interactive/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
 - [authenticating and authorizing streaming requests](recipes/streaming.interactive/advanced/auth#readme) _(to-be-written)_
 - [moving from a modular monolith to a distributed system](recipes/streaming.interactive/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
