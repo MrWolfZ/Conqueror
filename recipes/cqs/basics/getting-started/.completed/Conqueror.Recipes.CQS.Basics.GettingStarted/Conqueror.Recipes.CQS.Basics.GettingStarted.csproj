@@ -6,22 +6,18 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
 
-        <ShouldReferencePackage Condition="!Exists('$(MSBuildThisFileDirectory)/../../../Conqueror.sln')">true</ShouldReferencePackage>
-        <ShouldReferenceProject Condition="Exists('$(MSBuildThisFileDirectory)/../../../Conqueror.sln')">true</ShouldReferenceProject>
+        <!-- reference the projects if this project is opened in the Conqueror.sln (useful for development), otherwise reference packages -->
+        <ShouldReferenceProjects Condition="'$(SolutionName)'=='Conqueror'">true</ShouldReferenceProjects>
     </PropertyGroup>
 
-    <!-- reference the projects if the full repository is checked out (useful for development) -->
     <ItemGroup>
-        <ProjectReference Include="..\..\..\src\Conqueror.CQS\Conqueror.CQS.csproj" Condition="$(ShouldReferenceProject) == true" />
-    </ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS\Conqueror.CQS.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
 
-    <!-- reference the packages if the project is checked out standalone -->
-    <ItemGroup>
-        <PackageReference Include="Conqueror.CQS" Version="*-*" Condition="$(ShouldReferencePackage) == true" />
-    </ItemGroup>
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror.CQS" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
 
-    <!-- third-party packages -->
-    <ItemGroup>
+        <!-- third-party packages -->
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
     </ItemGroup>
 
