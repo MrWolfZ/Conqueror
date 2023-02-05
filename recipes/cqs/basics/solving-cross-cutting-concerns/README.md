@@ -1,4 +1,4 @@
-# Conqueror recipe (CQS Basics): solving cross-cutting concerns with middlewares (e.g. validation or logging)
+# Conqueror recipe (CQS Basics): solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)
 
 This recipe shows how simple it is to solve cross-cutting concerns like validation or logging for your commands and queries with **Conqueror.CQS**.
 

@@ -1,4 +1,4 @@
-# Conqueror recipe (Eventing Basics): solving cross-cutting concerns with middlewares (e.g. logging)
+# Conqueror recipe (Eventing Basics): solving cross-cutting concerns with middlewares (e.g. logging or retrying on failure)
 
 _work-in-progress_
 

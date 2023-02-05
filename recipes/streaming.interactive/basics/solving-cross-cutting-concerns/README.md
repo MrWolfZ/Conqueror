@@ -1,4 +1,4 @@
-# Conqueror recipe (Interactive Streaming Basics): solving cross-cutting concerns with middlewares (e.g. logging)
+# Conqueror recipe (Interactive Streaming Basics): solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)
 
 _work-in-progress_
 

@@ -224,7 +224,7 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 - [getting started](recipes/cqs/basics/getting-started#readme)
 - [testing command and query handlers](recipes/cqs/basics/testing-handlers#readme)
-- [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/cqs/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](recipes/cqs/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
 - [testing command and query handlers that have middleware pipelines](recipes/cqs/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
 - [testing middlewares](recipes/cqs/basics/testing-middlewares#readme) _(to-be-written)_
 
@@ -278,7 +278,7 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [getting started](recipes/eventing/basics/getting-started#readme) _(to-be-written)_
 - [testing event observers](recipes/eventing/basics/testing-observers#readme) _(to-be-written)_
 - [testing code that publishes events](recipes/eventing/basics/testing-publish#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. logging)](recipes/eventing/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. logging or retrying on failure)](recipes/eventing/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
 - [testing event observers with pipelines](recipes/eventing/basics/testing-observers-with-pipelines#readme) _(to-be-written)_
 - [testing event publisher pipeline](recipes/eventing/basics/testing-publisher-pipeline#readme) _(to-be-written)_
 - [testing middlewares](recipes/eventing/basics/testing-middlewares#readme) _(to-be-written)_
@@ -315,7 +315,7 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are genera
 
 - [getting started](recipes/streaming.interactive/basics/getting-started#readme) _(to-be-written)_
 - [testing streaming request handlers](recipes/streaming.interactive/basics/testing-handlers#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. validation or logging)](recipes/streaming.interactive/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](recipes/streaming.interactive/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
 - [testing streaming request handlers that have middleware pipelines](recipes/streaming.interactive/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
 - [testing middlewares](recipes/streaming.interactive/basics/testing-middlewares#readme) _(to-be-written)_
 
