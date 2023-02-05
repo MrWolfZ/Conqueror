@@ -493,4 +493,4 @@ This concludes our recipe for getting started with **Conqueror.CQS**. In summary
 
 As the next step you can explore how to [test command and query handlers](../testing-handlers#readme).
 
-Or head over to our [other recipes](../../../../README.md#recipes) for more guidance on different topics.
+Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.

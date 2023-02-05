@@ -1,6 +1,6 @@
 # Conqueror recipe (CQS Basics): solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)
 
-This recipe shows how simple it is to solve cross-cutting concerns like validation or logging for your commands and queries with **Conqueror.CQS**.
+This recipe shows how simple it is to solve cross-cutting concerns like validation or retrying on failure for your commands and queries with **Conqueror.CQS**.
 
 If you have not read the recipe for [getting started](../getting-started#readme) yet, we recommend you take a look at it before you start with this recipe.
 
@@ -18,13 +18,13 @@ public sealed record GetCounterValueQuery(string CounterName);
 public sealed record GetCounterValueQueryResponse(int CounterValue);
 ```
 
-Feel free to take a look at the full code for [the query](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/GetCounterValueQuery.cs) and [the command](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/IncrementCounterByCommand.cs). The counters are stored in an [in-memory repository](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/CountersRepository.cs).
+Feel free to take a look at the full code for [the command](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/IncrementCounterByCommand.cs) and [the query](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/GetCounterValueQuery.cs). The counters are stored in an [in-memory repository](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/CountersRepository.cs).
 
 The first cross-cutting concern we are going to address is validation. You may have noticed that the `IncrementBy` property of the `IncrementCounterByCommand` is an `int`, but we expect this value to be a _positive_ integer, and right now it could also be a negative number or zero. To deal with these cases we are going to add validation based on [data annotation attributes](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations?view=net-7.0).
 
 In **Conqueror.CQS** we use middlewares (which implement the [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) pattern) to address these concerns. Each command and query handler is executed as part of a pipeline. The pipeline consists of a set of middlewares which are executed in order. Each middleware wraps the execution of the rest of the pipeline, and can also abort the pipeline execution (e.g. due to a validation failure).
 
-> Middlewares (and pipelines) are separated for commands and queries, since the types of cross-cutting concerns that are relevant for each of them can be quite different (e.g. caching makes sense for queries, but not for commands). This means you may have to implement a middleware twice if you want to handle the same cross-cutting concern for both commands and queries. However, given that middlewares are tpyically written once and then used many times, the cost of implementing them is negligible in the big picture of your app's development. In addition, for many cross-cutting concerns **Conqueror.CQS** provides [pre-built middlewares](../../../..#conquerorcqs), so that you don't have to write them yourself. In the rest of this recipe we will only be building command middlewares, but you can see the equivalent query middlewares in the [completed recipe](.completed).
+> Middlewares (and pipelines) are separated for commands and queries, since the types of cross-cutting concerns that are relevant for each of them can be quite different (e.g. caching makes sense for queries, but not for commands). This means you may have to implement a middleware twice if you want to handle the same cross-cutting concern for both commands and queries. However, given that middlewares are tpyically written once and then used many times, the cost of implementing them is negligible in the big picture of your app's development. In addition, for many cross-cutting concerns **Conqueror.CQS** provides [pre-built middlewares](../../../../../..#conquerorcqs), so that you don't have to write them yourself. In the rest of this recipe we will only be building command middlewares, but you can see the equivalent query middlewares in the [completed recipe](.completed).
 
 All of this is quite theoretical, so let's explore it interactively by implementing a command middleware for data annotation validation. Create a new class called `DataAnnotationValidationCommandMiddleware.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/DataAnnotationValidationCommandMiddleware.cs)):
 
@@ -32,11 +32,11 @@ All of this is quite theoretical, so let's explore it interactively by implement
 // TODO: add middleware
 ```
 
-> The middleware is automatically added to the application services since we are using `services.AddConquerorCQSTypesFromExecutingAssembly()`. If you are not using this assembly scanning mechanism, you have to add the middleware explicitly, i.e. `services.AddTransient<DataAnnotationValidationCommandMiddleware>();`.
+> The middleware is automatically added to the application services since we are using `services.AddConquerorCQSTypesFromExecutingAssembly()` in [Program.cs](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/Program.cs). If you are not using this assembly scanning mechanism, or want your middleware to have a different lifetime (e.g. a singleton), you have to add the middleware explicitly, e.g. `services.AddSingleton<DataAnnotationValidationCommandMiddleware>();`.
 
 Now we can start using the middleware in our command handler. Each handler configures its own pipeline by implementing an interface (for command handlers it is `IConfigureCommandPipeline` and for query handlers it is `IConfigureQueryPipeline`). These interfaces contain a static method `ConfigurePipeline`, which takes a pipeline builder and adds middlewares to it. Let's do that for the [IncrementCounterByCommandHandler](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/IncrementCounterByCommand.cs):
 
-> The static interface method for the pipeline configuration interfaces only works out-of-the-box if you are using .NET 7 or higher since abstract static interface methods are a new feature introduced in .NET 7. If you are on .NET 6 you can use the **Conqueror.CQS** [analyzers](https://www.nuget.org/packages/Conqueror.CQS.Analyzers/), which contain an analyzer that enforces the static method to be present if a handler implements one of the pipeline configuration interfaces (there is also a code fix to automatically add the method). In the project for this recipe the analyzers are already added.
+> The static interface method for the pipeline configuration interfaces only works out-of-the-box if you are using .NET 7 or higher since [static virtual interface methods](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/static-virtual-interface-members) are a new feature introduced in .NET 7 / C# 11. If you are on .NET 6 you can use the **Conqueror.CQS** [analyzers](https://www.nuget.org/packages/Conqueror.CQS.Analyzers/), which contain an analyzer that enforces the static method to be present if a handler implements one of the pipeline configuration interfaces (there is also a code fix to automatically add the method). In the project for this recipe the analyzers are already added.
 
 ```diff
 // TODO: add diff for adding pipeline configuration to handler
@@ -117,7 +117,7 @@ shutting down...
 
 It works! But there are a few improvements we can still make to our new middleware. As you saw when you implemented the middleware, the maximum number of retry attempts was hardcoded in the middleware. To make the middleware more re-usable it would be better if the number of attempts could be configured from the outside.
 
-It is quite common for middlewares to be configurable, so let's take a look at a few options for achieving that. The simplest option is to create a class which contains the configuration parameters and the inject this class into the middleware. Create a new class `RetryConfiguration.cs`:
+It is quite common for middlewares to be configurable, so let's take a look at a few options for achieving that. The simplest option is to create a class which contains the configuration parameters and then inject this class into the middleware. Create a new class `RetryConfiguration.cs`:
 
 ```cs
 // TODO: configuration class
@@ -129,7 +129,7 @@ In a real application this class may be populated from a configuration file (for
 // TODO: add configuration class to services
 ```
 
-There are two ways to access the configuration instance in our middleware. Firstly, you could just add the configuration class as a parameter to the middleware's constructor. This works, but carries a very subtle risk: if the lifetime of the middleware would be longer than that of the injected class (e.g. the middleware was a singleton and the injected class was transient), then you would run into what is known as a [captive dependency](https://blog.ploeh.dk/2014/06/02/captive-dependency/). To prevent this from happening, **Conqueror.CQS** exposes the `IServiceProvider` from the scope in which the handler is resolved from, as a property on the middleware context. This allows resolving dependencies safely regardless of the lifetime of the middleware or the handler. Let's do that in our middleware in `RetryCommandMiddleware.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddleware.cs)):
+There are two ways to access the configuration instance in our middleware. Firstly, you could just add the configuration class as a parameter to the middleware's constructor. This works, but carries a very subtle risk: if the lifetime of the middleware would be longer than that of the injected class (e.g. the middleware was a singleton and the injected class was transient), then you would run into what is known as a [captive dependency](https://blog.ploeh.dk/2014/06/02/captive-dependency/). To prevent this from happening, **Conqueror.CQS** exposes the `IServiceProvider`, from the scope in which the handler is resolved, as a property on the middleware context. This allows resolving dependencies safely regardless of the lifetime of the middleware or the handler. Let's do that in our `RetryCommandMiddleware.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddleware.cs)):
 
 ```diff
 // TODO: resolve configuration instance from context
@@ -153,7 +153,7 @@ Finally, we adjust how we use the middleware in our command handler's pipeline i
 // TODO: adjust handler pipeline configuration
 ```
 
-That's a lot of extra code. Fortunately, the pipeline configuration uses the [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), which, together with C#'s excellent [extension methods](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods), allows us to simplify this quite a bit. The recommended approach for providing middlewares is to accompany them with a set of extension methods for configuring pipelines. Let's add such an extension method for our retry middleware in a new class `RetryCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineBuilderExtensions.cs)):
+That's a lot of extra code for configuring the pipeline. Fortunately, the pipeline configuration uses the [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), which, together with C#'s excellent [extension methods](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods), allows us to simplify this quite a bit. The recommended approach for providing middlewares is to accompany them with a set of extension methods for configuring pipelines. Let's add such an extension method for our retry middleware in a new class `RetryCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineBuilderExtensions.cs)):
 
 ```cs
 // TODO: configuration extension methods
@@ -205,10 +205,10 @@ All of these extensions methods are recommended conventions, but there is no lim
 
 This concludes our recipe for solving cross-cutting concerns with **Conqueror.CQS**. In summary, these are the steps:
 
-- build your own middleware or add a package reference to one of the [pre-built middlewares](../../../..#conquerorcqs)
+- build your own middleware or add a package reference to one of the [pre-built middlewares](../../../../../..#conquerorcqs)
 - write custom extension methods for your own or even pre-built middlewares to customize how they are added to handler pipelines
 - create default pipelines to align pipelines across all your handlers
 
-As the next step we recommend that you explore how to [test command and query handlers that have pipelines](../testing-handlers-with-pipelines#readme) as well as how to [test middlewares themselves](../testing-middlewares#readme).
+As the next step we recommend that you explore how to [test command and query handlers that have pipelines](../testing-handlers-with-pipelines#readme) as well as how to [test middlewares themselves](../testing-middlewares#readme). Another useful recipe is about [re-using middleware pipelines to solve cross-cutting concerns when calling external systems](../../advanced/reuse-piplines-for-external-calls#readme).
 
-Or head over to our [other recipes](../../../../README.md#recipes) for more guidance on different topics.
+Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.
