@@ -175,6 +175,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests", "recipes\cqs\basics\testing-handlers\.completed\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests\Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests.csproj", "{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solving-cross-cutting-concerns", "solving-cross-cutting-concerns", "{72DB3747-BE19-4A7A-8864-934D8F605A78}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{9AD2EEC8-4EBF-4181-863A-9706A5F4F26F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns", "recipes\cqs\basics\solving-cross-cutting-concerns\.completed\Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns\Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns.csproj", "{A3CE93BA-D034-4B47-9A6B-72E71A1FD316}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns", "recipes\cqs\basics\solving-cross-cutting-concerns\Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns\Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns.csproj", "{0A972CB5-84DB-4B32-9E8A-2C8E7870A88C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -376,6 +384,14 @@ Global
 		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3CE93BA-D034-4B47-9A6B-72E71A1FD316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3CE93BA-D034-4B47-9A6B-72E71A1FD316}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3CE93BA-D034-4B47-9A6B-72E71A1FD316}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3CE93BA-D034-4B47-9A6B-72E71A1FD316}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A972CB5-84DB-4B32-9E8A-2C8E7870A88C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A972CB5-84DB-4B32-9E8A-2C8E7870A88C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A972CB5-84DB-4B32-9E8A-2C8E7870A88C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A972CB5-84DB-4B32-9E8A-2C8E7870A88C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -414,5 +430,9 @@ Global
 		{BD01F363-9C29-4A87-BDDE-E4234E0D5309} = {9922B890-55CA-481D-8A6B-8A29C4136CDC}
 		{CA4A4301-138E-4AE2-A2FB-E2E14199245C} = {BA2466FB-82AA-4005-AAB6-4BF9B70F7C6F}
 		{F88D0B1E-637D-4BB3-B1CE-FC5EED720809} = {BA2466FB-82AA-4005-AAB6-4BF9B70F7C6F}
+		{72DB3747-BE19-4A7A-8864-934D8F605A78} = {67D09656-BB2A-42A9-86D1-73178EEA9F16}
+		{9AD2EEC8-4EBF-4181-863A-9706A5F4F26F} = {72DB3747-BE19-4A7A-8864-934D8F605A78}
+		{A3CE93BA-D034-4B47-9A6B-72E71A1FD316} = {9AD2EEC8-4EBF-4181-863A-9706A5F4F26F}
+		{0A972CB5-84DB-4B32-9E8A-2C8E7870A88C} = {72DB3747-BE19-4A7A-8864-934D8F605A78}
 	EndGlobalSection
 EndGlobal
