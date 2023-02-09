@@ -4,7 +4,7 @@ internal static class CommandPipelineDefaultBuilderExtensions
 {
     public static ICommandPipelineBuilder UseDefault(this ICommandPipelineBuilder pipeline)
     {
-        return pipeline.Use<DataAnnotationValidationCommandMiddleware>()
+        return pipeline.UseDataAnnotationValidation()
                        .UseRetry();
     }
 }

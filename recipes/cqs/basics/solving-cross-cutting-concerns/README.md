@@ -269,11 +269,25 @@ internal static class RetryCommandMiddlewarePipelineBuilderExtensions
 }
 ```
 
-With this change, we can now simplify the usage in our command handler's pipeline configuration in `IncrementCounterByCommand.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/IncrementCounterByCommand.cs)):
+While we're at it we'll also create an extension method for the data annotation validation middleware in a new class `DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions.cs)):
+
+```cs
+namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
+
+internal static class DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions
+{
+    public static ICommandPipelineBuilder UseDataAnnotationValidation(this ICommandPipelineBuilder pipeline)
+    {
+        return pipeline.Use<DataAnnotationValidationCommandMiddleware>();
+    }
+}
+```
+
+With these changes, we can now simplify the pipeline configuration of our command handler in `IncrementCounterByCommand.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/IncrementCounterByCommand.cs)):
 
 ```cs
 public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
-    pipeline.Use<DataAnnotationValidationCommandMiddleware>()
+    pipeline.UseDataAnnotationValidation()
             .UseRetry();
 ```
 
@@ -299,7 +313,7 @@ This allows us to specify a custom retry attempt limit in our command handler's 
 
 ```cs
 public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
-    pipeline.Use<DataAnnotationValidationCommandMiddleware>()
+    pipeline.UseDataAnnotationValidation()
             .UseRetry(retryAttemptLimit: 3);
 ```
 
@@ -312,7 +326,7 @@ internal static class CommandPipelineDefaultBuilderExtensions
 {
     public static ICommandPipelineBuilder UseDefault(this ICommandPipelineBuilder pipeline)
     {
-        return pipeline.Use<DataAnnotationValidationCommandMiddleware>()
+        return pipeline.UseDataAnnotationValidation()
                        .UseRetry();
     }
 }
