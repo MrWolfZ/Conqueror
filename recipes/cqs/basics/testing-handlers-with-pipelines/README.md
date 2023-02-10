@@ -86,6 +86,6 @@ And this is really all there is to testing handlers with middleware pipelines. S
 
 One thing to note is that as your application grows, so will your pipelines, as you will start solving more and more cross-cutting concerns with middlewares. This includes tricky concerns like authentication and authorization, which, according to our discussion above, also need to be tested as part of testing the public API of a handler. To support you in testing such handlers, we have dedicated recipes for [addressing some of the most common cross-cutting concerns](../../../../README.md#cqs-cross-cutting-concerns), which always include sections about how to test handlers.
 
-As the next step we recommend that you explore how to [test middlewares themselves](../testing-middlewares#readme).
+From the recipe for [solving cross-cutting concerns with middlewares](../solving-cross-cutting-concerns#readme) you may remember our discussion of **reusable pipelines**. When using such pipelines in your handlers, you may consider writing handler tests only for the most critical middlewares (e.g. authentication and authorization) or middlewares with custom configuration. Testing the reusable pipeline itself can then be done separately, as discussed in the recipe for [testing middlewares and reusable pipelines](../testing-middlewares#readme) (which we recommend you read next).
 
 Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.
