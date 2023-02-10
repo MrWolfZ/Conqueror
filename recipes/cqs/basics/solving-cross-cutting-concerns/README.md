@@ -167,6 +167,16 @@ public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
             .Use<RetryCommandMiddleware>();
 ```
 
+Note that chaining calls like this is a recommended practice for the builder pattern, but is not required. The configuration could also be done like this:
+
+```cs
+public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+{
+    pipeline.Use<DataAnnotationValidationCommandMiddleware>();
+    pipeline.Use<RetryCommandMiddleware>();
+}
+```
+
 Let's run the application and verify that we can now successfully increase the counter 3 times.
 
 ```txt
@@ -339,7 +349,15 @@ public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
     pipeline.UseDefault();
 ```
 
-There are currently still two limitations to this approach which we need to address. Firstly, we lost the ability to provide a custom retry attempt limit per handler, and secondly, we may have handlers which don't need retry capabilities, but want to make use of the rest of the default pipeline. Both of these concerns could be addressed by adding parameters to the `UseDefault` method, but this would quickly grow out of hand. Instead, **Conqueror.CQS** offers a few more methods for pipeline builders that allow for a simpler and more composable solution. Let's add two new extension methods `ConfigureRetry` and `WithoutRetry` in `RetryCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineBuilderExtensions.cs)):
+This approach is called **reusable pipelines**. Most of your applications will likely have one default pipeline for command and query handlers and then a few other reusable pipelines for specific use cases. In general, pipelines are composable, meaning you can also wrap a set of middlewares into a reusable pipeline and then combine this pipeline with other pipelines into a new reusable pipeline and so on. There are no limits to your creativity for how to structure your pipelines, but we recommend providing at least one simple-to-use default pipeline.
+
+There are a few limitations to reusable pipelines that we'll address next.
+
+Firstly, in our default pipeline example above, we lost the ability to provide a custom retry attempt limit per handler. Secondly, we may have handlers which don't need retry capabilities, but want to make use of the rest of the default pipeline (or any other reusable pipeline). Lastly, you may want to inject a middleware into the middle of a reusable pipeline. All of these concerns could be addressed by adding parameters to the reusable pipeline method, but this would quickly grow out of hand as the number of middlewares in the pipeline increases.
+
+Therefore, **Conqueror.CQS** offers a way to configure middlewares on a reusable pipeline as well as for removing middlewares from such a pipeline. The only aspect for which we don't provide a built-in solution is injecting a middleware into the middle of a pipeline. We'll discuss the reasons behind this below, but first we will take a look at the other two aspects.
+
+Let's add two new extension methods `ConfigureRetry` and `WithoutRetry` in `RetryCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineBuilderExtensions.cs)):
 
 ```cs
 public static ICommandPipelineBuilder ConfigureRetry(this ICommandPipelineBuilder pipeline, Action<RetryMiddlewareConfiguration> configure)
@@ -368,6 +386,29 @@ public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
 ```
 
 The extension method triplet of `UseX`, `ConfigureX`, and `WithoutX` is a recommended convention, but there is no limit to your imagination for what kind of methods you can create (the recipes for [addressing specific cross-cutting concerns](../../../../README.md#cqs-cross-cutting-concerns) contain examples of other useful extension methods).
+
+Lastly, let's discuss how you could allow injecting middlewares into the middle of a reusable pipeline. During development of **Conqueror.CQS** we considered various APIs for achieving this generically, but determined that it would add too much complexity to the API and would make pipelines too brittle. Therefore, this is something that you need to explicitly build into your reusable pipelines, for example by providing explicit points in the pipeline into which middlewares could be injected. Let's assume you would want to allow a developer to inject a middleware in between the data annotation validation and retry middlewares in our default pipeline above. To achieve this, the default pipeline could be built like this:
+
+```cs
+public static ICommandPipelineBuilder UseDefault(this ICommandPipelineBuilder pipeline,
+                                                 Action<ICommandPipelineBuilder>? preRetryHook = null)
+{
+    pipeline.UseDataAnnotationValidation();
+
+    preRetryHook?.Invoke(pipeline);
+
+    return pipeline.UseRetry();
+}
+```
+
+The default pipeline could then be used like this:
+
+```cs
+public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+    pipeline.UseDefault(preRetryHook: p => p.UseMyOtherMiddleware());
+```
+
+This approach allows you to control exactly where additional middlewares could be injected. You could also build conditionals or other control structures into the reusable pipeline method, but always consider whether the reusability of the pipeline is worth the extra complexity in its definition. Maybe it is good enough to simply specify a dedicated pipeline directly in the handler which requires the extra middleware.
 
 This concludes our recipe for solving cross-cutting concerns with **Conqueror.CQS**. In summary, these are the steps:
 
