@@ -352,6 +352,6 @@ And that concludes this recipe for testing command and query handlers with **Con
 - mock dependencies which cause side-effects (e.g. sending a notification), but do not mock your storage layer (i.e. the database)
 - consolidate common setup logic into a base class
 
-As the next step you can explore how to [address cross-cutting concerns like validation](../solving-cross-cutting-concerns#readme) or take a look at how to [expose your command and queries via HTTP](../../advanced/exposing-via-http#readme) and [how to test them](../../advanced/testing-http#readme) (the completed code for the linked recipe contains an implementation of [TestBase](../../advanced/testing-http/.completed/Conqueror.Recipes.CQS.Advanced.TestingHttp.Tests/TestBase.cs) which creates a fully configured HTTP test server).
+As the next step you can explore how to [address cross-cutting concerns like validation](../solving-cross-cutting-concerns#readme) or take a look at how to [expose your commands and queries via HTTP](../../advanced/exposing-via-http#readme) and [how to test them](../../advanced/testing-http#readme) (the completed code for the linked recipe contains an implementation of [TestBase](../../advanced/testing-http/.completed/Conqueror.Recipes.CQS.Advanced.TestingHttp.Tests/TestBase.cs) which creates a fully configured HTTP test server).
 
 Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.

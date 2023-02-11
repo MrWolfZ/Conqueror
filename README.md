@@ -11,7 +11,7 @@ See our [quickstart](#quickstart) or [example projects](examples) if you want to
 [![Build Status](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml/badge.svg)](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml)
 [![license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Conqueror** only supports .NET 6+
+> **Conqueror** only supports [.NET 6 or later](https://dotnet.microsoft.com/en-us/download)
 
 ## Libraries
 
@@ -37,6 +37,8 @@ Head over to our [CQS recipes](#cqs-introduction) for more guidance on how to us
 [![NuGet version (Conqueror.CQS.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Client?label=Conqueror.CQS.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Client/)
 
 ### Experimental Libraries
+
+The libraries below are still experimental. This means they do not have a stable API and are missing code documentation and recipes. They are therefore not suited for use in production applications, but can be used in proofs-of-concept or toy apps. If you use any of the experimental libraries and find bugs or have ideas for improving them, please don't hesitate to [create an issue](https://github.com/MrWolfZ/Conqueror/issues/new).
 
 <details>
 <summary>Click here to see experimental libraries</summary>
@@ -235,15 +237,15 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 #### CQS Advanced
 
-- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/cqs/advanced/different-dependency-injection#readme) _(to-be-written)_
-- [creating a clean architecture with commands and queries](recipes/cqs/advanced/clean-architecture#readme) _(to-be-written)_
 - [exposing commands and queries via HTTP](recipes/cqs/advanced/exposing-via-http#readme) _(to-be-written)_
 - [testing HTTP commands and queries](recipes/cqs/advanced/testing-http#readme) _(to-be-written)_
 - [calling HTTP commands and queries from another application](recipes/cqs/advanced/calling-http#readme) _(to-be-written)_
 - [using middlewares for command and query HTTP clients](recipes/cqs/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
+- [creating a clean architecture with commands and queries](recipes/cqs/advanced/clean-architecture#readme) _(to-be-written)_
+- [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme) _(to-be-written)_
+- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/cqs/advanced/different-dependency-injection#readme) _(to-be-written)_
 - [enforce that all command and query handlers declare a pipeline](recipes/cqs/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
 - [re-use middleware pipelines to solve cross-cutting concerns when calling external systems (e.g. logging or retrying failed calls)](recipes/cqs/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
-- [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme) _(to-be-written)_
 - [using commands and queries in a Blazor app (server-side or web-assembly)](recipes/cqs/advanced/blazor-server#readme) _(to-be-written)_
 - [building a CLI using commands and queries](recipes/cqs/advanced/building-cli#readme) _(to-be-written)_
 
