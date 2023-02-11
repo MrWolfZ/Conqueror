@@ -195,6 +195,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Basics.TestingMiddlewares.Tests", "recipes\cqs\basics\testing-middlewares\.completed\Conqueror.Recipes.CQS.Basics.TestingMiddlewares.Tests\Conqueror.Recipes.CQS.Basics.TestingMiddlewares.Tests.csproj", "{05EBB3C5-C2BE-4232-8EAA-6EEFD97D4192}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "exposing-via-http", "exposing-via-http", "{05DD1C0A-894F-4EE3-AE89-DEF9D95AE263}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{B7291CE5-3860-4423-9494-C29D653F110A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.ExposingViaHttp", "recipes\cqs\advanced\exposing-via-http\Conqueror.Recipes.CQS.Advanced.ExposingViaHttp\Conqueror.Recipes.CQS.Advanced.ExposingViaHttp.csproj", "{95EB3C4A-79A0-4E27-A10E-D8E7BDF111F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.ExposingViaHttp", "recipes\cqs\advanced\exposing-via-http\.completed\Conqueror.Recipes.CQS.Advanced.ExposingViaHttp\Conqueror.Recipes.CQS.Advanced.ExposingViaHttp.csproj", "{A5802B5C-57DC-412C-98F8-453A1D855371}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -420,6 +428,14 @@ Global
 		{05EBB3C5-C2BE-4232-8EAA-6EEFD97D4192}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{05EBB3C5-C2BE-4232-8EAA-6EEFD97D4192}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{05EBB3C5-C2BE-4232-8EAA-6EEFD97D4192}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95EB3C4A-79A0-4E27-A10E-D8E7BDF111F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95EB3C4A-79A0-4E27-A10E-D8E7BDF111F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95EB3C4A-79A0-4E27-A10E-D8E7BDF111F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95EB3C4A-79A0-4E27-A10E-D8E7BDF111F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5802B5C-57DC-412C-98F8-453A1D855371}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5802B5C-57DC-412C-98F8-453A1D855371}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5802B5C-57DC-412C-98F8-453A1D855371}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5802B5C-57DC-412C-98F8-453A1D855371}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -468,5 +484,9 @@ Global
 		{4F4B2DAD-AC2B-410D-878C-D7AC7E68DBB8} = {B8279F25-079E-4DAD-9852-DF7FF7D84BEA}
 		{2DF0DB23-70B1-452C-A8C6-8CCDE5E70C67} = {306C429B-F617-4A5D-811A-789C27EC7C95}
 		{05EBB3C5-C2BE-4232-8EAA-6EEFD97D4192} = {306C429B-F617-4A5D-811A-789C27EC7C95}
+		{05DD1C0A-894F-4EE3-AE89-DEF9D95AE263} = {C915D274-DCD2-47B2-B4EE-4A38F567063D}
+		{B7291CE5-3860-4423-9494-C29D653F110A} = {05DD1C0A-894F-4EE3-AE89-DEF9D95AE263}
+		{95EB3C4A-79A0-4E27-A10E-D8E7BDF111F2} = {05DD1C0A-894F-4EE3-AE89-DEF9D95AE263}
+		{A5802B5C-57DC-412C-98F8-453A1D855371} = {B7291CE5-3860-4423-9494-C29D653F110A}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <!-- reference the projects if this project is opened in the Conqueror.sln (useful for development), otherwise reference packages -->
+        <ShouldReferenceProjects Condition="'$(SolutionName)'=='Conqueror'">true</ShouldReferenceProjects>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="..\..\..\..\..\src\Conqueror.CQS\Conqueror.CQS.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
+        <ProjectReference Include="..\..\..\..\..\src\Conqueror.CQS.Analyzers\Conqueror.CQS.Analyzers.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror.CQS" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+        <PackageReference Include="Conqueror.CQS.Analyzers" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+
+        <!-- third-party packages -->
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    </ItemGroup>
+
+</Project>
