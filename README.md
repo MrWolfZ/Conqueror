@@ -237,7 +237,7 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 
 #### CQS Advanced
 
-- [exposing commands and queries via HTTP](recipes/cqs/advanced/exposing-via-http#readme) _(to-be-written)_
+- [exposing commands and queries via HTTP](recipes/cqs/advanced/exposing-via-http#readme)
 - [testing HTTP commands and queries](recipes/cqs/advanced/testing-http#readme) _(to-be-written)_
 - [calling HTTP commands and queries from another application](recipes/cqs/advanced/calling-http#readme) _(to-be-written)_
 - [using middlewares for command and query HTTP clients](recipes/cqs/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
