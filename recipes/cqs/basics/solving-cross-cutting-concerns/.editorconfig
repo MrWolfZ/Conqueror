@@ -1,7 +1,9 @@
+root = true
+
 [*{Command,Query}.cs]
-resharper_unused_type_global_highlighting=none
-resharper_unused_member_global_highlighting=none
+resharper_unused_type_global_highlighting = none
+resharper_unused_member_global_highlighting = none
 
 [*MiddlewarePipelineBuilderExtensions.cs]
-resharper_unused_member_global_highlighting=none
-resharper_unused_method_return_value_global_highlighting=none
+resharper_unused_member_global_highlighting = none
+resharper_unused_method_return_value_global_highlighting = none

@@ -1,15 +1,17 @@
+root = true
+
 [*{Command,Query}.cs]
-resharper_unused_type_global_highlighting=none
-resharper_unused_member_global_highlighting=none
+resharper_unused_type_global_highlighting = none
+resharper_unused_member_global_highlighting = none
 
 [*MiddlewarePipelineBuilderExtensions.cs]
-resharper_unused_member_global_highlighting=none
-resharper_unused_method_return_value_global_highlighting=none
+resharper_unused_member_global_highlighting = none
+resharper_unused_method_return_value_global_highlighting = none
 
 [*{Command,Query}MiddlewareTests.cs]
-resharper_unused_member_local_highlighting=none
-resharper_not_accessed_positional_property_local_highlighting=none
+resharper_unused_member_local_highlighting = none
+resharper_not_accessed_positional_property_local_highlighting = none
 
 [*PipelineTests.cs]
-resharper_unused_member_local_highlighting=none
-resharper_not_accessed_positional_property_local_highlighting=none
+resharper_unused_member_local_highlighting = none
+resharper_not_accessed_positional_property_local_highlighting = none
