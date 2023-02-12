@@ -494,3 +494,5 @@ This concludes our recipe for getting started with **Conqueror.CQS**. In summary
 As the next step you can explore how to [test command and query handlers](../testing-handlers#readme).
 
 Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.
+
+If you have any suggestions for how to improve this recipe, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new?template=recipe-improvement-suggestion.md&title=[recipes.cqs.basics.getting-started]%20...) or by [forking the repository](https://github.com/MrWolfZ/Conqueror/fork) and providing a pull request for the suggestion.

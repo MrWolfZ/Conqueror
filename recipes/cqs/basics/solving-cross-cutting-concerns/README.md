@@ -419,3 +419,5 @@ This concludes our recipe for solving cross-cutting concerns with **Conqueror.CQ
 As the next step we recommend that you explore how to [test command and query handlers that have pipelines](../testing-handlers-with-pipelines#readme) as well as how to [test middlewares themselves](../testing-middlewares#readme). Another useful recipe is about [re-using middleware pipelines to solve cross-cutting concerns when calling external systems](../../advanced/reuse-piplines-for-external-calls#readme).
 
 Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.
+
+If you have any suggestions for how to improve this recipe, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new?template=recipe-improvement-suggestion.md&title=[recipes.cqs.basics.solving-cross-cutting-concerns]%20...) or by [forking the repository](https://github.com/MrWolfZ/Conqueror/fork) and providing a pull request for the suggestion.

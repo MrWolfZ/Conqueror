@@ -355,3 +355,5 @@ And that concludes this recipe for testing command and query handlers with **Con
 As the next step you can explore how to [address cross-cutting concerns like validation](../solving-cross-cutting-concerns#readme) or take a look at how to [expose your commands and queries via HTTP](../../advanced/exposing-via-http#readme) and [how to test them](../../advanced/testing-http#readme) (the completed code for the linked recipe contains an implementation of [TestBase](../../advanced/testing-http/.completed/Conqueror.Recipes.CQS.Advanced.TestingHttp.Tests/TestBase.cs) which creates a fully configured HTTP test server).
 
 Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.
+
+If you have any suggestions for how to improve this recipe, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new?template=recipe-improvement-suggestion.md&title=[recipes.cqs.basics.testing-handlers]%20...) or by [forking the repository](https://github.com/MrWolfZ/Conqueror/fork) and providing a pull request for the suggestion.

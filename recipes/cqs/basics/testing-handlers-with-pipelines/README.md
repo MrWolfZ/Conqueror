@@ -89,3 +89,5 @@ One thing to note is that as your application grows, so will your pipelines, as 
 From the recipe for [solving cross-cutting concerns with middlewares](../solving-cross-cutting-concerns#readme) you may remember our discussion of **reusable pipelines**. When using such pipelines in your handlers, you may consider writing handler tests only for the most critical middlewares (e.g. authentication and authorization) or middlewares with custom configuration. Testing the reusable pipeline itself can then be done separately, as discussed in the recipe for [testing middlewares and reusable pipelines](../testing-middlewares#readme) (which we recommend you read next).
 
 Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.
+
+If you have any suggestions for how to improve this recipe, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new?template=recipe-improvement-suggestion.md&title=[recipes.cqs.basics.testing-handlers-with-pipelines]%20...) or by [forking the repository](https://github.com/MrWolfZ/Conqueror/fork) and providing a pull request for the suggestion.
