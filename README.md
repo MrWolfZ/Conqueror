@@ -254,7 +254,6 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/cqs/expert/conqueror-context#readme) _(to-be-written)_
 - [accessing properties of commands and queries in middlewares](recipes/cqs/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 - [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(to-be-written)_
-- [building test assertions that work for HTTP and non-HTTP commands and queries](recipes/cqs/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
 - [creating generic command or query handlers](recipes/cqs/expert/generic-handlers#readme) _(to-be-written)_
 
 #### CQS Cross-Cutting Concerns
