@@ -3,7 +3,7 @@ namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 [HttpQuery(Path = "/api/getCounterValue")]
 public sealed record GetCounterValueQuery(string CounterName);
 
-public sealed record GetCounterValueQueryResponse(int CounterValue);
+public sealed record GetCounterValueQueryResponse(bool CounterExists, int? CounterValue);
 
 public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>
 {
@@ -20,6 +20,7 @@ internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
 
     public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query, CancellationToken cancellationToken = default)
     {
-        return new(await repository.GetCounterValue(query.CounterName));
+        var counterValue = await repository.GetCounterValue(query.CounterName);
+        return new(counterValue.HasValue, counterValue);
     }
 }

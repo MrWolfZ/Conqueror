@@ -20,7 +20,8 @@ internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByComm
     public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await repository.GetCounterValue(command.CounterName);
-        await repository.SetCounterValue(command.CounterName, counterValue + command.IncrementBy);
-        return new(counterValue + command.IncrementBy);
+        var newCounterValue = counterValue ?? 0 + command.IncrementBy;
+        await repository.SetCounterValue(command.CounterName, newCounterValue);
+        return new(newCounterValue);
     }
 }

@@ -3,3 +3,4 @@ root = true
 [*{Command,Query}.cs]
 resharper_unused_type_global_highlighting = none
 resharper_unused_member_global_highlighting = none
+resharper_not_accessed_positional_property_global_highlighting = none
