@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- reference the projects if this project is opened in the Conqueror.sln (useful for development), otherwise reference packages -->
+    <ShouldReferenceProjects Condition="'$(SolutionName)'=='Conqueror'">true</ShouldReferenceProjects>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- conditional Conqueror project references -->
+    <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS.Abstractions\Conqueror.CQS.Abstractions.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
+
+    <!-- conditional Conqueror package references -->
+    <PackageReference Include="Conqueror.CQS.Abstractions" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+  </ItemGroup>
+
+</Project>

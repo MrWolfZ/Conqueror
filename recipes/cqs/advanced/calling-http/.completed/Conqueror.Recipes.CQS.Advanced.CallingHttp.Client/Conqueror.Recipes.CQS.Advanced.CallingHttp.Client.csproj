@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <!-- reference the projects if this project is opened in the Conqueror.sln (useful for development), otherwise reference packages -->
+        <ShouldReferenceProjects Condition="'$(SolutionName)'=='Conqueror'">true</ShouldReferenceProjects>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS\Conqueror.CQS.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
+        <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS.Analyzers\Conqueror.CQS.Analyzers.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+        <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS.Transport.Http.Client\Conqueror.CQS.Transport.Http.Client.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
+
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror.CQS" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+        <PackageReference Include="Conqueror.CQS.Analyzers" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+        <PackageReference Include="Conqueror.CQS.Transport.Http.Client" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+
+        <!-- third-party packages -->
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.CallingHttp.Contracts\Conqueror.Recipes.CQS.Advanced.CallingHttp.Contracts.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.CallingHttp.Middlewares\Conqueror.Recipes.CQS.Advanced.CallingHttp.Middlewares.csproj" />
+    </ItemGroup>
+
+</Project>
