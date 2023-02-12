@@ -9,13 +9,13 @@ This is an advanced recipe which builds upon the concepts introduced in the [rec
 The application, for which we will expose commands and queries, is managing a set of named counters. In code, the API of our application is represented with the following types:
 
 ```cs
-public sealed record IncrementCounterByCommand(string CounterName, [Range(1, int.MaxValue)] int IncrementBy);
+public sealed record IncrementCounterCommand([Required] string CounterName);
 
-public sealed record IncrementCounterByCommandResponse(int NewCounterValue);
+public sealed record IncrementCounterCommandResponse(int NewCounterValue);
 
-public sealed record GetCounterValueQuery(string CounterName);
+public sealed record GetCounterValueQuery([Required] string CounterName);
 
-public sealed record GetCounterValueQueryResponse(int CounterValue);
+public sealed record GetCounterValueQueryResponse(bool CounterExists, int? CounterValue);
 ```
 
 The standard for building HTTP APIs with .NET is ASP.NET Core. Our application is already [set up as an ASP.NET Core app](Conqueror.Recipes.CQS.Advanced.ExposingViaHttp/Program.cs), and can be launched as is, but it doesn't have any HTTP endpoints just yet.
@@ -41,31 +41,31 @@ Next, we need to specify which commands and queries we want to expose via HTTP. 
 
 ```diff
 + [HttpCommand]
-  public sealed record IncrementCounterByCommand(string CounterName, [Range(1, int.MaxValue)] int IncrementBy);
+  public sealed record IncrementCounterCommand([Required] string CounterName);
 ```
 
 ```diff
 + [HttpQuery]
-  public sealed record GetCounterValueQuery(string CounterName);
+  public sealed record GetCounterValueQuery([Required] string CounterName);
 ```
 
 Those few changes are all that is required to expose the command and query via HTTP. You can launch the app and try it out:
 
 ```sh
-curl http://localhost:5000/api/commands/incrementCounterBy --data '{"counterName":"test","incrementBy":2}' -H 'Content-Type: application/json'
-# prints {"newCounterValue":2}
+curl http://localhost:5000/api/commands/incrementCounter --data '{"counterName":"test"}' -H 'Content-Type: application/json'
+# prints {"newCounterValue":1}
 
 curl http://localhost:5000/api/queries/getCounterValue?counterName=test
-# prints {"counterValue":2}
+# prints {"counterValue":1}
 ```
 
 Because our application also has [Swagger](https://swagger.io) enabled via the [Swashbuckle.AspNetCore](https://www.nuget.org/packages/Swashbuckle.AspNetCore) package, the command and query are visible in the [Swagger UI](https://swagger.io/tools/swagger-ui/) at [http://localhost:5000/swagger](http://localhost:5000/swagger).
 
-**Conqueror.CQS** achieves this by using reflection and dynamic code generation to create an API controller for each command and query that is decorated with the corresponding attribute. The benefit of this approach is that from the point of view of ASP.NET Core, the dynamic controllers are indistinguishable from other controllers. This means that all ASP.NET Core features like routing, data validation, swagger integration, etc. work out of the box with those controllers. You can try the validation by calling the `incrementCounterBy` endpoint with an invalid command:
+**Conqueror.CQS** achieves this by using reflection and dynamic code generation to create an API controller for each command and query that is decorated with the corresponding attribute. The benefit of this approach is that from the point of view of ASP.NET Core, the dynamic controllers are indistinguishable from other controllers. This means that all ASP.NET Core features like routing, data validation, swagger integration, etc. work out of the box with those controllers. You can try the validation by calling the `incrementCounter` endpoint with an invalid command:
 
 ```sh
-curl http://localhost:5000/api/commands/incrementCounterBy --data '{"counterName":"test","incrementBy":-1}' -H 'Content-Type: application/json'
-# prints something like this: {"type":"https://tools.ietf.org/html/rfc7231#section-6.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-8b8dbffffda7acf68fdb8ba012a6ca9a-edd0de68b1444137-00","errors":{"IncrementBy":["The field IncrementBy must be between 1 and 2147483647."]}}
+curl http://localhost:5000/api/commands/incrementCounter --data '{"counterName":""}' -H 'Content-Type: application/json'
+# prints something like this: {"type":"https://tools.ietf.org/html/rfc7231#section-6.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-794686f5f38e121db5a0cb4b8a71a51c-9d591aaf8a4ec509-00","errors":{"CounterName":["The CounterName field is required."]}}
 ```
 
 HTTP commands and queries run through two pipelines. First, they run through the [ASP.NET Core middleware pipeline](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/) and afterwards they run through the **Conqueror.CQS** middleware pipeline (if the handler has a pipeline configured). We recommend that you only address HTTP-specific concerns in the ASP.NET Core pipeline and handle all other concerns in the **Conqueror** pipeline, in order to keep your application logic transport-agnostic and reusable.
@@ -82,7 +82,7 @@ Next, let's talk about [HTTP methods](https://developer.mozilla.org/en-US/docs/W
 
 ```cs
 [HttpQuery(UsePost = true)]
-public sealed record GetCounterValueQuery(string CounterName);
+public sealed record GetCounterValueQuery([Required] string CounterName);
 ```
 
 We recommend that you always expose commands via `POST` and queries via `GET` where possible, and via `POST` otherwise. There is typically enough meaning in the name of commands and queries that using other verbs like `DELETE` does not add any extra value. However, if you would like to use other verbs, this can be done by creating custom controllers as shown further down below.
@@ -93,10 +93,10 @@ The first approach is by using versioning. Versioning a command or query allows 
 
 ```cs
 [HttpCommand(Version = "v2")]
-public sealed record IncrementCounterByCommand(string CounterName, [Range(1, int.MaxValue)] int IncrementBy);
+public sealed record IncrementCounterCommand([Required] string CounterName);
 ```
 
-The version string will be placed as a path segment after `/api`, i.e. for our command the path becomes `/api/v2/commands/incrementCounterBy`. Placing the version at that spot in the path is useful for routing requests between multiple versions of the command (which is another advanced topic which goes beyond the scope of this recipe).
+The version string will be placed as a path segment after `/api`, i.e. for our command the path becomes `/api/v2/commands/incrementCounter`. Placing the version at that spot in the path is useful for routing requests between multiple versions of the command (which is another advanced topic which goes beyond the scope of this recipe).
 
 > To ensure consistency across the version of all your commands and queries you can create a static class `ApiVersion` and add constants like `V1`, `V2`, etc. (or `Default` to make all endpoints use the same version). Then the command could be decorated with `[HttpCommand(Version = ApiVersion.V2)]`.
 
@@ -104,7 +104,7 @@ Another way to customize the path is to explicity set it per command or query. B
 
 ```cs
 [HttpQuery(Path = "/api/getCounterValue")]
-public sealed record GetCounterValueQuery(string CounterName);
+public sealed record GetCounterValueQuery([Required] string CounterName);
 ```
 
 You can launch the app and check that the path was set correctly in the [Swagger UI](http://localhost:5000/swagger).
@@ -143,9 +143,9 @@ builder.Services
 +      .AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new CustomHttpCommandPathConvention());
 ```
 
-If you now launch the application, you will see that the command has the path `/api/v2/incrementCounterBy`.
+If you now launch the application, you will see that the command has the path `/api/v2/incrementCounter`.
 
-The last thing you can customize via the attributes are certain metadata values, which are used by tools like [Swashbuckle](https://www.nuget.org/packages/Swashbuckle.AspNetCore) to generate API documentation. The two metadata properties you can specify are `OperationId` and `ApiGroupName`. The default value for `OperationId` is the full name of the command or query type (e.g. `Conqueror.Recipes.CQS.Advanced.ExposingViaHttp.IncrementCounterByCommand`). The `ApiGroupName` is empty by default. Setting the `ApiGroupName` also allows grouping commands and queries in Swagger UI (where by default all commands are grouped together and all queries are grouped together). Note that if you set a custom `ApiGroupName`, you also need to specify a custom `DocInclusionPredicate` on the swagger generation options in `Program.cs` to ensure the endpoints still show up in the default document:
+The last thing you can customize via the attributes are certain metadata values, which are used by tools like [Swashbuckle](https://www.nuget.org/packages/Swashbuckle.AspNetCore) to generate API documentation. The two metadata properties you can specify are `OperationId` and `ApiGroupName`. The default value for `OperationId` is the full name of the command or query type (e.g. `Conqueror.Recipes.CQS.Advanced.ExposingViaHttp.IncrementCounterCommand`). The `ApiGroupName` is empty by default. Setting the `ApiGroupName` also allows grouping commands and queries in Swagger UI (where by default all commands are grouped together and all queries are grouped together). Note that if you set a custom `ApiGroupName`, you also need to specify a custom `DocInclusionPredicate` on the swagger generation options in `Program.cs` to ensure the endpoints still show up in the default document:
 
 ```diff
   builder.Services
@@ -154,7 +154,7 @@ The last thing you can customize via the attributes are certain metadata values,
 +        .AddSwaggerGen(c => c.DocInclusionPredicate((_, _) => true));
 ```
 
-The defaults and customization options shown above are designed to suit the most common use cases and allow exposing commands and queries via HTTP with minimal boilerplate code. However, if the customization options are not sufficient for you, you can create your own controllers. This provides you with all the control you need. However, you need to execute the command or query with a special helper class, which takes care of some internal aspects of **Conqueror.CQS**. Let's take a look at how this works by creating a custom controller for our command. We want the command to return status code `201` instead of `200` on success (this does not fit the intention of `201`, but serves as a good demonstration for how to build custom controllers). Create a new file called `IncrementCounterByCommandController.cs`:
+The defaults and customization options shown above are designed to suit the most common use cases and allow exposing commands and queries via HTTP with minimal boilerplate code. However, if the customization options are not sufficient for you, you can create your own controllers. This provides you with all the control you need. However, you need to execute the command or query with a special helper class, which takes care of some internal aspects of **Conqueror.CQS**. Let's take a look at how this works by creating a custom controller for our command. We want the command to return status code `201` instead of `200` on success (this does not fit the intention of `201`, but serves as a good demonstration for how to build custom controllers). Create a new file called `IncrementCounterCommandController.cs`:
 
 ```cs
 using Conqueror.CQS.Transport.Http.Server.AspNetCore;
@@ -163,13 +163,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 
 [ApiController]
-public sealed class IncrementCounterByCommandController : ControllerBase
+public sealed class IncrementCounterCommandController : ControllerBase
 {
-    [HttpPost("/api/custom/incrementCounterBy")]
-    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IncrementCounterByCommandResponse))]
-    public async Task<IActionResult> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken)
+    [HttpPost("/api/custom/incrementCounter")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IncrementCounterCommandResponse))]
+    public async Task<IActionResult> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken)
     {
-        var response = await HttpCommandExecutor.ExecuteCommand<IncrementCounterByCommand, IncrementCounterByCommandResponse>(HttpContext, command, cancellationToken);
+        var response = await HttpCommandExecutor.ExecuteCommand<IncrementCounterCommand, IncrementCounterCommandResponse>(HttpContext, command, cancellationToken);
 
         return StatusCode(StatusCodes.Status201Created, response);
     }

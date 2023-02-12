@@ -1,7 +1,7 @@
 namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 
 [HttpQuery(Path = "/api/getCounterValue")]
-public sealed record GetCounterValueQuery(string CounterName);
+public sealed record GetCounterValueQuery([Required] string CounterName);
 
 public sealed record GetCounterValueQueryResponse(bool CounterExists, int? CounterValue);
 
