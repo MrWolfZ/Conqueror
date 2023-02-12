@@ -25,10 +25,10 @@ The standard for building HTTP APIs with .NET is ASP.NET Core. Our application i
 The first step for exposing commands and queries via HTTP is to add a new package dependency:
 
 ```sh
-dotnet add Conqueror.Recipes.CQS.Advanced.ExposingViaHttp package Conqueror.CQS.Transport.Http.Server.AspNetCore
+dotnet add package Conqueror.CQS.Transport.Http.Server.AspNetCore
 ```
 
-As the name of the package implies, it contains the necesary logic for registering commands and queries with ASP.NET Core. In ASP.NET Core application, you typically use **Controllers** to define HTTP endpoints. Manually creating controllers for commands and queries can be done (and we'll take a look at how further down below), but a simpler way, which is the preferred approach with **Conqueror.CQS**, is to dynamically generate the necessary controllers. To get this working, we first need to let ASP.NET Core know about those controllers. Make the following change in [Program.cs](Conqueror.Recipes.CQS.Advanced.ExposingViaHttp/Program.cs):
+As the name of the package implies, it contains the necesary logic for registering commands and queries with ASP.NET Core. In ASP.NET Core applications, you typically use **Controllers** to define HTTP endpoints. Manually creating controllers for commands and queries can be done (and we'll take a look at how to do that further down below), but a simpler way, which is the preferred approach with **Conqueror.CQS**, is to dynamically generate the necessary controllers. To get this working, we first need to let ASP.NET Core know about those controllers. Make the following change in [Program.cs](Conqueror.Recipes.CQS.Advanced.ExposingViaHttp/Program.cs):
 
 ```diff
 - builder.Services.AddControllers();
@@ -92,9 +92,9 @@ public sealed record IncrementCounterByCommand(string CounterName, [Range(1, int
 
 The version string will be placed as a path segment after `/api`, i.e. for our command the path becomes `/api/v2/commands/incrementCounterBy`. Placing the version at that spot in the path is useful for routing requests between multiple versions of the command (which is another advanced topic which goes beyond the scope of this recipe).
 
-> To ensure consistency across the version of all your commands and queries you can create a static class `HttpVersions` and add constants like `V1`, `V2`, etc. (or `Default` to make all endpoints use the same version). Then the command could be decorated with `[HttpCommand(Version = HttpVersions.V2)]`.
+> To ensure consistency across the version of all your commands and queries you can create a static class `ApiVersion` and add constants like `V1`, `V2`, etc. (or `Default` to make all endpoints use the same version). Then the command could be decorated with `[HttpCommand(Version = ApiVersion.V2)]`.
 
-Another way to customize the path is to explicity set it per command or query. Both the `HttpCommand` and `HttpQuery` attributes have a `Path` property which allows overriding the complete path (if a version is also specified, it is ignored for the path). Let's do that for our query:
+Another way to customize the path is to explicity set it per command or query. Both the `HttpCommand` and `HttpQuery` attributes have a `Path` property which allows overriding the complete path (if the attribute's `Version` property is also specified, it is ignored for the path). Let's do that for our query:
 
 ```cs
 [HttpQuery(Path = "/api/getCounterValue")]
@@ -148,7 +148,7 @@ The last thing you can customize via the attributes are certain metadata values,
 +        .AddSwaggerGen(c => c.DocInclusionPredicate((_, _) => true));
 ```
 
-The defaults and customization options shown above are designed to suit the most common use cases and allow exposing commands and queries with minimal boilerplate code. However, if the customization options are not sufficient for you, you can create your own controllers. This provides you with all the control you need. However, you need to execute the command or query with a special helper class, which takes care of some internal aspects of **Conqueror.CQS**. Let's take a look at how this works by creating a custom controller for our command. We want the command to return status code `201` instead of `200` on success (this does not fit the intention of `201`, but serves as a good demonstration for how to build custom controllers). Create a new file called `IncrementCounterByCommandController.cs`:
+The defaults and customization options shown above are designed to suit the most common use cases and allow exposing commands and queries via HTTP with minimal boilerplate code. However, if the customization options are not sufficient for you, you can create your own controllers. This provides you with all the control you need. However, you need to execute the command or query with a special helper class, which takes care of some internal aspects of **Conqueror.CQS**. Let's take a look at how this works by creating a custom controller for our command. We want the command to return status code `201` instead of `200` on success (this does not fit the intention of `201`, but serves as a good demonstration for how to build custom controllers). Create a new file called `IncrementCounterByCommandController.cs`:
 
 ```cs
 using Conqueror.CQS.Transport.Http.Server.AspNetCore;
@@ -160,6 +160,7 @@ namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 public sealed class IncrementCounterByCommandController : ControllerBase
 {
     [HttpPost("/api/custom/incrementCounterBy")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IncrementCounterByCommandResponse))]
     public async Task<IActionResult> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken)
     {
         var response = await HttpCommandExecutor.ExecuteCommand<IncrementCounterByCommand, IncrementCounterByCommandResponse>(HttpContext, command, cancellationToken);
@@ -171,7 +172,7 @@ public sealed class IncrementCounterByCommandController : ControllerBase
 
 As you can see, this is a completely normal controller, but it uses the helper class `HttpCommandExecutor` to execute the command (for queries you would use the `HttpQueryExecutor`).
 
-> You probably also want to remove the `HttpCommand` attribute from the command, since otherwise it will be exposed via **Conqueror**'s controller as well as your own.
+> You probably also want to remove the `HttpCommand` attribute from the command, since otherwise it will be exposed via **Conqueror**'s dynamic controller as well as your own.
 
 And that concludes this recipe for exposing your commands and queries via HTTP with **Conqueror.CQS**. In summary, you need to do the following:
 
@@ -184,4 +185,4 @@ As the next step we recommend that you explore [how to test HTTP commands and qu
 
 Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.
 
-If you have any suggestions for how to improve this recipe, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new).
+If you have any suggestions for how to improve this recipe, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new?template=recipe-improvement-suggestion.md&title=[recipes.cqs.advanced.exposing-via-http]%20...) or by [forking the repository](https://github.com/MrWolfZ/Conqueror/fork) and providing a pull request for the suggestion.
