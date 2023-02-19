@@ -5,18 +5,28 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+
+        <!-- reference the projects if this project is opened in the Conqueror.sln (useful for development), otherwise reference packages -->
+        <ShouldReferenceProjects Condition="'$(SolutionName)'=='Conqueror'">true</ShouldReferenceProjects>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.CleanArchitecture\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.csproj" />
-    </ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS.Transport.Http.Client\Conqueror.CQS.Transport.Http.Client.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
 
-    <ItemGroup>
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror.CQS.Transport.Http.Client" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+
+        <!-- third-party packages -->
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.13" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
         <PackageReference Include="NUnit" Version="3.13.3" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
         <PackageReference Include="NUnit.Analyzers" Version="3.3.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.CleanArchitecture\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.csproj" />
     </ItemGroup>
 
 </Project>

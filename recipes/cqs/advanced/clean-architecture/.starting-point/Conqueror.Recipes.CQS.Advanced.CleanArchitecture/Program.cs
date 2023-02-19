@@ -1,6 +1,27 @@
+using Conqueror.Recipes.CQS.Advanced.CleanArchitecture;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services
+       .AddControllers()
+       .AddConquerorCQSHttpControllers();
+
+builder.Services
+       .AddEndpointsApiExplorer()
+       .AddSwaggerGen();
+
+builder.Services
+       .AddSingleton<CountersRepository>()
+       .AddSingleton<UserHistoryRepository>()
+       .AddConquerorCQS()
+       .AddConquerorCQSTypesFromExecutingAssembly()
+       .FinalizeConquerorRegistrations();
+
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.MapControllers();
 
 app.Run();

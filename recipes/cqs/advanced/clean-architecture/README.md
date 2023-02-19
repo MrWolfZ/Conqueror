@@ -55,7 +55,7 @@ Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests/
 └── IncrementCounterCommandTests.cs
 ```
 
-> Note that thanks to testing our application through its public API (i.e. its commands and queries) as discussed in the recipe for [testing command and query handlers](../../basics/testing-handlers#readme), we are able to make some significant changes to the implementation without needing to adjust any tests. It is often difficult to make such big refactorings in an application with a lot of low-level unit tests, since the tests also need to be adjusted during the refactoring, taking up valuable development time.
+> Note that thanks to testing our application through its public API (i.e. its commands and queries) as discussed in the recipe for [testing command and query handlers](../../basics/testing-handlers#readme), we are able to make some significant changes to the implementation with only minor adjustments to the tests. It is often difficult to make such big refactorings in an application with a lot of low-level unit tests, since those tests also require a lot of adjustments during the refactoring, taking up valuable development time.
 
 If we simply move the files into different layers as outlined above, we'll get the following structure (omitting the `Conqueror.Recipes.CQS.Advanced.CleanArchitecture` project name prefix for simplicity):
 
@@ -160,19 +160,25 @@ UserHistory.Infratructure/
 ├── CountersRepository.cs
 └── UserHistoryRepository.cs
 Tests/
-├── GetCounterValueQueryTests.cs
-├── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
-└── IncrementCounterCommandTests.cs
+├── Counters/
+│   ├── GetCounterValueQueryTests.cs
+│   └── IncrementCounterCommandTests.cs
+└── UserHistory/
+    └── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
 Web/
 └── Program.cs
 ```
 
-In this structure, the `Web` project will reference both context's `Application` and `Infrastructure` projects, each `Infrastructure` project will reference its context's `Application` project, and the `Tests` project references all other projects. But there is one open question: the `UserHistory` context needs to know when a counter was incremented, but how can the `Counters` context communicate this? There are a few options to do this:
+In this structure, the `Web` project will reference both context's `Application` and `Infrastructure` projects, each `Infrastructure` project will reference its context's `Application` project, and the `Tests` project references all other projects.
+
+There is still one open question: the `UserHistory` context needs to know when a counter was incremented, but how can the `Counters` context communicate this? There are a few options to do this:
 
 - we could add logic in the `Counters` context for writing to the `UserHistory` database directly (this works but violates the separation of the contexts)
 - we could add a dependency from the `Counters.Application` project to the `UserHistory.Infratructure` project, and use the `IUserHistoryWriteRepository` to update the user's history (this works, but leads to tight coupling between the contexts, which hurts long term maintainability)
 - we can introduce a new command in the `UserHistory` context for updating the user history (this is the approach we will use in this recipe)
 - we can use the [Conqueror.Eventing](../../../../../..#conqueroreventing) library to publish a domain event from the `Counters` context and have an event observer in the `UserHistory` context (the [Conqueror.Eventing](../../../../../..#conqueroreventing) library is still experimental, but once it is stable you will be able to find a recipe [here](../../../eventing/advanced/clean-architecture#readme) which explores how our example application could look like using an event instead of a command)
+
+> To separate the code for bounded contexts even more stronly, you could consider creating a dedicated test project for every bounded context (e.g. `Counters.Tests`), but that would make it difficult to test application behavior which involves multiple bounded contexts (for example, the `IncrementCounterCommand` also updates the user history). This can be solved by mocking commands and queries from other contexts, but then your tests don't assert the full production-like application behavior. This decision is a trade-off between isolation and test completeness.
 
 We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can be called by the `Counters` context whenever a counter is incremented. However, as it stands we would still require a reference from `Counters.Application` to `UserHistory.Application` in order to call the new command, which still leads to undesired coupling. Instead of this direct dependency, we can use the [dependency inversion principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle) once again and extract our command and query types into separate `Contracts` projects, which allow one context to call commands and queries from another context while maintaining loose coupling. Even though, strictly speaking, we only need this for our new command, we are going to do this for all commands and queries of both contexts for consistency. The folder structure would be adjusted like this:
 
