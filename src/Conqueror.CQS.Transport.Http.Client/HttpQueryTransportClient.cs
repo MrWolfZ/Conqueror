@@ -109,7 +109,11 @@ namespace Conqueror.CQS.Transport.Http.Client
                 {
                     var value = property.GetValue(o);
 
-                    if (value is IEnumerable e)
+                    if (value is string s)
+                    {
+                        queryString.Add(property.Name, s);
+                    }
+                    else if (value is IEnumerable e)
                     {
                         foreach (var v in e)
                         {

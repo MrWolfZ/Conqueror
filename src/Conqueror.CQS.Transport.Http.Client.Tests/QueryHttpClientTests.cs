@@ -43,6 +43,19 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
+        public async Task GivenSuccessfulHttpCallWithStringPayload_ReturnsQueryResponse()
+        {
+            const string testPayload = "an example test payload";
+
+            var handler = ResolveOnClient<ITestQueryWithStringPayloadHandler>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = testPayload }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(testPayload, result.Payload);
+        }
+
+        [Test]
         public async Task GivenSuccessfulHttpCallWithoutPayload_ReturnsResponse()
         {
             var handler = ResolveOnClient<ITestQueryWithoutPayloadHandler>();
@@ -306,6 +319,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = services.AddTransient<TestQueryHandler>()
                         .AddTransient<TestPostQueryHandler>()
+                        .AddTransient<TestQueryWithStringPayloadHandler>()
                         .AddTransient<TestQueryWithoutPayloadHandler>()
                         .AddTransient<TestPostQueryWithoutPayloadHandler>()
                         .AddTransient<TestQueryWithCollectionPayloadHandler>()
@@ -343,6 +357,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             });
 
             _ = services.AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(HttpClient))
+                        .AddConquerorQueryClient<ITestQueryWithStringPayloadHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestQueryWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestQueryWithCollectionPayloadHandler>(b => b.UseHttp(HttpClient))
                         .AddConquerorQueryClient<ITestQueryWithComplexPayloadHandler>(b => b.UseHttp(HttpClient))
@@ -406,6 +421,17 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         public sealed record TestQueryResponse
         {
             public int Payload { get; init; }
+        }
+
+        [HttpQuery]
+        public sealed record TestQueryWithStringPayload
+        {
+            public string Payload { get; init; } = string.Empty;
+        }
+
+        public sealed record TestQueryWithStringPayloadResponse
+        {
+            public string Payload { get; init; } = string.Empty;
         }
 
         [HttpQuery]
@@ -513,6 +539,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
         }
 
+        public interface ITestQueryWithStringPayloadHandler : IQueryHandler<TestQueryWithStringPayload, TestQueryWithStringPayloadResponse>
+        {
+        }
+
         public interface ITestQueryWithoutPayloadHandler : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
         {
         }
@@ -588,6 +618,16 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
                 return new() { Payload = query.Payload + 1 };
+            }
+        }
+
+        public sealed class TestQueryWithStringPayloadHandler : ITestQueryWithStringPayloadHandler
+        {
+            public async Task<TestQueryWithStringPayloadResponse> ExecuteQuery(TestQueryWithStringPayload query, CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                return new() { Payload = query.Payload };
             }
         }
 
