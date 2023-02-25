@@ -58,7 +58,7 @@ var services = new ServiceCollection();
 
 // we'll add services here in the next step
 
-await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+await using var serviceProvider = services.BuildServiceProvider();
 
 Console.WriteLine("input commands in format '<op> [counterName]' (e.g. 'inc test' or 'list')");
 Console.WriteLine("available operations: list, get, inc, del");
@@ -175,7 +175,7 @@ var services = new ServiceCollection();
 + // add the in-memory repository, which contains the counters, as a singleton
 + services.AddSingleton<CountersRepository>();
 
-await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+await using var serviceProvider = services.BuildServiceProvider();
 ```
 
 At this point you can already run the application and input commands, but they won't do anything just yet.
@@ -210,28 +210,18 @@ internal sealed class GetCounterNamesQueryHandler : IQueryHandler<GetCounterName
 }
 ```
 
-To be able to call this query handler, we need to add a few things to the services in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)):
+To be able to call this query handler, we need to add it to the services in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)):
 
 ```diff
 services.AddSingleton<CountersRepository>();
-
-+ // add the conqueror CQS services
-+ services.AddConquerorCQS();
 +
-+ // add our new query handler (note that you do not need to specify any interface)
-+ services.AddTransient<GetCounterNamesQueryHandler>();
-+
-+ // this method MUST be called exactly once after all conqueror services, handlers etc. are added
-+ services.FinalizeConquerorRegistrations();
++ // add our new query handler to the services
++ services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>();
 
-await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+await using var serviceProvider = services.BuildServiceProvider();
 ```
 
-The method `FinalizeConquerorRegistrations` contains logic that finds all registered command and query handlers and adds extra registrations that for example allow resolving a handler from its query handler interface instead of the concrete handler type (e.g. our new handler can be injected as `IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>`). The method is also a bit unusual, because it must be called exactly once after everything that is relevant for **Conqueror** has been added to the services. Therefore it is recommended to call it just before building the service provider.
-
-> For ASP.NET Core web applications, you typically do not build the service provider yourself. See [this recipe](../../advanced/exposing-via-http#readme) for more details on how to use **Conqueror.CQS** in such web applications.
-
-Now that we have everything set up, we can finally implement the `list` operation of our application in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)):
+Now that we have everything set up, we can implement the `list` operation of our application in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)):
 
 ```diff
 case "list" when counterName == null:
@@ -242,7 +232,7 @@ case "list" when counterName == null:
     break;
 ```
 
-You can now run the application and execute the `list` operation (although there aren't any counter names to show just yet):
+With this change in place you can run the application and execute the `list` operation (although there aren't any counter names to show just yet):
 
 ```txt
 > dotnet run
@@ -288,19 +278,18 @@ internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
 
 > A custom handler interface must not have any additional methods, it just inherits from the generic handler interface. While this limitation does not seem to make much sense on the surface, it is required for advanced use cases like [calling HTTP commands and queries from another application](../../advanced/calling-http#readme). It also encourages you to adhere to the [single-responsibility principle](https://en.wikipedia.org/wiki/Single-responsibility_principle) by ensuring that each handler only has a single public method.
 
-We can now use this handler to implement the `get` operation in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)):
+We can use this handler to implement the `get` operation in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)):
 
 ```diff
-services.AddConquerorCQS();
+services.AddSingleton<CountersRepository>();
 
-- // add our new query handler (note that you do not need to specify any interface)
-- services.AddTransient<GetCounterNamesQueryHandler>();
+- // add our new query handler to the services
+- services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>();
 + // add all query handlers
-+ services.AddTransient<GetCounterNamesQueryHandler>()
-+         .AddTransient<GetCounterValueQueryHandler>();
++ services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>()
++         .AddConquerorQueryHandler<GetCounterValueQueryHandler>();
 
-// this method MUST be called exactly once after all conqueror services, handlers etc. are added
-services.FinalizeConquerorRegistrations();
+await using var serviceProvider = services.BuildServiceProvider();
 ```
 
 ```diff
@@ -312,7 +301,7 @@ case "get" when counterName != null:
     break;
 ```
 
-You can now run the application and execute the `get` operation (although there aren't any counters to get a value for just yet, which we'll address in the next step):
+Run the application and execute the `get` operation (although there aren't any counters to get a value for just yet, which we'll address in the next step):
 
 ```txt
 > dotnet run
@@ -369,23 +358,22 @@ internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandH
 
 ```
 
-We can now use this handler to implement the `inc` operation in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)). At this point you may come to the conclusion that it is a bit annoying that you have to add every handler separately to the services. **Conqueror.CQS** provides two convenience extension methods `AddConquerorCQSTypesFromExecutingAssembly()` and `AddConquerorCQSTypesFromAssembly(Assembly assembly)` which discover and add all handlers in an assembly to the services as transient. The methods will not overwrite any handlers that are already added, meaning you can add non-transient handlers yourself (e.g. `services.AddSingleton<GetCounterNamesQueryHandler>()`) and then register all remaining ones automatically with the convenience methods. Let's do that for demonstration purposes:
+We can now use this handler to implement the `inc` operation in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)). At this point you may come to the conclusion that it is a bit annoying that you have to add every handler separately to the services. **Conqueror.CQS** provides two convenience extension methods `AddConquerorCQSTypesFromExecutingAssembly()` and `AddConquerorCQSTypesFromAssembly(Assembly assembly)` which discover and add all handlers in an assembly to the services as transient. The methods will not overwrite any handlers that are already added, meaning you can add non-transient handlers yourself (e.g. `services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>(ServiceLifetime.Singleton)`) and then register all remaining ones automatically with the convenience methods. Let's do that for demonstration purposes:
 
 ```diff
-services.AddConquerorCQS();
+services.AddSingleton<CountersRepository>();
 
 - // add all query handlers
-- services.AddTransient<GetCounterNamesQueryHandler>()
--         .AddTransient<GetCounterValueQueryHandler>();
+- services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>()
+-         .AddConquerorQueryHandler<GetCounterValueQueryHandler>();
 + // add some handlers manually for demonstration purposes
-+ services.AddSingleton<GetCounterNamesQueryHandler>()
-+         .AddScoped<IncrementCounterCommandHandler>();
++ services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>(ServiceLifetime.Singleton)
++         .AddConquerorCommandHandler<IncrementCounterCommandHandler>(ServiceLifetime.Scoped);
 +
 + // add all remaining handlers automatically as transient
 + services.AddConquerorCQSTypesFromExecutingAssembly();
 
-// this method MUST be called exactly once after all conqueror services, handlers etc. are added
-services.FinalizeConquerorRegistrations();
+await using var serviceProvider = services.BuildServiceProvider();
 ```
 
 ```diff
@@ -481,15 +469,13 @@ This concludes our recipe for getting started with **Conqueror.CQS**. In summary
 
 - add the [Conqueror.CQS](https://www.nuget.org/packages/Conqueror.CQS/) NuGet package
 - if you are not already writing a web application or using the [generic .NET host](https://learn.microsoft.com/en-us/dotnet/core/extensions/generic-host), add the [Microsoft.Extensions.DependencyInjections](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection) Nuget package
-- add the **Conqueror.CQS** services:
+- enable automatic discovery of all **Conqueror.CQS** types:
 
     ```cs
-    services.AddConquerorCQS()
-            .AddConquerorCQSTypesFromExecutingAssembly()
-            .FinalizeConquerorRegistrations();
+    services.AddConquerorCQSTypesFromExecutingAssembly();
     ```
 
-- start creating commands and queries, responses, custom handler interfaces, and handlers
+- start creating commands, queries, and handlers
 
 As the next step you can explore how to [test command and query handlers](../testing-handlers#readme).
 

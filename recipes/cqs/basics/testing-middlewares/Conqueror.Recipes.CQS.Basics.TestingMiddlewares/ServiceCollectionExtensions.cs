@@ -6,7 +6,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 });
 
-        services.AddConquerorCQS()
-                .AddConquerorCQSTypesFromExecutingAssembly();
+        services.AddConquerorCQSTypesFromExecutingAssembly();
     }
 }

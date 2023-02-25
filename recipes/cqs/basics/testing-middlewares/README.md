@@ -58,10 +58,8 @@ Now we need to create a service provider that has both the handler and the middl
 ```cs
 private static ServiceProvider BuildServiceProvider()
 {
-    return new ServiceCollection().AddConquerorCQS()
-                                  .AddTransient<DataAnnotationValidationCommandMiddleware>()
-                                  .AddTransient<TestCommandHandler>()
-                                  .FinalizeConquerorRegistrations()
+    return new ServiceCollection().AddConquerorCommandMiddleware<DataAnnotationValidationCommandMiddleware>()
+                                  .AddConquerorCommandHandler<TestCommandHandler>()
                                   .BuildServiceProvider();
 }
 ```
@@ -130,16 +128,14 @@ private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestComma
 
 private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn)
 {
-    return new ServiceCollection().AddConquerorCQS()
-                                  .AddTransient<RetryCommandMiddleware>()
-                                  .AddTransient<TestCommandHandler>()
+    return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
+                                  .AddConquerorCommandHandler<TestCommandHandler>()
 
                                   // add the retry middleware's default configuration
                                   .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
 
                                   // add the dynamic execution function so that it can be injected into the handler
                                   .AddSingleton(handlerExecuteFn)
-                                  .FinalizeConquerorRegistrations()
                                   .BuildServiceProvider();
 }
 ```
@@ -193,9 +189,8 @@ You may have noticed that we referred to the default configuration, but currentl
 + private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn,
 +                                                     Action<ICommandPipelineBuilder>? configurePipeline = null)
   {
-      return new ServiceCollection().AddConquerorCQS()
-                                    .AddTransient<RetryCommandMiddleware>()
-                                    .AddTransient<TestCommandHandler>()
+      return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
+                                    .AddConquerorCommandHandler<TestCommandHandler>()
 
                                     // add the retry middleware's default configuration
                                     .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
@@ -206,7 +201,6 @@ You may have noticed that we referred to the default configuration, but currentl
 +                                   // add the dynamic pipeline configuration function so that it can be used in the handler
 +                                   .AddSingleton(configurePipeline ?? (pipeline => pipeline.UseRetry()))
 +
-                                    .FinalizeConquerorRegistrations()
                                     .BuildServiceProvider();
   }
 ```
@@ -301,7 +295,7 @@ public abstract class TestBase : IDisposable
 
         ConfigureServices(services);
 
-        return services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        return services.BuildServiceProvider();
     }
 }
 ```
@@ -334,7 +328,7 @@ protected override void ConfigureServices(IServiceCollection services)
 {
     base.ConfigureServices(services);
 
-    services.AddTransient<TestCommandHandler>()
+    services.AddConquerorCommandHandler<TestCommandHandler>()
 
             // add dynamic pipeline and handler execution methods; we wrap them in
             // an extra arrow function to allow them to be changed inside of tests

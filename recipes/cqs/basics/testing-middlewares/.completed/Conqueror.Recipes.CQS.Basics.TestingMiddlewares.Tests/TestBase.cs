@@ -32,6 +32,6 @@ public abstract class TestBase : IDisposable
 
         ConfigureServices(services);
 
-        return services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        return services.BuildServiceProvider();
     }
 }

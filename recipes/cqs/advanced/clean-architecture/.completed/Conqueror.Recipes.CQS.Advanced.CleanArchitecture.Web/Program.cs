@@ -17,8 +17,7 @@ builder.Services
        .AddCountersApplication()
        .AddCountersInfrastructure()
        .AddUserHistoryApplication()
-       .AddUserHistoryInfrastructure()
-       .FinalizeConquerorRegistrations();
+       .AddUserHistoryInfrastructure();
 
 var app = builder.Build();
 

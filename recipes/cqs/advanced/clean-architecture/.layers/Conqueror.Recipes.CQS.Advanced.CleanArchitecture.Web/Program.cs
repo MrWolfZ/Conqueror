@@ -13,8 +13,7 @@ builder.Services
 
 builder.Services
        .AddApplication()
-       .AddInfrastructure()
-       .FinalizeConquerorRegistrations();
+       .AddInfrastructure();
 
 var app = builder.Build();
 

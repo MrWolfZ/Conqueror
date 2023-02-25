@@ -6,8 +6,7 @@ public static class UserHistoryApplicationServiceCollectionExtensions
 {
     public static IServiceCollection AddUserHistoryApplication(this IServiceCollection services)
     {
-        services.AddConquerorCQS()
-                .AddConquerorCQSTypesFromExecutingAssembly();
+        services.AddConquerorCQSTypesFromExecutingAssembly();
 
         return services;
     }

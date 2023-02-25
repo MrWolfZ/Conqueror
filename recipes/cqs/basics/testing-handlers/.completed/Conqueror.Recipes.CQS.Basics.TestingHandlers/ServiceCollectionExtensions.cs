@@ -9,8 +9,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<CountersRepository>()
                 .AddSingleton<IAdminNotificationService, NoopAdminNotificationService>();
 
-        services.AddConquerorCQS()
-                .AddConquerorCQSTypesFromExecutingAssembly()
-                .FinalizeConquerorRegistrations();
+        services.AddConquerorCQSTypesFromExecutingAssembly();
     }
 }

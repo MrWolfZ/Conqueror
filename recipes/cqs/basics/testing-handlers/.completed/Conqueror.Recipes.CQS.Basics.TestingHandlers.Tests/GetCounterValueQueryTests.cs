@@ -34,10 +34,8 @@ public sealed class GetCounterValueQueryTests
 
     private static ServiceProvider BuildServiceProvider()
     {
-        return new ServiceCollection().AddConquerorCQS()
-                                      .AddTransient<GetCounterValueQueryHandler>()
+        return new ServiceCollection().AddConquerorQueryHandler<GetCounterValueQueryHandler>()
                                       .AddSingleton<CountersRepository>()
-                                      .FinalizeConquerorRegistrations()
                                       .BuildServiceProvider();
     }
 }

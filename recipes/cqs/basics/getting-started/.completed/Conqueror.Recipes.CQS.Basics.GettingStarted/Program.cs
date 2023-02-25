@@ -8,20 +8,14 @@ var services = new ServiceCollection();
 // add the in-memory repository, which contains the counters, as a singleton
 services.AddSingleton<CountersRepository>();
 
-// add the conqueror CQS services
-services.AddConquerorCQS();
-
 // add some handlers manually for demonstration purposes
-services.AddSingleton<GetCounterNamesQueryHandler>()
-        .AddScoped<IncrementCounterCommandHandler>();
+services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>(ServiceLifetime.Singleton)
+        .AddConquerorCommandHandler<IncrementCounterCommandHandler>(ServiceLifetime.Scoped);
 
 // add all remaining handlers automatically as transient
 services.AddConquerorCQSTypesFromExecutingAssembly();
 
-// this method MUST be called exactly once after all conqueror services, handlers etc. are added
-services.FinalizeConquerorRegistrations();
-
-await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+await using var serviceProvider = services.BuildServiceProvider();
 
 Console.WriteLine("input commands in format '<op> [counterName]' (e.g. 'inc test' or 'list')");
 Console.WriteLine("available operations: list, get, inc, del");

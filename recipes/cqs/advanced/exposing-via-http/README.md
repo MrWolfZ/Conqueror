@@ -20,8 +20,6 @@ public sealed record GetCounterValueQueryResponse(bool CounterExists, int? Count
 
 The standard for building HTTP APIs with .NET is ASP.NET Core. Our application is already [set up as an ASP.NET Core app](Conqueror.Recipes.CQS.Advanced.ExposingViaHttp/Program.cs), and can be launched as is, but it doesn't have any HTTP endpoints just yet.
 
-> If your application uses a `Startup.cs` class, make sure that `FinalizeConquerorRegistrations` is called as the last step in `ConfigureServices`.
-
 The first step for exposing commands and queries via HTTP is to add a new package dependency:
 
 ```sh

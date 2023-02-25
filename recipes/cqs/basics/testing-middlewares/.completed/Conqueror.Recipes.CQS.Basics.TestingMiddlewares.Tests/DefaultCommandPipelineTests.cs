@@ -62,7 +62,7 @@ public sealed class DefaultCommandPipelineTests : TestBase
     {
         base.ConfigureServices(services);
 
-        services.AddTransient<TestCommandHandler>()
+        services.AddConquerorCommandHandler<TestCommandHandler>()
 
                 // add dynamic pipeline and handler execution methods; we wrap them in
                 // an extra arrow function to allow them to be changed inside of tests

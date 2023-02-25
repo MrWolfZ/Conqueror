@@ -4,11 +4,9 @@ var services = new ServiceCollection();
 
 services.AddSingleton<CountersRepository>();
 
-services.AddConquerorCQS()
-        .AddConquerorCQSTypesFromExecutingAssembly()
-        .FinalizeConquerorRegistrations();
+services.AddConquerorCQSTypesFromExecutingAssembly();
 
-await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+await using var serviceProvider = services.BuildServiceProvider();
 
 Console.WriteLine("input commands in format '<op> [counterName]' (e.g. 'inc test 1' or 'get test')");
 Console.WriteLine("available operations: inc, get");

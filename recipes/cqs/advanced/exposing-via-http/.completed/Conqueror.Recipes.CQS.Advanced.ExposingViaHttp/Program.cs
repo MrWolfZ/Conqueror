@@ -12,9 +12,7 @@ builder.Services
 
 builder.Services
        .AddSingleton<CountersRepository>()
-       .AddConquerorCQS()
-       .AddConquerorCQSTypesFromExecutingAssembly()
-       .FinalizeConquerorRegistrations();
+       .AddConquerorCQSTypesFromExecutingAssembly();
 
 var app = builder.Build();
 

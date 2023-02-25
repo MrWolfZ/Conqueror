@@ -12,8 +12,7 @@ services.AddConquerorCQSHttpClientServices()
                                                                     pipeline => pipeline.UseDataAnnotationValidation())
 
         // add all middlewares from the shared project
-        .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly)
-        .FinalizeConquerorRegistrations();
+        .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly);
 
 await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
 

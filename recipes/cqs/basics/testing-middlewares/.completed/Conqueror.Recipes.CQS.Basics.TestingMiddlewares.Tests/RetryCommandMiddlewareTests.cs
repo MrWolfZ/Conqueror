@@ -92,9 +92,8 @@ public sealed class RetryCommandMiddlewareTests
     private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn,
                                                         Action<ICommandPipelineBuilder>? configurePipeline = null)
     {
-        return new ServiceCollection().AddConquerorCQS()
-                                      .AddTransient<RetryCommandMiddleware>()
-                                      .AddTransient<TestCommandHandler>()
+        return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
+                                      .AddConquerorCommandHandler<TestCommandHandler>()
 
                                       // add the retry middleware's default configuration
                                       .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
@@ -105,7 +104,6 @@ public sealed class RetryCommandMiddlewareTests
                                       // add the dynamic pipeline configuration function so that it can be used in the handler
                                       .AddSingleton(configurePipeline ?? (pipeline => pipeline.UseRetry()))
 
-                                      .FinalizeConquerorRegistrations()
                                       .BuildServiceProvider();
     }
 }

@@ -13,9 +13,7 @@ builder.Services
 builder.Services
        .AddSingleton<CountersRepository>()
        .AddSingleton<UserHistoryRepository>()
-       .AddConquerorCQS()
-       .AddConquerorCQSTypesFromExecutingAssembly()
-       .FinalizeConquerorRegistrations();
+       .AddConquerorCQSTypesFromExecutingAssembly();
 
 var app = builder.Build();
 

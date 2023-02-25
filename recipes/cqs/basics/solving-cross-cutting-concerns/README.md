@@ -216,9 +216,7 @@ In a real application this class may be populated from a configuration file (for
 +
 + services.AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 2 });
 
-  services.AddConquerorCQS()
-          .AddConquerorCQSTypesFromExecutingAssembly()
-          .FinalizeConquerorRegistrations();
+  services.AddConquerorCQSTypesFromExecutingAssembly();
 ```
 
 There are two ways to access the configuration instance in our middleware. Firstly, you could just add the configuration class as a parameter to the middleware's constructor. This works, but carries a very subtle risk: if the lifetime of the middleware would be longer than that of the injected class (e.g. the middleware was a singleton and the injected class was transient), then you would run into what is known as a [captive dependency](https://blog.ploeh.dk/2014/06/02/captive-dependency/). To prevent this from happening, **Conqueror.CQS** exposes the `IServiceProvider`, from the scope in which the handler is resolved, as a property on the middleware context. This allows resolving dependencies safely regardless of the lifetime of the middleware or the handler. Let's do that in our `RetryCommandMiddleware.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddleware.cs)):

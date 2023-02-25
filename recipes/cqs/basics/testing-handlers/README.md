@@ -63,10 +63,8 @@ public async Task GivenNonExistingCounter_WhenGettingCounterValue_CounterNotFoun
 {
     var services = new ServiceCollection();
 
-    services.AddConquerorCQS()
-            .AddTransient<GetCounterValueQueryHandler>()
-            .AddSingleton<CountersRepository>()
-            .FinalizeConquerorRegistrations();
+    services.AddConquerorQueryHandler<GetCounterValueQueryHandler>()
+            .AddSingleton<CountersRepository>();
 
     await using var serviceProvider = services.BuildServiceProvider();
 
@@ -86,10 +84,8 @@ public async Task GivenExistingCounter_WhenGettingCounterValue_CounterValueIsRet
 {
     var services = new ServiceCollection();
 
-    services.AddConquerorCQS()
-            .AddTransient<GetCounterValueQueryHandler>()
-            .AddSingleton<CountersRepository>()
-            .FinalizeConquerorRegistrations();
+    services.AddConquerorQueryHandler<GetCounterValueQueryHandler>()
+            .AddSingleton<CountersRepository>();
 
     await using var serviceProvider = services.BuildServiceProvider();
 
@@ -117,10 +113,8 @@ public sealed class GetCounterValueQueryTests
     {
 -       var services = new ServiceCollection();
 -
--       services.AddConquerorCQS()
--               .AddTransient<GetCounterValueQueryHandler>()
--               .AddSingleton<CountersRepository>()
--               .FinalizeConquerorRegistrations();
+-       services.AddConquerorQueryHandler<GetCounterValueQueryHandler>()
+-               .AddSingleton<CountersRepository>();
 -
 -       await using var serviceProvider = services.BuildServiceProvider();
 +       await using var serviceProvider = BuildServiceProvider();
@@ -136,10 +130,8 @@ public sealed class GetCounterValueQueryTests
     {
 -       var services = new ServiceCollection();
 -
--       services.AddConquerorCQS()
--               .AddTransient<GetCounterValueQueryHandler>()
--               .AddSingleton<CountersRepository>()
--               .FinalizeConquerorRegistrations();
+-       services.AddConquerorQueryHandler<GetCounterValueQueryHandler>()
+-               .AddSingleton<CountersRepository>();
 -
 -       await using var serviceProvider = services.BuildServiceProvider();
 +       await using var serviceProvider = BuildServiceProvider();
@@ -158,10 +150,8 @@ public sealed class GetCounterValueQueryTests
 +
 +   private static ServiceProvider BuildServiceProvider()
 +   {
-+       return new ServiceCollection().AddConquerorCQS()
-+                                     .AddTransient<GetCounterValueQueryHandler>()
++       return new ServiceCollection().AddConquerorQueryHandler<GetCounterValueQueryHandler>()
 +                                     .AddSingleton<CountersRepository>()
-+                                     .FinalizeConquerorRegistrations()
 +                                     .BuildServiceProvider();
 +   }
 }
@@ -281,36 +271,36 @@ global using NUnit.Framework;
 Since we resolve the handler from the service provider for testing, we need to register the mock object in the service provider. Apply the following changes to `TestBase.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests/TestBase.cs)) to replace `IAdminNotificationService` with a mock object:
 
 ```diff
-using Microsoft.Extensions.DependencyInjection;
+  using Microsoft.Extensions.DependencyInjection;
 + using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests;
+  namespace Conqueror.Recipes.CQS.Basics.TestingHandlers.Tests;
 
-public abstract class TestBase : IDisposable
-{
-    private readonly ServiceProvider serviceProvider;
+  public abstract class TestBase : IDisposable
+  {
+      private readonly ServiceProvider serviceProvider;
 
-    protected TestBase()
-    {
-        var services = new ServiceCollection();
+      protected TestBase()
+      {
+          var services = new ServiceCollection();
 
-        services.AddApplicationServices();
+          services.AddApplicationServices();
 +
-+       services.Replace(ServiceDescriptor.Singleton(AdminNotificationServiceMock.Object));
++         services.Replace(ServiceDescriptor.Singleton(AdminNotificationServiceMock.Object));
 
-        serviceProvider = services.BuildServiceProvider();
-    }
+          serviceProvider = services.BuildServiceProvider();
+      }
 +
-+   protected Mock<IAdminNotificationService> AdminNotificationServiceMock { get; } = new();
++     protected Mock<IAdminNotificationService> AdminNotificationServiceMock { get; } = new();
 
-    public void Dispose()
-    {
-        serviceProvider.Dispose();
-    }
+      public void Dispose()
+      {
+          serviceProvider.Dispose();
+      }
 
-    protected T Resolve<T>()
-        where T : notnull => serviceProvider.GetRequiredService<T>();
-}
+      protected T Resolve<T>()
+          where T : notnull => serviceProvider.GetRequiredService<T>();
+  }
 ```
 
 > Our recommended approach is to mock all side-effectful dependencies inside the `TestBase` to ensure that you never accidentally trigger a real side-effect during testing. However, it is possible to delegate the creation of the mocks to the concrete test class by creating a virtual `ConfigureServices` method and creating the service provider lazily. This is left as an exercise for the reader.

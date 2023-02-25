@@ -6,8 +6,7 @@ public static class CountersApplicationServiceCollectionExtensions
 {
     public static IServiceCollection AddCountersApplication(this IServiceCollection services)
     {
-        services.AddConquerorCQS()
-                .AddConquerorCQSTypesFromExecutingAssembly();
+        services.AddConquerorCQSTypesFromExecutingAssembly();
 
         return services;
     }

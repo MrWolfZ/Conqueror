@@ -41,10 +41,8 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
 
     private static ServiceProvider BuildServiceProvider()
     {
-        return new ServiceCollection().AddConquerorCQS()
-                                      .AddTransient<DataAnnotationValidationCommandMiddleware>()
-                                      .AddTransient<TestCommandHandler>()
-                                      .FinalizeConquerorRegistrations()
+        return new ServiceCollection().AddConquerorCommandMiddleware<DataAnnotationValidationCommandMiddleware>()
+                                      .AddConquerorCommandHandler<TestCommandHandler>()
                                       .BuildServiceProvider();
     }
 }

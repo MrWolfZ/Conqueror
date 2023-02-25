@@ -107,20 +107,12 @@ Next, we need to add some configuration in `Program.cs` ([view completed file](.
 
 ```cs
 services.AddConquerorCQSHttpClientServices()
-        .FinalizeConquerorRegistrations();
-```
-
-That's already all the setup that is required and we can start creating clients. We'll start with the client for our command. Make the following adjustment in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.CallingHttp.Client/Program.cs)) to add the HTTP client:
-
-```diff
-  services.AddConquerorCQSHttpClientServices()
-+         .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress))
-          .FinalizeConquerorRegistrations();
+        .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress));
 ```
 
 > A query client can (unsurprisingly) be added via `AddConquerorQueryClient`.
 
-This code adds a client based on our custom command handler interface and then configures the client to use the HTTP transport with the address of our server application.
+This code is all that is required to create a client based on our custom command handler interface. It configures the client to use the HTTP transport with the address of our server application.
 
 With this change in place we can start using the command. Let's resolve and call the command handler in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.CallingHttp.Client/Program.cs)):
 
@@ -179,9 +171,8 @@ The code we wrote above covers the most basic possible HTTP client setup. There 
 
 ```diff
   services.AddConquerorCQSHttpClientServices()
--         .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress))
-+         .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")))
-          .FinalizeConquerorRegistrations();
+-         .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress));
++         .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")));
 ```
 
 The function to configure the client's transport can also be `async` and can access the service provider to resolve any required services. For example, fetching an authentication bearer token from a service could be done like this:
@@ -289,12 +280,10 @@ Now we can move the `DataAnnotationValidationCommandMiddleware.cs` file and the 
 ```diff
   builder.Services
          .AddSingleton<CountersRepository>()
-         .AddConquerorCQS()
          .AddConquerorCQSTypesFromExecutingAssembly()
 +
 +        // add all middlewares from the shared project
-+        .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly)
-         .FinalizeConquerorRegistrations();
++        .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly);
 ```
 
 In the client's `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.CallingHttp.Client/Program.cs)) make the following change:
@@ -304,8 +293,7 @@ In the client's `Program.cs` ([view completed file](.completed/Conqueror.Recipes
           .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")))
 +
 +         // add all middlewares from the shared project
-+         .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly)
-          .FinalizeConquerorRegistrations();
++         .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly);
 ```
 
 Now we can configure our command client to use the middleware in its pipeline:
@@ -317,8 +305,7 @@ Now we can configure our command client to use the middleware in its pipeline:
 +                                                                     pipeline => pipeline.UseDataAnnotationValidation())
  
           // add all middlewares from the shared project
-          .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly)
-          .FinalizeConquerorRegistrations();
+          .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly);
 ```
 
 If you now run the application with invalid input as before, you get a different better error message:

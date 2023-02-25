@@ -128,7 +128,6 @@ public abstract class TestBase : IDisposable
         // create a dedicated service provider for resolving command and query clients
         // to prevent interference with other services from the actual application
         clientServices = new ServiceCollection().AddConquerorCQSHttpClientServices()
-                                                .FinalizeConquerorRegistrations()
                                                 .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
     }
 
