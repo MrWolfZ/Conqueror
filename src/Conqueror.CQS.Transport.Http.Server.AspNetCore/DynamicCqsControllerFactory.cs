@@ -10,8 +10,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
 {
     internal static class DynamicCqsControllerFactory
     {
-        private static readonly AssemblyBuilder DynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new("ConquerorCqsExtensionsAspNetCoreServerDynamic"), AssemblyBuilderAccess.Run);
-        private static readonly ModuleBuilder ModuleBuilder = DynamicAssembly.DefineDynamicModule("ConquerorCqsExtensionsAspNetCoreServerDynamicModule");
+        private static readonly AssemblyBuilder DynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new("ConquerorCqsTransportHttpServerAspNetCoreDynamic"), AssemblyBuilderAccess.Run);
+        private static readonly ModuleBuilder ModuleBuilder = DynamicAssembly.DefineDynamicModule("ConquerorCqsTransportHttpServerAspNetCoreDynamicModule");
         private static readonly ConcurrentDictionary<string, Lazy<Type>> DynamicTypeDictionary = new();
 
         public static Type Create(string name, Func<Type> typeFactory)
