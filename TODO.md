@@ -4,8 +4,13 @@ This file contains all the open points for extensions and improvements to the **
 
 ## General
 
+- [ ] set up issues templates via yaml config
+- [ ] in all recipe code that is at risk of being copy-pasted, add a note that it shouldn't be used and add a reference to pre-built packages or recipes where possible (e.g. for middlewares)
 - [ ] in recipes improve language, e.g. replace `Now that ...` with `As the next step ...` etc.
 - [ ] use file-scoped namespaces everywhere
+- [ ] add nunit analyzers to all test projects and refactor all tests to use modern test assertions
+- [ ] configure build pipelines to build project with a variety of SDK versions
+  - [ ] set up dedicated example projects for .NET 6 and 7 with older SDK versions to ensure analyzers can be referenced without warnings or errors
 - [ ] re-order all code so that command comes before query (or even better split files)
 - [ ] add code coverage reports and badge
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
@@ -14,6 +19,10 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] add note in basics recipe that it is fine for simple applications to have DB logic directly in handlers
+- [ ] remove restriction about only being able to add middleware to pipeline once (also adjust mentions in recipe)
+- [ ] try referencing a lower version of csharp anlayzer dependencies to prevent version conflicts
+- [ ] write code-level documentation for all public APIs
 - [ ] adjust analyzer to target dedicated framework versions
   - [ ] reference correct CSharp library versions according to the framework version to prevent compiler warnings when using the analyzers in a .NET 6 project
 - [ ] create analyzers (including code fixes)
@@ -43,6 +52,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
+- [ ] use singleton HTTP client when not provided with custom factory
 - [ ] create analyzers (including code fixes)
   - [ ] when command or query does not have a version
 - [ ] add recipe for customizing OpenAPI specification with swashbuckle
