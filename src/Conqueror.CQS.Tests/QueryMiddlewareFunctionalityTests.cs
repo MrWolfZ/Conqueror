@@ -647,6 +647,37 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenHandlerDelegateWithSingleAppliedMiddleware_MiddlewareIsCalledWithQuery()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (command, p, cancellationToken) =>
+                                                                                        {
+                                                                                            await Task.Yield();
+                                                                                            var obs = p.GetRequiredService<TestObservations>();
+                                                                                            obs.QueriesFromHandlers.Add(command);
+                                                                                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
+                                                                                            return new(command.Payload + 1);
+                                                                                        },
+                                                                                        pipeline => pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var command = new TestQuery(10);
+
+            _ = await handler.ExecuteQuery(command, CancellationToken.None);
+
+            Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { command }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
+        }
+
+        [Test]
         public void InvalidMiddlewares()
         {
             _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddlewareWithMultipleInterfaces>());

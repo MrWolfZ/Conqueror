@@ -54,10 +54,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                     DynamicCqsControllerFactory.ApplyParameterSourceAttribute(paramBuilder, dataSourceAttributeType);
                 }
 
-                if (!hasResponse)
-                {
-                    DynamicCqsControllerFactory.ApplyProducesResponseTypeAttribute(methodBuilder, StatusCodes.Status204NoContent);
-                }
+                DynamicCqsControllerFactory.ApplyProducesResponseTypeAttribute(methodBuilder, StatusCodes.Status200OK);
 
                 _ = methodBuilder.DefineParameter(parameterTypes.Length, ParameterAttributes.None, "cancellationToken");
 

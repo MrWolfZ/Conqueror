@@ -312,6 +312,28 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
         }
 
+        [Test]
+        public async Task GivenSuccessfulHttpCallForDelegateHandler_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<IQueryHandler<TestDelegateQuery, TestDelegateQueryResponse>>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
+        [Test]
+        public async Task GivenSuccessfulPostHttpCallForDelegateHandler_ReturnsQueryResponse()
+        {
+            var handler = ResolveOnClient<IQueryHandler<TestPostDelegateQuery, TestDelegateQueryResponse>>();
+
+            var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result.Payload);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
@@ -335,7 +357,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>()
                         .AddConquerorQueryHandler<TestQueryWithCustomHeadersHandler>()
                         .AddConquerorQueryHandler<TestPostQueryWithCustomHeadersHandler>()
-                        .AddConquerorQueryHandler<NonHttpTestQueryHandler>();
+                        .AddConquerorQueryHandler<NonHttpTestQueryHandler>()
+                        .AddConquerorQueryHandlerDelegate<TestDelegateQuery, TestDelegateQueryResponse>((command, _, _) => Task.FromResult(new TestDelegateQueryResponse { Payload = command.Payload + 1 }))
+                        .AddConquerorQueryHandlerDelegate<TestPostDelegateQuery, TestDelegateQueryResponse>((command, _, _) => Task.FromResult(new TestDelegateQueryResponse { Payload = command.Payload + 1 }));
         }
 
         protected override void ConfigureClientServices(IServiceCollection services)
@@ -383,7 +407,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                         {
                             o.Headers.Authorization = new("Basic", "test");
                             o.Headers.Add("test-header", new[] { "value1", "value2" });
-                        }));
+                        }))
+                        .AddConquerorQueryClient<IQueryHandler<TestDelegateQuery, TestDelegateQueryResponse>>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<IQueryHandler<TestPostDelegateQuery, TestDelegateQueryResponse>>(b => b.UseHttp(baseAddress));
         }
 
         protected override void Configure(IApplicationBuilder app)
@@ -486,6 +512,17 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             public int Payload { get; init; }
         }
 
+        [HttpQuery]
+        public sealed record TestDelegateQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestDelegateQueryResponse
+        {
+            public int Payload { get; init; }
+        }
+
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
         {
@@ -522,6 +559,12 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQueryWithCustomHeaders
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostDelegateQuery
         {
             public int Payload { get; init; }
         }

@@ -33,7 +33,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(commandApiDescription);
             Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
             Assert.AreEqual("api/commands/TestCommandWithoutResponse", commandApiDescription?.RelativePath);
-            Assert.AreEqual(204, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
             Assert.IsNull(commandApiDescription?.GroupName);
             Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
         }
@@ -61,7 +61,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.IsNotNull(commandApiDescription);
             Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
             Assert.AreEqual("api/commands/TestCommandWithoutResponseWithoutPayload", commandApiDescription?.RelativePath);
-            Assert.AreEqual(204, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
             Assert.IsNull(commandApiDescription?.GroupName);
             Assert.AreEqual(0, commandApiDescription?.ParameterDescriptions.Count);
         }

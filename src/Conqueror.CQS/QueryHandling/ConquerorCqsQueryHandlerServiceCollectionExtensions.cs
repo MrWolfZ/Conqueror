@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.CQS.Common;
 using Conqueror.CQS.QueryHandling;
@@ -16,7 +18,7 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                             ServiceLifetime lifetime = ServiceLifetime.Transient)
             where THandler : class, IQueryHandler
         {
-            return services.AddConquerorQueryHandler(typeof(THandler), new(typeof(THandler), typeof(THandler), lifetime));
+            return services.AddConquerorQueryHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), typeof(THandler), lifetime));
         }
 
         public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services,
@@ -24,26 +26,45 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                             ServiceLifetime lifetime = ServiceLifetime.Transient)
             where THandler : class, IQueryHandler
         {
-            return services.AddConquerorQueryHandler(typeof(THandler), new(typeof(THandler), factory, lifetime));
+            return services.AddConquerorQueryHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), factory, lifetime));
         }
 
         public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services,
                                                                             THandler instance)
             where THandler : class, IQueryHandler
         {
-            return services.AddConquerorQueryHandler(typeof(THandler), new(typeof(THandler), instance));
+            return services.AddConquerorQueryHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), instance));
         }
 
-        public static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
-                                                                    Type handlerType,
-                                                                    ServiceDescriptor serviceDescriptor)
+        public static IServiceCollection AddConquerorQueryHandlerDelegate<TQuery, TResponse>(this IServiceCollection services,
+                                                                                             Func<TQuery, IServiceProvider, CancellationToken, Task<TResponse>> handlerFn)
+            where TQuery : class
         {
-            services.TryAdd(serviceDescriptor);
-            return services.AddConquerorQueryHandler(handlerType);
+            return services.AddConquerorQueryHandler(p => new DelegateQueryHandler<TQuery, TResponse>(handlerFn, p));
+        }
+
+        public static IServiceCollection AddConquerorQueryHandlerDelegate<TQuery, TResponse>(this IServiceCollection services,
+                                                                                             Func<TQuery, IServiceProvider, CancellationToken, Task<TResponse>> handlerFn,
+                                                                                             Action<IQueryPipelineBuilder> configurePipeline)
+            where TQuery : class
+        {
+            return services.AddConquerorQueryHandler(typeof(DelegateQueryHandler<TQuery, TResponse>),
+                                                     ServiceDescriptor.Transient(p => new DelegateQueryHandler<TQuery, TResponse>(handlerFn, p)),
+                                                     configurePipeline);
         }
 
         internal static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
-                                                                    Type handlerType)
+                                                                    Type handlerType,
+                                                                    ServiceDescriptor serviceDescriptor,
+                                                                    Action<IQueryPipelineBuilder>? configurePipeline = null)
+        {
+            services.TryAdd(serviceDescriptor);
+            return services.AddConquerorQueryHandler(handlerType, configurePipeline);
+        }
+
+        internal static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
+                                                                    Type handlerType,
+                                                                    Action<IQueryPipelineBuilder>? configurePipeline)
         {
             var existingRegistrations = services.Select(d => d.ImplementationInstance).OfType<QueryHandlerRegistration>().ToDictionary(r => r.QueryType, r => r.HandlerType);
 
@@ -63,7 +84,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 services.AddSingleton(registration);
             }
 
-            var pipelineConfigurationAction = CreatePipelineConfigurationFunction(handlerType);
+            var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(handlerType);
 
             services.TryAddConquerorQueryClient(handlerType, b => new InMemoryQueryTransport(b.ServiceProvider, handlerType), pipelineConfigurationAction);
 

@@ -23,6 +23,33 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenQuery_DelegateHandlerReceivesQuery()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (query, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.Queries.Add(query);
+                            obs.CancellationTokens.Add(cancellationToken);
+                            return new(query.Payload + 1);
+                        })
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var query = new TestQuery(10);
+
+            _ = await handler.ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
+        }
+
+        [Test]
         public async Task GivenGenericQuery_HandlerReceivesQuery()
         {
             var services = new ServiceCollection();
@@ -62,12 +89,63 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenCancellationToken_DelegateHandlerReceivesCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (command, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.Queries.Add(command);
+                            obs.CancellationTokens.Add(cancellationToken);
+                            return new(command.Payload + 1);
+                        })
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            using var tokenSource = new CancellationTokenSource();
+
+            _ = await handler.ExecuteQuery(new(10), tokenSource.Token);
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
+        }
+
+        [Test]
         public async Task GivenNoCancellationToken_HandlerReceivesDefaultCancellationToken()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
             _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new(10));
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        }
+
+        [Test]
+        public async Task GivenNoCancellationToken_DelegateHandlerReceivesDefaultCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (command, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.Queries.Add(command);
+                            obs.CancellationTokens.Add(cancellationToken);
+                            return new(command.Payload + 1);
+                        })
                         .AddSingleton(observations);
 
             var provider = services.BuildServiceProvider();
@@ -97,6 +175,30 @@ namespace Conqueror.CQS.Tests
             var response = await handler.ExecuteQuery(query, CancellationToken.None);
 
             Assert.AreEqual(query.Payload + 1, response.Payload);
+        }
+
+        [Test]
+        public async Task GivenQuery_DelegateHandlerReturnsResponse()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (command, _, _) =>
+                        {
+                            await Task.Yield();
+                            return new(command.Payload + 1);
+                        })
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            var command = new TestQuery(10);
+
+            var response = await handler.ExecuteQuery(command, CancellationToken.None);
+
+            Assert.AreEqual(command.Payload + 1, response.Payload);
         }
 
         [Test]

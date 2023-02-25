@@ -180,6 +180,31 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.AreEqual(11, result!.Payload);
         }
 
+        [Test]
+        public async Task GivenHttpCommandWithDelegateHandler_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/commands/testDelegate", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestDelegateCommandResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
+        [Test]
+        public async Task GivenHttpCommandWithoutResponseWithDelegateHandler_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/commands/testDelegateCommandWithoutResponse", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var result = await response.Content.ReadAsStringAsync();
+
+            Assert.IsEmpty(result);
+        }
+
         private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
         protected override void ConfigureServices(IServiceCollection services)
@@ -202,7 +227,18 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
                         .AddConquerorCommandHandler<TestCommandWithCustomSerializedPayloadTypeHandler>()
                         .AddConquerorCommandHandler<TestCommandWithCustomPathHandler>()
-                        .AddConquerorCommandHandler<TestCommandWithVersionHandler>();
+                        .AddConquerorCommandHandler<TestCommandWithVersionHandler>()
+                        .AddConquerorCommandHandlerDelegate<TestDelegateCommand, TestDelegateCommandResponse>(async (command, _, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            cancellationToken.ThrowIfCancellationRequested();
+                            return new() { Payload = command.Payload + 1 };
+                        })
+                        .AddConquerorCommandHandlerDelegate<TestDelegateCommandWithoutResponse>(async (_, _, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            cancellationToken.ThrowIfCancellationRequested();
+                        });
         }
 
         protected override void Configure(IApplicationBuilder app)
@@ -276,6 +312,23 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [HttpCommand(Version = "v2")]
         public sealed record TestCommandWithVersion
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpCommand]
+        public sealed record TestDelegateCommand
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestDelegateCommandResponse
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpCommand]
+        public sealed record TestDelegateCommandWithoutResponse
         {
             public int Payload { get; init; }
         }

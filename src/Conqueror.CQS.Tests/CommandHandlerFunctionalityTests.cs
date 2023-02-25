@@ -23,6 +23,33 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenCommand_DelegateHandlerReceivesCommand()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (command, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.Commands.Add(command);
+                            obs.CancellationTokens.Add(cancellationToken);
+                            return new(command.Payload + 1);
+                        })
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
+        }
+
+        [Test]
         public async Task GivenGenericCommand_HandlerReceivesCommand()
         {
             var services = new ServiceCollection();
@@ -49,6 +76,32 @@ namespace Conqueror.CQS.Tests
             var observations = new TestObservations();
 
             _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+
+            var command = new TestCommandWithoutResponse(10);
+
+            await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
+        }
+
+        [Test]
+        public async Task GivenCommandWithoutResponse_DelegateHandlerReceivesCommand()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandlerDelegate<TestCommandWithoutResponse>(async (command, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.Commands.Add(command);
+                            obs.CancellationTokens.Add(cancellationToken);
+                        })
                         .AddSingleton(observations);
 
             var provider = services.BuildServiceProvider();
@@ -102,7 +155,33 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public async Task GivenCancellationTokenForHandlerWithoutResponse_HandlerReceivesCommand()
+        public async Task GivenCancellationToken_DelegateHandlerReceivesCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (command, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.Commands.Add(command);
+                            obs.CancellationTokens.Add(cancellationToken);
+                            return new(command.Payload + 1);
+                        })
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            using var tokenSource = new CancellationTokenSource();
+
+            _ = await handler.ExecuteCommand(new(10), tokenSource.Token);
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
+        }
+
+        [Test]
+        public async Task GivenCancellationTokenForHandlerWithoutResponse_HandlerReceivesCancellationToken()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
@@ -121,12 +200,104 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenCancellationTokenForHandlerWithoutResponse_DelegateHandlerReceivesCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandlerDelegate<TestCommandWithoutResponse>(async (command, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.Commands.Add(command);
+                            obs.CancellationTokens.Add(cancellationToken);
+                        })
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+            using var tokenSource = new CancellationTokenSource();
+
+            await handler.ExecuteCommand(new(10), tokenSource.Token);
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
+        }
+
+        [Test]
+        public async Task GivenNoCancellationToken_HandlerReceivesDefaultCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler.ExecuteCommand(new(10));
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        }
+
+        [Test]
+        public async Task GivenNoCancellationToken_DelegateHandlerReceivesDefaultCancellationToken()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (command, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.Commands.Add(command);
+                            obs.CancellationTokens.Add(cancellationToken);
+                            return new(command.Payload + 1);
+                        })
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler.ExecuteCommand(new(10));
+
+            Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        }
+
+        [Test]
         public async Task GivenCommand_HandlerReturnsResponse()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
             _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var command = new TestCommand(10);
+
+            var response = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.AreEqual(command.Payload + 1, response.Payload);
+        }
+
+        [Test]
+        public async Task GivenCommand_DelegateHandlerReturnsResponse()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (command, _, _) =>
+                        {
+                            await Task.Yield();
+                            return new(command.Payload + 1);
+                        })
                         .AddSingleton(observations);
 
             var provider = services.BuildServiceProvider();
@@ -178,71 +349,71 @@ namespace Conqueror.CQS.Tests
 
         private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            private readonly TestObservations responses;
+            private readonly TestObservations observations;
 
-            public TestCommandHandler(TestObservations responses)
+            public TestCommandHandler(TestObservations observations)
             {
-                this.responses = responses;
+                this.observations = observations;
             }
 
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
-                responses.Commands.Add(command);
-                responses.CancellationTokens.Add(cancellationToken);
+                observations.Commands.Add(command);
+                observations.CancellationTokens.Add(cancellationToken);
                 return new(command.Payload + 1);
             }
         }
 
         private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
         {
-            private readonly TestObservations responses;
+            private readonly TestObservations observations;
 
-            public TestCommandHandlerWithoutResponse(TestObservations responses)
+            public TestCommandHandlerWithoutResponse(TestObservations observations)
             {
-                this.responses = responses;
+                this.observations = observations;
             }
 
             public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
-                responses.Commands.Add(command);
-                responses.CancellationTokens.Add(cancellationToken);
+                observations.Commands.Add(command);
+                observations.CancellationTokens.Add(cancellationToken);
             }
         }
 
         private sealed class GenericTestCommandHandler<T> : ICommandHandler<GenericTestCommand<T>, GenericTestCommandResponse<T>>
         {
-            private readonly TestObservations responses;
+            private readonly TestObservations observations;
 
-            public GenericTestCommandHandler(TestObservations responses)
+            public GenericTestCommandHandler(TestObservations observations)
             {
-                this.responses = responses;
+                this.observations = observations;
             }
 
             public async Task<GenericTestCommandResponse<T>> ExecuteCommand(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
-                responses.Commands.Add(command);
-                responses.CancellationTokens.Add(cancellationToken);
+                observations.Commands.Add(command);
+                observations.CancellationTokens.Add(cancellationToken);
                 return new(command.Payload);
             }
         }
 
         private sealed class GenericTestCommandHandlerWithoutResponse<T> : ICommandHandler<GenericTestCommand<T>>
         {
-            private readonly TestObservations responses;
+            private readonly TestObservations observations;
 
-            public GenericTestCommandHandlerWithoutResponse(TestObservations responses)
+            public GenericTestCommandHandlerWithoutResponse(TestObservations observations)
             {
-                this.responses = responses;
+                this.observations = observations;
             }
 
             public async Task ExecuteCommand(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
-                responses.Commands.Add(command);
-                responses.CancellationTokens.Add(cancellationToken);
+                observations.Commands.Add(command);
+                observations.CancellationTokens.Add(cancellationToken);
             }
         }
 

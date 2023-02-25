@@ -31,6 +31,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenContextItems_ItemsAreReturnedInHeader(string path, string? postContent = null)
@@ -53,6 +54,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenConquerorContextRequestHeader_ItemsAreReceivedByHandler(string path, string? postContent = null)
@@ -77,6 +79,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path, string? postContent = null)
@@ -97,6 +100,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenQueryIdHeader_CorrectIdIsObservedByHandler(string path, string? postContent = null)
@@ -143,6 +147,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenTraceIdInConquerorHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string? postContent = null)
@@ -192,6 +197,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenTraceIdInConquerorHeaderWithActiveActivity_IdFromActivityIsObservedByHandler(string path, string? postContent = null)
@@ -247,6 +253,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string? postContent = null)
@@ -299,6 +306,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandler(string path, string? postContent = null)
@@ -355,6 +363,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenTraceIdInTraceParentAndConquerorHeadersWithoutActiveActivity_IdFromTraceParentHeaderIsObservedByHandler(string path, string? postContent = null)
@@ -411,6 +420,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/queries/test?payload=10")]
         [TestCase("/api/queries/testQueryWithoutPayload")]
         [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+        [TestCase("/api/queries/testDelegate?payload=10")]
         [TestCase("/api/custom/queries/test?payload=10")]
         [TestCase("/api/custom/queries/testQueryWithoutPayload")]
         public async Task GivenTraceIdInTraceParentAndConquerorHeadersWithActiveActivity_IdFromActivityIsObservedByHandler(string path, string? postContent = null)
@@ -483,6 +493,25 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddConquerorQueryHandler<TestQueryWithNestedQueryHandler>()
                         .AddConquerorQueryHandler<NestedTestQueryHandler>()
                         .AddConquerorQueryHandler<TestPostQueryHandler>()
+                        .AddConquerorQueryHandlerDelegate<TestDelegateQuery, TestDelegateQueryResponse>(async (_, p, _) =>
+                        {
+                            await Task.CompletedTask;
+
+                            var testObservations = p.GetRequiredService<TestObservations>();
+                            var queryContextAccessor = p.GetRequiredService<IQueryContextAccessor>();
+                            var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
+
+                            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+                            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+
+                            if (testObservations.ShouldAddItems)
+                            {
+                                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                            }
+
+                            return new TestDelegateQueryResponse();
+                        })
                         .AddSingleton<TestObservations>();
         }
 
@@ -542,6 +571,11 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [HttpQuery]
         public sealed record TestQueryWithNestedQuery;
+
+        [HttpQuery]
+        public sealed record TestDelegateQuery;
+
+        public sealed record TestDelegateQueryResponse;
 
         public sealed record NestedTestQuery;
 

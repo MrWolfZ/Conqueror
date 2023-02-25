@@ -1,3 +1,5 @@
+using Conqueror.CQS.CommandHandling;
+
 namespace Conqueror.CQS.Tests
 {
     [TestFixture]
@@ -41,6 +43,24 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public void GivenManuallyRegisteredCommandHandlerDelegate_ReturnsRegistration()
+        {
+            var provider = new ServiceCollection().AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((_, _, _) => Task.FromResult(new TestCommandResponse()))
+                                                  .BuildServiceProvider();
+
+            var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
+
+            var expectedRegistrations = new[]
+            {
+                new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>)),
+            };
+
+            var registrations = registry.GetCommandHandlerRegistrations();
+
+            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+        }
+
+        [Test]
         public void GivenManuallyRegisteredCommandHandlerWithoutResponse_ReturnsRegistration()
         {
             var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
@@ -69,6 +89,24 @@ namespace Conqueror.CQS.Tests
             var expectedRegistrations = new[]
             {
                 new CommandHandlerRegistration(typeof(TestCommandWithoutResponseWithCustomInterface), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface)),
+            };
+
+            var registrations = registry.GetCommandHandlerRegistrations();
+
+            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+        }
+
+        [Test]
+        public void GivenManuallyRegisteredCommandHandlerDelegateWithoutResponse_ReturnsRegistration()
+        {
+            var provider = new ServiceCollection().AddConquerorCommandHandlerDelegate<TestCommandWithoutResponse>((_, _, _) => Task.CompletedTask)
+                                                  .BuildServiceProvider();
+
+            var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
+
+            var expectedRegistrations = new[]
+            {
+                new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>)),
             };
 
             var registrations = registry.GetCommandHandlerRegistrations();

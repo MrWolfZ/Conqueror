@@ -836,6 +836,67 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenHandlerDelegateWithSingleAppliedMiddleware_MiddlewareIsCalledWithCommand()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (command, p, cancellationToken) =>
+                                                                                              {
+                                                                                                  await Task.Yield();
+                                                                                                  var obs = p.GetRequiredService<TestObservations>();
+                                                                                                  obs.CommandsFromHandlers.Add(command);
+                                                                                                  obs.CancellationTokensFromHandlers.Add(cancellationToken);
+                                                                                                  return new(command.Payload + 1);
+                                                                                              },
+                                                                                              pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
+        }
+
+        [Test]
+        public async Task GivenHandlerDelegateWithoutResponseWithSingleAppliedMiddleware_MiddlewareIsCalledWithCommand()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandlerDelegate<TestCommandWithoutResponse>(async (command, p, cancellationToken) =>
+                                                                                        {
+                                                                                            await Task.Yield();
+                                                                                            var obs = p.GetRequiredService<TestObservations>();
+                                                                                            obs.CommandsFromHandlers.Add(command);
+                                                                                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
+                                                                                        },
+                                                                                        pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+
+            var command = new TestCommandWithoutResponse(10);
+
+            await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
+        }
+
+        [Test]
         public void InvalidMiddlewares()
         {
             _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddlewareWithMultipleInterfaces>());

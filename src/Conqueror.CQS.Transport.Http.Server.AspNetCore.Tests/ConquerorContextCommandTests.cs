@@ -32,6 +32,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -57,6 +58,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -80,6 +82,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -99,6 +102,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -145,6 +149,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -191,6 +196,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -243,6 +249,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -292,6 +299,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -345,6 +353,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -398,6 +407,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/commands/testCommandWithoutPayload", "")]
         [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+        [TestCase("/api/commands/testDelegate", "{}")]
         [TestCase("/api/custom/commands/test", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
         [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
@@ -467,6 +477,25 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
                         .AddConquerorCommandHandler<TestCommandWithNestedCommandHandler>()
                         .AddConquerorCommandHandler<NestedTestCommandHandler>()
+                        .AddConquerorCommandHandlerDelegate<TestDelegateCommand, TestDelegateCommandResponse>(async (_, p, _) =>
+                        {
+                            await Task.CompletedTask;
+
+                            var testObservations = p.GetRequiredService<TestObservations>();
+                            var commandContextAccessor = p.GetRequiredService<ICommandContextAccessor>();
+                            var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
+
+                            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+                            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+
+                            if (testObservations.ShouldAddItems)
+                            {
+                                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                            }
+
+                            return new TestDelegateCommandResponse();
+                        })
                         .AddSingleton<TestObservations>();
         }
 
@@ -529,6 +558,11 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [HttpCommand]
         public sealed record TestCommandWithNestedCommand;
+
+        [HttpCommand]
+        public sealed record TestDelegateCommand;
+
+        public sealed record TestDelegateCommandResponse;
 
         public sealed record NestedTestCommand;
 

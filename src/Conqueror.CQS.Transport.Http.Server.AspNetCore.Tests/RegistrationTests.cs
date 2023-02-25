@@ -48,6 +48,32 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         }
 
         [Test]
+        public void GivenServiceCollectionWithDuplicateCommandNameFromDelegate_StartingHostThrowsInvalidOperationException()
+        {
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
+
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorCQSHttpControllers();
+
+                    _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                                .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((_, _, _) => Task.FromResult(new TestCommandResponse()));
+                });
+
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
+        }
+
+        [Test]
         public void GivenServiceCollectionWithDuplicateQueryName_StartingHostThrowsInvalidOperationException()
         {
             var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
@@ -61,6 +87,32 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
                     _ = services.AddConquerorQueryHandler<TestQueryHandler>()
                                 .AddConquerorQueryHandler<DuplicateQueryName.TestQueryHandler>();
+                });
+
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
+        }
+
+        [Test]
+        public void GivenServiceCollectionWithDuplicateQueryNameFromDelegate_StartingHostThrowsInvalidOperationException()
+        {
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
+
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorCQSHttpControllers();
+
+                    _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                                .AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>((_, _, _) => Task.FromResult(new TestQueryResponse()));
                 });
 
                 _ = webHost.Configure(app =>

@@ -240,6 +240,33 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             Assert.AreEqual(11, result!.Payload);
         }
 
+        [Test]
+        public async Task GivenHttpQueryWithDelegateHandler_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            var response = await HttpClient.GetAsync("/api/queries/testDelegate?payload=10");
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestDelegateQueryResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
+        [Test]
+        public async Task GivenHttpPostQueryWithDelegateHandler_WhenCallingEndpoint_ReturnsCorrectResponse()
+        {
+            using var content = CreateJsonStringContent("{\"payload\":10}");
+            var response = await HttpClient.PostAsync("/api/queries/testPostDelegate", content);
+            await response.AssertStatusCode(HttpStatusCode.OK);
+            var resultString = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TestDelegateQueryResponse>(resultString, JsonSerializerOptions);
+
+            Assert.AreEqual("{\"payload\":11}", resultString);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(11, result!.Payload);
+        }
+
         protected override void ConfigureServices(IServiceCollection services)
         {
             var applicationPartManager = new ApplicationPartManager();
@@ -264,7 +291,19 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                         .AddConquerorQueryHandler<TestPostQueryHandlerWithoutPayload>()
                         .AddConquerorQueryHandler<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
                         .AddConquerorQueryHandler<TestPostQueryWithCustomPathHandler>()
-                        .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>();
+                        .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>()
+                        .AddConquerorQueryHandlerDelegate<TestDelegateQuery, TestDelegateQueryResponse>(async (command, _, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            cancellationToken.ThrowIfCancellationRequested();
+                            return new() { Payload = command.Payload + 1 };
+                        })
+                        .AddConquerorQueryHandlerDelegate<TestPostDelegateQuery, TestDelegateQueryResponse>(async (command, _, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            cancellationToken.ThrowIfCancellationRequested();
+                            return new() { Payload = command.Payload + 1 };
+                        });
         }
 
         private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
@@ -333,6 +372,17 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             public int Payload { get; init; }
         }
 
+        [HttpQuery]
+        public sealed record TestDelegateQuery
+        {
+            public int Payload { get; init; }
+        }
+
+        public sealed record TestDelegateQueryResponse
+        {
+            public int Payload { get; init; }
+        }
+
         [HttpQuery(UsePost = true)]
         public sealed record TestPostQuery
         {
@@ -363,6 +413,12 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         [HttpQuery(UsePost = true, Version = "v2")]
         public sealed record TestPostQueryWithVersion
+        {
+            public int Payload { get; init; }
+        }
+
+        [HttpQuery(UsePost = true)]
+        public sealed record TestPostDelegateQuery
         {
             public int Payload { get; init; }
         }

@@ -1,3 +1,5 @@
+using Conqueror.CQS.QueryHandling;
+
 namespace Conqueror.CQS.Tests
 {
     [TestFixture]
@@ -33,6 +35,24 @@ namespace Conqueror.CQS.Tests
             var expectedRegistrations = new[]
             {
                 new QueryHandlerRegistration(typeof(TestQueryWithCustomInterface), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface)),
+            };
+
+            var registrations = registry.GetQueryHandlerRegistrations();
+
+            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+        }
+
+        [Test]
+        public void GivenManuallyRegisteredQueryHandlerDelegate_ReturnsRegistration()
+        {
+            var provider = new ServiceCollection().AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>((_, _, _) => Task.FromResult(new TestQueryResponse()))
+                                                  .BuildServiceProvider();
+
+            var registry = provider.GetRequiredService<IQueryHandlerRegistry>();
+
+            var expectedRegistrations = new[]
+            {
+                new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>)),
             };
 
             var registrations = registry.GetQueryHandlerRegistrations();

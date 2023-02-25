@@ -20,7 +20,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] create API for lightweight handlers as delegate (e.g. `AddConquerorCommandHandlerDelegate<TCommand, TResponse>(Func<TCommand, IServiceProvider, Task<TResponse>> handlerFn, Action<ICommandPipelineBuilder>? configurePipeline)`)
 - [ ] add note in basics recipe that it is fine for simple applications to have DB logic directly in handlers
 - [ ] remove restriction about only being able to add middleware to pipeline once (also adjust mentions in recipe)
 - [ ] try referencing a lower version of csharp analyzer dependencies to prevent version conflicts
