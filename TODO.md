@@ -7,6 +7,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] set up issues templates via yaml config
 - [ ] in all recipe code that is at risk of being copy-pasted, add a note that it shouldn't be used and add a reference to pre-built packages or recipes where possible (e.g. for middlewares)
 - [ ] in recipes improve language, e.g. replace `Now that ...` with `As the next step ...` etc.
+- [ ] for each library add a TL;DR recipe that showcases all capabilities in a concise fashion
 - [ ] use file-scoped namespaces everywhere
 - [ ] add nunit analyzers to all test projects and refactor all tests to use modern test assertions
 - [ ] configure build pipelines to build project with a variety of SDK versions
@@ -19,6 +20,9 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] make registries fetch registrations from DI container
+- [ ] change registration API to be proactive
+- [ ] add `OverrideConquerorCommandClientTransport` etc. methods for testing
 - [ ] add note in basics recipe that it is fine for simple applications to have DB logic directly in handlers
 - [ ] remove restriction about only being able to add middleware to pipeline once (also adjust mentions in recipe)
 - [ ] try referencing a lower version of csharp anlayzer dependencies to prevent version conflicts
