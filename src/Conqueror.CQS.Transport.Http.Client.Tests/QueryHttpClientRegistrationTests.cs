@@ -251,7 +251,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenMultipleOptionsConfigurations_WhenResolvingHandler_UsesMergedOptions()
+        public async Task GivenMultipleOptionsConfigurationsFromAddServices_WhenResolvingHandler_UsesMergedOptions()
         {
             var unexpectedOptions = new JsonSerializerOptions();
             var expectedOptions = new JsonSerializerOptions();
@@ -266,6 +266,44 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.QueryPathConvention = expectedConvention;
                         })
                         .AddConquerorCQSHttpClientServices(o =>
+                        {
+                            o.JsonSerializerOptions = expectedOptions;
+                        })
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new Uri("http://localhost")) as HttpQueryTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            seenConvention = httpTransportClient?.Options.QueryPathConvention;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreNotSame(unexpectedOptions, seenOptions);
+            Assert.AreSame(expectedConvention, seenConvention);
+        }
+
+        [Test]
+        public async Task GivenMultipleOptionsConfigurations_WhenResolvingHandler_UsesMergedOptions()
+        {
+            var unexpectedOptions = new JsonSerializerOptions();
+            var expectedOptions = new JsonSerializerOptions();
+            var expectedConvention = new TestHttpQueryPathConvention();
+            JsonSerializerOptions? seenOptions = null;
+            IHttpQueryPathConvention? seenConvention = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o =>
+                        {
+                            o.JsonSerializerOptions = unexpectedOptions;
+                            o.QueryPathConvention = expectedConvention;
+                        })
+                        .ConfigureConquerorCQSHttpClientOptions(o =>
                         {
                             o.JsonSerializerOptions = expectedOptions;
                         })

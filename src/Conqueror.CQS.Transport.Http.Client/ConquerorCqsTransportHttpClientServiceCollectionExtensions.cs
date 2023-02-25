@@ -26,5 +26,14 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return services;
         }
+
+        public static IServiceCollection ConfigureConquerorCQSHttpClientOptions(this IServiceCollection services,
+                                                                                Action<ConquerorCqsHttpClientGlobalOptions> configure)
+        {
+            // developer note: this method is identical to AddConquerorCQSHttpClientServices, but the name better expresses
+            // that multiple configurations are merged (i.e. calling add+configure is more intuitive than add+add, even though
+            // they both do the same thing)
+            return services.AddConquerorCQSHttpClientServices(configure);
+        }
     }
 }
