@@ -94,20 +94,20 @@ dotnet add package Conqueror.CQS.Middleware.Logging
 dotnet add package Conqueror.CQS.Transport.Http.Server.AspNetCore
 ```
 
-```csharp
+```cs
 // add Conqueror CQS to your services
 builder.Services
-       .AddConquerorCQS()
        .AddConquerorCQSTypesFromExecutingAssembly()
        .AddConquerorCQSLoggingMiddlewares();
 
-builder.Services.AddControllers().AddConquerorCQSHttpControllers();
-builder.Services.FinalizeConquerorRegistrations();
+builder.Services
+       .AddControllers()
+       .AddConquerorCQSHttpControllers();
 ```
 
 In [IncrementCounterByCommand.cs](recipes/quickstart/IncrementCounterByCommand.cs) create a command that increments a named counter by a given amount (for demonstration purposes the counter is stored in an environment variable instead of a database).
 
-```csharp
+```cs
 using Conqueror;
 
 namespace Quickstart;
@@ -147,7 +147,7 @@ internal sealed class IncrementCounterByCommandHandler
 
 In [GetCounterValueQuery.cs](recipes/quickstart/GetCounterValueQuery.cs) create a query that returns the value of a counter with the given name.
 
-```csharp
+```cs
 using Conqueror;
 
 namespace Quickstart;
