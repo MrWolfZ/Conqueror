@@ -7,7 +7,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] set up issues templates via yaml config
 - [ ] in all recipe code that is at risk of being copy-pasted, add a note that it shouldn't be used and add a reference to pre-built packages or recipes where possible (e.g. for middlewares)
 - [ ] in recipes improve language, e.g. replace `Now that ...` with `As the next step ...` etc.
-- [ ] for each library add a TL;DR recipe that showcases all capabilities in a concise fashion
+- [ ] for each library add a quick reference handbook that showcases all capabilities in a concise fashion
 - [ ] use file-scoped namespaces everywhere
 - [ ] add nunit analyzers to all test projects and refactor all tests to use modern test assertions
 - [ ] configure build pipelines to build project with a variety of SDK versions
@@ -20,15 +20,11 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] make registries fetch registrations from DI container
-- [ ] change registration API to be proactive
-- [ ] add `OverrideConquerorCommandClientTransport` etc. methods for testing
+- [ ] create API for lightweight handlers as delegate (e.g. `AddConquerorCommandHandlerDelegate<TCommand, TResponse>(Func<TCommand, IServiceProvider, Task<TResponse>> handlerFn, Action<ICommandPipelineBuilder>? configurePipeline)`)
 - [ ] add note in basics recipe that it is fine for simple applications to have DB logic directly in handlers
 - [ ] remove restriction about only being able to add middleware to pipeline once (also adjust mentions in recipe)
-- [ ] try referencing a lower version of csharp anlayzer dependencies to prevent version conflicts
+- [ ] try referencing a lower version of csharp analyzer dependencies to prevent version conflicts
 - [ ] write code-level documentation for all public APIs
-- [ ] adjust analyzer to target dedicated framework versions
-  - [ ] reference correct CSharp library versions according to the framework version to prevent compiler warnings when using the analyzers in a .NET 6 project
 - [ ] create analyzers (including code fixes)
   - [ ] do not raise analyzer error for missing `ConfigurePipeline` on .NET 7 or higher
   - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or higher is being used)
@@ -56,7 +52,9 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
-- [ ] use singleton HTTP client when not provided with custom factory
+- [ ] create recipe for "testing code that calls HTTP commands or queries"
+  - [ ] in recipe, mention that optimally you would test against the real application
+  - [ ] in recipe, show how to create dedicated test server that has a delegate for handling specific command (the delegate calls another delegate, that can be overwritten in a test to be able to execute assertions)
 - [ ] create analyzers (including code fixes)
   - [ ] when command or query does not have a version
 - [ ] add recipe for customizing OpenAPI specification with swashbuckle
