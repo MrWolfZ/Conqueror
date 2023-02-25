@@ -261,7 +261,8 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [authenticating and authorizing commands and queries](recipes/cqs/cross-cutting-concerns/auth#readme) _(to-be-written)_
 - [logging commands and queries](recipes/cqs/cross-cutting-concerns/logging#readme) _(to-be-written)_
 - [validating commands and queries](recipes/cqs/cross-cutting-concerns/validation#readme) _(to-be-written)_
-- [retrying failed commands and queries](recipes/cqs/cross-cutting-concerns/retry#readme) _(to-be-written)_
+- [caching query results for improved performance](recipes/cqs/cross-cutting-concerns/caching#readme) _(to-be-written)_
+- [making commands and queries more resilient (e.g. through retries, circuit breakers, fallbacks etc.)](recipes/cqs/cross-cutting-concerns/resiliency#readme) _(to-be-written)_
 - [executing commands and queries in a database transaction](recipes/cqs/cross-cutting-concerns/db-transaction#readme) _(to-be-written)_
 - [timeouts for commands and queries](recipes/cqs/cross-cutting-concerns/timeouts#readme) _(to-be-written)_
 - [metrics for commands and queries](recipes/cqs/cross-cutting-concerns/metrics#readme) _(to-be-written)_
@@ -398,9 +399,7 @@ In summary, these are some of the strengths of **Conqueror**:
 
 - **Strong focus on testability:** Testing is a very important topic that is sadly often neglected. **Conqueror** takes testability very seriously and makes sure that you know how you can test the code you have written using it (you may have noticed that the **Conqueror.CQS** recipe immediately following [getting started](recipes/cqs/basics/getting-started#readme) shows you how you can [test the handlers](recipes/cqs/basics/testing-handlers#readme) we built in the first recipe).
 
-<!---
-- **Out-of-the-box solutions for many common yet often complex use-cases:** Many development teams spend valuable time on solving common cross-cutting concerns like validation, logging, error handling etc. over and over again. **Conqueror** provides a variety of pre-built middlewares that help you address those concerns with minimal effort.
--->
+- **Out-of-the-box solutions for many common yet often complex cross-cutting concerns:** Many development teams spend valuable time on solving common cross-cutting concerns like validation, logging, error handling etc. over and over again. **Conqueror** provides a variety of pre-built middlewares that help you address those concerns with minimal effort.
 
 - **Migrating from a modular monolith to a distributed system with minimal friction:** Business logic built on top of **Conqueror** provides clear contracts to consumers, regardless of whether these consumers are located in the same process or in a different application. By abstracting away the concrete transport over which the business logic is called, it can easily be moved from a monolithic approach to a distributed approach with minimal code changes.
 
