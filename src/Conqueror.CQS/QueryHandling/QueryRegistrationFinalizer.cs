@@ -45,7 +45,9 @@ namespace Conqueror.CQS.QueryHandling
 
                 foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
                 {
-                    registrations.Add(new(queryType, responseType, handlerType));
+                    var registration = new QueryHandlerRegistration(queryType, responseType, handlerType);
+                    registrations.Add(registration);
+                    services.AddSingleton(registration);
                 }
             }
 
@@ -57,9 +59,6 @@ namespace Conqueror.CQS.QueryHandling
                 var duplicateHandlerTypes = duplicateRegistrations.Select(h => h.HandlerType);
                 throw new InvalidOperationException($"only a single handler for query type {queryType} is allowed, but found multiple: {string.Join(", ", duplicateHandlerTypes)}");
             }
-
-            _ = services.AddSingleton(new QueryHandlerRegistry(registrations))
-                        .AddSingleton<IQueryHandlerRegistry>(p => p.GetRequiredService<QueryHandlerRegistry>());
 
             Action<IQueryPipelineBuilder>? GetPipelineConfigurationAction(Type handlerType)
             {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Conqueror.CQS.QueryHandling
 {
@@ -6,9 +7,9 @@ namespace Conqueror.CQS.QueryHandling
     {
         private readonly IReadOnlyCollection<QueryHandlerRegistration> registrations;
 
-        public QueryHandlerRegistry(IReadOnlyCollection<QueryHandlerRegistration> registrations)
+        public QueryHandlerRegistry(IEnumerable<QueryHandlerRegistration> registrations)
         {
-            this.registrations = registrations;
+            this.registrations = registrations.ToList();
         }
 
         public IReadOnlyCollection<QueryHandlerRegistration> GetQueryHandlerRegistrations() => registrations;

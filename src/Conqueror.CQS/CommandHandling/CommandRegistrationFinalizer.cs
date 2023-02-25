@@ -45,7 +45,9 @@ namespace Conqueror.CQS.CommandHandling
 
                 foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
                 {
-                    registrations.Add(new(commandType, responseType, handlerType));
+                    var registration = new CommandHandlerRegistration(commandType, responseType, handlerType);
+                    registrations.Add(registration);
+                    services.AddSingleton(registration);
                 }
             }
 
@@ -57,9 +59,6 @@ namespace Conqueror.CQS.CommandHandling
                 var duplicateHandlerTypes = duplicateRegistrations.Select(h => h.HandlerType);
                 throw new InvalidOperationException($"only a single handler for command type {commandType} is allowed, but found multiple: {string.Join(", ", duplicateHandlerTypes)}");
             }
-
-            _ = services.AddSingleton(new CommandHandlerRegistry(registrations))
-                        .AddSingleton<ICommandHandlerRegistry>(p => p.GetRequiredService<CommandHandlerRegistry>());
 
             Action<ICommandPipelineBuilder>? GetPipelineConfigurationAction(Type handlerType)
             {

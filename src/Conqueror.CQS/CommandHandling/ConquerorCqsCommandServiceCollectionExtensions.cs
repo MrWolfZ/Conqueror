@@ -75,6 +75,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton(new CommandRegistrationFinalizer(services));
             services.TryAddTransient<ICommandClientFactory, TransientCommandClientFactory>();
             services.TryAddSingleton<CommandClientFactory>();
+            services.TryAddSingleton<CommandHandlerRegistry>();
+            services.TryAddSingleton<ICommandHandlerRegistry>(p => p.GetRequiredService<CommandHandlerRegistry>());
             services.TryAddSingleton<CommandContextAccessor>();
             services.TryAddSingleton<ICommandContextAccessor>(p => p.GetRequiredService<CommandContextAccessor>());
         }

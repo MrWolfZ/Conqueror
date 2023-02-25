@@ -75,6 +75,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton(new QueryRegistrationFinalizer(services));
             services.TryAddTransient<IQueryClientFactory, TransientQueryClientFactory>();
             services.TryAddSingleton<QueryClientFactory>();
+            services.TryAddSingleton<QueryHandlerRegistry>();
+            services.TryAddSingleton<IQueryHandlerRegistry>(p => p.GetRequiredService<QueryHandlerRegistry>());
             services.TryAddSingleton<QueryContextAccessor>();
             services.TryAddSingleton<IQueryContextAccessor>(p => p.GetRequiredService<QueryContextAccessor>());
         }
