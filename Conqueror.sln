@@ -267,6 +267,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests", "recipes\cqs\advanced\clean-architecture\.completed\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests.csproj", "{46349AC7-0E1B-464A-88F9-F2649F6E1B61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.DataAnnotationValidation", "src\Conqueror.CQS.Middleware.DataAnnotationValidation\Conqueror.CQS.Middleware.DataAnnotationValidation.csproj", "{655D7184-0B19-4771-B3F1-06ED51C85BA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.DataAnnotationValidation.Tests", "src\Conqueror.CQS.Middleware.DataAnnotationValidation.Tests\Conqueror.CQS.Middleware.DataAnnotationValidation.Tests.csproj", "{D1871A75-20F5-4BC2-BEEA-C23AC8B7E932}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -596,6 +600,14 @@ Global
 		{46349AC7-0E1B-464A-88F9-F2649F6E1B61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46349AC7-0E1B-464A-88F9-F2649F6E1B61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46349AC7-0E1B-464A-88F9-F2649F6E1B61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{655D7184-0B19-4771-B3F1-06ED51C85BA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{655D7184-0B19-4771-B3F1-06ED51C85BA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{655D7184-0B19-4771-B3F1-06ED51C85BA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{655D7184-0B19-4771-B3F1-06ED51C85BA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1871A75-20F5-4BC2-BEEA-C23AC8B7E932}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1871A75-20F5-4BC2-BEEA-C23AC8B7E932}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1871A75-20F5-4BC2-BEEA-C23AC8B7E932}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1871A75-20F5-4BC2-BEEA-C23AC8B7E932}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}

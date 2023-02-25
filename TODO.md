@@ -42,7 +42,6 @@ This file contains all the open points for extensions and improvements to the **
 ### CQS middleware
 
 - [ ] create projects for common middlewares, e.g.
-  - [ ] `Conqueror.CQS.Middleware.DataAnnotationValidation`
   - [ ] `Conqueror.CQS.Middleware.Retry`
   - [ ] `Conqueror.CQS.Middleware.Timeout`
   - [ ] `Conqueror.CQS.Middleware.Metrics`

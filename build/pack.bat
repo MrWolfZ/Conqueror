@@ -25,6 +25,7 @@ dotnet pack %srcDir%\Conqueror.CQS -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Analyzers -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Common -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.CQS.Middleware.DataAnnotationValidation -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Middleware.Logging -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Transport.Http.Common -c Release -o %publishDir% --include-symbols
