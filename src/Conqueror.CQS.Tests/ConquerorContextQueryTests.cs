@@ -525,11 +525,11 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenNoQueryExecution_ConquerorContextIsNotAvailable()
         {
-            var services = new ServiceCollection().AddConquerorCQS();
+            var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>();
 
             _ = services.AddTransient(p => new NestedClass(Assert.IsNull, p.GetRequiredService<IConquerorContextAccessor>()));
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             provider.GetRequiredService<NestedClass>().Execute();
         }
@@ -804,27 +804,23 @@ namespace Conqueror.CQS.Tests
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<IConquerorContextAccessor>()), nestedClassLifetime));
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(TestQueryHandler),
-                                                        p => new TestQueryHandler(handlerFn,
-                                                                                  handlerPreReturnFn,
-                                                                                  p.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                  p.GetRequiredService<NestedClass>(),
-                                                                                  p.GetRequiredService<IQueryHandler<NestedTestQuery, NestedTestQueryResponse>>()),
-                                                        handlerLifetime));
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>(p => new(handlerFn,
+                                                                             handlerPreReturnFn,
+                                                                             p.GetRequiredService<IConquerorContextAccessor>(),
+                                                                             p.GetRequiredService<NestedClass>(),
+                                                                             p.GetRequiredService<IQueryHandler<NestedTestQuery, NestedTestQueryResponse>>()),
+                                                                    handlerLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(NestedTestQueryHandler),
-                                                        p => new NestedTestQueryHandler(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                        nestedHandlerLifetime));
+            _ = services.AddConquerorQueryHandler<NestedTestQueryHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
+                                                                          nestedHandlerLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(TestQueryMiddleware),
-                                                        p => new TestQueryMiddleware(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                        middlewareLifetime));
+            _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(p => new(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
+                                                                          middlewareLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(OuterTestQueryMiddleware),
-                                                        p => new OuterTestQueryMiddleware(outerMiddlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                        middlewareLifetime));
+            _ = services.AddConquerorQueryMiddleware<OuterTestQueryMiddleware>(p => new(outerMiddlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
+                                                                               middlewareLifetime);
 
-            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             _ = provider.GetRequiredService<NestedClass>();
             _ = provider.GetRequiredService<TestQueryHandler>();

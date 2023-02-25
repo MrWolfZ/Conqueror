@@ -8,11 +8,10 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandHandler>()
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -34,11 +33,10 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandHandlerWithoutResponse>()
+            _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -55,16 +53,40 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenTransientHandlerWithFactory_ResolvingHandlerCreatesNewInstanceEveryTime()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandler(p => new TestCommandHandler(p.GetRequiredService<TestObservations>()))
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler3 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1 }));
+        }
+
+        [Test]
         public async Task GivenScopedHandler_ResolvingHandlerCreatesNewInstanceForEveryScope()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddScoped<TestCommandHandler>()
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>(ServiceLifetime.Scoped)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -86,11 +108,10 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddScoped<TestCommandHandlerWithoutResponse>()
+            _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>(ServiceLifetime.Scoped)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -107,16 +128,40 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenScopedHandlerWithFactory_ResolvingHandlerCreatesNewInstanceForEveryScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandler(p => new TestCommandHandler(p.GetRequiredService<TestObservations>()), ServiceLifetime.Scoped)
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler3 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1 }));
+        }
+
+        [Test]
         public async Task GivenSingletonHandler_ResolvingHandlerReturnsSameInstanceEveryTime()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton<TestCommandHandler>()
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -138,11 +183,10 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton<TestCommandHandlerWithoutResponse>()
+            _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -159,16 +203,44 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
+        public async Task GivenSingletonHandlerWithFactory_ResolvingHandlerReturnsSameInstanceEveryTime()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorCommandHandler(p => new TestCommandHandler(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var handler3 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+            _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+            _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
+        }
+
+        [Test]
         public async Task GivenSingletonHandlerWithMultipleHandlerInterfaces_ResolvingHandlerViaEitherInterfaceReturnsSameInstanceEveryTime()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton<TestCommandHandlerWithMultipleInterfaces>()
+            _ = services.AddSingleton<TestCommandHandlerWithMultipleInterfaces>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithMultipleInterfaces>(p => p.GetRequiredService<TestCommandHandlerWithMultipleInterfaces>(),
+                                                                                              ServiceLifetime.Singleton)
+                        .AddConquerorQueryHandler<TestCommandHandlerWithMultipleInterfaces>(p => p.GetRequiredService<TestCommandHandlerWithMultipleInterfaces>(),
+                                                                                            ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler1 = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
             var handler2 = provider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
@@ -189,11 +261,10 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton<TestCommandHandler>()
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler1 = provider.GetRequiredService<TestCommandHandler>();
             var handler2 = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
@@ -210,10 +281,9 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton(new TestCommandHandler(observations));
+            _ = services.AddConquerorCommandHandler(new TestCommandHandler(observations));
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();

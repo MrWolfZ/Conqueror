@@ -175,7 +175,7 @@ namespace Conqueror.CQS.Tests
         public void GivenAlreadyRegisteredPlainClient_WhenRegistering_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport());
+            _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport());
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport()));
         }
@@ -184,7 +184,7 @@ namespace Conqueror.CQS.Tests
         public void GivenAlreadyRegisteredPlainClientWithAsyncClientFactory_WhenRegistering_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async _ =>
+            _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async _ =>
             {
                 await Task.CompletedTask;
                 return new TestCommandTransport();
@@ -197,7 +197,7 @@ namespace Conqueror.CQS.Tests
         public void GivenAlreadyRegisteredPlainClient_WhenRegisteringWithAsyncClientFactory_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport());
+            _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport());
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async _ =>
             {
@@ -210,7 +210,7 @@ namespace Conqueror.CQS.Tests
         public void GivenAlreadyRegisteredPlainClientWithAsyncClientFactory_WhenRegisteringWithAsyncClientFactory_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async _ =>
+            _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async _ =>
             {
                 await Task.CompletedTask;
                 return new TestCommandTransport();
@@ -227,7 +227,7 @@ namespace Conqueror.CQS.Tests
         public void GivenAlreadyRegisteredCustomClient_WhenRegistering_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport());
+            _ = services.AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport());
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport()));
         }
@@ -236,7 +236,7 @@ namespace Conqueror.CQS.Tests
         public void GivenAlreadyRegisteredCustomClientWithAsyncClientFactory_WhenRegistering_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddConquerorCommandClient<ITestCommandHandler>(async _ =>
+            _ = services.AddConquerorCommandClient<ITestCommandHandler>(async _ =>
             {
                 await Task.CompletedTask;
                 return new TestCommandTransport();
@@ -249,7 +249,7 @@ namespace Conqueror.CQS.Tests
         public void GivenAlreadyRegisteredCustomClient_WhenRegisteringWithAsyncClientFactory_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport());
+            _ = services.AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport());
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ITestCommandHandler>(async _ =>
             {
@@ -262,11 +262,55 @@ namespace Conqueror.CQS.Tests
         public void GivenAlreadyRegisteredCustomClientWithAsyncClientFactory_WhenRegisteringWithAsyncClientFactory_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddConquerorCommandClient<ITestCommandHandler>(async _ =>
+            _ = services.AddConquerorCommandClient<ITestCommandHandler>(async _ =>
             {
                 await Task.CompletedTask;
                 return new TestCommandTransport();
             });
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ITestCommandHandler>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestCommandTransport();
+            }));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredHandler_WhenRegisteringPlainClient_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport()));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredHandler_WhenRegisteringPlainClientWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async _ =>
+            {
+                await Task.CompletedTask;
+                return new TestCommandTransport();
+            }));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredHandler_WhenRegisteringCustomClient_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport()));
+        }
+
+        [Test]
+        public void GivenAlreadyRegisteredHandler_WhenRegisteringCustomClientWithAsyncClientFactory_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>();
 
             _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ITestCommandHandler>(async _ =>
             {
@@ -279,7 +323,7 @@ namespace Conqueror.CQS.Tests
         public void GivenCustomInterfaceWithExtraMethods_WhenRegistering_ThrowsArgumentException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS();
+            _ = services;
 
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCommandClient<ITestCommandHandlerWithExtraMethod>(_ => new TestCommandTransport()));
         }
@@ -288,101 +332,13 @@ namespace Conqueror.CQS.Tests
         public void GivenCustomInterfaceWithExtraMethods_WhenRegisteringWithAsyncClientFactory_ThrowsArgumentException()
         {
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQS();
+            _ = services;
 
             _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCommandClient<ITestCommandHandlerWithExtraMethod>(async _ =>
             {
                 await Task.CompletedTask;
                 return new TestCommandTransport();
             }));
-        }
-
-        [Test]
-        public void GivenRegisteredAndFinalizedHandler_WhenRegisteringPlainClient_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().FinalizeConquerorRegistrations();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport()));
-        }
-
-        [Test]
-        public void GivenRegisteredAndFinalizedHandler_WhenRegisteringPlainClientWithAsyncClientFactory_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().FinalizeConquerorRegistrations();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async _ =>
-            {
-                await Task.CompletedTask;
-                return new TestCommandTransport();
-            }));
-        }
-
-        [Test]
-        public void GivenRegisteredAndFinalizedHandler_WhenRegisteringCustomClient_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().FinalizeConquerorRegistrations();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport()));
-        }
-
-        [Test]
-        public void GivenRegisteredAndFinalizedHandler_WhenRegisteringCustomClientWithAsyncClientFactory_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().FinalizeConquerorRegistrations();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandClient<ITestCommandHandler>(async _ =>
-            {
-                await Task.CompletedTask;
-                return new TestCommandTransport();
-            }));
-        }
-
-        [Test]
-        public void GivenRegisteredHandlerAndPlainClient_WhenFinalizing_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => new TestCommandTransport());
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
-        }
-
-        [Test]
-        public void GivenRegisteredHandlerAndPlainClientWithAsyncClientFactory_WhenFinalizing_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async _ =>
-            {
-                await Task.CompletedTask;
-                return new TestCommandTransport();
-            });
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
-        }
-
-        [Test]
-        public void GivenRegisteredHandlerAndCustomClient_WhenFinalizing_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().AddConquerorCommandClient<ITestCommandHandler>(_ => new TestCommandTransport());
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
-        }
-
-        [Test]
-        public void GivenRegisteredHandlerAndCustomClientWithAsyncClientFactory_WhenFinalizing_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQS().AddTransient<TestCommandHandler>().AddConquerorCommandClient<ITestCommandHandler>(async _ =>
-            {
-                await Task.CompletedTask;
-                return new TestCommandTransport();
-            });
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
         }
 
         [Test]
@@ -396,18 +352,14 @@ namespace Conqueror.CQS.Tests
         private static ServiceProvider RegisterClient<TCommandHandler>()
             where TCommandHandler : class, ICommandHandler
         {
-            return new ServiceCollection().AddConquerorCQS()
-                                          .AddConquerorCommandClient<TCommandHandler>(_ => new TestCommandTransport())
-                                          .FinalizeConquerorRegistrations()
+            return new ServiceCollection().AddConquerorCommandClient<TCommandHandler>(_ => new TestCommandTransport())
                                           .BuildServiceProvider();
         }
 
         private static ServiceProvider RegisterClientWithAsyncClientFactory<TCommandHandler>()
             where TCommandHandler : class, ICommandHandler
         {
-            return new ServiceCollection().AddConquerorCQS()
-                                          .AddConquerorCommandClient<TCommandHandler>(_ => Task.FromResult(new TestCommandTransport() as ICommandTransportClient))
-                                          .FinalizeConquerorRegistrations()
+            return new ServiceCollection().AddConquerorCommandClient<TCommandHandler>(_ => Task.FromResult(new TestCommandTransport() as ICommandTransportClient))
                                           .BuildServiceProvider();
         }
 

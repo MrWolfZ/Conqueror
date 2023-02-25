@@ -575,27 +575,23 @@ namespace Conqueror.CQS.Tests
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<ICommandContextAccessor>()), nestedClassLifetime));
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandHandler),
-                                                        p => new TestCommandHandler(handlerFn,
-                                                                                    handlerPreReturnFn,
-                                                                                    p.GetRequiredService<ICommandContextAccessor>(),
-                                                                                    p.GetRequiredService<NestedClass>(),
-                                                                                    p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
-                                                        handlerLifetime));
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>(p => new(handlerFn,
+                                                                                 handlerPreReturnFn,
+                                                                                 p.GetRequiredService<ICommandContextAccessor>(),
+                                                                                 p.GetRequiredService<NestedClass>(),
+                                                                                 p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
+                                                                        handlerLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(NestedTestCommandHandler),
-                                                        p => new NestedTestCommandHandler(nestedHandlerFn, p.GetRequiredService<ICommandContextAccessor>()),
-                                                        nestedHandlerLifetime));
+            _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedHandlerFn, p.GetRequiredService<ICommandContextAccessor>()),
+                                                                              nestedHandlerLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandMiddleware),
-                                                        p => new TestCommandMiddleware(middlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
-                                                        middlewareLifetime));
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(p => new(middlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
+                                                                              middlewareLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(OuterTestCommandMiddleware),
-                                                        p => new OuterTestCommandMiddleware(outerMiddlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
-                                                        middlewareLifetime));
+            _ = services.AddConquerorCommandMiddleware<OuterTestCommandMiddleware>(p => new(outerMiddlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
+                                                                                   middlewareLifetime);
 
-            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             _ = provider.GetRequiredService<NestedClass>();
             _ = provider.GetRequiredService<TestCommandHandler>();
@@ -621,15 +617,13 @@ namespace Conqueror.CQS.Tests
 
             _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<ICommandContextAccessor>()), nestedClassLifetime));
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandHandlerWithoutResponse),
-                                                        p => new TestCommandHandlerWithoutResponse(handlerFn, p.GetRequiredService<ICommandContextAccessor>(), p.GetRequiredService<NestedClass>()),
-                                                        handlerLifetime));
+            _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>(p => new(handlerFn, p.GetRequiredService<ICommandContextAccessor>(), p.GetRequiredService<NestedClass>()),
+                                                                                       handlerLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandMiddleware),
-                                                        p => new TestCommandMiddleware(middlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
-                                                        middlewareLifetime));
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(p => new(middlewareFn, p.GetRequiredService<ICommandContextAccessor>()),
+                                                                              middlewareLifetime);
 
-            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             _ = provider.GetRequiredService<NestedClass>();
             _ = provider.GetRequiredService<TestCommandHandlerWithoutResponse>();

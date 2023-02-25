@@ -7,9 +7,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredCommandHandler_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandHandler>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
@@ -27,9 +25,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredCommandHandlerWithCustomInterface_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandHandlerWithCustomInterface>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithCustomInterface>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
@@ -47,9 +43,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredCommandHandlerWithoutResponse_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandWithoutResponseHandler>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
@@ -67,9 +61,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredCommandHandlerWithCustomInterfaceWithoutResponse_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandWithoutResponseHandlerWithCustomInterface>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandlerWithCustomInterface>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
@@ -87,10 +79,8 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenMultipleManuallyRegisteredCommandHandlers_ReturnsRegistrations()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandHandler>()
-                                                  .AddTransient<TestCommand2Handler>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
+                                                  .AddConquerorCommandHandler<TestCommand2Handler>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
@@ -109,9 +99,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenCommandHandlersRegisteredViaAssemblyScanning_ReturnsRegistrations()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddConquerorCQSTypesFromExecutingAssembly()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandHandlerRegistry>();

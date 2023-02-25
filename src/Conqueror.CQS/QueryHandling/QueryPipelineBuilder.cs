@@ -14,7 +14,7 @@ namespace Conqueror.CQS.QueryHandling
         public QueryPipelineBuilder(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
-            middlewareInvokersByMiddlewareTypes = serviceProvider.GetRequiredService<IReadOnlyDictionary<Type, IQueryMiddlewareInvoker>>();
+            middlewareInvokersByMiddlewareTypes = serviceProvider.GetRequiredService<QueryMiddlewareRegistry>().GetQueryMiddlewareInvokers();
         }
 
         public IServiceProvider ServiceProvider { get; }

@@ -11,11 +11,10 @@ namespace Conqueror.CQS.Tests
 
             AddQueryClient<ITestQueryHandler>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryTransport>()
+            _ = services.AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 

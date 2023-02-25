@@ -251,22 +251,20 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-            _ = services.AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQueryHandler2>()
-                        .AddTransient<TestQueryHandler3>()
-                        .AddTransient<TestQueryHandler4>()
-                        .AddTransient<TestQueryHandlerWithoutPayload>()
-                        .AddTransient<TestQueryHandlerWithComplexPayload>()
-                        .AddTransient<TestQueryWithCustomPathHandler>()
-                        .AddTransient<TestQueryWithVersionHandler>()
-                        .AddTransient<TestPostQueryHandler>()
-                        .AddTransient<TestPostQueryHandler2>()
-                        .AddTransient<TestPostQueryHandlerWithoutPayload>()
-                        .AddTransient<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
-                        .AddTransient<TestPostQueryWithCustomPathHandler>()
-                        .AddTransient<TestPostQueryWithVersionHandler>();
-
-            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryHandler<TestQueryHandler3>()
+                        .AddConquerorQueryHandler<TestQueryHandler4>()
+                        .AddConquerorQueryHandler<TestQueryHandlerWithoutPayload>()
+                        .AddConquerorQueryHandler<TestQueryHandlerWithComplexPayload>()
+                        .AddConquerorQueryHandler<TestQueryWithCustomPathHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithVersionHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryHandler2>()
+                        .AddConquerorQueryHandler<TestPostQueryHandlerWithoutPayload>()
+                        .AddConquerorQueryHandler<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithCustomPathHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>();
         }
 
         private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;

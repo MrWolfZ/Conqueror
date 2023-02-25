@@ -7,9 +7,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredQueryHandler_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryHandler>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<IQueryHandlerRegistry>();
@@ -27,9 +25,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredQueryHandlerWithCustomInterface_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryHandlerWithCustomInterface>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithCustomInterface>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<IQueryHandlerRegistry>();
@@ -47,10 +43,8 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenMultipleManuallyRegisteredQueryHandlers_ReturnsRegistrations()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryHandler>()
-                                                  .AddTransient<TestQuery2Handler>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>()
+                                                  .AddConquerorQueryHandler<TestQuery2Handler>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<IQueryHandlerRegistry>();
@@ -69,9 +63,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenQueryHandlersRegisteredViaAssemblyScanning_ReturnsRegistrations()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddConquerorCQSTypesFromExecutingAssembly()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<IQueryHandlerRegistry>();

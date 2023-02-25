@@ -27,7 +27,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -54,7 +54,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -83,7 +83,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = services.AddScoped<ScopingTest>();
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
 
@@ -117,7 +117,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -141,7 +141,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -166,7 +166,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -191,7 +191,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -215,7 +215,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -235,7 +235,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -253,7 +253,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
@@ -276,7 +276,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             return new TestQueryTransport();
                         });
 
-            await using var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 

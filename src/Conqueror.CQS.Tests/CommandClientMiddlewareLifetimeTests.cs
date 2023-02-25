@@ -14,11 +14,10 @@ namespace Conqueror.CQS.Tests
             AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandMiddleware>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -52,11 +51,10 @@ namespace Conqueror.CQS.Tests
             AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
 
-            _ = services.AddConquerorCQS()
-                        .AddScoped<TestCommandMiddleware>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Scoped)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -90,11 +88,10 @@ namespace Conqueror.CQS.Tests
             AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton<TestCommandMiddleware>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -136,12 +133,11 @@ namespace Conqueror.CQS.Tests
                                                                           CreateTransport,
                                                                           p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandMiddleware>()
-                        .AddTransient<TestCommandMiddleware2>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -183,12 +179,11 @@ namespace Conqueror.CQS.Tests
                                                                           CreateTransport,
                                                                           p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
 
-            _ = services.AddConquerorCQS()
-                        .AddScoped<TestCommandMiddleware>()
-                        .AddScoped<TestCommandMiddleware2>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Scoped)
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>(ServiceLifetime.Scoped)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -230,12 +225,11 @@ namespace Conqueror.CQS.Tests
                                                                           CreateTransport,
                                                                           p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton<TestCommandMiddleware>()
-                        .AddSingleton<TestCommandMiddleware2>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -277,12 +271,11 @@ namespace Conqueror.CQS.Tests
                                                                           CreateTransport,
                                                                           p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandMiddleware>()
-                        .AddSingleton<TestCommandMiddleware2>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -318,13 +311,12 @@ namespace Conqueror.CQS.Tests
                                                                                       .Use<TestCommandMiddleware>()
                                                                                       .Use<TestCommandMiddleware2>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandRetryMiddleware>()
-                        .AddTransient<TestCommandMiddleware>()
-                        .AddTransient<TestCommandMiddleware2>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -350,13 +342,12 @@ namespace Conqueror.CQS.Tests
                                                                                       .Use<TestCommandMiddleware>()
                                                                                       .Use<TestCommandMiddleware2>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandRetryMiddleware>()
-                        .AddScoped<TestCommandMiddleware>()
-                        .AddTransient<TestCommandMiddleware2>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Scoped)
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -382,13 +373,12 @@ namespace Conqueror.CQS.Tests
                                                                                       .Use<TestCommandMiddleware>()
                                                                                       .Use<TestCommandMiddleware2>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandRetryMiddleware>()
-                        .AddSingleton<TestCommandMiddleware>()
-                        .AddTransient<TestCommandMiddleware2>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -414,14 +404,13 @@ namespace Conqueror.CQS.Tests
                                                                                       .Use<TestCommandMiddleware>()
                                                                                       .Use<TestCommandMiddleware2>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandTransport>()
-                        .AddTransient<TestCommandRetryMiddleware>()
-                        .AddTransient<TestCommandMiddleware>()
-                        .AddTransient<TestCommandMiddleware2>()
+            _ = services.AddTransient<TestCommandTransport>()
+                        .AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -445,11 +434,10 @@ namespace Conqueror.CQS.Tests
                                                                                 CreateTransport,
                                                                                 p => p.UseAllowMultiple<TestCommandMiddleware>().UseAllowMultiple<TestCommandMiddleware>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandMiddleware>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -468,11 +456,10 @@ namespace Conqueror.CQS.Tests
                                                                           CreateTransport,
                                                                           p => p.UseAllowMultiple<TestCommandMiddleware>().UseAllowMultiple<TestCommandMiddleware>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandMiddleware>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -491,12 +478,11 @@ namespace Conqueror.CQS.Tests
             AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandMiddleware>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                         .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -530,12 +516,11 @@ namespace Conqueror.CQS.Tests
             AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
 
-            _ = services.AddConquerorCQS()
-                        .AddScoped<TestCommandMiddleware>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Scoped)
                         .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -569,12 +554,11 @@ namespace Conqueror.CQS.Tests
             AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton<TestCommandMiddleware>()
+            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
                         .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();

@@ -8,13 +8,12 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -32,13 +31,12 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithSingleMiddleware>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithSingleMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -56,13 +54,12 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithSingleMiddlewareWithParameter>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithSingleMiddlewareWithParameter>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -77,13 +74,12 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -101,17 +97,16 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.UseAllowMultiple<TestQueryMiddleware2>()
                                         .UseAllowMultiple<TestQueryMiddleware2>();
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -129,12 +124,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                         .Use<TestQueryMiddleware2>()
@@ -142,7 +136,7 @@ namespace Conqueror.CQS.Tests
                                         .Without<TestQueryMiddleware2>();
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -160,12 +154,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.UseAllowMultiple<TestQueryMiddleware2>()
                                         .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
@@ -173,7 +166,7 @@ namespace Conqueror.CQS.Tests
                                         .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>();
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -191,12 +184,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                         .UseAllowMultiple<TestQueryMiddleware2>()
@@ -205,7 +197,7 @@ namespace Conqueror.CQS.Tests
                                         .Without<TestQueryMiddleware2>();
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -223,12 +215,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.UseAllowMultiple<TestQueryMiddleware2>()
                                         .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
@@ -237,7 +228,7 @@ namespace Conqueror.CQS.Tests
                                         .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>();
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -255,18 +246,17 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.Use<TestQueryMiddleware2>()
                                         .Use<TestQueryMiddleware2>();
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -279,18 +269,17 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                         .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -303,18 +292,17 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.Use<TestQueryMiddleware2>()
                                         .UseAllowMultiple<TestQueryMiddleware2>();
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -327,18 +315,17 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                         .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -351,19 +338,18 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.Use<TestQueryMiddleware2>()
                                         .Without<TestQueryMiddleware2>()
                                         .Use<TestQueryMiddleware2>();
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -376,19 +362,18 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations)
-                        .ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline =>
+                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
                             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                         .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>()
                                         .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
                         });
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -401,14 +386,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithRetryMiddleware>()
-                        .AddTransient<TestQueryRetryMiddleware>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -430,12 +414,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface>()
-                        .AddTransient<TestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -453,32 +436,23 @@ namespace Conqueror.CQS.Tests
         {
             var services = new ServiceCollection();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod>();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<TestQueryHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod>());
         }
-        
+
         [Test]
         public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodReturnType_RegisteringHandlerThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>());
         }
-        
+
         [Test]
         public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodParameters_RegisteringHandlerThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>());
         }
 #endif
 
@@ -488,13 +462,12 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
             using var tokenSource = new CancellationTokenSource();
@@ -511,14 +484,13 @@ namespace Conqueror.CQS.Tests
             var observations = new TestObservations();
             var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMutatingMiddlewares>()
-                        .AddTransient<MutatingTestQueryMiddleware>()
-                        .AddTransient<MutatingTestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMutatingMiddlewares>()
+                        .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware2>()
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -539,14 +511,13 @@ namespace Conqueror.CQS.Tests
             var observations = new TestObservations();
             var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMutatingMiddlewares>()
-                        .AddTransient<MutatingTestQueryMiddleware>()
-                        .AddTransient<MutatingTestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMutatingMiddlewares>()
+                        .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware2>()
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -567,14 +538,13 @@ namespace Conqueror.CQS.Tests
             var observations = new TestObservations();
             var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false) } };
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMutatingMiddlewares>()
-                        .AddTransient<MutatingTestQueryMiddleware>()
-                        .AddTransient<MutatingTestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMutatingMiddlewares>()
+                        .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware2>()
                         .AddSingleton(observations)
                         .AddSingleton(tokens);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -591,14 +561,13 @@ namespace Conqueror.CQS.Tests
             var observations = new TestObservations();
             var observedInstances = new List<TestService>();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
                         .AddScoped<TestService>()
                         .AddSingleton(observations);
 
-            _ = services.ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
+            _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -622,13 +591,12 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
                         .AddSingleton(observations);
 
-            _ = services.ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline => pipeline.Use<TestQueryMiddleware2>());
+            _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline => pipeline.Use<TestQueryMiddleware2>());
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -644,13 +612,12 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithoutMiddlewares>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
                         .AddSingleton(observations);
 
-            _ = services.ConfigureQueryPipeline<TestQueryHandlerWithoutMiddlewares>(pipeline => pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+            _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline => pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -666,12 +633,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var exception = new Exception();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithThrowingMiddleware>()
-                        .AddTransient<ThrowingTestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithThrowingMiddleware>()
+                        .AddConquerorQueryMiddleware<ThrowingTestQueryMiddleware>()
                         .AddSingleton(exception);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -683,9 +649,9 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void InvalidMiddlewares()
         {
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddTransient<TestQueryMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddScoped<TestQueryMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
-            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCQS().AddSingleton<TestQueryMiddlewareWithMultipleInterfaces>().FinalizeConquerorRegistrations());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddlewareWithMultipleInterfaces>());
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddlewareWithMultipleInterfaces>(_ => new()));
+            _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryMiddleware(new TestQueryMiddlewareWithMultipleInterfaces()));
         }
 
         private sealed record TestQuery(int Payload);
@@ -762,7 +728,7 @@ namespace Conqueror.CQS.Tests
             }
         }
 
-        private sealed class TestQueryHandlerWithoutMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
+        private sealed class TestQueryHandlerWithoutMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             private readonly TestObservations observations;
 
@@ -777,6 +743,11 @@ namespace Conqueror.CQS.Tests
                 observations.QueriesFromHandlers.Add(query);
                 observations.CancellationTokensFromHandlers.Add(cancellationToken);
                 return new(0);
+            }
+
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+            {
+                pipeline.ServiceProvider.GetService<Action<IQueryPipelineBuilder>>()?.Invoke(pipeline);
             }
         }
 
@@ -853,7 +824,7 @@ namespace Conqueror.CQS.Tests
                 return new(0);
             }
         }
-        
+
         private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
@@ -864,7 +835,7 @@ namespace Conqueror.CQS.Tests
 
             public static IQueryPipelineBuilder ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline;
         }
-        
+
         private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)

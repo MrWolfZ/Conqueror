@@ -193,18 +193,16 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-            _ = services.AddTransient<TestCommandHandler>()
-                        .AddTransient<TestCommandHandler2>()
-                        .AddTransient<TestCommandHandler3>()
-                        .AddTransient<TestCommandHandler4>()
-                        .AddTransient<TestCommandHandlerWithoutResponse>()
-                        .AddTransient<TestCommandHandlerWithoutPayload>()
-                        .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
-                        .AddTransient<TestCommandWithCustomSerializedPayloadTypeHandler>()
-                        .AddTransient<TestCommandWithCustomPathHandler>()
-                        .AddTransient<TestCommandWithVersionHandler>();
-
-            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                        .AddConquerorCommandHandler<TestCommandHandler2>()
+                        .AddConquerorCommandHandler<TestCommandHandler3>()
+                        .AddConquerorCommandHandler<TestCommandHandler4>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutPayload>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
+                        .AddConquerorCommandHandler<TestCommandWithCustomSerializedPayloadTypeHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithCustomPathHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithVersionHandler>();
         }
 
         protected override void Configure(IApplicationBuilder app)

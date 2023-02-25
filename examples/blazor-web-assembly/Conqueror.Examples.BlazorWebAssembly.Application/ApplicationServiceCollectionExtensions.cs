@@ -12,8 +12,7 @@ public static class ApplicationServiceCollectionExtensions
                 .AddSingleton<InMemoryEventStore>()
                 .AddTransient<IEventHub, NullEventHub>();
 
-        services.AddConquerorCQS()
-                .AddConquerorCQSTypesFromExecutingAssembly()
+        services.AddConquerorCQSTypesFromExecutingAssembly()
                 .AddConquerorCQSTypesFromAssembly(typeof(CommandTimeoutMiddleware).Assembly)
                 .AddConquerorEventing()
                 .AddConquerorEventingTypesFromExecutingAssembly();

@@ -6,11 +6,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers().AddConquerorCQSHttpControllers();
+builder.Services
+       .AddControllers()
+       .AddConquerorCQSHttpControllers();
 
-builder.Services.AddConquerorCQS();
 builder.Services.AddConquerorCQSTypesFromExecutingAssembly();
-builder.Services.FinalizeConquerorRegistrations();
 
 var app = builder.Build();
 

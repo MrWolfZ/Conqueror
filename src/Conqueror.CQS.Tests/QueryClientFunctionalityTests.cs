@@ -10,11 +10,10 @@ namespace Conqueror.CQS.Tests
 
             AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryTransport>()
+            _ = services.AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -33,11 +32,10 @@ namespace Conqueror.CQS.Tests
 
             AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryTransport>()
+            _ = services.AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -56,11 +54,10 @@ namespace Conqueror.CQS.Tests
 
             AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryTransport>()
+            _ = services.AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -86,11 +83,10 @@ namespace Conqueror.CQS.Tests
                 return transport;
             });
 
-            _ = services.AddConquerorCQS()
-                        .AddScoped<TestQueryTransport>()
+            _ = services.AddScoped<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -116,11 +112,10 @@ namespace Conqueror.CQS.Tests
 
             AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<ThrowingTestQueryTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<ThrowingTestQueryTransport>()
+            _ = services.AddTransient<ThrowingTestQueryTransport>()
                         .AddSingleton(exception);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 

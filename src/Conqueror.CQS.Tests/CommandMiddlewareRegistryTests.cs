@@ -7,9 +7,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredCommandMiddleware_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandMiddleware>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddleware>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
@@ -27,9 +25,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredCommandMiddlewareWithoutConfiguration_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandMiddlewareWithoutConfiguration>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddlewareWithoutConfiguration>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
@@ -47,10 +43,8 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenMultipleManuallyRegisteredCommandMiddlewares_ReturnsRegistrations()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandMiddleware>()
-                                                  .AddTransient<TestCommandMiddleware2>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                                                  .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
@@ -69,9 +63,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenCommandMiddlewaresRegisteredViaAssemblyScanning_ReturnsRegistrations()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddConquerorCQSTypesFromExecutingAssembly()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();

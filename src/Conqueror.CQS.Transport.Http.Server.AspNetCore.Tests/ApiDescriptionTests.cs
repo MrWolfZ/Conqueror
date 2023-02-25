@@ -354,35 +354,33 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 o.QueryPathConvention = new TestHttpQueryPathConvention();
             });
 
-            _ = services.AddTransient<TestCommandHandler>()
-                        .AddTransient<TestCommandHandler2>()
-                        .AddTransient<TestCommandHandler3>()
-                        .AddTransient<TestCommandHandlerWithoutResponse>()
-                        .AddTransient<TestCommandHandlerWithoutPayload>()
-                        .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
-                        .AddTransient<TestCommandWithCustomPathHandler>()
-                        .AddTransient<TestCommandWithVersionHandler>()
-                        .AddTransient<TestCommandWithOperationIdHandler>()
-                        .AddTransient<TestCommandWithApiGroupNameHandler>();
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                        .AddConquerorCommandHandler<TestCommandHandler2>()
+                        .AddConquerorCommandHandler<TestCommandHandler3>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutPayload>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
+                        .AddConquerorCommandHandler<TestCommandWithCustomPathHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithVersionHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithOperationIdHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithApiGroupNameHandler>();
 
-            _ = services.AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQueryHandler2>()
-                        .AddTransient<TestQueryHandler3>()
-                        .AddTransient<TestQueryHandlerWithoutPayload>()
-                        .AddTransient<TestQueryHandlerWithComplexPayload>()
-                        .AddTransient<TestQueryWithCustomPathHandler>()
-                        .AddTransient<TestQueryWithVersionHandler>()
-                        .AddTransient<TestQueryWithOperationIdHandler>()
-                        .AddTransient<TestQueryWithApiGroupNameHandler>()
-                        .AddTransient<TestPostQueryHandler>()
-                        .AddTransient<TestPostQueryHandler2>()
-                        .AddTransient<TestPostQueryHandlerWithoutPayload>()
-                        .AddTransient<TestPostQueryWithCustomPathHandler>()
-                        .AddTransient<TestPostQueryWithVersionHandler>()
-                        .AddTransient<TestPostQueryWithOperationIdHandler>()
-                        .AddTransient<TestPostQueryWithApiGroupNameHandler>();
-
-            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryHandler<TestQueryHandler3>()
+                        .AddConquerorQueryHandler<TestQueryHandlerWithoutPayload>()
+                        .AddConquerorQueryHandler<TestQueryHandlerWithComplexPayload>()
+                        .AddConquerorQueryHandler<TestQueryWithCustomPathHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithVersionHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithOperationIdHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithApiGroupNameHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryHandler2>()
+                        .AddConquerorQueryHandler<TestPostQueryHandlerWithoutPayload>()
+                        .AddConquerorQueryHandler<TestPostQueryWithCustomPathHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithOperationIdHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithApiGroupNameHandler>();
         }
 
         protected override void Configure(IApplicationBuilder app)

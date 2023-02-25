@@ -12,11 +12,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandTransport>()
+            _ = services.AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -35,11 +34,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandTransport>()
+            _ = services.AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -58,11 +56,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandTransport>()
+            _ = services.AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -81,11 +78,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandTransport>()
+            _ = services.AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
@@ -104,11 +100,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandTransport>()
+            _ = services.AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
@@ -134,11 +129,10 @@ namespace Conqueror.CQS.Tests
                 return transport;
             });
 
-            _ = services.AddConquerorCQS()
-                        .AddScoped<TestCommandTransport>()
+            _ = services.AddScoped<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -164,11 +158,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<ThrowingTestCommandTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<ThrowingTestCommandTransport>()
+            _ = services.AddTransient<ThrowingTestCommandTransport>()
                         .AddSingleton(exception);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 

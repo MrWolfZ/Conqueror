@@ -13,11 +13,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ITestCommandHandler>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandTransport>()
+            _ = services.AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestCommandHandler>();
 
@@ -36,11 +35,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ITestCommandWithoutResponseHandler>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestCommandTransport>()
+            _ = services.AddTransient<TestCommandTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestCommandWithoutResponseHandler>();
 

@@ -735,27 +735,25 @@ namespace Conqueror.CQS.Tests
 
             var services = new ServiceCollection();
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(TestCommandHandler),
-                                                        p => new TestCommandHandler(commandHandlerFn,
-                                                                                    p.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                    p.GetRequiredService<IQueryHandler<NestedTestQuery, NestedTestQueryResponse>>()),
-                                                        commandHandlerLifetime));
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>(p => new(commandHandlerFn,
+                                                                                 p.GetRequiredService<IConquerorContextAccessor>(),
+                                                                                 p.GetRequiredService<IQueryHandler<NestedTestQuery, NestedTestQueryResponse>>()),
+                                                                        commandHandlerLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(NestedTestCommandHandler),
-                                                        p => new NestedTestCommandHandler(nestedCommandHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                        nestedCommandHandlerLifetime));
+            _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedCommandHandlerFn,
+                                                                                       p.GetRequiredService<IConquerorContextAccessor>()),
+                                                                              nestedCommandHandlerLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(TestQueryHandler),
-                                                        p => new TestQueryHandler(queryHandlerFn,
-                                                                                  p.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                  p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
-                                                        queryHandlerLifetime));
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>(p => new(queryHandlerFn,
+                                                                             p.GetRequiredService<IConquerorContextAccessor>(),
+                                                                             p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
+                                                                    queryHandlerLifetime);
 
-            _ = services.Add(ServiceDescriptor.Describe(typeof(NestedTestQueryHandler),
-                                                        p => new NestedTestQueryHandler(nestedQueryHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                        nestedQueryHandlerLifetime));
+            _ = services.AddConquerorQueryHandler<NestedTestQueryHandler>(p => new(nestedQueryHandlerFn,
+                                                                                   p.GetRequiredService<IConquerorContextAccessor>()),
+                                                                          nestedQueryHandlerLifetime);
 
-            var provider = services.AddConquerorCQS().FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             _ = provider.GetRequiredService<TestCommandHandler>();
             _ = provider.GetRequiredService<NestedTestCommandHandler>();

@@ -14,7 +14,7 @@ namespace Conqueror.CQS.CommandHandling
         public CommandPipelineBuilder(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
-            middlewareInvokersByMiddlewareTypes = serviceProvider.GetRequiredService<IReadOnlyDictionary<Type, ICommandMiddlewareInvoker>>();
+            middlewareInvokersByMiddlewareTypes = serviceProvider.GetRequiredService<CommandMiddlewareRegistry>().GetCommandMiddlewareInvokers();
         }
 
         public IServiceProvider ServiceProvider { get; }

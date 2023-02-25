@@ -14,10 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient(p => p.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions);
 
-builder.Services
-       .AddConquerorCQS()
-       .AddConquerorCQSTypesFromExecutingAssembly()
-       .FinalizeConquerorRegistrations();
+builder.Services.AddConquerorCQSTypesFromExecutingAssembly();
 
 var app = builder.Build();
 

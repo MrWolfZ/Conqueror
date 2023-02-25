@@ -2,8 +2,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Conqueror;
-using Conqueror.Common;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable InconsistentNaming
 
@@ -14,12 +12,8 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddConquerorCQS(this IServiceCollection services)
         {
-            services.AddFinalizationCheck();
-            services.AddConquerorCqsQueryServices();
             services.AddConquerorCqsCommandServices();
-
-            services.TryAddSingleton<ConquerorContextAccessor>();
-            services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
+            services.AddConquerorCqsQueryServices();
 
             return services;
         }
@@ -30,24 +24,24 @@ namespace Microsoft.Extensions.DependencyInjection
                                      .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false })
                                      .ToList();
 
-            foreach (var queryHandlerType in validTypes.Where(t => t.IsAssignableTo(typeof(IQueryHandler))))
-            {
-                services.TryAddTransient(queryHandlerType);
-            }
-
-            foreach (var queryMiddlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsQueryMiddlewareInterface)))
-            {
-                services.TryAddTransient(queryMiddlewareType);
-            }
-
             foreach (var commandHandlerType in validTypes.Where(t => t.IsAssignableTo(typeof(ICommandHandler))))
             {
-                services.TryAddTransient(commandHandlerType);
+                services.AddConquerorCommandHandler(commandHandlerType, ServiceDescriptor.Transient(commandHandlerType, commandHandlerType));
             }
 
             foreach (var commandMiddlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsCommandMiddlewareInterface)))
             {
-                services.TryAddTransient(commandMiddlewareType);
+                services.AddConquerorCommandMiddleware(commandMiddlewareType, ServiceDescriptor.Transient(commandMiddlewareType, commandMiddlewareType));
+            }
+
+            foreach (var queryHandlerType in validTypes.Where(t => t.IsAssignableTo(typeof(IQueryHandler))))
+            {
+                services.AddConquerorQueryHandler(queryHandlerType, ServiceDescriptor.Transient(queryHandlerType, queryHandlerType));
+            }
+
+            foreach (var queryMiddlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsQueryMiddlewareInterface)))
+            {
+                services.AddConquerorQueryMiddleware(queryMiddlewareType, ServiceDescriptor.Transient(queryMiddlewareType, queryMiddlewareType));
             }
 
             return services;

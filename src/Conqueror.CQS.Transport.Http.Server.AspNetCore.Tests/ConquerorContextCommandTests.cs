@@ -461,15 +461,13 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
-            _ = services.AddTransient<TestCommandHandler>()
-                        .AddTransient<TestCommandHandlerWithoutResponse>()
-                        .AddTransient<TestCommandHandlerWithoutPayload>()
-                        .AddTransient<TestCommandHandlerWithoutResponseWithoutPayload>()
-                        .AddTransient<TestCommandWithNestedCommandHandler>()
-                        .AddTransient<NestedTestCommandHandler>()
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutPayload>()
+                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
+                        .AddConquerorCommandHandler<TestCommandWithNestedCommandHandler>()
+                        .AddConquerorCommandHandler<NestedTestCommandHandler>()
                         .AddSingleton<TestObservations>();
-
-            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
 
         protected override void Configure(IApplicationBuilder app)

@@ -4,53 +4,53 @@ namespace Conqueror.CQS.Tests
     public sealed class QueryServiceCollectionConfigurationTests
     {
         [Test]
-        public void GivenMultipleRegisteredIdenticalHandlerTypes_ConfiguringServiceCollectionDoesNotThrow()
+        public void GivenRegisteredHandlerType_AddingIdenticalHandlerDoesNotThrow()
         {
-            var services = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryHandler>()
-                                                  .AddTransient<TestQueryHandler>();
+            var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>();
 
-            Assert.DoesNotThrow(() => services.FinalizeConquerorRegistrations());
+            Assert.DoesNotThrow(() => services.AddConquerorQueryHandler<TestQueryHandler>());
         }
 
         [Test]
-        public void GivenMultipleRegisteredHandlerTypesForSameQueryAndResponseTypes_ConfiguringServiceCollectionThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerType_AddingIdenticalHandlerOnlyKeepsOneRegistration()
         {
-            var services = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryHandler>()
-                                                  .AddTransient<DuplicateTestQueryHandler>();
+            var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>()
+                                                  .AddConquerorQueryHandler<TestQueryHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestQueryHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)));
         }
 
         [Test]
-        public void GivenMultipleRegisteredHandlerTypesForSameQueryAndDifferentResponseTypes_ConfiguringServiceCollectionThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerType_AddingHandlerWithSameQueryAndResponseTypesThrowsInvalidOperationException()
         {
-            var services = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryHandler>()
-                                                  .AddTransient<DuplicateTestQueryHandlerWithDifferentResponseType>();
+            var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<DuplicateTestQueryHandler>());
         }
 
         [Test]
-        public void GivenHandlerTypeWithInstanceFactory_ConfiguringServiceCollectionRecognizesHandler()
+        public void GivenRegisteredHandlerType_AddingHandlerWithSameQueryTypeAndDifferentResponseTypeThrowsInvalidOperationException()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient(_ => new TestQueryHandler())
-                                                  .FinalizeConquerorRegistrations()
+            var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<DuplicateTestQueryHandlerWithDifferentResponseType>());
+        }
+
+        [Test]
+        public void GivenHandlerTypeWithInstanceFactory_AddedHandlerCanBeResolvedFromInterface()
+        {
+            var provider = new ServiceCollection().AddConquerorQueryHandler(_ => new TestQueryHandler())
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
         }
 
         [Test]
-        public void GivenMiddlewareTypeWithInstanceFactory_ConfiguringServiceCollectionRecognizesHandler()
+        public void GivenMiddlewareTypeWithInstanceFactory_AddedMiddlewareCanBeUsedInPipeline()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryHandlerWithMiddleware>()
-                                                  .AddTransient(_ => new TestQueryMiddleware())
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithMiddleware>()
+                                                  .AddConquerorQueryMiddleware(_ => new TestQueryMiddleware())
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrowAsync(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new(), CancellationToken.None));

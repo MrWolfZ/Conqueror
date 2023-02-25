@@ -302,11 +302,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
-            _ = services.AddTransient<TestQueryHandler>()
-                        .AddTransient<TestPostQueryHandler>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryHandler>()
                         .AddSingleton<TestObservations>();
-
-            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
 
         protected override void ConfigureClientServices(IServiceCollection services)
@@ -332,11 +330,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                                                                                                                                        b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
                                                                                                                                        b.ServiceProvider.GetRequiredService<TestObservations>()));
 
-            _ = services.AddTransient<OuterTestQueryHandler>()
-                        .AddTransient<OuterTestPostQueryHandler>()
+            _ = services.AddConquerorQueryHandler<OuterTestQueryHandler>()
+                        .AddConquerorQueryHandler<OuterTestPostQueryHandler>()
                         .AddSingleton<TestObservations>();
-
-            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
         }
 
         protected override void Configure(IApplicationBuilder app)

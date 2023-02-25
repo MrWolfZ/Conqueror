@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Conqueror;
+using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
@@ -45,6 +46,14 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             services.TryAddSingleton<DidYouForgetToCallFinalizeConquerorRegistrations>();
+
+            return services;
+        }
+
+        internal static IServiceCollection AddConquerorContext(this IServiceCollection services)
+        {
+            services.TryAddSingleton<ConquerorContextAccessor>();
+            services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
 
             return services;
         }

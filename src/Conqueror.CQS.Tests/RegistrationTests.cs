@@ -1,3 +1,4 @@
+using Conqueror.Common;
 using Conqueror.CQS.CommandHandling;
 using Conqueror.CQS.QueryHandling;
 
@@ -9,12 +10,31 @@ namespace Conqueror.CQS.Tests
     public sealed class RegistrationTests
     {
         [Test]
-        public void GivenServiceCollectionWithConquerorAlreadyRegistered_DoesNotRegisterConquerorTypesAgain()
+        public void GivenServiceCollectionWithMultipleRegisteredHandlers_DoesNotRegisterConquerorTypesMultipleTimes()
         {
-            var services = new ServiceCollection().AddConquerorCQS().AddConquerorCQS();
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
+                                                  .AddConquerorCommandHandler<TestCommand2Handler>()
+                                                  .AddConquerorQueryHandler<TestQueryHandler>()
+                                                  .AddConquerorQueryHandler<TestQuery2Handler>();
 
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryRegistrationFinalizer)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandRegistrationFinalizer)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandClientFactory)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandClientFactory)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandHandlerRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandHandlerRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandMiddlewareRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandMiddlewareRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandContextAccessor)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandContextAccessor)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryClientFactory)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryClientFactory)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryHandlerRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryMiddlewareRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryMiddlewareRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryContextAccessor)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryContextAccessor)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ConquerorContextAccessor)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)));
         }
 
         [Test]
@@ -111,19 +131,23 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenServiceCollectionWithHandlerAlreadyRegistered_AddingAllTypesFromAssemblyDoesNotAddHandlerAgain()
         {
-            var services = new ServiceCollection().AddSingleton<TestCommandHandler>().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>(ServiceLifetime.Singleton)
+                                                  .AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
             Assert.AreEqual(1, services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandHandler)));
         }
 
         [Test]
-        public void GivenServiceCollection_AddingAllTypesFromAssemblyDoesNotAddInterfaces()
+        public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsInterfaces()
         {
             var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(ITestQueryHandler)));
-            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(ITestCommandHandler)));
-            Assert.IsFalse(services.Any(d => d.ServiceType == typeof(ITestCommandWithoutResponseHandler)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ITestQueryHandler)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ITestCommandHandler)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ITestCommandWithoutResponseHandler)));
         }
 
         [Test]
@@ -160,36 +184,13 @@ namespace Conqueror.CQS.Tests
             Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestCommandMiddleware)));
         }
 
-        [Test]
-        public void GivenServiceCollectionWithConquerorCQSRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
-        {
-            var services = new ServiceCollection().AddConquerorCQS();
-
-            var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
-
-            Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
-            Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
-        }
-
-        [Test]
-        public void GivenServiceCollectionWithConquerorCQSRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
-        {
-            var services = new ServiceCollection().AddConquerorCQS().FinalizeConquerorRegistrations();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
-        }
-
-        [Test]
-        public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringCQS()
-        {
-            var services = new ServiceCollection().FinalizeConquerorRegistrations();
-
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCQS());
-        }
-
         public sealed record TestQuery;
 
         public sealed record TestQueryResponse;
+
+        public sealed record TestQuery2;
+
+        public sealed record TestQuery2Response;
 
         public sealed record TestQueryWithCustomInterface;
 
@@ -205,6 +206,11 @@ namespace Conqueror.CQS.Tests
         public sealed class TestQueryHandlerWithCustomInterface : ITestQueryHandler
         {
             public Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomInterface query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        }
+
+        public sealed class TestQuery2Handler : IQueryHandler<TestQuery2, TestQuery2Response>
+        {
+            public Task<TestQuery2Response> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQuery2Response());
         }
 
         public abstract class AbstractTestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
@@ -266,6 +272,10 @@ namespace Conqueror.CQS.Tests
 
         public sealed record TestCommandResponse;
 
+        public sealed record TestCommand2;
+
+        public sealed record TestCommand2Response;
+
         public sealed record TestCommandWithoutResponse;
 
         public sealed record TestCommandWithCustomInterface;
@@ -288,6 +298,11 @@ namespace Conqueror.CQS.Tests
         public sealed class TestCommandHandlerWithCustomInterface : ITestCommandHandler
         {
             public Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomInterface command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        }
+
+        public sealed class TestCommand2Handler : ICommandHandler<TestCommand2, TestCommand2Response>
+        {
+            public Task<TestCommand2Response> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommand2Response());
         }
 
         public abstract class AbstractTestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>

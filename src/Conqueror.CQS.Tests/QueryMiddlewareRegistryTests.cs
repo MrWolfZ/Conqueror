@@ -7,9 +7,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredQueryMiddleware_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryMiddleware>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddleware>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
@@ -27,9 +25,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenManuallyRegisteredQueryMiddlewareWithoutConfiguration_ReturnsRegistration()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryMiddlewareWithoutConfiguration>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddlewareWithoutConfiguration>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
@@ -47,10 +43,8 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenMultipleManuallyRegisteredQueryMiddlewares_ReturnsRegistrations()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestQueryMiddleware>()
-                                                  .AddTransient<TestQueryMiddleware2>()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                                                  .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
@@ -69,9 +63,7 @@ namespace Conqueror.CQS.Tests
         [Test]
         public void GivenQueryMiddlewaresRegisteredViaAssemblyScanning_ReturnsRegistrations()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddConquerorCQSTypesFromExecutingAssembly()
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly()
                                                   .BuildServiceProvider();
 
             var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();

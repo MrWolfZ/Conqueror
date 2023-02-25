@@ -8,13 +8,43 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQueryHandler2>()
-                        .AddTransient<TestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+            var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1 }));
+        }
+
+        [Test]
+        public async Task GivenTransientMiddlewareWithFactory_ResolvingHandlerCreatesNewInstanceEveryTime()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware(p => new TestQueryMiddleware(p.GetRequiredService<TestObservations>()))
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -40,13 +70,43 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQueryHandler2>()
-                        .AddScoped<TestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Scoped)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+            var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
+        }
+
+        [Test]
+        public async Task GivenScopedMiddlewareWithFactory_ResolvingHandlerCreatesNewInstanceForEveryScope()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware(p => new TestQueryMiddleware(p.GetRequiredService<TestObservations>()), ServiceLifetime.Scoped)
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -72,13 +132,43 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQueryHandler2>()
-                        .AddSingleton<TestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
+
+            using var scope1 = provider.CreateScope();
+            using var scope2 = provider.CreateScope();
+
+            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler3 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+            var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+
+            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
+            _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 5 }));
+        }
+
+        [Test]
+        public async Task GivenSingletonMiddlewareWithFactory_ResolvingHandlerReturnsSameInstanceEveryTime()
+        {
+            var services = new ServiceCollection();
+            var observations = new TestObservations();
+
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware(p => new TestQueryMiddleware(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
+                        .AddSingleton(observations);
+
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -104,14 +194,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares>()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares2>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares>()
+                        .AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -137,14 +226,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares>()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares2>()
-                        .AddScoped<TestQueryMiddleware>()
-                        .AddScoped<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares>()
+                        .AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Scoped)
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>(ServiceLifetime.Scoped)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -170,14 +258,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares>()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares2>()
-                        .AddSingleton<TestQueryMiddleware>()
-                        .AddSingleton<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares>()
+                        .AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -203,14 +290,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares>()
-                        .AddTransient<TestQueryHandlerWithMultipleMiddlewares2>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddSingleton<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares>()
+                        .AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>(ServiceLifetime.Singleton)
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -236,14 +322,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithRetryMiddleware>()
-                        .AddTransient<TestQueryRetryMiddleware>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -263,14 +348,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithRetryMiddleware>()
-                        .AddTransient<TestQueryRetryMiddleware>()
-                        .AddScoped<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Scoped)
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -290,14 +374,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithRetryMiddleware>()
-                        .AddTransient<TestQueryRetryMiddleware>()
-                        .AddSingleton<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -317,14 +400,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithRetryMiddleware>()
-                        .AddTransient<TestQueryRetryMiddleware>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -344,14 +426,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddScoped<TestQueryHandlerWithRetryMiddleware>()
-                        .AddTransient<TestQueryRetryMiddleware>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithRetryMiddleware>(ServiceLifetime.Scoped)
+                        .AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -371,14 +452,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddSingleton<TestQueryHandlerWithRetryMiddleware>()
-                        .AddTransient<TestQueryRetryMiddleware>()
-                        .AddTransient<TestQueryMiddleware>()
-                        .AddTransient<TestQueryMiddleware2>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithRetryMiddleware>(ServiceLifetime.Singleton)
+                        .AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -398,12 +478,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandlerWithSameMiddlewareMultipleTimes>()
-                        .AddTransient<TestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithSameMiddlewareMultipleTimes>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
@@ -418,14 +497,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQueryHandler2>()
-                        .AddTransient<TestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                         .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -451,14 +529,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQueryHandler2>()
-                        .AddScoped<TestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Scoped)
                         .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();
@@ -484,14 +561,13 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQueryHandler2>()
-                        .AddSingleton<TestQueryMiddleware>()
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryHandler2>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
                         .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             using var scope1 = provider.CreateScope();
             using var scope2 = provider.CreateScope();

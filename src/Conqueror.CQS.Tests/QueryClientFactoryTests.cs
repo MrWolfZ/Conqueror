@@ -13,7 +13,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
@@ -36,7 +36,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
@@ -55,12 +55,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryTransport>()
-                        .AddTransient<TestQueryMiddleware>()
+            _ = services.AddTransient<TestQueryTransport>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
@@ -81,12 +80,11 @@ namespace Conqueror.CQS.Tests
             var services = new ServiceCollection();
             var observations = new TestObservations();
 
-            _ = services.AddConquerorCQS()
-                        .AddTransient<TestQueryTransport>()
-                        .AddTransient<TestQueryMiddleware>()
+            _ = services.AddTransient<TestQueryTransport>()
+                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
@@ -111,7 +109,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
@@ -128,7 +126,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
@@ -145,7 +143,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
@@ -162,7 +160,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
@@ -179,7 +177,7 @@ namespace Conqueror.CQS.Tests
                         .AddTransient<TestQueryTransport>()
                         .AddSingleton(observations);
 
-            var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+            var provider = services.BuildServiceProvider();
 
             var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 

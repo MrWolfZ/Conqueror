@@ -4,63 +4,79 @@ namespace Conqueror.CQS.Tests
     public sealed class CommandServiceCollectionConfigurationTests
     {
         [Test]
-        public void GivenMultipleRegisteredIdenticalHandlerTypes_ConfiguringServiceCollectionDoesNotThrow()
+        public void GivenRegisteredHandlerType_AddingIdenticalHandlerDoesNotThrow()
         {
-            var services = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandHandler>()
-                                                  .AddTransient<TestCommandHandler>();
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>();
 
-            Assert.DoesNotThrow(() => services.FinalizeConquerorRegistrations());
+            Assert.DoesNotThrow(() => services.AddConquerorCommandHandler<TestCommandHandler>());
         }
 
         [Test]
-        public void GivenMultipleRegisteredHandlerTypesForSameCommandAndResponseTypes_ConfiguringServiceCollectionThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerType_AddingIdenticalHandlerOnlyKeepsOneRegistration()
         {
-            var services = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandHandler>()
-                                                  .AddTransient<DuplicateTestCommandHandler>();
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
+                                                  .AddConquerorCommandHandler<TestCommandHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestCommandHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)));
         }
 
         [Test]
-        public void GivenMultipleRegisteredHandlerTypesForSameCommandAndDifferentResponseTypes_ConfiguringServiceCollectionThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerTypeWithoutResponse_AddingIdenticalHandlerDoesNotThrow()
         {
-            var services = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandHandler>()
-                                                  .AddTransient<DuplicateTestCommandHandlerWithDifferentResponseType>();
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+            Assert.DoesNotThrow(() => services.AddConquerorCommandHandler<TestCommandWithoutResponseHandler>());
         }
 
         [Test]
-        public void GivenMultipleRegisteredHandlerTypesWithoutResponseForSameCommandType_ConfiguringServiceCollectionThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerTypeWithoutResponse_AddingIdenticalHandlerOnlyKeepsOneRegistration()
         {
-            var services = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandWithoutResponseHandler>()
-                                                  .AddTransient<DuplicateTestCommandWithoutResponseHandler>();
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
+                                                  .AddConquerorCommandHandler<TestCommandWithoutResponseHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestCommandWithoutResponseHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)));
         }
 
         [Test]
-        public void GivenHandlerTypeWithInstanceFactory_ConfiguringServiceCollectionRecognizesHandler()
+        public void GivenRegisteredHandlerType_AddingHandlerWithSameCommandAndResponseTypesThrowsInvalidOperationException()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient(_ => new TestCommandHandler())
-                                                  .FinalizeConquerorRegistrations()
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandHandler<DuplicateTestCommandHandler>());
+        }
+
+        [Test]
+        public void GivenRegisteredHandlerType_AddingHandlerWithSameCommandTypeAndDifferentResponseTypeThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandHandler<DuplicateTestCommandHandlerWithDifferentResponseType>());
+        }
+
+        [Test]
+        public void GivenRegisteredHandlerType_AddingHandlerWithoutResponseWithSameCommandTypeThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>();
+
+            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandHandler<DuplicateTestCommandWithoutResponseHandler>());
+        }
+
+        [Test]
+        public void GivenHandlerTypeWithInstanceFactory_AddedHandlerCanBeResolvedFromInterface()
+        {
+            var provider = new ServiceCollection().AddConquerorCommandHandler(_ => new TestCommandHandler())
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
         }
 
         [Test]
-        public void GivenMiddlewareTypeWithInstanceFactory_ConfiguringServiceCollectionRecognizesHandler()
+        public void GivenMiddlewareTypeWithInstanceFactory_AddedMiddlewareCanBeUsedInPipeline()
         {
-            var provider = new ServiceCollection().AddConquerorCQS()
-                                                  .AddTransient<TestCommandHandlerWithMiddleware>()
-                                                  .AddTransient(_ => new TestCommandMiddleware())
-                                                  .FinalizeConquerorRegistrations()
+            var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithMiddleware>()
+                                                  .AddConquerorCommandMiddleware(_ => new TestCommandMiddleware())
                                                   .BuildServiceProvider();
 
             Assert.DoesNotThrowAsync(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new(), CancellationToken.None));

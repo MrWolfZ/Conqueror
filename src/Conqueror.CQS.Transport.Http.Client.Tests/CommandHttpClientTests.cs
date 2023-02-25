@@ -185,19 +185,17 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-            _ = services.AddTransient<TestCommandHandler>()
-                        .AddTransient<TestCommandWithoutResponseHandler>()
-                        .AddTransient<TestCommandWithoutPayloadHandler>()
-                        .AddTransient<TestCommandWithoutResponseWithoutPayloadHandler>()
-                        .AddTransient<TestCommandWithCustomSerializedPayloadTypeHandler>()
-                        .AddTransient<TestCommandWithCustomPathConventionHandler>()
-                        .AddTransient<TestCommandWithCustomPathHandler>()
-                        .AddTransient<TestCommandWithVersionHandler>()
-                        .AddTransient<TestCommandWithCustomHeadersHandler>()
-                        .AddTransient<NonHttpTestCommandHandler>()
-                        .AddTransient<NonHttpTestCommandWithoutResponseHandler>();
-
-            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
+            _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithoutPayloadHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithoutResponseWithoutPayloadHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithCustomSerializedPayloadTypeHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithCustomPathConventionHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithCustomPathHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithVersionHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithCustomHeadersHandler>()
+                        .AddConquerorCommandHandler<NonHttpTestCommandHandler>()
+                        .AddConquerorCommandHandler<NonHttpTestCommandWithoutResponseHandler>();
         }
 
         protected override void ConfigureClientServices(IServiceCollection services)
@@ -233,8 +231,6 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.Headers.Authorization = new("Basic", "test");
                             o.Headers.Add("test-header", new[] { "value1", "value2" });
                         }));
-
-            _ = services.FinalizeConquerorRegistrations();
         }
 
         protected override void Configure(IApplicationBuilder app)

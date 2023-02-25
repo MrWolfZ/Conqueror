@@ -10,13 +10,11 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services
-       .AddConquerorCQS()
        .AddConquerorCQSTypesFromExecutingAssembly()
        .AddConquerorCQSTypesFromAssembly(typeof(CommandTimeoutMiddleware).Assembly)
        .AddConquerorCQSHttpClientServices()
        .AddConquerorQueryClient<IGetSharedCounterValueQueryHandler>(b => b.UseHttpApi(), pipeline => pipeline.UseDefaultHttpPipeline())
        .AddConquerorCommandClient<IIncrementSharedCounterValueCommandHandler>(b => b.UseHttpApi(), pipeline => pipeline.UseDefaultHttpPipeline())
-       .AddSingleton(new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-       .FinalizeConquerorRegistrations();
+       .AddSingleton(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
 await builder.Build().RunAsync();

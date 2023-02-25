@@ -317,27 +317,25 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
             _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-            _ = services.AddTransient<TestQueryHandler>()
-                        .AddTransient<TestPostQueryHandler>()
-                        .AddTransient<TestQueryWithStringPayloadHandler>()
-                        .AddTransient<TestQueryWithoutPayloadHandler>()
-                        .AddTransient<TestPostQueryWithoutPayloadHandler>()
-                        .AddTransient<TestQueryWithCollectionPayloadHandler>()
-                        .AddTransient<TestQueryWithComplexPayloadHandler>()
-                        .AddTransient<TestQueryWithComplexPayloadWithCollectionPropertyHandler>()
-                        .AddTransient<TestQueryWithOptionalPropertyHandler>()
-                        .AddTransient<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
-                        .AddTransient<TestQueryWithCustomPathConventionHandler>()
-                        .AddTransient<TestPostQueryWithCustomPathConventionHandler>()
-                        .AddTransient<TestQueryWithCustomPathHandler>()
-                        .AddTransient<TestPostQueryWithCustomPathHandler>()
-                        .AddTransient<TestQueryWithVersionHandler>()
-                        .AddTransient<TestPostQueryWithVersionHandler>()
-                        .AddTransient<TestQueryWithCustomHeadersHandler>()
-                        .AddTransient<TestPostQueryWithCustomHeadersHandler>()
-                        .AddTransient<NonHttpTestQueryHandler>();
-
-            _ = services.AddConquerorCQS().FinalizeConquerorRegistrations();
+            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithStringPayloadHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithoutPayloadHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithoutPayloadHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithCollectionPayloadHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithComplexPayloadHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithComplexPayloadWithCollectionPropertyHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithOptionalPropertyHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithCustomPathConventionHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithCustomPathConventionHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithCustomPathHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithCustomPathHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithVersionHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>()
+                        .AddConquerorQueryHandler<TestQueryWithCustomHeadersHandler>()
+                        .AddConquerorQueryHandler<TestPostQueryWithCustomHeadersHandler>()
+                        .AddConquerorQueryHandler<NonHttpTestQueryHandler>();
         }
 
         protected override void ConfigureClientServices(IServiceCollection services)
@@ -386,8 +384,6 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.Headers.Authorization = new("Basic", "test");
                             o.Headers.Add("test-header", new[] { "value1", "value2" });
                         }));
-
-            _ = services.FinalizeConquerorRegistrations();
         }
 
         protected override void Configure(IApplicationBuilder app)
