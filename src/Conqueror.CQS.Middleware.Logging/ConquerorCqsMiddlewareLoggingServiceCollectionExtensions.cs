@@ -19,8 +19,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns>The service collection</returns>
         public static IServiceCollection AddConquerorCQSLoggingMiddlewares(this IServiceCollection services)
         {
-            services.AddSingleton<CommandLoggingMiddleware>();
-            services.AddSingleton<QueryLoggingMiddleware>();
+            services.AddConquerorCommandMiddleware<CommandLoggingMiddleware>(ServiceLifetime.Singleton);
+            services.AddConquerorQueryMiddleware<QueryLoggingMiddleware>(ServiceLifetime.Singleton);
 
             return services;
         }

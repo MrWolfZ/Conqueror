@@ -519,14 +519,12 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
 
         protected override void ConfigureServices(IServiceCollection services)
         {
-            _ = services.AddConquerorCQS()
-                        .AddConquerorCQSLoggingMiddlewares()
-                        .AddTransient<TestCommandHandler>()
-                        .AddTransient<TestCommandWithoutResponseHandler>()
-                        .AddTransient<TestCommandWithoutPayloadHandler>()
+            _ = services.AddConquerorCQSLoggingMiddlewares()
+                        .AddConquerorCommandHandler<TestCommandHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
+                        .AddConquerorCommandHandler<TestCommandWithoutPayloadHandler>()
                         .AddTransient<Func<TestCommand, TestCommandResponse>>(_ => cmd => handlerFn.Invoke(cmd))
-                        .AddTransient<Action<ICommandPipelineBuilder>>(_ => b => configurePipeline.Invoke(b))
-                        .FinalizeConquerorRegistrations();
+                        .AddTransient<Action<ICommandPipelineBuilder>>(_ => b => configurePipeline.Invoke(b));
         }
 
         private sealed record TestCommand(int Payload);
