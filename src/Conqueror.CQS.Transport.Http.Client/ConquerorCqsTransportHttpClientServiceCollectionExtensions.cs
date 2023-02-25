@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class ConquerorCqsAspNetCoreClientServiceCollectionExtensions
+    public static class ConquerorCqsTransportHttpClientServiceCollectionExtensions
     {
         public static IServiceCollection AddConquerorCQSHttpClientServices(this IServiceCollection services)
         {

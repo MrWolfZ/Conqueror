@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class ConquerorCqsMvcBuilderExtensions
+    public static class ConquerorCqsTransportHttpServerAspNetCoreMvcBuilderExtensions
     {
         public static IMvcBuilder AddConquerorCQSHttpControllers(this IMvcBuilder builder, Action<ConquerorCqsHttpTransportServerAspNetCoreOptions>? configureOptions = null)
         {
