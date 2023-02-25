@@ -1,7 +1,8 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
@@ -17,95 +18,148 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddControllers().AddConquerorCQSHttpControllers();
 
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CqsHttpServerAspNetCoreRegistrationFinalizer)));
-        }
-
-        [Test]
-        public void GivenServiceCollectionWithConquerorRegistered_FinalizeConquerorRegistrationsAddsEndpointFeatureProvider()
-        {
-            var services = new ServiceCollection();
-
-            _ = services.AddControllers().AddConquerorCQSHttpControllers();
-
-            _ = services.FinalizeConquerorRegistrations();
-
-            var applicationPartManager = services.Select(d => d.ImplementationInstance).OfType<ApplicationPartManager>().Single();
-
-            Assert.IsNotNull(applicationPartManager.FeatureProviders.SingleOrDefault(p => p is HttpEndpointControllerFeatureProvider));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(HttpEndpointRegistry)));
+            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(HttpEndpointActionDescriptorChangeProvider)));
+            Assert.AreEqual(1, services.Count(d => d.ImplementationType == typeof(HttpEndpointConfigurationStartupFilter)));
         }
 
         [Test]
         public void GivenServiceCollectionWithDuplicateCommandName_FinalizeThrowsInvalidOperationException()
         {
-            var services = new ServiceCollection();
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
 
-            _ = services.AddControllers()
-                        .AddConquerorCQSHttpControllers();
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorCQSHttpControllers();
 
-            _ = services.AddTransient<TestCommandHandler>()
-                        .AddTransient<DuplicateCommandName.TestCommandHandler>();
+                    _ = services.AddTransient<TestCommandHandler>()
+                                .AddTransient<DuplicateCommandName.TestCommandHandler>()
+                                .FinalizeConquerorRegistrations();
+                });
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
         }
 
         [Test]
         public void GivenServiceCollectionWithDuplicateQueryName_FinalizeThrowsInvalidOperationException()
         {
-            var services = new ServiceCollection();
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
 
-            _ = services.AddControllers()
-                        .AddConquerorCQSHttpControllers();
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorCQSHttpControllers();
 
-            _ = services.AddTransient<TestQueryHandler>()
-                        .AddTransient<DuplicateQueryName.TestQueryHandler>();
+                    _ = services.AddTransient<TestQueryHandler>()
+                                .AddTransient<DuplicateQueryName.TestQueryHandler>()
+                                .FinalizeConquerorRegistrations();
+                });
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
         }
 
         [Test]
         public void GivenServiceCollectionWithDuplicateCommandPathFromConvention_FinalizeThrowsInvalidOperationException()
         {
-            var services = new ServiceCollection();
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
 
-            _ = services.AddControllers()
-                        .AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new HttpCommandPathConventionWithDuplicates());
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new HttpCommandPathConventionWithDuplicates());
 
-            _ = services.AddTransient<TestCommandHandler>()
-                        .AddTransient<TestCommand2Handler>();
+                    _ = services.AddTransient<TestCommandHandler>()
+                                .AddTransient<TestCommand2Handler>()
+                                .FinalizeConquerorRegistrations();
+                });
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
         }
 
         [Test]
         public void GivenServiceCollectionWithDuplicateQueryPathFromConvention_FinalizeThrowsInvalidOperationException()
         {
-            var services = new ServiceCollection();
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
 
-            _ = services.AddControllers()
-                        .AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new HttpQueryPathConventionWithDuplicates());
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new HttpQueryPathConventionWithDuplicates());
 
-            _ = services.AddTransient<TestQueryHandler>()
-                        .AddTransient<TestQuery2Handler>();
+                    _ = services.AddTransient<TestQueryHandler>()
+                                .AddTransient<TestQuery2Handler>()
+                                .FinalizeConquerorRegistrations();
+                });
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
         }
 
         [Test]
         public void GivenServiceCollectionWithDuplicateCommandAndQueryPathFromConvention_FinalizeThrowsInvalidOperationException()
         {
-            var services = new ServiceCollection();
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
 
-            _ = services.AddControllers()
-                        .AddConquerorCQSHttpControllers(o =>
-                        {
-                            o.CommandPathConvention = new HttpCommandPathConventionWithDuplicates();
-                            o.QueryPathConvention = new HttpQueryPathConventionWithDuplicates();
-                        });
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorCQSHttpControllers(o =>
+                                {
+                                    o.CommandPathConvention = new HttpCommandPathConventionWithDuplicates();
+                                    o.QueryPathConvention = new HttpQueryPathConventionWithDuplicates();
+                                });
 
-            _ = services.AddTransient<TestCommandHandler>()
-                        .AddTransient<TestQueryHandler>();
+                    _ = services.AddTransient<TestCommandHandler>()
+                                .AddTransient<TestQueryHandler>()
+                                .FinalizeConquerorRegistrations();
+                });
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
         }
 
         [Test]

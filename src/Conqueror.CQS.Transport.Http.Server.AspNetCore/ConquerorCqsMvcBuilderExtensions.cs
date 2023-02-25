@@ -1,6 +1,8 @@
 using System;
 using Conqueror.CQS.Transport.Http.Server.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable InconsistentNaming
@@ -14,7 +16,14 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             _ = builder.Services.AddConquerorCQS();
 
-            builder.Services.TryAddSingleton(new CqsHttpServerAspNetCoreRegistrationFinalizer(builder.Services));
+            builder.Services.TryAddSingleton<HttpEndpointRegistry>();
+
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpEndpointConfigurationStartupFilter>());
+
+            builder.Services.TryAddSingleton<HttpEndpointActionDescriptorChangeProvider>();
+            builder.Services.TryAddEnumerable(
+                ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
+                    p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
 
             _ = builder.Services.PostConfigure<MvcOptions>(options => { _ = options.Filters.Add<BadContextExceptionHandlerFilter>(); });
 
