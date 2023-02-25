@@ -1,20 +1,36 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 
 namespace Conqueror.CQS.Transport.Http.Client
 {
-    internal sealed class ConfigurationProvider
+    internal sealed class ConfigurationProvider : IDisposable
     {
         private readonly IReadOnlyCollection<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions;
+        private readonly Lazy<HttpClient> httpClientLazy = new();
 
         public ConfigurationProvider(IEnumerable<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions)
         {
             this.configureGlobalOptions = configureGlobalOptions.ToList();
         }
 
+        public void Dispose()
+        {
+            if (httpClientLazy.IsValueCreated)
+            {
+                httpClientLazy.Value.Dispose();
+            }
+        }
+
         public ResolvedHttpClientOptions GetOptions(IServiceProvider provider, HttpClientRegistration registration)
         {
+            var commandOptions = new HttpCommandClientOptions(provider);
+            registration.CommandConfigurationAction?.Invoke(commandOptions);
+
+            var queryOptions = new HttpQueryClientOptions(provider);
+            registration.QueryConfigurationAction?.Invoke(queryOptions);
+
             var globalOptions = new ConquerorCqsHttpClientGlobalOptions(provider);
 
             foreach (var configure in configureGlobalOptions)
@@ -22,28 +38,13 @@ namespace Conqueror.CQS.Transport.Http.Client
                 configure(globalOptions);
             }
 
-            var commandOptions = new HttpCommandClientOptions(provider);
-            registration.CommandConfigurationAction?.Invoke(commandOptions);
+            var httpClient = CreateHttpClient(registration, globalOptions);
 
-            var queryOptions = new HttpQueryClientOptions(provider);
-            registration.QueryConfigurationAction?.Invoke(queryOptions);
+            var baseAddress = httpClient.BaseAddress ?? registration.BaseAddress;
 
-            var httpClient = registration.HttpClient;
-
-            if (httpClient is null)
+            if (!baseAddress.IsAbsoluteUri)
             {
-                if (registration.BaseAddress is null)
-                {
-                    // should not be possible with public API, since it enforces either one to be provided
-                    throw new InvalidOperationException("configuration error while creating options for Conqueror HTTP transport client: either HTTP client or base address must be provided");
-                }
-
-                httpClient = globalOptions.HttpClientFactory(registration.BaseAddress);
-            }
-
-            if (httpClient.BaseAddress is null)
-            {
-                throw new InvalidOperationException("configuration error while creating options for Conqueror HTTP transport client: HTTP client base address is not set");
+                throw new InvalidOperationException($"configuration error while creating options for Conqueror HTTP transport client: base address must be an absolute URI, but got '{baseAddress}'");
             }
 
             var jsonSerializerOptions = queryOptions.JsonSerializerOptions ?? commandOptions.JsonSerializerOptions ?? globalOptions.JsonSerializerOptions;
@@ -51,7 +52,22 @@ namespace Conqueror.CQS.Transport.Http.Client
             var queryPathConvention = queryOptions.PathConvention ?? globalOptions.QueryPathConvention;
             var headers = queryOptions.OptionalHeaders ?? commandOptions.OptionalHeaders;
 
-            return new(httpClient, jsonSerializerOptions, commandPathConvention, queryPathConvention, headers);
+            return new(httpClient, baseAddress, jsonSerializerOptions, commandPathConvention, queryPathConvention, headers);
+        }
+
+        private HttpClient CreateHttpClient(HttpClientRegistration registration, ConquerorCqsHttpClientGlobalOptions globalOptions)
+        {
+            if (registration.CommandType is not null && (globalOptions.CommandHttpClients?.TryGetValue(registration.CommandType, out var commandClient) ?? false))
+            {
+                return commandClient;
+            }
+
+            if (registration.QueryType is not null && (globalOptions.QueryHttpClients?.TryGetValue(registration.QueryType, out var queryClient) ?? false))
+            {
+                return queryClient;
+            }
+
+            return globalOptions.GlobalHttpClient ?? httpClientLazy.Value;
         }
     }
 }

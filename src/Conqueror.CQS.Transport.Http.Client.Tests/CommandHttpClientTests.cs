@@ -202,9 +202,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             _ = services.AddConquerorCQSHttpClientServices(o =>
             {
-                o.HttpClientFactory = uri =>
-                    throw new InvalidOperationException(
-                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+                _ = o.UseHttpClient(HttpClient);
 
                 o.JsonSerializerOptions = new()
                 {
@@ -214,19 +212,21 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 o.CommandPathConvention = new TestHttpCommandPathConvention();
             });
 
-            _ = services.AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithoutResponseHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithoutResponseWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(HttpClient, o => o.JsonSerializerOptions = new()
+            var baseAddress = new Uri("http://conqueror.test");
+
+            _ = services.AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorCommandClient<ITestCommandWithoutResponseHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorCommandClient<ITestCommandWithoutPayloadHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorCommandClient<ITestCommandWithoutResponseWithoutPayloadHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorCommandClient<ITestCommandWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(baseAddress, o => o.JsonSerializerOptions = new()
                         {
                             Converters = { new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
                         }))
-                        .AddConquerorCommandClient<ITestCommandWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithCustomPathHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithVersionHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ITestCommandWithCustomHeadersHandler>(b => b.UseHttp(HttpClient, o =>
+                        .AddConquerorCommandClient<ITestCommandWithCustomPathConventionHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorCommandClient<ITestCommandWithCustomPathHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorCommandClient<ITestCommandWithVersionHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorCommandClient<ITestCommandWithCustomHeadersHandler>(b => b.UseHttp(baseAddress, o =>
                         {
                             o.Headers.Authorization = new("Basic", "test");
                             o.Headers.Add("test-header", new[] { "value1", "value2" });

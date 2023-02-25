@@ -186,7 +186,7 @@ services.AddConquerorCommandClient<IIncrementCounterCommandHandler>(async b =>
 });
 ```
 
-> Note that the transport configuration function is called every time the command is executed. For example, in the example above this means that a new `accessToken` would be fetched every time the command is executed. To prevent this, you need to ensure that any service you use during client transport configuration caches its result.
+> Note that the transport configuration function is called every time the command is executed. For example, in the example above this means that a new `accessToken` would be fetched every time the command is executed. To prevent this, you need to ensure that any service you use during client transport configuration caches its result appropriately.
 
 Another thing you may want to provide are custom `JsonSerializerOptions` to control how your commands and queries are serialized. This can be done either per client or globally for all clients (if both are specified, the config per client wins):
 
@@ -224,31 +224,23 @@ If you are using custom path conventions, we recommend that you place them in yo
 
 > Being able to set a path convention per client can be useful if your application calls command or queries from multiple other applications which each use different conventions (although we recommend that all **Conqueror.CQS** users stick to the default conventions as much as possible).
 
-If you require even more control over how the HTTP call is handled inside the transport, you can provide an `HttpClient` instance instead of just the server's base URL when setting up the command or query client. This can also be combined with Microsoft's [IHttpClientFactory](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/http-requests) approach from the [Microsoft.Extensions.Http](https://www.nuget.org/packages/Microsoft.Extensions.Http) package to manage HTTP clients separately. The only requirement for the provided `HttpClient` is that the `BaseAddress` property must be set to the server's base address.
+If you have multiple clients that all use the same settings, the recommended practice is to create a custom extension method on `ICommandTransportClientBuilder` or `IQueryTransportClientBuilder`. For example, if you have multiple commands for a server application with a custom path convention, the extension method could look like this:
 
 ```cs
-// create HTTP client using Microsoft.Extensions.Http
-services.AddHttpClient("serverClient", httpClient => httpClient.BaseAddress = serverAddress);
-
-services.AddConquerorCommandClient<IIncrementCounterCommandHandler>(b =>
+public static ICommandTransportClient UseMyServerHttpApi(this ICommandTransportClientBuilder builder)
 {
-    var httpClient = b.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("serverClient");
-    return b.UseHttp(httpClient);
-});
+    var configuration = builder.ServiceProvider.GetRequiredService<IConfiguration>();
+    var serverAddress = new Uri(configuration.GetValue<string>("MyServerBaseAddress"));
+    var customPathConvention = builder.ServiceProvider.GetRequiredService<MyServerCommandPathConvention>();
+    return builder.UseHttp(serverAddress, o => o.PathConvention = customPathConvention);
+}
 ```
 
-If you don't provide an `HttpClient` when configuring the client, then by default **Conqueror.CQS** creates a new `HttpClient` for each command or query client instance. Alternatively, you can provide a custom HTTP client factory function when adding the HTTP client services:
+With this extension method, configuring multiple clients becomes very simple:
 
 ```cs
-services.AddConquerorCQSHttpClientServices(o =>
-{
-    o.HttpClientFactory = baseAddress =>
-    {
-        var httpClient = o.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
-        httpClient.BaseAddress = baseAddress;
-        return httpClient;
-    };
-});
+services.AddConquerorCommandClient<IMyFirstCommandHandler>(b => b.UseMyServerHttpApi())
+        .AddConquerorCommandClient<IMySecondCommandHandler>(b => b.UseMyServerHttpApi());
 ```
 
 The final awesome feature we are going to look at are middlewares. From the recipe for [solving cross-cutting concerns](../../basics/solving-cross-cutting-concerns#readme) you may recall that each command or query handler can have a middleware pipeline that is called as part of its execution. The same applies for command and query clients. This allows handling cross-cutting concerns not only on the server, but also on the client. To see how this can be useful, let's execute our client application as follows:
@@ -316,6 +308,25 @@ The CounterName field is required.
 ```
 
 That looks much better. Being able to use the same middlewares in both server and clients is one of the best features of **Conqueror.CQS**. In addition to validation, there are many other cross-cutting concerns which you might want to handle on both client and server, including logging, retrying failed calls, caching results, etc. Take a look at our recipes for [addressing certain cross-cutting concerns](../../../../README.md#cqs-cross-cutting-concerns) for more inspiration of what is possible with this approach.
+
+Similar to the default pipelines we created in the recipe for [solving cross-cutting concerns](../../basics/solving-cross-cutting-concerns#readme), it can be useful to create shared pipelines for your command and query clients. For example, you could create a shared pipeline that ensures all outgoing commands are validated and retried on failure:
+
+```cs
+public static ICommandPipelineBuilder UseHttpClientDefault(this ICommandPipelineBuilder pipeline)
+{
+    return pipeline.UseDataAnnotationValidation()
+                   .UseRetry();
+}
+```
+
+With this extension method, configuring multiple clients becomes very simple:
+
+```cs
+services.AddConquerorCommandClient<IMyFirstCommandHandler>(b => b.UseMyServerHttpApi(), p => p.UseHttpClientDefault())
+        .AddConquerorCommandClient<IMySecondCommandHandler>(b => b.UseMyServerHttpApi(), p => p.UseHttpClientDefault());
+```
+
+> You can even reuse the same shared pipelines in both clients and handlers, since they use the same pipeline builder interfaces and underlying mechanism.
 
 And that concludes this recipe for calling your HTTP commands and queries from another application with **Conqueror.CQS**. In summary, you need to do the following:
 

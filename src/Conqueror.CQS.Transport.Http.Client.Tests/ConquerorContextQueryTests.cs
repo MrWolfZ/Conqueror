@@ -311,9 +311,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             _ = services.AddConquerorCQSHttpClientServices(o =>
             {
-                o.HttpClientFactory = uri =>
-                    throw new InvalidOperationException(
-                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+                _ = o.UseHttpClient(HttpClient);
 
                 o.JsonSerializerOptions = new()
                 {
@@ -321,11 +319,13 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 };
             });
 
-            _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(HttpClient),
+            var baseAddress = new Uri("http://localhost");
+
+            _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(baseAddress),
                                                                                                                                    b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
                                                                                                                                    b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
                                                                                                                                    b.ServiceProvider.GetRequiredService<TestObservations>()))
-                        .AddConquerorQueryClient<IQueryHandler<TestPostQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(HttpClient),
+                        .AddConquerorQueryClient<IQueryHandler<TestPostQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(baseAddress),
                                                                                                                                        b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
                                                                                                                                        b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
                                                                                                                                        b.ServiceProvider.GetRequiredService<TestObservations>()));

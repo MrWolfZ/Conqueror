@@ -4,27 +4,78 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
     [TestFixture]
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic interface generation")]
+    [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "false positive")]
     public sealed class QueryHttpClientRegistrationTests
     {
         [Test]
-        public async Task GivenCustomHttpClientFactory_WhenResolvingHandlerRegisteredWithBaseAddressFactory_CallsCustomHttpClientFactory()
+        public async Task GivenCustomHttpClient_WhenResolvingClient_UsesCustomHttpClient()
         {
-            var expectedBaseAddress = new Uri("http://localhost");
+            using var expectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(expectedHttpClient))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestQueryTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientWithBaseAddress_WhenResolvingClient_UsesCustomHttpClientsBaseAddress()
+        {
+            var expectedBaseAddress = new Uri("http://expected.localhost");
+            var unexpectedBaseAddress = new Uri("http://unexpected.localhost");
             Uri? seenBaseAddress = null;
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o =>
-                        {
-                            o.HttpClientFactory = baseAddress =>
-                            {
-                                seenBaseAddress = baseAddress;
-                                return new() { BaseAddress = baseAddress };
-                            };
-                        })
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(new() { BaseAddress = expectedBaseAddress }))
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            _ = b.UseHttp(expectedBaseAddress);
-                            return new TestQueryTransport();
+                            var transportClient = b.UseHttp(unexpectedBaseAddress) as HttpQueryTransportClient;
+
+                            seenBaseAddress = transportClient?.Options.BaseAddress;
+
+                            return new TestQueryTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedBaseAddress, seenBaseAddress);
+            Assert.AreNotSame(unexpectedBaseAddress, seenBaseAddress);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientWithoutBaseAddress_WhenResolvingClient_UsesProvidedBaseAddress()
+        {
+            var expectedBaseAddress = new Uri("http://expected.localhost");
+            Uri? seenBaseAddress = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(new()))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(expectedBaseAddress) as HttpQueryTransportClient;
+
+                            seenBaseAddress = transportClient?.Options.BaseAddress;
+
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -37,48 +88,179 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public void GivenCustomHttpClientFactory_WhenResolvingHandlerRegisteredWithHttpClientFactory_DoesNotCallCustomHttpClientFactory()
+        public async Task GivenCustomHttpClientForSameQueryType_WhenResolvingClient_UsesCustomHttpClient()
         {
+            using var expectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o =>
-                        {
-                            o.HttpClientFactory = _ =>
-                            {
-                                Assert.Fail("should not have called factory");
-                                return new();
-                            };
-                        })
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClientForQuery<TestQuery>(expectedHttpClient))
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            _ = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") });
-                            return new TestQueryTransport();
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestQueryTransportClient();
                         });
 
-            using var provider = services.BuildServiceProvider();
+            await using var provider = services.BuildServiceProvider();
 
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
-            Assert.DoesNotThrowAsync(() => client.ExecuteQuery(new(), CancellationToken.None));
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedHttpClient, seenHttpClient);
         }
 
         [Test]
-        public async Task GivenCustomHttpClientFactory_CallsFactoryWithScopedServiceProvider()
+        public async Task GivenGlobalCustomHttpClientAndCustomHttpClientForSameCommandType_WhenResolvingClient_UsesCustomHttpClientForCommandType()
+        {
+            using var expectedHttpClient = new HttpClient();
+            using var unexpectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(unexpectedHttpClient).UseHttpClientForQuery<TestQuery>(expectedHttpClient))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestQueryTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedHttpClient, seenHttpClient);
+            Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        }
+
+        // test different order of calling UseHttpClientForQuery and UseHttpClient
+        [Test]
+        public async Task GivenCustomHttpClientForSameQueryTypeAndGlobalCustomHttpClient_WhenResolvingClient_UsesCustomHttpClientForQueryType()
+        {
+            using var expectedHttpClient = new HttpClient();
+            using var unexpectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClientForQuery<TestQuery>(expectedHttpClient).UseHttpClient(unexpectedHttpClient))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestQueryTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedHttpClient, seenHttpClient);
+            Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
+        public async Task GivenGlobalCustomHttpClientAndCustomHttpClientForDifferentQueryType_WhenResolvingClient_UsesGlobalCustomHttpClient()
+        {
+            using var expectedHttpClient = new HttpClient();
+            using var unexpectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(expectedHttpClient).UseHttpClientForQuery<TestQuery2>(unexpectedHttpClient))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestQueryTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedHttpClient, seenHttpClient);
+            Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientForDifferentQueryType_WhenResolvingClient_DoesNotUseCustomHttpClient()
+        {
+            using var unexpectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClientForQuery<TestQuery2>(unexpectedHttpClient))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestQueryTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientForCommandType_WhenResolvingClient_DoesNotUseCustomHttpClient()
+        {
+            using var unexpectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClientForCommand<TestQuery>(unexpectedHttpClient))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestQueryTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
+        public async Task GivenCustomConfiguration_WhenResolvingClient_ConfiguresOptionsWithScopedServiceProvider()
         {
             var seenInstances = new HashSet<ScopingTest>();
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o =>
-                        {
-                            o.HttpClientFactory = baseAddress =>
-                            {
-                                _ = seenInstances.Add(o.ServiceProvider.GetRequiredService<ScopingTest>());
-                                return new() { BaseAddress = baseAddress };
-                            };
-                        })
+            _ = services.AddConquerorCQSHttpClientServices(o => { _ = seenInstances.Add(o.ServiceProvider.GetRequiredService<ScopingTest>()); })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            _ = b.UseHttp(new Uri("http://localhost"));
-                            return new TestQueryTransport();
+                            _ = b.UseHttp(new("http://localhost"));
+                            return new TestQueryTransportClient();
                         });
 
             _ = services.AddScoped<ScopingTest>();
@@ -103,7 +285,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenGlobalJsonSerializerOptions_WhenResolvingHandler_UsesGlobalJsonSerializerOptions()
+        public async Task GivenGlobalJsonSerializerOptions_WhenExecutingHandler_UsesGlobalJsonSerializerOptions()
         {
             var expectedOptions = new JsonSerializerOptions();
             JsonSerializerOptions? seenOptions = null;
@@ -112,9 +294,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = expectedOptions; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
-                            return new TestQueryTransport();
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -127,7 +309,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenClientJsonSerializerOptions_WhenResolvingHandler_UsesClientJsonSerializerOptions()
+        public async Task GivenClientJsonSerializerOptions_WhenExecutingHandler_UsesClientJsonSerializerOptions()
         {
             var expectedOptions = new JsonSerializerOptions();
             JsonSerializerOptions? seenOptions = null;
@@ -136,9 +318,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new("http://localhost"), o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
-                            return new TestQueryTransport();
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -151,7 +333,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenGlobalAndClientJsonSerializerOptions_WhenResolvingHandler_UsesClientJsonSerializerOptions()
+        public async Task GivenGlobalAndClientJsonSerializerOptions_WhenExecutingHandler_UsesClientJsonSerializerOptions()
         {
             var globalOptions = new JsonSerializerOptions();
             var expectedOptions = new JsonSerializerOptions();
@@ -161,9 +343,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = globalOptions; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new("http://localhost"), o => o.JsonSerializerOptions = expectedOptions) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
-                            return new TestQueryTransport();
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -177,7 +359,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenGlobalPathConvention_WhenResolvingHandler_UsesGlobalPathConvention()
+        public async Task GivenGlobalPathConvention_WhenExecutingHandler_UsesGlobalPathConvention()
         {
             var expectedConvention = new TestHttpQueryPathConvention();
             IHttpQueryPathConvention? seenConvention = null;
@@ -186,9 +368,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = expectedConvention; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
                             seenConvention = httpTransportClient?.Options.QueryPathConvention;
-                            return new TestQueryTransport();
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -201,7 +383,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
+        public async Task GivenClientPathConvention_WhenExecutingHandler_UsesClientPathConvention()
         {
             var expectedConvention = new TestHttpQueryPathConvention();
             IHttpQueryPathConvention? seenConvention = null;
@@ -210,9 +392,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedConvention) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new("http://localhost"), o => o.PathConvention = expectedConvention) as HttpQueryTransportClient;
                             seenConvention = httpTransportClient?.Options.QueryPathConvention;
-                            return new TestQueryTransport();
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -225,7 +407,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenGlobalAndClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
+        public async Task GivenGlobalAndClientPathConvention_WhenExecutingHandler_UsesClientPathConvention()
         {
             var globalConvention = new TestHttpQueryPathConvention();
             var expectedConvention = new TestHttpQueryPathConvention();
@@ -235,9 +417,9 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = globalConvention; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedConvention) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new("http://localhost"), o => o.PathConvention = expectedConvention) as HttpQueryTransportClient;
                             seenConvention = httpTransportClient?.Options.QueryPathConvention;
-                            return new TestQueryTransport();
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -251,7 +433,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenMultipleOptionsConfigurationsFromAddServices_WhenResolvingHandler_UsesMergedOptions()
+        public async Task GivenMultipleOptionsConfigurationsFromAddServices_WhenExecutingHandler_UsesMergedOptions()
         {
             var unexpectedOptions = new JsonSerializerOptions();
             var expectedOptions = new JsonSerializerOptions();
@@ -265,16 +447,13 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.JsonSerializerOptions = unexpectedOptions;
                             o.QueryPathConvention = expectedConvention;
                         })
-                        .AddConquerorCQSHttpClientServices(o =>
-                        {
-                            o.JsonSerializerOptions = expectedOptions;
-                        })
+                        .AddConquerorCQSHttpClientServices(o => { o.JsonSerializerOptions = expectedOptions; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new Uri("http://localhost")) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                             seenConvention = httpTransportClient?.Options.QueryPathConvention;
-                            return new TestQueryTransport();
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -289,7 +468,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenMultipleOptionsConfigurations_WhenResolvingHandler_UsesMergedOptions()
+        public async Task GivenMultipleOptionsConfigurations_WhenExecutingHandler_UsesMergedOptions()
         {
             var unexpectedOptions = new JsonSerializerOptions();
             var expectedOptions = new JsonSerializerOptions();
@@ -303,16 +482,13 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                             o.JsonSerializerOptions = unexpectedOptions;
                             o.QueryPathConvention = expectedConvention;
                         })
-                        .ConfigureConquerorCQSHttpClientOptions(o =>
-                        {
-                            o.JsonSerializerOptions = expectedOptions;
-                        })
+                        .ConfigureConquerorCQSHttpClientOptions(o => { o.JsonSerializerOptions = expectedOptions; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new Uri("http://localhost")) as HttpQueryTransportClient;
+                            var httpTransportClient = b.UseHttp(new("http://localhost")) as HttpQueryTransportClient;
                             seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                             seenConvention = httpTransportClient?.Options.QueryPathConvention;
-                            return new TestQueryTransport();
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -327,32 +503,14 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenCustomHttpClientFactoryWhichDoesNotSetClientBaseAddress_WhenResolvingHandler_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o => { o.HttpClientFactory = _ => new(); })
-                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
-                        {
-                            _ = b.UseHttp(new Uri("http://localhost"));
-                            return new TestQueryTransport();
-                        });
-
-            await using var provider = services.BuildServiceProvider();
-
-            var client = provider.GetRequiredService<ITestQueryHandler>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteQuery(new(), CancellationToken.None));
-        }
-
-        [Test]
-        public async Task GivenCustomHttpClientWhichDoesNotHaveBaseAddressSet_WhenResolvingHandler_ThrowsInvalidOperationException()
+        public async Task GivenClientConfigurationWithRelativeBaseAddress_WhenExecutingHandler_ThrowsInvalidOperationException()
         {
             var services = new ServiceCollection();
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            _ = b.UseHttp(new HttpClient());
-                            return new TestQueryTransport();
+                            _ = b.UseHttp(new("/", UriKind.Relative));
+                            return new TestQueryTransportClient();
                         });
 
             await using var provider = services.BuildServiceProvider();
@@ -360,6 +518,24 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
             _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteQuery(new(), CancellationToken.None));
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientWithBaseAddressAndClientConfigurationWithRelativeBaseAddress_WhenExecutingHandler_DoesNotThrowException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(new() { BaseAddress = new("http://localhost") }))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            _ = b.UseHttp(new("/", UriKind.Relative));
+                            return new TestQueryTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            Assert.DoesNotThrowAsync(() => client.ExecuteQuery(new(), CancellationToken.None));
         }
 
         [HttpQuery]
@@ -370,11 +546,14 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         public sealed record TestQueryResponse;
 
+        [HttpQuery]
+        public sealed record TestQuery2;
+
         public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
         }
 
-        private sealed class TestQueryTransport : IQueryTransportClient
+        private sealed class TestQueryTransportClient : IQueryTransportClient
         {
             public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
                 where TQuery : class

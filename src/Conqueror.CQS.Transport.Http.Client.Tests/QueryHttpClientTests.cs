@@ -342,9 +342,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             _ = services.AddConquerorCQSHttpClientServices(o =>
             {
-                o.HttpClientFactory = uri =>
-                    throw new InvalidOperationException(
-                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+                _ = o.UseHttpClient(HttpClient);
 
                 o.JsonSerializerOptions = new()
                 {
@@ -354,32 +352,34 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 o.QueryPathConvention = new TestHttpQueryPathConvention();
             });
 
-            _ = services.AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithStringPayloadHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithCollectionPayloadHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithComplexPayloadHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithComplexPayloadWithCollectionPropertyHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithOptionalPropertyHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestPostQueryHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestPostQueryWithoutPayloadHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(HttpClient, o => o.JsonSerializerOptions = new()
+            var baseAddress = new Uri("http://conqueror.test");
+
+            _ = services.AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithStringPayloadHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithoutPayloadHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithCollectionPayloadHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithComplexPayloadHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithComplexPayloadWithCollectionPropertyHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithOptionalPropertyHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestPostQueryHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestPostQueryWithoutPayloadHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>(b => b.UseHttp(baseAddress, o => o.JsonSerializerOptions = new()
                         {
                             Converters = { new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory() },
                             PropertyNameCaseInsensitive = true,
                         }))
-                        .AddConquerorQueryClient<ITestQueryWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestPostQueryWithCustomPathConventionHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithCustomPathHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestPostQueryWithCustomPathHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithVersionHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestPostQueryWithVersionHandler>(b => b.UseHttp(HttpClient))
-                        .AddConquerorQueryClient<ITestQueryWithCustomHeadersHandler>(b => b.UseHttp(HttpClient, o =>
+                        .AddConquerorQueryClient<ITestQueryWithCustomPathConventionHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestPostQueryWithCustomPathConventionHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithCustomPathHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestPostQueryWithCustomPathHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithVersionHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestPostQueryWithVersionHandler>(b => b.UseHttp(baseAddress))
+                        .AddConquerorQueryClient<ITestQueryWithCustomHeadersHandler>(b => b.UseHttp(baseAddress, o =>
                         {
                             o.Headers.Authorization = new("Basic", "test");
                             o.Headers.Add("test-header", new[] { "value1", "value2" });
                         }))
-                        .AddConquerorQueryClient<ITestPostQueryWithCustomHeadersHandler>(b => b.UseHttp(HttpClient, o =>
+                        .AddConquerorQueryClient<ITestPostQueryWithCustomHeadersHandler>(b => b.UseHttp(baseAddress, o =>
                         {
                             o.Headers.Authorization = new("Basic", "test");
                             o.Headers.Add("test-header", new[] { "value1", "value2" });

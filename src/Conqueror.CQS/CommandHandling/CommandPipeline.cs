@@ -35,7 +35,7 @@ namespace Conqueror.CQS.CommandHandling
 
             using var conquerorContext = conquerorContextAccessor.GetOrCreate();
 
-            var transportBuilder = new CommandTransportClientBuilder(serviceProvider);
+            var transportBuilder = new CommandTransportClientBuilder(serviceProvider, typeof(TCommand));
 
             try
             {

@@ -1,5 +1,4 @@
 using System;
-using System.Net.Http;
 
 namespace Conqueror.CQS.Transport.Http.Client
 {
@@ -9,8 +8,10 @@ namespace Conqueror.CQS.Transport.Http.Client
 
         public Action<HttpQueryClientOptions>? QueryConfigurationAction { get; init; }
 
-        public HttpClient? HttpClient { get; init; }
+        public Uri BaseAddress { get; init; } = default!;
 
-        public Uri? BaseAddress { get; init; }
+        public Type? CommandType { get; init; }
+
+        public Type? QueryType { get; init; }
     }
 }

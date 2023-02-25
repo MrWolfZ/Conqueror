@@ -4,7 +4,7 @@ namespace Conqueror.Recipes.CQS.Advanced.TestingHttp.Tests;
 public sealed class IncrementCounterCommandTests : TestBase
 {
     private IIncrementCounterCommandHandler CommandClient =>
-        ResolveOnClient<ICommandClientFactory>().CreateCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(HttpTestClient));
+        ResolveOnClient<ICommandClientFactory>().CreateCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(new("http://localhost")));
 
     [Test]
     public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncrementedAndNewValueIsReturned()

@@ -83,9 +83,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             _ = services.AddConquerorCQSHttpClientServices(o =>
             {
-                o.HttpClientFactory = uri =>
-                    throw new InvalidOperationException(
-                        $"during tests all clients should be explicitly configured with the test http client; got request to create http client for base address '{uri}'");
+                _ = o.UseHttpClient(HttpClient);
 
                 o.JsonSerializerOptions = new()
                 {
@@ -93,8 +91,10 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 };
             });
 
-            _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.UseHttp(HttpClient))
-                        .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.UseHttp(HttpClient));
+            var baseAddress = new Uri("http://localhost");
+
+            _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.UseHttp(baseAddress))
+                        .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.UseHttp(baseAddress));
         }
 
         protected override void Configure(IApplicationBuilder app)

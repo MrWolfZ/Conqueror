@@ -35,7 +35,7 @@ namespace Conqueror.CQS.QueryHandling
 
             using var conquerorContext = conquerorContextAccessor.GetOrCreate();
 
-            var transportClientBuilder = new QueryTransportClientBuilder(serviceProvider);
+            var transportClientBuilder = new QueryTransportClientBuilder(serviceProvider, typeof(TQuery));
 
             try
             {

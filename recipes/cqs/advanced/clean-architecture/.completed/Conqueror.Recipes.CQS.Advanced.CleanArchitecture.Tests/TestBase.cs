@@ -7,6 +7,7 @@ public abstract class TestBase : IDisposable
 {
     private readonly WebApplicationFactory<Program> applicationFactory;
     private readonly ServiceProvider clientServices;
+    private readonly HttpClient httpTestClient;
 
     protected TestBase()
     {
@@ -18,20 +19,19 @@ public abstract class TestBase : IDisposable
                                            .SetMinimumLevel(LogLevel.Information));
         });
 
-        HttpTestClient = applicationFactory.CreateClient(new() { AllowAutoRedirect = false });
+        httpTestClient = applicationFactory.CreateClient(new() { AllowAutoRedirect = false });
 
         // create a dedicated service provider for resolving command and query clients
-        // to prevent interference with other services from the actual application
-        clientServices = new ServiceCollection().AddConquerorCQSHttpClientServices()
-                                                .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+        // to prevent interference with other services from the actual application; we also
+        // configure the client services to use our test server's HTTP client
+        clientServices = new ServiceCollection().AddConquerorCQSHttpClientServices(o => o.UseHttpClient(httpTestClient))
+                                                .BuildServiceProvider();
     }
-
-    protected HttpClient HttpTestClient { get; }
 
     public void Dispose()
     {
         clientServices.Dispose();
-        HttpTestClient.Dispose();
+        httpTestClient.Dispose();
         applicationFactory.Dispose();
     }
 
@@ -39,8 +39,8 @@ public abstract class TestBase : IDisposable
         where T : notnull => applicationFactory.Services.GetRequiredService<T>();
 
     protected T ResolveCommandClient<T>()
-        where T : class, ICommandHandler => clientServices.GetRequiredService<ICommandClientFactory>().CreateCommandClient<T>(b => b.UseHttp(HttpTestClient));
+        where T : class, ICommandHandler => clientServices.GetRequiredService<ICommandClientFactory>().CreateCommandClient<T>(b => b.UseHttp(new("http://localhost")));
 
     protected T ResolveQueryClient<T>()
-        where T : class, IQueryHandler => clientServices.GetRequiredService<IQueryClientFactory>().CreateQueryClient<T>(b => b.UseHttp(HttpTestClient));
+        where T : class, IQueryHandler => clientServices.GetRequiredService<IQueryClientFactory>().CreateQueryClient<T>(b => b.UseHttp(new("http://localhost")));
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Net.Http;
 using Conqueror.CQS.Transport.Http.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,30 +7,15 @@ namespace Conqueror
 {
     public static class HttpQueryTransportClientBuilderExtensions
     {
-        public static IQueryTransportClient UseHttp(this IQueryTransportClientBuilder builder, HttpClient httpClient, Action<HttpQueryClientOptions>? configure = null)
-        {
-            var registration = new HttpClientRegistration
-            {
-                HttpClient = httpClient,
-                QueryConfigurationAction = configure,
-            };
-
-            return builder.UseHttp(registration);
-        }
-
         public static IQueryTransportClient UseHttp(this IQueryTransportClientBuilder builder, Uri baseAddress, Action<HttpQueryClientOptions>? configure = null)
         {
             var registration = new HttpClientRegistration
             {
                 BaseAddress = baseAddress,
                 QueryConfigurationAction = configure,
+                QueryType = builder.QueryType,
             };
 
-            return builder.UseHttp(registration);
-        }
-
-        private static IQueryTransportClient UseHttp(this IQueryTransportClientBuilder builder, HttpClientRegistration registration)
-        {
             var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
             return new HttpQueryTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration),
                                                 builder.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),

@@ -40,10 +40,10 @@ public abstract class TestBase
     protected JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
     protected THandler CreateCommandHttpClient<THandler>()
-        where THandler : class, ICommandHandler => ResolveOnClient<ICommandClientFactory>().CreateCommandClient<THandler>(b => b.UseHttp(HttpClient));
+        where THandler : class, ICommandHandler => ResolveOnClient<ICommandClientFactory>().CreateCommandClient<THandler>(b => b.UseHttp(new("http://localhost")));
 
     protected THandler CreateQueryHttpClient<THandler>()
-        where THandler : class, IQueryHandler => ResolveOnClient<IQueryClientFactory>().CreateQueryClient<THandler>(b => b.UseHttp(HttpClient));
+        where THandler : class, IQueryHandler => ResolveOnClient<IQueryClientFactory>().CreateQueryClient<THandler>(b => b.UseHttp(new("http://localhost")));
 
     [SetUp]
     public void SetUp()
@@ -71,7 +71,7 @@ public abstract class TestBase
     {
         _ = services.AddConquerorCQSHttpClientServices(o =>
         {
-            o.HttpClientFactory = _ => HttpClient;
+            o.UseHttpClient(HttpClient);
             o.JsonSerializerOptions = JsonSerializerOptions;
         });
     }

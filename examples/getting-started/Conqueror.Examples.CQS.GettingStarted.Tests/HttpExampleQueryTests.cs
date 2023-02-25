@@ -37,15 +37,14 @@ public sealed class HttpExampleQueryTests
     }
 
     private IHttpExampleQueryHandler QueryHandler => ClientServiceProvider.GetRequiredService<IQueryClientFactory>()
-                                                                          .CreateQueryClient<IHttpExampleQueryHandler>(b => b.UseHttp(HttpClient));
+                                                                          .CreateQueryClient<IHttpExampleQueryHandler>(b => b.UseHttp(new("http://localhost")));
 
     [SetUp]
     public void SetUp()
     {
         applicationFactory = new();
 
-        clientServiceProvider = new ServiceCollection().AddConquerorCQSHttpClientServices()
-                                                       .FinalizeConquerorRegistrations()
+        clientServiceProvider = new ServiceCollection().AddConquerorCQSHttpClientServices(o => o.UseHttpClient(HttpClient))
                                                        .BuildServiceProvider();
 
         client = applicationFactory.CreateClient();
