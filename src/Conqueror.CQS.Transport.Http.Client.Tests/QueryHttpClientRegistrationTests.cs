@@ -179,15 +179,15 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         [Test]
         public async Task GivenGlobalPathConvention_WhenResolvingHandler_UsesGlobalPathConvention()
         {
-            var expectedOptions = new TestHttpQueryPathConvention();
-            IHttpQueryPathConvention? seenOptions = null;
+            var expectedConvention = new TestHttpQueryPathConvention();
+            IHttpQueryPathConvention? seenConvention = null;
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = expectedOptions; })
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = expectedConvention; })
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
                             var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }) as HttpQueryTransportClient;
-                            seenOptions = httpTransportClient?.Options.QueryPathConvention;
+                            seenConvention = httpTransportClient?.Options.QueryPathConvention;
                             return new TestQueryTransport();
                         });
 
@@ -197,21 +197,83 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-            Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreSame(expectedConvention, seenConvention);
         }
 
         [Test]
         public async Task GivenClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
         {
-            var expectedOptions = new TestHttpQueryPathConvention();
-            IHttpQueryPathConvention? seenOptions = null;
+            var expectedConvention = new TestHttpQueryPathConvention();
+            IHttpQueryPathConvention? seenConvention = null;
 
             var services = new ServiceCollection();
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorQueryClient<ITestQueryHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedOptions) as HttpQueryTransportClient;
-                            seenOptions = httpTransportClient?.Options.QueryPathConvention;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedConvention) as HttpQueryTransportClient;
+                            seenConvention = httpTransportClient?.Options.QueryPathConvention;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedConvention, seenConvention);
+        }
+
+        [Test]
+        public async Task GivenGlobalAndClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
+        {
+            var globalConvention = new TestHttpQueryPathConvention();
+            var expectedConvention = new TestHttpQueryPathConvention();
+            IHttpQueryPathConvention? seenConvention = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = globalConvention; })
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedConvention) as HttpQueryTransportClient;
+                            seenConvention = httpTransportClient?.Options.QueryPathConvention;
+                            return new TestQueryTransport();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestQueryHandler>();
+
+            _ = await client.ExecuteQuery(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedConvention, seenConvention);
+            Assert.AreNotSame(globalConvention, seenConvention);
+        }
+
+        [Test]
+        public async Task GivenMultipleOptionsConfigurations_WhenResolvingHandler_UsesMergedOptions()
+        {
+            var unexpectedOptions = new JsonSerializerOptions();
+            var expectedOptions = new JsonSerializerOptions();
+            var expectedConvention = new TestHttpQueryPathConvention();
+            JsonSerializerOptions? seenOptions = null;
+            IHttpQueryPathConvention? seenConvention = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o =>
+                        {
+                            o.JsonSerializerOptions = unexpectedOptions;
+                            o.QueryPathConvention = expectedConvention;
+                        })
+                        .AddConquerorCQSHttpClientServices(o =>
+                        {
+                            o.JsonSerializerOptions = expectedOptions;
+                        })
+                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new Uri("http://localhost")) as HttpQueryTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            seenConvention = httpTransportClient?.Options.QueryPathConvention;
                             return new TestQueryTransport();
                         });
 
@@ -222,6 +284,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
             Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreNotSame(unexpectedOptions, seenOptions);
+            Assert.AreSame(expectedConvention, seenConvention);
         }
 
         [Test]
@@ -258,32 +322,6 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             var client = provider.GetRequiredService<ITestQueryHandler>();
 
             _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteQuery(new(), CancellationToken.None));
-        }
-
-        [Test]
-        public async Task GivenGlobalAndClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
-        {
-            var globalOptions = new TestHttpQueryPathConvention();
-            var expectedOptions = new TestHttpQueryPathConvention();
-            IHttpQueryPathConvention? seenOptions = null;
-
-            var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o => { o.QueryPathConvention = globalOptions; })
-                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
-                        {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedOptions) as HttpQueryTransportClient;
-                            seenOptions = httpTransportClient?.Options.QueryPathConvention;
-                            return new TestQueryTransport();
-                        });
-
-            await using var provider = services.BuildServiceProvider();
-
-            var client = provider.GetRequiredService<ITestQueryHandler>();
-
-            _ = await client.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.AreSame(expectedOptions, seenOptions);
-            Assert.AreNotSame(globalOptions, seenOptions);
         }
 
         [HttpQuery]

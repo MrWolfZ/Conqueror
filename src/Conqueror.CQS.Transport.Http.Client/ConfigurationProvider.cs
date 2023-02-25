@@ -1,20 +1,26 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Conqueror.CQS.Transport.Http.Client
 {
     internal sealed class ConfigurationProvider
     {
-        private readonly Action<ConquerorCqsHttpClientGlobalOptions>? configureGlobalOptions;
+        private readonly IReadOnlyCollection<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions;
 
-        public ConfigurationProvider(Action<ConquerorCqsHttpClientGlobalOptions>? configureGlobalOptions = null)
+        public ConfigurationProvider(IEnumerable<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions)
         {
-            this.configureGlobalOptions = configureGlobalOptions;
+            this.configureGlobalOptions = configureGlobalOptions.ToList();
         }
 
         public ResolvedHttpClientOptions GetOptions(IServiceProvider provider, HttpClientRegistration registration)
         {
             var globalOptions = new ConquerorCqsHttpClientGlobalOptions(provider);
-            configureGlobalOptions?.Invoke(globalOptions);
+
+            foreach (var configure in configureGlobalOptions)
+            {
+                configure(globalOptions);
+            }
 
             var commandOptions = new HttpCommandClientOptions(provider);
             registration.CommandConfigurationAction?.Invoke(commandOptions);

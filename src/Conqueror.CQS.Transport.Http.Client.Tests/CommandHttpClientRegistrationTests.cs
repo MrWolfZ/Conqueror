@@ -179,15 +179,15 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         [Test]
         public async Task GivenGlobalPathConvention_WhenResolvingHandler_UsesGlobalPathConvention()
         {
-            var expectedOptions = new TestHttpCommandPathConvention();
-            IHttpCommandPathConvention? seenOptions = null;
+            var expectedConvention = new TestHttpCommandPathConvention();
+            IHttpCommandPathConvention? seenConvention = null;
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o => { o.CommandPathConvention = expectedOptions; })
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.CommandPathConvention = expectedConvention; })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
                             var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }) as HttpCommandTransportClient;
-                            seenOptions = httpTransportClient?.Options.CommandPathConvention;
+                            seenConvention = httpTransportClient?.Options.CommandPathConvention;
                             return new TestCommandTransport();
                         });
 
@@ -197,21 +197,21 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = await client.ExecuteCommand(new(), CancellationToken.None);
 
-            Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreSame(expectedConvention, seenConvention);
         }
 
         [Test]
         public async Task GivenClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
         {
-            var expectedOptions = new TestHttpCommandPathConvention();
-            IHttpCommandPathConvention? seenOptions = null;
+            var expectedConvention = new TestHttpCommandPathConvention();
+            IHttpCommandPathConvention? seenConvention = null;
 
             var services = new ServiceCollection();
             _ = services.AddConquerorCQSHttpClientServices()
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedOptions) as HttpCommandTransportClient;
-                            seenOptions = httpTransportClient?.Options.CommandPathConvention;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedConvention) as HttpCommandTransportClient;
+                            seenConvention = httpTransportClient?.Options.CommandPathConvention;
                             return new TestCommandTransport();
                         });
 
@@ -221,22 +221,59 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = await client.ExecuteCommand(new(), CancellationToken.None);
 
-            Assert.AreSame(expectedOptions, seenOptions);
+            Assert.AreSame(expectedConvention, seenConvention);
         }
 
         [Test]
         public async Task GivenGlobalAndClientPathConvention_WhenResolvingHandler_UsesClientPathConvention()
         {
-            var globalOptions = new TestHttpCommandPathConvention();
-            var expectedOptions = new TestHttpCommandPathConvention();
-            IHttpCommandPathConvention? seenOptions = null;
+            var globalConvention = new TestHttpCommandPathConvention();
+            var expectedConvention = new TestHttpCommandPathConvention();
+            IHttpCommandPathConvention? seenConvention = null;
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o => { o.CommandPathConvention = globalOptions; })
+            _ = services.AddConquerorCQSHttpClientServices(o => { o.CommandPathConvention = globalConvention; })
                         .AddConquerorCommandClient<ITestCommandHandler>(b =>
                         {
-                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedOptions) as HttpCommandTransportClient;
-                            seenOptions = httpTransportClient?.Options.CommandPathConvention;
+                            var httpTransportClient = b.UseHttp(new HttpClient { BaseAddress = new("http://localhost") }, o => o.PathConvention = expectedConvention) as HttpCommandTransportClient;
+                            seenConvention = httpTransportClient?.Options.CommandPathConvention;
+                            return new TestCommandTransport();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedConvention, seenConvention);
+            Assert.AreNotSame(globalConvention, seenConvention);
+        }
+
+        [Test]
+        public async Task GivenMultipleOptionsConfigurations_WhenResolvingHandler_UsesMergedOptions()
+        {
+            var unexpectedOptions = new JsonSerializerOptions();
+            var expectedOptions = new JsonSerializerOptions();
+            var expectedConvention = new TestHttpCommandPathConvention();
+            JsonSerializerOptions? seenOptions = null;
+            IHttpCommandPathConvention? seenConvention = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o =>
+                        {
+                            o.JsonSerializerOptions = unexpectedOptions;
+                            o.CommandPathConvention = expectedConvention;
+                        })
+                        .AddConquerorCQSHttpClientServices(o =>
+                        {
+                            o.JsonSerializerOptions = expectedOptions;
+                        })
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var httpTransportClient = b.UseHttp(new Uri("http://localhost")) as HttpCommandTransportClient;
+                            seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
+                            seenConvention = httpTransportClient?.Options.CommandPathConvention;
                             return new TestCommandTransport();
                         });
 
@@ -247,7 +284,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             _ = await client.ExecuteCommand(new(), CancellationToken.None);
 
             Assert.AreSame(expectedOptions, seenOptions);
-            Assert.AreNotSame(globalOptions, seenOptions);
+            Assert.AreNotSame(unexpectedOptions, seenOptions);
+            Assert.AreSame(expectedConvention, seenConvention);
         }
 
         [Test]
