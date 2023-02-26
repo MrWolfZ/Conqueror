@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
@@ -38,7 +37,7 @@ namespace Conqueror.CQS.Transport.Http.Client
             using var message = new HttpRequestMessage
             {
                 Method = HttpMethod.Post,
-                RequestUri = new(path, UriKind.Relative),
+                RequestUri = new(Options.BaseAddress, path),
                 Content = content,
             };
 

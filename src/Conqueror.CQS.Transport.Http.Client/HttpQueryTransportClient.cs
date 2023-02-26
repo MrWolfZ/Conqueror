@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -72,7 +71,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 uriString += BuildQueryString(query);
             }
 
-            requestMessage.RequestUri = new(uriString, UriKind.Relative);
+            requestMessage.RequestUri = new(Options.BaseAddress, uriString);
 
             var response = await Options.HttpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 

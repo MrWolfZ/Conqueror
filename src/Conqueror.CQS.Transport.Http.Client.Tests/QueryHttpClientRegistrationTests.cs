@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 
 namespace Conqueror.CQS.Transport.Http.Client.Tests
@@ -38,18 +39,11 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             var expectedBaseAddress = new Uri("http://expected.localhost");
             var unexpectedBaseAddress = new Uri("http://unexpected.localhost");
-            Uri? seenBaseAddress = null;
+            using var testClient = new TestHttpClient { BaseAddress = expectedBaseAddress };
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(new() { BaseAddress = expectedBaseAddress }))
-                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
-                        {
-                            var transportClient = b.UseHttp(unexpectedBaseAddress) as HttpQueryTransportClient;
-
-                            seenBaseAddress = transportClient?.Options.BaseAddress;
-
-                            return new TestQueryTransportClient();
-                        });
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(testClient))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(unexpectedBaseAddress));
 
             await using var provider = services.BuildServiceProvider();
 
@@ -57,26 +51,20 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-            Assert.AreSame(expectedBaseAddress, seenBaseAddress);
-            Assert.AreNotSame(unexpectedBaseAddress, seenBaseAddress);
+            Assert.IsNotNull(testClient.LastSeenRequestUri);
+            Assert.IsTrue(expectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!));
+            Assert.IsFalse(unexpectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!));
         }
 
         [Test]
         public async Task GivenCustomHttpClientWithoutBaseAddress_WhenResolvingClient_UsesProvidedBaseAddress()
         {
             var expectedBaseAddress = new Uri("http://expected.localhost");
-            Uri? seenBaseAddress = null;
+            using var testClient = new TestHttpClient();
 
             var services = new ServiceCollection();
-            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(new()))
-                        .AddConquerorQueryClient<ITestQueryHandler>(b =>
-                        {
-                            var transportClient = b.UseHttp(expectedBaseAddress) as HttpQueryTransportClient;
-
-                            seenBaseAddress = transportClient?.Options.BaseAddress;
-
-                            return new TestQueryTransportClient();
-                        });
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(testClient))
+                        .AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(expectedBaseAddress));
 
             await using var provider = services.BuildServiceProvider();
 
@@ -84,7 +72,8 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
             _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-            Assert.AreSame(expectedBaseAddress, seenBaseAddress);
+            Assert.IsNotNull(testClient.LastSeenRequestUri);
+            Assert.IsTrue(expectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!));
         }
 
         [Test]
@@ -572,6 +561,23 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         private sealed class ScopingTest
         {
+        }
+
+        private sealed class TestHttpClient : HttpClient
+        {
+            public Uri? LastSeenRequestUri { get; set; }
+
+            public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                LastSeenRequestUri = request.RequestUri;
+
+                var response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{}"),
+                };
+
+                return Task.FromResult(response);
+            }
         }
     }
 }
