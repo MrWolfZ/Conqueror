@@ -21,7 +21,6 @@ This file contains all the open points for extensions and improvements to the **
 ## CQS
 
 - [ ] add note in basics recipe that it is fine for simple applications to have DB logic directly in handlers
-- [ ] remove restriction about only being able to add middleware to pipeline once (also adjust mentions in recipe)
 - [ ] try referencing a lower version of csharp analyzer dependencies to prevent version conflicts
 - [ ] write code-level documentation for all public APIs
 - [ ] create analyzers (including code fixes)
@@ -50,9 +49,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
-- [ ] create recipe for "testing code that calls HTTP commands or queries"
-  - [ ] in recipe, mention that optimally you would test against the real application
-  - [ ] in recipe, show how to create dedicated test server that has a delegate for handling specific command (the delegate calls another delegate, that can be overwritten in a test to be able to execute assertions)
 - [ ] create analyzers (including code fixes)
   - [ ] when command or query does not have a version
 - [ ] add recipe for customizing OpenAPI specification with swashbuckle

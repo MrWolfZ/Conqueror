@@ -1,0 +1,72 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{FD2B5D63-9E15-4E0C-8E98-E4849686E6A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Contracts", "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Contracts\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Contracts.csproj", "{77D7C066-2A84-4976-BB24-48EADF756E83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server", "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server.csproj", "{A023BF30-AB95-4E38-A025-559A01834350}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client", "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.csproj", "{6E608768-9ED8-4523-94A1-EEABD9937FF6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests", "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests.csproj", "{B91615B9-B205-499E-A632-A86E16B3DA57}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Contracts", ".completed\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Contracts\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Contracts.csproj", "{2A66A000-D9BE-43B8-9FED-E87CD2831D91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client", ".completed\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.csproj", "{583CC201-5310-48BE-9F03-EF5AEBC7FB9A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server", ".completed\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server.csproj", "{34156109-049B-4D4E-A5D1-32B49510053F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests", ".completed\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests.csproj", "{7B11C747-6515-43BF-BB82-252E594BC8B4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{77D7C066-2A84-4976-BB24-48EADF756E83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77D7C066-2A84-4976-BB24-48EADF756E83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77D7C066-2A84-4976-BB24-48EADF756E83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77D7C066-2A84-4976-BB24-48EADF756E83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A023BF30-AB95-4E38-A025-559A01834350}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A023BF30-AB95-4E38-A025-559A01834350}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A023BF30-AB95-4E38-A025-559A01834350}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A023BF30-AB95-4E38-A025-559A01834350}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E608768-9ED8-4523-94A1-EEABD9937FF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E608768-9ED8-4523-94A1-EEABD9937FF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E608768-9ED8-4523-94A1-EEABD9937FF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E608768-9ED8-4523-94A1-EEABD9937FF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B91615B9-B205-499E-A632-A86E16B3DA57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B91615B9-B205-499E-A632-A86E16B3DA57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B91615B9-B205-499E-A632-A86E16B3DA57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B91615B9-B205-499E-A632-A86E16B3DA57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A66A000-D9BE-43B8-9FED-E87CD2831D91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A66A000-D9BE-43B8-9FED-E87CD2831D91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A66A000-D9BE-43B8-9FED-E87CD2831D91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A66A000-D9BE-43B8-9FED-E87CD2831D91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{583CC201-5310-48BE-9F03-EF5AEBC7FB9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{583CC201-5310-48BE-9F03-EF5AEBC7FB9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{583CC201-5310-48BE-9F03-EF5AEBC7FB9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{583CC201-5310-48BE-9F03-EF5AEBC7FB9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34156109-049B-4D4E-A5D1-32B49510053F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34156109-049B-4D4E-A5D1-32B49510053F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34156109-049B-4D4E-A5D1-32B49510053F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34156109-049B-4D4E-A5D1-32B49510053F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B11C747-6515-43BF-BB82-252E594BC8B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B11C747-6515-43BF-BB82-252E594BC8B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B11C747-6515-43BF-BB82-252E594BC8B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B11C747-6515-43BF-BB82-252E594BC8B4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2A66A000-D9BE-43B8-9FED-E87CD2831D91} = {FD2B5D63-9E15-4E0C-8E98-E4849686E6A1}
+		{583CC201-5310-48BE-9F03-EF5AEBC7FB9A} = {FD2B5D63-9E15-4E0C-8E98-E4849686E6A1}
+		{34156109-049B-4D4E-A5D1-32B49510053F} = {FD2B5D63-9E15-4E0C-8E98-E4849686E6A1}
+		{7B11C747-6515-43BF-BB82-252E594BC8B4} = {FD2B5D63-9E15-4E0C-8E98-E4849686E6A1}
+	EndGlobalSection
+EndGlobal

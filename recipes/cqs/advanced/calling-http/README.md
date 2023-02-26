@@ -336,7 +336,7 @@ And that concludes this recipe for calling your HTTP commands and queries from a
 - add your command and query clients to your services and configure them to use the HTTP transport
 - configure your clients as required with middlewares and HTTP settings
 
-As the next step we recommend that you explore how to [create a clean architecture with commands and queries](../clean-architecture#readme).
+As the next step we recommend that you explore how to [test your code which calls HTTP commands and queries](../testing-calling-http#readme) or how to [create a clean architecture with commands and queries](../clean-architecture#readme).
 
 Or head over to our [other recipes](../../../../../..#recipes) for more guidance on different topics.
 
