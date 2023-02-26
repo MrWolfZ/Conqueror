@@ -1,4 +1,4 @@
-# Conqueror recipe (CQS Advanced): creating a clean architecture with commands and queries
+# Conqueror recipe (CQS Advanced): creating a clean architecture and modular monolith with commands and queries
 
 This recipe shows how you can use commands and queries to create a [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) with **Conqueror.CQS**.
 
