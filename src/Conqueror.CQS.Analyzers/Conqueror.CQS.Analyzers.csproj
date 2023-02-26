@@ -34,9 +34,9 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Condition="'$(TargetFramework)' == 'net6.0'" Version="4.3.1" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Condition="'$(TargetFramework)' == 'net7.0'" Version="4.4.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Condition="'$(TargetFramework)' == 'net7.0'" Version="4.3.1" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Condition="'$(TargetFramework)' == 'net6.0'" Version="4.3.1" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Condition="'$(TargetFramework)' == 'net7.0'" Version="4.4.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Condition="'$(TargetFramework)' == 'net7.0'" Version="4.3.1" />
     </ItemGroup>
 
     <ItemGroup>
