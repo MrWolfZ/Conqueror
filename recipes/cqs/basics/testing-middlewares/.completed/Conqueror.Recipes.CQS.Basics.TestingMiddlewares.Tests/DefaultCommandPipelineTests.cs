@@ -62,12 +62,10 @@ public sealed class DefaultCommandPipelineTests : TestBase
     {
         base.ConfigureServices(services);
 
-        services.AddConquerorCommandHandler<TestCommandHandler>()
-
-                // add dynamic pipeline and handler execution methods; we wrap them in
-                // an extra arrow function to allow them to be changed inside of tests
-                .AddSingleton<Action<ICommandPipelineBuilder>>(p => configurePipeline(p))
-                .AddSingleton<Func<TestCommand, Task<TestCommandResponse>>>(cmd => handlerExecutionFn(cmd));
+        // create handler from delegate; note that we intentionally wrap the pipeline configuration function
+        // in another arrow function to ensure it can the changed inside tests
+        services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecutionFn(command),
+                                                                                      pipeline => configurePipeline(pipeline));
     }
 
     private sealed record TestCommand(int Parameter)
@@ -77,22 +75,4 @@ public sealed class DefaultCommandPipelineTests : TestBase
     }
 
     private sealed record TestCommandResponse(int Value);
-
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-    {
-        private readonly Func<TestCommand, Task<TestCommandResponse>> executeFn;
-
-        public TestCommandHandler(Func<TestCommand, Task<TestCommandResponse>> executeFn)
-        {
-            this.executeFn = executeFn;
-        }
-
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
-            pipeline.ServiceProvider.GetRequiredService<Action<ICommandPipelineBuilder>>()(pipeline);
-
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-        {
-            return executeFn(command);
-        }
-    }
 }

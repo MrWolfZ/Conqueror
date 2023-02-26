@@ -71,38 +71,17 @@ public sealed class RetryCommandMiddlewareTests
 
     private sealed record TestCommandResponse(int Value);
 
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-    {
-        private readonly Func<TestCommand, Task<TestCommandResponse>> executeFn;
-
-        public TestCommandHandler(Func<TestCommand, Task<TestCommandResponse>> executeFn)
-        {
-            this.executeFn = executeFn;
-        }
-
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
-            pipeline.ServiceProvider.GetRequiredService<Action<ICommandPipelineBuilder>>()(pipeline);
-
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-        {
-            return executeFn(command);
-        }
-    }
-
     private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn,
                                                         Action<ICommandPipelineBuilder>? configurePipeline = null)
     {
         return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
-                                      .AddConquerorCommandHandler<TestCommandHandler>()
+
+                                      // create a handler from a delegate
+                                      .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecuteFn(command),
+                                                                                                            configurePipeline ?? (pipeline => pipeline.UseRetry()))
 
                                       // add the retry middleware's default configuration
                                       .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
-
-                                      // add the dynamic execution function so that it can be injected into the handler
-                                      .AddSingleton(handlerExecuteFn)
-
-                                      // add the dynamic pipeline configuration function so that it can be used in the handler
-                                      .AddSingleton(configurePipeline ?? (pipeline => pipeline.UseRetry()))
 
                                       .BuildServiceProvider();
     }

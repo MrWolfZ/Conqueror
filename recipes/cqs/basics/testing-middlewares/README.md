@@ -101,46 +101,28 @@ public sealed class RetryCommandMiddlewareTests
 }
 ```
 
-The retry middleware's behavior depends on what happens when the handler is executed (i.e. based on whether it throws an exception or not). Therefore, we need to be able to control what the handler does in our tests. The simplest way to do this is to create a dedicated command and handler in the test class and then make the handler's behavior configurable through dependency injection like this:
+The retry middleware's behavior depends on what happens when the handler is executed (i.e. based on whether it throws an exception or not). Therefore, we need to be able to control what the handler does in our tests. **Conqueror.CQS** provides a way to create handlers from a delegate, which makes it very simple to create a handler with dynamic behavior. Let's create a dedicated test comand type and create the handler delegate:
 
 ```cs
 private sealed record TestCommand(int Parameter);
 
 private sealed record TestCommandResponse(int Value);
 
-private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-{
-    private readonly Func<TestCommand, Task<TestCommandResponse>> executeFn;
-
-    public TestCommandHandler(Func<TestCommand, Task<TestCommandResponse>> executeFn)
-    {
-        this.executeFn = executeFn;
-    }
-
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
-        pipeline.UseRetry();
-
-    public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-    {
-        return executeFn(command);
-    }
-}
-
 private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn)
 {
     return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
-                                  .AddConquerorCommandHandler<TestCommandHandler>()
+
+                                  // create a handler from a delegate
+                                  .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecuteFn(command),
+                                                                                                        pipeline => pipeline.UseRetry())
 
                                   // add the retry middleware's default configuration
                                   .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
-
-                                  // add the dynamic execution function so that it can be injected into the handler
-                                  .AddSingleton(handlerExecuteFn)
                                   .BuildServiceProvider();
 }
 ```
 
-> Instead of using a `Func` like this you could of course also create and inject an `ITestDependency` interface into the handler and then use a mocking library like [Moq](https://github.com/moq/moq4) to mock and dynamically configure the behavior of `ITestDependency`.
+> Creating handlers from delegates like this is only recommended for testing purposes. In the application code itself, handlers shoud always be proper classes.
 
 With the supporting code above we can now start writing tests. The first test will assert that execution is successful when the handler throws an exception once with the default configuration:
 
@@ -182,7 +164,7 @@ public async Task GivenHandlerThatContinuouslyThrowsWithDefaultConfiguration_Whe
 }
 ```
 
-You may have noticed that we referred to the default configuration, but currently we cannot provide a custom middleware configuration for the handler. However, we can use the same approach as for the dynamic handler behavior by adding a custom middleware configuration function into the service provider:
+You may have noticed that we referred to the default configuration, but currently we cannot provide a custom middleware configuration for the handler. However, we can use the same approach as for the dynamic handler behavior by passing a custom middleware configuration function into the service provider build method:
 
 ```diff
 - private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn)
@@ -190,30 +172,17 @@ You may have noticed that we referred to the default configuration, but currentl
 +                                                     Action<ICommandPipelineBuilder>? configurePipeline = null)
   {
       return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
-                                    .AddConquerorCommandHandler<TestCommandHandler>()
+
+                                   // create a handler from a delegate
+                                   .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecuteFn(command),
+-                                                                                                        pipeline => pipeline.UseRetry())
++                                                                                                        configurePipeline ?? (pipeline => pipeline.UseRetry()))
 
                                     // add the retry middleware's default configuration
                                     .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
-
-                                    // add the dynamic execution function so that it can be injected into the handler
-                                    .AddSingleton(handlerExecuteFn)
-+
-+                                   // add the dynamic pipeline configuration function so that it can be used in the handler
-+                                   .AddSingleton(configurePipeline ?? (pipeline => pipeline.UseRetry()))
-+
-                                    .BuildServiceProvider();
-  }
 ```
 
-We then need to adjust the handler's `ConfigurePipeline` method as follows:
-
-```diff
-  public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
--     pipeline.UseRetry();
-+     pipeline.ServiceProvider.GetRequiredService<Action<ICommandPipelineBuilder>>()(pipeline);
-```
-
-With these changes we can now dynamically configure the pipeline in our tests. Let's add a test which verifies that a custom retry attempt limit works as expected:
+With this change we can dynamically configure the pipeline in our tests. Let's add a test which verifies that a custom retry attempt limit works as expected:
 
 ```cs
 [Test]
@@ -256,7 +225,7 @@ public async Task GivenHandlerThatContinuouslyThrowsWithCustomRetryAttemptLimitO
 
 There are more tests which could be written for the retry middleware (for example, the edge cases of providing a zero or negative retry attempt limit), but the tests above should be sufficient to illustrate how tests for configurable middlewares can be written.
 
-As the last step we are going to write tests for the default middleware pipeline defined in [CommandPipelineDefaultBuilderExtensions.cs](Conqueror.Recipes.CQS.Basics.TestingMiddlewares/CommandPipelineDefaultBuilderExtensions.cs). This pipeline consists of two middlewares: the data annotation validation and retry middlewares we just wrote tests for. This particular pipeline is simple enough that we could test it exactly like we tested the individual middlewares, i.e. we would create a custom service provider inside a helper function in the test class and then resolve the handler from that provider to execute it. If your own reusable pipeline is as simple as this, then this approach is just fine to use. However, in a real application your pipelines are likely going to be significantly bigger and more complex, and it would require quite a lot of work to set up the service provider correctly. For these complex pipelines the better approach is to create (or reuse) a custom `TestBase` class, which takes care of the setup and let's the actual test class focus on the tests themselves, just like we did in the recipe for [testing command and query handlers](../testing-handlers#readme).
+As the last step we are going to write tests for the default middleware pipeline defined in [CommandPipelineDefaultBuilderExtensions.cs](Conqueror.Recipes.CQS.Basics.TestingMiddlewares/CommandPipelineDefaultBuilderExtensions.cs). This pipeline consists of two middlewares: the data annotation validation and retry middlewares we just wrote tests for. This particular pipeline is simple enough that we could test it exactly like we tested the individual middlewares, i.e. we would create a custom service provider inside a helper function in the test class and then resolve the handler from that provider to execute it. If your own reusable pipeline is as simple as this, then this approach is just fine to use. However, in a real application your pipelines are likely going to be significantly bigger and more complex, and it would require quite a lot of work to set up the service provider correctly. For these complex pipelines, a better approach is to create (or reuse) a custom `TestBase` class, which takes care of the setup and lets the actual test class focus on the tests themselves, just like we did in the recipe for [testing command and query handlers](../testing-handlers#readme).
 
 Let's create such a test base in a new file `TestBase.cs`:
 
@@ -315,7 +284,7 @@ public sealed class DefaultCommandPipelineTests : TestBase
 }
 ```
 
-We are still going to use a custom test command handler with a dynamic configuration, but the setup looks slightly different:
+We are still going to use a custom test command and a delegate handler, but the setup looks slightly different:
 
 ```cs
 private Action<ICommandPipelineBuilder> configurePipeline = pipeline => pipeline.UseDefault();
@@ -328,12 +297,10 @@ protected override void ConfigureServices(IServiceCollection services)
 {
     base.ConfigureServices(services);
 
-    services.AddConquerorCommandHandler<TestCommandHandler>()
-
-            // add dynamic pipeline and handler execution methods; we wrap them in
-            // an extra arrow function to allow them to be changed inside of tests
-            .AddSingleton<Action<ICommandPipelineBuilder>>(p => configurePipeline(p))
-            .AddSingleton<Func<TestCommand, Task<TestCommandResponse>>>(cmd => handlerExecutionFn(cmd));
+    // create handler from delegate; note that we intentionally wrap the pipeline configuration function
+    // in another arrow function to ensure it can the changed inside tests
+    services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecutionFn(command),
+                                                                                  pipeline => configurePipeline(pipeline));
 }
 
 private sealed record TestCommand(int Parameter)
@@ -343,27 +310,7 @@ private sealed record TestCommand(int Parameter)
 }
 
 private sealed record TestCommandResponse(int Value);
-
-private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-{
-    private readonly Func<TestCommand, Task<TestCommandResponse>> executeFn;
-
-    public TestCommandHandler(Func<TestCommand, Task<TestCommandResponse>> executeFn)
-    {
-        this.executeFn = executeFn;
-    }
-
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
-        pipeline.ServiceProvider.GetRequiredService<Action<ICommandPipelineBuilder>>()(pipeline);
-
-    public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-    {
-        return executeFn(command);
-    }
-}
 ```
-
-> The code above still contains quite a lot of boilerplate. If you have multiple middlewares or pipelines you want to test with this approach, you could extract most of this boilerplate into an additional base class `MiddlewareTestBase`. This is left as an exercise for the reader.
 
 When considering which tests to write for a reusable pipeline you have a few options. Depending on the complexity of the pipeline and whether your pipeline has its own parameters, you may want to write tests for various combinations of behaviors (for example, if you have a middleware for authentication and a middleware for authorization, those depend on each other and need to be tested together with different data and configuration combinations). For simple pipelines like our default pipeline, it may be sufficient to write a single test per middleware to assert its presence in the pipeline. Let's do that with the following tests:
 
@@ -425,7 +372,7 @@ public void GivenHandlerThatThrowsTwiceWithDefaultPipelineAndCustomRetryConfigur
 And that concludes this recipe for testing middlewares and reusable pipelines with **Conqueror.CQS**. In summary, we recommend the following:
 
 - always test middlewares and pipelines as part of a handler execution with a handler resolved from a service provider
-- use dependency injection to allow dynamic handler execution behavior and middleware configuration
+- create handlers from delegates to allow dynamic handler execution behavior and middleware configuration
 - for complex middlewares and pipelines, consolidate common setup logic into a base class
 
 As the next step you can explore how to [expose your commands and queries via HTTP](../../advanced/exposing-via-http#readme) and [how to test them](../../advanced/testing-http#readme) (the completed code for the linked recipe contains an implementation of [TestBase](../../advanced/testing-http/.completed/Conqueror.Recipes.CQS.Advanced.TestingHttp.Tests/TestBase.cs) which creates a fully configured HTTP test server).
