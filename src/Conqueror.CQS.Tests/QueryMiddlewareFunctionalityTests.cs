@@ -102,8 +102,8 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
-                            _ = pipeline.UseAllowMultiple<TestQueryMiddleware2>()
-                                        .UseAllowMultiple<TestQueryMiddleware2>();
+                            _ = pipeline.Use<TestQueryMiddleware2>()
+                                        .Use<TestQueryMiddleware2>();
                         });
 
             var provider = services.BuildServiceProvider();
@@ -130,9 +130,9 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
-                            _ = pipeline.UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                            _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                         .Use<TestQueryMiddleware2>()
-                                        .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                        .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                         .Without<TestQueryMiddleware2>();
                         });
 
@@ -160,9 +160,9 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
-                            _ = pipeline.UseAllowMultiple<TestQueryMiddleware2>()
+                            _ = pipeline.Use<TestQueryMiddleware2>()
                                         .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                        .UseAllowMultiple<TestQueryMiddleware2>()
+                                        .Use<TestQueryMiddleware2>()
                                         .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>();
                         });
 
@@ -190,10 +190,10 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
-                            _ = pipeline.UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                        .UseAllowMultiple<TestQueryMiddleware2>()
-                                        .UseAllowMultiple<TestQueryMiddleware2>()
-                                        .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                            _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                        .Use<TestQueryMiddleware2>()
+                                        .Use<TestQueryMiddleware2>()
+                                        .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                         .Without<TestQueryMiddleware2>();
                         });
 
@@ -221,10 +221,10 @@ namespace Conqueror.CQS.Tests
                         .AddSingleton(observations)
                         .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
                         {
-                            _ = pipeline.UseAllowMultiple<TestQueryMiddleware2>()
-                                        .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                        .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                        .UseAllowMultiple<TestQueryMiddleware2>()
+                            _ = pipeline.Use<TestQueryMiddleware2>()
+                                        .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                        .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                        .Use<TestQueryMiddleware2>()
                                         .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>();
                         });
 
@@ -241,99 +241,7 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgain_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
-                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
-                        .AddSingleton(observations)
-                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
-                        {
-                            _ = pipeline.Use<TestQueryMiddleware2>()
-                                        .Use<TestQueryMiddleware2>();
-                        });
-
-            var provider = services.BuildServiceProvider();
-
-            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
-        }
-
-        [Test]
-        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgain_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
-                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
-                        .AddSingleton(observations)
-                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
-                        {
-                            _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                        .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
-                        });
-
-            var provider = services.BuildServiceProvider();
-
-            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
-        }
-
-        [Test]
-        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgainAsAllowingMultiple_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
-                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
-                        .AddSingleton(observations)
-                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
-                        {
-                            _ = pipeline.Use<TestQueryMiddleware2>()
-                                        .UseAllowMultiple<TestQueryMiddleware2>();
-                        });
-
-            var provider = services.BuildServiceProvider();
-
-            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
-        }
-
-        [Test]
-        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgainAsAllowingMultiple_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
-                        .AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                        .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
-                        .AddSingleton(observations)
-                        .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
-                        {
-                            _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                        .UseAllowMultiple<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
-                        });
-
-            var provider = services.BuildServiceProvider();
-
-            var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
-        }
-
-        [Test]
-        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_DoesNotThrowInvalidOperationException()
+        public async Task GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_MiddlewareIsCalled()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
@@ -353,11 +261,16 @@ namespace Conqueror.CQS.Tests
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-            Assert.DoesNotThrowAsync(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+            var query = new TestQuery(10);
+
+            _ = await handler.ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2) }));
         }
 
         [Test]
-        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_DoesNotThrowInvalidOperationException()
+        public async Task GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_MiddlewareIsCalled()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
@@ -377,7 +290,12 @@ namespace Conqueror.CQS.Tests
 
             var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-            Assert.DoesNotThrowAsync(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+            var query = new TestQuery(10);
+
+            _ = await handler.ExecuteQuery(query, CancellationToken.None);
+
+            Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
         }
 
         [Test]

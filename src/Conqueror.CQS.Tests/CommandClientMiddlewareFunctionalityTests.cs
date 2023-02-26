@@ -212,8 +212,8 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
                                                                                 CreateTransport,
-                                                                                p => p.UseAllowMultiple<TestCommandMiddleware2>()
-                                                                                      .UseAllowMultiple<TestCommandMiddleware2>());
+                                                                                p => p.Use<TestCommandMiddleware2>()
+                                                                                      .Use<TestCommandMiddleware2>());
 
             _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                         .AddSingleton(observations);
@@ -238,9 +238,9 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
                                                                                 CreateTransport,
-                                                                                p => p.UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                                                                p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                                                                                       .Use<TestCommandMiddleware2>()
-                                                                                      .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                                                                      .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                                                                                       .Without<TestCommandMiddleware2>());
 
             _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
@@ -267,9 +267,9 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
                                                                                 CreateTransport,
-                                                                                p => p.UseAllowMultiple<TestCommandMiddleware2>()
+                                                                                p => p.Use<TestCommandMiddleware2>()
                                                                                       .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                      .UseAllowMultiple<TestCommandMiddleware2>()
+                                                                                      .Use<TestCommandMiddleware2>()
                                                                                       .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>());
 
             _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
@@ -296,10 +296,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
                                                                                 CreateTransport,
-                                                                                p => p.UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                      .UseAllowMultiple<TestCommandMiddleware2>()
-                                                                                      .UseAllowMultiple<TestCommandMiddleware2>()
-                                                                                      .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                                                                p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                                                                      .Use<TestCommandMiddleware2>()
+                                                                                      .Use<TestCommandMiddleware2>()
+                                                                                      .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                                                                                       .Without<TestCommandMiddleware2>());
 
             _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
@@ -326,10 +326,10 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
                                                                                 CreateTransport,
-                                                                                p => p.UseAllowMultiple<TestCommandMiddleware2>()
-                                                                                      .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                      .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                      .UseAllowMultiple<TestCommandMiddleware2>()
+                                                                                p => p.Use<TestCommandMiddleware2>()
+                                                                                      .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                                                                      .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                                                                      .Use<TestCommandMiddleware2>()
                                                                                       .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>());
 
             _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
@@ -349,95 +349,7 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgain_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                                CreateTransport,
-                                                                                p => p.Use<TestCommandMiddleware2>()
-                                                                                      .Use<TestCommandMiddleware2>());
-
-            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
-                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
-        }
-
-        [Test]
-        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgain_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                                CreateTransport,
-                                                                                p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                      .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
-
-            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
-                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
-        }
-
-        [Test]
-        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgainAsAllowingMultiple_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                                CreateTransport,
-                                                                                p => p.Use<TestCommandMiddleware2>()
-                                                                                      .UseAllowMultiple<TestCommandMiddleware2>());
-
-            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
-                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
-        }
-
-        [Test]
-        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgainAsAllowingMultiple_ThrowsInvalidOperationException()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                                CreateTransport,
-                                                                                p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                      .UseAllowMultiple<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
-
-            _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
-                        .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-            _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
-        }
-
-        [Test]
-        public void GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_DoesNotThrowInvalidOperationException()
+        public async Task GivenPipelineWithExistingMiddleware_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_MiddlewareIsCalled()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
@@ -456,11 +368,16 @@ namespace Conqueror.CQS.Tests
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-            Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2) }));
         }
 
         [Test]
-        public void GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_DoesNotThrowInvalidOperationException()
+        public async Task GivenPipelineWithExistingMiddlewareWithConfiguration_WhenAddingSameMiddlewareAgainAfterRemovingPreviousMiddleware_MiddlewareIsCalled()
         {
             var services = new ServiceCollection();
             var observations = new TestObservations();
@@ -479,7 +396,12 @@ namespace Conqueror.CQS.Tests
 
             var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-            Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+            var command = new TestCommand(10);
+
+            _ = await handler.ExecuteCommand(command, CancellationToken.None);
+
+            Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
+            Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
         }
 
         [Test]

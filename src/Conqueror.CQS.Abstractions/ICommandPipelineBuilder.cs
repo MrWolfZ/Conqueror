@@ -12,12 +12,6 @@ namespace Conqueror
         ICommandPipelineBuilder Use<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : ICommandMiddleware<TConfiguration>;
 
-        ICommandPipelineBuilder UseAllowMultiple<TMiddleware>()
-            where TMiddleware : ICommandMiddleware;
-
-        ICommandPipelineBuilder UseAllowMultiple<TMiddleware, TConfiguration>(TConfiguration configuration)
-            where TMiddleware : ICommandMiddleware<TConfiguration>;
-
         ICommandPipelineBuilder Without<TMiddleware>()
             where TMiddleware : ICommandMiddleware;
 

@@ -9,7 +9,6 @@ namespace Conqueror.CQS.QueryHandling
     {
         private readonly IReadOnlyDictionary<Type, IQueryMiddlewareInvoker> middlewareInvokersByMiddlewareTypes;
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IQueryMiddlewareInvoker Invoker)> middlewares = new();
-        private readonly Dictionary<Type, MiddlewareRegistration> registeredMiddlewareTypes = new();
 
         public QueryPipelineBuilder(IServiceProvider serviceProvider)
         {
@@ -22,11 +21,6 @@ namespace Conqueror.CQS.QueryHandling
         public IQueryPipelineBuilder Use<TMiddleware>()
             where TMiddleware : IQueryMiddleware
         {
-            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new()))
-            {
-                throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered");
-            }
-
             middlewares.Add((typeof(TMiddleware), null, GetInvoker<TMiddleware>()));
             return this;
         }
@@ -34,45 +28,6 @@ namespace Conqueror.CQS.QueryHandling
         public IQueryPipelineBuilder Use<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : IQueryMiddleware<TConfiguration>
         {
-            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new()))
-            {
-                throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered");
-            }
-
-            middlewares.Add((typeof(TMiddleware), configuration, GetInvoker<TMiddleware>()));
-            return this;
-        }
-
-        public IQueryPipelineBuilder UseAllowMultiple<TMiddleware>()
-            where TMiddleware : IQueryMiddleware
-        {
-            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new() { IsExclusive = false }))
-            {
-                if (registeredMiddlewareTypes[typeof(TMiddleware)].IsExclusive)
-                {
-                    throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered as exclusive");
-                }
-
-                registeredMiddlewareTypes[typeof(TMiddleware)].RegistrationCount += 1;
-            }
-
-            middlewares.Add((typeof(TMiddleware), null, GetInvoker<TMiddleware>()));
-            return this;
-        }
-
-        public IQueryPipelineBuilder UseAllowMultiple<TMiddleware, TConfiguration>(TConfiguration configuration)
-            where TMiddleware : IQueryMiddleware<TConfiguration>
-        {
-            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new() { IsExclusive = false }))
-            {
-                if (registeredMiddlewareTypes[typeof(TMiddleware)].IsExclusive)
-                {
-                    throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered as exclusive");
-                }
-
-                registeredMiddlewareTypes[typeof(TMiddleware)].RegistrationCount += 1;
-            }
-
             middlewares.Add((typeof(TMiddleware), configuration, GetInvoker<TMiddleware>()));
             return this;
         }
@@ -80,8 +35,6 @@ namespace Conqueror.CQS.QueryHandling
         public IQueryPipelineBuilder Without<TMiddleware>()
             where TMiddleware : IQueryMiddleware
         {
-            _ = registeredMiddlewareTypes.Remove(typeof(TMiddleware));
-
             while (true)
             {
                 var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
@@ -98,8 +51,6 @@ namespace Conqueror.CQS.QueryHandling
         public IQueryPipelineBuilder Without<TMiddleware, TConfiguration>()
             where TMiddleware : IQueryMiddleware<TConfiguration>
         {
-            _ = registeredMiddlewareTypes.Remove(typeof(TMiddleware));
-
             while (true)
             {
                 var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
@@ -159,13 +110,6 @@ namespace Conqueror.CQS.QueryHandling
             }
 
             return invoker;
-        }
-
-        private sealed class MiddlewareRegistration
-        {
-            public bool IsExclusive { get; init; } = true;
-
-            public int RegistrationCount { get; set; } = 1;
         }
     }
 }

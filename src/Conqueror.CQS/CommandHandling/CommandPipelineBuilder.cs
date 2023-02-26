@@ -9,7 +9,6 @@ namespace Conqueror.CQS.CommandHandling
     {
         private readonly IReadOnlyDictionary<Type, ICommandMiddlewareInvoker> middlewareInvokersByMiddlewareTypes;
         private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares = new();
-        private readonly Dictionary<Type, MiddlewareRegistration> registeredMiddlewareTypes = new();
 
         public CommandPipelineBuilder(IServiceProvider serviceProvider)
         {
@@ -22,11 +21,6 @@ namespace Conqueror.CQS.CommandHandling
         public ICommandPipelineBuilder Use<TMiddleware>()
             where TMiddleware : ICommandMiddleware
         {
-            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new()))
-            {
-                throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered");
-            }
-
             middlewares.Add((typeof(TMiddleware), null, GetInvoker<TMiddleware>()));
             return this;
         }
@@ -34,45 +28,6 @@ namespace Conqueror.CQS.CommandHandling
         public ICommandPipelineBuilder Use<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : ICommandMiddleware<TConfiguration>
         {
-            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new()))
-            {
-                throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered");
-            }
-
-            middlewares.Add((typeof(TMiddleware), configuration, GetInvoker<TMiddleware>()));
-            return this;
-        }
-
-        public ICommandPipelineBuilder UseAllowMultiple<TMiddleware>()
-            where TMiddleware : ICommandMiddleware
-        {
-            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new() { IsExclusive = false }))
-            {
-                if (registeredMiddlewareTypes[typeof(TMiddleware)].IsExclusive)
-                {
-                    throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered as exclusive");
-                }
-
-                registeredMiddlewareTypes[typeof(TMiddleware)].RegistrationCount += 1;
-            }
-
-            middlewares.Add((typeof(TMiddleware), null, GetInvoker<TMiddleware>()));
-            return this;
-        }
-
-        public ICommandPipelineBuilder UseAllowMultiple<TMiddleware, TConfiguration>(TConfiguration configuration)
-            where TMiddleware : ICommandMiddleware<TConfiguration>
-        {
-            if (!registeredMiddlewareTypes.TryAdd(typeof(TMiddleware), new() { IsExclusive = false }))
-            {
-                if (registeredMiddlewareTypes[typeof(TMiddleware)].IsExclusive)
-                {
-                    throw new InvalidOperationException($"middleware '{typeof(TMiddleware).Name}' is already registered as exclusive");
-                }
-
-                registeredMiddlewareTypes[typeof(TMiddleware)].RegistrationCount += 1;
-            }
-
             middlewares.Add((typeof(TMiddleware), configuration, GetInvoker<TMiddleware>()));
             return this;
         }
@@ -80,8 +35,6 @@ namespace Conqueror.CQS.CommandHandling
         public ICommandPipelineBuilder Without<TMiddleware>()
             where TMiddleware : ICommandMiddleware
         {
-            _ = registeredMiddlewareTypes.Remove(typeof(TMiddleware));
-
             while (true)
             {
                 var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
@@ -98,8 +51,6 @@ namespace Conqueror.CQS.CommandHandling
         public ICommandPipelineBuilder Without<TMiddleware, TConfiguration>()
             where TMiddleware : ICommandMiddleware<TConfiguration>
         {
-            _ = registeredMiddlewareTypes.Remove(typeof(TMiddleware));
-
             while (true)
             {
                 var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
@@ -159,13 +110,6 @@ namespace Conqueror.CQS.CommandHandling
             }
 
             return invoker;
-        }
-
-        private sealed class MiddlewareRegistration
-        {
-            public bool IsExclusive { get; init; } = true;
-
-            public int RegistrationCount { get; set; } = 1;
         }
     }
 }

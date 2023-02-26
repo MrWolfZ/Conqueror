@@ -432,7 +432,7 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
                                                                                 CreateTransport,
-                                                                                p => p.UseAllowMultiple<TestCommandMiddleware>().UseAllowMultiple<TestCommandMiddleware>());
+                                                                                p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>());
 
             _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                         .AddSingleton(observations);
@@ -454,7 +454,7 @@ namespace Conqueror.CQS.Tests
 
             AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
                                                                           CreateTransport,
-                                                                          p => p.UseAllowMultiple<TestCommandMiddleware>().UseAllowMultiple<TestCommandMiddleware>());
+                                                                          p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>());
 
             _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                         .AddSingleton(observations);

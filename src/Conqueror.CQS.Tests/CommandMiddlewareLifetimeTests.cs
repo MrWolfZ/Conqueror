@@ -765,7 +765,7 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.UseAllowMultiple<TestCommandMiddleware>().UseAllowMultiple<TestCommandMiddleware>();
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
         }
 
         private sealed class TestCommandHandlerWithoutResponseWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand>, IConfigureCommandPipeline
@@ -775,7 +775,7 @@ namespace Conqueror.CQS.Tests
                 await Task.Yield();
             }
 
-            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.UseAllowMultiple<TestCommandMiddleware>().UseAllowMultiple<TestCommandMiddleware>();
+            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
         }
 
         private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline

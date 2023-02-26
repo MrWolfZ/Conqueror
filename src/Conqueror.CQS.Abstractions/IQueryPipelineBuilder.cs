@@ -12,12 +12,6 @@ namespace Conqueror
         IQueryPipelineBuilder Use<TMiddleware, TConfiguration>(TConfiguration configuration)
             where TMiddleware : IQueryMiddleware<TConfiguration>;
 
-        IQueryPipelineBuilder UseAllowMultiple<TMiddleware>()
-            where TMiddleware : IQueryMiddleware;
-
-        IQueryPipelineBuilder UseAllowMultiple<TMiddleware, TConfiguration>(TConfiguration configuration)
-            where TMiddleware : IQueryMiddleware<TConfiguration>;
-
         IQueryPipelineBuilder Without<TMiddleware>()
             where TMiddleware : IQueryMiddleware;
 

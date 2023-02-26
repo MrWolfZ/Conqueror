@@ -76,7 +76,7 @@ Let's add a pipeline configuration for our command handler in `IncrementCounterB
       {
 ```
 
-> Note that by default, middlewares can only be added once to a pipeline, which is reasonable for most kinds of middlewares. If you want to build a middleware which can be added multiple times to a pipeline, you can use `pipeline.UseAllowMultiple<MyMiddleware>();`. Also note that the `ConfigurePipeline` method is executed every time the handler is executed, meaning every handler execution gets a fresh pipeline. This also implies that the `ConfigurePipeline` method should not perform any expensive operations, otherwise it will slow down execution.
+> Note that the `ConfigurePipeline` method is executed every time the handler is executed, meaning every handler execution gets a fresh pipeline. This also implies that the `ConfigurePipeline` method should not perform any expensive operations, otherwise it will slow down execution.
 
 Now the `DataAnnotationValidationCommandMiddleware` will be called every time the command handler is executed. The last step to get the validation working is to add a data annotation attribute to the command's `IncrementBy` property to declare that it needs to be a positive integer:
 

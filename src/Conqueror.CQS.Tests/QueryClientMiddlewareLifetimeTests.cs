@@ -386,7 +386,7 @@ namespace Conqueror.CQS.Tests
 
             AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
                                                                         CreateTransport,
-                                                                        p => p.UseAllowMultiple<TestQueryMiddleware>().UseAllowMultiple<TestQueryMiddleware>());
+                                                                        p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>());
 
             _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                         .AddSingleton(observations);

@@ -655,7 +655,7 @@ namespace Conqueror.CQS.Tests
                 return new();
             }
 
-            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.UseAllowMultiple<TestQueryMiddleware>().UseAllowMultiple<TestQueryMiddleware>();
+            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>();
         }
 
         private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
