@@ -520,11 +520,23 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         protected override void ConfigureServices(IServiceCollection services)
         {
             _ = services.AddConquerorCQSLoggingMiddlewares()
-                        .AddConquerorCommandHandler<TestCommandHandler>()
-                        .AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
-                        .AddConquerorCommandHandler<TestCommandWithoutPayloadHandler>()
-                        .AddTransient<Func<TestCommand, TestCommandResponse>>(_ => cmd => handlerFn.Invoke(cmd))
-                        .AddTransient<Action<ICommandPipelineBuilder>>(_ => b => configurePipeline.Invoke(b));
+                        .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
+                            async (command, _, _) =>
+                            {
+                                await Task.Yield();
+                                return handlerFn(command);
+                            },
+                            pipeline => configurePipeline(pipeline))
+                        .AddConquerorCommandHandlerDelegate<TestCommandWithoutResponse>(
+                            async (_, _, _) => { await Task.Yield(); },
+                            pipeline => configurePipeline(pipeline))
+                        .AddConquerorCommandHandlerDelegate<TestCommandWithoutPayload, TestCommandResponse>(
+                            async (_, _, _) =>
+                            {
+                                await Task.Yield();
+                                return new(0);
+                            },
+                            pipeline => configurePipeline(pipeline));
         }
 
         private sealed record TestCommand(int Payload);
@@ -534,57 +546,6 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         private sealed record TestCommandWithoutResponse(int Payload);
 
         private sealed record TestCommandWithoutPayload;
-
-        private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-        {
-            private readonly Func<TestCommand, TestCommandResponse> handlerFn;
-
-            public TestCommandHandler(Func<TestCommand, TestCommandResponse> handlerFn)
-            {
-                this.handlerFn = handlerFn;
-            }
-
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                return handlerFn(command);
-            }
-
-            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-            {
-                var configure = pipeline.ServiceProvider.GetRequiredService<Action<ICommandPipelineBuilder>>();
-                configure(pipeline);
-            }
-        }
-
-        private sealed class TestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
-        {
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-            }
-
-            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-            {
-                var configure = pipeline.ServiceProvider.GetRequiredService<Action<ICommandPipelineBuilder>>();
-                configure(pipeline);
-            }
-        }
-
-        private sealed class TestCommandWithoutPayloadHandler : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>, IConfigureCommandPipeline
-        {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                return new(0);
-            }
-
-            public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-            {
-                var configure = pipeline.ServiceProvider.GetRequiredService<Action<ICommandPipelineBuilder>>();
-                configure(pipeline);
-            }
-        }
 
         private sealed class ThrowingJsonNamingPolicy : JsonNamingPolicy
         {

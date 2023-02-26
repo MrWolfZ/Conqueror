@@ -484,10 +484,20 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         protected override void ConfigureServices(IServiceCollection services)
         {
             _ = services.AddConquerorCQSLoggingMiddlewares()
-                        .AddConquerorQueryHandler<TestQueryHandler>()
-                        .AddConquerorQueryHandler<TestQueryWithoutPayloadHandler>()
-                        .AddTransient<Func<TestQuery, TestQueryResponse>>(_ => qry => handlerFn.Invoke(qry))
-                        .AddTransient<Action<IQueryPipelineBuilder>>(_ => b => configurePipeline.Invoke(b));
+                        .AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
+                            async (query, _, _) =>
+                            {
+                                await Task.Yield();
+                                return handlerFn(query);
+                            },
+                            pipeline => configurePipeline(pipeline))
+                        .AddConquerorQueryHandlerDelegate<TestQueryWithoutPayload, TestQueryResponse>(
+                            async (_, _, _) =>
+                            {
+                                await Task.Yield();
+                                return new(0);
+                            },
+                            pipeline => configurePipeline(pipeline));
         }
 
         private sealed record TestQuery(int Payload);
@@ -495,43 +505,6 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         private sealed record TestQueryResponse(int ResponsePayload);
 
         private sealed record TestQueryWithoutPayload;
-
-        private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
-        {
-            private readonly Func<TestQuery, TestQueryResponse> handlerFn;
-
-            public TestQueryHandler(Func<TestQuery, TestQueryResponse> handlerFn)
-            {
-                this.handlerFn = handlerFn;
-            }
-
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                return handlerFn(query);
-            }
-
-            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
-            {
-                var configure = pipeline.ServiceProvider.GetRequiredService<Action<IQueryPipelineBuilder>>();
-                configure(pipeline);
-            }
-        }
-
-        private sealed class TestQueryWithoutPayloadHandler : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>, IConfigureQueryPipeline
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                return new(0);
-            }
-
-            public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
-            {
-                var configure = pipeline.ServiceProvider.GetRequiredService<Action<IQueryPipelineBuilder>>();
-                configure(pipeline);
-            }
-        }
 
         private sealed class ThrowingJsonNamingPolicy : JsonNamingPolicy
         {
