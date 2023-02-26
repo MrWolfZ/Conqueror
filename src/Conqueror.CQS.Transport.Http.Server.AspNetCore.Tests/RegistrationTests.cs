@@ -60,7 +60,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                                 .AddConquerorCQSHttpControllers();
 
                     _ = services.AddConquerorCommandHandler<TestCommandHandler>()
-                                .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((_, _, _) => Task.FromResult(new TestCommandResponse()));
+                                .AddConquerorCommandHandlerDelegate<DuplicateCommandName.TestCommand, TestCommandResponse>((_, _, _) => Task.FromResult(new TestCommandResponse()));
                 });
 
                 _ = webHost.Configure(app =>
@@ -112,7 +112,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                                 .AddConquerorCQSHttpControllers();
 
                     _ = services.AddConquerorQueryHandler<TestQueryHandler>()
-                                .AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>((_, _, _) => Task.FromResult(new TestQueryResponse()));
+                                .AddConquerorQueryHandlerDelegate<DuplicateQueryName.TestQuery, TestQueryResponse>((_, _, _) => Task.FromResult(new TestQueryResponse()));
                 });
 
                 _ = webHost.Configure(app =>

@@ -66,18 +66,19 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                     Type handlerType,
                                                                     Action<IQueryPipelineBuilder>? configurePipeline)
         {
-            var existingRegistrations = services.Select(d => d.ImplementationInstance).OfType<QueryHandlerRegistration>().ToDictionary(r => r.QueryType, r => r.HandlerType);
+            var existingRegistrations = services.Where(d => d.ImplementationInstance is QueryHandlerRegistration)
+                                                .ToDictionary(d => ((QueryHandlerRegistration)d.ImplementationInstance!).QueryType);
 
             foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
             {
-                if (existingRegistrations.TryGetValue(queryType, out var existingHandlerType))
+                if (existingRegistrations.TryGetValue(queryType, out var existingDescriptor))
                 {
-                    if (existingHandlerType == handlerType)
+                    if (handlerType == ((QueryHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
                     {
                         continue;
                     }
 
-                    throw new InvalidOperationException($"only a single handler for query type '{queryType.Name}' is allowed, but found multiple ('{existingHandlerType.Name}' and '{handlerType.Name}')");
+                    services.Remove(existingDescriptor);
                 }
 
                 var registration = new QueryHandlerRegistration(queryType, responseType, handlerType);
@@ -86,7 +87,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(handlerType);
 
-            services.TryAddConquerorQueryClient(handlerType, b => new InMemoryQueryTransport(b.ServiceProvider, handlerType), pipelineConfigurationAction);
+            services.AddConquerorQueryClient(handlerType, b => new InMemoryQueryTransport(b.ServiceProvider, handlerType), pipelineConfigurationAction);
 
             return services;
 

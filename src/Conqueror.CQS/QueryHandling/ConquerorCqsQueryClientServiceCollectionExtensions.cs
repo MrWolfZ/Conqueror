@@ -26,15 +26,7 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                            Action<IQueryPipelineBuilder>? configurePipeline = null)
             where THandler : class, IQueryHandler
         {
-            return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, configurePipeline, false);
-        }
-
-        internal static IServiceCollection TryAddConquerorQueryClient(this IServiceCollection services,
-                                                                      Type handlerType,
-                                                                      Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                                      Action<IQueryPipelineBuilder>? configurePipeline)
-        {
-            return services.AddConquerorQueryClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline, true);
+            return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, configurePipeline);
         }
 
         internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
@@ -42,14 +34,13 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                    Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
                                                                    Action<IQueryPipelineBuilder>? configurePipeline)
         {
-            return services.AddConquerorQueryClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline, false);
+            return services.AddConquerorQueryClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline);
         }
 
         internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                                    Type handlerType,
                                                                    Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                                   Action<IQueryPipelineBuilder>? configurePipeline,
-                                                                   bool shouldIgnoreOnDuplicate)
+                                                                   Action<IQueryPipelineBuilder>? configurePipeline)
         {
             handlerType.ValidateNoInvalidQueryHandlerInterface();
 
@@ -62,16 +53,16 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new InvalidOperationException($"could not find method '{nameof(AddClient)}'");
             }
 
+            var existingQueryRegistrations = services.Select(d => d.ServiceType)
+                                                     .Where(t => t.IsQueryHandlerInterfaceType())
+                                                     .SelectMany(t => t.GetQueryAndResponseTypes())
+                                                     .ToDictionary(t => t.QueryType, t => t.ResponseType);
+
             foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
             {
-                if (services.Any(d => d.ServiceType == typeof(IQueryHandler<,>).MakeGenericType(queryType, responseType)))
+                if (existingQueryRegistrations.TryGetValue(queryType, out var existingResponseType) && responseType != existingResponseType)
                 {
-                    if (shouldIgnoreOnDuplicate)
-                    {
-                        continue;
-                    }
-
-                    throw new InvalidOperationException($"query client for handler type '{handlerType.Name}' is already registered");
+                    throw new InvalidOperationException($"client for query type '{queryType.Name}' is already registered with response type '{existingResponseType.Name}', but tried to add client with different response type '{responseType.Name}'");
                 }
 
                 var genericAddClientMethod = addClientMethod.MakeGenericMethod(handlerType, queryType, responseType);
@@ -100,8 +91,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             void RegisterPlainInterface()
             {
-                services.TryAddTransient<IQueryHandler<TQuery, TResponse>>(
-                    p => new QueryHandlerProxy<TQuery, TResponse>(p, transportClientFactory, configurePipeline));
+                _ = services.Replace(ServiceDescriptor.Transient<IQueryHandler<TQuery, TResponse>>(p => new QueryHandlerProxy<TQuery, TResponse>(p, transportClientFactory, configurePipeline)));
             }
 
             void RegisterCustomInterface()

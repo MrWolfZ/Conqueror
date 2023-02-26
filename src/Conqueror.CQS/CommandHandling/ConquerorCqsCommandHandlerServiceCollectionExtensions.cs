@@ -83,18 +83,19 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                       Type handlerType,
                                                                       Action<ICommandPipelineBuilder>? configurePipeline)
         {
-            var existingRegistrations = services.Select(d => d.ImplementationInstance).OfType<CommandHandlerRegistration>().ToDictionary(r => r.CommandType, r => r.HandlerType);
+            var existingRegistrations = services.Where(d => d.ImplementationInstance is CommandHandlerRegistration)
+                                                .ToDictionary(d => ((CommandHandlerRegistration)d.ImplementationInstance!).CommandType);
 
             foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
             {
-                if (existingRegistrations.TryGetValue(commandType, out var existingHandlerType))
+                if (existingRegistrations.TryGetValue(commandType, out var existingDescriptor))
                 {
-                    if (existingHandlerType == handlerType)
+                    if (handlerType == ((CommandHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
                     {
                         continue;
                     }
 
-                    throw new InvalidOperationException($"only a single handler for command type '{commandType.Name}' is allowed, but found multiple ('{existingHandlerType.Name}' and '{handlerType.Name}')");
+                    services.Remove(existingDescriptor);
                 }
 
                 var registration = new CommandHandlerRegistration(commandType, responseType, handlerType);
@@ -103,7 +104,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(handlerType);
 
-            services.TryAddConquerorCommandClient(handlerType, b => new InMemoryCommandTransport(b.ServiceProvider, handlerType), pipelineConfigurationAction);
+            services.AddConquerorCommandClient(handlerType, b => new InMemoryCommandTransport(b.ServiceProvider, handlerType), pipelineConfigurationAction);
 
             return services;
 

@@ -26,15 +26,7 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                              Action<ICommandPipelineBuilder>? configurePipeline = null)
             where THandler : class, ICommandHandler
         {
-            return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline, false);
-        }
-
-        internal static IServiceCollection TryAddConquerorCommandClient(this IServiceCollection services,
-                                                                        Type handlerType,
-                                                                        Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                                        Action<ICommandPipelineBuilder>? configurePipeline)
-        {
-            return services.AddConquerorCommandClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline, true);
+            return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline);
         }
 
         internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
@@ -42,14 +34,13 @@ namespace Microsoft.Extensions.DependencyInjection
                                                                      Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                                      Action<ICommandPipelineBuilder>? configurePipeline)
         {
-            return services.AddConquerorCommandClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline, false);
+            return services.AddConquerorCommandClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline);
         }
 
         internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
                                                                      Type handlerType,
                                                                      Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                                     Action<ICommandPipelineBuilder>? configurePipeline,
-                                                                     bool shouldIgnoreOnDuplicate)
+                                                                     Action<ICommandPipelineBuilder>? configurePipeline)
         {
             handlerType.ValidateNoInvalidCommandHandlerInterface();
 
@@ -62,16 +53,17 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new InvalidOperationException($"could not find method '{nameof(AddClient)}'");
             }
 
+            var existingCommandRegistrations = services.Select(d => d.ServiceType)
+                                                       .Where(t => t.IsCommandHandlerInterfaceType())
+                                                       .SelectMany(t => t.GetCommandAndResponseTypes())
+                                                       .Where(t => t.ResponseType != typeof(UnitCommandResponse))
+                                                       .ToDictionary(t => t.CommandType, t => t.ResponseType);
+
             foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
             {
-                if (services.Any(d => d.ServiceType == typeof(ICommandHandler<,>).MakeGenericType(commandType, responseType ?? typeof(UnitCommandResponse))))
+                if (existingCommandRegistrations.TryGetValue(commandType, out var existingResponseType) && responseType != existingResponseType)
                 {
-                    if (shouldIgnoreOnDuplicate)
-                    {
-                        continue;
-                    }
-
-                    throw new InvalidOperationException($"command client for handler type '{handlerType.Name}' is already registered");
+                    throw new InvalidOperationException($"client for command type '{commandType.Name}' is already registered with response type '{(existingResponseType ?? typeof(UnitCommandResponse)).Name}', but tried to add client with different response type '{(responseType ?? typeof(UnitCommandResponse)).Name}'");
                 }
 
                 var genericAddClientMethod = addClientMethod.MakeGenericMethod(handlerType, commandType, responseType ?? typeof(UnitCommandResponse));
@@ -105,8 +97,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     services.TryAddTransient<ICommandHandler<TCommand>, CommandWithoutResponseAdapter<TCommand>>();
                 }
 
-                services.TryAddTransient<ICommandHandler<TCommand, TResponse>>(
-                    p => new CommandHandlerProxy<TCommand, TResponse>(p, transportClientFactory, configurePipeline));
+                _ = services.Replace(ServiceDescriptor.Transient<ICommandHandler<TCommand, TResponse>>(p => new CommandHandlerProxy<TCommand, TResponse>(p, transportClientFactory, configurePipeline)));
             }
 
             void RegisterCustomInterface()

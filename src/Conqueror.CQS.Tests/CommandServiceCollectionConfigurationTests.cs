@@ -40,11 +40,14 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public void GivenRegisteredHandlerType_AddingHandlerWithSameCommandAndResponseTypesThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerType_AddingHandlerWithSameCommandAndResponseTypesKeepsBothRegistrations()
         {
-            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>();
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
+                                                  .AddConquerorCommandHandler<DuplicateTestCommandHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandHandler<DuplicateTestCommandHandler>());
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestCommandHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(DuplicateTestCommandHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)));
         }
 
         [Test]
@@ -56,11 +59,14 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public void GivenRegisteredHandlerType_AddingHandlerWithoutResponseWithSameCommandTypeThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerType_AddingHandlerWithoutResponseWithSameCommandTypeKeepsBothRegistrations()
         {
-            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>();
+            var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
+                                                  .AddConquerorCommandHandler<DuplicateTestCommandWithoutResponseHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandHandler<DuplicateTestCommandWithoutResponseHandler>());
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestCommandWithoutResponseHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(DuplicateTestCommandWithoutResponseHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)));
         }
 
         [Test]

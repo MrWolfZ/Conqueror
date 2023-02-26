@@ -22,11 +22,14 @@ namespace Conqueror.CQS.Tests
         }
 
         [Test]
-        public void GivenRegisteredHandlerType_AddingHandlerWithSameQueryAndResponseTypesThrowsInvalidOperationException()
+        public void GivenRegisteredHandlerType_AddingHandlerWithSameQueryAndResponseTypesKeepsBothRegistrations()
         {
-            var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>();
+            var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>()
+                                                  .AddConquerorQueryHandler<DuplicateTestQueryHandler>();
 
-            _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<DuplicateTestQueryHandler>());
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestQueryHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(DuplicateTestQueryHandler)));
+            Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)));
         }
 
         [Test]
