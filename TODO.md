@@ -5,55 +5,49 @@ This file contains all the open points for extensions and improvements to the **
 ## General
 
 - [ ] set up issues templates via yaml config
-- [ ] in all recipe code that is at risk of being copy-pasted, add a note that it shouldn't be used and add a reference to pre-built packages or recipes where possible (e.g. for middlewares)
-- [ ] in recipes improve language, e.g. replace `Now that ...` with `As the next step ...` etc.
 - [ ] for each library add a quick reference handbook that showcases all capabilities in a concise fashion
 - [ ] use file-scoped namespaces everywhere
 - [ ] add nunit analyzers to all test projects and refactor all tests to use modern test assertions
 - [ ] configure build pipelines to build project with a variety of SDK versions
   - [ ] set up dedicated example projects for .NET 6 and 7 with older SDK versions to ensure analyzers can be referenced without warnings or errors
-- [ ] re-order all code so that command comes before query (or even better split files)
-- [ ] add code coverage reports and badge
-- [ ] add null checks to public API methods to support users that do not use nullable reference types
+- [ ] create dedicated readme files for each package
 - [ ] use explicit dependency version numbers in all recipes and examples
   - [ ] add a script to bump version number across whole project
+- [ ] add code coverage reports and badge
+- [ ] add null checks to public API methods to support users that do not use nullable reference types
 
 ## CQS
 
-- [ ] try referencing a lower version of csharp analyzer dependencies to prevent version conflicts
+- [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
 - [ ] write code-level documentation for all public APIs
+- [ ] cache client factory results
+- [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] create analyzers (including code fixes)
   - [ ] do not raise analyzer error for missing `ConfigurePipeline` on .NET 7 or higher
-  - [ ] when generating pipeline configuration method via code fix, also add comment for suppressing unused method (with extra comment about removing this comment when .NET 7 or higher is being used)
-  - [ ] non-empty `ConfigurePipeline` method
   - [ ] enforce `IConfigureCommandPipeline` interface to be present on all handler types that implement `ConfigurePipeline` method
-  - [ ] enforce `IConfigureCommandPipeline` interface to only be present on command handler types
+  - [ ] non-empty `ConfigurePipeline` method
   - [ ] custom handler interfaces may not have extra methods
-  - [ ] handler must not implement multiple custom interface for same command
+  - [ ] handler must not implement multiple custom interfaces for same command
+  - [ ] enforce `IConfigureCommandPipeline` interface to only be present on command handler types
   - [ ] middlewares must not implement more than one middleware interface of the same type (i.e. not implement interface with and without configuration)
   - [ ] error (optionally) when a handler is being injected directly instead of an interface
-  - [ ] error when `AddConquerorCQS` is being called without registration finalization method being called
-- [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
-- [ ] allow caching client factory results
+- [ ] re-order all code so that command comes before query (or even better split files)
 
 ### CQS middleware
 
 - [ ] create projects for common middlewares, e.g.
-  - [ ] `Conqueror.CQS.Middleware.Retry`
-  - [ ] `Conqueror.CQS.Middleware.Timeout`
+  - [ ] `Conqueror.CQS.Middleware.FluentValidation`
+  - [ ] `Conqueror.CQS.Middleware.MemoryCache`
   - [ ] `Conqueror.CQS.Middleware.Metrics`
   - [ ] `Conqueror.CQS.Middleware.Tracing`
-  - [ ] `Conqueror.CQS.Middleware.FluentValidation`
 
 ### CQS ASP Core
 
+- [ ] add recipe for customizing OpenAPI specification with swashbuckle
 - [ ] create analyzers (including code fixes)
   - [ ] when command or query does not have a version
-- [ ] add recipe for customizing OpenAPI specification with swashbuckle
-- [ ] instruct users to place their custom path conventions into their contracts module to allow both server and client to use the same conventions
-- [ ] provide delegating HTTP client handler that takes care of conqueror context propagation to llow custom http clients to be used
-- [ ] allow registering commands and queries via DI extension instead of attribute
+- [ ] provide delegating HTTP client handler that takes care of conqueror context propagation to allow custom http clients to be used
 
 ## Eventing
 
