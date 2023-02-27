@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 namespace Conqueror.CQS.Middleware.Logging
 {
     /// <summary>
-    ///     The configuration options for <see cref="CommandLoggingMiddleware" />.
+    ///     The configuration options for <see cref="LoggingCommandMiddleware" />.
     /// </summary>
-    public sealed class CommandLoggingMiddlewareConfiguration
+    public sealed class LoggingCommandMiddlewareConfiguration
     {
         /// <summary>
         ///     The level at which the pre-execution log message is logged.
@@ -55,36 +55,36 @@ namespace Conqueror.CQS.Middleware.Logging
         ///     is written. Return <c>true</c> to allow the log message to be
         ///     written or return <c>false</c> for the log message to be skipped.
         ///     This hook can be used to customize the logging by returning <c>false</c>
-        ///     and then using either the <see cref="CommandLoggingPreExecutionContext.Logger" />
+        ///     and then using either the <see cref="LoggingCommandPreExecutionContext.Logger" />
         ///     directly or by resolving a different logger from the
-        ///     <see cref="CommandLoggingPreExecutionContext.ServiceProvider" />.
+        ///     <see cref="LoggingCommandPreExecutionContext.ServiceProvider" />.
         /// </summary>
-        public Func<CommandLoggingPreExecutionContext, bool>? PreExecutionHook { get; set; }
+        public Func<LoggingCommandPreExecutionContext, bool>? PreExecutionHook { get; set; }
 
         /// <summary>
         ///     A hook that is called just before the post-execution log message
         ///     is written. Return <c>true</c> to allow the log message to be
         ///     written or return <c>false</c> for the log message to be skipped.
         ///     This hook can be used to customize the logging by returning <c>false</c>
-        ///     and then using either the <see cref="CommandLoggingPreExecutionContext.Logger" />
+        ///     and then using either the <see cref="LoggingCommandPreExecutionContext.Logger" />
         ///     directly or by resolving a different logger from the
-        ///     <see cref="CommandLoggingPreExecutionContext.ServiceProvider" />.
+        ///     <see cref="LoggingCommandPreExecutionContext.ServiceProvider" />.
         /// </summary>
-        public Func<CommandLoggingPostExecutionContext, bool>? PostExecutionHook { get; set; }
+        public Func<LoggingCommandPostExecutionContext, bool>? PostExecutionHook { get; set; }
 
         /// <summary>
         ///     A hook that is called just before the exception log message
         ///     is written. Return <c>true</c> to allow the log message to be
         ///     written or return <c>false</c> for the log message to be skipped.
         ///     This hook can be used to customize the logging by returning <c>false</c>
-        ///     and then using either the <see cref="CommandLoggingPreExecutionContext.Logger" />
+        ///     and then using either the <see cref="LoggingCommandPreExecutionContext.Logger" />
         ///     directly or by resolving a different logger from the
-        ///     <see cref="CommandLoggingPreExecutionContext.ServiceProvider" />.<br />
+        ///     <see cref="LoggingCommandPreExecutionContext.ServiceProvider" />.<br />
         ///     <br />
         ///     Note that this hook does not influence what happens with the exception
         ///     itself. It will always be re-thrown by the middleware.
         /// </summary>
-        public Func<CommandLoggingExceptionContext, bool>? ExceptionHook { get; set; }
+        public Func<LoggingCommandExceptionContext, bool>? ExceptionHook { get; set; }
 
         /// <summary>
         ///     Specify the options to use when JSON-serializing command and
@@ -94,9 +94,9 @@ namespace Conqueror.CQS.Middleware.Logging
     }
 
     /// <summary>
-    ///     The context passed to a <see cref="CommandLoggingMiddleware" />'s <see cref="CommandLoggingMiddlewareConfiguration.PreExecutionHook" />.
+    ///     The context passed to a <see cref="LoggingCommandMiddleware" />'s <see cref="LoggingCommandMiddlewareConfiguration.PreExecutionHook" />.
     /// </summary>
-    public sealed record CommandLoggingPreExecutionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, IServiceProvider ServiceProvider)
+    public sealed record LoggingCommandPreExecutionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
@@ -131,9 +131,9 @@ namespace Conqueror.CQS.Middleware.Logging
     }
 
     /// <summary>
-    ///     The context passed to a <see cref="CommandLoggingMiddleware" />'s <see cref="CommandLoggingMiddlewareConfiguration.PostExecutionHook" />.
+    ///     The context passed to a <see cref="LoggingCommandMiddleware" />'s <see cref="LoggingCommandMiddlewareConfiguration.PostExecutionHook" />.
     /// </summary>
-    public sealed record CommandLoggingPostExecutionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, object? Response, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+    public sealed record LoggingCommandPostExecutionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, object? Response, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
@@ -178,9 +178,9 @@ namespace Conqueror.CQS.Middleware.Logging
     }
 
     /// <summary>
-    ///     The context passed to a <see cref="CommandLoggingMiddleware" />'s <see cref="CommandLoggingMiddlewareConfiguration.ExceptionHook" />.
+    ///     The context passed to a <see cref="LoggingCommandMiddleware" />'s <see cref="LoggingCommandMiddlewareConfiguration.ExceptionHook" />.
     /// </summary>
-    public sealed record CommandLoggingExceptionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+    public sealed record LoggingCommandExceptionContext(ILogger Logger, LogLevel LogLevel, string CommandId, string TraceId, object Command, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message

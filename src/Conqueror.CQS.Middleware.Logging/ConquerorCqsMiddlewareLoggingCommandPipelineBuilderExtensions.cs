@@ -19,13 +19,13 @@ namespace Conqueror
         /// </summary>
         /// <param name="pipeline">The command pipeline to add logging to</param>
         /// <param name="configure">
-        ///     An optional delegate to configure the logging functionality (see <see cref="CommandLoggingMiddlewareConfiguration" />
+        ///     An optional delegate to configure the logging functionality (see <see cref="LoggingCommandMiddlewareConfiguration" />
         ///     for the full list of configuration options)
         /// </param>
         /// <returns>The command pipeline</returns>
-        public static ICommandPipelineBuilder UseLogging(this ICommandPipelineBuilder pipeline, Action<CommandLoggingMiddlewareConfiguration>? configure = null)
+        public static ICommandPipelineBuilder UseLogging(this ICommandPipelineBuilder pipeline, Action<LoggingCommandMiddlewareConfiguration>? configure = null)
         {
-            return pipeline.Use<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>(new())
+            return pipeline.Use<LoggingCommandMiddleware, LoggingCommandMiddlewareConfiguration>(new())
                            .ConfigureLogging(configure ?? (_ => { }));
         }
 
@@ -34,13 +34,13 @@ namespace Conqueror
         /// </summary>
         /// <param name="pipeline">The command pipeline with the logging middleware to configure</param>
         /// <param name="configure">
-        ///     The delegate for configuring the logging functionality (see <see cref="CommandLoggingMiddlewareConfiguration" />
+        ///     The delegate for configuring the logging functionality (see <see cref="LoggingCommandMiddlewareConfiguration" />
         ///     for the full list of configuration options)
         /// </param>
         /// <returns>The command pipeline</returns>
-        public static ICommandPipelineBuilder ConfigureLogging(this ICommandPipelineBuilder pipeline, Action<CommandLoggingMiddlewareConfiguration> configure)
+        public static ICommandPipelineBuilder ConfigureLogging(this ICommandPipelineBuilder pipeline, Action<LoggingCommandMiddlewareConfiguration> configure)
         {
-            return pipeline.Configure<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>(configure);
+            return pipeline.Configure<LoggingCommandMiddleware, LoggingCommandMiddlewareConfiguration>(configure);
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Conqueror
         /// <returns>The command pipeline</returns>
         public static ICommandPipelineBuilder WithoutLogging(this ICommandPipelineBuilder pipeline)
         {
-            return pipeline.Without<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>();
+            return pipeline.Without<LoggingCommandMiddleware, LoggingCommandMiddlewareConfiguration>();
         }
     }
 }

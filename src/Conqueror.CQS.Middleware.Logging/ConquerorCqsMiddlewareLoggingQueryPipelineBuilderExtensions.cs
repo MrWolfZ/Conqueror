@@ -19,13 +19,13 @@ namespace Conqueror
         /// </summary>
         /// <param name="pipeline">The query pipeline to add logging to</param>
         /// <param name="configure">
-        ///     An optional delegate to configure the logging functionality (see <see cref="QueryLoggingMiddlewareConfiguration" />
+        ///     An optional delegate to configure the logging functionality (see <see cref="LoggingQueryMiddlewareConfiguration" />
         ///     for the full list of configuration options)
         /// </param>
         /// <returns>The query pipeline</returns>
-        public static IQueryPipelineBuilder UseLogging(this IQueryPipelineBuilder pipeline, Action<QueryLoggingMiddlewareConfiguration>? configure = null)
+        public static IQueryPipelineBuilder UseLogging(this IQueryPipelineBuilder pipeline, Action<LoggingQueryMiddlewareConfiguration>? configure = null)
         {
-            return pipeline.Use<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>(new())
+            return pipeline.Use<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>(new())
                            .ConfigureLogging(configure ?? (_ => { }));
         }
 
@@ -34,13 +34,13 @@ namespace Conqueror
         /// </summary>
         /// <param name="pipeline">The query pipeline with the logging middleware to configure</param>
         /// <param name="configure">
-        ///     The delegate for configuring the logging functionality (see <see cref="QueryLoggingMiddlewareConfiguration" />
+        ///     The delegate for configuring the logging functionality (see <see cref="LoggingQueryMiddlewareConfiguration" />
         ///     for the full list of configuration options)
         /// </param>
         /// <returns>The query pipeline</returns>
-        public static IQueryPipelineBuilder ConfigureLogging(this IQueryPipelineBuilder pipeline, Action<QueryLoggingMiddlewareConfiguration> configure)
+        public static IQueryPipelineBuilder ConfigureLogging(this IQueryPipelineBuilder pipeline, Action<LoggingQueryMiddlewareConfiguration> configure)
         {
-            return pipeline.Configure<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>(configure);
+            return pipeline.Configure<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>(configure);
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Conqueror
         /// <returns>The query pipeline</returns>
         public static IQueryPipelineBuilder WithoutLogging(this IQueryPipelineBuilder pipeline)
         {
-            return pipeline.Without<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>();
+            return pipeline.Without<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>();
         }
     }
 }

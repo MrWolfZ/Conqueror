@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 namespace Conqueror.CQS.Middleware.Logging.Tests
 {
     [TestFixture]
-    public sealed class QueryLoggingMiddlewareTests : TestBase
+    public sealed class LoggingQueryMiddlewareTests : TestBase
     {
         private Func<TestQuery, TestQueryResponse> handlerFn = qry => new(qry.Payload);
         private Action<IQueryPipelineBuilder> configurePipeline = b => b.UseLogging();
@@ -176,7 +176,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         public async Task GivenConfiguredPreExecutionHook_HookIsCalledWithCorrectParameters()
         {
             var testQuery = new TestQuery(10);
-            QueryLoggingPreExecutionContext? seenContext = null;
+            LoggingQueryPreExecutionContext? seenContext = null;
 
             var queryId = "test-query-id";
             var traceId = "test-trace-id";
@@ -229,7 +229,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         public async Task GivenConfiguredPostExecutionHook_HookIsCalledWithCorrectParameters()
         {
             var testQuery = new TestQuery(10);
-            QueryLoggingPostExecutionContext? seenContext = null;
+            LoggingQueryPostExecutionContext? seenContext = null;
 
             var queryId = "test-query-id";
             var traceId = "test-trace-id";
@@ -285,7 +285,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         {
             var testQuery = new TestQuery(10);
             var exception = new InvalidOperationException("test exception message");
-            QueryLoggingExceptionContext? seenContext = null;
+            LoggingQueryExceptionContext? seenContext = null;
 
             var queryId = "test-query-id";
             var traceId = "test-trace-id";

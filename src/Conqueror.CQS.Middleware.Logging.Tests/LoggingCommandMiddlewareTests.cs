@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 namespace Conqueror.CQS.Middleware.Logging.Tests
 {
     [TestFixture]
-    public sealed class CommandLoggingMiddlewareTests : TestBase
+    public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         private Func<TestCommand, TestCommandResponse> handlerFn = cmd => new(cmd.Payload);
         private Action<ICommandPipelineBuilder> configurePipeline = b => b.UseLogging();
@@ -210,7 +210,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         public async Task GivenConfiguredPreExecutionHook_HookIsCalledWithCorrectParameters()
         {
             var testCommand = new TestCommand(10);
-            CommandLoggingPreExecutionContext? seenContext = null;
+            LoggingCommandPreExecutionContext? seenContext = null;
 
             var commandId = "test-command-id";
             var traceId = "test-trace-id";
@@ -263,7 +263,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         public async Task GivenConfiguredPostExecutionHook_HookIsCalledWithCorrectParameters()
         {
             var testCommand = new TestCommand(10);
-            CommandLoggingPostExecutionContext? seenContext = null;
+            LoggingCommandPostExecutionContext? seenContext = null;
 
             var commandId = "test-command-id";
             var traceId = "test-trace-id";
@@ -319,7 +319,7 @@ namespace Conqueror.CQS.Middleware.Logging.Tests
         {
             var testCommand = new TestCommand(10);
             var exception = new InvalidOperationException("test exception message");
-            CommandLoggingExceptionContext? seenContext = null;
+            LoggingCommandExceptionContext? seenContext = null;
 
             var commandId = "test-command-id";
             var traceId = "test-trace-id";

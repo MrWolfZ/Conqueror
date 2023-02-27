@@ -16,10 +16,10 @@ namespace Conqueror.CQS.Middleware.Logging
     ///         <item>If an exception gets thrown during query execution</item>
     ///     </list>
     /// </summary>
-    public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddlewareConfiguration>
+    public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddlewareConfiguration>
     {
         /// <inheritdoc />
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, QueryLoggingMiddlewareConfiguration> ctx)
+        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
             where TQuery : class
         {
             var logger = GetLogger(ctx);
@@ -50,12 +50,12 @@ namespace Conqueror.CQS.Middleware.Logging
         private static void PreExecution<TQuery, TResponse>(ILogger logger,
                                                             string queryId,
                                                             string traceId,
-                                                            QueryMiddlewareContext<TQuery, TResponse, QueryLoggingMiddlewareConfiguration> ctx)
+                                                            QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
             where TQuery : class
         {
             if (ctx.Configuration.PreExecutionHook is { } preExecutionHook)
             {
-                var preExecutionContext = new QueryLoggingPreExecutionContext(logger, ctx.Configuration.PreExecutionLogLevel, queryId, traceId, ctx.Query, ctx.ServiceProvider);
+                var preExecutionContext = new LoggingQueryPreExecutionContext(logger, ctx.Configuration.PreExecutionLogLevel, queryId, traceId, ctx.Query, ctx.ServiceProvider);
 
                 if (!preExecutionHook(preExecutionContext))
                 {
@@ -90,12 +90,12 @@ namespace Conqueror.CQS.Middleware.Logging
                                                              string traceId,
                                                              object? response,
                                                              TimeSpan elapsedTime,
-                                                             QueryMiddlewareContext<TQuery, TResponse, QueryLoggingMiddlewareConfiguration> ctx)
+                                                             QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
             where TQuery : class
         {
             if (ctx.Configuration.PostExecutionHook is { } postExecutionHook)
             {
-                var postExecutionContext = new QueryLoggingPostExecutionContext(logger,
+                var postExecutionContext = new LoggingQueryPostExecutionContext(logger,
                                                                                 ctx.Configuration.PostExecutionLogLevel,
                                                                                 queryId,
                                                                                 traceId,
@@ -142,12 +142,12 @@ namespace Conqueror.CQS.Middleware.Logging
                                                            string traceId,
                                                            Exception exception,
                                                            TimeSpan elapsedTime,
-                                                           QueryMiddlewareContext<TQuery, TResponse, QueryLoggingMiddlewareConfiguration> ctx)
+                                                           QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
             where TQuery : class
         {
             if (ctx.Configuration.ExceptionHook is { } exceptionHook)
             {
-                var loggingExceptionContext = new QueryLoggingExceptionContext(logger,
+                var loggingExceptionContext = new LoggingQueryExceptionContext(logger,
                                                                                ctx.Configuration.ExceptionLogLevel,
                                                                                queryId,
                                                                                traceId,
@@ -177,7 +177,7 @@ namespace Conqueror.CQS.Middleware.Logging
                        traceId);
         }
 
-        private static ILogger GetLogger<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, QueryLoggingMiddlewareConfiguration> ctx)
+        private static ILogger GetLogger<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
             where TQuery : class
         {
             var loggerFactory = ctx.ServiceProvider.GetRequiredService<ILoggerFactory>();

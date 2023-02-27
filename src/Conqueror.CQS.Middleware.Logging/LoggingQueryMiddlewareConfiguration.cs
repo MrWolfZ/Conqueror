@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 namespace Conqueror.CQS.Middleware.Logging
 {
     /// <summary>
-    ///     The configuration options for <see cref="QueryLoggingMiddleware" />.
+    ///     The configuration options for <see cref="LoggingQueryMiddleware" />.
     /// </summary>
-    public sealed class QueryLoggingMiddlewareConfiguration
+    public sealed class LoggingQueryMiddlewareConfiguration
     {
         /// <summary>
         ///     The level at which the pre-execution log message is logged.
@@ -55,36 +55,36 @@ namespace Conqueror.CQS.Middleware.Logging
         ///     is written. Return <c>true</c> to allow the log message to be
         ///     written or return <c>false</c> for the log message to be skipped.
         ///     This hook can be used to customize the logging by returning <c>false</c>
-        ///     and then using either the <see cref="QueryLoggingPreExecutionContext.Logger" />
+        ///     and then using either the <see cref="LoggingQueryPreExecutionContext.Logger" />
         ///     directly or by resolving a different logger from the
-        ///     <see cref="QueryLoggingPreExecutionContext.ServiceProvider" />.
+        ///     <see cref="LoggingQueryPreExecutionContext.ServiceProvider" />.
         /// </summary>
-        public Func<QueryLoggingPreExecutionContext, bool>? PreExecutionHook { get; set; }
+        public Func<LoggingQueryPreExecutionContext, bool>? PreExecutionHook { get; set; }
 
         /// <summary>
         ///     A hook that is called just before the post-execution log message
         ///     is written. Return <c>true</c> to allow the log message to be
         ///     written or return <c>false</c> for the log message to be skipped.
         ///     This hook can be used to customize the logging by returning <c>false</c>
-        ///     and then using either the <see cref="QueryLoggingPreExecutionContext.Logger" />
+        ///     and then using either the <see cref="LoggingQueryPreExecutionContext.Logger" />
         ///     directly or by resolving a different logger from the
-        ///     <see cref="QueryLoggingPreExecutionContext.ServiceProvider" />.
+        ///     <see cref="LoggingQueryPreExecutionContext.ServiceProvider" />.
         /// </summary>
-        public Func<QueryLoggingPostExecutionContext, bool>? PostExecutionHook { get; set; }
+        public Func<LoggingQueryPostExecutionContext, bool>? PostExecutionHook { get; set; }
 
         /// <summary>
         ///     A hook that is called just before the exception log message
         ///     is written. Return <c>true</c> to allow the log message to be
         ///     written or return <c>false</c> for the log message to be skipped.
         ///     This hook can be used to customize the logging by returning <c>false</c>
-        ///     and then using either the <see cref="QueryLoggingPreExecutionContext.Logger" />
+        ///     and then using either the <see cref="LoggingQueryPreExecutionContext.Logger" />
         ///     directly or by resolving a different logger from the
-        ///     <see cref="QueryLoggingPreExecutionContext.ServiceProvider" />.<br />
+        ///     <see cref="LoggingQueryPreExecutionContext.ServiceProvider" />.<br />
         ///     <br />
         ///     Note that this hook does not influence what happens with the exception
         ///     itself. It will always be re-thrown by the middleware.
         /// </summary>
-        public Func<QueryLoggingExceptionContext, bool>? ExceptionHook { get; set; }
+        public Func<LoggingQueryExceptionContext, bool>? ExceptionHook { get; set; }
 
         /// <summary>
         ///     Specify the options to use when JSON-serializing query and
@@ -94,9 +94,9 @@ namespace Conqueror.CQS.Middleware.Logging
     }
 
     /// <summary>
-    ///     The context passed to a <see cref="QueryLoggingMiddleware" />'s <see cref="QueryLoggingMiddlewareConfiguration.PreExecutionHook" />.
+    ///     The context passed to a <see cref="LoggingQueryMiddleware" />'s <see cref="LoggingQueryMiddlewareConfiguration.PreExecutionHook" />.
     /// </summary>
-    public sealed record QueryLoggingPreExecutionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, IServiceProvider ServiceProvider)
+    public sealed record LoggingQueryPreExecutionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
@@ -131,9 +131,9 @@ namespace Conqueror.CQS.Middleware.Logging
     }
 
     /// <summary>
-    ///     The context passed to a <see cref="QueryLoggingMiddleware" />'s <see cref="QueryLoggingMiddlewareConfiguration.PostExecutionHook" />.
+    ///     The context passed to a <see cref="LoggingQueryMiddleware" />'s <see cref="LoggingQueryMiddlewareConfiguration.PostExecutionHook" />.
     /// </summary>
-    public sealed record QueryLoggingPostExecutionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, object? Response, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+    public sealed record LoggingQueryPostExecutionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, object? Response, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
@@ -178,9 +178,9 @@ namespace Conqueror.CQS.Middleware.Logging
     }
 
     /// <summary>
-    ///     The context passed to a <see cref="QueryLoggingMiddleware" />'s <see cref="QueryLoggingMiddlewareConfiguration.ExceptionHook" />.
+    ///     The context passed to a <see cref="LoggingQueryMiddleware" />'s <see cref="LoggingQueryMiddlewareConfiguration.ExceptionHook" />.
     /// </summary>
-    public sealed record QueryLoggingExceptionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+    public sealed record LoggingQueryExceptionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
     {
         /// <summary>
         ///     The logger used in the middleware. Can be used to log the message
