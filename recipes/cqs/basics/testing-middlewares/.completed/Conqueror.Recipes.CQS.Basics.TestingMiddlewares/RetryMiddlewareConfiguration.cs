@@ -1,7 +1,6 @@
-namespace Conqueror.Recipes.CQS.Basics.TestingMiddlewares
+namespace Conqueror.Recipes.CQS.Basics.TestingMiddlewares;
+
+internal sealed class RetryMiddlewareConfiguration
 {
-    internal sealed class RetryMiddlewareConfiguration
-    {
-        public int RetryAttemptLimit { get; set; }
-    }
+    public int RetryAttemptLimit { get; set; }
 }

@@ -1,5 +1,6 @@
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
+// in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.DataAnnotationValidation
 internal sealed class DataAnnotationValidationQueryMiddleware : IQueryMiddleware
 {
     public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)

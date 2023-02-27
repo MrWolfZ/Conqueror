@@ -1,10 +1,9 @@
-namespace Conqueror.Recipes.CQS.Basics.TestingMiddlewares
+namespace Conqueror.Recipes.CQS.Basics.TestingMiddlewares;
+
+internal static class DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions
 {
-    internal static class DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions
+    public static ICommandPipelineBuilder UseDataAnnotationValidation(this ICommandPipelineBuilder pipeline)
     {
-        public static ICommandPipelineBuilder UseDataAnnotationValidation(this ICommandPipelineBuilder pipeline)
-        {
-            return pipeline.Use<DataAnnotationValidationCommandMiddleware>();
-        }
+        return pipeline.Use<DataAnnotationValidationCommandMiddleware>();
     }
 }

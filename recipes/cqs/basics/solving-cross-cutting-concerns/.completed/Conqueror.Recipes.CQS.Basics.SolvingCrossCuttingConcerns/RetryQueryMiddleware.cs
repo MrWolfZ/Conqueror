@@ -1,5 +1,6 @@
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
+// in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.Polly
 internal sealed class RetryQueryMiddleware : IQueryMiddleware<RetryMiddlewareConfiguration>
 {
     public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, RetryMiddlewareConfiguration> ctx)

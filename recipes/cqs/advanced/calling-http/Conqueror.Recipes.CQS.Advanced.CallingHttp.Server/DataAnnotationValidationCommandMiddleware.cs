@@ -2,6 +2,7 @@ using System.Reflection;
 
 namespace Conqueror.Recipes.CQS.Advanced.CallingHttp.Server;
 
+// in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.DataAnnotationValidation
 public sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddleware
 {
     public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)

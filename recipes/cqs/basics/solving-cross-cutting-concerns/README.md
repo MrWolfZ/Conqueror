@@ -31,6 +31,7 @@ All of this is quite theoretical, so let's explore it interactively by implement
 ```cs
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
+// in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.DataAnnotationValidation
 internal sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddleware
 {
     public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
@@ -127,6 +128,7 @@ Create a new class called `RetryCommandMiddleware.cs` ([view completed file](.co
 ```cs
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
+// in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.Polly
 internal sealed class RetryCommandMiddleware : ICommandMiddleware
 {
     public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
