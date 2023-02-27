@@ -291,6 +291,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests", "recipes\cqs\advanced\testing-calling-http\.completed\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests\Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests.csproj", "{2DA381D9-391C-49E4-B9D6-4300942DFE3B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Polly", "src\Conqueror.CQS.Middleware.Polly\Conqueror.CQS.Middleware.Polly.csproj", "{0833569B-DAC7-4523-B8A9-EDFD30392C10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Polly.Tests", "src\Conqueror.CQS.Middleware.Polly.Tests\Conqueror.CQS.Middleware.Polly.Tests.csproj", "{5435F505-20D7-45ED-91E5-7926E3A6C65A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -660,6 +664,14 @@ Global
 		{2DA381D9-391C-49E4-B9D6-4300942DFE3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DA381D9-391C-49E4-B9D6-4300942DFE3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DA381D9-391C-49E4-B9D6-4300942DFE3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0833569B-DAC7-4523-B8A9-EDFD30392C10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0833569B-DAC7-4523-B8A9-EDFD30392C10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0833569B-DAC7-4523-B8A9-EDFD30392C10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0833569B-DAC7-4523-B8A9-EDFD30392C10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5435F505-20D7-45ED-91E5-7926E3A6C65A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5435F505-20D7-45ED-91E5-7926E3A6C65A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5435F505-20D7-45ED-91E5-7926E3A6C65A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5435F505-20D7-45ED-91E5-7926E3A6C65A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
