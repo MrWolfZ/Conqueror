@@ -9,7 +9,7 @@ public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQue
 {
 }
 
-internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
+internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler, IConfigureQueryPipeline
 {
     private readonly CountersRepository repository;
 
@@ -17,6 +17,8 @@ internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
     {
         this.repository = repository;
     }
+
+    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.UseDefault();
 
     public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query, CancellationToken cancellationToken = default)
     {

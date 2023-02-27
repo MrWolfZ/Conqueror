@@ -9,7 +9,7 @@ public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCoun
 {
 }
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
+internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler, IConfigureCommandPipeline
 {
     private readonly CountersRepository countersRepository;
     private readonly UserHistoryRepository userHistoryRepository;
@@ -19,6 +19,8 @@ internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandH
         this.countersRepository = countersRepository;
         this.userHistoryRepository = userHistoryRepository;
     }
+
+    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.UseDefault();
 
     public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {

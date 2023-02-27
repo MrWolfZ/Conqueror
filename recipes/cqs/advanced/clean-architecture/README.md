@@ -44,6 +44,7 @@ Before we start with the refactoring, we'll think about our desired file structu
 ```txt
 Conqueror.Recipes.CQS.Advanced.CleanArchitecture/
 ├── CountersRepository.cs
+├── DefaultPipelines.cs
 ├── GetCounterValueQuery.cs
 ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 ├── IncrementCounterCommand.cs
@@ -61,6 +62,7 @@ If we simply move the files into different layers as outlined above, we'll get t
 
 ```txt
 Application/
+├── DefaultPipelines.cs
 ├── GetCounterValueQuery.cs
 ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 └── IncrementCounterCommand.cs
@@ -79,6 +81,7 @@ In this structure, the `Web` project will reference the `Application` and `Infra
 
 ```diff
   Application/
+  ├── DefaultPipelines.cs
   ├── GetCounterValueQuery.cs
   ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 + ├── ICountersRepository.cs
@@ -99,6 +102,7 @@ Creating a single interface for each repository is a common approach that works 
 
 ```diff
   Application/
+  ├── DefaultPipelines.cs
   ├── GetCounterValueQuery.cs
   ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 - ├── ICountersRepository.cs
@@ -125,6 +129,7 @@ Before we move on to the next part of the refactoring, let's briefly discuss one
 
 ```txt
 Application/
+├── DefaultPipelines.cs
 ├── GetCounterValueQuery/
 │   ├── GetCounterValueQuery.cs
 │   └── IGetCounterValueQueryRepository.cs
@@ -138,13 +143,15 @@ Application/
 
 The layered project structure discussed above is suitable for many applications and scales quite well. However, when your application reaches a certain size or complexity, you may want to consider a further separation (and sometimes you may even want to do this separation from the start). One way to do this is to use [domain-driven design](https://en.wikipedia.org/wiki/Domain-driven_design) and split your application into separate [bounded contexts](https://martinfowler.com/bliki/BoundedContext.html).
 
-In this recipe, we are going to split our example application into two bounded contexts: `Counters` and `UserHistory`. For each of these contexts we are going to create an `Application` and an `Infrastructure` project. However, since we are building this application as a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html), we are going to keep a single `Web` project and a single `Tests` project.
+In this recipe, we are going to split our example application into two bounded contexts: `Counters` and `UserHistory`. For each of these contexts we are going to create an `Application` and an `Infrastructure` project. However, since we are building this application as a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html), we are going to keep a single `Web` project and a single `Tests` project. We also would like to share our default command and query pipelines across all bounded contexts, and therefore we place them in a shared project called `Core.Application`.
 
-> There is a recipe, in which we explore how this modular monolith can be [refactored into a distributed application](../monolith-to-distributed#readme).
+> If there are other aspects you want to share across different bounded contexts, you can introduce additional projects as necessary. For example, if you have common code for the `Infrastructure` layer, you could create a `Core.Infrastructure` project, etc. (The prefix `Core` is one option among many others like `Platform`, `Base`, etc.; discuss with your team which one your prefer for your specific application).
 
 The folder structure of our monolith could look like this:
 
 ```txt
+Core.Application/
+└── DefaultPipelines.cs
 Counters.Application/
 ├── GetCounterValueQuery.cs
 ├── ICountersReadRepository.cs
@@ -169,7 +176,7 @@ Web/
 └── Program.cs
 ```
 
-In this structure, the `Web` project will reference both context's `Application` and `Infrastructure` projects, each `Infrastructure` project will reference its context's `Application` project, and the `Tests` project references all other projects.
+In this structure, the `Web` project will reference both context's `Application` and `Infrastructure` projects, each `Infrastructure` project will reference its context's `Application` project, each `Application` project references the `Core.Application` project, and the `Tests` project references all other projects.
 
 There is still one open question: the `UserHistory` context needs to know when a counter was incremented, but how can the `Counters` context communicate this? There are a few options to do this:
 
@@ -183,6 +190,8 @@ There is still one open question: the `UserHistory` context needs to know when a
 We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can be called by the `Counters` context whenever a counter is incremented. However, as it stands we would still require a reference from `Counters.Application` to `UserHistory.Application` in order to call the new command, which still leads to undesired coupling. Instead of this direct dependency, we can use the [dependency inversion principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle) once again and extract our command and query types into separate `Contracts` projects, which allow one context to call commands and queries from another context while maintaining loose coupling. Even though, strictly speaking, we only need this for our new command, we are going to do this for all commands and queries of both contexts for consistency. The folder structure would be adjusted like this:
 
 ```diff
+  Core.Application/
+  └── DefaultPipelines.cs
   Counters.Application/
 - ├── GetCounterValueQuery.cs
 + ├── GetCounterValueQueryHandler.cs
@@ -216,8 +225,6 @@ We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can b
 ```
 
 In this structure, the `Counters.Application` project references the `UserHistory.Contracts` project and the `Web` project takes care of all the bootstrapping to ensure all commands and queries from all context contracts can be called.
-
-> If there are other aspects you want to share across different bounded contexts, you can introduce additional projects as necessary. For example, if you have custom middlewares, those could be placed into a separate `Middlewares` project, which is referenced from all context's `Application` projects. If you have shared code for any of the layers discussed above, you could also consider introducing shared project per layer, for example `Core.Application`, `Core.Infrastructure`, etc. (The prefix `Core` is one option among many others like `Platform`, `Base`, etc.; discuss with your team which one your prefer for your specific application).
 
 This completes the refactoring of our example application into a clean architecture. You can view the completed code [here](.completed) in your browser or in the `completed` folder of the recipe's solution.
 

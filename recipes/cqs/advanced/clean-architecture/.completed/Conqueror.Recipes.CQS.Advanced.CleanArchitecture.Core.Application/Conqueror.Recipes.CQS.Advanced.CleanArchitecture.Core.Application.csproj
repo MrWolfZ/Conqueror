@@ -15,14 +15,12 @@
         <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS.Analyzers\Conqueror.CQS.Analyzers.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
         <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS.Middleware.DataAnnotationValidation\Conqueror.CQS.Middleware.DataAnnotationValidation.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
         <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS.Middleware.Logging\Conqueror.CQS.Middleware.Logging.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
-        <ProjectReference Include="..\..\..\..\..\..\src\Conqueror.CQS.Transport.Http.Abstractions\Conqueror.CQS.Transport.Http.Abstractions.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
 
         <!-- conditional Conqueror package references -->
         <PackageReference Include="Conqueror.CQS" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
         <PackageReference Include="Conqueror.CQS.Analyzers" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
         <PackageReference Include="Conqueror.CQS.Middleware.DataAnnotationValidation" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
         <PackageReference Include="Conqueror.CQS.Middleware.Logging" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
-        <PackageReference Include="Conqueror.CQS.Transport.Http.Abstractions" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
     </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@ using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Contracts;
 
 namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Application;
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
+internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler, IConfigureCommandPipeline
 {
     private readonly ICountersReadRepository countersReadRepository;
     private readonly ICountersWriteRepository countersWriteRepository;
@@ -16,6 +16,8 @@ internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandH
         this.countersWriteRepository = countersWriteRepository;
         this.setMostRecentlyIncrementedCounterForUserCommandHandler = setMostRecentlyIncrementedCounterForUserCommandHandler;
     }
+
+    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.UseDefault();
 
     public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {

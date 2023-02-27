@@ -1,6 +1,6 @@
 namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Application;
 
-internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
+internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler, IConfigureQueryPipeline
 {
     private readonly ICountersReadRepository repository;
 
@@ -8,6 +8,8 @@ internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
     {
         this.repository = repository;
     }
+
+    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.UseDefault();
 
     public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query, CancellationToken cancellationToken = default)
     {
