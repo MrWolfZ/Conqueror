@@ -113,7 +113,9 @@ while (true)
 
 Note that this program does not compile yet since it already references a few things we'll only create in the next step.
 
-Now that we have the core application loop, we can create an in-memory repository for managing our counters in `CountersRepository.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/CountersRepository.cs)):
+To store our counters, we are going to use the [repository pattern](https://martinfowler.com/eaaCatalog/repository.html). For simplicity, we store the counters in memory, but in a real application the repository would talk to some kind of database. There are other ways to interact with a data store, but repositories are a common way to do this. In very simple apps you may even consider talking directly to the database from within your handlers, but beware the challenges this poses for testing.
+
+Let's create an in-memory repository for managing our counters in `CountersRepository.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/CountersRepository.cs)):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basics.GettingStarted;

@@ -20,7 +20,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] add note in basics recipe that it is fine for simple applications to have DB logic directly in handlers
 - [ ] try referencing a lower version of csharp analyzer dependencies to prevent version conflicts
 - [ ] write code-level documentation for all public APIs
 - [ ] create analyzers (including code fixes)
