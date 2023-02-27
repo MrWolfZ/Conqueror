@@ -60,6 +60,7 @@ public sealed class IncOperationTests
 
         var testClient = webHost.GetTestClient();
 
+        // call inc operation without a counter name
         var output = await ProgramInvoker.Invoke(
             services => services.ConfigureConquerorCQSHttpClientOptions(o => o.UseHttpClient(testClient)),
             "inc");
@@ -95,7 +96,7 @@ public sealed class IncOperationTests
     public async Task GivenServerThatFailsRequests_WhenExecutingIncOperation_ErrorMessageIsPrinted()
     {
         const string counterName = "testCounter";
-        const int errorStatusCode = StatusCodes.Status500InternalServerError;
+        const int errorStatusCode = StatusCodes.Status502BadGateway;
 
         using var webHost = await StartServerApp(configureApp: app => app.Use((HttpContext ctx, Func<Task> _) =>
         {

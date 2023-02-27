@@ -39,7 +39,7 @@ We are going to write tests, which execute the application in the same way a use
 
 > If you look at the code for [Program.cs](./Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client/Program.cs), you see that we are using a `HostBuilder` (via the [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting) package) instead of a plain `ServiceCollection`. This allows us to configure services from within our tests by using a trick as shown below.
 
-Let's start with unit testing the `get` operation. Create a new class `GetOperationTests.cs`:
+Let's start with unit testing the `get` operation. Create a new class `GetOperationTests.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests/GetOperationTests.cs)):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests;
@@ -101,7 +101,7 @@ public async Task WhenExecutingGetOperationFailsWithHttpError_PrintsErrorMessage
 }
 ```
 
-Next, we will test the `inc` operation. We are going to write tests in three different ways and will discuss the advantages and disadvantages of each. Create a new class `IncOperationTests.cs`:
+Next, we will test the `inc` operation. We are going to write tests in three different ways and will discuss the advantages and disadvantages of each. Create a new class `IncOperationTests.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests/IncOperationTests.cs)):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests;
@@ -193,7 +193,7 @@ We want to write a few more tests that use the same setup. To prevent having to 
 
 ```cs
 private static async Task<IWebHost> StartServerApp(Action<IServiceCollection>? configureServices = null,
-                                                    Action<IApplicationBuilder>? configureApp = null)
+                                                   Action<IApplicationBuilder>? configureApp = null)
 {
     var webHost = new WebHostBuilder()
                   .UseTestServer()
@@ -229,6 +229,7 @@ public async Task WhenExecutingIncOperationWithInvalidCommand_PrintsErrorMessage
 
     var testClient = webHost.GetTestClient();
 
+    // call inc operation without a counter name
     var output = await ProgramInvoker.Invoke(
         services => services.ConfigureConquerorCQSHttpClientOptions(o => o.UseHttpClient(testClient)),
         "inc");
@@ -264,7 +265,7 @@ public async Task WhenExecutingIncOperation_CustomHttpHeaderIsPassed()
 public async Task GivenServerThatFailsRequests_WhenExecutingIncOperation_ErrorMessageIsPrinted()
 {
     const string counterName = "testCounter";
-    const int errorStatusCode = StatusCodes.Status500InternalServerError;
+    const int errorStatusCode = StatusCodes.Status502BadGateway;
 
     using var webHost = await StartServerApp(configureApp: app => app.Use((HttpContext ctx, Func<Task> _) =>
     {
