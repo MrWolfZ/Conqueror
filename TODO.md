@@ -44,6 +44,13 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
+- [ ] add handling for non-HTTP command and query clients being created (should throw when transport is created)
+- [ ] mention status code in exception message for HttpCommandException etc.
+- [ ] handle or document client exceptions other than failed requests (e.g. when connection cannot be established)
+  - wrap send call in try/catch and make status code and response message optional
+- [ ] always set `traceparent` header from activity ID when client base address is `http://localhost/` (for testing)
+- [ ] use `traceparent` header to carry trace ID
+  - if no active activity and present conqueror trace ID, then generate span ID and format `traceparent`
 - [ ] add recipe for customizing OpenAPI specification with swashbuckle
 - [ ] create analyzers (including code fixes)
   - [ ] when command or query does not have a version
