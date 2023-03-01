@@ -35,7 +35,7 @@ In this recipe we assume that a team started building the example application wi
 
 > There are many ways to build a clean architecture in .NET, and we're going to look at one such way. We are also going to use some of the [SOLID principles](https://en.wikipedia.org/wiki/SOLID) of object-oriented design as well as some other related concepts. You can consider this recipe to be quite an opinionated take on clean architectures, which can serve as an illustration of the general ideas, but it shouldn't be copied verbatim. You or your team may (and probably should) choose different names, layers, and file structures than what we look at here, depending on the concrete application or system you are building.
 
-One core idea of a clean architecture is to separate your core business logic from aspects like HTTP, databases, message queues, etc. This idea fits very well with **Conqueror**'s approach of making your command and query handlers transport-agnostic. For our clean architecture, we are going to separate our application into three layers: application, infrastructure, and web. The application layer contains our application business logic, which means our command and query handlers. The infrastructure layer will contain the [repositories](https://martinfowler.com/eaaCatalog/repository.html), which interact with a database (although in our simple example application, everything is just stored in-memory). The web layer will contain all the setup code to run a web server. In a typical project this would include controllers, but as you saw in the recipe for [exposing commands and queries via HTTP](../exposing-via-http#readme), **Conqueror.CQS** dynamically creates the controllers for your commands and queries, meaning that the web layer can be very thin.
+One core idea of a clean architecture is to separate your core business logic from aspects like HTTP, databases, message queues, etc. This idea fits very well with **Conqueror**'s approach of making your command and query handlers transport-agnostic. For our clean architecture, we are going to separate our application into three layers: application, infrastructure, and the web API entry point. The application layer contains our application business logic, which means our command and query handlers. The infrastructure layer will contain the [repositories](https://martinfowler.com/eaaCatalog/repository.html), which interact with a database (although in our simple example application, everything is just stored in-memory). The web API entry point layer will contain all the setup code to run a web server. In a typical project this would include controllers, but as you saw in the recipe for [exposing commands and queries via HTTP](../exposing-via-http#readme), **Conqueror.CQS** dynamically creates the controllers for your commands and queries, meaning that this layer can be very thin.
 
 > In more complex applications you could consider introducing a separate layer which contains your domain objects, as well as any business logic calculations. In such a setup the command and query handlers in the application layer become orchestrators which call into the domain layer instead of implementing the business logic themselves.
 
@@ -69,15 +69,19 @@ Application/
 Infratructure/
 ├── CountersRepository.cs
 └── UserHistoryRepository.cs
+EntryPoint.WebApi/
+└── Program.cs
 Tests/
 ├── GetCounterValueQueryTests.cs
 ├── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
 └── IncrementCounterCommandTests.cs
-Web/
-└── Program.cs
 ```
 
-In this structure, the `Web` project will reference the `Application` and `Infrastructure` projects, the `Infrastructure` project will reference the `Application` project, and the `Tests` project references all other projects. However, this won't work yet, since the command and query handlers require a reference to the repositories. To solve this, we can use the [dependency inversion principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle) by introducing interfaces for the repositories:
+In this structure, the `EntryPoint.WebApi` project will reference the `Application` and `Infrastructure` projects, the `Infrastructure` project will reference the `Application` project, and the `Tests` project references all other projects.
+
+> With this structure, it is very easy to add additional entry points to your application. For example, if there was a requirement to allow calling the `IncrementCounterCommand` via a message queue in addition to a web API, you could just create an `EntryPoint.QueueApi` project, that uses the exact same `Application` and `Infrastructure` projects.
+
+However, this won't work yet, since the command and query handlers require a reference to the repositories. To solve this, we can use the [dependency inversion principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle) by introducing interfaces for the repositories:
 
 ```diff
   Application/
@@ -90,12 +94,12 @@ In this structure, the `Web` project will reference the `Application` and `Infra
   Infratructure/
   ├── CountersRepository.cs
   └── UserHistoryRepository.cs
+  EntryPoint.WebApi/
+  └── Program.cs
   Tests/
   ├── GetCounterValueQueryTests.cs
   ├── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
   └── IncrementCounterCommandTests.cs
-  Web/
-  └── Program.cs
 ```
 
 Creating a single interface for each repository is a common approach that works well in many cases. However, in accordance with the spirit of [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) as well as according to the [interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle), we can go one step further and split the repository interfaces into two interfaces each: one for reading and one for writing.
@@ -115,12 +119,12 @@ Creating a single interface for each repository is a common approach that works 
   Infratructure/
   ├── CountersRepository.cs
   └── UserHistoryRepository.cs
+  EntryPoint.WebApi/
+  └── Program.cs
   Tests/
   ├── GetCounterValueQueryTests.cs
   ├── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
   └── IncrementCounterCommandTests.cs
-  Web/
-  └── Program.cs
 ```
 
 This is the structure we will use in this recipe as the basis for further refactorings. You can view it [here](.layers) in your browser or in the `layers` folder in the recipe's solution.
@@ -143,7 +147,7 @@ Application/
 
 The layered project structure discussed above is suitable for many applications and scales quite well. However, when your application reaches a certain size or complexity, you may want to consider a further separation (and sometimes you may even want to do this separation from the start). One way to do this is to use [domain-driven design](https://en.wikipedia.org/wiki/Domain-driven_design) and split your application into separate [bounded contexts](https://martinfowler.com/bliki/BoundedContext.html).
 
-In this recipe, we are going to split our example application into two bounded contexts: `Counters` and `UserHistory`. For each of these contexts we are going to create an `Application` and an `Infrastructure` project. However, since we are building this application as a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html), we are going to keep a single `Web` project and a single `Tests` project. We also would like to share our default command and query pipelines across all bounded contexts, and therefore we place them in a shared project called `Core.Application`.
+In this recipe, we are going to split our example application into two bounded contexts: `Counters` and `UserHistory`. For each of these contexts we are going to create an `Application` and an `Infrastructure` project. However, since we are building this application as a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html), we are going to keep a single `EntryPoint.WebApi` project and a single `Tests` project. We also would like to share our default command and query pipelines across all bounded contexts, and therefore we place them in a shared project called `Core.Application`.
 
 > If there are other aspects you want to share across different bounded contexts, you can introduce additional projects as necessary. For example, if you have common code for the `Infrastructure` layer, you could create a `Core.Infrastructure` project, etc. (The prefix `Core` is one option among many others like `Platform`, `Base`, etc.; discuss with your team which one your prefer for your specific application).
 
@@ -166,17 +170,17 @@ UserHistory.Application/
 UserHistory.Infratructure/
 ├── CountersRepository.cs
 └── UserHistoryRepository.cs
+EntryPoint.WebApi/
+└── Program.cs
 Tests/
 ├── Counters/
 │   ├── GetCounterValueQueryTests.cs
 │   └── IncrementCounterCommandTests.cs
 └── UserHistory/
     └── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
-Web/
-└── Program.cs
 ```
 
-In this structure, the `Web` project will reference both context's `Application` and `Infrastructure` projects, each `Infrastructure` project will reference its context's `Application` project, each `Application` project references the `Core.Application` project, and the `Tests` project references all other projects.
+In this structure, the `EntryPoint.WebApi` project will reference both context's `Application` and `Infrastructure` projects, each `Infrastructure` project will reference its context's `Application` project, each `Application` project references the `Core.Application` project, and the `Tests` project references all other projects.
 
 There is still one open question: the `UserHistory` context needs to know when a counter was incremented, but how can the `Counters` context communicate this? There are a few options to do this:
 
@@ -216,15 +220,15 @@ We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can b
   UserHistory.Infratructure/
   ├── CountersRepository.cs
   └── UserHistoryRepository.cs
+  EntryPoint.WebApi/
+  └── Program.cs
   Tests/
   ├── GetCounterValueQueryTests.cs
   ├── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
   └── IncrementCounterCommandTests.cs
-  Web/
-  └── Program.cs
 ```
 
-In this structure, the `Counters.Application` project references the `UserHistory.Contracts` project and the `Web` project takes care of all the bootstrapping to ensure all commands and queries from all context contracts can be called.
+In this structure, the `Counters.Application` project references the `UserHistory.Contracts` project and the `EntryPoint.WebApi` project takes care of all the bootstrapping to ensure all commands and queries from all context contracts can be called.
 
 This completes the refactoring of our example application into a clean architecture. You can view the completed code [here](.completed) in your browser or in the `completed` folder of the recipe's solution.
 

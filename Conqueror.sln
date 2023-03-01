@@ -247,7 +247,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Infrastructure", "recipes\cqs\advanced\clean-architecture\.layers\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Infrastructure\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Infrastructure.csproj", "{B4675C12-47D1-4D4A-AF99-D5B953A39500}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Web", "recipes\cqs\advanced\clean-architecture\.layers\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Web\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Web.csproj", "{E08CAF27-5E4C-4F0D-9DEC-73839939CE24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.EntryPoint.WebApi", "recipes\cqs\advanced\clean-architecture\.layers\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.EntryPoint.WebApi\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.EntryPoint.WebApi.csproj", "{E08CAF27-5E4C-4F0D-9DEC-73839939CE24}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests", "recipes\cqs\advanced\clean-architecture\.layers\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests.csproj", "{84601F68-9502-403C-BE67-D2DCE0CE7E4F}"
 EndProject
@@ -263,7 +263,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Infrastructure", "recipes\cqs\advanced\clean-architecture\.completed\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Infrastructure\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Infrastructure.csproj", "{E2E4A230-53D8-48DC-AFAD-1EB30D7BCA2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Web", "recipes\cqs\advanced\clean-architecture\.completed\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Web\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Web.csproj", "{DD85F252-0698-4951-9FA1-9B3BBEFBD21D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.EntryPoint.WebApi", "recipes\cqs\advanced\clean-architecture\.completed\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.EntryPoint.WebApi\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.EntryPoint.WebApi.csproj", "{DD85F252-0698-4951-9FA1-9B3BBEFBD21D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests", "recipes\cqs\advanced\clean-architecture\.completed\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests.csproj", "{46349AC7-0E1B-464A-88F9-F2649F6E1B61}"
 EndProject

@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Web\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Web.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.EntryPoint.WebApi\Conqueror.Recipes.CQS.Advanced.CleanArchitecture.EntryPoint.WebApi.csproj" />
     </ItemGroup>
 
 </Project>
