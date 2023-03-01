@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests;
+namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Tests;
 
 public abstract class TestBase : IDisposable
 {

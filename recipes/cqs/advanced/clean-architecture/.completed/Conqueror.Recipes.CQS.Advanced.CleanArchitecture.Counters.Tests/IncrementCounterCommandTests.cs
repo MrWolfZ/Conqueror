@@ -1,8 +1,6 @@
-using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Application;
-using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Contracts;
 using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Contracts;
 
-namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests.Counters;
+namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Tests;
 
 [TestFixture]
 public sealed class IncrementCounterCommandTests : TestBase

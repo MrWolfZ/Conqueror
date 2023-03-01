@@ -147,7 +147,7 @@ Application/
 
 The layered project structure discussed above is suitable for many applications and scales quite well. However, when your application reaches a certain size or complexity, you may want to consider a further separation (and sometimes you may even want to do this separation from the start). One way to do this is to use [domain-driven design](https://en.wikipedia.org/wiki/Domain-driven_design) and split your application into separate [bounded contexts](https://martinfowler.com/bliki/BoundedContext.html).
 
-In this recipe, we are going to split our example application into two bounded contexts: `Counters` and `UserHistory`. For each of these contexts we are going to create an `Application` and an `Infrastructure` project. However, since we are building this application as a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html), we are going to keep a single `EntryPoint.WebApi` project and a single `Tests` project. We also would like to share our default command and query pipelines across all bounded contexts, and therefore we place them in a shared project called `Core.Application`.
+In this recipe, we are going to split our example application into two bounded contexts: `Counters` and `UserHistory`. For each of these contexts we are going to create an `Application`, an `Infrastructure`, and a `Tests` project. However, since we are building this application as a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html), we are going to keep a single `EntryPoint.WebApi` project. We also would like to share our default command and query pipelines across all bounded contexts, and therefore we place them in a shared project called `Core.Application`.
 
 > If there are other aspects you want to share across different bounded contexts, you can introduce additional projects as necessary. For example, if you have common code for the `Infrastructure` layer, you could create a `Core.Infrastructure` project, etc. (The prefix `Core` is one option among many others like `Platform`, `Base`, etc.; discuss with your team which one your prefer for your specific application).
 
@@ -163,6 +163,9 @@ Counters.Application/
 └── IncrementCounterCommand.cs
 Counters.Infratructure/
 └── CountersRepository.cs
+Counters.Tests/
+├── GetCounterValueQueryTests.cs
+└── IncrementCounterCommandTests.cs
 UserHistory.Application/
 ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 ├── IUserHistoryReadRepository.cs
@@ -170,17 +173,15 @@ UserHistory.Application/
 UserHistory.Infratructure/
 ├── CountersRepository.cs
 └── UserHistoryRepository.cs
+UserHistory.Tests/
+└── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
 EntryPoint.WebApi/
 └── Program.cs
-Tests/
-├── Counters/
-│   ├── GetCounterValueQueryTests.cs
-│   └── IncrementCounterCommandTests.cs
-└── UserHistory/
-    └── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
 ```
 
-In this structure, the `EntryPoint.WebApi` project will reference both context's `Application` and `Infrastructure` projects, each `Infrastructure` project will reference its context's `Application` project, each `Application` project references the `Core.Application` project, and the `Tests` project references all other projects.
+In this structure, the `EntryPoint.WebApi` project will reference both context's `Application` and `Infrastructure` projects, each `Infrastructure` project will reference its context's `Application` project, each `Application` project references the `Core.Application` project, and the `Tests` projects reference all other projects.
+
+> While each bounded context has its own `Tests` project, the tests still bootstrap the whole application, since we want to test the commands and queries from each context with full integration with other contexts.
 
 There is still one open question: the `UserHistory` context needs to know when a counter was incremented, but how can the `Counters` context communicate this? There are a few options to do this:
 
@@ -188,8 +189,6 @@ There is still one open question: the `UserHistory` context needs to know when a
 - we could add a dependency from the `Counters.Application` project to the `UserHistory.Infratructure` project, and use the `IUserHistoryWriteRepository` to update the user's history (this works, but leads to tight coupling between the contexts, which hurts long term maintainability)
 - we can introduce a new command in the `UserHistory` context for updating the user history (this is the approach we will use in this recipe)
 - we can use the [Conqueror.Eventing](../../../../../..#conqueroreventing) library to publish a domain event from the `Counters` context and have an event observer in the `UserHistory` context (the [Conqueror.Eventing](../../../../../..#conqueroreventing) library is still experimental, but once it is stable you will be able to find a recipe [here](../../../eventing/advanced/clean-architecture#readme) which explores how our example application could look like using an event instead of a command)
-
-> To separate the code for bounded contexts even more stronly, you could consider creating a dedicated test project for every bounded context (e.g. `Counters.Tests`), but that would make it difficult to test application behavior which involves multiple bounded contexts (for example, the `IncrementCounterCommand` also updates the user history). This can be solved by mocking commands and queries from other contexts, but then your tests don't assert the full production-like application behavior. This decision is a trade-off between isolation and test completeness.
 
 We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can be called by the `Counters` context whenever a counter is incremented. However, as it stands we would still require a reference from `Counters.Application` to `UserHistory.Application` in order to call the new command, which still leads to undesired coupling. Instead of this direct dependency, we can use the [dependency inversion principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle) once again and extract our command and query types into separate `Contracts` projects, which allow one context to call commands and queries from another context while maintaining loose coupling. Even though, strictly speaking, we only need this for our new command, we are going to do this for all commands and queries of both contexts for consistency. The folder structure would be adjusted like this:
 
@@ -208,6 +207,9 @@ We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can b
 + └── IncrementCounterCommand.cs
   Counters.Infratructure/
   └── CountersRepository.cs
+  Counters.Tests/
+  ├── GetCounterValueQueryTests.cs
+  └── IncrementCounterCommandTests.cs
   UserHistory.Application/
 - ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 + ├── GetMostRecentlyIncrementedCounterForUserQueryHandler.cs
@@ -220,12 +222,10 @@ We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can b
   UserHistory.Infratructure/
   ├── CountersRepository.cs
   └── UserHistoryRepository.cs
+  UserHistory.Tests/
+  └── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
   EntryPoint.WebApi/
   └── Program.cs
-  Tests/
-  ├── GetCounterValueQueryTests.cs
-  ├── GetMostRecentlyIncrementedCounterForUserQueryTests.cs
-  └── IncrementCounterCommandTests.cs
 ```
 
 In this structure, the `Counters.Application` project references the `UserHistory.Contracts` project and the `EntryPoint.WebApi` project takes care of all the bootstrapping to ensure all commands and queries from all context contracts can be called.

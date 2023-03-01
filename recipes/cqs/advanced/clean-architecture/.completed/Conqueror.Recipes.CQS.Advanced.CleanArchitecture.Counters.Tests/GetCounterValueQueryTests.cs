@@ -1,7 +1,4 @@
-using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Application;
-using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Contracts;
-
-namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests.Counters;
+namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Tests;
 
 [TestFixture]
 public sealed class GetCounterValueQueryTests : TestBase

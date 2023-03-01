@@ -1,7 +1,4 @@
-using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Application;
-using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Contracts;
-
-namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Tests.UserHistory;
+namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Tests;
 
 [TestFixture]
 public sealed class GetMostRecentlyIncrementedCounterForUserQueryTests : TestBase
