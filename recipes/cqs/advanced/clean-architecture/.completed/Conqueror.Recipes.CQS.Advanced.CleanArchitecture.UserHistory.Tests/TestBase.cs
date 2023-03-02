@@ -38,9 +38,9 @@ public abstract class TestBase : IDisposable
     protected T ResolveOnServer<T>()
         where T : notnull => applicationFactory.Services.GetRequiredService<T>();
 
-    protected T ResolveCommandClient<T>()
+    protected T CreateCommandClient<T>()
         where T : class, ICommandHandler => clientServices.GetRequiredService<ICommandClientFactory>().CreateCommandClient<T>(b => b.UseHttp(new("http://localhost")));
 
-    protected T ResolveQueryClient<T>()
+    protected T CreateQueryClient<T>()
         where T : class, IQueryHandler => clientServices.GetRequiredService<IQueryClientFactory>().CreateQueryClient<T>(b => b.UseHttp(new("http://localhost")));
 }

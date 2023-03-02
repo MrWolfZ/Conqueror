@@ -8,10 +8,10 @@ public sealed class IncrementCounterCommandTests : TestBase
     private const string TestCounterName = "testCounter";
     private const string TestUserId = "user1";
 
-    private IIncrementCounterCommandHandler CommandClient => ResolveCommandClient<IIncrementCounterCommandHandler>();
+    private IIncrementCounterCommandHandler CommandClient => CreateCommandClient<IIncrementCounterCommandHandler>();
 
     private IGetMostRecentlyIncrementedCounterForUserQueryHandler GetMostRecentlyIncrementedCounterForUserQueryClient =>
-        ResolveQueryClient<IGetMostRecentlyIncrementedCounterForUserQueryHandler>();
+        CreateQueryClient<IGetMostRecentlyIncrementedCounterForUserQueryHandler>();
 
     [Test]
     public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncrementedAndNewValueIsReturned()

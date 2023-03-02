@@ -8,7 +8,7 @@ public sealed class GetMostRecentlyIncrementedCounterForUserQueryTests : TestBas
     private const string TestCounterName = "testCounter";
     private const string TestUserId = "testUser";
 
-    private IGetMostRecentlyIncrementedCounterForUserQueryHandler QueryClient => ResolveQueryClient<IGetMostRecentlyIncrementedCounterForUserQueryHandler>();
+    private IGetMostRecentlyIncrementedCounterForUserQueryHandler QueryClient => CreateQueryClient<IGetMostRecentlyIncrementedCounterForUserQueryHandler>();
 
     [Test]
     public async Task GivenExistingUserHistory_WhenGettingMostRecentlyIncrementedCounterForUser_CounterNameIsReturned()

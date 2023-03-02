@@ -5,7 +5,7 @@ public sealed class GetCounterValueQueryTests : TestBase
 {
     private const string TestCounterName = "testCounter";
 
-    private IGetCounterValueQueryHandler QueryClient => ResolveQueryClient<IGetCounterValueQueryHandler>();
+    private IGetCounterValueQueryHandler QueryClient => CreateQueryClient<IGetCounterValueQueryHandler>();
 
     [Test]
     public async Task GivenExistingCounter_WhenGettingCounterValue_CounterValueIsReturned()
