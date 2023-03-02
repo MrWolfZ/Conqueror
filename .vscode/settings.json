@@ -11,6 +11,7 @@
     "polyrepo",
     "Quickstart",
     "Swashbuckle",
-    "traceparent"
+    "traceparent",
+    "typeof"
   ]
 }

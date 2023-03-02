@@ -294,9 +294,9 @@ public abstract class TestBase : IDisposable
             {
                 services.ConfigureConquerorCQSHttpClientOptions(o =>
                 {
-                    // configure Conqueror.CQS to use the UserHistory web app's test HTTP client for the single
-                    // command that we need
-                    o.UseHttpClientForCommand<SetMostRecentlyIncrementedCounterForUserCommand>(userHistoryClient);
+                    // configure Conqueror.CQS to use the UserHistory web app's test HTTP client for
+                    // all types from the UserHistory's contracts
+                    o.UseHttpClientForTypesFromAssembly(typeof(SetMostRecentlyIncrementedCounterForUserCommand).Assembly, userHistoryClient);
                 });
             });
         });
@@ -310,9 +310,10 @@ public abstract class TestBase : IDisposable
                                                         // use the test HTTP client for the Counters app for all command and query clients
                                                         o.UseHttpClient(httpTestClient)
 
-                                                         // in our tests we want to call a command from the UserHistory app as part of our test
-                                                         // assertions; therefore we configure our
-                                                         .UseHttpClientForQuery<GetMostRecentlyIncrementedCounterForUserQuery>(userHistoryClient))
+                                                         // in our tests we want to call a query from the UserHistory app as part of our test
+                                                         // assertions; therefore we also configure the client services to use the UserHistory
+                                                         // web app's test HTTP client for all types from the UserHistory's contracts
+                                                         .UseHttpClientForTypesFromAssembly(typeof(SetMostRecentlyIncrementedCounterForUserCommand).Assembly, userHistoryClient))
                                                 .BuildServiceProvider();
     }
 
