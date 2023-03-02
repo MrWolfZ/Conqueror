@@ -7,7 +7,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] set up issues templates via yaml config
 - [ ] for each library add a quick reference handbook that showcases all capabilities in a concise fashion
 - [ ] use file-scoped namespaces everywhere
-- [ ] add nunit analyzers to all test projects and refactor all tests to use modern test assertions
+- [ ] add NUnit analyzers to all test projects and refactor all tests to use modern test assertions
 - [ ] configure build pipelines to build project with a variety of SDK versions
   - [ ] set up dedicated example projects for .NET 6 and 7 with older SDK versions to ensure analyzers can be referenced without warnings or errors
 - [ ] create dedicated readme files for each package
@@ -44,14 +44,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
-- [ ] add handling for non-HTTP command and query clients being created (should throw when transport is created)
-- [ ] mention status code in exception message for HttpCommandException etc.
-- [ ] handle or document client exceptions other than failed requests (e.g. when connection cannot be established)
-  - wrap send call in try/catch and make status code and response message optional
-- [ ] always set `traceparent` header from activity ID when client base address is `http://localhost/` (for testing)
-- [ ] use `traceparent` header to carry trace ID
-  - if no active activity and present conqueror trace ID, then generate span ID and format `traceparent`
-- [ ] add recipe for customizing OpenAPI specification with swashbuckle
+- [ ] add recipe for customizing OpenAPI specification with Swashbuckle
 - [ ] create analyzers (including code fixes)
   - [ ] when command or query does not have a version
 - [ ] provide delegating HTTP client handler that takes care of conqueror context propagation to allow custom http clients to be used
