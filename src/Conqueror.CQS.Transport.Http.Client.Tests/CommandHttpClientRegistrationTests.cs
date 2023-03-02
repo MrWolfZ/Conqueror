@@ -539,6 +539,34 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.That(thrownException?.ParamName, Is.EqualTo("baseAddress"));
         }
 
+        [Test]
+        public async Task GivenNonHttpPlainHandlerInterface_WhenExecutingHandler_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorCommandClient<ICommandHandler<NonHttpTestCommand, TestCommandResponse>>(b => b.UseHttp(new("http://localhost")));
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ICommandHandler<NonHttpTestCommand, TestCommandResponse>>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteCommand(new(), CancellationToken.None));
+        }
+
+        [Test]
+        public async Task GivenNonHttpCustomHandlerInterface_WhenExecutingHandler_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorCommandClient<INonHttpTestCommandHandler>(b => b.UseHttp(new("http://localhost")));
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<INonHttpTestCommandHandler>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteCommand(new(), CancellationToken.None));
+        }
+
         [HttpCommand]
         public sealed record TestCommand
         {
@@ -550,7 +578,13 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         [HttpCommand]
         public sealed record TestCommand2;
 
+        public sealed record NonHttpTestCommand;
+
         public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+        {
+        }
+
+        public interface INonHttpTestCommandHandler : ICommandHandler<NonHttpTestCommand, TestCommandResponse>
         {
         }
 

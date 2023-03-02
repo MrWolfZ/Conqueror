@@ -103,7 +103,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
-        public async Task GivenGlobalCustomHttpClientAndCustomHttpClientForSameCommandType_WhenResolvingClient_UsesCustomHttpClientForCommandType()
+        public async Task GivenGlobalCustomHttpClientAndCustomHttpClientForSameQueryType_WhenResolvingClient_UsesCustomHttpClientForQueryType()
         {
             using var expectedHttpClient = new HttpClient();
             using var unexpectedHttpClient = new HttpClient();
@@ -539,6 +539,34 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.That(thrownException?.ParamName, Is.EqualTo("baseAddress"));
         }
 
+        [Test]
+        public async Task GivenNonHttpPlainHandlerInterface_WhenExecutingHandler_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorQueryClient<IQueryHandler<NonHttpTestQuery, TestQueryResponse>>(b => b.UseHttp(new("http://localhost")));
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<IQueryHandler<NonHttpTestQuery, TestQueryResponse>>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteQuery(new(), CancellationToken.None));
+        }
+
+        [Test]
+        public async Task GivenNonHttpCustomHandlerInterface_WhenExecutingHandler_ThrowsInvalidOperationException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorQueryClient<INonHttpTestQueryHandler>(b => b.UseHttp(new("http://localhost")));
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<INonHttpTestQueryHandler>();
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteQuery(new(), CancellationToken.None));
+        }
+
         [HttpQuery]
         public sealed record TestQuery
         {
@@ -550,7 +578,13 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         [HttpQuery]
         public sealed record TestQuery2;
 
+        public sealed record NonHttpTestQuery;
+
         public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+        {
+        }
+
+        public interface INonHttpTestQueryHandler : IQueryHandler<NonHttpTestQuery, TestQueryResponse>
         {
         }
 

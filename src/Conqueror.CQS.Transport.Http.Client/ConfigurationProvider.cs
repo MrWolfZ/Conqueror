@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 
 namespace Conqueror.CQS.Transport.Http.Client
 {
@@ -9,6 +11,7 @@ namespace Conqueror.CQS.Transport.Http.Client
     {
         private readonly IReadOnlyCollection<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions;
         private readonly Lazy<HttpClient> httpClientLazy = new();
+        private readonly ConcurrentDictionary<Type, bool> httpValidityByRequestType = new();
 
         public ConfigurationProvider(IEnumerable<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions)
         {
@@ -25,6 +28,8 @@ namespace Conqueror.CQS.Transport.Http.Client
 
         public ResolvedHttpClientOptions GetOptions(IServiceProvider provider, HttpClientRegistration registration)
         {
+            ValidateRequestType(registration);
+
             var commandOptions = new HttpCommandClientOptions(provider);
             registration.CommandConfigurationAction?.Invoke(commandOptions);
 
@@ -68,6 +73,29 @@ namespace Conqueror.CQS.Transport.Http.Client
             }
 
             return globalOptions.GlobalHttpClient ?? httpClientLazy.Value;
+        }
+
+        private void ValidateRequestType(HttpClientRegistration registration)
+        {
+            if (registration.CommandType is { } commandType)
+            {
+                var isHttpCommand = httpValidityByRequestType.GetOrAdd(commandType, t => t.GetCustomAttribute<HttpCommandAttribute>() != null);
+
+                if (!isHttpCommand)
+                {
+                    throw new InvalidOperationException($"command type '{commandType.Name}' is not an HTTP command; did you forget to add the '[HttpCommand]' attribute?");
+                }
+            }
+
+            if (registration.QueryType is { } queryType)
+            {
+                var isHttpQuery = httpValidityByRequestType.GetOrAdd(queryType, t => t.GetCustomAttribute<HttpQueryAttribute>() != null);
+
+                if (!isHttpQuery)
+                {
+                    throw new InvalidOperationException($"query type '{queryType.Name}' is not an HTTP query; did you forget to add the '[HttpQuery]' attribute?");
+                }
+            }
         }
     }
 }
