@@ -298,6 +298,30 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.AreEqual(activity.TraceId, Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault());
         }
 
+        [Test]
+        public async Task GivenQueryWithoutActiveClientSideActivityWithActiveServerSideActivity_SameTraceIdIsObservedInTransportClientAndHandler()
+        {
+            using var listener = StartActivityListener("Microsoft.AspNetCore");
+
+            var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        }
+
+        [Test]
+        public async Task GivenPostQueryWithoutActiveClientSideActivityWithActiveServerSideActivity_SameTraceIdIsObservedInTransportClientAndHandler()
+        {
+            using var listener = StartActivityListener("Microsoft.AspNetCore");
+
+            var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
+
+            _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+            CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        }
+
         protected override void ConfigureServerServices(IServiceCollection services)
         {
             _ = services.AddMvc().AddConquerorCQSHttpControllers();
@@ -341,6 +365,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             {
                 // prevent leaking of client-side activity to server
                 Activity.Current = null;
+
                 await next();
             });
 
@@ -352,17 +377,24 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             var activitySource = new ActivitySource(name);
 
+            var activityListener = StartActivityListener();
+
+            var activity = activitySource.StartActivity()!;
+            return new(activity.TraceId.ToString(), activitySource, activityListener, activity);
+        }
+
+        private static IDisposable StartActivityListener(string? activityName = null)
+        {
             var activityListener = new ActivityListener
             {
-                ShouldListenTo = _ => true,
+                ShouldListenTo = activity => activityName == null || activity.Name == activityName,
                 SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
                 Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
             };
 
             ActivitySource.AddActivityListener(activityListener);
 
-            var activity = activitySource.StartActivity()!;
-            return new(activity.TraceId.ToString(), activitySource, activityListener, activity);
+            return activityListener;
         }
 
         [HttpQuery]

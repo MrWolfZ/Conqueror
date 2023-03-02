@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Threading;
@@ -41,28 +42,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 Content = content,
             };
 
-            if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
-            {
-                message.Headers.Add(HttpConstants.ConquerorTraceIdHeaderName, traceId);
-            }
-
-            if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
-            {
-                message.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
-            }
-
-            if (commandContextAccessor.CommandContext?.CommandId is { } commandId)
-            {
-                message.Headers.Add(HttpConstants.ConquerorCommandIdHeaderName, commandId);
-            }
-
-            if (Options.Headers is { } headers)
-            {
-                foreach (var (headerName, headerValues) in headers)
-                {
-                    message.Headers.Add(headerName, headerValues);
-                }
-            }
+            SetHeaders(message.Headers);
 
             var response = await Options.HttpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
 
@@ -85,6 +65,32 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
             return result!;
+        }
+
+        private void SetHeaders(HttpHeaders headers)
+        {
+            if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
+            {
+                headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
+            }
+
+            if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
+            {
+                headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
+            }
+
+            if (commandContextAccessor.CommandContext?.CommandId is { } commandId)
+            {
+                headers.Add(HttpConstants.ConquerorCommandIdHeaderName, commandId);
+            }
+
+            if (Options.Headers is { } headersFromOptions)
+            {
+                foreach (var (headerName, headerValues) in headersFromOptions)
+                {
+                    headers.Add(headerName, headerValues);
+                }
+            }
         }
     }
 }

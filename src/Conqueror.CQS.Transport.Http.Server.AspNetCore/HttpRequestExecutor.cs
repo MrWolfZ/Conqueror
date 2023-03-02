@@ -43,18 +43,11 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 httpContext.RequestServices.GetRequiredService<IQueryContextAccessor>().SetExternalQueryId(queryId);
             }
 
-            if (Activity.Current is null)
+            if (Activity.Current is null && httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues) && traceParentValues.FirstOrDefault() is { } traceParent)
             {
-                if (httpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues) && traceParentValues.FirstOrDefault() is { } traceParent)
-                {
-                    using var a = new Activity(string.Empty);
-                    var traceId = a.SetParentId(traceParent).TraceId.ToString();
-                    context.SetTraceId(traceId);
-                }
-                else if (httpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorTraceIdHeaderName, out var traceIdValues) && traceIdValues.FirstOrDefault() is { } traceId)
-                {
-                    context.SetTraceId(traceId);
-                }
+                using var a = new Activity(string.Empty);
+                var traceId = a.SetParentId(traceParent).TraceId.ToString();
+                context.SetTraceId(traceId);
             }
 
             var response = await executeFn().ConfigureAwait(false);

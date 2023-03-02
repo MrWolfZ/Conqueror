@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Threading;
@@ -37,28 +38,7 @@ namespace Conqueror.CQS.Transport.Http.Client
                 Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
             };
 
-            if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
-            {
-                requestMessage.Headers.Add(HttpConstants.ConquerorTraceIdHeaderName, traceId);
-            }
-
-            if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
-            {
-                requestMessage.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
-            }
-
-            if (queryContextAccessor.QueryContext?.QueryId is { } queryId)
-            {
-                requestMessage.Headers.Add(HttpConstants.ConquerorQueryIdHeaderName, queryId);
-            }
-
-            if (Options.Headers is { } headers)
-            {
-                foreach (var (headerName, headerValues) in headers)
-                {
-                    requestMessage.Headers.Add(headerName, headerValues);
-                }
-            }
+            SetHeaders(requestMessage.Headers);
 
             var uriString = Options.QueryPathConvention?.GetQueryPath(typeof(TQuery), attribute) ?? DefaultHttpQueryPathConvention.Instance.GetQueryPath(typeof(TQuery), attribute);
 
@@ -89,6 +69,32 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
             return result!;
+        }
+
+        private void SetHeaders(HttpHeaders headers)
+        {
+            if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
+            {
+                headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
+            }
+
+            if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
+            {
+                headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
+            }
+
+            if (queryContextAccessor.QueryContext?.QueryId is { } queryId)
+            {
+                headers.Add(HttpConstants.ConquerorQueryIdHeaderName, queryId);
+            }
+
+            if (Options.Headers is { } headersFromOptions)
+            {
+                foreach (var (headerName, headerValues) in headersFromOptions)
+                {
+                    headers.Add(headerName, headerValues);
+                }
+            }
         }
 
         private static string BuildQueryString<TQuery>(TQuery query)
