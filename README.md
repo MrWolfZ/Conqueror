@@ -247,9 +247,9 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme)
 - [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/cqs/advanced/different-dependency-injection#readme) _(to-be-written)_
 - [customizing OpenAPI specification for HTTP commands and queries](recipes/cqs/advanced/custom-openapi-http#readme) _(to-be-written)_
-- [enforce that all command and query handlers declare a pipeline](recipes/cqs/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
 - [re-use middleware pipelines to solve cross-cutting concerns when calling external systems (e.g. logging or retrying failed calls)](recipes/cqs/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
 <!-- 
+- [enforce that all command and query handlers declare a pipeline](recipes/cqs/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
 - [using commands and queries in a Blazor app (server-side or web-assembly)](recipes/cqs/advanced/blazor-server#readme) _(to-be-written)_
 - [building a CLI using commands and queries](recipes/cqs/advanced/building-cli#readme) _(to-be-written)_
 -->
