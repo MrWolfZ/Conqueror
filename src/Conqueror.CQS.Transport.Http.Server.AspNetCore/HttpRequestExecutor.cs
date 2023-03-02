@@ -53,7 +53,6 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
                 }
                 else if (httpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorTraceIdHeaderName, out var traceIdValues) && traceIdValues.FirstOrDefault() is { } traceId)
                 {
-                    using var a = new Activity(string.Empty);
                     context.SetTraceId(traceId);
                 }
             }
