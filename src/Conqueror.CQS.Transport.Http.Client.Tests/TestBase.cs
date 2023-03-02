@@ -1,9 +1,7 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Net.Http.Headers;
 
 namespace Conqueror.CQS.Transport.Http.Client.Tests
 {
@@ -65,7 +63,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             });
 
             host = await hostBuilder.StartAsync();
-            client = new ActivityAwareTestHttpClient(host.GetTestClient());
+            client = host.GetTestClient();
 
             var services = new ServiceCollection();
             ConfigureClientServices(services);
@@ -93,50 +91,6 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             where T : notnull
         {
             return ClientServiceProvider.GetRequiredService<T>();
-        }
-
-        // the default HTTP test client does not set tracing headers like the real HTTP client does,
-        // so we do this ourselves here
-        private sealed class ActivityAwareTestHttpClient : HttpClient
-        {
-            private readonly HttpClient wrapped;
-
-            public ActivityAwareTestHttpClient(HttpClient wrapped)
-            {
-                this.wrapped = wrapped;
-
-                BaseAddress = wrapped.BaseAddress;
-            }
-
-            public override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                if (Activity.Current?.Id is { } traceParent)
-                {
-                    request.Headers.Add(HeaderNames.TraceParent, traceParent);
-                }
-
-                return wrapped.Send(request, cancellationToken);
-            }
-
-            public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                if (Activity.Current?.Id is { } traceParent)
-                {
-                    request.Headers.Add(HeaderNames.TraceParent, traceParent);
-                }
-
-                return wrapped.SendAsync(request, cancellationToken);
-            }
-
-            protected override void Dispose(bool disposing)
-            {
-                if (disposing)
-                {
-                    wrapped.Dispose();
-                }
-
-                base.Dispose(disposing);
-            }
         }
     }
 }

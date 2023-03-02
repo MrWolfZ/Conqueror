@@ -44,6 +44,8 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             SetHeaders(message.Headers);
 
+            TracingHelper.SetTraceParentHeaderForTestClient(message.Headers, Options.HttpClient);
+
             var response = await Options.HttpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.NoContent)

@@ -40,6 +40,8 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             SetHeaders(requestMessage.Headers);
 
+            TracingHelper.SetTraceParentHeaderForTestClient(requestMessage.Headers, Options.HttpClient);
+
             var uriString = Options.QueryPathConvention?.GetQueryPath(typeof(TQuery), attribute) ?? DefaultHttpQueryPathConvention.Instance.GetQueryPath(typeof(TQuery), attribute);
 
             if (attribute.UsePost)
