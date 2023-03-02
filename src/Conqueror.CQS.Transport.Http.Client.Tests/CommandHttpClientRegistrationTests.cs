@@ -240,6 +240,116 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         }
 
         [Test]
+        public async Task GivenCustomHttpClientForCommandTypeAssembly_WhenResolvingClient_UsesCustomHttpClient()
+        {
+            using var expectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClientForTypesFromAssembly(typeof(TestCommand).Assembly, expectedHttpClient))
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpCommandTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestCommandTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientForDifferentAssembly_WhenResolvingClient_DoesNotUseCustomHttpClient()
+        {
+            using var unexpectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClientForTypesFromAssembly(typeof(string).Assembly, unexpectedHttpClient))
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpCommandTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestCommandTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
+        public async Task GivenGlobalCustomHttpClientAndForCommandTypeAssembly_WhenResolvingClient_UsesCustomHttpClientForAssembly()
+        {
+            using var expectedHttpClient = new HttpClient();
+            using var unexpectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(unexpectedHttpClient)
+                                                                 .UseHttpClientForTypesFromAssembly(typeof(TestCommand).Assembly, expectedHttpClient))
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpCommandTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestCommandTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedHttpClient, seenHttpClient);
+            Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
+        public async Task GivenCustomHttpClientForCommandTypeAndForCommandTypeAssembly_WhenResolvingClient_UsesCustomHttpClientForCommandType()
+        {
+            using var expectedHttpClient = new HttpClient();
+            using var unexpectedHttpClient = new HttpClient();
+            HttpClient? seenHttpClient = null;
+
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClientForCommand<TestCommand>(expectedHttpClient)
+                                                                 .UseHttpClientForTypesFromAssembly(typeof(TestCommand).Assembly, unexpectedHttpClient))
+                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                        {
+                            var transportClient = b.UseHttp(new("http://localhost")) as HttpCommandTransportClient;
+
+                            seenHttpClient = transportClient?.Options.HttpClient;
+
+                            return new TestCommandTransportClient();
+                        });
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            _ = await client.ExecuteCommand(new(), CancellationToken.None);
+
+            Assert.AreSame(expectedHttpClient, seenHttpClient);
+            Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        }
+
+        [Test]
         public async Task GivenCustomConfiguration_WhenResolvingClient_ConfiguresOptionsWithScopedServiceProvider()
         {
             var seenInstances = new HashSet<ScopingTest>();

@@ -72,6 +72,13 @@ namespace Conqueror.CQS.Transport.Http.Client
                 return queryClient;
             }
 
+            var requestType = registration.CommandType ?? registration.QueryType;
+
+            if (requestType is not null && (globalOptions.AssemblyClients?.TryGetValue(requestType.Assembly, out var assemblyClient) ?? false))
+            {
+                return assemblyClient;
+            }
+
             return globalOptions.GlobalHttpClient ?? httpClientLazy.Value;
         }
 

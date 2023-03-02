@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json;
 
 namespace Conqueror.CQS.Transport.Http.Client
@@ -26,6 +27,8 @@ namespace Conqueror.CQS.Transport.Http.Client
 
         internal Dictionary<Type, HttpClient>? QueryHttpClients { get; private set; }
 
+        internal Dictionary<Assembly, HttpClient>? AssemblyClients { get; private set; }
+
         public ConquerorCqsHttpClientGlobalOptions UseHttpClientForCommand<T>(HttpClient httpClient)
             where T : notnull
         {
@@ -42,6 +45,15 @@ namespace Conqueror.CQS.Transport.Http.Client
             QueryHttpClients ??= new();
 
             QueryHttpClients[typeof(T)] = httpClient;
+
+            return this;
+        }
+
+        public ConquerorCqsHttpClientGlobalOptions UseHttpClientForTypesFromAssembly(Assembly assembly, HttpClient httpClient)
+        {
+            AssemblyClients ??= new();
+
+            AssemblyClients[assembly] = httpClient;
 
             return this;
         }
