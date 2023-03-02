@@ -1,17 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Conqueror.CQS.QueryHandling
+namespace Conqueror.CQS.QueryHandling;
+
+internal sealed class QueryHandlerRegistry : IQueryHandlerRegistry
 {
-    internal sealed class QueryHandlerRegistry : IQueryHandlerRegistry
+    private readonly IReadOnlyCollection<QueryHandlerRegistration> registrations;
+
+    public QueryHandlerRegistry(IEnumerable<QueryHandlerRegistration> registrations)
     {
-        private readonly IReadOnlyCollection<QueryHandlerRegistration> registrations;
-
-        public QueryHandlerRegistry(IEnumerable<QueryHandlerRegistration> registrations)
-        {
-            this.registrations = registrations.ToList();
-        }
-
-        public IReadOnlyCollection<QueryHandlerRegistration> GetQueryHandlerRegistrations() => registrations;
+        this.registrations = registrations.ToList();
     }
+
+    public IReadOnlyCollection<QueryHandlerRegistration> GetQueryHandlerRegistrations() => registrations;
 }

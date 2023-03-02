@@ -1,102 +1,101 @@
-namespace Conqueror.CQS.Tests
+namespace Conqueror.CQS.Tests;
+
+[TestFixture]
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for assembly scanning to work")]
+public sealed class CommandMiddlewareRegistryTests
 {
-    [TestFixture]
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for assembly scanning to work")]
-    public sealed class CommandMiddlewareRegistryTests
+    [Test]
+    public void GivenManuallyRegisteredCommandMiddleware_ReturnsRegistration()
     {
-        [Test]
-        public void GivenManuallyRegisteredCommandMiddleware_ReturnsRegistration()
+        var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                                              .BuildServiceProvider();
+
+        var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
+
+        var expectedRegistrations = new[]
         {
-            var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddleware>()
-                                                  .BuildServiceProvider();
+            new CommandMiddlewareRegistration(typeof(TestCommandMiddleware), typeof(TestCommandMiddlewareConfiguration)),
+        };
 
-            var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
+        var registrations = registry.GetCommandMiddlewareRegistrations();
 
-            var expectedRegistrations = new[]
-            {
-                new CommandMiddlewareRegistration(typeof(TestCommandMiddleware), typeof(TestCommandMiddlewareConfiguration)),
-            };
+        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+    }
 
-            var registrations = registry.GetCommandMiddlewareRegistrations();
+    [Test]
+    public void GivenManuallyRegisteredCommandMiddlewareWithoutConfiguration_ReturnsRegistration()
+    {
+        var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddlewareWithoutConfiguration>()
+                                              .BuildServiceProvider();
 
-            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
-        }
+        var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
 
-        [Test]
-        public void GivenManuallyRegisteredCommandMiddlewareWithoutConfiguration_ReturnsRegistration()
+        var expectedRegistrations = new[]
         {
-            var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddlewareWithoutConfiguration>()
-                                                  .BuildServiceProvider();
+            new CommandMiddlewareRegistration(typeof(TestCommandMiddlewareWithoutConfiguration), null),
+        };
 
-            var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
+        var registrations = registry.GetCommandMiddlewareRegistrations();
 
-            var expectedRegistrations = new[]
-            {
-                new CommandMiddlewareRegistration(typeof(TestCommandMiddlewareWithoutConfiguration), null),
-            };
+        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+    }
 
-            var registrations = registry.GetCommandMiddlewareRegistrations();
+    [Test]
+    public void GivenMultipleManuallyRegisteredCommandMiddlewares_ReturnsRegistrations()
+    {
+        var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                                              .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                                              .BuildServiceProvider();
 
-            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
-        }
+        var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
 
-        [Test]
-        public void GivenMultipleManuallyRegisteredCommandMiddlewares_ReturnsRegistrations()
+        var expectedRegistrations = new[]
         {
-            var provider = new ServiceCollection().AddConquerorCommandMiddleware<TestCommandMiddleware>()
-                                                  .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
-                                                  .BuildServiceProvider();
+            new CommandMiddlewareRegistration(typeof(TestCommandMiddleware), typeof(TestCommandMiddlewareConfiguration)),
+            new CommandMiddlewareRegistration(typeof(TestCommandMiddleware2), null),
+        };
 
-            var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
+        var registrations = registry.GetCommandMiddlewareRegistrations();
 
-            var expectedRegistrations = new[]
-            {
-                new CommandMiddlewareRegistration(typeof(TestCommandMiddleware), typeof(TestCommandMiddlewareConfiguration)),
-                new CommandMiddlewareRegistration(typeof(TestCommandMiddleware2), null),
-            };
+        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+    }
 
-            var registrations = registry.GetCommandMiddlewareRegistrations();
+    [Test]
+    public void GivenCommandMiddlewaresRegisteredViaAssemblyScanning_ReturnsRegistrations()
+    {
+        var provider = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly()
+                                              .BuildServiceProvider();
 
-            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
-        }
+        var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
 
-        [Test]
-        public void GivenCommandMiddlewaresRegisteredViaAssemblyScanning_ReturnsRegistrations()
-        {
-            var provider = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly()
-                                                  .BuildServiceProvider();
+        var registrations = registry.GetCommandMiddlewareRegistrations();
 
-            var registry = provider.GetRequiredService<ICommandMiddlewareRegistry>();
+        Assert.That(registrations, Contains.Item(new CommandMiddlewareRegistration(typeof(TestCommandMiddleware), typeof(TestCommandMiddlewareConfiguration))));
+        Assert.That(registrations, Contains.Item(new CommandMiddlewareRegistration(typeof(TestCommandMiddleware2), null)));
+    }
 
-            var registrations = registry.GetCommandMiddlewareRegistrations();
+    public sealed class TestCommandMiddlewareConfiguration
+    {
+    }
 
-            Assert.That(registrations, Contains.Item(new CommandMiddlewareRegistration(typeof(TestCommandMiddleware), typeof(TestCommandMiddlewareConfiguration))));
-            Assert.That(registrations, Contains.Item(new CommandMiddlewareRegistration(typeof(TestCommandMiddleware2), null)));
-        }
+    public sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
+    {
+        public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareConfiguration> ctx)
+            where TCommand : class =>
+            ctx.Next(ctx.Command, ctx.CancellationToken);
+    }
 
-        public sealed class TestCommandMiddlewareConfiguration
-        {
-        }
+    public sealed class TestCommandMiddlewareWithoutConfiguration : ICommandMiddleware
+    {
+        public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+            where TCommand : class =>
+            ctx.Next(ctx.Command, ctx.CancellationToken);
+    }
 
-        public sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
-        {
-            public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareConfiguration> ctx)
-                where TCommand : class =>
-                ctx.Next(ctx.Command, ctx.CancellationToken);
-        }
-
-        public sealed class TestCommandMiddlewareWithoutConfiguration : ICommandMiddleware
-        {
-            public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-                where TCommand : class =>
-                ctx.Next(ctx.Command, ctx.CancellationToken);
-        }
-
-        public sealed class TestCommandMiddleware2 : ICommandMiddleware
-        {
-            public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-                where TCommand : class =>
-                ctx.Next(ctx.Command, ctx.CancellationToken);
-        }
+    public sealed class TestCommandMiddleware2 : ICommandMiddleware
+    {
+        public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+            where TCommand : class =>
+            ctx.Next(ctx.Command, ctx.CancellationToken);
     }
 }

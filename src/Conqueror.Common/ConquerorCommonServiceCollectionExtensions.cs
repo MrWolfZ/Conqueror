@@ -5,61 +5,60 @@ using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class ConquerorCommonServiceCollectionExtensions
 {
-    public static class ConquerorCommonServiceCollectionExtensions
+    public static IServiceCollection FinalizeConquerorRegistrations(this IServiceCollection services)
     {
-        public static IServiceCollection FinalizeConquerorRegistrations(this IServiceCollection services)
+        if (services.Any(d => d.ServiceType == typeof(WasFinalized)))
         {
-            if (services.Any(d => d.ServiceType == typeof(WasFinalized)))
-            {
-                throw new InvalidOperationException($"'{nameof(FinalizeConquerorRegistrations)}' was called multiple times, but it must only be called once");
-            }
-
-            _ = services.AddSingleton<WasFinalized>();
-
-            var configurators = services.Select(d => d.ImplementationInstance)
-                                        .OfType<IConquerorRegistrationFinalizer>()
-                                        .OrderBy(c => c.ExecutionPhase)
-                                        .ToList();
-
-            var finalizationCheck = services.SingleOrDefault(d => d.ServiceType == typeof(DidYouForgetToCallFinalizeConquerorRegistrations));
-
-            if (finalizationCheck != null)
-            {
-                _ = services.Remove(finalizationCheck);
-            }
-
-            foreach (var configurator in configurators)
-            {
-                configurator.Execute();
-            }
-
-            return services;
+            throw new InvalidOperationException($"'{nameof(FinalizeConquerorRegistrations)}' was called multiple times, but it must only be called once");
         }
 
-        internal static IServiceCollection AddFinalizationCheck(this IServiceCollection services)
+        _ = services.AddSingleton<WasFinalized>();
+
+        var configurators = services.Select(d => d.ImplementationInstance)
+                                    .OfType<IConquerorRegistrationFinalizer>()
+                                    .OrderBy(c => c.ExecutionPhase)
+                                    .ToList();
+
+        var finalizationCheck = services.SingleOrDefault(d => d.ServiceType == typeof(DidYouForgetToCallFinalizeConquerorRegistrations));
+
+        if (finalizationCheck != null)
         {
-            if (services.Any(d => d.ServiceType == typeof(WasFinalized)))
-            {
-                throw new InvalidOperationException($"no more Conqueror services can be added after '{nameof(FinalizeConquerorRegistrations)}' was called");
-            }
-
-            services.TryAddSingleton<DidYouForgetToCallFinalizeConquerorRegistrations>();
-
-            return services;
+            _ = services.Remove(finalizationCheck);
         }
 
-        internal static IServiceCollection AddConquerorContext(this IServiceCollection services)
+        foreach (var configurator in configurators)
         {
-            services.TryAddSingleton<ConquerorContextAccessor>();
-            services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
-
-            return services;
+            configurator.Execute();
         }
 
-        private sealed class WasFinalized
+        return services;
+    }
+
+    internal static IServiceCollection AddFinalizationCheck(this IServiceCollection services)
+    {
+        if (services.Any(d => d.ServiceType == typeof(WasFinalized)))
         {
+            throw new InvalidOperationException($"no more Conqueror services can be added after '{nameof(FinalizeConquerorRegistrations)}' was called");
         }
+
+        services.TryAddSingleton<DidYouForgetToCallFinalizeConquerorRegistrations>();
+
+        return services;
+    }
+
+    internal static IServiceCollection AddConquerorContext(this IServiceCollection services)
+    {
+        services.TryAddSingleton<ConquerorContextAccessor>();
+        services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
+
+        return services;
+    }
+
+    private sealed class WasFinalized
+    {
     }
 }

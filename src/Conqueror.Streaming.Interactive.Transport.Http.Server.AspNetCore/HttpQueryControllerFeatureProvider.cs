@@ -5,35 +5,34 @@ using Conqueror.Streaming.Interactive.Common;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 
-namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore
+namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore;
+
+internal sealed class HttpQueryControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
 {
-    internal sealed class HttpQueryControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
+    private readonly DynamicInteractiveStreamingControllerFactory controllerFactory;
+    private readonly IReadOnlyCollection<InteractiveStreamingHandlerMetadata> metadata;
+
+    public HttpQueryControllerFeatureProvider(DynamicInteractiveStreamingControllerFactory controllerFactory, IEnumerable<InteractiveStreamingHandlerMetadata> metadata)
     {
-        private readonly DynamicInteractiveStreamingControllerFactory controllerFactory;
-        private readonly IReadOnlyCollection<InteractiveStreamingHandlerMetadata> metadata;
+        this.controllerFactory = controllerFactory;
+        this.metadata = metadata.ToList();
+    }
 
-        public HttpQueryControllerFeatureProvider(DynamicInteractiveStreamingControllerFactory controllerFactory, IEnumerable<InteractiveStreamingHandlerMetadata> metadata)
+    public void PopulateFeature(
+        IEnumerable<ApplicationPart> parts,
+        ControllerFeature feature)
+    {
+        foreach (var interactiveStream in GetHttpInteractiveStreams())
         {
-            this.controllerFactory = controllerFactory;
-            this.metadata = metadata.ToList();
-        }
+            var controllerType = controllerFactory.Create(interactiveStream, interactiveStream.RequestType.GetCustomAttribute<HttpInteractiveStreamingRequestAttribute>()!).GetTypeInfo();
 
-        public void PopulateFeature(
-            IEnumerable<ApplicationPart> parts,
-            ControllerFeature feature)
-        {
-            foreach (var interactiveStream in GetHttpInteractiveStreams())
+            if (!feature.Controllers.Contains(controllerType))
             {
-                var controllerType = controllerFactory.Create(interactiveStream, interactiveStream.RequestType.GetCustomAttribute<HttpInteractiveStreamingRequestAttribute>()!).GetTypeInfo();
-
-                if (!feature.Controllers.Contains(controllerType))
-                {
-                    feature.Controllers.Add(controllerType);
-                }
+                feature.Controllers.Add(controllerType);
             }
         }
-
-        private IEnumerable<InteractiveStreamingHandlerMetadata> GetHttpInteractiveStreams() =>
-            metadata.Where(m => m.RequestType.GetCustomAttributes(typeof(HttpInteractiveStreamingRequestAttribute), true).Any());
     }
+
+    private IEnumerable<InteractiveStreamingHandlerMetadata> GetHttpInteractiveStreams() =>
+        metadata.Where(m => m.RequestType.GetCustomAttributes(typeof(HttpInteractiveStreamingRequestAttribute), true).Any());
 }

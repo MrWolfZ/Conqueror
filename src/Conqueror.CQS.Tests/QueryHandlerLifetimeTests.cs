@@ -1,298 +1,297 @@
-namespace Conqueror.CQS.Tests
+namespace Conqueror.CQS.Tests;
+
+public sealed class QueryHandlerLifetimeTests
 {
-    public sealed class QueryHandlerLifetimeTests
+    [Test]
+    public async Task GivenTransientHandler_ResolvingHandlerCreatesNewInstanceEveryTime()
     {
-        [Test]
-        public async Task GivenTransientHandler_ResolvingHandlerCreatesNewInstanceEveryTime()
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1 }));
+    }
+
+    [Test]
+    public async Task GivenTransientHandlerWithFactory_ResolvingHandlerCreatesNewInstanceEveryTime()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler(p => new TestQueryHandler(p.GetRequiredService<TestObservations>()))
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1 }));
+    }
+
+    [Test]
+    public async Task GivenScopedHandler_ResolvingHandlerCreatesNewInstanceForEveryScope()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandler>(ServiceLifetime.Scoped)
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1 }));
+    }
+
+    [Test]
+    public async Task GivenScopedHandlerWithFactory_ResolvingHandlerCreatesNewInstanceForEveryScope()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler(p => new TestQueryHandler(p.GetRequiredService<TestObservations>()), ServiceLifetime.Scoped)
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1 }));
+    }
+
+    [Test]
+    public async Task GivenSingletonHandler_ResolvingHandlerReturnsSameInstanceEveryTime()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandler>(ServiceLifetime.Singleton)
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
+    }
+
+    [Test]
+    public async Task GivenSingletonHandlerWithFactory_ResolvingHandlerReturnsSameInstanceEveryTime()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler(p => new TestQueryHandler(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
+    }
+
+    [Test]
+    public async Task GivenSingletonHandlerWithMultipleHandlerInterfaces_ResolvingHandlerViaEitherInterfaceReturnsSameInstanceEveryTime()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddSingleton<TestQueryHandlerWithMultipleInterfaces>()
+                    .AddConquerorQueryHandler<TestQueryHandlerWithMultipleInterfaces>(p => p.GetRequiredService<TestQueryHandlerWithMultipleInterfaces>(),
+                                                                                      ServiceLifetime.Singleton)
+                    .AddConquerorCommandHandler<TestQueryHandlerWithMultipleInterfaces>(p => p.GetRequiredService<TestQueryHandlerWithMultipleInterfaces>(),
+                                                                                        ServiceLifetime.Singleton)
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler1 = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler2 = provider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
+        var handler3 = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
+    }
+
+    [Test]
+    public async Task GivenSingletonHandler_ResolvingHandlerViaConcreteClassReturnsSameInstanceAsResolvingViaInterface()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandler>(ServiceLifetime.Singleton)
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler1 = provider.GetRequiredService<TestQueryHandler>();
+        var handler2 = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2 }));
+    }
+
+    [Test]
+    public async Task GivenSingletonHandlerInstance_ResolvingHandlerReturnsSameInstanceEveryTime()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler(new TestQueryHandler(observations));
+
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
+
+        Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
+    }
+
+    private sealed record TestQuery;
+
+    private sealed record TestQueryResponse;
+
+    private sealed record TestQuery2;
+
+    private sealed record TestQueryResponse2;
+
+    private sealed record TestCommand;
+
+    private sealed record TestCommandResponse;
+
+    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    {
+        private readonly TestObservations observations;
+        private int invocationCount;
+
+        public TestQueryHandler(TestObservations observations)
         {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            using var scope1 = provider.CreateScope();
-            using var scope2 = provider.CreateScope();
-
-            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1 }));
+            this.observations = observations;
         }
 
-        [Test]
-        public async Task GivenTransientHandlerWithFactory_ResolvingHandlerCreatesNewInstanceEveryTime()
+        public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
         {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
+            invocationCount += 1;
+            await Task.Yield();
+            observations.InvocationCounts.Add(invocationCount);
+            return new();
+        }
+    }
 
-            _ = services.AddConquerorQueryHandler(p => new TestQueryHandler(p.GetRequiredService<TestObservations>()))
-                        .AddSingleton(observations);
+    private sealed class TestQueryHandlerWithMultipleInterfaces : IQueryHandler<TestQuery, TestQueryResponse>,
+                                                                  IQueryHandler<TestQuery2, TestQueryResponse2>,
+                                                                  ICommandHandler<TestCommand, TestCommandResponse>
+    {
+        private readonly TestObservations observations;
+        private int invocationCount;
 
-            var provider = services.BuildServiceProvider();
-
-            using var scope1 = provider.CreateScope();
-            using var scope2 = provider.CreateScope();
-
-            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1 }));
+        public TestQueryHandlerWithMultipleInterfaces(TestObservations observations)
+        {
+            this.observations = observations;
         }
 
-        [Test]
-        public async Task GivenScopedHandler_ResolvingHandlerCreatesNewInstanceForEveryScope()
+        public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
         {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandler>(ServiceLifetime.Scoped)
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            using var scope1 = provider.CreateScope();
-            using var scope2 = provider.CreateScope();
-
-            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1 }));
+            invocationCount += 1;
+            await Task.Yield();
+            observations.InvocationCounts.Add(invocationCount);
+            return new();
         }
 
-        [Test]
-        public async Task GivenScopedHandlerWithFactory_ResolvingHandlerCreatesNewInstanceForEveryScope()
+        public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 command, CancellationToken cancellationToken = default)
         {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler(p => new TestQueryHandler(p.GetRequiredService<TestObservations>()), ServiceLifetime.Scoped)
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            using var scope1 = provider.CreateScope();
-            using var scope2 = provider.CreateScope();
-
-            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1 }));
+            invocationCount += 1;
+            await Task.Yield();
+            observations.InvocationCounts.Add(invocationCount);
+            return new();
         }
 
-        [Test]
-        public async Task GivenSingletonHandler_ResolvingHandlerReturnsSameInstanceEveryTime()
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandler>(ServiceLifetime.Singleton)
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            using var scope1 = provider.CreateScope();
-            using var scope2 = provider.CreateScope();
-
-            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
+            invocationCount += 1;
+            await Task.Yield();
+            observations.InvocationCounts.Add(invocationCount);
+            return new();
         }
+    }
 
-        [Test]
-        public async Task GivenSingletonHandlerWithFactory_ResolvingHandlerReturnsSameInstanceEveryTime()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler(p => new TestQueryHandler(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            using var scope1 = provider.CreateScope();
-            using var scope2 = provider.CreateScope();
-
-            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
-        }
-
-        [Test]
-        public async Task GivenSingletonHandlerWithMultipleHandlerInterfaces_ResolvingHandlerViaEitherInterfaceReturnsSameInstanceEveryTime()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddSingleton<TestQueryHandlerWithMultipleInterfaces>()
-                        .AddConquerorQueryHandler<TestQueryHandlerWithMultipleInterfaces>(p => p.GetRequiredService<TestQueryHandlerWithMultipleInterfaces>(),
-                                                                                          ServiceLifetime.Singleton)
-                        .AddConquerorCommandHandler<TestQueryHandlerWithMultipleInterfaces>(p => p.GetRequiredService<TestQueryHandlerWithMultipleInterfaces>(),
-                                                                                            ServiceLifetime.Singleton)
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            var handler1 = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler2 = provider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
-            var handler3 = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
-        }
-
-        [Test]
-        public async Task GivenSingletonHandler_ResolvingHandlerViaConcreteClassReturnsSameInstanceAsResolvingViaInterface()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandler>(ServiceLifetime.Singleton)
-                        .AddSingleton(observations);
-
-            var provider = services.BuildServiceProvider();
-
-            var handler1 = provider.GetRequiredService<TestQueryHandler>();
-            var handler2 = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2 }));
-        }
-
-        [Test]
-        public async Task GivenSingletonHandlerInstance_ResolvingHandlerReturnsSameInstanceEveryTime()
-        {
-            var services = new ServiceCollection();
-            var observations = new TestObservations();
-
-            _ = services.AddConquerorQueryHandler(new TestQueryHandler(observations));
-
-            var provider = services.BuildServiceProvider();
-
-            using var scope1 = provider.CreateScope();
-            using var scope2 = provider.CreateScope();
-
-            var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-            var handler3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-            _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-            _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-
-            Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3 }));
-        }
-
-        private sealed record TestQuery;
-
-        private sealed record TestQueryResponse;
-
-        private sealed record TestQuery2;
-
-        private sealed record TestQueryResponse2;
-
-        private sealed record TestCommand;
-
-        private sealed record TestCommandResponse;
-
-        private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-        {
-            private readonly TestObservations observations;
-            private int invocationCount;
-
-            public TestQueryHandler(TestObservations observations)
-            {
-                this.observations = observations;
-            }
-
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
-            {
-                invocationCount += 1;
-                await Task.Yield();
-                observations.InvocationCounts.Add(invocationCount);
-                return new();
-            }
-        }
-
-        private sealed class TestQueryHandlerWithMultipleInterfaces : IQueryHandler<TestQuery, TestQueryResponse>,
-                                                                      IQueryHandler<TestQuery2, TestQueryResponse2>,
-                                                                      ICommandHandler<TestCommand, TestCommandResponse>
-        {
-            private readonly TestObservations observations;
-            private int invocationCount;
-
-            public TestQueryHandlerWithMultipleInterfaces(TestObservations observations)
-            {
-                this.observations = observations;
-            }
-
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
-            {
-                invocationCount += 1;
-                await Task.Yield();
-                observations.InvocationCounts.Add(invocationCount);
-                return new();
-            }
-
-            public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 command, CancellationToken cancellationToken = default)
-            {
-                invocationCount += 1;
-                await Task.Yield();
-                observations.InvocationCounts.Add(invocationCount);
-                return new();
-            }
-
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-            {
-                invocationCount += 1;
-                await Task.Yield();
-                observations.InvocationCounts.Add(invocationCount);
-                return new();
-            }
-        }
-
-        private sealed class TestObservations
-        {
-            public List<int> InvocationCounts { get; } = new();
-        }
+    private sealed class TestObservations
+    {
+        public List<int> InvocationCounts { get; } = new();
     }
 }

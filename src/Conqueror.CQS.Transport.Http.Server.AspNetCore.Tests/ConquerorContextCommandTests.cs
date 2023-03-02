@@ -9,605 +9,604 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Net.Http.Headers;
 
-namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
+namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
+
+[TestFixture]
+[NonParallelizable]
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
+public sealed class ConquerorContextCommandTests : TestBase
 {
-    [TestFixture]
-    [NonParallelizable]
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
-    public sealed class ConquerorContextCommandTests : TestBase
+    private static readonly Dictionary<string, string> ContextItems = new()
     {
-        private static readonly Dictionary<string, string> ContextItems = new()
+        { "key1", "value1" },
+        { "key2", "value2" },
+        { "keyWith,Comma", "value" },
+        { "key4", "valueWith,Comma" },
+        { "keyWith=Equals", "value" },
+        { "key6", "valueWith=Equals" },
+    };
+
+    private DisposableActivity? activity;
+
+    [TestCase("/api/commands/test", "{}")]
+    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+    [TestCase("/api/commands/testDelegate", "{}")]
+    [TestCase("/api/custom/commands/test", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+    public async Task GivenContextItems_ItemsAreReturnedInHeader(string path, string data)
+    {
+        Resolve<TestObservations>().ShouldAddItems = true;
+
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        var response = await HttpClient.PostAsync(path, content);
+        await response.AssertSuccessStatusCode();
+
+        var exists = response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values);
+
+        Assert.IsTrue(exists);
+
+        var receivedItems = ContextValueFormatter.Parse(values!);
+
+        CollectionAssert.AreEquivalent(ContextItems, receivedItems);
+    }
+
+    [TestCase("/api/commands/test", "{}")]
+    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+    [TestCase("/api/commands/testDelegate", "{}")]
+    [TestCase("/api/custom/commands/test", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+    public async Task GivenConquerorContextRequestHeader_ItemsAreReceivedByHandler(string path, string data)
+    {
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
         {
-            { "key1", "value1" },
-            { "key2", "value2" },
-            { "keyWith,Comma", "value" },
-            { "key4", "valueWith,Comma" },
-            { "keyWith=Equals", "value" },
-            { "key6", "valueWith=Equals" },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(ContextItems) } },
         };
 
-        private DisposableActivity? activity;
+        var response = await HttpClient.PostAsync(path, content);
+        await response.AssertSuccessStatusCode();
 
-        [TestCase("/api/commands/test", "{}")]
-        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        [TestCase("/api/commands/testDelegate", "{}")]
-        [TestCase("/api/custom/commands/test", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenContextItems_ItemsAreReturnedInHeader(string path, string data)
+        var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
+
+        CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+    }
+
+    [TestCase("/api/commands/test", "{}")]
+    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+    [TestCase("/api/commands/testDelegate", "{}")]
+    [TestCase("/api/custom/commands/test", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+    public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path, string data)
+    {
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
         {
-            Resolve<TestObservations>().ShouldAddItems = true;
+            Headers = { { HttpConstants.ConquerorContextHeaderName, "foo=bar" } },
+        };
 
-            using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
-            var response = await HttpClient.PostAsync(path, content);
-            await response.AssertSuccessStatusCode();
+        var response = await HttpClient.PostAsync(path, content);
+        await response.AssertStatusCode(HttpStatusCode.BadRequest);
+    }
 
-            var exists = response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values);
-
-            Assert.IsTrue(exists);
-
-            var receivedItems = ContextValueFormatter.Parse(values!);
-
-            CollectionAssert.AreEquivalent(ContextItems, receivedItems);
-        }
-
-        [TestCase("/api/commands/test", "{}")]
-        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        [TestCase("/api/commands/testDelegate", "{}")]
-        [TestCase("/api/custom/commands/test", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenConquerorContextRequestHeader_ItemsAreReceivedByHandler(string path, string data)
+    [TestCase("/api/commands/test", "{}")]
+    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+    [TestCase("/api/commands/testDelegate", "{}")]
+    [TestCase("/api/custom/commands/test", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+    public async Task GivenCommandIdHeader_CorrectIdIsObservedByHandler(string path, string data)
+    {
+        const string testCommandId = "TestCommandId";
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
         {
-            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            Headers = { { HttpConstants.ConquerorCommandIdHeaderName, testCommandId } },
+        };
+
+        var response = await HttpClient.PostAsync(path, content);
+        await response.AssertSuccessStatusCode();
+
+        var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
+
+        CollectionAssert.AreEquivalent(new[] { testCommandId }, receivedCommandIds);
+    }
+
+    [Test]
+    public async Task GivenCommandIdHeader_CorrectIdsAreObservedByHandlerAndNestedHandler()
+    {
+        const string testCommandId = "TestCommandId";
+        using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+        {
+            Headers =
             {
-                Headers = { { HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(ContextItems) } },
-            };
+                { HttpConstants.ConquerorCommandIdHeaderName, testCommandId },
+            },
+        };
 
-            var response = await HttpClient.PostAsync(path, content);
-            await response.AssertSuccessStatusCode();
+        var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+        await response.AssertSuccessStatusCode();
 
-            var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
+        var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
 
-            CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
-        }
+        Assert.That(receivedCommandIds, Has.Count.EqualTo(2));
+        Assert.AreEqual(testCommandId, receivedCommandIds[0]);
+        Assert.AreNotEqual(testCommandId, receivedCommandIds[1]);
+    }
 
-        [TestCase("/api/commands/test", "{}")]
-        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        [TestCase("/api/commands/testDelegate", "{}")]
-        [TestCase("/api/custom/commands/test", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path, string data)
+    [TestCase("/api/commands/test", "{}")]
+    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+    [TestCase("/api/commands/testDelegate", "{}")]
+    [TestCase("/api/custom/commands/test", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+    public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string data)
+    {
+        const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
         {
-            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            Headers =
             {
-                Headers = { { HttpConstants.ConquerorContextHeaderName, "foo=bar" } },
-            };
+                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+            },
+        };
 
-            var response = await HttpClient.PostAsync(path, content);
-            await response.AssertStatusCode(HttpStatusCode.BadRequest);
-        }
+        var response = await HttpClient.PostAsync(path, content);
+        await response.AssertSuccessStatusCode();
 
-        [TestCase("/api/commands/test", "{}")]
-        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        [TestCase("/api/commands/testDelegate", "{}")]
-        [TestCase("/api/custom/commands/test", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenCommandIdHeader_CorrectIdIsObservedByHandler(string path, string data)
+        var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+
+        CollectionAssert.AreEquivalent(new[] { testTraceId }, receivedTraceIds);
+    }
+
+    [Test]
+    public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandlerAndNestedHandler()
+    {
+        const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
+        using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
         {
-            const string testCommandId = "TestCommandId";
-            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            Headers =
             {
-                Headers = { { HttpConstants.ConquerorCommandIdHeaderName, testCommandId } },
-            };
+                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+            },
+        };
 
-            var response = await HttpClient.PostAsync(path, content);
-            await response.AssertSuccessStatusCode();
+        var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+        await response.AssertSuccessStatusCode();
 
-            var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
+        var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-            CollectionAssert.AreEquivalent(new[] { testCommandId }, receivedCommandIds);
-        }
+        Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
+        Assert.AreEqual(testTraceId, receivedTraceIds[0]);
+        Assert.AreEqual(testTraceId, receivedTraceIds[1]);
+    }
 
-        [Test]
-        public async Task GivenCommandIdHeader_CorrectIdsAreObservedByHandlerAndNestedHandler()
+    [TestCase("/api/commands/test", "{}")]
+    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+    [TestCase("/api/commands/testDelegate", "{}")]
+    [TestCase("/api/custom/commands/test", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+    public async Task GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandler(string path, string data)
+    {
+        using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandler));
+        activity = a;
+
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
         {
-            const string testCommandId = "TestCommandId";
-            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
+            Headers =
             {
-                Headers =
-                {
-                    { HttpConstants.ConquerorCommandIdHeaderName, testCommandId },
-                },
-            };
+                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+            },
+        };
 
-            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
-            await response.AssertSuccessStatusCode();
+        var response = await HttpClient.PostAsync(path, content);
+        await response.AssertSuccessStatusCode();
 
-            var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
+        var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-            Assert.That(receivedCommandIds, Has.Count.EqualTo(2));
-            Assert.AreEqual(testCommandId, receivedCommandIds[0]);
-            Assert.AreNotEqual(testCommandId, receivedCommandIds[1]);
-        }
+        CollectionAssert.AreEquivalent(new[] { a.TraceId }, receivedTraceIds);
+    }
 
-        [TestCase("/api/commands/test", "{}")]
-        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        [TestCase("/api/commands/testDelegate", "{}")]
-        [TestCase("/api/custom/commands/test", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string data)
+    [Test]
+    public async Task GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler()
+    {
+        using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler));
+        activity = a;
+
+        using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
         {
-            const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
-            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+            Headers =
             {
-                Headers =
-                {
-                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-                },
-            };
+                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
+            },
+        };
 
-            var response = await HttpClient.PostAsync(path, content);
-            await response.AssertSuccessStatusCode();
+        var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
+        await response.AssertSuccessStatusCode();
 
-            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+        var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-            CollectionAssert.AreEquivalent(new[] { testTraceId }, receivedTraceIds);
-        }
+        Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
+        Assert.AreEqual(a.TraceId, receivedTraceIds[0]);
+        Assert.AreEqual(a.TraceId, receivedTraceIds[1]);
+    }
 
-        [Test]
-        public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandlerAndNestedHandler()
-        {
-            const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
-            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
-            {
-                Headers =
-                {
-                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-                },
-            };
+    protected override void ConfigureServices(IServiceCollection services)
+    {
+        var applicationPartManager = new ApplicationPartManager();
+        applicationPartManager.ApplicationParts.Add(new TestControllerApplicationPart());
+        applicationPartManager.FeatureProviders.Add(new TestControllerFeatureProvider());
 
-            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
-            await response.AssertSuccessStatusCode();
+        _ = services.AddSingleton(applicationPartManager);
 
-            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
+        _ = services.AddMvc().AddConquerorCQSHttpControllers();
 
-            Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
-            Assert.AreEqual(testTraceId, receivedTraceIds[0]);
-            Assert.AreEqual(testTraceId, receivedTraceIds[1]);
-        }
+        _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                    .AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
+                    .AddConquerorCommandHandler<TestCommandHandlerWithoutPayload>()
+                    .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
+                    .AddConquerorCommandHandler<TestCommandWithNestedCommandHandler>()
+                    .AddConquerorCommandHandler<NestedTestCommandHandler>()
+                    .AddConquerorCommandHandlerDelegate<TestDelegateCommand, TestDelegateCommandResponse>(async (_, p, _) =>
+                    {
+                        await Task.CompletedTask;
 
-        [TestCase("/api/commands/test", "{}")]
-        [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-        [TestCase("/api/commands/testDelegate", "{}")]
-        [TestCase("/api/custom/commands/test", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
-        [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
-        [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-        public async Task GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandler(string path, string data)
-        {
-            using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandler));
-            activity = a;
+                        var testObservations = p.GetRequiredService<TestObservations>();
+                        var commandContextAccessor = p.GetRequiredService<ICommandContextAccessor>();
+                        var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
 
-            using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-            {
-                Headers =
-                {
-                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-                },
-            };
+                        testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                        testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+                        testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
-            var response = await HttpClient.PostAsync(path, content);
-            await response.AssertSuccessStatusCode();
-
-            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
-
-            CollectionAssert.AreEquivalent(new[] { a.TraceId }, receivedTraceIds);
-        }
-
-        [Test]
-        public async Task GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler()
-        {
-            using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler));
-            activity = a;
-
-            using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
-            {
-                Headers =
-                {
-                    { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-                },
-            };
-
-            var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
-            await response.AssertSuccessStatusCode();
-
-            var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
-
-            Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
-            Assert.AreEqual(a.TraceId, receivedTraceIds[0]);
-            Assert.AreEqual(a.TraceId, receivedTraceIds[1]);
-        }
-
-        protected override void ConfigureServices(IServiceCollection services)
-        {
-            var applicationPartManager = new ApplicationPartManager();
-            applicationPartManager.ApplicationParts.Add(new TestControllerApplicationPart());
-            applicationPartManager.FeatureProviders.Add(new TestControllerFeatureProvider());
-
-            _ = services.AddSingleton(applicationPartManager);
-
-            _ = services.AddMvc().AddConquerorCQSHttpControllers();
-
-            _ = services.AddConquerorCommandHandler<TestCommandHandler>()
-                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
-                        .AddConquerorCommandHandler<TestCommandHandlerWithoutPayload>()
-                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
-                        .AddConquerorCommandHandler<TestCommandWithNestedCommandHandler>()
-                        .AddConquerorCommandHandler<NestedTestCommandHandler>()
-                        .AddConquerorCommandHandlerDelegate<TestDelegateCommand, TestDelegateCommandResponse>(async (_, p, _) =>
+                        if (testObservations.ShouldAddItems)
                         {
-                            await Task.CompletedTask;
+                            conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                        }
 
-                            var testObservations = p.GetRequiredService<TestObservations>();
-                            var commandContextAccessor = p.GetRequiredService<ICommandContextAccessor>();
-                            var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
+                        return new TestDelegateCommandResponse();
+                    })
+                    .AddSingleton<TestObservations>();
+    }
 
-                            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
-                            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-                            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
-
-                            if (testObservations.ShouldAddItems)
-                            {
-                                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
-                            }
-
-                            return new TestDelegateCommandResponse();
-                        })
-                        .AddSingleton<TestObservations>();
-        }
-
-        protected override void Configure(IApplicationBuilder app)
+    protected override void Configure(IApplicationBuilder app)
+    {
+        _ = app.Use(async (ctx, next) =>
         {
-            _ = app.Use(async (ctx, next) =>
+            if (activity is not null)
             {
-                if (activity is not null)
+                _ = activity.Activity.Start();
+
+                try
                 {
-                    _ = activity.Activity.Start();
-
-                    try
-                    {
-                        await next();
-                        return;
-                    }
-                    finally
-                    {
-                        activity.Activity.Stop();
-                    }
+                    await next();
+                    return;
                 }
-
-                await next();
-            });
-
-            _ = app.UseRouting();
-            _ = app.UseEndpoints(b => b.MapControllers());
-        }
-
-        private static DisposableActivity CreateActivity(string name)
-        {
-            var activitySource = new ActivitySource(name);
-
-            var activityListener = new ActivityListener
-            {
-                ShouldListenTo = _ => true,
-                SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
-                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-            };
-
-            ActivitySource.AddActivityListener(activityListener);
-
-            var a = activitySource.CreateActivity(name, ActivityKind.Server)!;
-            return new(a, activitySource, activityListener, a);
-        }
-
-        [HttpCommand]
-        public sealed record TestCommand;
-
-        public sealed record TestCommandResponse;
-
-        [HttpCommand]
-        public sealed record TestCommandWithoutPayload;
-
-        [HttpCommand]
-        public sealed record TestCommandWithoutResponse;
-
-        [HttpCommand]
-        public sealed record TestCommandWithoutResponseWithoutPayload;
-
-        [HttpCommand]
-        public sealed record TestCommandWithNestedCommand;
-
-        [HttpCommand]
-        public sealed record TestDelegateCommand;
-
-        public sealed record TestDelegateCommandResponse;
-
-        public sealed record NestedTestCommand;
-
-        public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-        {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly IConquerorContextAccessor conquerorContextAccessor;
-            private readonly TestObservations testObservations;
-
-            public TestCommandHandler(ICommandContextAccessor commandContextAccessor,
-                                      IConquerorContextAccessor conquerorContextAccessor,
-                                      TestObservations testObservations)
-            {
-                this.commandContextAccessor = commandContextAccessor;
-                this.conquerorContextAccessor = conquerorContextAccessor;
-                this.testObservations = testObservations;
-            }
-
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-            {
-                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
-                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
-
-                if (testObservations.ShouldAddItems)
+                finally
                 {
-                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                    activity.Activity.Stop();
                 }
-
-                return Task.FromResult(new TestCommandResponse());
             }
+
+            await next();
+        });
+
+        _ = app.UseRouting();
+        _ = app.UseEndpoints(b => b.MapControllers());
+    }
+
+    private static DisposableActivity CreateActivity(string name)
+    {
+        var activitySource = new ActivitySource(name);
+
+        var activityListener = new ActivityListener
+        {
+            ShouldListenTo = _ => true,
+            SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+        };
+
+        ActivitySource.AddActivityListener(activityListener);
+
+        var a = activitySource.CreateActivity(name, ActivityKind.Server)!;
+        return new(a, activitySource, activityListener, a);
+    }
+
+    [HttpCommand]
+    public sealed record TestCommand;
+
+    public sealed record TestCommandResponse;
+
+    [HttpCommand]
+    public sealed record TestCommandWithoutPayload;
+
+    [HttpCommand]
+    public sealed record TestCommandWithoutResponse;
+
+    [HttpCommand]
+    public sealed record TestCommandWithoutResponseWithoutPayload;
+
+    [HttpCommand]
+    public sealed record TestCommandWithNestedCommand;
+
+    [HttpCommand]
+    public sealed record TestDelegateCommand;
+
+    public sealed record TestDelegateCommandResponse;
+
+    public sealed record NestedTestCommand;
+
+    public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    {
+        private readonly ICommandContextAccessor commandContextAccessor;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
+        private readonly TestObservations testObservations;
+
+        public TestCommandHandler(ICommandContextAccessor commandContextAccessor,
+                                  IConquerorContextAccessor conquerorContextAccessor,
+                                  TestObservations testObservations)
+        {
+            this.commandContextAccessor = commandContextAccessor;
+            this.conquerorContextAccessor = conquerorContextAccessor;
+            this.testObservations = testObservations;
         }
 
-        public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly IConquerorContextAccessor conquerorContextAccessor;
-            private readonly TestObservations testObservations;
+            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
-            public TestCommandHandlerWithoutResponse(ICommandContextAccessor commandContextAccessor,
-                                                     IConquerorContextAccessor conquerorContextAccessor,
-                                                     TestObservations testObservations)
+            if (testObservations.ShouldAddItems)
             {
-                this.commandContextAccessor = commandContextAccessor;
-                this.conquerorContextAccessor = conquerorContextAccessor;
-                this.testObservations = testObservations;
+                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
             }
 
-            public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
-            {
-                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
-                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            return Task.FromResult(new TestCommandResponse());
+        }
+    }
 
-                if (testObservations.ShouldAddItems)
-                {
-                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
-                }
+    public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+    {
+        private readonly ICommandContextAccessor commandContextAccessor;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
+        private readonly TestObservations testObservations;
 
-                return Task.CompletedTask;
-            }
+        public TestCommandHandlerWithoutResponse(ICommandContextAccessor commandContextAccessor,
+                                                 IConquerorContextAccessor conquerorContextAccessor,
+                                                 TestObservations testObservations)
+        {
+            this.commandContextAccessor = commandContextAccessor;
+            this.conquerorContextAccessor = conquerorContextAccessor;
+            this.testObservations = testObservations;
         }
 
-        public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
+        public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly IConquerorContextAccessor conquerorContextAccessor;
-            private readonly TestObservations testObservations;
+            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
-            public TestCommandHandlerWithoutPayload(ICommandContextAccessor commandContextAccessor,
-                                                    IConquerorContextAccessor conquerorContextAccessor,
-                                                    TestObservations testObservations)
+            if (testObservations.ShouldAddItems)
             {
-                this.commandContextAccessor = commandContextAccessor;
-                this.conquerorContextAccessor = conquerorContextAccessor;
-                this.testObservations = testObservations;
+                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
             }
 
-            public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
-            {
-                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
-                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            return Task.CompletedTask;
+        }
+    }
 
-                if (testObservations.ShouldAddItems)
-                {
-                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
-                }
+    public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
+    {
+        private readonly ICommandContextAccessor commandContextAccessor;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
+        private readonly TestObservations testObservations;
 
-                return Task.FromResult(new TestCommandResponse());
-            }
+        public TestCommandHandlerWithoutPayload(ICommandContextAccessor commandContextAccessor,
+                                                IConquerorContextAccessor conquerorContextAccessor,
+                                                TestObservations testObservations)
+        {
+            this.commandContextAccessor = commandContextAccessor;
+            this.conquerorContextAccessor = conquerorContextAccessor;
+            this.testObservations = testObservations;
         }
 
-        public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
+        public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly IConquerorContextAccessor conquerorContextAccessor;
-            private readonly TestObservations testObservations;
+            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
-            public TestCommandHandlerWithoutResponseWithoutPayload(ICommandContextAccessor commandContextAccessor,
-                                                                   IConquerorContextAccessor conquerorContextAccessor,
-                                                                   TestObservations testObservations)
+            if (testObservations.ShouldAddItems)
             {
-                this.commandContextAccessor = commandContextAccessor;
-                this.conquerorContextAccessor = conquerorContextAccessor;
-                this.testObservations = testObservations;
+                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
             }
 
-            public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
-            {
-                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
-                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            return Task.FromResult(new TestCommandResponse());
+        }
+    }
 
-                if (testObservations.ShouldAddItems)
-                {
-                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
-                }
+    public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
+    {
+        private readonly ICommandContextAccessor commandContextAccessor;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
+        private readonly TestObservations testObservations;
 
-                return Task.CompletedTask;
-            }
+        public TestCommandHandlerWithoutResponseWithoutPayload(ICommandContextAccessor commandContextAccessor,
+                                                               IConquerorContextAccessor conquerorContextAccessor,
+                                                               TestObservations testObservations)
+        {
+            this.commandContextAccessor = commandContextAccessor;
+            this.conquerorContextAccessor = conquerorContextAccessor;
+            this.testObservations = testObservations;
         }
 
-        public sealed class TestCommandWithNestedCommandHandler : ICommandHandler<TestCommandWithNestedCommand, TestCommandResponse>
+        public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly IConquerorContextAccessor conquerorContextAccessor;
-            private readonly ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler;
-            private readonly TestObservations testObservations;
+            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
-            public TestCommandWithNestedCommandHandler(ICommandContextAccessor commandContextAccessor,
-                                                       IConquerorContextAccessor conquerorContextAccessor,
-                                                       ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler,
-                                                       TestObservations testObservations)
+            if (testObservations.ShouldAddItems)
             {
-                this.commandContextAccessor = commandContextAccessor;
-                this.conquerorContextAccessor = conquerorContextAccessor;
-                this.testObservations = testObservations;
-                this.nestedHandler = nestedHandler;
+                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
             }
 
-            public Task<TestCommandResponse> ExecuteCommand(TestCommandWithNestedCommand command, CancellationToken cancellationToken = default)
-            {
-                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
-                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            return Task.CompletedTask;
+        }
+    }
 
-                if (testObservations.ShouldAddItems)
-                {
-                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
-                }
+    public sealed class TestCommandWithNestedCommandHandler : ICommandHandler<TestCommandWithNestedCommand, TestCommandResponse>
+    {
+        private readonly ICommandContextAccessor commandContextAccessor;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
+        private readonly ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler;
+        private readonly TestObservations testObservations;
 
-                return nestedHandler.ExecuteCommand(new(), cancellationToken);
-            }
+        public TestCommandWithNestedCommandHandler(ICommandContextAccessor commandContextAccessor,
+                                                   IConquerorContextAccessor conquerorContextAccessor,
+                                                   ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler,
+                                                   TestObservations testObservations)
+        {
+            this.commandContextAccessor = commandContextAccessor;
+            this.conquerorContextAccessor = conquerorContextAccessor;
+            this.testObservations = testObservations;
+            this.nestedHandler = nestedHandler;
         }
 
-        public sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, TestCommandResponse>
+        public Task<TestCommandResponse> ExecuteCommand(TestCommandWithNestedCommand command, CancellationToken cancellationToken = default)
         {
-            private readonly ICommandContextAccessor commandContextAccessor;
-            private readonly IConquerorContextAccessor conquerorContextAccessor;
-            private readonly TestObservations testObservations;
+            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
-            public NestedTestCommandHandler(ICommandContextAccessor commandContextAccessor,
-                                            IConquerorContextAccessor conquerorContextAccessor,
-                                            TestObservations testObservations)
+            if (testObservations.ShouldAddItems)
             {
-                this.commandContextAccessor = commandContextAccessor;
-                this.conquerorContextAccessor = conquerorContextAccessor;
-                this.testObservations = testObservations;
+                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
             }
 
-            public Task<TestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
-            {
-                testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
-                testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-                testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            return nestedHandler.ExecuteCommand(new(), cancellationToken);
+        }
+    }
 
-                if (testObservations.ShouldAddItems)
-                {
-                    conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
-                }
+    public sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, TestCommandResponse>
+    {
+        private readonly ICommandContextAccessor commandContextAccessor;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
+        private readonly TestObservations testObservations;
 
-                return Task.FromResult(new TestCommandResponse());
-            }
+        public NestedTestCommandHandler(ICommandContextAccessor commandContextAccessor,
+                                        IConquerorContextAccessor conquerorContextAccessor,
+                                        TestObservations testObservations)
+        {
+            this.commandContextAccessor = commandContextAccessor;
+            this.conquerorContextAccessor = conquerorContextAccessor;
+            this.testObservations = testObservations;
         }
 
-        public sealed class TestObservations
+        public Task<TestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
         {
-            public List<string?> ReceivedCommandIds { get; } = new();
+            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
 
-            public List<string?> ReceivedTraceIds { get; } = new();
+            if (testObservations.ShouldAddItems)
+            {
+                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+            }
 
-            public bool ShouldAddItems { get; set; }
+            return Task.FromResult(new TestCommandResponse());
+        }
+    }
 
-            public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
+    public sealed class TestObservations
+    {
+        public List<string?> ReceivedCommandIds { get; } = new();
+
+        public List<string?> ReceivedTraceIds { get; } = new();
+
+        public bool ShouldAddItems { get; set; }
+
+        public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
+    }
+
+    [ApiController]
+    private sealed class TestHttpCommandController : ControllerBase
+    {
+        [HttpPost("/api/custom/commands/test")]
+        public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
+        {
+            return HttpCommandExecutor.ExecuteCommand<TestCommand, TestCommandResponse>(HttpContext, command, cancellationToken);
         }
 
-        [ApiController]
-        private sealed class TestHttpCommandController : ControllerBase
+        [HttpPost("/api/custom/commands/testCommandWithoutPayload")]
+        public Task<TestCommandResponse> ExecuteTestCommandWithoutPayload(CancellationToken cancellationToken)
         {
-            [HttpPost("/api/custom/commands/test")]
-            public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
-            {
-                return HttpCommandExecutor.ExecuteCommand<TestCommand, TestCommandResponse>(HttpContext, command, cancellationToken);
-            }
-
-            [HttpPost("/api/custom/commands/testCommandWithoutPayload")]
-            public Task<TestCommandResponse> ExecuteTestCommandWithoutPayload(CancellationToken cancellationToken)
-            {
-                return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutPayload, TestCommandResponse>(HttpContext, cancellationToken);
-            }
-
-            [HttpPost("/api/custom/commands/testCommandWithoutResponse")]
-            public Task ExecuteTestCommandWithoutResponse(TestCommandWithoutResponse command, CancellationToken cancellationToken)
-            {
-                return HttpCommandExecutor.ExecuteCommand(HttpContext, command, cancellationToken);
-            }
-
-            [HttpPost("/api/custom/commands/testCommandWithoutResponseWithoutPayload")]
-            public Task ExecuteTestCommandWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
-            {
-                return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutResponseWithoutPayload>(HttpContext, cancellationToken);
-            }
+            return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutPayload, TestCommandResponse>(HttpContext, cancellationToken);
         }
 
-        private sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
+        [HttpPost("/api/custom/commands/testCommandWithoutResponse")]
+        public Task ExecuteTestCommandWithoutResponse(TestCommandWithoutResponse command, CancellationToken cancellationToken)
         {
-            public override string Name => nameof(TestControllerApplicationPart);
-
-            public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpCommandController).GetTypeInfo() };
+            return HttpCommandExecutor.ExecuteCommand(HttpContext, command, cancellationToken);
         }
 
-        private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
+        [HttpPost("/api/custom/commands/testCommandWithoutResponseWithoutPayload")]
+        public Task ExecuteTestCommandWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
         {
-            protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpCommandController);
+            return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutResponseWithoutPayload>(HttpContext, cancellationToken);
+        }
+    }
+
+    private sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
+    {
+        public override string Name => nameof(TestControllerApplicationPart);
+
+        public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpCommandController).GetTypeInfo() };
+    }
+
+    private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
+    {
+        protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpCommandController);
+    }
+
+    private sealed class DisposableActivity : IDisposable
+    {
+        private readonly IReadOnlyCollection<IDisposable> disposables;
+
+        public DisposableActivity(Activity activity, params IDisposable[] disposables)
+        {
+            Activity = activity;
+            this.disposables = disposables;
         }
 
-        private sealed class DisposableActivity : IDisposable
+        public Activity Activity { get; }
+
+        public string TraceId => Activity.TraceId.ToString();
+
+        public void Dispose()
         {
-            private readonly IReadOnlyCollection<IDisposable> disposables;
-
-            public DisposableActivity(Activity activity, params IDisposable[] disposables)
+            foreach (var disposable in disposables.Reverse())
             {
-                Activity = activity;
-                this.disposables = disposables;
-            }
-
-            public Activity Activity { get; }
-
-            public string TraceId => Activity.TraceId.ToString();
-
-            public void Dispose()
-            {
-                foreach (var disposable in disposables.Reverse())
-                {
-                    disposable.Dispose();
-                }
+                disposable.Dispose();
             }
         }
     }

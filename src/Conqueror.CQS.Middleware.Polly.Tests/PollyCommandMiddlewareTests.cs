@@ -1,220 +1,219 @@
 using Polly;
 
-namespace Conqueror.CQS.Middleware.Polly.Tests
+namespace Conqueror.CQS.Middleware.Polly.Tests;
+
+[TestFixture]
+public sealed class PollyCommandMiddlewareTests : TestBase
 {
-    [TestFixture]
-    public sealed class PollyCommandMiddlewareTests : TestBase
+    private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
+    private Action<ICommandPipelineBuilder> configurePipeline = _ => { };
+
+    [Test]
+    public async Task GivenDefaultMiddlewareConfiguration_ExecutesHandlerWithoutModification()
     {
-        private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
-        private Action<ICommandPipelineBuilder> configurePipeline = _ => { };
+        var testCommand = new TestCommand();
+        var expectedResponse = new TestCommandResponse();
 
-        [Test]
-        public async Task GivenDefaultMiddlewareConfiguration_ExecutesHandlerWithoutModification()
+        handlerFn = cmd =>
         {
-            var testCommand = new TestCommand();
-            var expectedResponse = new TestCommandResponse();
+            Assert.AreSame(testCommand, cmd);
+            return expectedResponse;
+        };
 
-            handlerFn = cmd =>
-            {
-                Assert.AreSame(testCommand, cmd);
-                return expectedResponse;
-            };
+        configurePipeline = pipeline => pipeline.Use<PollyCommandMiddleware, PollyCommandMiddlewareConfiguration>(new());
 
-            configurePipeline = pipeline => pipeline.Use<PollyCommandMiddleware, PollyCommandMiddlewareConfiguration>(new());
+        var response = await Handler.ExecuteCommand(testCommand);
 
-            var response = await Handler.ExecuteCommand(testCommand);
-
-            Assert.AreSame(expectedResponse, response);
-        }
-
-        [Test]
-        public void GivenDefaultMiddlewareConfiguration_ExecutesThrowingHandlerWithoutModification()
-        {
-            var testCommand = new TestCommand();
-            var expectedException = new InvalidOperationException();
-
-            handlerFn = cmd =>
-            {
-                Assert.AreSame(testCommand, cmd);
-                throw expectedException;
-            };
-
-            configurePipeline = pipeline => pipeline.Use<PollyCommandMiddleware, PollyCommandMiddlewareConfiguration>(new());
-
-            var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
-
-            Assert.AreSame(expectedException, thrownException);
-        }
-
-        [Test]
-        public async Task GivenConfigurationWithPolicy_ExecutesHandlerWithPolicy()
-        {
-            var testCommand = new TestCommand();
-            var expectedResponse = new TestCommandResponse();
-
-            var executionCount = 0;
-
-            handlerFn = cmd =>
-            {
-                Assert.AreSame(testCommand, cmd);
-
-                executionCount += 1;
-
-                if (executionCount < 2)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                return expectedResponse;
-            };
-
-            var policy = Policy.Handle<InvalidOperationException>().RetryAsync();
-
-            configurePipeline = pipeline => pipeline.UsePolly(policy);
-
-            var response = await Handler.ExecuteCommand(testCommand);
-
-            Assert.AreSame(expectedResponse, response);
-            Assert.AreEqual(2, executionCount);
-        }
-
-        [Test]
-        public void GivenConfigurationWithPolicy_ExecutesThrowingHandlerWithPolicy()
-        {
-            var testCommand = new TestCommand();
-            var expectedException = new InvalidOperationException();
-
-            var executionCount = 0;
-
-            handlerFn = cmd =>
-            {
-                Assert.AreSame(testCommand, cmd);
-
-                executionCount += 1;
-
-                throw expectedException;
-            };
-
-            var policy = Policy.Handle<InvalidOperationException>().RetryAsync(3);
-
-            configurePipeline = pipeline => pipeline.UsePolly(policy);
-
-            var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
-
-            Assert.AreSame(expectedException, thrownException);
-            Assert.AreEqual(4, executionCount);
-        }
-
-        [Test]
-        public async Task GivenOverriddenConfigurationWithPolicy_ExecutesHandlerWithOverriddenPolicy()
-        {
-            var testCommand = new TestCommand();
-            var expectedResponse = new TestCommandResponse();
-
-            var executionCount = 0;
-
-            handlerFn = cmd =>
-            {
-                Assert.AreSame(testCommand, cmd);
-
-                executionCount += 1;
-
-                if (executionCount < 2)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                return expectedResponse;
-            };
-
-            var policy = Policy.Handle<InvalidOperationException>().RetryAsync();
-
-            configurePipeline = pipeline => pipeline.UsePolly(Policy.NoOpAsync())
-                                                    .ConfigurePollyPolicy(policy);
-
-            var response = await Handler.ExecuteCommand(testCommand);
-
-            Assert.AreSame(expectedResponse, response);
-            Assert.AreEqual(2, executionCount);
-        }
-
-        [Test]
-        public void GivenOverriddenConfigurationWithPolicy_ExecutesThrowingHandlerWithOverriddenPolicy()
-        {
-            var testCommand = new TestCommand();
-            var expectedException = new InvalidOperationException();
-
-            var executionCount = 0;
-
-            handlerFn = cmd =>
-            {
-                Assert.AreSame(testCommand, cmd);
-
-                executionCount += 1;
-
-                throw expectedException;
-            };
-
-            var policy = Policy.Handle<InvalidOperationException>().RetryAsync(3);
-
-            configurePipeline = pipeline => pipeline.UsePolly(Policy.NoOpAsync())
-                                                    .ConfigurePollyPolicy(policy);
-
-            var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
-
-            Assert.AreSame(expectedException, thrownException);
-            Assert.AreEqual(4, executionCount);
-        }
-
-        [Test]
-        public void GivenRemovedPollyMiddleware_ExecutesHandlerWithoutModification()
-        {
-            var testCommand = new TestCommand();
-            var expectedException = new InvalidOperationException();
-
-            var executionCount = 0;
-
-            handlerFn = cmd =>
-            {
-                Assert.AreSame(testCommand, cmd);
-
-                executionCount += 1;
-
-                if (executionCount < 2)
-                {
-                    throw expectedException;
-                }
-
-                return new();
-            };
-
-            var policy = Policy.Handle<InvalidOperationException>().RetryAsync();
-
-            configurePipeline = pipeline => pipeline.UsePolly(policy)
-                                                    .WithoutPolly();
-
-            var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
-
-            Assert.AreSame(expectedException, thrownException);
-            Assert.AreEqual(1, executionCount);
-        }
-
-        private ICommandHandler<TestCommand, TestCommandResponse> Handler => Resolve<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-        protected override void ConfigureServices(IServiceCollection services)
-        {
-            _ = services.AddConquerorCQSPollyMiddlewares()
-                        .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
-                            async (query, _, _) =>
-                            {
-                                await Task.Yield();
-                                return handlerFn(query);
-                            },
-                            pipeline => configurePipeline(pipeline));
-        }
-
-        private sealed record TestCommand;
-
-        private sealed record TestCommandResponse;
+        Assert.AreSame(expectedResponse, response);
     }
+
+    [Test]
+    public void GivenDefaultMiddlewareConfiguration_ExecutesThrowingHandlerWithoutModification()
+    {
+        var testCommand = new TestCommand();
+        var expectedException = new InvalidOperationException();
+
+        handlerFn = cmd =>
+        {
+            Assert.AreSame(testCommand, cmd);
+            throw expectedException;
+        };
+
+        configurePipeline = pipeline => pipeline.Use<PollyCommandMiddleware, PollyCommandMiddlewareConfiguration>(new());
+
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+
+        Assert.AreSame(expectedException, thrownException);
+    }
+
+    [Test]
+    public async Task GivenConfigurationWithPolicy_ExecutesHandlerWithPolicy()
+    {
+        var testCommand = new TestCommand();
+        var expectedResponse = new TestCommandResponse();
+
+        var executionCount = 0;
+
+        handlerFn = cmd =>
+        {
+            Assert.AreSame(testCommand, cmd);
+
+            executionCount += 1;
+
+            if (executionCount < 2)
+            {
+                throw new InvalidOperationException();
+            }
+
+            return expectedResponse;
+        };
+
+        var policy = Policy.Handle<InvalidOperationException>().RetryAsync();
+
+        configurePipeline = pipeline => pipeline.UsePolly(policy);
+
+        var response = await Handler.ExecuteCommand(testCommand);
+
+        Assert.AreSame(expectedResponse, response);
+        Assert.AreEqual(2, executionCount);
+    }
+
+    [Test]
+    public void GivenConfigurationWithPolicy_ExecutesThrowingHandlerWithPolicy()
+    {
+        var testCommand = new TestCommand();
+        var expectedException = new InvalidOperationException();
+
+        var executionCount = 0;
+
+        handlerFn = cmd =>
+        {
+            Assert.AreSame(testCommand, cmd);
+
+            executionCount += 1;
+
+            throw expectedException;
+        };
+
+        var policy = Policy.Handle<InvalidOperationException>().RetryAsync(3);
+
+        configurePipeline = pipeline => pipeline.UsePolly(policy);
+
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+
+        Assert.AreSame(expectedException, thrownException);
+        Assert.AreEqual(4, executionCount);
+    }
+
+    [Test]
+    public async Task GivenOverriddenConfigurationWithPolicy_ExecutesHandlerWithOverriddenPolicy()
+    {
+        var testCommand = new TestCommand();
+        var expectedResponse = new TestCommandResponse();
+
+        var executionCount = 0;
+
+        handlerFn = cmd =>
+        {
+            Assert.AreSame(testCommand, cmd);
+
+            executionCount += 1;
+
+            if (executionCount < 2)
+            {
+                throw new InvalidOperationException();
+            }
+
+            return expectedResponse;
+        };
+
+        var policy = Policy.Handle<InvalidOperationException>().RetryAsync();
+
+        configurePipeline = pipeline => pipeline.UsePolly(Policy.NoOpAsync())
+                                                .ConfigurePollyPolicy(policy);
+
+        var response = await Handler.ExecuteCommand(testCommand);
+
+        Assert.AreSame(expectedResponse, response);
+        Assert.AreEqual(2, executionCount);
+    }
+
+    [Test]
+    public void GivenOverriddenConfigurationWithPolicy_ExecutesThrowingHandlerWithOverriddenPolicy()
+    {
+        var testCommand = new TestCommand();
+        var expectedException = new InvalidOperationException();
+
+        var executionCount = 0;
+
+        handlerFn = cmd =>
+        {
+            Assert.AreSame(testCommand, cmd);
+
+            executionCount += 1;
+
+            throw expectedException;
+        };
+
+        var policy = Policy.Handle<InvalidOperationException>().RetryAsync(3);
+
+        configurePipeline = pipeline => pipeline.UsePolly(Policy.NoOpAsync())
+                                                .ConfigurePollyPolicy(policy);
+
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+
+        Assert.AreSame(expectedException, thrownException);
+        Assert.AreEqual(4, executionCount);
+    }
+
+    [Test]
+    public void GivenRemovedPollyMiddleware_ExecutesHandlerWithoutModification()
+    {
+        var testCommand = new TestCommand();
+        var expectedException = new InvalidOperationException();
+
+        var executionCount = 0;
+
+        handlerFn = cmd =>
+        {
+            Assert.AreSame(testCommand, cmd);
+
+            executionCount += 1;
+
+            if (executionCount < 2)
+            {
+                throw expectedException;
+            }
+
+            return new();
+        };
+
+        var policy = Policy.Handle<InvalidOperationException>().RetryAsync();
+
+        configurePipeline = pipeline => pipeline.UsePolly(policy)
+                                                .WithoutPolly();
+
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+
+        Assert.AreSame(expectedException, thrownException);
+        Assert.AreEqual(1, executionCount);
+    }
+
+    private ICommandHandler<TestCommand, TestCommandResponse> Handler => Resolve<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+    protected override void ConfigureServices(IServiceCollection services)
+    {
+        _ = services.AddConquerorCQSPollyMiddlewares()
+                    .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
+                        async (query, _, _) =>
+                        {
+                            await Task.Yield();
+                            return handlerFn(query);
+                        },
+                        pipeline => configurePipeline(pipeline));
+    }
+
+    private sealed record TestCommand;
+
+    private sealed record TestCommandResponse;
 }

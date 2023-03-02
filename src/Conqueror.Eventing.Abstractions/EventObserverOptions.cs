@@ -1,7 +1,6 @@
-namespace Conqueror
+namespace Conqueror;
+
+public sealed class EventObserverOptions
 {
-    public sealed class EventObserverOptions
-    {
-        public bool PolymorphicDispatchIsDisabled { get; set; }
-    }
+    public bool PolymorphicDispatchIsDisabled { get; set; }
 }

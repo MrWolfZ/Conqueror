@@ -1,11 +1,10 @@
 using System;
 
-namespace Conqueror
-{
-    public interface ICommandTransportClientBuilder
-    {
-        IServiceProvider ServiceProvider { get; }
+namespace Conqueror;
 
-        Type CommandType { get; }
-    }
+public interface ICommandTransportClientBuilder
+{
+    IServiceProvider ServiceProvider { get; }
+
+    Type CommandType { get; }
 }

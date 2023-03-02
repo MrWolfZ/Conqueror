@@ -5,35 +5,34 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class ConquerorCqsTransportHttpClientServiceCollectionExtensions
 {
-    public static class ConquerorCqsTransportHttpClientServiceCollectionExtensions
+    public static IServiceCollection AddConquerorCQSHttpClientServices(this IServiceCollection services)
     {
-        public static IServiceCollection AddConquerorCQSHttpClientServices(this IServiceCollection services)
-        {
-            services.AddConquerorCQS();
+        services.AddConquerorCQS();
 
-            services.TryAddSingleton<ConfigurationProvider>();
+        services.TryAddSingleton<ConfigurationProvider>();
 
-            return services;
-        }
+        return services;
+    }
 
-        public static IServiceCollection AddConquerorCQSHttpClientServices(this IServiceCollection services,
-                                                                           Action<ConquerorCqsHttpClientGlobalOptions> configure)
-        {
-            services.AddConquerorCQSHttpClientServices();
-            services.AddSingleton(configure);
+    public static IServiceCollection AddConquerorCQSHttpClientServices(this IServiceCollection services,
+                                                                       Action<ConquerorCqsHttpClientGlobalOptions> configure)
+    {
+        services.AddConquerorCQSHttpClientServices();
+        services.AddSingleton(configure);
 
-            return services;
-        }
+        return services;
+    }
 
-        public static IServiceCollection ConfigureConquerorCQSHttpClientOptions(this IServiceCollection services,
-                                                                                Action<ConquerorCqsHttpClientGlobalOptions> configure)
-        {
-            // developer note: this method is identical to AddConquerorCQSHttpClientServices, but the name better expresses
-            // that multiple configurations are merged (i.e. calling add+configure is more intuitive than add+add, even though
-            // they both do the same thing)
-            return services.AddConquerorCQSHttpClientServices(configure);
-        }
+    public static IServiceCollection ConfigureConquerorCQSHttpClientOptions(this IServiceCollection services,
+                                                                            Action<ConquerorCqsHttpClientGlobalOptions> configure)
+    {
+        // developer note: this method is identical to AddConquerorCQSHttpClientServices, but the name better expresses
+        // that multiple configurations are merged (i.e. calling add+configure is more intuitive than add+add, even though
+        // they both do the same thing)
+        return services.AddConquerorCQSHttpClientServices(configure);
     }
 }

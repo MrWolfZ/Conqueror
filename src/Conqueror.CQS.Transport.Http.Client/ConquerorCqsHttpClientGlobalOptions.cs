@@ -4,64 +4,63 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
 
-namespace Conqueror.CQS.Transport.Http.Client
+namespace Conqueror.CQS.Transport.Http.Client;
+
+public sealed class ConquerorCqsHttpClientGlobalOptions
 {
-    public sealed class ConquerorCqsHttpClientGlobalOptions
+    internal ConquerorCqsHttpClientGlobalOptions(IServiceProvider serviceProvider)
     {
-        internal ConquerorCqsHttpClientGlobalOptions(IServiceProvider serviceProvider)
-        {
-            ServiceProvider = serviceProvider;
-        }
+        ServiceProvider = serviceProvider;
+    }
 
-        public IServiceProvider ServiceProvider { get; }
+    public IServiceProvider ServiceProvider { get; }
 
-        public JsonSerializerOptions? JsonSerializerOptions { get; set; }
+    public JsonSerializerOptions? JsonSerializerOptions { get; set; }
 
-        public IHttpCommandPathConvention? CommandPathConvention { get; set; }
+    public IHttpCommandPathConvention? CommandPathConvention { get; set; }
 
-        public IHttpQueryPathConvention? QueryPathConvention { get; set; }
+    public IHttpQueryPathConvention? QueryPathConvention { get; set; }
 
-        internal HttpClient? GlobalHttpClient { get; private set; }
+    internal HttpClient? GlobalHttpClient { get; private set; }
 
-        internal Dictionary<Type, HttpClient>? CommandHttpClients { get; private set; }
+    internal Dictionary<Type, HttpClient>? CommandHttpClients { get; private set; }
 
-        internal Dictionary<Type, HttpClient>? QueryHttpClients { get; private set; }
+    internal Dictionary<Type, HttpClient>? QueryHttpClients { get; private set; }
 
-        internal Dictionary<Assembly, HttpClient>? AssemblyClients { get; private set; }
+    internal Dictionary<Assembly, HttpClient>? AssemblyClients { get; private set; }
 
-        public ConquerorCqsHttpClientGlobalOptions UseHttpClientForCommand<T>(HttpClient httpClient)
-            where T : notnull
-        {
-            CommandHttpClients ??= new();
+    public ConquerorCqsHttpClientGlobalOptions UseHttpClientForCommand<T>(HttpClient httpClient)
+        where T : notnull
+    {
+        CommandHttpClients ??= new();
 
-            CommandHttpClients[typeof(T)] = httpClient;
+        CommandHttpClients[typeof(T)] = httpClient;
 
-            return this;
-        }
+        return this;
+    }
 
-        public ConquerorCqsHttpClientGlobalOptions UseHttpClientForQuery<T>(HttpClient httpClient)
-            where T : notnull
-        {
-            QueryHttpClients ??= new();
+    public ConquerorCqsHttpClientGlobalOptions UseHttpClientForQuery<T>(HttpClient httpClient)
+        where T : notnull
+    {
+        QueryHttpClients ??= new();
 
-            QueryHttpClients[typeof(T)] = httpClient;
+        QueryHttpClients[typeof(T)] = httpClient;
 
-            return this;
-        }
+        return this;
+    }
 
-        public ConquerorCqsHttpClientGlobalOptions UseHttpClientForTypesFromAssembly(Assembly assembly, HttpClient httpClient)
-        {
-            AssemblyClients ??= new();
+    public ConquerorCqsHttpClientGlobalOptions UseHttpClientForTypesFromAssembly(Assembly assembly, HttpClient httpClient)
+    {
+        AssemblyClients ??= new();
 
-            AssemblyClients[assembly] = httpClient;
+        AssemblyClients[assembly] = httpClient;
 
-            return this;
-        }
+        return this;
+    }
 
-        public ConquerorCqsHttpClientGlobalOptions UseHttpClient(HttpClient httpClient)
-        {
-            GlobalHttpClient = httpClient;
-            return this;
-        }
+    public ConquerorCqsHttpClientGlobalOptions UseHttpClient(HttpClient httpClient)
+    {
+        GlobalHttpClient = httpClient;
+        return this;
     }
 }

@@ -1,9 +1,8 @@
 using System;
 
-namespace Conqueror
+namespace Conqueror;
+
+[AttributeUsage(AttributeTargets.Class)]
+public sealed class HttpInteractiveStreamingRequestAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public sealed class HttpInteractiveStreamingRequestAttribute : Attribute
-    {
-    }
 }

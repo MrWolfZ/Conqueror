@@ -1,11 +1,10 @@
 using System;
 
-namespace Conqueror
-{
-    public interface IQueryTransportClientBuilder
-    {
-        IServiceProvider ServiceProvider { get; }
+namespace Conqueror;
 
-        Type QueryType { get; }
-    }
+public interface IQueryTransportClientBuilder
+{
+    IServiceProvider ServiceProvider { get; }
+
+    Type QueryType { get; }
 }

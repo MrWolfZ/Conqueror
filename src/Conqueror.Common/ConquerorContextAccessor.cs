@@ -2,62 +2,61 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Conqueror.Common
+namespace Conqueror.Common;
+
+/// <summary>
+///     Provides an implementation of <see cref="IConquerorContextAccessor" /> based on the current execution context.
+/// </summary>
+internal sealed class ConquerorContextAccessor : IConquerorContextAccessor
 {
-    /// <summary>
-    ///     Provides an implementation of <see cref="IConquerorContextAccessor" /> based on the current execution context.
-    /// </summary>
-    internal sealed class ConquerorContextAccessor : IConquerorContextAccessor
+    private static readonly AsyncLocal<ConquerorContextHolder> ConquerorContextCurrent = new();
+
+    /// <inheritdoc />
+    public IConquerorContext? ConquerorContext
     {
-        private static readonly AsyncLocal<ConquerorContextHolder> ConquerorContextCurrent = new();
-
-        /// <inheritdoc />
-        public IConquerorContext? ConquerorContext
+        get => ConquerorContextCurrent.Value?.Context;
+        set
         {
-            get => ConquerorContextCurrent.Value?.Context;
-            set
+            if (value == null)
             {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value), "conqueror context must not be null");
-                }
-
-                // Use an object indirection to hold the ConquerorContext in the AsyncLocal,
-                // so it can be cleared in all ExecutionContexts when its cleared.
-                ConquerorContextCurrent.Value = new() { Context = value };
-            }
-        }
-
-        /// <inheritdoc />
-        public IDisposableConquerorContext GetOrCreate()
-        {
-            if (ConquerorContext != null)
-            {
-                // if there already is a context, we just wrap it without any disposal action
-                return new DisposableConquerorContext(ConquerorContext);
+                throw new ArgumentNullException(nameof(value), "conqueror context must not be null");
             }
 
-            // if we create the context, we make sure that disposing it causes the context to be cleared
-            var context = new DefaultConquerorContext(Activity.Current?.TraceId.ToString() ?? ActivityTraceId.CreateRandom().ToString());
-            var disposableContext = new DisposableConquerorContext(context, ClearContext);
-            ConquerorContext = context;
-            return disposableContext;
+            // Use an object indirection to hold the ConquerorContext in the AsyncLocal,
+            // so it can be cleared in all ExecutionContexts when its cleared.
+            ConquerorContextCurrent.Value = new() { Context = value };
         }
+    }
 
-        private static void ClearContext()
+    /// <inheritdoc />
+    public IDisposableConquerorContext GetOrCreate()
+    {
+        if (ConquerorContext != null)
         {
-            var holder = ConquerorContextCurrent.Value;
-
-            if (holder != null)
-            {
-                // Clear current ConquerorContext trapped in the AsyncLocals, as it's done.
-                holder.Context = null;
-            }
+            // if there already is a context, we just wrap it without any disposal action
+            return new DisposableConquerorContext(ConquerorContext);
         }
 
-        private sealed class ConquerorContextHolder
+        // if we create the context, we make sure that disposing it causes the context to be cleared
+        var context = new DefaultConquerorContext(Activity.Current?.TraceId.ToString() ?? ActivityTraceId.CreateRandom().ToString());
+        var disposableContext = new DisposableConquerorContext(context, ClearContext);
+        ConquerorContext = context;
+        return disposableContext;
+    }
+
+    private static void ClearContext()
+    {
+        var holder = ConquerorContextCurrent.Value;
+
+        if (holder != null)
         {
-            public IConquerorContext? Context { get; set; }
+            // Clear current ConquerorContext trapped in the AsyncLocals, as it's done.
+            holder.Context = null;
         }
+    }
+
+    private sealed class ConquerorContextHolder
+    {
+        public IConquerorContext? Context { get; set; }
     }
 }

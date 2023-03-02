@@ -1,9 +1,8 @@
 using System;
 
-namespace Conqueror
+namespace Conqueror;
+
+public interface IHttpCommandPathConvention
 {
-    public interface IHttpCommandPathConvention
-    {
-        public string? GetCommandPath(Type commandType, HttpCommandAttribute attribute);
-    }
+    public string? GetCommandPath(Type commandType, HttpCommandAttribute attribute);
 }

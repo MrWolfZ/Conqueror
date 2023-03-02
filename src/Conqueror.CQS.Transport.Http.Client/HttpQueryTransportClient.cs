@@ -13,148 +13,147 @@ using System.Threading.Tasks;
 using System.Web;
 using Conqueror.CQS.Transport.Http.Common;
 
-namespace Conqueror.CQS.Transport.Http.Client
+namespace Conqueror.CQS.Transport.Http.Client;
+
+internal sealed class HttpQueryTransportClient : IQueryTransportClient
 {
-    internal sealed class HttpQueryTransportClient : IQueryTransportClient
+    private readonly IConquerorContextAccessor conquerorContextAccessor;
+    private readonly IQueryContextAccessor queryContextAccessor;
+
+    public HttpQueryTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor, IQueryContextAccessor queryContextAccessor)
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryContextAccessor queryContextAccessor;
+        this.conquerorContextAccessor = conquerorContextAccessor;
+        this.queryContextAccessor = queryContextAccessor;
+        Options = options;
+    }
 
-        public HttpQueryTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor, IQueryContextAccessor queryContextAccessor)
+    public ResolvedHttpClientOptions Options { get; }
+
+    public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+        where TQuery : class
+    {
+        var attribute = typeof(TQuery).GetCustomAttribute<HttpQueryAttribute>()!;
+
+        using var requestMessage = new HttpRequestMessage
         {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
-            Options = options;
+            Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
+        };
+
+        SetHeaders(requestMessage.Headers);
+
+        TracingHelper.SetTraceParentHeaderForTestClient(requestMessage.Headers, Options.HttpClient);
+
+        var uriString = Options.QueryPathConvention?.GetQueryPath(typeof(TQuery), attribute) ?? DefaultHttpQueryPathConvention.Instance.GetQueryPath(typeof(TQuery), attribute);
+
+        if (attribute.UsePost)
+        {
+            requestMessage.Content = JsonContent.Create(query, null, Options.JsonSerializerOptions);
+        }
+        else
+        {
+            uriString += BuildQueryString(query);
         }
 
-        public ResolvedHttpClientOptions Options { get; }
+        requestMessage.RequestUri = new(Options.BaseAddress, uriString);
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
-            where TQuery : class
+        try
         {
-            var attribute = typeof(TQuery).GetCustomAttribute<HttpQueryAttribute>()!;
+            var response = await Options.HttpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 
-            using var requestMessage = new HttpRequestMessage
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
-            };
-
-            SetHeaders(requestMessage.Headers);
-
-            TracingHelper.SetTraceParentHeaderForTestClient(requestMessage.Headers, Options.HttpClient);
-
-            var uriString = Options.QueryPathConvention?.GetQueryPath(typeof(TQuery), attribute) ?? DefaultHttpQueryPathConvention.Instance.GetQueryPath(typeof(TQuery), attribute);
-
-            if (attribute.UsePost)
-            {
-                requestMessage.Content = JsonContent.Create(query, null, Options.JsonSerializerOptions);
-            }
-            else
-            {
-                uriString += BuildQueryString(query);
+                var content = await response.BufferAndReadContent().ConfigureAwait(false);
+                throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed with status code {response.StatusCode} and response content: {content}", response);
             }
 
-            requestMessage.RequestUri = new(Options.BaseAddress, uriString);
-
-            try
+            if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
             {
-                var response = await Options.HttpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
-
-                if (response.StatusCode != HttpStatusCode.OK)
-                {
-                    var content = await response.BufferAndReadContent().ConfigureAwait(false);
-                    throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed with status code {response.StatusCode} and response content: {content}", response);
-                }
-
-                if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
-                {
-                    var parsedContextItems = ContextValueFormatter.Parse(values);
-                    ctx.AddOrReplaceItems(parsedContextItems);
-                }
-
-                var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-                return result!;
+                var parsedContextItems = ContextValueFormatter.Parse(values);
+                ctx.AddOrReplaceItems(parsedContextItems);
             }
-            catch (Exception ex) when (ex is not HttpQueryFailedException)
-            {
-                throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed", null, ex);
-            }
+
+            var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+            return result!;
+        }
+        catch (Exception ex) when (ex is not HttpQueryFailedException)
+        {
+            throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed", null, ex);
+        }
+    }
+
+    private void SetHeaders(HttpHeaders headers)
+    {
+        if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
+        {
+            headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }
 
-        private void SetHeaders(HttpHeaders headers)
+        if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
         {
-            if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
-            {
-                headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
-            }
-
-            if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
-            {
-                headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
-            }
-
-            if (queryContextAccessor.QueryContext?.QueryId is { } queryId)
-            {
-                headers.Add(HttpConstants.ConquerorQueryIdHeaderName, queryId);
-            }
-
-            if (Options.Headers is { } headersFromOptions)
-            {
-                foreach (var (headerName, headerValues) in headersFromOptions)
-                {
-                    headers.Add(headerName, headerValues);
-                }
-            }
+            headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
         }
 
-        private static string BuildQueryString<TQuery>(TQuery query)
-            where TQuery : class
+        if (queryContextAccessor.QueryContext?.QueryId is { } queryId)
         {
-            var queryString = BuildQuery(query);
+            headers.Add(HttpConstants.ConquerorQueryIdHeaderName, queryId);
+        }
 
-            return queryString.HasKeys() ? $"?{queryString}" : string.Empty;
-
-            static bool IsPrimitive(object? o) => o?.GetType().IsPrimitive ?? true;
-
-            static NameValueCollection BuildQuery(object o)
+        if (Options.Headers is { } headersFromOptions)
+        {
+            foreach (var (headerName, headerValues) in headersFromOptions)
             {
-                var queryString = HttpUtility.ParseQueryString(string.Empty);
+                headers.Add(headerName, headerValues);
+            }
+        }
+    }
 
-                foreach (var property in o.GetType().GetProperties())
+    private static string BuildQueryString<TQuery>(TQuery query)
+        where TQuery : class
+    {
+        var queryString = BuildQuery(query);
+
+        return queryString.HasKeys() ? $"?{queryString}" : string.Empty;
+
+        static bool IsPrimitive(object? o) => o?.GetType().IsPrimitive ?? true;
+
+        static NameValueCollection BuildQuery(object o)
+        {
+            var queryString = HttpUtility.ParseQueryString(string.Empty);
+
+            foreach (var property in o.GetType().GetProperties())
+            {
+                var value = property.GetValue(o);
+
+                if (value is string s)
                 {
-                    var value = property.GetValue(o);
-
-                    if (value is string s)
+                    queryString.Add(property.Name, s);
+                }
+                else if (value is IEnumerable e)
+                {
+                    foreach (var v in e)
                     {
-                        queryString.Add(property.Name, s);
+                        queryString.Add(property.Name, v?.ToString());
                     }
-                    else if (value is IEnumerable e)
+                }
+                else if (value is not null && !IsPrimitive(value))
+                {
+                    var subQuery = BuildQuery(value);
+
+                    foreach (var subProp in subQuery.AllKeys)
                     {
-                        foreach (var v in e)
+                        foreach (var subVal in subQuery.GetValues(subProp) ?? Enumerable.Empty<object>())
                         {
-                            queryString.Add(property.Name, v?.ToString());
+                            queryString.Add($"{property.Name}.{subProp}", subVal.ToString());
                         }
                     }
-                    else if (value is not null && !IsPrimitive(value))
-                    {
-                        var subQuery = BuildQuery(value);
-
-                        foreach (var subProp in subQuery.AllKeys)
-                        {
-                            foreach (var subVal in subQuery.GetValues(subProp) ?? Enumerable.Empty<object>())
-                            {
-                                queryString.Add($"{property.Name}.{subProp}", subVal.ToString());
-                            }
-                        }
-                    }
-                    else if (value is not null)
-                    {
-                        queryString[property.Name] = value.ToString();
-                    }
                 }
-
-                return queryString;
+                else if (value is not null)
+                {
+                    queryString[property.Name] = value.ToString();
+                }
             }
+
+            return queryString;
         }
     }
 }

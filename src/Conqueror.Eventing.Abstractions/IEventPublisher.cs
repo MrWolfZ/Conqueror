@@ -1,10 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Conqueror
+namespace Conqueror;
+
+public interface IEventPublisher
 {
-    public interface IEventPublisher
-    {
-        Task PublishEvent(object evt, CancellationToken cancellationToken);
-    }
+    Task PublishEvent(object evt, CancellationToken cancellationToken);
 }

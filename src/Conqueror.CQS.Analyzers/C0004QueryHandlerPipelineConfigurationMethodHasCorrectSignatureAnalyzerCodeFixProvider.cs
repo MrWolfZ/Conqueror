@@ -12,72 +12,71 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 
-namespace Conqueror.CQS.Analyzers
+namespace Conqueror.CQS.Analyzers;
+
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(C0004QueryHandlerPipelineConfigurationMethodHasCorrectSignatureAnalyzerCodeFixProvider))]
+[Shared]
+public sealed class C0004QueryHandlerPipelineConfigurationMethodHasCorrectSignatureAnalyzerCodeFixProvider : CodeFixProvider
 {
-    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(C0004QueryHandlerPipelineConfigurationMethodHasCorrectSignatureAnalyzerCodeFixProvider))]
-    [Shared]
-    public sealed class C0004QueryHandlerPipelineConfigurationMethodHasCorrectSignatureAnalyzerCodeFixProvider : CodeFixProvider
+    public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(C0004QueryHandlerPipelineConfigurationMethodHasCorrectSignatureAnalyzer.DiagnosticId);
+
+    public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+
+    public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(C0004QueryHandlerPipelineConfigurationMethodHasCorrectSignatureAnalyzer.DiagnosticId);
+        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-        public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+        var diagnostic = context.Diagnostics.First();
+        var diagnosticSpan = diagnostic.Location.SourceSpan;
 
-        public override async Task RegisterCodeFixesAsync(CodeFixContext context)
+        // Find the method declaration identified by the diagnostic
+        var declaration = root?.FindToken(diagnosticSpan.Start).Parent?.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
+
+        // Register a code action that will invoke the fix.
+        context.RegisterCodeFix(
+            CodeAction.Create(
+                Resources.Analyzer0004CodeFixTitle,
+                c => FixConfigurationMethodSignature(context.Document, declaration, c),
+                nameof(Resources.Analyzer0004CodeFixTitle)),
+            diagnostic);
+    }
+
+    private static async Task<Solution> FixConfigurationMethodSignature(Document document, MethodDeclarationSyntax methodDecl, CancellationToken cancellationToken)
+    {
+        var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
+        if (root == null)
         {
-            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-
-            var diagnostic = context.Diagnostics.First();
-            var diagnosticSpan = diagnostic.Location.SourceSpan;
-
-            // Find the method declaration identified by the diagnostic
-            var declaration = root?.FindToken(diagnosticSpan.Start).Parent?.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().First();
-
-            // Register a code action that will invoke the fix.
-            context.RegisterCodeFix(
-                CodeAction.Create(
-                    Resources.Analyzer0004CodeFixTitle,
-                    c => FixConfigurationMethodSignature(context.Document, declaration, c),
-                    nameof(Resources.Analyzer0004CodeFixTitle)),
-                diagnostic);
+            return document.Project.Solution;
         }
 
-        private static async Task<Solution> FixConfigurationMethodSignature(Document document, MethodDeclarationSyntax methodDecl, CancellationToken cancellationToken)
-        {
-            var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+        var existingBuilderParameter = methodDecl.ParameterList
+                                                 .Parameters
+                                                 .FirstOrDefault(p => p.Type is IdentifierNameSyntax n && n.Identifier.Text == Constants.QueryPipelineBuilderInterfaceName);
 
-            if (root == null)
-            {
-                return document.Project.Solution;
-            }
+        var newMethodDeclaration = SyntaxFactory.MethodDeclaration(default,
+                                                                   SyntaxTokenList.Create(SyntaxFactory.Token(SyntaxKind.PublicKeyword)).Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword)),
+                                                                   SyntaxFactory.ParseTypeName("void"),
+                                                                   null,
+                                                                   SyntaxFactory.Identifier(Constants.ConfigurePipelineMethodName),
+                                                                   null,
+                                                                   SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(new List<ParameterSyntax>
+                                                                   {
+                                                                       SyntaxFactory.Parameter(default,
+                                                                                               default,
+                                                                                               SyntaxFactory.ParseTypeName(Constants.QueryPipelineBuilderInterfaceName),
+                                                                                               existingBuilderParameter?.Identifier ?? SyntaxFactory.Identifier("pipeline"),
+                                                                                               null),
+                                                                   })),
+                                                                   default,
+                                                                   methodDecl.Body,
+                                                                   methodDecl.ExpressionBody)
+                                                .WithSemicolonToken(methodDecl.SemicolonToken)
+                                                .NormalizeWhitespace()
+                                                .WithAdditionalAnnotations(Formatter.Annotation)
+                                                .WithLeadingTrivia(methodDecl.GetLeadingTrivia())
+                                                .WithTrailingTrivia(methodDecl.GetTrailingTrivia());
 
-            var existingBuilderParameter = methodDecl.ParameterList
-                                                     .Parameters
-                                                     .FirstOrDefault(p => p.Type is IdentifierNameSyntax n && n.Identifier.Text == Constants.QueryPipelineBuilderInterfaceName);
-
-            var newMethodDeclaration = SyntaxFactory.MethodDeclaration(default,
-                                                                       SyntaxTokenList.Create(SyntaxFactory.Token(SyntaxKind.PublicKeyword)).Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword)),
-                                                                       SyntaxFactory.ParseTypeName("void"),
-                                                                       null,
-                                                                       SyntaxFactory.Identifier(Constants.ConfigurePipelineMethodName),
-                                                                       null,
-                                                                       SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(new List<ParameterSyntax>
-                                                                       {
-                                                                           SyntaxFactory.Parameter(default,
-                                                                                                   default,
-                                                                                                   SyntaxFactory.ParseTypeName(Constants.QueryPipelineBuilderInterfaceName),
-                                                                                                   existingBuilderParameter?.Identifier ?? SyntaxFactory.Identifier("pipeline"),
-                                                                                                   null),
-                                                                       })),
-                                                                       default,
-                                                                       methodDecl.Body,
-                                                                       methodDecl.ExpressionBody)
-                                                    .WithSemicolonToken(methodDecl.SemicolonToken)
-                                                    .NormalizeWhitespace()
-                                                    .WithAdditionalAnnotations(Formatter.Annotation)
-                                                    .WithLeadingTrivia(methodDecl.GetLeadingTrivia())
-                                                    .WithTrailingTrivia(methodDecl.GetTrailingTrivia());
-
-            return document.WithSyntaxRoot(root.ReplaceNode(methodDecl, newMethodDeclaration)).Project.Solution;
-        }
+        return document.WithSyntaxRoot(root.ReplaceNode(methodDecl, newMethodDeclaration)).Project.Solution;
     }
 }

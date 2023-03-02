@@ -1,37 +1,36 @@
 using System;
 using System.Net.WebSockets;
 
-namespace Conqueror.Streaming.Interactive.Transport.Http.Client
+namespace Conqueror.Streaming.Interactive.Transport.Http.Client;
+
+internal sealed class ConfigurationProvider
 {
-    internal sealed class ConfigurationProvider
+    private readonly Action<ConquerorInteractiveStreamingHttpClientGlobalOptions>? configureGlobalOptions;
+
+    public ConfigurationProvider(Action<ConquerorInteractiveStreamingHttpClientGlobalOptions>? configureGlobalOptions = null)
     {
-        private readonly Action<ConquerorInteractiveStreamingHttpClientGlobalOptions>? configureGlobalOptions;
+        this.configureGlobalOptions = configureGlobalOptions;
+    }
 
-        public ConfigurationProvider(Action<ConquerorInteractiveStreamingHttpClientGlobalOptions>? configureGlobalOptions = null)
+    public ResolvedHttpClientOptions GetOptions(IServiceProvider provider, HttpClientRegistration registration)
+    {
+        var globalOptions = new ConquerorInteractiveStreamingHttpClientGlobalOptions(provider);
+        configureGlobalOptions?.Invoke(globalOptions);
+
+        var clientOptions = new ConquerorInteractiveStreamingHttpClientOptions(provider);
+        registration.ConfigurationAction?.Invoke(clientOptions);
+
+        var webSocketClientFactory = globalOptions.WebSocketFactory ?? (async (address, cancellationToken) =>
         {
-            this.configureGlobalOptions = configureGlobalOptions;
-        }
+            var socket = new ClientWebSocket();
 
-        public ResolvedHttpClientOptions GetOptions(IServiceProvider provider, HttpClientRegistration registration)
-        {
-            var globalOptions = new ConquerorInteractiveStreamingHttpClientGlobalOptions(provider);
-            configureGlobalOptions?.Invoke(globalOptions);
+            await socket.ConnectAsync(address, cancellationToken).ConfigureAwait(false);
 
-            var clientOptions = new ConquerorInteractiveStreamingHttpClientOptions(provider);
-            registration.ConfigurationAction?.Invoke(clientOptions);
+            return socket;
+        });
 
-            var webSocketClientFactory = globalOptions.WebSocketFactory ?? (async (address, cancellationToken) =>
-            {
-                var socket = new ClientWebSocket();
+        var jsonSerializerOptions = clientOptions.JsonSerializerOptions ?? globalOptions.JsonSerializerOptions;
 
-                await socket.ConnectAsync(address, cancellationToken).ConfigureAwait(false);
-
-                return socket;
-            });
-
-            var jsonSerializerOptions = clientOptions.JsonSerializerOptions ?? globalOptions.JsonSerializerOptions;
-
-            return new(webSocketClientFactory, registration.BaseAddressFactory.Invoke(provider), jsonSerializerOptions);
-        }
+        return new(webSocketClientFactory, registration.BaseAddressFactory.Invoke(provider), jsonSerializerOptions);
     }
 }

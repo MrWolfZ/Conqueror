@@ -1,11 +1,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Conqueror
+namespace Conqueror;
+
+public interface ICommandTransportClient
 {
-    public interface ICommandTransportClient
-    {
-        Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
-            where TCommand : class;
-    }
+    Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+        where TCommand : class;
 }

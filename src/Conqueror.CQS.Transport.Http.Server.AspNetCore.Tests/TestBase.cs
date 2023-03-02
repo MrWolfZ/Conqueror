@@ -3,66 +3,65 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 
-namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
+namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
+
+public abstract class TestBase
 {
-    public abstract class TestBase
+    private HttpClient? client;
+    private IHost? host;
+
+    protected HttpClient HttpClient
     {
-        private HttpClient? client;
-        private IHost? host;
-
-        protected HttpClient HttpClient
+        get
         {
-            get
+            if (client == null)
             {
-                if (client == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using http client");
-                }
-
-                return client;
+                throw new InvalidOperationException("test fixture must be initialized before using http client");
             }
+
+            return client;
         }
-
-        protected IHost Host
-        {
-            get
-            {
-                if (host == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using host");
-                }
-
-                return host;
-            }
-        }
-
-        [SetUp]
-        public async Task SetUp()
-        {
-            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
-            {
-                _ = webHost.UseTestServer();
-
-                _ = webHost.ConfigureServices(ConfigureServices);
-                _ = webHost.Configure(Configure);
-            });
-
-            host = await hostBuilder.StartAsync();
-            client = host.GetTestClient();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            host?.Dispose();
-            client?.Dispose();
-        }
-
-        protected abstract void ConfigureServices(IServiceCollection services);
-
-        protected abstract void Configure(IApplicationBuilder app);
-
-        protected T Resolve<T>()
-            where T : notnull => Host.Services.GetRequiredService<T>();
     }
+
+    protected IHost Host
+    {
+        get
+        {
+            if (host == null)
+            {
+                throw new InvalidOperationException("test fixture must be initialized before using host");
+            }
+
+            return host;
+        }
+    }
+
+    [SetUp]
+    public async Task SetUp()
+    {
+        var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+        {
+            _ = webHost.UseTestServer();
+
+            _ = webHost.ConfigureServices(ConfigureServices);
+            _ = webHost.Configure(Configure);
+        });
+
+        host = await hostBuilder.StartAsync();
+        client = host.GetTestClient();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        host?.Dispose();
+        client?.Dispose();
+    }
+
+    protected abstract void ConfigureServices(IServiceCollection services);
+
+    protected abstract void Configure(IApplicationBuilder app);
+
+    protected T Resolve<T>()
+        where T : notnull => Host.Services.GetRequiredService<T>();
 }

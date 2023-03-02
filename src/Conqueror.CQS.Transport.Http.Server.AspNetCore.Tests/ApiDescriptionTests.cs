@@ -2,830 +2,829 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
-namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
+namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
+
+[TestFixture]
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
+public class ApiDescriptionTests : TestBase
 {
-    [TestFixture]
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
-    public class ApiDescriptionTests : TestBase
+    private IApiDescriptionGroupCollectionProvider ApiDescriptionProvider => Resolve<IApiDescriptionGroupCollectionProvider>();
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptors()
     {
-        private IApiDescriptionGroupCollectionProvider ApiDescriptionProvider => Resolve<IApiDescriptionGroupCollectionProvider>();
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommand).FullName);
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptors()
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/commands/Test", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(commandApiDescription?.GroupName);
+        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutResponse()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutResponse).FullName);
+
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/commands/TestCommandWithoutResponse", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(commandApiDescription?.GroupName);
+        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutPayload()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutPayload).FullName);
+
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/commands/TestCommandWithoutPayload", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(commandApiDescription?.GroupName);
+        Assert.AreEqual(0, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutResponseWithoutPayload()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutResponseWithoutPayload).FullName);
+
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/commands/TestCommandWithoutResponseWithoutPayload", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(commandApiDescription?.GroupName);
+        Assert.AreEqual(0, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithCustomPathConvention()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommand3).FullName);
+
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/commands/TestCommand3FromConvention", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(commandApiDescription?.GroupName);
+        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithCustomPath()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithCustomPath).FullName);
+
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/testCommandWithCustomPath", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(commandApiDescription?.GroupName);
+        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithVersion()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithVersion).FullName);
+
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/v2/commands/TestCommandWithVersion", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(commandApiDescription?.GroupName);
+        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithOperationId()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-command-op-id");
+
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/commands/TestCommandWithOperationId", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(commandApiDescription?.GroupName);
+        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithApiGroupName()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithApiGroupName).FullName);
+
+        Assert.IsNotNull(commandApiDescription);
+        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
+        Assert.AreEqual("api/commands/TestCommandWithApiGroupName", commandApiDescription?.RelativePath);
+        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.AreEqual("Custom Command Group", commandApiDescription?.GroupName);
+        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsQueryDescriptors()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQuery).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/Test", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsPostQueryDescriptors()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQuery).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestPost", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithoutPayload()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithoutPayload).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestQueryWithoutPayload", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(0, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithComplexPayload()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithComplexPayload).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestQueryWithComplexPayload", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithoutPayload()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithoutPayload).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestPostQueryWithoutPayload", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(0, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithCustomPathConvention()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQuery3).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestQuery3FromConvention", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithCustomPathConvention()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQuery2).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestPostQuery2FromConvention", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithCustomPath()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithCustomPath).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/testQueryWithCustomPath", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithCustomPath()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithCustomPath).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/testPostQueryWithCustomPath", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithVersion()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithVersion).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/v2/queries/TestQueryWithVersion", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithVersion()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithVersion).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/v2/queries/TestPostQueryWithVersion", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithOperationId()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-query-op-id");
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestQueryWithOperationId", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithOperationId()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-post-query-op-id");
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestPostQueryWithOperationId", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.IsNull(queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithApiGroupName()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithApiGroupName).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestQueryWithApiGroupName", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.AreEqual("Custom Query Group", queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    [Test]
+    public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithApiGroupName()
+    {
+        var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
+        var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithApiGroupName).FullName);
+
+        Assert.IsNotNull(queryApiDescription);
+        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
+        Assert.AreEqual("api/queries/TestPostQueryWithApiGroupName", queryApiDescription?.RelativePath);
+        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
+        Assert.AreEqual("Custom POST Query Group", queryApiDescription?.GroupName);
+        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+    }
+
+    protected override void ConfigureServices(IServiceCollection services)
+    {
+        _ = services.AddMvc().AddConquerorCQSHttpControllers(o =>
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommand).FullName);
+            o.CommandPathConvention = new TestHttpCommandPathConvention();
+            o.QueryPathConvention = new TestHttpQueryPathConvention();
+        });
 
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/commands/Test", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(commandApiDescription?.GroupName);
-            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                    .AddConquerorCommandHandler<TestCommandHandler2>()
+                    .AddConquerorCommandHandler<TestCommandHandler3>()
+                    .AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
+                    .AddConquerorCommandHandler<TestCommandHandlerWithoutPayload>()
+                    .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
+                    .AddConquerorCommandHandler<TestCommandWithCustomPathHandler>()
+                    .AddConquerorCommandHandler<TestCommandWithVersionHandler>()
+                    .AddConquerorCommandHandler<TestCommandWithOperationIdHandler>()
+                    .AddConquerorCommandHandler<TestCommandWithApiGroupNameHandler>();
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                    .AddConquerorQueryHandler<TestQueryHandler2>()
+                    .AddConquerorQueryHandler<TestQueryHandler3>()
+                    .AddConquerorQueryHandler<TestQueryHandlerWithoutPayload>()
+                    .AddConquerorQueryHandler<TestQueryHandlerWithComplexPayload>()
+                    .AddConquerorQueryHandler<TestQueryWithCustomPathHandler>()
+                    .AddConquerorQueryHandler<TestQueryWithVersionHandler>()
+                    .AddConquerorQueryHandler<TestQueryWithOperationIdHandler>()
+                    .AddConquerorQueryHandler<TestQueryWithApiGroupNameHandler>()
+                    .AddConquerorQueryHandler<TestPostQueryHandler>()
+                    .AddConquerorQueryHandler<TestPostQueryHandler2>()
+                    .AddConquerorQueryHandler<TestPostQueryHandlerWithoutPayload>()
+                    .AddConquerorQueryHandler<TestPostQueryWithCustomPathHandler>()
+                    .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>()
+                    .AddConquerorQueryHandler<TestPostQueryWithOperationIdHandler>()
+                    .AddConquerorQueryHandler<TestPostQueryWithApiGroupNameHandler>();
+    }
+
+    protected override void Configure(IApplicationBuilder app)
+    {
+        _ = app.UseRouting();
+        _ = app.UseEndpoints(b => b.MapControllers());
+    }
+
+    [HttpQuery]
+    public sealed record TestQuery
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed record TestQueryResponse
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery]
+    public sealed record TestQuery2;
+
+    public sealed record TestQueryResponse2;
+
+    [HttpQuery]
+    public sealed record TestQuery3
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery]
+    public sealed record TestQueryWithoutPayload;
+
+    [HttpQuery]
+    public sealed record TestQueryWithComplexPayload(TestQueryWithComplexPayloadPayload Payload);
+
+    public sealed record TestQueryWithComplexPayloadPayload(int Payload);
+
+    [HttpQuery(Path = "/api/testQueryWithCustomPath")]
+    public sealed record TestQueryWithCustomPath
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(Version = "v2")]
+    public sealed record TestQueryWithVersion
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(OperationId = "custom-query-op-id")]
+    public sealed record TestQueryWithOperationId
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(ApiGroupName = "Custom Query Group")]
+    public sealed record TestQueryWithApiGroupName
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(UsePost = true)]
+    public sealed record TestPostQuery
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(UsePost = true)]
+    public sealed record TestPostQuery2
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(UsePost = true)]
+    public sealed record TestPostQueryWithoutPayload;
+
+    [HttpQuery(UsePost = true, Path = "/api/testPostQueryWithCustomPath")]
+    public sealed record TestPostQueryWithCustomPath
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(UsePost = true, Version = "v2")]
+    public sealed record TestPostQueryWithVersion
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(UsePost = true, OperationId = "custom-post-query-op-id")]
+    public sealed record TestPostQueryWithOperationId
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(UsePost = true, ApiGroupName = "Custom POST Query Group")]
+    public sealed record TestPostQueryWithApiGroupName
+    {
+        public int Payload { get; init; }
+    }
+
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    {
+    }
+
+    public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
+    {
+    }
+
+    public sealed class TestQueryHandler : ITestQueryHandler
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutResponse()
+    public sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
+    {
+        public Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutResponse).FullName);
-
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/commands/TestCommandWithoutResponse", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(commandApiDescription?.GroupName);
-            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+            throw new NotSupportedException();
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutPayload()
+    public sealed class TestQueryHandler3 : IQueryHandler<TestQuery3, TestQueryResponse>
+    {
+        public Task<TestQueryResponse> ExecuteQuery(TestQuery3 query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutPayload).FullName);
-
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/commands/TestCommandWithoutPayload", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(commandApiDescription?.GroupName);
-            Assert.AreEqual(0, commandApiDescription?.ParameterDescriptions.Count);
+            throw new NotSupportedException();
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithoutResponseWithoutPayload()
+    public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutResponseWithoutPayload).FullName);
-
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/commands/TestCommandWithoutResponseWithoutPayload", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(commandApiDescription?.GroupName);
-            Assert.AreEqual(0, commandApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = 11 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithCustomPathConvention()
+    public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommand3).FullName);
-
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/commands/TestCommand3FromConvention", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(commandApiDescription?.GroupName);
-            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithCustomPath()
+    public sealed class TestQueryWithCustomPathHandler : IQueryHandler<TestQueryWithCustomPath, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomPath query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithCustomPath).FullName);
-
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/testCommandWithCustomPath", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(commandApiDescription?.GroupName);
-            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithVersion()
+    public sealed class TestQueryWithVersionHandler : IQueryHandler<TestQueryWithVersion, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithVersion query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithVersion).FullName);
-
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/v2/commands/TestCommandWithVersion", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(commandApiDescription?.GroupName);
-            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithOperationId()
+    public sealed class TestQueryWithOperationIdHandler : IQueryHandler<TestQueryWithOperationId, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithOperationId query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-command-op-id");
-
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/commands/TestCommandWithOperationId", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(commandApiDescription?.GroupName);
-            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsCommandDescriptorsWithApiGroupName()
+    public sealed class TestQueryWithApiGroupNameHandler : IQueryHandler<TestQueryWithApiGroupName, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithApiGroupName query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithApiGroupName).FullName);
-
-            Assert.IsNotNull(commandApiDescription);
-            Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-            Assert.AreEqual("api/commands/TestCommandWithApiGroupName", commandApiDescription?.RelativePath);
-            Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.AreEqual("Custom Command Group", commandApiDescription?.GroupName);
-            Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsQueryDescriptors()
+    public sealed class TestPostQueryHandler : ITestPostQueryHandler
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQuery).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/Test", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsPostQueryDescriptors()
+    public sealed class TestPostQueryHandler2 : IQueryHandler<TestPostQuery2, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery2 query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQuery).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestPost", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithoutPayload()
+    public sealed class TestPostQueryHandlerWithoutPayload : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithoutPayload).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestQueryWithoutPayload", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(0, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = 11 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithComplexPayload()
+    public sealed class TestPostQueryWithCustomPathHandler : IQueryHandler<TestPostQueryWithCustomPath, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithComplexPayload).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestQueryWithComplexPayload", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithoutPayload()
+    public sealed class TestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithoutPayload).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestPostQueryWithoutPayload", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(0, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithCustomPathConvention()
+    public sealed class TestPostQueryWithOperationIdHandler : IQueryHandler<TestPostQueryWithOperationId, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithOperationId query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQuery3).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestQuery3FromConvention", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithCustomPathConvention()
+    public sealed class TestPostQueryWithApiGroupNameHandler : IQueryHandler<TestPostQueryWithApiGroupName, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithApiGroupName query, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQuery2).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestPostQuery2FromConvention", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = query.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithCustomPath()
+    [HttpCommand]
+    public sealed record TestCommand
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed record TestCommandResponse
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpCommand]
+    public sealed record TestCommand2;
+
+    public sealed record TestCommandResponse2;
+
+    [HttpCommand]
+    public sealed record TestCommand3
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpCommand]
+    public sealed record TestCommandWithoutPayload;
+
+    [HttpCommand]
+    public sealed record TestCommandWithoutResponse
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpCommand]
+    public sealed record TestCommandWithoutResponseWithoutPayload;
+
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    {
+    }
+
+    [HttpCommand(Path = "/api/testCommandWithCustomPath")]
+    public sealed record TestCommandWithCustomPath
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpCommand(Version = "v2")]
+    public sealed record TestCommandWithVersion
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpCommand(OperationId = "custom-command-op-id")]
+    public sealed record TestCommandWithOperationId
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpCommand(ApiGroupName = "Custom Command Group")]
+    public sealed record TestCommandWithApiGroupName
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed class TestCommandHandler : ITestCommandHandler
+    {
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithCustomPath).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/testQueryWithCustomPath", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = command.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithCustomPath()
+    public sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
+    {
+        public Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithCustomPath).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/testPostQueryWithCustomPath", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            throw new NotSupportedException();
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithVersion()
+    public sealed class TestCommandHandler3 : ICommandHandler<TestCommand3, TestCommandResponse>
+    {
+        public Task<TestCommandResponse> ExecuteCommand(TestCommand3 command, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithVersion).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/v2/queries/TestQueryWithVersion", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            throw new NotSupportedException();
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithVersion()
+    public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
+    {
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithVersion).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/v2/queries/TestPostQueryWithVersion", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = 11 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithOperationId()
+    public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+    {
+        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-query-op-id");
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestQueryWithOperationId", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithOperationId()
+    public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
+    {
+        public async Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-post-query-op-id");
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestPostQueryWithOperationId", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.IsNull(queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsQueryDescriptorsWithApiGroupName()
+    public sealed class TestCommandWithCustomPathHandler : ICommandHandler<TestCommandWithCustomPath, TestCommandResponse>
+    {
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithApiGroupName).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestQueryWithApiGroupName", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.AreEqual("Custom Query Group", queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = command.Payload + 1 };
         }
+    }
 
-        [Test]
-        public void ApiDescriptionProvider_ReturnsPostQueryDescriptorsWithApiGroupName()
+    public sealed class TestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>
+    {
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithVersion command, CancellationToken cancellationToken = default)
         {
-            var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
-            var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithApiGroupName).FullName);
-
-            Assert.IsNotNull(queryApiDescription);
-            Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-            Assert.AreEqual("api/queries/TestPostQueryWithApiGroupName", queryApiDescription?.RelativePath);
-            Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-            Assert.AreEqual("Custom POST Query Group", queryApiDescription?.GroupName);
-            Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = command.Payload + 1 };
         }
+    }
 
-        protected override void ConfigureServices(IServiceCollection services)
+    public sealed class TestCommandWithOperationIdHandler : ICommandHandler<TestCommandWithOperationId, TestCommandResponse>
+    {
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithOperationId command, CancellationToken cancellationToken = default)
         {
-            _ = services.AddMvc().AddConquerorCQSHttpControllers(o =>
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = command.Payload + 1 };
+        }
+    }
+
+    public sealed class TestCommandWithApiGroupNameHandler : ICommandHandler<TestCommandWithApiGroupName, TestCommandResponse>
+    {
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithApiGroupName command, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = command.Payload + 1 };
+        }
+    }
+
+    private sealed class TestHttpCommandPathConvention : IHttpCommandPathConvention
+    {
+        public string? GetCommandPath(Type commandType, HttpCommandAttribute attribute)
+        {
+            if (commandType != typeof(TestCommand3))
             {
-                o.CommandPathConvention = new TestHttpCommandPathConvention();
-                o.QueryPathConvention = new TestHttpQueryPathConvention();
-            });
-
-            _ = services.AddConquerorCommandHandler<TestCommandHandler>()
-                        .AddConquerorCommandHandler<TestCommandHandler2>()
-                        .AddConquerorCommandHandler<TestCommandHandler3>()
-                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
-                        .AddConquerorCommandHandler<TestCommandHandlerWithoutPayload>()
-                        .AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutPayload>()
-                        .AddConquerorCommandHandler<TestCommandWithCustomPathHandler>()
-                        .AddConquerorCommandHandler<TestCommandWithVersionHandler>()
-                        .AddConquerorCommandHandler<TestCommandWithOperationIdHandler>()
-                        .AddConquerorCommandHandler<TestCommandWithApiGroupNameHandler>();
-
-            _ = services.AddConquerorQueryHandler<TestQueryHandler>()
-                        .AddConquerorQueryHandler<TestQueryHandler2>()
-                        .AddConquerorQueryHandler<TestQueryHandler3>()
-                        .AddConquerorQueryHandler<TestQueryHandlerWithoutPayload>()
-                        .AddConquerorQueryHandler<TestQueryHandlerWithComplexPayload>()
-                        .AddConquerorQueryHandler<TestQueryWithCustomPathHandler>()
-                        .AddConquerorQueryHandler<TestQueryWithVersionHandler>()
-                        .AddConquerorQueryHandler<TestQueryWithOperationIdHandler>()
-                        .AddConquerorQueryHandler<TestQueryWithApiGroupNameHandler>()
-                        .AddConquerorQueryHandler<TestPostQueryHandler>()
-                        .AddConquerorQueryHandler<TestPostQueryHandler2>()
-                        .AddConquerorQueryHandler<TestPostQueryHandlerWithoutPayload>()
-                        .AddConquerorQueryHandler<TestPostQueryWithCustomPathHandler>()
-                        .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>()
-                        .AddConquerorQueryHandler<TestPostQueryWithOperationIdHandler>()
-                        .AddConquerorQueryHandler<TestPostQueryWithApiGroupNameHandler>();
-        }
-
-        protected override void Configure(IApplicationBuilder app)
-        {
-            _ = app.UseRouting();
-            _ = app.UseEndpoints(b => b.MapControllers());
-        }
-
-        [HttpQuery]
-        public sealed record TestQuery
-        {
-            public int Payload { get; init; }
-        }
-
-        public sealed record TestQueryResponse
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery]
-        public sealed record TestQuery2;
-
-        public sealed record TestQueryResponse2;
-
-        [HttpQuery]
-        public sealed record TestQuery3
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery]
-        public sealed record TestQueryWithoutPayload;
-
-        [HttpQuery]
-        public sealed record TestQueryWithComplexPayload(TestQueryWithComplexPayloadPayload Payload);
-
-        public sealed record TestQueryWithComplexPayloadPayload(int Payload);
-
-        [HttpQuery(Path = "/api/testQueryWithCustomPath")]
-        public sealed record TestQueryWithCustomPath
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(Version = "v2")]
-        public sealed record TestQueryWithVersion
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(OperationId = "custom-query-op-id")]
-        public sealed record TestQueryWithOperationId
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(ApiGroupName = "Custom Query Group")]
-        public sealed record TestQueryWithApiGroupName
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(UsePost = true)]
-        public sealed record TestPostQuery
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(UsePost = true)]
-        public sealed record TestPostQuery2
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(UsePost = true)]
-        public sealed record TestPostQueryWithoutPayload;
-
-        [HttpQuery(UsePost = true, Path = "/api/testPostQueryWithCustomPath")]
-        public sealed record TestPostQueryWithCustomPath
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(UsePost = true, Version = "v2")]
-        public sealed record TestPostQueryWithVersion
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(UsePost = true, OperationId = "custom-post-query-op-id")]
-        public sealed record TestPostQueryWithOperationId
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpQuery(UsePost = true, ApiGroupName = "Custom POST Query Group")]
-        public sealed record TestPostQueryWithApiGroupName
-        {
-            public int Payload { get; init; }
-        }
-
-        public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-        {
-        }
-
-        public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
-        {
-        }
-
-        public sealed class TestQueryHandler : ITestQueryHandler
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
+                return null;
             }
-        }
 
-        public sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
+            return $"/api/commands/{commandType.Name}FromConvention";
+        }
+    }
+
+    private sealed class TestHttpQueryPathConvention : IHttpQueryPathConvention
+    {
+        public string? GetQueryPath(Type queryType, HttpQueryAttribute attribute)
         {
-            public Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+            if (queryType != typeof(TestQuery3) && queryType != typeof(TestPostQuery2))
             {
-                throw new NotSupportedException();
+                return null;
             }
-        }
 
-        public sealed class TestQueryHandler3 : IQueryHandler<TestQuery3, TestQueryResponse>
-        {
-            public Task<TestQueryResponse> ExecuteQuery(TestQuery3 query, CancellationToken cancellationToken = default)
-            {
-                throw new NotSupportedException();
-            }
-        }
-
-        public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = 11 };
-            }
-        }
-
-        public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload.Payload + 1 };
-            }
-        }
-
-        public sealed class TestQueryWithCustomPathHandler : IQueryHandler<TestQueryWithCustomPath, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomPath query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestQueryWithVersionHandler : IQueryHandler<TestQueryWithVersion, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithVersion query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestQueryWithOperationIdHandler : IQueryHandler<TestQueryWithOperationId, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithOperationId query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestQueryWithApiGroupNameHandler : IQueryHandler<TestQueryWithApiGroupName, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithApiGroupName query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestPostQueryHandler : ITestPostQueryHandler
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestPostQueryHandler2 : IQueryHandler<TestPostQuery2, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery2 query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestPostQueryHandlerWithoutPayload : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = 11 };
-            }
-        }
-
-        public sealed class TestPostQueryWithCustomPathHandler : IQueryHandler<TestPostQueryWithCustomPath, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestPostQueryWithOperationIdHandler : IQueryHandler<TestPostQueryWithOperationId, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithOperationId query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        public sealed class TestPostQueryWithApiGroupNameHandler : IQueryHandler<TestPostQueryWithApiGroupName, TestQueryResponse>
-        {
-            public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithApiGroupName query, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = query.Payload + 1 };
-            }
-        }
-
-        [HttpCommand]
-        public sealed record TestCommand
-        {
-            public int Payload { get; init; }
-        }
-
-        public sealed record TestCommandResponse
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpCommand]
-        public sealed record TestCommand2;
-
-        public sealed record TestCommandResponse2;
-
-        [HttpCommand]
-        public sealed record TestCommand3
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpCommand]
-        public sealed record TestCommandWithoutPayload;
-
-        [HttpCommand]
-        public sealed record TestCommandWithoutResponse
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpCommand]
-        public sealed record TestCommandWithoutResponseWithoutPayload;
-
-        public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-        {
-        }
-
-        [HttpCommand(Path = "/api/testCommandWithCustomPath")]
-        public sealed record TestCommandWithCustomPath
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpCommand(Version = "v2")]
-        public sealed record TestCommandWithVersion
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpCommand(OperationId = "custom-command-op-id")]
-        public sealed record TestCommandWithOperationId
-        {
-            public int Payload { get; init; }
-        }
-
-        [HttpCommand(ApiGroupName = "Custom Command Group")]
-        public sealed record TestCommandWithApiGroupName
-        {
-            public int Payload { get; init; }
-        }
-
-        public sealed class TestCommandHandler : ITestCommandHandler
-        {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = command.Payload + 1 };
-            }
-        }
-
-        public sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
-        {
-            public Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
-            {
-                throw new NotSupportedException();
-            }
-        }
-
-        public sealed class TestCommandHandler3 : ICommandHandler<TestCommand3, TestCommandResponse>
-        {
-            public Task<TestCommandResponse> ExecuteCommand(TestCommand3 command, CancellationToken cancellationToken = default)
-            {
-                throw new NotSupportedException();
-            }
-        }
-
-        public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
-        {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = 11 };
-            }
-        }
-
-        public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
-        {
-            public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-        }
-
-        public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
-        {
-            public async Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-        }
-
-        public sealed class TestCommandWithCustomPathHandler : ICommandHandler<TestCommandWithCustomPath, TestCommandResponse>
-        {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = command.Payload + 1 };
-            }
-        }
-
-        public sealed class TestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>
-        {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithVersion command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = command.Payload + 1 };
-            }
-        }
-
-        public sealed class TestCommandWithOperationIdHandler : ICommandHandler<TestCommandWithOperationId, TestCommandResponse>
-        {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithOperationId command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = command.Payload + 1 };
-            }
-        }
-
-        public sealed class TestCommandWithApiGroupNameHandler : ICommandHandler<TestCommandWithApiGroupName, TestCommandResponse>
-        {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithApiGroupName command, CancellationToken cancellationToken = default)
-            {
-                await Task.Yield();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new() { Payload = command.Payload + 1 };
-            }
-        }
-
-        private sealed class TestHttpCommandPathConvention : IHttpCommandPathConvention
-        {
-            public string? GetCommandPath(Type commandType, HttpCommandAttribute attribute)
-            {
-                if (commandType != typeof(TestCommand3))
-                {
-                    return null;
-                }
-
-                return $"/api/commands/{commandType.Name}FromConvention";
-            }
-        }
-
-        private sealed class TestHttpQueryPathConvention : IHttpQueryPathConvention
-        {
-            public string? GetQueryPath(Type queryType, HttpQueryAttribute attribute)
-            {
-                if (queryType != typeof(TestQuery3) && queryType != typeof(TestPostQuery2))
-                {
-                    return null;
-                }
-
-                return $"/api/queries/{queryType.Name}FromConvention";
-            }
+            return $"/api/queries/{queryType.Name}FromConvention";
         }
     }
 }

@@ -9,117 +9,116 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests
+namespace Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore.Tests;
+
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
+public abstract class TestBase
 {
-    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
-    public abstract class TestBase
+    private HttpClient? client;
+    private IHost? host;
+    private CancellationTokenSource? timeoutCancellationTokenSource;
+    private WebSocketClient? webSocketClient;
+
+    protected HttpClient HttpClient
     {
-        private HttpClient? client;
-        private IHost? host;
-        private CancellationTokenSource? timeoutCancellationTokenSource;
-        private WebSocketClient? webSocketClient;
-
-        protected HttpClient HttpClient
+        get
         {
-            get
+            if (client == null)
             {
-                if (client == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using http client");
-                }
-
-                return client;
+                throw new InvalidOperationException("test fixture must be initialized before using http client");
             }
-        }
 
-        protected WebSocketClient WebSocketClient
+            return client;
+        }
+    }
+
+    protected WebSocketClient WebSocketClient
+    {
+        get
         {
-            get
+            if (webSocketClient == null)
             {
-                if (webSocketClient == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using web socket client");
-                }
-
-                return webSocketClient;
+                throw new InvalidOperationException("test fixture must be initialized before using web socket client");
             }
-        }
 
-        protected IHost Host
+            return webSocketClient;
+        }
+    }
+
+    protected IHost Host
+    {
+        get
         {
-            get
+            if (host == null)
             {
-                if (host == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using host");
-                }
-
-                return host;
+                throw new InvalidOperationException("test fixture must be initialized before using host");
             }
+
+            return host;
         }
+    }
 
-        protected JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
+    protected JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
-        protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(2);
+    protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(2);
 
-        protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
+    protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
 
-        private CancellationTokenSource TimeoutCancellationTokenSource
+    private CancellationTokenSource TimeoutCancellationTokenSource
+    {
+        get
         {
-            get
+            if (timeoutCancellationTokenSource == null)
             {
-                if (timeoutCancellationTokenSource == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before timeout cancellation token source");
-                }
-
-                return timeoutCancellationTokenSource;
+                throw new InvalidOperationException("test fixture must be initialized before timeout cancellation token source");
             }
-        }
 
-        [SetUp]
-        public async Task SetUp()
+            return timeoutCancellationTokenSource;
+        }
+    }
+
+    [SetUp]
+    public async Task SetUp()
+    {
+        timeoutCancellationTokenSource = new();
+
+        var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
+                                           .ConfigureWebHost(webHost =>
+                                           {
+                                               _ = webHost.UseTestServer();
+
+                                               _ = webHost.ConfigureServices(ConfigureServices);
+                                               _ = webHost.Configure(Configure);
+                                           });
+
+        host = await hostBuilder.StartAsync(TestTimeoutToken);
+        client = host.GetTestClient();
+        webSocketClient = host.GetTestServer().CreateWebSocketClient();
+
+        if (!Debugger.IsAttached)
         {
-            timeoutCancellationTokenSource = new();
-
-            var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace))
-                                               .ConfigureWebHost(webHost =>
-                                               {
-                                                   _ = webHost.UseTestServer();
-
-                                                   _ = webHost.ConfigureServices(ConfigureServices);
-                                                   _ = webHost.Configure(Configure);
-                                               });
-
-            host = await hostBuilder.StartAsync(TestTimeoutToken);
-            client = host.GetTestClient();
-            webSocketClient = host.GetTestServer().CreateWebSocketClient();
-
-            if (!Debugger.IsAttached)
-            {
-                TimeoutCancellationTokenSource.CancelAfter(TestTimeout);
-            }
+            TimeoutCancellationTokenSource.CancelAfter(TestTimeout);
         }
+    }
 
-        [TearDown]
-        public void TearDown()
-        {
-            timeoutCancellationTokenSource?.Cancel();
-            host?.Dispose();
-            client?.Dispose();
-            timeoutCancellationTokenSource?.Dispose();
-        }
+    [TearDown]
+    public void TearDown()
+    {
+        timeoutCancellationTokenSource?.Cancel();
+        host?.Dispose();
+        client?.Dispose();
+        timeoutCancellationTokenSource?.Dispose();
+    }
 
-        protected abstract void ConfigureServices(IServiceCollection services);
+    protected abstract void ConfigureServices(IServiceCollection services);
 
-        protected abstract void Configure(IApplicationBuilder app);
+    protected abstract void Configure(IApplicationBuilder app);
 
-        protected T Resolve<T>()
-            where T : notnull => Host.Services.GetRequiredService<T>();
+    protected T Resolve<T>()
+        where T : notnull => Host.Services.GetRequiredService<T>();
 
-        protected Task<WebSocket> ConnectToWebSocket(string path, string query)
-        {
-            return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
-        }
+    protected Task<WebSocket> ConnectToWebSocket(string path, string query)
+    {
+        return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
     }
 }

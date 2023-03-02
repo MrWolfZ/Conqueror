@@ -12,141 +12,140 @@ using System.Web;
 using Conqueror.CQS.Extensions.AspNetCore.Common;
 using Conqueror.Streaming.Interactive.Transport.Http.Common;
 
-namespace Conqueror.Streaming.Interactive.Transport.Http.Client
-{
-    internal sealed class HttpInteractiveStreamingHandler<TRequest, TItem> : IInteractiveStreamingHandler<TRequest, TItem>
-        where TRequest : class
-    {
-        private readonly HttpInteractiveStreamingRequestAttribute attribute;
-        private readonly IConquerorContextAccessor? conquerorContextAccessor;
-        private readonly ResolvedHttpClientOptions options;
+namespace Conqueror.Streaming.Interactive.Transport.Http.Client;
 
-        public HttpInteractiveStreamingHandler(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
+internal sealed class HttpInteractiveStreamingHandler<TRequest, TItem> : IInteractiveStreamingHandler<TRequest, TItem>
+    where TRequest : class
+{
+    private readonly HttpInteractiveStreamingRequestAttribute attribute;
+    private readonly IConquerorContextAccessor? conquerorContextAccessor;
+    private readonly ResolvedHttpClientOptions options;
+
+    public HttpInteractiveStreamingHandler(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
+    {
+        this.options = options;
+        this.conquerorContextAccessor = conquerorContextAccessor;
+        attribute = typeof(TRequest).GetCustomAttribute<HttpInteractiveStreamingRequestAttribute>()!;
+    }
+
+    public async IAsyncEnumerable<TItem> ExecuteRequest(TRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        _ = attribute;
+
+        // TODO: use service
+        var regex = new Regex("(Interactive)?(Stream(ing)?)?Request$");
+        var uriString = $"/api/streams/interactive/{FirstCharToLowerCase(regex.Replace(typeof(TRequest).Name, string.Empty))}";
+
+        var queryString = HttpUtility.ParseQueryString(string.Empty);
+
+        foreach (var property in typeof(TRequest).GetProperties())
         {
-            this.options = options;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            attribute = typeof(TRequest).GetCustomAttribute<HttpInteractiveStreamingRequestAttribute>()!;
+            var paramName = FirstCharToLowerCase(property.Name);
+            var value = property.GetValue(request);
+
+            if (value is IEnumerable e)
+            {
+                foreach (var v in e)
+                {
+                    queryString.Add(paramName, v?.ToString());
+                }
+            }
+            else if (value is not null)
+            {
+                queryString[paramName] = value.ToString();
+            }
         }
 
-        public async IAsyncEnumerable<TItem> ExecuteRequest(TRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+        if (conquerorContextAccessor?.ConquerorContext?.HasItems ?? false)
         {
-            _ = attribute;
+            queryString.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
+        }
 
-            // TODO: use service
-            var regex = new Regex("(Interactive)?(Stream(ing)?)?Request$");
-            var uriString = $"/api/streams/interactive/{FirstCharToLowerCase(regex.Replace(typeof(TRequest).Name, string.Empty))}";
+        if (queryString.HasKeys())
+        {
+            uriString += $"?{queryString}";
+        }
 
-            var queryString = HttpUtility.ParseQueryString(string.Empty);
+        var address = new Uri(options.BaseAddress, uriString);
 
-            foreach (var property in typeof(TRequest).GetProperties())
+        using var webSocket = await options.WebSocketFactory(address, cancellationToken).ConfigureAwait(false);
+        using var textWebSocket = new TextWebSocket(webSocket);
+        using var textWebSocketWithHeartbeat = new TextWebSocketWithHeartbeat(textWebSocket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
+        using var jsonWebSocket = new JsonWebSocket(textWebSocketWithHeartbeat, options.JsonSerializerOptions ?? new JsonSerializerOptions());
+        using var clientWebSocket = new InteractiveStreamingClientWebSocket<TItem>(jsonWebSocket);
+
+        using var closingSemaphore = new SemaphoreSlim(1);
+
+        async Task Close(CancellationToken ct)
+        {
+            // ReSharper disable AccessToDisposedClosure
+            await closingSemaphore.WaitAsync(ct).ConfigureAwait(false);
+
+            try
             {
-                var paramName = FirstCharToLowerCase(property.Name);
-                var value = property.GetValue(request);
-
-                if (value is IEnumerable e)
-                {
-                    foreach (var v in e)
-                    {
-                        queryString.Add(paramName, v?.ToString());
-                    }
-                }
-                else if (value is not null)
-                {
-                    queryString[paramName] = value.ToString();
-                }
+                await clientWebSocket.Close(ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                _ = closingSemaphore.Release();
             }
 
-            if (conquerorContextAccessor?.ConquerorContext?.HasItems ?? false)
+            // ReSharper enable AccessToDisposedClosure
+        }
+
+        await using var d = cancellationToken.Register(() => Close(CancellationToken.None).Wait(CancellationToken.None)).ConfigureAwait(false);
+
+        var enumerator = clientWebSocket.Read(cancellationToken).GetAsyncEnumerator(cancellationToken);
+
+        while (true)
+        {
+            if (cancellationToken.IsCancellationRequested)
             {
-                queryString.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
+                await Close(cancellationToken).ConfigureAwait(false);
+                yield break;
             }
 
-            if (queryString.HasKeys())
+            try
             {
-                uriString += $"?{queryString}";
-            }
+                _ = await clientWebSocket.RequestNextItem(cancellationToken).ConfigureAwait(false);
 
-            var address = new Uri(options.BaseAddress, uriString);
-
-            using var webSocket = await options.WebSocketFactory(address, cancellationToken).ConfigureAwait(false);
-            using var textWebSocket = new TextWebSocket(webSocket);
-            using var textWebSocketWithHeartbeat = new TextWebSocketWithHeartbeat(textWebSocket, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
-            using var jsonWebSocket = new JsonWebSocket(textWebSocketWithHeartbeat, options.JsonSerializerOptions ?? new JsonSerializerOptions());
-            using var clientWebSocket = new InteractiveStreamingClientWebSocket<TItem>(jsonWebSocket);
-
-            using var closingSemaphore = new SemaphoreSlim(1);
-
-            async Task Close(CancellationToken ct)
-            {
-                // ReSharper disable AccessToDisposedClosure
-                await closingSemaphore.WaitAsync(ct).ConfigureAwait(false);
-
-                try
-                {
-                    await clientWebSocket.Close(ct).ConfigureAwait(false);
-                }
-                finally
-                {
-                    _ = closingSemaphore.Release();
-                }
-
-                // ReSharper enable AccessToDisposedClosure
-            }
-
-            await using var d = cancellationToken.Register(() => Close(CancellationToken.None).Wait(CancellationToken.None)).ConfigureAwait(false);
-
-            var enumerator = clientWebSocket.Read(cancellationToken).GetAsyncEnumerator(cancellationToken);
-
-            while (true)
-            {
-                if (cancellationToken.IsCancellationRequested)
+                if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
                 {
                     await Close(cancellationToken).ConfigureAwait(false);
                     yield break;
                 }
-
-                try
-                {
-                    _ = await clientWebSocket.RequestNextItem(cancellationToken).ConfigureAwait(false);
-
-                    if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
-                    {
-                        await Close(cancellationToken).ConfigureAwait(false);
-                        yield break;
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    await Close(CancellationToken.None).ConfigureAwait(false);
-                    throw;
-                }
-                catch
-                {
-                    await Close(cancellationToken).ConfigureAwait(false);
-                    throw;
-                }
-
-                switch (enumerator.Current)
-                {
-                    case StreamingMessageEnvelope<TItem> { Message: { } } env:
-                        yield return env.Message;
-                        break;
-
-                    case ErrorMessage { Message: { } } msg:
-                        throw new HttpInteractiveStreamingException(msg.Message);
-                }
             }
-        }
-
-        [SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "lower-case is intentional")]
-        private static string? FirstCharToLowerCase(string? str)
-        {
-            if (!string.IsNullOrEmpty(str) && char.IsUpper(str[0]))
+            catch (OperationCanceledException)
             {
-                return str.Length == 1 ? char.ToLower(str[0]).ToString() : char.ToLower(str[0]) + str[1..];
+                await Close(CancellationToken.None).ConfigureAwait(false);
+                throw;
+            }
+            catch
+            {
+                await Close(cancellationToken).ConfigureAwait(false);
+                throw;
             }
 
-            return str;
+            switch (enumerator.Current)
+            {
+                case StreamingMessageEnvelope<TItem> { Message: { } } env:
+                    yield return env.Message;
+                    break;
+
+                case ErrorMessage { Message: { } } msg:
+                    throw new HttpInteractiveStreamingException(msg.Message);
+            }
         }
+    }
+
+    [SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "lower-case is intentional")]
+    private static string? FirstCharToLowerCase(string? str)
+    {
+        if (!string.IsNullOrEmpty(str) && char.IsUpper(str[0]))
+        {
+            return str.Length == 1 ? char.ToLower(str[0]).ToString() : char.ToLower(str[0]) + str[1..];
+        }
+
+        return str;
     }
 }

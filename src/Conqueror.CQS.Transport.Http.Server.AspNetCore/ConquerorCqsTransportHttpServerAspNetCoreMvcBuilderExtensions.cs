@@ -8,32 +8,31 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class ConquerorCqsTransportHttpServerAspNetCoreMvcBuilderExtensions
 {
-    public static class ConquerorCqsTransportHttpServerAspNetCoreMvcBuilderExtensions
+    public static IMvcBuilder AddConquerorCQSHttpControllers(this IMvcBuilder builder, Action<ConquerorCqsHttpTransportServerAspNetCoreOptions>? configureOptions = null)
     {
-        public static IMvcBuilder AddConquerorCQSHttpControllers(this IMvcBuilder builder, Action<ConquerorCqsHttpTransportServerAspNetCoreOptions>? configureOptions = null)
-        {
-            _ = builder.Services.AddConquerorCQS();
+        _ = builder.Services.AddConquerorCQS();
 
-            builder.Services.TryAddSingleton<HttpEndpointRegistry>();
+        builder.Services.TryAddSingleton<HttpEndpointRegistry>();
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpEndpointConfigurationStartupFilter>());
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpEndpointConfigurationStartupFilter>());
 
-            builder.Services.TryAddSingleton<HttpEndpointActionDescriptorChangeProvider>();
-            builder.Services.TryAddEnumerable(
-                ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
-                    p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
+        builder.Services.TryAddSingleton<HttpEndpointActionDescriptorChangeProvider>();
+        builder.Services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
+                p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
 
-            _ = builder.Services.PostConfigure<MvcOptions>(options => { _ = options.Filters.Add<BadContextExceptionHandlerFilter>(); });
+        _ = builder.Services.PostConfigure<MvcOptions>(options => { _ = options.Filters.Add<BadContextExceptionHandlerFilter>(); });
 
-            var options = new ConquerorCqsHttpTransportServerAspNetCoreOptions();
+        var options = new ConquerorCqsHttpTransportServerAspNetCoreOptions();
 
-            configureOptions?.Invoke(options);
+        configureOptions?.Invoke(options);
 
-            _ = builder.Services.AddSingleton(options);
+        _ = builder.Services.AddSingleton(options);
 
-            return builder;
-        }
+        return builder;
     }
 }

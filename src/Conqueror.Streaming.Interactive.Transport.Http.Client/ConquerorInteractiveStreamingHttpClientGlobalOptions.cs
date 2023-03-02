@@ -4,19 +4,18 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Conqueror.Streaming.Interactive.Transport.Http.Client
+namespace Conqueror.Streaming.Interactive.Transport.Http.Client;
+
+public sealed class ConquerorInteractiveStreamingHttpClientGlobalOptions
 {
-    public sealed class ConquerorInteractiveStreamingHttpClientGlobalOptions
+    internal ConquerorInteractiveStreamingHttpClientGlobalOptions(IServiceProvider serviceProvider)
     {
-        internal ConquerorInteractiveStreamingHttpClientGlobalOptions(IServiceProvider serviceProvider)
-        {
-            ServiceProvider = serviceProvider;
-        }
-
-        public IServiceProvider ServiceProvider { get; }
-
-        public Func<Uri, CancellationToken, Task<WebSocket>>? WebSocketFactory { get; set; }
-
-        public JsonSerializerOptions? JsonSerializerOptions { get; set; }
+        ServiceProvider = serviceProvider;
     }
+
+    public IServiceProvider ServiceProvider { get; }
+
+    public Func<Uri, CancellationToken, Task<WebSocket>>? WebSocketFactory { get; set; }
+
+    public JsonSerializerOptions? JsonSerializerOptions { get; set; }
 }

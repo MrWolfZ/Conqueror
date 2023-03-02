@@ -1,96 +1,95 @@
 using System;
 using System.Collections.Generic;
 
-namespace Conqueror.Eventing
+namespace Conqueror.Eventing;
+
+internal sealed class EventObserverPipelineBuilder : IEventObserverPipelineBuilder
 {
-    internal sealed class EventObserverPipelineBuilder : IEventObserverPipelineBuilder
+    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares = new();
+
+    public EventObserverPipelineBuilder(IServiceProvider serviceProvider)
     {
-        private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares = new();
+        ServiceProvider = serviceProvider;
+    }
 
-        public EventObserverPipelineBuilder(IServiceProvider serviceProvider)
+    public IServiceProvider ServiceProvider { get; }
+
+    public IEventObserverPipelineBuilder Use<TMiddleware>()
+        where TMiddleware : IEventObserverMiddleware
+    {
+        middlewares.Add((typeof(TMiddleware), null));
+        return this;
+    }
+
+    public IEventObserverPipelineBuilder Use<TMiddleware, TConfiguration>(TConfiguration configuration)
+        where TMiddleware : IEventObserverMiddleware<TConfiguration>
+    {
+        middlewares.Add((typeof(TMiddleware), configuration));
+        return this;
+    }
+
+    public IEventObserverPipelineBuilder Without<TMiddleware>()
+        where TMiddleware : IEventObserverMiddleware
+    {
+        var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+        if (index < 0)
         {
-            ServiceProvider = serviceProvider;
-        }
-
-        public IServiceProvider ServiceProvider { get; }
-
-        public IEventObserverPipelineBuilder Use<TMiddleware>()
-            where TMiddleware : IEventObserverMiddleware
-        {
-            middlewares.Add((typeof(TMiddleware), null));
             return this;
         }
 
-        public IEventObserverPipelineBuilder Use<TMiddleware, TConfiguration>(TConfiguration configuration)
-            where TMiddleware : IEventObserverMiddleware<TConfiguration>
+        middlewares.RemoveAt(index);
+
+        return this;
+    }
+
+    public IEventObserverPipelineBuilder Without<TMiddleware, TConfiguration>()
+        where TMiddleware : IEventObserverMiddleware<TConfiguration>
+    {
+        var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+        if (index < 0)
         {
-            middlewares.Add((typeof(TMiddleware), configuration));
             return this;
         }
 
-        public IEventObserverPipelineBuilder Without<TMiddleware>()
-            where TMiddleware : IEventObserverMiddleware
+        middlewares.RemoveAt(index);
+
+        return this;
+    }
+
+    public IEventObserverPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
+        where TMiddleware : IEventObserverMiddleware<TConfiguration>
+    {
+        return Configure<TMiddleware, TConfiguration>(_ => configuration);
+    }
+
+    public IEventObserverPipelineBuilder Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configure)
+        where TMiddleware : IEventObserverMiddleware<TConfiguration>
+    {
+        return Configure<TMiddleware, TConfiguration>(c =>
         {
-            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+            configure(c);
+            return c;
+        });
+    }
 
-            if (index < 0)
-            {
-                return this;
-            }
+    public IEventObserverPipelineBuilder Configure<TMiddleware, TConfiguration>(Func<TConfiguration, TConfiguration> configure)
+        where TMiddleware : IEventObserverMiddleware<TConfiguration>
+    {
+        var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
 
-            middlewares.RemoveAt(index);
-
-            return this;
+        if (index < 0)
+        {
+            throw new InvalidOperationException($"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used");
         }
 
-        public IEventObserverPipelineBuilder Without<TMiddleware, TConfiguration>()
-            where TMiddleware : IEventObserverMiddleware<TConfiguration>
-        {
-            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+        middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!));
+        return this;
+    }
 
-            if (index < 0)
-            {
-                return this;
-            }
-
-            middlewares.RemoveAt(index);
-
-            return this;
-        }
-
-        public IEventObserverPipelineBuilder Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
-            where TMiddleware : IEventObserverMiddleware<TConfiguration>
-        {
-            return Configure<TMiddleware, TConfiguration>(_ => configuration);
-        }
-
-        public IEventObserverPipelineBuilder Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configure)
-            where TMiddleware : IEventObserverMiddleware<TConfiguration>
-        {
-            return Configure<TMiddleware, TConfiguration>(c =>
-            {
-                configure(c);
-                return c;
-            });
-        }
-
-        public IEventObserverPipelineBuilder Configure<TMiddleware, TConfiguration>(Func<TConfiguration, TConfiguration> configure)
-            where TMiddleware : IEventObserverMiddleware<TConfiguration>
-        {
-            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
-
-            if (index < 0)
-            {
-                throw new InvalidOperationException($"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used");
-            }
-
-            middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!));
-            return this;
-        }
-
-        public EventObserverPipeline Build()
-        {
-            return new(middlewares);
-        }
+    public EventObserverPipeline Build()
+    {
+        return new(middlewares);
     }
 }

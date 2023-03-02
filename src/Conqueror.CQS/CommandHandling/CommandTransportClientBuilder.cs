@@ -1,17 +1,16 @@
 using System;
 
-namespace Conqueror.CQS.CommandHandling
+namespace Conqueror.CQS.CommandHandling;
+
+internal sealed class CommandTransportClientBuilder : ICommandTransportClientBuilder
 {
-    internal sealed class CommandTransportClientBuilder : ICommandTransportClientBuilder
+    public CommandTransportClientBuilder(IServiceProvider serviceProvider, Type commandType)
     {
-        public CommandTransportClientBuilder(IServiceProvider serviceProvider, Type commandType)
-        {
-            ServiceProvider = serviceProvider;
-            CommandType = commandType;
-        }
-
-        public IServiceProvider ServiceProvider { get; }
-
-        public Type CommandType { get; }
+        ServiceProvider = serviceProvider;
+        CommandType = commandType;
     }
+
+    public IServiceProvider ServiceProvider { get; }
+
+    public Type CommandType { get; }
 }

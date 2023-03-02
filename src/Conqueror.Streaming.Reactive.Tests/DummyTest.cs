@@ -1,12 +1,11 @@
-namespace Conqueror.Streaming.Reactive.Tests
+namespace Conqueror.Streaming.Reactive.Tests;
+
+[TestFixture]
+public class DummyTest
 {
-    [TestFixture]
-    public class DummyTest
+    [Test]
+    public async Task Test()
     {
-        [Test]
-        public async Task Test()
-        {
-            await Task.Yield();
-        }
+        await Task.Yield();
     }
 }

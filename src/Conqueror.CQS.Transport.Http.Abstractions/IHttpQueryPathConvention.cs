@@ -1,9 +1,8 @@
 using System;
 
-namespace Conqueror
+namespace Conqueror;
+
+public interface IHttpQueryPathConvention
 {
-    public interface IHttpQueryPathConvention
-    {
-        public string? GetQueryPath(Type queryType, HttpQueryAttribute attribute);
-    }
+    public string? GetQueryPath(Type queryType, HttpQueryAttribute attribute);
 }

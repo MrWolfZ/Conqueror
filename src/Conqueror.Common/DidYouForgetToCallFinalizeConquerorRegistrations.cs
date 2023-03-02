@@ -1,11 +1,10 @@
 // ReSharper disable once CheckNamespace (we want this type to live in this namespace in exception messages)
 
-namespace Conqueror
+namespace Conqueror;
+
+internal sealed class DidYouForgetToCallFinalizeConquerorRegistrations
 {
-    internal sealed class DidYouForgetToCallFinalizeConquerorRegistrations
+    public DidYouForgetToCallFinalizeConquerorRegistrations(DidYouForgetToCallFinalizeConquerorRegistrations _)
     {
-        public DidYouForgetToCallFinalizeConquerorRegistrations(DidYouForgetToCallFinalizeConquerorRegistrations _)
-        {
-        }
     }
 }

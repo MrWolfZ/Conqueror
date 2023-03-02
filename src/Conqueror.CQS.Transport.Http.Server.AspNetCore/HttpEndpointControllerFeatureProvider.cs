@@ -3,29 +3,28 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 
-namespace Conqueror.CQS.Transport.Http.Server.AspNetCore
+namespace Conqueror.CQS.Transport.Http.Server.AspNetCore;
+
+internal sealed class HttpEndpointControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
 {
-    internal sealed class HttpEndpointControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
+    private readonly IReadOnlyCollection<HttpEndpoint> endpoints;
+
+    public HttpEndpointControllerFeatureProvider(IReadOnlyCollection<HttpEndpoint> endpoints)
     {
-        private readonly IReadOnlyCollection<HttpEndpoint> endpoints;
+        this.endpoints = endpoints;
+    }
 
-        public HttpEndpointControllerFeatureProvider(IReadOnlyCollection<HttpEndpoint> endpoints)
+    public void PopulateFeature(
+        IEnumerable<ApplicationPart> parts,
+        ControllerFeature feature)
+    {
+        foreach (var endpoint in endpoints)
         {
-            this.endpoints = endpoints;
-        }
+            var controllerType = DynamicCqsEndpointControllerFactory.Create(endpoint).GetTypeInfo();
 
-        public void PopulateFeature(
-            IEnumerable<ApplicationPart> parts,
-            ControllerFeature feature)
-        {
-            foreach (var endpoint in endpoints)
+            if (!feature.Controllers.Contains(controllerType))
             {
-                var controllerType = DynamicCqsEndpointControllerFactory.Create(endpoint).GetTypeInfo();
-
-                if (!feature.Controllers.Contains(controllerType))
-                {
-                    feature.Controllers.Add(controllerType);
-                }
+                feature.Controllers.Add(controllerType);
             }
         }
     }

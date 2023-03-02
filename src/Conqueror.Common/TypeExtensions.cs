@@ -3,36 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Conqueror.Common
+namespace Conqueror.Common;
+
+internal static class TypeExtensions
 {
-    internal static class TypeExtensions
+    public static MethodInfo? GetMethodWithParameters(this Type t, string name, Type[] parameterTypes)
     {
-        public static MethodInfo? GetMethodWithParameters(this Type t, string name, Type[] parameterTypes)
+        var methods = t.GetMethods().Concat(t.GetInterfaces().SelectMany(i => i.GetMethods())).Where(m => m.Name == name);
+        return methods.FirstOrDefault(m => m.HasParameters(parameterTypes));
+    }
+
+    public static IEnumerable<MethodInfo> AllMethods(this Type t) => t.GetInterfaces().Concat(new[] { t }).SelectMany(s => s.GetMethods());
+
+    private static bool HasParameters(this MethodInfo method, Type[] parameterTypes)
+    {
+        var methodParameters = method.GetParameters().Select(parameter => parameter.ParameterType).ToArray();
+
+        if (methodParameters.Length != parameterTypes.Length)
         {
-            var methods = t.GetMethods().Concat(t.GetInterfaces().SelectMany(i => i.GetMethods())).Where(m => m.Name == name);
-            return methods.FirstOrDefault(m => m.HasParameters(parameterTypes));
+            return false;
         }
 
-        public static IEnumerable<MethodInfo> AllMethods(this Type t) => t.GetInterfaces().Concat(new[] { t }).SelectMany(s => s.GetMethods());
-
-        private static bool HasParameters(this MethodInfo method, Type[] parameterTypes)
+        for (var i = 0; i < methodParameters.Length; i++)
         {
-            var methodParameters = method.GetParameters().Select(parameter => parameter.ParameterType).ToArray();
-
-            if (methodParameters.Length != parameterTypes.Length)
+            if (methodParameters[i].ToString() != parameterTypes[i].ToString())
             {
                 return false;
             }
-
-            for (var i = 0; i < methodParameters.Length; i++)
-            {
-                if (methodParameters[i].ToString() != parameterTypes[i].ToString())
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
+
+        return true;
     }
 }

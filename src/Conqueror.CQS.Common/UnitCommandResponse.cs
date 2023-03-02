@@ -1,7 +1,6 @@
-namespace Conqueror.CQS.Common
+namespace Conqueror.CQS.Common;
+
+public sealed record UnitCommandResponse
 {
-    public sealed record UnitCommandResponse
-    {
-        public static readonly UnitCommandResponse Instance = new();
-    }
+    public static readonly UnitCommandResponse Instance = new();
 }

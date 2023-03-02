@@ -1,10 +1,9 @@
 using System.Threading.Tasks;
 
-namespace Conqueror
+namespace Conqueror;
+
+public interface IEventPublisherMiddleware
 {
-    public interface IEventPublisherMiddleware
-    {
-        Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
-            where TEvent : class;
-    }
+    Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
+        where TEvent : class;
 }

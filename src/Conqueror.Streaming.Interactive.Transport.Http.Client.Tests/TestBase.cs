@@ -5,143 +5,142 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 
-namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests
+namespace Conqueror.Streaming.Interactive.Transport.Http.Client.Tests;
+
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
+public abstract class TestBase
 {
-    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
-    public abstract class TestBase
+    private HttpClient? client;
+    private ServiceProvider? clientServiceProvider;
+    private IHost? host;
+    private CancellationTokenSource? timeoutCancellationTokenSource;
+    private WebSocketClient? webSocketClient;
+
+    protected HttpClient HttpClient
     {
-        private HttpClient? client;
-        private ServiceProvider? clientServiceProvider;
-        private IHost? host;
-        private CancellationTokenSource? timeoutCancellationTokenSource;
-        private WebSocketClient? webSocketClient;
-
-        protected HttpClient HttpClient
+        get
         {
-            get
+            if (client == null)
             {
-                if (client == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using http client");
-                }
-
-                return client;
+                throw new InvalidOperationException("test fixture must be initialized before using http client");
             }
+
+            return client;
         }
+    }
 
-        protected WebSocketClient WebSocketClient
+    protected WebSocketClient WebSocketClient
+    {
+        get
         {
-            get
+            if (webSocketClient == null)
             {
-                if (webSocketClient == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using web socket client");
-                }
-
-                return webSocketClient;
+                throw new InvalidOperationException("test fixture must be initialized before using web socket client");
             }
+
+            return webSocketClient;
         }
+    }
 
-        protected IHost Host
+    protected IHost Host
+    {
+        get
         {
-            get
+            if (host == null)
             {
-                if (host == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using host");
-                }
-
-                return host;
+                throw new InvalidOperationException("test fixture must be initialized before using host");
             }
+
+            return host;
         }
+    }
 
-        protected IServiceProvider ClientServiceProvider
+    protected IServiceProvider ClientServiceProvider
+    {
+        get
         {
-            get
+            if (clientServiceProvider == null)
             {
-                if (clientServiceProvider == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before using client service provider");
-                }
-
-                return clientServiceProvider;
+                throw new InvalidOperationException("test fixture must be initialized before using client service provider");
             }
+
+            return clientServiceProvider;
         }
+    }
 
-        protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(IsRunningInContinuousIntegration ? 10 : 2);
+    protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(IsRunningInContinuousIntegration ? 10 : 2);
 
-        protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
+    protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
 
-        private CancellationTokenSource TimeoutCancellationTokenSource
+    private CancellationTokenSource TimeoutCancellationTokenSource
+    {
+        get
         {
-            get
+            if (timeoutCancellationTokenSource == null)
             {
-                if (timeoutCancellationTokenSource == null)
-                {
-                    throw new InvalidOperationException("test fixture must be initialized before timeout cancellation token source");
-                }
-
-                return timeoutCancellationTokenSource;
+                throw new InvalidOperationException("test fixture must be initialized before timeout cancellation token source");
             }
+
+            return timeoutCancellationTokenSource;
         }
+    }
 
-        private static bool IsRunningInContinuousIntegration => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
+    private static bool IsRunningInContinuousIntegration => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
 
-        [SetUp]
-        public async Task SetUp()
+    [SetUp]
+    public async Task SetUp()
+    {
+        timeoutCancellationTokenSource = new();
+
+        var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
         {
-            timeoutCancellationTokenSource = new();
+            _ = webHost.UseTestServer();
 
-            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
-            {
-                _ = webHost.UseTestServer();
+            _ = webHost.ConfigureServices(ConfigureServerServices);
+            _ = webHost.Configure(Configure);
+        });
 
-                _ = webHost.ConfigureServices(ConfigureServerServices);
-                _ = webHost.Configure(Configure);
-            });
+        host = await hostBuilder.StartAsync(TestTimeoutToken);
+        client = host.GetTestClient();
+        webSocketClient = host.GetTestServer().CreateWebSocketClient();
 
-            host = await hostBuilder.StartAsync(TestTimeoutToken);
-            client = host.GetTestClient();
-            webSocketClient = host.GetTestServer().CreateWebSocketClient();
+        var services = new ServiceCollection();
+        ConfigureClientServices(services);
+        clientServiceProvider = services.BuildServiceProvider();
 
-            var services = new ServiceCollection();
-            ConfigureClientServices(services);
-            clientServiceProvider = services.BuildServiceProvider();
-
-            if (!Debugger.IsAttached)
-            {
-                TimeoutCancellationTokenSource.CancelAfter(TestTimeout);
-            }
-        }
-
-        [TearDown]
-        public void TearDown()
+        if (!Debugger.IsAttached)
         {
-            timeoutCancellationTokenSource?.Cancel();
-            host?.Dispose();
-            client?.Dispose();
-            clientServiceProvider?.Dispose();
-            timeoutCancellationTokenSource?.Dispose();
+            TimeoutCancellationTokenSource.CancelAfter(TestTimeout);
         }
+    }
 
-        protected abstract void ConfigureServerServices(IServiceCollection services);
+    [TearDown]
+    public void TearDown()
+    {
+        timeoutCancellationTokenSource?.Cancel();
+        host?.Dispose();
+        client?.Dispose();
+        clientServiceProvider?.Dispose();
+        timeoutCancellationTokenSource?.Dispose();
+    }
 
-        protected abstract void ConfigureClientServices(IServiceCollection services);
+    protected abstract void ConfigureServerServices(IServiceCollection services);
 
-        protected abstract void Configure(IApplicationBuilder app);
+    protected abstract void ConfigureClientServices(IServiceCollection services);
 
-        protected T Resolve<T>()
-            where T : notnull => Host.Services.GetRequiredService<T>();
+    protected abstract void Configure(IApplicationBuilder app);
 
-        protected T ResolveOnClient<T>()
-            where T : notnull
-        {
-            return ClientServiceProvider.GetRequiredService<T>();
-        }
+    protected T Resolve<T>()
+        where T : notnull => Host.Services.GetRequiredService<T>();
 
-        protected Task<WebSocket> ConnectToWebSocket(string path, string query)
-        {
-            return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
-        }
+    protected T ResolveOnClient<T>()
+        where T : notnull
+    {
+        return ClientServiceProvider.GetRequiredService<T>();
+    }
+
+    protected Task<WebSocket> ConnectToWebSocket(string path, string query)
+    {
+        return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
     }
 }

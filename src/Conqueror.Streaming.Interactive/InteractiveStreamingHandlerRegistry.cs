@@ -3,26 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using Conqueror.Streaming.Interactive.Common;
 
-namespace Conqueror.Streaming.Interactive
+namespace Conqueror.Streaming.Interactive;
+
+internal sealed class InteractiveStreamingHandlerRegistry
 {
-    internal sealed class InteractiveStreamingHandlerRegistry
+    private readonly IReadOnlyDictionary<(Type RequestType, Type ItemType), InteractiveStreamingHandlerMetadata> metadataLookup;
+
+    public InteractiveStreamingHandlerRegistry(IEnumerable<InteractiveStreamingHandlerMetadata> metadata)
     {
-        private readonly IReadOnlyDictionary<(Type RequestType, Type ItemType), InteractiveStreamingHandlerMetadata> metadataLookup;
+        metadataLookup = metadata.ToDictionary(m => (m.RequestType, m.ItemType));
+    }
 
-        public InteractiveStreamingHandlerRegistry(IEnumerable<InteractiveStreamingHandlerMetadata> metadata)
+    public InteractiveStreamingHandlerMetadata GetInteractiveStreamingHandlerMetadata<TRequest, TItem>()
+        where TRequest : class
+    {
+        if (!metadataLookup.TryGetValue((typeof(TRequest), typeof(TItem)), out var metadata))
         {
-            metadataLookup = metadata.ToDictionary(m => (m.RequestType, m.ItemType));
+            throw new ArgumentException($"there is no registered interactive streaming handler for request type '{typeof(TRequest).Name}' and item type '{typeof(TItem).Name}'");
         }
 
-        public InteractiveStreamingHandlerMetadata GetInteractiveStreamingHandlerMetadata<TRequest, TItem>()
-            where TRequest : class
-        {
-            if (!metadataLookup.TryGetValue((typeof(TRequest), typeof(TItem)), out var metadata))
-            {
-                throw new ArgumentException($"there is no registered interactive streaming handler for request type '{typeof(TRequest).Name}' and item type '{typeof(TItem).Name}'");
-            }
-
-            return metadata;
-        }
+        return metadata;
     }
 }

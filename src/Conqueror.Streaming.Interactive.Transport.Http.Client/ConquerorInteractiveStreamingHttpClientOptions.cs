@@ -1,17 +1,16 @@
 using System;
 using System.Text.Json;
 
-namespace Conqueror.Streaming.Interactive.Transport.Http.Client
+namespace Conqueror.Streaming.Interactive.Transport.Http.Client;
+
+public sealed class ConquerorInteractiveStreamingHttpClientOptions
 {
-    public sealed class ConquerorInteractiveStreamingHttpClientOptions
+    internal ConquerorInteractiveStreamingHttpClientOptions(IServiceProvider serviceProvider)
     {
-        internal ConquerorInteractiveStreamingHttpClientOptions(IServiceProvider serviceProvider)
-        {
-            ServiceProvider = serviceProvider;
-        }
-
-        public IServiceProvider ServiceProvider { get; }
-
-        public JsonSerializerOptions? JsonSerializerOptions { get; set; }
+        ServiceProvider = serviceProvider;
     }
+
+    public IServiceProvider ServiceProvider { get; }
+
+    public JsonSerializerOptions? JsonSerializerOptions { get; set; }
 }

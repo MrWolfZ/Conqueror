@@ -1,17 +1,16 @@
 using System;
 
-namespace Conqueror
+namespace Conqueror;
+
+public sealed class EventObserverMiddlewareMetadata
 {
-    public sealed class EventObserverMiddlewareMetadata
+    public EventObserverMiddlewareMetadata(Type middlewareType, Type? configurationType)
     {
-        public EventObserverMiddlewareMetadata(Type middlewareType, Type? configurationType)
-        {
-            MiddlewareType = middlewareType;
-            ConfigurationType = configurationType;
-        }
-
-        public Type MiddlewareType { get; }
-
-        public Type? ConfigurationType { get; }
+        MiddlewareType = middlewareType;
+        ConfigurationType = configurationType;
     }
+
+    public Type MiddlewareType { get; }
+
+    public Type? ConfigurationType { get; }
 }

@@ -6,77 +6,76 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Conqueror.CQS.Analyzers
+namespace Conqueror.CQS.Analyzers;
+
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
+public sealed class C0003CommandHandlerPipelineConfigurationMethodHasCorrectSignatureAnalyzer : DiagnosticAnalyzer
 {
-    [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class C0003CommandHandlerPipelineConfigurationMethodHasCorrectSignatureAnalyzer : DiagnosticAnalyzer
+    public const string DiagnosticId = "ConquerorCQS0003";
+
+    private const string Category = "Design";
+
+    private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.Analyzer0003Title), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.Analyzer0003MessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.Analyzer0003Description), Resources.ResourceManager, typeof(Resources));
+    private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, true, Description);
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+
+    public override void Initialize(AnalysisContext context)
     {
-        public const string DiagnosticId = "ConquerorCQS0003";
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
 
-        private const string Category = "Design";
+        context.RegisterSyntaxNodeAction(CheckMethodSignature, SyntaxKind.MethodDeclaration);
+    }
 
-        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.Analyzer0003Title), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.Analyzer0003MessageFormat), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.Analyzer0003Description), Resources.ResourceManager, typeof(Resources));
-        private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, true, Description);
+    private static void CheckMethodSignature(SyntaxNodeAnalysisContext context)
+    {
+        var methodDeclarationSyntax = (MethodDeclarationSyntax)context.Node;
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+        var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclarationSyntax);
 
-        public override void Initialize(AnalysisContext context)
+        if (methodSymbol == null || methodSymbol.Name != Constants.ConfigurePipelineMethodName)
         {
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-            context.EnableConcurrentExecution();
-
-            context.RegisterSyntaxNodeAction(CheckMethodSignature, SyntaxKind.MethodDeclaration);
+            return;
         }
 
-        private static void CheckMethodSignature(SyntaxNodeAnalysisContext context)
+        if (IsValidPipelineConfigurationMethod(methodSymbol))
         {
-            var methodDeclarationSyntax = (MethodDeclarationSyntax)context.Node;
+            return;
+        }
 
-            var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclarationSyntax);
+        if (methodDeclarationSyntax.Parent is ClassDeclarationSyntax classDeclarationSyntax)
+        {
+            var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-            if (methodSymbol == null || methodSymbol.Name != Constants.ConfigurePipelineMethodName)
+            // if the containing class is not a command handler, we ignore the method
+            if (!classSymbol.IsCommandHandlerType(context) || !classSymbol.HasConfigureCommandPipelineInterface(context))
             {
                 return;
             }
 
-            if (IsValidPipelineConfigurationMethod(methodSymbol))
+            // if the containing class has a valid configuration method, we ignore any invalid configuration methods, since they could be overloads etc.
+            if (classDeclarationSyntax.Members.OfType<MethodDeclarationSyntax>().Select(m => context.SemanticModel.GetDeclaredSymbol(m)).Any(IsValidPipelineConfigurationMethod))
             {
                 return;
             }
-
-            if (methodDeclarationSyntax.Parent is ClassDeclarationSyntax classDeclarationSyntax)
-            {
-                var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
-
-                // if the containing class is not a command handler, we ignore the method
-                if (!classSymbol.IsCommandHandlerType(context) || !classSymbol.HasConfigureCommandPipelineInterface(context))
-                {
-                    return;
-                }
-
-                // if the containing class has a valid configuration method, we ignore any invalid configuration methods, since they could be overloads etc.
-                if (classDeclarationSyntax.Members.OfType<MethodDeclarationSyntax>().Select(m => context.SemanticModel.GetDeclaredSymbol(m)).Any(IsValidPipelineConfigurationMethod))
-                {
-                    return;
-                }
-            }
-
-            var diagnostic = Diagnostic.Create(Rule, methodSymbol.Locations[0], methodSymbol.Name);
-
-            context.ReportDiagnostic(diagnostic);
         }
 
-        private static bool IsValidPipelineConfigurationMethod(IMethodSymbol symbol)
-        {
-            return symbol != null &&
-                   symbol.ReturnsVoid &&
-                   symbol.IsStatic &&
-                   symbol.TypeParameters.IsEmpty &&
-                   symbol.Parameters.Length == 1 &&
-                   symbol.Parameters[0].Type.MetadataName == Constants.CommandPipelineBuilderInterfaceName &&
-                   symbol.Parameters[0].Type.ContainingAssembly.Name == Constants.AbstractionsAssemblyName;
-        }
+        var diagnostic = Diagnostic.Create(Rule, methodSymbol.Locations[0], methodSymbol.Name);
+
+        context.ReportDiagnostic(diagnostic);
+    }
+
+    private static bool IsValidPipelineConfigurationMethod(IMethodSymbol symbol)
+    {
+        return symbol != null &&
+               symbol.ReturnsVoid &&
+               symbol.IsStatic &&
+               symbol.TypeParameters.IsEmpty &&
+               symbol.Parameters.Length == 1 &&
+               symbol.Parameters[0].Type.MetadataName == Constants.CommandPipelineBuilderInterfaceName &&
+               symbol.Parameters[0].Type.ContainingAssembly.Name == Constants.AbstractionsAssemblyName;
     }
 }

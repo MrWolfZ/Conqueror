@@ -1,102 +1,101 @@
-namespace Conqueror.CQS.Tests
+namespace Conqueror.CQS.Tests;
+
+[TestFixture]
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for assembly scanning to work")]
+public sealed class QueryMiddlewareRegistryTests
 {
-    [TestFixture]
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for assembly scanning to work")]
-    public sealed class QueryMiddlewareRegistryTests
+    [Test]
+    public void GivenManuallyRegisteredQueryMiddleware_ReturnsRegistration()
     {
-        [Test]
-        public void GivenManuallyRegisteredQueryMiddleware_ReturnsRegistration()
+        var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                                              .BuildServiceProvider();
+
+        var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
+
+        var expectedRegistrations = new[]
         {
-            var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                                                  .BuildServiceProvider();
+            new QueryMiddlewareRegistration(typeof(TestQueryMiddleware), typeof(TestQueryMiddlewareConfiguration)),
+        };
 
-            var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
+        var registrations = registry.GetQueryMiddlewareRegistrations();
 
-            var expectedRegistrations = new[]
-            {
-                new QueryMiddlewareRegistration(typeof(TestQueryMiddleware), typeof(TestQueryMiddlewareConfiguration)),
-            };
+        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+    }
 
-            var registrations = registry.GetQueryMiddlewareRegistrations();
+    [Test]
+    public void GivenManuallyRegisteredQueryMiddlewareWithoutConfiguration_ReturnsRegistration()
+    {
+        var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddlewareWithoutConfiguration>()
+                                              .BuildServiceProvider();
 
-            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
-        }
+        var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
 
-        [Test]
-        public void GivenManuallyRegisteredQueryMiddlewareWithoutConfiguration_ReturnsRegistration()
+        var expectedRegistrations = new[]
         {
-            var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddlewareWithoutConfiguration>()
-                                                  .BuildServiceProvider();
+            new QueryMiddlewareRegistration(typeof(TestQueryMiddlewareWithoutConfiguration), null),
+        };
 
-            var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
+        var registrations = registry.GetQueryMiddlewareRegistrations();
 
-            var expectedRegistrations = new[]
-            {
-                new QueryMiddlewareRegistration(typeof(TestQueryMiddlewareWithoutConfiguration), null),
-            };
+        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+    }
 
-            var registrations = registry.GetQueryMiddlewareRegistrations();
+    [Test]
+    public void GivenMultipleManuallyRegisteredQueryMiddlewares_ReturnsRegistrations()
+    {
+        var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                                              .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
+                                              .BuildServiceProvider();
 
-            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
-        }
+        var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
 
-        [Test]
-        public void GivenMultipleManuallyRegisteredQueryMiddlewares_ReturnsRegistrations()
+        var expectedRegistrations = new[]
         {
-            var provider = new ServiceCollection().AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                                                  .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
-                                                  .BuildServiceProvider();
+            new QueryMiddlewareRegistration(typeof(TestQueryMiddleware), typeof(TestQueryMiddlewareConfiguration)),
+            new QueryMiddlewareRegistration(typeof(TestQueryMiddleware2), null),
+        };
 
-            var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
+        var registrations = registry.GetQueryMiddlewareRegistrations();
 
-            var expectedRegistrations = new[]
-            {
-                new QueryMiddlewareRegistration(typeof(TestQueryMiddleware), typeof(TestQueryMiddlewareConfiguration)),
-                new QueryMiddlewareRegistration(typeof(TestQueryMiddleware2), null),
-            };
+        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+    }
 
-            var registrations = registry.GetQueryMiddlewareRegistrations();
+    [Test]
+    public void GivenQueryMiddlewaresRegisteredViaAssemblyScanning_ReturnsRegistrations()
+    {
+        var provider = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly()
+                                              .BuildServiceProvider();
 
-            Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
-        }
+        var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
 
-        [Test]
-        public void GivenQueryMiddlewaresRegisteredViaAssemblyScanning_ReturnsRegistrations()
-        {
-            var provider = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly()
-                                                  .BuildServiceProvider();
+        var registrations = registry.GetQueryMiddlewareRegistrations();
 
-            var registry = provider.GetRequiredService<IQueryMiddlewareRegistry>();
+        Assert.That(registrations, Contains.Item(new QueryMiddlewareRegistration(typeof(TestQueryMiddleware), typeof(TestQueryMiddlewareConfiguration))));
+        Assert.That(registrations, Contains.Item(new QueryMiddlewareRegistration(typeof(TestQueryMiddleware2), null)));
+    }
 
-            var registrations = registry.GetQueryMiddlewareRegistrations();
+    public sealed class TestQueryMiddlewareConfiguration
+    {
+    }
 
-            Assert.That(registrations, Contains.Item(new QueryMiddlewareRegistration(typeof(TestQueryMiddleware), typeof(TestQueryMiddlewareConfiguration))));
-            Assert.That(registrations, Contains.Item(new QueryMiddlewareRegistration(typeof(TestQueryMiddleware2), null)));
-        }
+    public sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
+    {
+        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
+            where TQuery : class =>
+            ctx.Next(ctx.Query, ctx.CancellationToken);
+    }
 
-        public sealed class TestQueryMiddlewareConfiguration
-        {
-        }
+    public sealed class TestQueryMiddlewareWithoutConfiguration : IQueryMiddleware
+    {
+        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
+            where TQuery : class =>
+            ctx.Next(ctx.Query, ctx.CancellationToken);
+    }
 
-        public sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
-        {
-            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
-                where TQuery : class =>
-                ctx.Next(ctx.Query, ctx.CancellationToken);
-        }
-
-        public sealed class TestQueryMiddlewareWithoutConfiguration : IQueryMiddleware
-        {
-            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-                where TQuery : class =>
-                ctx.Next(ctx.Query, ctx.CancellationToken);
-        }
-
-        public sealed class TestQueryMiddleware2 : IQueryMiddleware
-        {
-            public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-                where TQuery : class =>
-                ctx.Next(ctx.Query, ctx.CancellationToken);
-        }
+    public sealed class TestQueryMiddleware2 : IQueryMiddleware
+    {
+        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
+            where TQuery : class =>
+            ctx.Next(ctx.Query, ctx.CancellationToken);
     }
 }

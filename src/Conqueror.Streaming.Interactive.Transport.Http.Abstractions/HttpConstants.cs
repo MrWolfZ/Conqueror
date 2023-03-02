@@ -1,7 +1,6 @@
-namespace Conqueror
+namespace Conqueror;
+
+public static class HttpConstants
 {
-    public static class HttpConstants
-    {
-        public const string ConquerorContextHeaderName = "conqueror-context";
-    }
+    public const string ConquerorContextHeaderName = "conqueror-context";
 }

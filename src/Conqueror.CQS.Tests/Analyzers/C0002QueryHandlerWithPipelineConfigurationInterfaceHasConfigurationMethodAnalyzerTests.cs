@@ -6,14 +6,14 @@ using CodeFixVerifier = Conqueror.CQS.Tests.Analyzers.Verifiers.CSharpCodeFixVer
     Conqueror.CQS.Analyzers.C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer,
     Conqueror.CQS.Analyzers.C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerCodeFixProvider>;
 
-namespace Conqueror.CQS.Tests.Analyzers
+namespace Conqueror.CQS.Tests.Analyzers;
+
+public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerTests
 {
-    public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerTests
+    [Test]
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
     {
-        [Test]
-        public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
-        {
-            var source = @"
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -33,17 +33,17 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = AnalyzerVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
-                                           .WithLocation(0)
-                                           .WithArguments("TestQueryHandler");
+        var expected = AnalyzerVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+                                       .WithLocation(0)
+                                       .WithArguments("TestQueryHandler");
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -64,17 +64,17 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = AnalyzerVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
-                                           .WithLocation(0)
-                                           .WithArguments("TestQueryHandler");
+        var expected = AnalyzerVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+                                       .WithLocation(0)
+                                       .WithArguments("TestQueryHandler");
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source, expected);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -100,7 +100,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var fixedSource = @"
+        var fixedSource = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -128,17 +128,17 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
-                                          .WithLocation(0)
-                                          .WithArguments("TestQueryHandler");
+        var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+                                      .WithLocation(0)
+                                      .WithArguments("TestQueryHandler");
 
-            await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
-        }
+        await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -165,7 +165,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var fixedSource = @"
+        var fixedSource = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -194,17 +194,17 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
-                                          .WithLocation(0)
-                                          .WithArguments("TestQueryHandler");
+        var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+                                      .WithLocation(0)
+                                      .WithArguments("TestQueryHandler");
 
-            await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
-        }
+        await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithInterfaceWithoutAnyMembers_CodeFixIsAppliedCorrectly()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithInterfaceWithoutAnyMembers_CodeFixIsAppliedCorrectly()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -219,7 +219,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var fixedSource = @"
+        var fixedSource = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -235,17 +235,17 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
-                                          .WithLocation(0)
-                                          .WithArguments("TestQueryHandler");
+        var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+                                      .WithLocation(0)
+                                      .WithArguments("TestQueryHandler");
 
-            await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
-        }
+        await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithInterfaceWithoutAnyMethods_CodeFixIsAppliedCorrectly()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithInterfaceWithoutAnyMethods_CodeFixIsAppliedCorrectly()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -265,7 +265,7 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var fixedSource = @"
+        var fixedSource = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -287,17 +287,17 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
-                                          .WithLocation(0)
-                                          .WithArguments("TestQueryHandler");
+        var expected = CodeFixVerifier.Diagnostic(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId)
+                                      .WithLocation(0)
+                                      .WithArguments("TestQueryHandler");
 
-            await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
-        }
+        await CodeFixVerifier.VerifyCodeFixAsync(source, expected, fixedSource);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -321,13 +321,13 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -352,13 +352,13 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -383,13 +383,13 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -415,13 +415,13 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithoutMethod_NoDiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithoutMethod_NoDiagnosticsAreProduced()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -441,13 +441,13 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
 
-        [Test]
-        public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -471,13 +471,13 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
 
-        [Test]
-        public async Task GivenTypeWithNonConquerorQueryHandlerInterface_NoDiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenTypeWithNonConquerorQueryHandlerInterface_NoDiagnosticsAreProduced()
+    {
+        var source = @"
                 using Conqueror;
                 using System.Threading;
                 using System.Threading.Tasks;
@@ -498,13 +498,13 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
 
-        [Test]
-        public async Task GivenSourceFromProjectWithoutConquerorReference_NoDiagnosticsAreProduced()
-        {
-            var source = @"
+    [Test]
+    public async Task GivenSourceFromProjectWithoutConquerorReference_NoDiagnosticsAreProduced()
+    {
+        var source = @"
                 using System.Threading;
                 using System.Threading.Tasks;
 
@@ -522,15 +522,14 @@ namespace Conqueror.CQS.Tests.Analyzers
                 }
             ".Dedent();
 
-            await AnalyzerVerifier.VerifyAnalyzerWithoutConquerorReferenceAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerWithoutConquerorReferenceAsync(source);
+    }
 
-        [Test]
-        public async Task GivenEmptyCode_NoDiagnosticsAreProduced()
-        {
-            var source = string.Empty;
+    [Test]
+    public async Task GivenEmptyCode_NoDiagnosticsAreProduced()
+    {
+        var source = string.Empty;
 
-            await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-        }
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
     }
 }
