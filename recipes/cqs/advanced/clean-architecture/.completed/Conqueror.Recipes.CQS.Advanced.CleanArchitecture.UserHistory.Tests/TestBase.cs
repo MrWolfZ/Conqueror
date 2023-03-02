@@ -19,7 +19,7 @@ public abstract class TestBase : IDisposable
                                            .SetMinimumLevel(LogLevel.Information));
         });
 
-        httpTestClient = applicationFactory.CreateClient(new() { AllowAutoRedirect = false });
+        httpTestClient = applicationFactory.CreateClient();
 
         // create a dedicated service provider for resolving command and query clients
         // to prevent interference with other services from the actual application; we also
