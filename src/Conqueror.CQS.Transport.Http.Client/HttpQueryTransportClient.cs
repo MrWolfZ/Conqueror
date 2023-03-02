@@ -60,7 +60,7 @@ namespace Conqueror.CQS.Transport.Http.Client
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 var content = await response.BufferAndReadContent().ConfigureAwait(false);
-                throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed: {content}", response);
+                throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed with status code {response.StatusCode} and response content: {content}", response);
             }
 
             if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
