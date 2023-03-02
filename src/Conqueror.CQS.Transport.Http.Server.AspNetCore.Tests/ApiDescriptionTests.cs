@@ -16,12 +16,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommand).FullName);
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/commands/Test", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(commandApiDescription?.GroupName);
-        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/commands/Test"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.Null);
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -30,12 +30,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutResponse).FullName);
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/commands/TestCommandWithoutResponse", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(commandApiDescription?.GroupName);
-        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/commands/TestCommandWithoutResponse"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.Null);
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -44,12 +44,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutPayload).FullName);
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/commands/TestCommandWithoutPayload", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(commandApiDescription?.GroupName);
-        Assert.AreEqual(0, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/commands/TestCommandWithoutPayload"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.Null);
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(0));
     }
 
     [Test]
@@ -58,12 +58,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithoutResponseWithoutPayload).FullName);
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/commands/TestCommandWithoutResponseWithoutPayload", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(commandApiDescription?.GroupName);
-        Assert.AreEqual(0, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/commands/TestCommandWithoutResponseWithoutPayload"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.Null);
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(0));
     }
 
     [Test]
@@ -72,12 +72,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommand3).FullName);
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/commands/TestCommand3FromConvention", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(commandApiDescription?.GroupName);
-        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/commands/TestCommand3FromConvention"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.Null);
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -86,12 +86,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithCustomPath).FullName);
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/testCommandWithCustomPath", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(commandApiDescription?.GroupName);
-        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/testCommandWithCustomPath"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.Null);
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -100,12 +100,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithVersion).FullName);
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/v2/commands/TestCommandWithVersion", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(commandApiDescription?.GroupName);
-        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/v2/commands/TestCommandWithVersion"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.Null);
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -114,12 +114,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-command-op-id");
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/commands/TestCommandWithOperationId", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(commandApiDescription?.GroupName);
-        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/commands/TestCommandWithOperationId"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.Null);
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -128,12 +128,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var commandApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestCommandWithApiGroupName).FullName);
 
-        Assert.IsNotNull(commandApiDescription);
-        Assert.AreEqual(HttpMethods.Post, commandApiDescription?.HttpMethod);
-        Assert.AreEqual("api/commands/TestCommandWithApiGroupName", commandApiDescription?.RelativePath);
-        Assert.AreEqual(200, commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.AreEqual("Custom Command Group", commandApiDescription?.GroupName);
-        Assert.AreEqual(1, commandApiDescription?.ParameterDescriptions.Count);
+        Assert.That(commandApiDescription, Is.Not.Null);
+        Assert.That(commandApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(commandApiDescription?.RelativePath, Is.EqualTo("api/commands/TestCommandWithApiGroupName"));
+        Assert.That(commandApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(commandApiDescription?.GroupName, Is.EqualTo("Custom Command Group"));
+        Assert.That(commandApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -142,12 +142,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQuery).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/Test", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Get));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/Test"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -156,12 +156,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQuery).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestPost", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestPost"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -170,12 +170,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithoutPayload).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestQueryWithoutPayload", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(0, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Get));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestQueryWithoutPayload"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(0));
     }
 
     [Test]
@@ -184,12 +184,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithComplexPayload).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestQueryWithComplexPayload", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Get));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestQueryWithComplexPayload"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -198,12 +198,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithoutPayload).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestPostQueryWithoutPayload", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(0, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestPostQueryWithoutPayload"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(0));
     }
 
     [Test]
@@ -212,12 +212,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQuery3).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestQuery3FromConvention", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Get));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestQuery3FromConvention"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -226,12 +226,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQuery2).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestPostQuery2FromConvention", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestPostQuery2FromConvention"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -240,12 +240,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithCustomPath).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/testQueryWithCustomPath", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Get));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/testQueryWithCustomPath"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -254,12 +254,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithCustomPath).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/testPostQueryWithCustomPath", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/testPostQueryWithCustomPath"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -268,12 +268,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithVersion).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/v2/queries/TestQueryWithVersion", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Get));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/v2/queries/TestQueryWithVersion"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -282,12 +282,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithVersion).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/v2/queries/TestPostQueryWithVersion", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/v2/queries/TestPostQueryWithVersion"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -296,12 +296,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-query-op-id");
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestQueryWithOperationId", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Get));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestQueryWithOperationId"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -310,12 +310,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == "custom-post-query-op-id");
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestPostQueryWithOperationId", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.IsNull(queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestPostQueryWithOperationId"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.Null);
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -324,12 +324,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestQueryWithApiGroupName).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Get, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestQueryWithApiGroupName", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.AreEqual("Custom Query Group", queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Get));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestQueryWithApiGroupName"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.EqualTo("Custom Query Group"));
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -338,12 +338,12 @@ public class ApiDescriptionTests : TestBase
         var apiDescriptions = ApiDescriptionProvider.ApiDescriptionGroups.Items.SelectMany(i => i.Items);
         var queryApiDescription = apiDescriptions.FirstOrDefault(d => d.ActionDescriptor.AttributeRouteInfo?.Name == typeof(TestPostQueryWithApiGroupName).FullName);
 
-        Assert.IsNotNull(queryApiDescription);
-        Assert.AreEqual(HttpMethods.Post, queryApiDescription?.HttpMethod);
-        Assert.AreEqual("api/queries/TestPostQueryWithApiGroupName", queryApiDescription?.RelativePath);
-        Assert.AreEqual(200, queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single());
-        Assert.AreEqual("Custom POST Query Group", queryApiDescription?.GroupName);
-        Assert.AreEqual(1, queryApiDescription?.ParameterDescriptions.Count);
+        Assert.That(queryApiDescription, Is.Not.Null);
+        Assert.That(queryApiDescription?.HttpMethod, Is.EqualTo(HttpMethods.Post));
+        Assert.That(queryApiDescription?.RelativePath, Is.EqualTo("api/queries/TestPostQueryWithApiGroupName"));
+        Assert.That(queryApiDescription?.SupportedResponseTypes.Select(t => t.StatusCode).Single(), Is.EqualTo(200));
+        Assert.That(queryApiDescription?.GroupName, Is.EqualTo("Custom POST Query Group"));
+        Assert.That(queryApiDescription?.ParameterDescriptions.Count, Is.EqualTo(1));
     }
 
     protected override void ConfigureServices(IServiceCollection services)

@@ -16,7 +16,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         handlerFn = query =>
         {
-            Assert.AreSame(testQuery, query);
+            Assert.That(query, Is.SameAs(testQuery));
             return expectedResponse;
         };
 
@@ -24,7 +24,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         var response = await Handler.ExecuteQuery(testQuery);
 
-        Assert.AreSame(expectedResponse, response);
+        Assert.That(response, Is.SameAs(expectedResponse));
     }
 
     [Test]
@@ -35,7 +35,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         handlerFn = query =>
         {
-            Assert.AreSame(testQuery, query);
+            Assert.That(query, Is.SameAs(testQuery));
             throw expectedException;
         };
 
@@ -43,7 +43,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
 
-        Assert.AreSame(expectedException, thrownException);
+        Assert.That(thrownException, Is.SameAs(expectedException));
     }
 
     [Test]
@@ -56,7 +56,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         handlerFn = query =>
         {
-            Assert.AreSame(testQuery, query);
+            Assert.That(query, Is.SameAs(testQuery));
 
             executionCount += 1;
 
@@ -74,8 +74,8 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         var response = await Handler.ExecuteQuery(testQuery);
 
-        Assert.AreSame(expectedResponse, response);
-        Assert.AreEqual(2, executionCount);
+        Assert.That(response, Is.SameAs(expectedResponse));
+        Assert.That(executionCount, Is.EqualTo(2));
     }
 
     [Test]
@@ -88,7 +88,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         handlerFn = query =>
         {
-            Assert.AreSame(testQuery, query);
+            Assert.That(query, Is.SameAs(testQuery));
 
             executionCount += 1;
 
@@ -101,8 +101,8 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
 
-        Assert.AreSame(expectedException, thrownException);
-        Assert.AreEqual(4, executionCount);
+        Assert.That(thrownException, Is.SameAs(expectedException));
+        Assert.That(executionCount, Is.EqualTo(4));
     }
 
     [Test]
@@ -115,7 +115,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         handlerFn = query =>
         {
-            Assert.AreSame(testQuery, query);
+            Assert.That(query, Is.SameAs(testQuery));
 
             executionCount += 1;
 
@@ -134,8 +134,8 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         var response = await Handler.ExecuteQuery(testQuery);
 
-        Assert.AreSame(expectedResponse, response);
-        Assert.AreEqual(2, executionCount);
+        Assert.That(response, Is.SameAs(expectedResponse));
+        Assert.That(executionCount, Is.EqualTo(2));
     }
 
     [Test]
@@ -148,7 +148,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         handlerFn = query =>
         {
-            Assert.AreSame(testQuery, query);
+            Assert.That(query, Is.SameAs(testQuery));
 
             executionCount += 1;
 
@@ -162,8 +162,8 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
 
-        Assert.AreSame(expectedException, thrownException);
-        Assert.AreEqual(4, executionCount);
+        Assert.That(thrownException, Is.SameAs(expectedException));
+        Assert.That(executionCount, Is.EqualTo(4));
     }
 
     [Test]
@@ -176,7 +176,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         handlerFn = query =>
         {
-            Assert.AreSame(testQuery, query);
+            Assert.That(query, Is.SameAs(testQuery));
 
             executionCount += 1;
 
@@ -195,8 +195,8 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
         var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
 
-        Assert.AreSame(expectedException, thrownException);
-        Assert.AreEqual(1, executionCount);
+        Assert.That(thrownException, Is.SameAs(expectedException));
+        Assert.That(executionCount, Is.EqualTo(1));
     }
 
     private IQueryHandler<TestQuery, TestQueryResponse> Handler => Resolve<IQueryHandler<TestQuery, TestQueryResponse>>();

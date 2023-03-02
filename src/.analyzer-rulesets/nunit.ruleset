@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="nunit.ruleset" ToolsVersion="16.0">
+    <Rules AnalyzerId="NUnit.Analyzers" RuleNamespace="NUnit.Analyzers">
+        <Rule Id="NUnit1001" Action="Error" /> <!-- The individual arguments provided by a TestCaseAttribute must match the type of the corresponding parameter of the method -->
+        <Rule Id="NUnit1002" Action="Error" /> <!-- The TestCaseSource should use nameof operator to specify target -->
+        <Rule Id="NUnit1003" Action="Error" /> <!-- The TestCaseAttribute provided too few arguments -->
+        <Rule Id="NUnit1004" Action="Error" /> <!-- The TestCaseAttribute provided too many arguments -->
+        <Rule Id="NUnit1005" Action="Error" /> <!-- The type of the value specified via ExpectedResult must match the return type of the method -->
+        <Rule Id="NUnit1006" Action="Error" /> <!-- ExpectedResult must not be specified when the method returns void -->
+        <Rule Id="NUnit1007" Action="Error" /> <!-- The method has non-void return type, but no result is expected in ExpectedResult -->
+        <Rule Id="NUnit1008" Action="Error" /> <!-- Specifying ParallelScope.Self on assembly level has no effect -->
+        <Rule Id="NUnit1009" Action="Error" /> <!-- One may not specify ParallelScope.Children on a non-parameterized test method -->
+        <Rule Id="NUnit1010" Action="Error" /> <!-- One may not specify ParallelScope.Fixtures on a test method -->
+        <Rule Id="NUnit1011" Action="Error" /> <!-- The TestCaseSource argument does not specify an existing member -->
+        <Rule Id="NUnit1012" Action="Error" /> <!-- The async test method must have a non-void return type -->
+        <Rule Id="NUnit1013" Action="Error" /> <!-- The async test method must have a non-generic Task return type when no result is expected -->
+        <Rule Id="NUnit1014" Action="Error" /> <!-- The async test method must have a Task<T> return type when a result is expected -->
+        <Rule Id="NUnit1015" Action="Error" /> <!-- The source type does not implement IEnumerable -->
+        <Rule Id="NUnit1016" Action="Error" /> <!-- The source type does not have a default constructor -->
+        <Rule Id="NUnit1017" Action="Error" /> <!-- The specified source is not static -->
+        <Rule Id="NUnit1018" Action="Error" /> <!-- The number of parameters provided by the TestCaseSource does not match the number of parameters in the target method -->
+        <Rule Id="NUnit1019" Action="Error" /> <!-- The source specified by the TestCaseSource does not return an IEnumerable or a type that implements IEnumerable -->
+        <Rule Id="NUnit1020" Action="Error" /> <!-- The TestCaseSource provides parameters to a source - field or property - that expects no parameters -->
+        <Rule Id="NUnit1021" Action="Error" /> <!-- The ValueSource should use nameof operator to specify target -->
+        <Rule Id="NUnit1022" Action="Error" /> <!-- The specified source is not static -->
+        <Rule Id="NUnit1023" Action="Error" /> <!-- The target method expects parameters which cannot be supplied by the ValueSource -->
+        <Rule Id="NUnit1024" Action="Error" /> <!-- The source specified by the ValueSource does not return an IEnumerable or a type that implements IEnumerable -->
+        <Rule Id="NUnit1025" Action="Error" /> <!-- The ValueSource argument does not specify an existing member -->
+        <Rule Id="NUnit1026" Action="Error" /> <!-- The test or setup/teardown method is not public -->
+        <Rule Id="NUnit1027" Action="Error" /> <!-- The test method has parameters, but no arguments are supplied by attributes -->
+        <Rule Id="NUnit1028" Action="Error" /> <!-- The non-test method is public -->
+        <Rule Id="NUnit1029" Action="Error" /> <!-- The number of parameters provided by the TestCaseSource does not match the number of parameters in the Test method -->
+        <Rule Id="NUnit1030" Action="Error" /> <!-- The type of parameter provided by the TestCaseSource does not match the type of the parameter in the Test method -->
+
+        <Rule Id="NUnit2001" Action="Error" /> <!-- Consider using Assert.That(expr, Is.False) instead of Assert.False(expr) -->
+        <Rule Id="NUnit2002" Action="Error" /> <!-- Consider using Assert.That(expr, Is.False) instead of Assert.IsFalse(expr) -->
+        <Rule Id="NUnit2003" Action="Error" /> <!-- Consider using Assert.That(expr, Is.True) instead of Assert.IsTrue(expr) -->
+        <Rule Id="NUnit2004" Action="Error" /> <!-- Consider using Assert.That(expr, Is.True) instead of Assert.True(expr) -->
+        <Rule Id="NUnit2005" Action="Error" /> <!-- Consider using Assert.That(actual, Is.EqualTo(expected)) instead of Assert.AreEqual(expected, actual) -->
+        <Rule Id="NUnit2006" Action="Error" /> <!-- Consider using Assert.That(actual, Is.Not.EqualTo(expected)) instead of Assert.AreNotEqual(expected, actual) -->
+        <Rule Id="NUnit2007" Action="Error" /> <!-- The actual value should not be a constant -->
+        <Rule Id="NUnit2008" Action="Error" /> <!-- Incorrect IgnoreCase usage -->
+        <Rule Id="NUnit2009" Action="Error" /> <!-- The same value has been provided as both the actual and the expected argument -->
+        <Rule Id="NUnit2010" Action="Error" /> <!-- Use EqualConstraint for better assertion messages in case of failure -->
+        <Rule Id="NUnit2011" Action="Error" /> <!-- Use ContainsConstraint for better assertion messages in case of failure -->
+        <Rule Id="NUnit2012" Action="Error" /> <!-- Use StartsWithConstraint for better assertion messages in case of failure -->
+        <Rule Id="NUnit2013" Action="Error" /> <!-- Use EndsWithConstraint for better assertion messages in case of failure -->
+        <Rule Id="NUnit2014" Action="Error" /> <!-- Use SomeItemsConstraint for better assertion messages in case of failure -->
+        <Rule Id="NUnit2015" Action="Error" /> <!-- Consider using Assert.That(actual, Is.SameAs(expected)) instead of Assert.AreSame(expected, actual) -->
+        <Rule Id="NUnit2016" Action="Error" /> <!-- Consider using Assert.That(expr, Is.Null) instead of Assert.Null(expr) -->
+        <Rule Id="NUnit2017" Action="Error" /> <!-- Consider using Assert.That(expr, Is.Null) instead of Assert.IsNull(expr) -->
+        <Rule Id="NUnit2018" Action="Error" /> <!-- Consider using Assert.That(expr, Is.Not.Null) instead of Assert.NotNull(expr) -->
+        <Rule Id="NUnit2019" Action="Error" /> <!-- Consider using Assert.That(expr, Is.Not.Null) instead of Assert.IsNotNull(expr) -->
+        <Rule Id="NUnit2020" Action="Error" /> <!-- Incompatible types for SameAs constraint -->
+        <Rule Id="NUnit2021" Action="Error" /> <!-- Incompatible types for EqualTo constraint -->
+        <Rule Id="NUnit2022" Action="Error" /> <!-- Missing property required for constraint -->
+        <Rule Id="NUnit2023" Action="Error" /> <!-- Invalid NullConstraint usage -->
+        <Rule Id="NUnit2024" Action="Error" /> <!-- Wrong actual type used with String Constraint -->
+        <Rule Id="NUnit2025" Action="Error" /> <!-- Wrong actual type used with ContainsConstraint -->
+        <Rule Id="NUnit2026" Action="Error" /> <!-- Wrong actual type used with the SomeItemsConstraint with EqualConstraint -->
+        <Rule Id="NUnit2027" Action="Error" /> <!-- Consider using Assert.That(actual, Is.GreaterThan(expected)) instead of Assert.Greater(actual, expected) -->
+        <Rule Id="NUnit2028" Action="Error" /> <!-- Consider using Assert.That(actual, Is.GreaterThanOrEqualTo(expected)) instead of Assert.GreaterOrEqual(actual, expected) -->
+        <Rule Id="NUnit2029" Action="Error" /> <!-- Consider using Assert.That(actual, Is.LessThan(expected)) instead of Assert.Less(actual, expected) -->
+        <Rule Id="NUnit2030" Action="Error" /> <!-- Consider using Assert.That(actual, Is.LessThanOrEqualTo(expected)) instead of Assert.LessOrEqual(actual, expected) -->
+        <Rule Id="NUnit2031" Action="Error" /> <!-- Consider using Assert.That(actual, Is.Not.SameAs(expected)) instead of Assert.AreNotSame(expected, actual) -->
+        <Rule Id="NUnit2032" Action="Error" /> <!-- Consider using Assert.That(expr, Is.Zero) instead of Assert.Zero(expr) -->
+        <Rule Id="NUnit2033" Action="Error" /> <!-- Consider using Assert.That(expr, Is.Not.Zero) instead of Assert.NotZero(expr) -->
+        <Rule Id="NUnit2034" Action="Error" /> <!-- Consider using Assert.That(expr, Is.NaN) instead of Assert.IsNaN(expr) -->
+        <Rule Id="NUnit2035" Action="Error" /> <!-- Consider using Assert.That(collection, Is.Empty) instead of Assert.IsEmpty(collection) -->
+        <Rule Id="NUnit2036" Action="Error" /> <!-- Consider using Assert.That(collection, Is.Not.Empty) instead of Assert.IsNotEmpty(collection) -->
+        <Rule Id="NUnit2037" Action="Error" /> <!-- Consider using Assert.That(collection, Does.Contain(instance)) instead of Assert.Contains(instance, collection) -->
+        <Rule Id="NUnit2038" Action="Error" /> <!-- Consider using Assert.That(actual, Is.InstanceOf(expected)) instead of Assert.IsInstanceOf(expected, actual) -->
+        <Rule Id="NUnit2039" Action="Error" /> <!-- Consider using Assert.That(actual, Is.Not.InstanceOf(expected)) instead of Assert.IsNotInstanceOf(expected, actual) -->
+        <Rule Id="NUnit2040" Action="Error" /> <!-- Non-reference types for SameAs constraint -->
+        <Rule Id="NUnit2041" Action="Error" /> <!-- Incompatible types for comparison constraint -->
+        <Rule Id="NUnit2042" Action="Error" /> <!-- Comparison constraint on object -->
+        <Rule Id="NUnit2043" Action="Error" /> <!-- Use ComparisonConstraint for better assertion messages in case of failure -->
+        <Rule Id="NUnit2044" Action="Error" /> <!-- Non-delegate actual parameter -->
+        <Rule Id="NUnit2045" Action="None" />  <!-- Use Assert.Multiple -->
+        <Rule Id="NUnit2046" Action="Error" /> <!-- Use CollectionConstraint for better assertion messages in case of failure -->
+
+        <Rule Id="NUnit3001" Action="Info" /> <!-- Expression was checked in an Assert.NotNull, Assert.IsNotNull or Assert.That call -->
+        <Rule Id="NUnit3002" Action="Info" /> <!-- Field/Property is initialized in SetUp or OneTimeSetUp method -->
+    </Rules>
+</RuleSet>

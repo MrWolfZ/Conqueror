@@ -16,9 +16,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
             _ = services.AddControllers().AddConquerorCQSHttpControllers();
 
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(HttpEndpointRegistry)));
-            Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(HttpEndpointActionDescriptorChangeProvider)));
-            Assert.AreEqual(1, services.Count(d => d.ImplementationType == typeof(HttpEndpointConfigurationStartupFilter)));
+            Assert.That(services.Count(d => d.ServiceType == typeof(HttpEndpointRegistry)), Is.EqualTo(1));
+            Assert.That(services.Count(d => d.ServiceType == typeof(HttpEndpointActionDescriptorChangeProvider)), Is.EqualTo(1));
+            Assert.That(services.Count(d => d.ImplementationType == typeof(HttpEndpointConfigurationStartupFilter)), Is.EqualTo(1));
         }
 
         [Test]

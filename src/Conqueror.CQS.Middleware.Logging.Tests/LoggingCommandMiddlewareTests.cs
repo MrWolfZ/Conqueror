@@ -238,11 +238,11 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         seenContext?.Logger.LogCritical("validation");
 
         Assert.That(seenContext, Is.Not.Null);
-        Assert.AreEqual(LogLevel.Debug, seenContext?.LogLevel);
-        Assert.AreSame(commandId, seenContext?.CommandId);
-        Assert.AreSame(traceId, seenContext?.TraceId);
-        Assert.AreSame(testCommand, seenContext?.Command);
-        Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
+        Assert.That(seenContext?.LogLevel, Is.EqualTo(LogLevel.Debug));
+        Assert.That(seenContext?.CommandId, Is.SameAs(commandId));
+        Assert.That(seenContext?.TraceId, Is.SameAs(traceId));
+        Assert.That(seenContext?.Command, Is.SameAs(testCommand));
+        Assert.That(seenContext?.ServiceProvider, Is.SameAs(scope.ServiceProvider));
 
         AssertLogEntryContains(LogLevel.Critical, "validation", testCommand.GetType().FullName!.Replace("+", "."));
     }
@@ -291,13 +291,13 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         seenContext?.Logger.LogCritical("validation");
 
         Assert.That(seenContext, Is.Not.Null);
-        Assert.AreEqual(LogLevel.Debug, seenContext?.LogLevel);
-        Assert.AreSame(commandId, seenContext?.CommandId);
-        Assert.AreSame(traceId, seenContext?.TraceId);
-        Assert.AreSame(testCommand, seenContext?.Command);
-        Assert.AreSame(response, seenContext?.Response);
-        Assert.IsTrue(seenContext?.ElapsedTime.Ticks > 0);
-        Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
+        Assert.That(seenContext?.LogLevel, Is.EqualTo(LogLevel.Debug));
+        Assert.That(seenContext?.CommandId, Is.SameAs(commandId));
+        Assert.That(seenContext?.TraceId, Is.SameAs(traceId));
+        Assert.That(seenContext?.Command, Is.SameAs(testCommand));
+        Assert.That(seenContext?.Response, Is.SameAs(response));
+        Assert.That(seenContext?.ElapsedTime.Ticks, Is.GreaterThan(0));
+        Assert.That(seenContext?.ServiceProvider, Is.SameAs(scope.ServiceProvider));
 
         AssertLogEntryContains(LogLevel.Critical, "validation", testCommand.GetType().FullName!.Replace("+", "."));
     }
@@ -349,13 +349,13 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         seenContext?.Logger.LogTrace("validation");
 
         Assert.That(seenContext, Is.Not.Null);
-        Assert.AreEqual(LogLevel.Critical, seenContext?.LogLevel);
-        Assert.AreSame(commandId, seenContext?.CommandId);
-        Assert.AreSame(traceId, seenContext?.TraceId);
-        Assert.AreSame(testCommand, seenContext?.Command);
-        Assert.AreSame(exception, seenContext?.Exception);
-        Assert.IsTrue(seenContext?.ElapsedTime.Ticks > 0);
-        Assert.AreSame(scope.ServiceProvider, seenContext?.ServiceProvider);
+        Assert.That(seenContext?.LogLevel, Is.EqualTo(LogLevel.Critical));
+        Assert.That(seenContext?.CommandId, Is.SameAs(commandId));
+        Assert.That(seenContext?.TraceId, Is.SameAs(traceId));
+        Assert.That(seenContext?.Command, Is.SameAs(testCommand));
+        Assert.That(seenContext?.Exception, Is.SameAs(exception));
+        Assert.That(seenContext?.ElapsedTime.Ticks, Is.GreaterThan(0));
+        Assert.That(seenContext?.ServiceProvider, Is.SameAs(scope.ServiceProvider));
 
         AssertLogEntryContains(LogLevel.Trace, "validation", testCommand.GetType().FullName!.Replace("+", "."));
     }

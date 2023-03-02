@@ -86,9 +86,9 @@ public sealed class InteractiveStreamingHandlerFunctionalityTests
         var response = await handler.ExecuteRequest(request, CancellationToken.None).Drain();
 
         Assert.That(response, Has.Count.EqualTo(3));
-        Assert.AreEqual(request.Payload + 1, response.ElementAt(0).Payload);
-        Assert.AreEqual(request.Payload + 2, response.ElementAt(1).Payload);
-        Assert.AreEqual(request.Payload + 3, response.ElementAt(2).Payload);
+        Assert.That(response.ElementAt(0).Payload, Is.EqualTo(request.Payload + 1));
+        Assert.That(response.ElementAt(1).Payload, Is.EqualTo(request.Payload + 2));
+        Assert.That(response.ElementAt(2).Payload, Is.EqualTo(request.Payload + 3));
     }
 
     [Test]

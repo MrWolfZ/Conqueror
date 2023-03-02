@@ -284,7 +284,7 @@ public sealed class CommandHandlerFunctionalityTests
 
         var response = await handler.ExecuteCommand(command, CancellationToken.None);
 
-        Assert.AreEqual(command.Payload + 1, response.Payload);
+        Assert.That(response.Payload, Is.EqualTo(command.Payload + 1));
     }
 
     [Test]
@@ -308,7 +308,7 @@ public sealed class CommandHandlerFunctionalityTests
 
         var response = await handler.ExecuteCommand(command, CancellationToken.None);
 
-        Assert.AreEqual(command.Payload + 1, response.Payload);
+        Assert.That(response.Payload, Is.EqualTo(command.Payload + 1));
     }
 
     [Test]
@@ -326,7 +326,7 @@ public sealed class CommandHandlerFunctionalityTests
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
 
-        Assert.AreSame(exception, thrownException);
+        Assert.That(thrownException, Is.SameAs(exception));
     }
 
     [Test]

@@ -9,12 +9,12 @@ public sealed class QueryContextTests
 
         var provider = Setup((cmd, ctx) =>
         {
-            Assert.AreEqual(query, cmd);
-            Assert.IsNotNull(ctx);
-            Assert.AreEqual(query, ctx!.Query);
-            Assert.IsNotNull(ctx.QueryId);
-            Assert.IsNotEmpty(ctx.QueryId);
-            Assert.IsNull(ctx.Response);
+            Assert.That(cmd, Is.EqualTo(query));
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Query, Is.EqualTo(query));
+            Assert.That(ctx.QueryId, Is.Not.Null);
+            Assert.That(ctx.QueryId, Is.Not.Empty);
+            Assert.That(ctx.Response, Is.Null);
 
             return new(cmd.Payload);
         });
@@ -30,17 +30,17 @@ public sealed class QueryContextTests
 
         var provider = Setup((_, _) => response, middlewareFn: async (middlewareCtx, ctx, next) =>
         {
-            Assert.AreEqual(query, middlewareCtx.Query);
-            Assert.IsNotNull(ctx);
-            Assert.AreEqual(query, ctx!.Query);
-            Assert.IsNotNull(ctx.QueryId);
-            Assert.IsNotEmpty(ctx.QueryId);
-            Assert.IsNull(ctx.Response);
+            Assert.That(middlewareCtx.Query, Is.EqualTo(query));
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Query, Is.EqualTo(query));
+            Assert.That(ctx.QueryId, Is.Not.Null);
+            Assert.That(ctx.QueryId, Is.Not.Empty);
+            Assert.That(ctx.Response, Is.Null);
 
             var resp = await next(middlewareCtx.Query);
 
-            Assert.AreEqual(response, resp);
-            Assert.AreEqual(response, ctx.Response);
+            Assert.That(resp, Is.EqualTo(response));
+            Assert.That(ctx.Response, Is.EqualTo(response));
 
             return resp;
         });
@@ -56,11 +56,11 @@ public sealed class QueryContextTests
         var provider = Setup(
             nestedClassFn: ctx =>
             {
-                Assert.IsNotNull(ctx);
-                Assert.AreEqual(query, ctx!.Query);
-                Assert.IsNotNull(ctx.QueryId);
-                Assert.IsNotEmpty(ctx.QueryId);
-                Assert.IsNull(ctx.Response);
+                Assert.That(ctx, Is.Not.Null);
+                Assert.That(ctx!.Query, Is.EqualTo(query));
+                Assert.That(ctx.QueryId, Is.Not.Null);
+                Assert.That(ctx.QueryId, Is.Not.Empty);
+                Assert.That(ctx.Response, Is.Null);
             },
             nestedClassLifetime: ServiceLifetime.Scoped);
 
@@ -74,11 +74,11 @@ public sealed class QueryContextTests
 
         var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
         {
-            Assert.IsNotNull(ctx);
-            Assert.AreNotEqual(query, ctx!.Query);
-            Assert.IsNotNull(ctx.QueryId);
-            Assert.IsNotEmpty(ctx.QueryId);
-            Assert.IsNull(ctx.Response);
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Query, Is.Not.EqualTo(query));
+            Assert.That(ctx.QueryId, Is.Not.Null);
+            Assert.That(ctx.QueryId, Is.Not.Empty);
+            Assert.That(ctx.Response, Is.Null);
 
             return new(cmd.Payload);
         });
@@ -93,10 +93,10 @@ public sealed class QueryContextTests
 
         var provider = Setup(handlerPreReturnFn: ctx =>
         {
-            Assert.IsNotNull(ctx);
-            Assert.AreEqual(query, ctx!.Query);
-            Assert.IsNotNull(ctx.QueryId);
-            Assert.IsNotEmpty(ctx.QueryId);
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Query, Is.EqualTo(query));
+            Assert.That(ctx.QueryId, Is.Not.Null);
+            Assert.That(ctx.QueryId, Is.Not.Empty);
         });
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
@@ -112,7 +112,7 @@ public sealed class QueryContextTests
         var provider = Setup(
             (_, ctx) =>
             {
-                Assert.AreSame(modifiedQuery, ctx!.Query);
+                Assert.That(ctx!.Query, Is.SameAs(modifiedQuery));
                 return response;
             },
             middlewareFn: async (_, _, next) => await next(modifiedQuery));
@@ -137,7 +137,7 @@ public sealed class QueryContextTests
             outerMiddlewareFn: async (middlewareCtx, ctx, next) =>
             {
                 var result = await next(middlewareCtx.Query);
-                Assert.AreSame(modifiedResponse, ctx!.Response);
+                Assert.That(ctx!.Response, Is.SameAs(modifiedResponse));
                 return result;
             });
 
@@ -179,9 +179,9 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(3));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.AreSame(observedContexts[0], observedContexts[1]);
-        Assert.AreSame(observedContexts[0], observedContexts[2]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
+        Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -212,9 +212,9 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(2));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.IsNotNull(observedContexts[1]);
-        Assert.AreNotSame(observedContexts[0], observedContexts[1]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.Not.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -242,9 +242,9 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(3));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.AreSame(observedContexts[0], observedContexts[1]);
-        Assert.AreSame(observedContexts[0], observedContexts[2]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
+        Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -271,8 +271,8 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.AreSame(observedItems[0], observedItems[1]);
-        Assert.AreSame(observedItems[0], observedItems[2]);
+        Assert.That(observedItems[1], Is.SameAs(observedItems[0]));
+        Assert.That(observedItems[2], Is.SameAs(observedItems[0]));
     }
 
     [Test]
@@ -296,7 +296,7 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(2));
-        Assert.AreNotSame(observedItems[0], observedItems[1]);
+        Assert.That(observedItems[1], Is.Not.SameAs(observedItems[0]));
     }
 
     [Test]
@@ -323,8 +323,8 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedQueryIds, Has.Count.EqualTo(3));
-        Assert.AreSame(observedQueryIds[0], observedQueryIds[1]);
-        Assert.AreSame(observedQueryIds[0], observedQueryIds[2]);
+        Assert.That(observedQueryIds[1], Is.SameAs(observedQueryIds[0]));
+        Assert.That(observedQueryIds[2], Is.SameAs(observedQueryIds[0]));
     }
 
     [Test]
@@ -348,7 +348,7 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedQueryIds, Has.Count.EqualTo(2));
-        Assert.AreNotSame(observedQueryIds[0], observedQueryIds[1]);
+        Assert.That(observedQueryIds[1], Is.Not.SameAs(observedQueryIds[0]));
     }
 
     [Test]
@@ -378,7 +378,7 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.AreSame(observedKeys[0], observedKeys[1]);
+        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
     }
 
     [Test]
@@ -409,7 +409,7 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.AreSame(observedKeys[0], observedKeys[1]);
+        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
     }
 
     [Test]
@@ -439,9 +439,9 @@ public sealed class QueryContextTests
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.IsNull(observedItems[0]);
-        Assert.AreSame(key, observedItems[1]);
-        Assert.AreSame(key, observedItems[2]);
+        Assert.That(observedItems[0], Is.Null);
+        Assert.That(observedItems[1], Is.SameAs(key));
+        Assert.That(observedItems[2], Is.SameAs(key));
     }
 
     [Test]
@@ -459,7 +459,7 @@ public sealed class QueryContextTests
             },
             (cmd, ctx) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 return new(cmd.Payload);
             });
 
@@ -480,7 +480,7 @@ public sealed class QueryContextTests
             },
             (cmd, ctx) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 return new(cmd.Payload);
             });
 
@@ -502,9 +502,9 @@ public sealed class QueryContextTests
             },
             middlewareFn: async (middlewareCtx, ctx, next) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 var r = await next(middlewareCtx.Query);
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 return r;
             });
 
@@ -525,9 +525,9 @@ public sealed class QueryContextTests
             },
             middlewareFn: async (middlewareCtx, ctx, next) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 var r = await next(middlewareCtx.Query);
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 return r;
             });
 

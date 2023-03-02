@@ -24,8 +24,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -37,10 +37,10 @@ public sealed class QueryHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
-        Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-        Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        Assert.That(ex, Is.Not.Null);
+        Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
+        Assert.That(ex?.Message, Contains.Substring(ErrorPayload));
+        Assert.That(await ex!.Response!.Content.ReadAsStringAsync(), Is.EqualTo(ErrorPayload));
     }
 
     [Test]
@@ -52,9 +52,9 @@ public sealed class QueryHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.IsNull(ex?.StatusCode);
-        Assert.IsNotNull(ex?.InnerException);
+        Assert.That(ex, Is.Not.Null);
+        Assert.That(ex?.StatusCode, Is.Null);
+        Assert.That(ex?.InnerException, Is.Not.Null);
     }
 
     [Test]
@@ -66,8 +66,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = testPayload }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(testPayload, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(testPayload));
     }
 
     [Test]
@@ -77,8 +77,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -90,10 +90,10 @@ public sealed class QueryHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new(), CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
-        Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-        Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        Assert.That(ex, Is.Not.Null);
+        Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
+        Assert.That(ex?.Message, Contains.Substring(ErrorPayload));
+        Assert.That(await ex!.Response!.Content.ReadAsStringAsync(), Is.EqualTo(ErrorPayload));
     }
 
     [Test]
@@ -103,8 +103,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -116,10 +116,10 @@ public sealed class QueryHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
-        Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-        Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        Assert.That(ex, Is.Not.Null);
+        Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
+        Assert.That(ex?.Message, Contains.Substring(ErrorPayload));
+        Assert.That(await ex!.Response!.Content.ReadAsStringAsync(), Is.EqualTo(ErrorPayload));
     }
 
     [Test]
@@ -129,8 +129,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -142,10 +142,10 @@ public sealed class QueryHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new(), CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
-        Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-        Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        Assert.That(ex, Is.Not.Null);
+        Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
+        Assert.That(ex?.Message, Contains.Substring(ErrorPayload));
+        Assert.That(await ex!.Response!.Content.ReadAsStringAsync(), Is.EqualTo(ErrorPayload));
     }
 
     [Test]
@@ -155,8 +155,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new(new(10)), CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -166,11 +166,11 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = new() { 10, 11 } }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(3, result.Payload.Count);
-        Assert.AreEqual(10, result.Payload[0]);
-        Assert.AreEqual(11, result.Payload[1]);
-        Assert.AreEqual(1, result.Payload[2]);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Has.Count.EqualTo(3));
+        Assert.That(result.Payload[0], Is.EqualTo(10));
+        Assert.That(result.Payload[1], Is.EqualTo(11));
+        Assert.That(result.Payload[2], Is.EqualTo(1));
     }
 
     [Test]
@@ -180,8 +180,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new(new(10)), CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -191,8 +191,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new(new(new() { 10, 11 })), CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(22, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(22));
     }
 
     [Test]
@@ -202,8 +202,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10, OptionalPayload = 5 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(16, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(16));
     }
 
     [Test]
@@ -213,8 +213,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -224,8 +224,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -235,8 +235,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -246,8 +246,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -257,8 +257,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -268,8 +268,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -279,8 +279,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -301,7 +301,7 @@ public sealed class QueryHttpClientTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.AreEqual("Basic test", seenAuthorizationHeader);
+        Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
         CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
     }
 
@@ -323,7 +323,7 @@ public sealed class QueryHttpClientTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.AreEqual("Basic test", seenAuthorizationHeader);
+        Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
         CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
     }
 
@@ -334,8 +334,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -345,8 +345,8 @@ public sealed class QueryHttpClientTests : TestBase
 
         var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     protected override void ConfigureServerServices(IServiceCollection services)

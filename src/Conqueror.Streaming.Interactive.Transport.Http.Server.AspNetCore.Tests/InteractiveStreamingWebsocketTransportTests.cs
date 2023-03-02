@@ -87,17 +87,17 @@ public sealed class InteractiveStreamingWebsocketTransportTests : TestBase
         var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
 
         // successful invocation
-        Assert.IsTrue(await enumerator.MoveNextAsync());
+        Assert.That(await enumerator.MoveNextAsync(), Is.True);
 
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
 
         // error
-        Assert.IsTrue(await enumerator.MoveNextAsync());
+        Assert.That(await enumerator.MoveNextAsync(), Is.True);
 
-        Assert.IsInstanceOf<ErrorMessage>(enumerator.Current);
+        Assert.That(enumerator.Current, Is.InstanceOf<ErrorMessage>());
 
         // should finish the enumeration
-        Assert.IsFalse(await enumerator.MoveNextAsync());
+        Assert.That(await enumerator.MoveNextAsync(), Is.False);
     }
 
     [Test]
@@ -114,7 +114,7 @@ public sealed class InteractiveStreamingWebsocketTransportTests : TestBase
         var enumerator = streamingClientWebSocket.Read(TestTimeoutToken).GetAsyncEnumerator();
 
         // successful invocation
-        Assert.IsTrue(await enumerator.MoveNextAsync());
+        Assert.That(await enumerator.MoveNextAsync(), Is.True);
 
         // this causes the server to close the connection
         _ = await streamingClientWebSocket.RequestNextItem(TestTimeoutToken);
@@ -126,7 +126,7 @@ public sealed class InteractiveStreamingWebsocketTransportTests : TestBase
             await Task.Delay(10);
         }
 
-        Assert.AreEqual(WebSocketState.Closed, socket.State);
+        Assert.That(socket.State, Is.EqualTo(WebSocketState.Closed));
     }
 
     protected override void ConfigureServices(IServiceCollection services)

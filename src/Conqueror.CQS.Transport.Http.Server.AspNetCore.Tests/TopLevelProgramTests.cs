@@ -33,8 +33,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             await response.AssertStatusCode(HttpStatusCode.OK);
             var result = await response.Content.ReadFromJsonAsync<TopLevelTestQueryResponse>();
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -44,8 +44,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             await response.AssertStatusCode(HttpStatusCode.OK);
             var result = await response.Content.ReadFromJsonAsync<TopLevelTestCommandResponse>();
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         private WebApplicationFactory<Program>? applicationFactory;

@@ -17,24 +17,24 @@ public sealed class RegistrationTests
                                               .AddConquerorQueryHandler<TestQueryHandler>()
                                               .AddConquerorQueryHandler<TestQuery2Handler>();
 
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandClientFactory)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandClientFactory)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandHandlerRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandHandlerRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandMiddlewareRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandMiddlewareRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(CommandContextAccessor)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandContextAccessor)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryClientFactory)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryClientFactory)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryHandlerRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryMiddlewareRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryMiddlewareRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(QueryContextAccessor)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryContextAccessor)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ConquerorContextAccessor)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)));
+        Assert.That(services.Count(d => d.ServiceType == typeof(CommandClientFactory)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandClientFactory)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(CommandHandlerRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandHandlerRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(CommandMiddlewareRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandMiddlewareRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(CommandContextAccessor)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandContextAccessor)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(QueryClientFactory)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IQueryClientFactory)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IQueryHandlerRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(QueryMiddlewareRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IQueryMiddlewareRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(QueryContextAccessor)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IQueryContextAccessor)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ConquerorContextAccessor)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)), Is.EqualTo(1));
     }
 
     [Test]
@@ -43,7 +43,7 @@ public sealed class RegistrationTests
         var services1 = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
         var services2 = new ServiceCollection().AddConquerorCQSTypesFromExecutingAssembly();
 
-        Assert.AreEqual(services1.Count, services2.Count);
+        Assert.That(services2, Has.Count.EqualTo(services1.Count));
         Assert.That(services1.Select(d => d.ServiceType), Is.EquivalentTo(services2.Select(d => d.ServiceType)));
     }
 
@@ -52,7 +52,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryHandler) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryHandler) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -60,7 +60,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryHandlerWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryHandlerWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -68,7 +68,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandHandler) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandHandler) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -76,7 +76,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandHandlerWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandHandlerWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -84,7 +84,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandWithoutResponseHandler) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandWithoutResponseHandler) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -92,7 +92,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandWithoutResponseHandlerWithCustomInterface) &&
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandWithoutResponseHandlerWithCustomInterface) &&
                                         d.Lifetime == ServiceLifetime.Transient));
     }
 
@@ -101,7 +101,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryMiddleware) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryMiddleware) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -109,7 +109,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -117,7 +117,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandMiddleware) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandMiddleware) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -125,7 +125,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -134,7 +134,7 @@ public sealed class RegistrationTests
         var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>(ServiceLifetime.Singleton)
                                               .AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.AreEqual(1, services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandHandler)));
+        Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandHandler)), Is.EqualTo(1));
     }
 
     [Test]
@@ -142,12 +142,12 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ITestQueryHandler)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ITestCommandHandler)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(ITestCommandWithoutResponseHandler)));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ITestQueryHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ITestCommandHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ITestCommandWithoutResponseHandler)), Is.EqualTo(1));
     }
 
     [Test]
@@ -155,11 +155,11 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestQueryHandler)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestCommandHandler)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestCommandHandlerWithCustomInterface)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestQueryMiddleware)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestCommandMiddleware)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestQueryHandler)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestCommandHandler)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestCommandHandlerWithCustomInterface)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestQueryMiddleware)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestCommandMiddleware)));
     }
 
     [Test]
@@ -167,10 +167,10 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(GenericTestQueryHandler<>)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(GenericTestCommandHandler<>)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(GenericTestQueryMiddleware<>)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(GenericTestCommandMiddleware<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestQueryHandler<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestCommandHandler<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestQueryMiddleware<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestCommandMiddleware<>)));
     }
 
     [Test]
@@ -178,10 +178,10 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestQueryHandler)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestCommandHandler)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestQueryMiddleware)));
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(PrivateTestCommandMiddleware)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestQueryHandler)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestCommandHandler)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestQueryMiddleware)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestCommandMiddleware)));
     }
 
     public sealed record TestQuery;

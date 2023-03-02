@@ -15,8 +15,8 @@ public static class CollectionAssertionExtensions
             Assert.Fail($"did not receive item in time: {item}");
         }
 
-        Assert.NotNull(receivedItem);
-        Assert.AreEqual(item, receivedItem);
+        Assert.That(receivedItem, Is.Not.Null);
+        Assert.That(receivedItem, Is.EqualTo(item));
     }
 
     public static void ShouldNotReceiveAnyItem<T>(this BlockingCollection<T> collection, TimeSpan? waitFor = null)

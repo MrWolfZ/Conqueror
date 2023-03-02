@@ -111,7 +111,7 @@ public abstract class CommandClientFunctionalityTests
 
         var response = await client.ExecuteCommand(command, CancellationToken.None);
 
-        Assert.AreEqual(command.Payload + 1, response.Payload);
+        Assert.That(response.Payload, Is.EqualTo(command.Payload + 1));
     }
 
     [Test]
@@ -146,8 +146,8 @@ public abstract class CommandClientFunctionalityTests
         _ = await client3.ExecuteCommand(new(10), CancellationToken.None);
 
         Assert.That(seenInstances, Has.Count.EqualTo(3));
-        Assert.AreSame(seenInstances[0], seenInstances[1]);
-        Assert.AreNotSame(seenInstances[0], seenInstances[2]);
+        Assert.That(seenInstances[1], Is.SameAs(seenInstances[0]));
+        Assert.That(seenInstances[2], Is.Not.SameAs(seenInstances[0]));
     }
 
     [Test]
@@ -167,7 +167,7 @@ public abstract class CommandClientFunctionalityTests
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
 
-        Assert.AreSame(exception, thrownException);
+        Assert.That(thrownException, Is.SameAs(exception));
     }
 
     protected abstract void AddCommandClient<THandler>(IServiceCollection services,

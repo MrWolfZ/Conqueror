@@ -16,7 +16,7 @@ public class RegistrationTests
 
         _ = services.AddMvc().AddConquerorInteractiveStreaming();
 
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingHttpServerAspNetCoreRegistrationFinalizer)));
+        Assert.That(services.Count(d => d.ServiceType == typeof(InteractiveStreamingHttpServerAspNetCoreRegistrationFinalizer)), Is.EqualTo(1));
     }
 
     [Test]
@@ -30,7 +30,7 @@ public class RegistrationTests
 
         var applicationPartManager = services.Select(d => d.ImplementationInstance).OfType<ApplicationPartManager>().Single();
 
-        Assert.IsNotNull(applicationPartManager.FeatureProviders.SingleOrDefault(p => p is HttpQueryControllerFeatureProvider));
+        Assert.That(applicationPartManager.FeatureProviders.SingleOrDefault(p => p is HttpQueryControllerFeatureProvider), Is.Not.Null);
     }
 
     [Test]
@@ -50,7 +50,7 @@ public class RegistrationTests
 
         var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
 
-        Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
+        Assert.That(ex?.InnerException, Is.InstanceOf<InvalidOperationException>());
         Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
     }
 

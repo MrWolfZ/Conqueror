@@ -24,8 +24,8 @@ public sealed class CommandHttpClientTests : TestBase
 
         var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -37,10 +37,10 @@ public sealed class CommandHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
-        Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-        Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        Assert.That(ex, Is.Not.Null);
+        Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
+        Assert.That(ex?.Message, Contains.Substring(ErrorPayload));
+        Assert.That(await ex!.Response!.Content.ReadAsStringAsync(), Is.EqualTo(ErrorPayload));
     }
 
     [Test]
@@ -52,9 +52,9 @@ public sealed class CommandHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.IsNull(ex?.StatusCode);
-        Assert.IsNotNull(ex?.InnerException);
+        Assert.That(ex, Is.Not.Null);
+        Assert.That(ex?.StatusCode, Is.Null);
+        Assert.That(ex?.InnerException, Is.Not.Null);
     }
 
     [Test]
@@ -74,10 +74,10 @@ public sealed class CommandHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
-        Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-        Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        Assert.That(ex, Is.Not.Null);
+        Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
+        Assert.That(ex?.Message, Contains.Substring(ErrorPayload));
+        Assert.That(await ex!.Response!.Content.ReadAsStringAsync(), Is.EqualTo(ErrorPayload));
     }
 
     [Test]
@@ -87,8 +87,8 @@ public sealed class CommandHttpClientTests : TestBase
 
         var result = await handler.ExecuteCommand(new(), CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -100,10 +100,10 @@ public sealed class CommandHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new(), CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
-        Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-        Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        Assert.That(ex, Is.Not.Null);
+        Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
+        Assert.That(ex?.Message, Contains.Substring(ErrorPayload));
+        Assert.That(await ex!.Response!.Content.ReadAsStringAsync(), Is.EqualTo(ErrorPayload));
     }
 
     [Test]
@@ -123,10 +123,10 @@ public sealed class CommandHttpClientTests : TestBase
 
         var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new(), CancellationToken.None));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
-        Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-        Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        Assert.That(ex, Is.Not.Null);
+        Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
+        Assert.That(ex?.Message, Contains.Substring(ErrorPayload));
+        Assert.That(await ex!.Response!.Content.ReadAsStringAsync(), Is.EqualTo(ErrorPayload));
     }
 
     [Test]
@@ -136,8 +136,8 @@ public sealed class CommandHttpClientTests : TestBase
 
         var result = await handler.ExecuteCommand(new(new(10)), CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -147,8 +147,8 @@ public sealed class CommandHttpClientTests : TestBase
 
         var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -158,8 +158,8 @@ public sealed class CommandHttpClientTests : TestBase
 
         var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -169,8 +169,8 @@ public sealed class CommandHttpClientTests : TestBase
 
         var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]
@@ -191,7 +191,7 @@ public sealed class CommandHttpClientTests : TestBase
 
         _ = await handler.ExecuteCommand(new(10), CancellationToken.None);
 
-        Assert.AreEqual("Basic test", seenAuthorizationHeader);
+        Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
         CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
     }
 
@@ -202,8 +202,8 @@ public sealed class CommandHttpClientTests : TestBase
 
         var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.IsNotNull(result);
-        Assert.AreEqual(11, result.Payload);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Payload, Is.EqualTo(11));
     }
 
     [Test]

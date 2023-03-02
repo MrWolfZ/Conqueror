@@ -1025,8 +1025,8 @@ public sealed class EventMiddlewareFunctionalityTests
         await observer3.HandleEvent(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(observedInstances, Has.Count.EqualTo(3));
-        Assert.AreNotSame(observedInstances[0], observedInstances[1]);
-        Assert.AreSame(observedInstances[0], observedInstances[2]);
+        Assert.That(observedInstances[1], Is.Not.SameAs(observedInstances[0]));
+        Assert.That(observedInstances[2], Is.SameAs(observedInstances[0]));
     }
 
     [Test]
@@ -1057,8 +1057,8 @@ public sealed class EventMiddlewareFunctionalityTests
         await publisher3.PublishEvent(new TestEvent { Payload = 10 }, CancellationToken.None);
 
         Assert.That(observedInstances, Has.Count.EqualTo(3));
-        Assert.AreNotSame(observedInstances[0], observedInstances[1]);
-        Assert.AreSame(observedInstances[0], observedInstances[2]);
+        Assert.That(observedInstances[1], Is.Not.SameAs(observedInstances[0]));
+        Assert.That(observedInstances[2], Is.SameAs(observedInstances[0]));
     }
 
     [Test]

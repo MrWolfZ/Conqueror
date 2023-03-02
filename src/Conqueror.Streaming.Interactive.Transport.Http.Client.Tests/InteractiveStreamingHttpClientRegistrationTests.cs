@@ -101,7 +101,7 @@ public sealed class InteractiveStreamingHttpClientRegistrationTests
                           .GetAsyncEnumerator()
                           .MoveNextAsync();
 
-        Assert.AreEqual(expectedAddress, seenAddress);
+        Assert.That(seenAddress, Is.EqualTo(expectedAddress));
     }
 
     [Test]
@@ -147,7 +147,7 @@ public sealed class InteractiveStreamingHttpClientRegistrationTests
                         .GetAsyncEnumerator()
                         .MoveNextAsync();
 
-        Assert.AreEqual(2, seenInstances.Count);
+        Assert.That(seenInstances, Has.Count.EqualTo(2));
     }
 
     private static ServiceProvider RegisterClient<TStreamingHandler>()

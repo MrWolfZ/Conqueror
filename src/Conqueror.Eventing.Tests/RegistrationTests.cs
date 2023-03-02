@@ -8,11 +8,11 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventing().AddConquerorEventing();
 
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IEventPublisher)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(IEventObserver<>)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventObserverRegistry)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventMiddlewaresInvoker)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(EventingRegistrationFinalizer)));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IEventPublisher)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IEventObserver<>)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(EventObserverRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(EventMiddlewaresInvoker)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(EventingRegistrationFinalizer)), Is.EqualTo(1));
     }
 
     [Test]
@@ -21,7 +21,7 @@ public sealed class RegistrationTests
         var services1 = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
         var services2 = new ServiceCollection().AddConquerorEventingTypesFromExecutingAssembly();
 
-        Assert.AreEqual(services1.Count, services2.Count);
+        Assert.That(services2, Has.Count.EqualTo(services1.Count));
         Assert.That(services1.Select(d => d.ServiceType), Is.EquivalentTo(services2.Select(d => d.ServiceType)));
     }
 
@@ -30,7 +30,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserver) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserver) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -38,7 +38,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -46,9 +46,8 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultiplePlainInterfaces) && d.Lifetime == ServiceLifetime.Transient));
-        Assert.AreEqual(
-            1, services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultiplePlainInterfaces) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultiplePlainInterfaces) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultiplePlainInterfaces) && d.Lifetime == ServiceLifetime.Transient), Is.EqualTo(1));
     }
 
     [Test]
@@ -56,10 +55,8 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultipleCustomInterfaces) &&
-                                        d.Lifetime == ServiceLifetime.Transient));
-        Assert.AreEqual(
-            1, services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultipleCustomInterfaces) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultipleCustomInterfaces) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultipleCustomInterfaces) && d.Lifetime == ServiceLifetime.Transient), Is.EqualTo(1));
     }
 
     [Test]
@@ -67,9 +64,8 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultipleMixedInterfaces) && d.Lifetime == ServiceLifetime.Transient));
-        Assert.AreEqual(
-            1, services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultipleMixedInterfaces) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultipleMixedInterfaces) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverWithMultipleMixedInterfaces) && d.Lifetime == ServiceLifetime.Transient), Is.EqualTo(1));
     }
 
     [Test]
@@ -77,7 +73,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverMiddleware) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverMiddleware) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -85,8 +81,8 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(
-            services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(
+            services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient), Is.True);
     }
 
     [Test]
@@ -94,7 +90,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventPublisherMiddleware) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventPublisherMiddleware) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -102,7 +98,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddSingleton<TestEventObserver>().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.AreEqual(1, services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserver)));
+        Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserver)), Is.EqualTo(1));
     }
 
     [Test]
@@ -110,7 +106,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddSingleton<TestEventObserver>().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(ITestEventObserver)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ITestEventObserver)));
     }
 
     [Test]
@@ -118,7 +114,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddSingleton<TestEventObserver>().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestEventObserver)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestEventObserver)));
     }
 
     [Test]
@@ -128,7 +124,7 @@ public sealed class RegistrationTests
 
         var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
 
-        Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
+        Assert.That(ex?.InnerException, Is.InstanceOf<InvalidOperationException>());
         Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
     }
 

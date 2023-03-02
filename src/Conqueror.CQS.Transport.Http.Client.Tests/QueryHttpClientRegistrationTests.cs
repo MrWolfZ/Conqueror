@@ -31,7 +31,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
     }
 
     [Test]
@@ -51,9 +51,9 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.IsNotNull(testClient.LastSeenRequestUri);
-        Assert.IsTrue(expectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!));
-        Assert.IsFalse(unexpectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!));
+        Assert.That(testClient.LastSeenRequestUri, Is.Not.Null);
+        Assert.That(expectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!), Is.True);
+        Assert.That(unexpectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!), Is.False);
     }
 
     [Test]
@@ -72,8 +72,8 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.IsNotNull(testClient.LastSeenRequestUri);
-        Assert.IsTrue(expectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!));
+        Assert.That(testClient.LastSeenRequestUri, Is.Not.Null);
+        Assert.That(expectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!), Is.True);
     }
 
     [Test]
@@ -99,7 +99,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
     }
 
     [Test]
@@ -126,8 +126,8 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedHttpClient, seenHttpClient);
-        Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
+        Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
 
     // test different order of calling UseHttpClientForQuery and UseHttpClient
@@ -155,8 +155,8 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedHttpClient, seenHttpClient);
-        Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
+        Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
 
     [Test]
@@ -183,8 +183,8 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedHttpClient, seenHttpClient);
-        Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
+        Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
 
     [Test]
@@ -210,7 +210,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
 
     [Test]
@@ -236,7 +236,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
 
     [Test]
@@ -262,7 +262,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
     }
 
     [Test]
@@ -288,7 +288,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
 
     [Test]
@@ -316,8 +316,8 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedHttpClient, seenHttpClient);
-        Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
+        Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
 
     [Test]
@@ -345,8 +345,8 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedHttpClient, seenHttpClient);
-        Assert.AreNotSame(unexpectedHttpClient, seenHttpClient);
+        Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
+        Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
 
     [Test]
@@ -380,7 +380,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client3.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreEqual(2, seenInstances.Count);
+        Assert.That(seenInstances, Has.Count.EqualTo(2));
     }
 
     [Test]
@@ -404,7 +404,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedOptions, seenOptions);
+        Assert.That(seenOptions, Is.SameAs(expectedOptions));
     }
 
     [Test]
@@ -428,7 +428,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedOptions, seenOptions);
+        Assert.That(seenOptions, Is.SameAs(expectedOptions));
     }
 
     [Test]
@@ -453,8 +453,8 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedOptions, seenOptions);
-        Assert.AreNotSame(globalOptions, seenOptions);
+        Assert.That(seenOptions, Is.SameAs(expectedOptions));
+        Assert.That(seenOptions, Is.Not.SameAs(globalOptions));
     }
 
     [Test]
@@ -478,7 +478,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedConvention, seenConvention);
+        Assert.That(seenConvention, Is.SameAs(expectedConvention));
     }
 
     [Test]
@@ -502,7 +502,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedConvention, seenConvention);
+        Assert.That(seenConvention, Is.SameAs(expectedConvention));
     }
 
     [Test]
@@ -527,8 +527,8 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedConvention, seenConvention);
-        Assert.AreNotSame(globalConvention, seenConvention);
+        Assert.That(seenConvention, Is.SameAs(expectedConvention));
+        Assert.That(seenConvention, Is.Not.SameAs(globalConvention));
     }
 
     [Test]
@@ -561,9 +561,9 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedOptions, seenOptions);
-        Assert.AreNotSame(unexpectedOptions, seenOptions);
-        Assert.AreSame(expectedConvention, seenConvention);
+        Assert.That(seenOptions, Is.SameAs(expectedOptions));
+        Assert.That(seenOptions, Is.Not.SameAs(unexpectedOptions));
+        Assert.That(seenConvention, Is.SameAs(expectedConvention));
     }
 
     [Test]
@@ -596,9 +596,9 @@ public sealed class QueryHttpClientRegistrationTests
 
         _ = await client.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreSame(expectedOptions, seenOptions);
-        Assert.AreNotSame(unexpectedOptions, seenOptions);
-        Assert.AreSame(expectedConvention, seenConvention);
+        Assert.That(seenOptions, Is.SameAs(expectedOptions));
+        Assert.That(seenOptions, Is.Not.SameAs(unexpectedOptions));
+        Assert.That(seenConvention, Is.SameAs(expectedConvention));
     }
 
     [Test]

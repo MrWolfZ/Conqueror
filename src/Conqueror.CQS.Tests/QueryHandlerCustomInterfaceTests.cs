@@ -97,7 +97,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
         var response = await handler.ExecuteQuery(query, CancellationToken.None);
 
-        Assert.AreEqual(query.Payload + 1, response.Payload);
+        Assert.That(response.Payload, Is.EqualTo(query.Payload + 1));
     }
 
     [Test]
@@ -115,7 +115,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
 
-        Assert.AreSame(exception, thrownException);
+        Assert.That(thrownException, Is.SameAs(exception));
     }
 
     [Test]
@@ -163,8 +163,8 @@ public sealed class QueryHandlerCustomInterfaceTests
         _ = await plainInterfaceHandler.ExecuteQuery(new(), CancellationToken.None);
         _ = await customInterfaceHandler.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreEqual(2, observations.Instances.Count);
-        Assert.AreSame(observations.Instances[0], observations.Instances[1]);
+        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]

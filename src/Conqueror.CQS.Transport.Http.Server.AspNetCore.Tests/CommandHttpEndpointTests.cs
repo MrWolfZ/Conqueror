@@ -27,9 +27,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var resultString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(resultString, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -40,7 +40,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             await response.AssertStatusCode(HttpStatusCode.OK);
             var result = await response.Content.ReadAsStringAsync();
 
-            Assert.IsEmpty(result);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -52,9 +52,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var resultString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(resultString, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -65,7 +65,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             await response.AssertStatusCode(HttpStatusCode.OK);
             var result = await response.Content.ReadAsStringAsync();
 
-            Assert.IsEmpty(result);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -77,9 +77,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var resultString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<TestCommandWithCustomSerializedPayloadTypeResponse>(resultString, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload.Payload);
+            Assert.That(resultString, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -95,11 +95,11 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var result1 = JsonSerializer.Deserialize<TestCommandResponse>(resultString1, JsonSerializerOptions);
             var result2 = JsonSerializer.Deserialize<TestCommandResponse>(resultString2, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString1);
-            Assert.IsNotNull(result1);
-            Assert.AreEqual(11, result1!.Payload);
+            Assert.That(resultString1, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result1, Is.Not.Null);
+            Assert.That(result1!.Payload, Is.EqualTo(11));
 
-            Assert.IsNotNull(result2);
+            Assert.That(result2, Is.Not.Null);
         }
 
         [Test]
@@ -111,9 +111,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var resultString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(resultString, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -124,7 +124,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             await response.AssertStatusCode(HttpStatusCode.OK);
             var result = await response.Content.ReadAsStringAsync();
 
-            Assert.IsEmpty(result);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -136,9 +136,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var resultString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(resultString, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -149,7 +149,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             await response.AssertStatusCode(HttpStatusCode.OK);
             var result = await response.Content.ReadAsStringAsync();
 
-            Assert.IsEmpty(result);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -161,9 +161,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var resultString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(resultString, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -175,9 +175,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var resultString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<TestCommandResponse>(resultString, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(resultString, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -189,9 +189,9 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             var resultString = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<TestDelegateCommandResponse>(resultString, JsonSerializerOptions);
 
-            Assert.AreEqual("{\"payload\":11}", resultString);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(11, result!.Payload);
+            Assert.That(resultString, Is.EqualTo("{\"payload\":11}"));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Payload, Is.EqualTo(11));
         }
 
         [Test]
@@ -202,7 +202,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
             await response.AssertStatusCode(HttpStatusCode.OK);
             var result = await response.Content.ReadAsStringAsync();
 
-            Assert.IsEmpty(result);
+            Assert.That(result, Is.Empty);
         }
 
         private JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;

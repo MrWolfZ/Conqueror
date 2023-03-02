@@ -84,7 +84,7 @@ public sealed class EventObserverMiddlewareConfigurationTests
 
         Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
 
-        Assert.AreEqual(20, initialConfiguration.Parameter);
+        Assert.That(initialConfiguration.Parameter, Is.EqualTo(20));
     }
 
     [Test]
@@ -115,7 +115,7 @@ public sealed class EventObserverMiddlewareConfigurationTests
 
         Assert.That(observations.Configurations, Has.Count.EqualTo(1));
 
-        Assert.AreEqual(20, observations.Configurations[0].Parameter);
+        Assert.That(observations.Configurations[0].Parameter, Is.EqualTo(20));
     }
 
     [Test]
@@ -170,7 +170,7 @@ public sealed class EventObserverMiddlewareConfigurationTests
 
         Assert.That(observations.Configurations, Has.Count.EqualTo(1));
 
-        Assert.AreEqual(10, observations.Configurations[0].Parameter);
+        Assert.That(observations.Configurations[0].Parameter, Is.EqualTo(10));
     }
 
     private sealed record TestEvent;

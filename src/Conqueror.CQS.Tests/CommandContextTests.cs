@@ -9,12 +9,12 @@ public sealed class CommandContextTests
 
         var provider = Setup((cmd, ctx) =>
         {
-            Assert.AreEqual(command, cmd);
-            Assert.IsNotNull(ctx);
-            Assert.AreEqual(command, ctx!.Command);
-            Assert.IsNotNull(ctx.CommandId);
-            Assert.IsNotEmpty(ctx.CommandId);
-            Assert.IsNull(ctx.Response);
+            Assert.That(cmd, Is.EqualTo(command));
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Command, Is.EqualTo(command));
+            Assert.That(ctx.CommandId, Is.Not.Null);
+            Assert.That(ctx.CommandId, Is.Not.Empty);
+            Assert.That(ctx.Response, Is.Null);
 
             return new(cmd.Payload);
         });
@@ -29,12 +29,12 @@ public sealed class CommandContextTests
 
         var provider = SetupWithoutResponse((cmd, ctx) =>
         {
-            Assert.AreEqual(command, cmd);
-            Assert.IsNotNull(ctx);
-            Assert.AreEqual(command, ctx!.Command);
-            Assert.IsNotNull(ctx.CommandId);
-            Assert.IsNotEmpty(ctx.CommandId);
-            Assert.IsNull(ctx.Response);
+            Assert.That(cmd, Is.EqualTo(command));
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Command, Is.EqualTo(command));
+            Assert.That(ctx.CommandId, Is.Not.Null);
+            Assert.That(ctx.CommandId, Is.Not.Empty);
+            Assert.That(ctx.Response, Is.Null);
         });
 
         await provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>().ExecuteCommand(command, CancellationToken.None);
@@ -48,17 +48,17 @@ public sealed class CommandContextTests
 
         var provider = Setup((_, _) => response, middlewareFn: async (middlewareCtx, ctx, next) =>
         {
-            Assert.AreEqual(command, middlewareCtx.Command);
-            Assert.IsNotNull(ctx);
-            Assert.AreEqual(command, ctx!.Command);
-            Assert.IsNotNull(ctx.CommandId);
-            Assert.IsNotEmpty(ctx.CommandId);
-            Assert.IsNull(ctx.Response);
+            Assert.That(middlewareCtx.Command, Is.EqualTo(command));
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Command, Is.EqualTo(command));
+            Assert.That(ctx.CommandId, Is.Not.Null);
+            Assert.That(ctx.CommandId, Is.Not.Empty);
+            Assert.That(ctx.Response, Is.Null);
 
             var resp = await next(middlewareCtx.Command);
 
-            Assert.AreEqual(response, resp);
-            Assert.AreEqual(response, ctx.Response);
+            Assert.That(resp, Is.EqualTo(response));
+            Assert.That(ctx.Response, Is.EqualTo(response));
 
             return resp;
         });
@@ -74,11 +74,11 @@ public sealed class CommandContextTests
         var provider = Setup(
             nestedClassFn: ctx =>
             {
-                Assert.IsNotNull(ctx);
-                Assert.AreEqual(command, ctx!.Command);
-                Assert.IsNotNull(ctx.CommandId);
-                Assert.IsNotEmpty(ctx.CommandId);
-                Assert.IsNull(ctx.Response);
+                Assert.That(ctx, Is.Not.Null);
+                Assert.That(ctx!.Command, Is.EqualTo(command));
+                Assert.That(ctx.CommandId, Is.Not.Null);
+                Assert.That(ctx.CommandId, Is.Not.Empty);
+                Assert.That(ctx.Response, Is.Null);
             },
             nestedClassLifetime: ServiceLifetime.Scoped);
 
@@ -92,11 +92,11 @@ public sealed class CommandContextTests
 
         var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
         {
-            Assert.IsNotNull(ctx);
-            Assert.AreNotEqual(command, ctx!.Command);
-            Assert.IsNotNull(ctx.CommandId);
-            Assert.IsNotEmpty(ctx.CommandId);
-            Assert.IsNull(ctx.Response);
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Command, Is.Not.EqualTo(command));
+            Assert.That(ctx.CommandId, Is.Not.Null);
+            Assert.That(ctx.CommandId, Is.Not.Empty);
+            Assert.That(ctx.Response, Is.Null);
 
             return new(cmd.Payload);
         });
@@ -111,10 +111,10 @@ public sealed class CommandContextTests
 
         var provider = Setup(handlerPreReturnFn: ctx =>
         {
-            Assert.IsNotNull(ctx);
-            Assert.AreEqual(command, ctx!.Command);
-            Assert.IsNotNull(ctx.CommandId);
-            Assert.IsNotEmpty(ctx.CommandId);
+            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx!.Command, Is.EqualTo(command));
+            Assert.That(ctx.CommandId, Is.Not.Null);
+            Assert.That(ctx.CommandId, Is.Not.Empty);
         });
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
@@ -130,7 +130,7 @@ public sealed class CommandContextTests
         var provider = Setup(
             (_, ctx) =>
             {
-                Assert.AreSame(modifiedCommand, ctx!.Command);
+                Assert.That(ctx!.Command, Is.SameAs(modifiedCommand));
                 return response;
             },
             middlewareFn: async (_, _, next) => await next(modifiedCommand));
@@ -155,7 +155,7 @@ public sealed class CommandContextTests
             outerMiddlewareFn: async (middlewareCtx, ctx, next) =>
             {
                 var result = await next(middlewareCtx.Command);
-                Assert.AreSame(modifiedResponse, ctx!.Response);
+                Assert.That(ctx!.Response, Is.SameAs(modifiedResponse));
                 return result;
             });
 
@@ -197,9 +197,9 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(3));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.AreSame(observedContexts[0], observedContexts[1]);
-        Assert.AreSame(observedContexts[0], observedContexts[2]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
+        Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -230,9 +230,9 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(2));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.IsNotNull(observedContexts[1]);
-        Assert.AreNotSame(observedContexts[0], observedContexts[1]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.Not.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -260,9 +260,9 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(3));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.AreSame(observedContexts[0], observedContexts[1]);
-        Assert.AreSame(observedContexts[0], observedContexts[2]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
+        Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -289,8 +289,8 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.AreSame(observedItems[0], observedItems[1]);
-        Assert.AreSame(observedItems[0], observedItems[2]);
+        Assert.That(observedItems[1], Is.SameAs(observedItems[0]));
+        Assert.That(observedItems[2], Is.SameAs(observedItems[0]));
     }
 
     [Test]
@@ -314,7 +314,7 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(2));
-        Assert.AreNotSame(observedItems[0], observedItems[1]);
+        Assert.That(observedItems[1], Is.Not.SameAs(observedItems[0]));
     }
 
     [Test]
@@ -341,8 +341,8 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedCommandIds, Has.Count.EqualTo(3));
-        Assert.AreSame(observedCommandIds[0], observedCommandIds[1]);
-        Assert.AreSame(observedCommandIds[0], observedCommandIds[2]);
+        Assert.That(observedCommandIds[1], Is.SameAs(observedCommandIds[0]));
+        Assert.That(observedCommandIds[2], Is.SameAs(observedCommandIds[0]));
     }
 
     [Test]
@@ -366,7 +366,7 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedCommandIds, Has.Count.EqualTo(2));
-        Assert.AreNotSame(observedCommandIds[0], observedCommandIds[1]);
+        Assert.That(observedCommandIds[1], Is.Not.SameAs(observedCommandIds[0]));
     }
 
     [Test]
@@ -396,7 +396,7 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.AreSame(observedKeys[0], observedKeys[1]);
+        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
     }
 
     [Test]
@@ -427,7 +427,7 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.AreSame(observedKeys[0], observedKeys[1]);
+        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
     }
 
     [Test]
@@ -457,9 +457,9 @@ public sealed class CommandContextTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.IsNull(observedItems[0]);
-        Assert.AreSame(key, observedItems[1]);
-        Assert.AreSame(key, observedItems[2]);
+        Assert.That(observedItems[0], Is.Null);
+        Assert.That(observedItems[1], Is.SameAs(key));
+        Assert.That(observedItems[2], Is.SameAs(key));
     }
 
     [Test]
@@ -477,7 +477,7 @@ public sealed class CommandContextTests
             },
             (cmd, ctx) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 return new(cmd.Payload);
             });
 
@@ -498,7 +498,7 @@ public sealed class CommandContextTests
             },
             (cmd, ctx) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 return new(cmd.Payload);
             });
 
@@ -520,9 +520,9 @@ public sealed class CommandContextTests
             },
             middlewareFn: async (middlewareCtx, ctx, next) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 var r = await next(middlewareCtx.Command);
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 return r;
             });
 
@@ -543,9 +543,9 @@ public sealed class CommandContextTests
             },
             middlewareFn: async (middlewareCtx, ctx, next) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 var r = await next(middlewareCtx.Command);
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 return r;
             });
 

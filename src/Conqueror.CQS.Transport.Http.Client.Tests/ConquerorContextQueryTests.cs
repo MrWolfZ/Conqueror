@@ -282,7 +282,7 @@ public class ConquerorContextQueryTests : TestBase
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
         CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
-        Assert.AreEqual(activity.TraceId, Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault());
+        Assert.That(Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault(), Is.EqualTo(activity.TraceId));
     }
 
     [Test]
@@ -295,7 +295,7 @@ public class ConquerorContextQueryTests : TestBase
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
         CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
-        Assert.AreEqual(activity.TraceId, Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault());
+        Assert.That(Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault(), Is.EqualTo(activity.TraceId));
     }
 
     [Test]

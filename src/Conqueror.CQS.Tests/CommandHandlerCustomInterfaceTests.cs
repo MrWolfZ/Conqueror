@@ -138,7 +138,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
         var response = await handler.ExecuteCommand(command, CancellationToken.None);
 
-        Assert.AreEqual(command.Payload + 1, response.Payload);
+        Assert.That(response.Payload, Is.EqualTo(command.Payload + 1));
     }
 
     [Test]
@@ -156,7 +156,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
 
-        Assert.AreSame(exception, thrownException);
+        Assert.That(thrownException, Is.SameAs(exception));
     }
 
     [Test]
@@ -232,8 +232,8 @@ public sealed class CommandHandlerCustomInterfaceTests
         _ = await plainInterfaceHandler.ExecuteCommand(new(), CancellationToken.None);
         _ = await customInterfaceHandler.ExecuteCommand(new(), CancellationToken.None);
 
-        Assert.AreEqual(2, observations.Instances.Count);
-        Assert.AreSame(observations.Instances[0], observations.Instances[1]);
+        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]
@@ -253,8 +253,8 @@ public sealed class CommandHandlerCustomInterfaceTests
         await plainInterfaceHandler.ExecuteCommand(new(), CancellationToken.None);
         await customInterfaceHandler.ExecuteCommand(new(), CancellationToken.None);
 
-        Assert.AreEqual(2, observations.Instances.Count);
-        Assert.AreSame(observations.Instances[0], observations.Instances[1]);
+        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]

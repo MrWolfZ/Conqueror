@@ -17,8 +17,8 @@ public sealed class QueryServiceCollectionConfigurationTests
         var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>()
                                               .AddConquerorQueryHandler<TestQueryHandler>();
 
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestQueryHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)));
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestQueryHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)), Is.EqualTo(1));
     }
 
     [Test]
@@ -27,9 +27,9 @@ public sealed class QueryServiceCollectionConfigurationTests
         var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>()
                                               .AddConquerorQueryHandler<DuplicateTestQueryHandler>();
 
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestQueryHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(DuplicateTestQueryHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)));
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestQueryHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(DuplicateTestQueryHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IQueryHandler<TestQuery, TestQueryResponse>)), Is.EqualTo(1));
     }
 
     [Test]

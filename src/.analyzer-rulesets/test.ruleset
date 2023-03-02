@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="test.ruleset" ToolsVersion="16.0">
     <Include Path="full.ruleset" Action="Default" />
+    <Include Path="nunit.ruleset" Action="Default" />
 
     <!-- overrule some specific rules for test projects -->
     <Rules AnalyzerId="Microsoft.CodeQuality.Analyzers" RuleNamespace="Microsoft.CodeQuality.Analyzers">

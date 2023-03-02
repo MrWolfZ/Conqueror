@@ -52,6 +52,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".analyzer-rulesets", ".anal
 		src\.analyzer-rulesets\sonarqube.ruleset = src\.analyzer-rulesets\sonarqube.ruleset
 		src\.analyzer-rulesets\stylecop.ruleset = src\.analyzer-rulesets\stylecop.ruleset
 		src\.analyzer-rulesets\test.ruleset = src\.analyzer-rulesets\test.ruleset
+		src\.analyzer-rulesets\nunit.ruleset = src\.analyzer-rulesets\nunit.ruleset
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{32A9E3EF-C9BF-4932-AECF-4CFE563C3150}"

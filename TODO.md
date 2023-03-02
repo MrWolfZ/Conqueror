@@ -6,7 +6,6 @@ This file contains all the open points for extensions and improvements to the **
 
 - [ ] set up issues templates via yaml config
 - [ ] for each library add a quick reference handbook that showcases all capabilities in a concise fashion
-- [ ] add NUnit analyzers to all test projects and refactor all tests to use modern test assertions
 - [ ] configure build pipelines to build project with a variety of SDK versions
   - [ ] set up dedicated example projects for .NET 6 and 7 with older SDK versions to ensure analyzers can be referenced without warnings or errors
 - [ ] create dedicated readme files for each package

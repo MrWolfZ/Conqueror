@@ -17,8 +17,8 @@ public sealed class CommandServiceCollectionConfigurationTests
         var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
                                               .AddConquerorCommandHandler<TestCommandHandler>();
 
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestCommandHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)));
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestCommandHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)), Is.EqualTo(1));
     }
 
     [Test]
@@ -35,8 +35,8 @@ public sealed class CommandServiceCollectionConfigurationTests
         var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
                                               .AddConquerorCommandHandler<TestCommandWithoutResponseHandler>();
 
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestCommandWithoutResponseHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)));
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestCommandWithoutResponseHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)), Is.EqualTo(1));
     }
 
     [Test]
@@ -45,9 +45,9 @@ public sealed class CommandServiceCollectionConfigurationTests
         var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
                                               .AddConquerorCommandHandler<DuplicateTestCommandHandler>();
 
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestCommandHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(DuplicateTestCommandHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)));
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestCommandHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(DuplicateTestCommandHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommand, TestCommandResponse>)), Is.EqualTo(1));
     }
 
     [Test]
@@ -64,9 +64,9 @@ public sealed class CommandServiceCollectionConfigurationTests
         var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandWithoutResponseHandler>()
                                               .AddConquerorCommandHandler<DuplicateTestCommandWithoutResponseHandler>();
 
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(TestCommandWithoutResponseHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(DuplicateTestCommandWithoutResponseHandler)));
-        Assert.AreEqual(1, services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)));
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestCommandWithoutResponseHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(DuplicateTestCommandWithoutResponseHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(ICommandHandler<TestCommandWithoutResponse>)), Is.EqualTo(1));
     }
 
     [Test]

@@ -174,7 +174,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var response = await handler.ExecuteQuery(query, CancellationToken.None);
 
-        Assert.AreEqual(query.Payload + 1, response.Payload);
+        Assert.That(response.Payload, Is.EqualTo(query.Payload + 1));
     }
 
     [Test]
@@ -198,7 +198,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var response = await handler.ExecuteQuery(command, CancellationToken.None);
 
-        Assert.AreEqual(command.Payload + 1, response.Payload);
+        Assert.That(response.Payload, Is.EqualTo(command.Payload + 1));
     }
 
     [Test]
@@ -216,7 +216,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
 
-        Assert.AreSame(exception, thrownException);
+        Assert.That(thrownException, Is.SameAs(exception));
     }
 
     [Test]

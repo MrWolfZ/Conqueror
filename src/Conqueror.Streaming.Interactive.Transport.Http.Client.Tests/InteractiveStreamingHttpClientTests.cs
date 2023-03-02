@@ -18,7 +18,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
 
         var result = await handler.ExecuteRequest(new(10), TestTimeoutToken).Drain(TestTimeoutToken);
 
-        Assert.IsNotNull(result);
+        Assert.That(result, Is.Not.Null);
         CollectionAssert.AreEqual(new[] { 11, 12, 13 }, result.Select(i => i.Payload));
     }
 
@@ -29,7 +29,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
 
         var result = await handler.ExecuteRequest(new(), TestTimeoutToken).Drain(TestTimeoutToken);
 
-        Assert.IsNotNull(result);
+        Assert.That(result, Is.Not.Null);
         CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.Select(i => i.Payload));
     }
 
@@ -40,7 +40,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
 
         var result = await handler.ExecuteRequest(new(10), TestTimeoutToken).Drain(TestTimeoutToken);
 
-        Assert.IsNotNull(result);
+        Assert.That(result, Is.Not.Null);
         CollectionAssert.AreEqual(new[] { 11, 12, 13 }, result.Select(i => i.Payload.Payload));
     }
 
@@ -51,7 +51,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
 
         var result = await handler.ExecuteRequest(new(new() { 10, 11 }), TestTimeoutToken).Drain(TestTimeoutToken);
 
-        Assert.IsNotNull(result);
+        Assert.That(result, Is.Not.Null);
         CollectionAssert.AreEqual(new[] { 22, 23, 24 }, result.Select(i => i.Payload));
     }
 
@@ -66,7 +66,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
 
         var enumerator = stream.GetAsyncEnumerator(cts.Token);
 
-        Assert.IsTrue(await enumerator.MoveNextAsync());
+        Assert.That(await enumerator.MoveNextAsync(), Is.True);
 
         _ = Assert.ThrowsAsync<HttpInteractiveStreamingException>(() => enumerator.MoveNextAsync().AsTask());
     }

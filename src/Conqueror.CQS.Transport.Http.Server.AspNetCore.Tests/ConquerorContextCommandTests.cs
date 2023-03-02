@@ -47,7 +47,7 @@ public sealed class ConquerorContextCommandTests : TestBase
 
         var exists = response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values);
 
-        Assert.IsTrue(exists);
+        Assert.That(exists, Is.True);
 
         var receivedItems = ContextValueFormatter.Parse(values!);
 
@@ -141,8 +141,8 @@ public sealed class ConquerorContextCommandTests : TestBase
         var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
 
         Assert.That(receivedCommandIds, Has.Count.EqualTo(2));
-        Assert.AreEqual(testCommandId, receivedCommandIds[0]);
-        Assert.AreNotEqual(testCommandId, receivedCommandIds[1]);
+        Assert.That(receivedCommandIds[0], Is.EqualTo(testCommandId));
+        Assert.That(receivedCommandIds[1], Is.Not.EqualTo(testCommandId));
     }
 
     [TestCase("/api/commands/test", "{}")]
@@ -191,8 +191,8 @@ public sealed class ConquerorContextCommandTests : TestBase
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
         Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
-        Assert.AreEqual(testTraceId, receivedTraceIds[0]);
-        Assert.AreEqual(testTraceId, receivedTraceIds[1]);
+        Assert.That(receivedTraceIds[0], Is.EqualTo(testTraceId));
+        Assert.That(receivedTraceIds[1], Is.EqualTo(testTraceId));
     }
 
     [TestCase("/api/commands/test", "{}")]
@@ -245,8 +245,8 @@ public sealed class ConquerorContextCommandTests : TestBase
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
         Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
-        Assert.AreEqual(a.TraceId, receivedTraceIds[0]);
-        Assert.AreEqual(a.TraceId, receivedTraceIds[1]);
+        Assert.That(receivedTraceIds[0], Is.EqualTo(a.TraceId));
+        Assert.That(receivedTraceIds[1], Is.EqualTo(a.TraceId));
     }
 
     protected override void ConfigureServices(IServiceCollection services)

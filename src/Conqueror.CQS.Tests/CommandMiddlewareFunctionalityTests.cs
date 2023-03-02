@@ -562,7 +562,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         var response3 = new TestCommandResponse(3);
 
         Assert.That(observations.ResponsesFromMiddlewares, Is.EquivalentTo(new[] { response1, response2 }));
-        Assert.AreEqual(response3, response);
+        Assert.That(response, Is.EqualTo(response3));
     }
 
     [Test]
@@ -615,8 +615,8 @@ public sealed class CommandMiddlewareFunctionalityTests
         _ = await handler3.ExecuteCommand(new(10), CancellationToken.None);
 
         Assert.That(observedInstances, Has.Count.EqualTo(3));
-        Assert.AreNotSame(observedInstances[0], observedInstances[1]);
-        Assert.AreSame(observedInstances[0], observedInstances[2]);
+        Assert.That(observedInstances[1], Is.Not.SameAs(observedInstances[0]));
+        Assert.That(observedInstances[2], Is.SameAs(observedInstances[0]));
     }
 
     [Test]
@@ -646,8 +646,8 @@ public sealed class CommandMiddlewareFunctionalityTests
         await handler3.ExecuteCommand(new(10), CancellationToken.None);
 
         Assert.That(observedInstances, Has.Count.EqualTo(3));
-        Assert.AreNotSame(observedInstances[0], observedInstances[1]);
-        Assert.AreSame(observedInstances[0], observedInstances[2]);
+        Assert.That(observedInstances[1], Is.Not.SameAs(observedInstances[0]));
+        Assert.That(observedInstances[2], Is.SameAs(observedInstances[0]));
     }
 
     [Test]
@@ -750,7 +750,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
 
-        Assert.AreSame(exception, thrownException);
+        Assert.That(thrownException, Is.SameAs(exception));
     }
 
     [Test]

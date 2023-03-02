@@ -8,10 +8,10 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorInteractiveStreaming().AddConquerorInteractiveStreaming();
 
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingHandlerRegistry)));
+        Assert.That(services.Count(d => d.ServiceType == typeof(InteractiveStreamingHandlerRegistry)), Is.EqualTo(1));
         //// TODO
         //// Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingMiddlewaresInvoker)));
-        Assert.AreEqual(1, services.Count(d => d.ServiceType == typeof(InteractiveStreamingRegistrationFinalizer)));
+        Assert.That(services.Count(d => d.ServiceType == typeof(InteractiveStreamingRegistrationFinalizer)), Is.EqualTo(1));
     }
 
     [Test]
@@ -20,7 +20,7 @@ public sealed class RegistrationTests
         var services1 = new ServiceCollection().AddConquerorInteractiveStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
         var services2 = new ServiceCollection().AddConquerorInteractiveStreamingTypesFromExecutingAssembly();
 
-        Assert.AreEqual(services1.Count, services2.Count);
+        Assert.That(services2, Has.Count.EqualTo(services1.Count));
         Assert.That(services1.Select(d => d.ServiceType), Is.EquivalentTo(services2.Select(d => d.ServiceType)));
     }
 
@@ -29,7 +29,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorInteractiveStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingHandler) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingHandler) && d.Lifetime == ServiceLifetime.Transient), Is.True);
     }
 
     [Test]
@@ -37,7 +37,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorInteractiveStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsTrue(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingHandlerWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingHandlerWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient), Is.True);
     }
 
     // TODO
@@ -62,7 +62,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddSingleton<TestStreamingHandler>().AddConquerorInteractiveStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.AreEqual(1, services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingHandler)));
+        Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingHandler)), Is.EqualTo(1));
     }
 
     [Test]
@@ -70,7 +70,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddSingleton<TestStreamingHandler>().AddConquerorInteractiveStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(ITestStreamingHandler)));
+        Assert.That(services.Any(d => d.ServiceType == typeof(ITestStreamingHandler)), Is.False);
     }
 
     [Test]
@@ -78,7 +78,7 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddSingleton<TestStreamingHandler>().AddConquerorInteractiveStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.IsFalse(services.Any(d => d.ServiceType == typeof(AbstractTestStreamingHandler)));
+        Assert.That(services.Any(d => d.ServiceType == typeof(AbstractTestStreamingHandler)), Is.False);
     }
 
     [Test]
@@ -88,7 +88,7 @@ public sealed class RegistrationTests
 
         var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
 
-        Assert.IsInstanceOf<InvalidOperationException>(ex?.InnerException);
+        Assert.That(ex?.InnerException, Is.InstanceOf<InvalidOperationException>());
         Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
     }
 

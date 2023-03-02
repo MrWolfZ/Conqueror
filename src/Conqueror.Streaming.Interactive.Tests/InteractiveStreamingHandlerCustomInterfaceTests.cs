@@ -53,8 +53,8 @@ public sealed class InteractiveStreamingHandlerCustomInterfaceTests
         _ = await plainInterfaceHandler.ExecuteRequest(new(), CancellationToken.None).Drain();
         _ = await customInterfaceHandler.ExecuteRequest(new(), CancellationToken.None).Drain();
 
-        Assert.AreEqual(2, observations.Instances.Count);
-        Assert.AreSame(observations.Instances[0], observations.Instances[1]);
+        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]

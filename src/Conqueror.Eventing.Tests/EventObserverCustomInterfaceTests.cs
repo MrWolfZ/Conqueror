@@ -51,8 +51,8 @@ public sealed class EventObserverCustomInterfaceTests
         await plainInterfaceObserver.HandleEvent(new(), CancellationToken.None);
         await customInterfaceObserver.HandleEvent(new(), CancellationToken.None);
 
-        Assert.AreEqual(2, observations.Instances.Count);
-        Assert.AreSame(observations.Instances[0], observations.Instances[1]);
+        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]
@@ -73,8 +73,8 @@ public sealed class EventObserverCustomInterfaceTests
         await observer1.HandleEvent(new(), CancellationToken.None);
         await observer2.HandleEvent(new(), CancellationToken.None);
 
-        Assert.AreEqual(2, observations.Instances.Count);
-        Assert.AreSame(observations.Instances[0], observations.Instances[1]);
+        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]
@@ -95,8 +95,8 @@ public sealed class EventObserverCustomInterfaceTests
         await observer1.HandleEvent(new(), CancellationToken.None);
         await observer2.HandleEvent(new(), CancellationToken.None);
 
-        Assert.AreEqual(2, observations.Instances.Count);
-        Assert.AreSame(observations.Instances[0], observations.Instances[1]);
+        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]
@@ -117,8 +117,8 @@ public sealed class EventObserverCustomInterfaceTests
         await publisher.PublishEvent(new TestEvent(), CancellationToken.None);
         await observer.HandleEvent(new(), CancellationToken.None);
 
-        Assert.AreEqual(2, observations.Instances.Count);
-        Assert.AreSame(observations.Instances[0], observations.Instances[1]);
+        Assert.That(observations.Instances, Has.Count.EqualTo(2));
+        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]

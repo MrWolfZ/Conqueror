@@ -13,7 +13,7 @@ public sealed class ConquerorContextCommandTests
 
         var provider = Setup((cmd, ctx) =>
         {
-            Assert.IsNotNull(ctx);
+            Assert.That(ctx, Is.Not.Null);
 
             return new(cmd.Payload);
         });
@@ -26,7 +26,7 @@ public sealed class ConquerorContextCommandTests
     {
         var command = new TestCommandWithoutResponse(10);
 
-        var provider = SetupWithoutResponse((_, ctx) => { Assert.IsNotNull(ctx); });
+        var provider = SetupWithoutResponse((_, ctx) => { Assert.That(ctx, Is.Not.Null); });
 
         await provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>().ExecuteCommand(command, CancellationToken.None);
     }
@@ -39,7 +39,7 @@ public sealed class ConquerorContextCommandTests
 
         var provider = Setup((_, _) => response, middlewareFn: async (middlewareCtx, ctx, next) =>
         {
-            Assert.IsNotNull(ctx);
+            Assert.That(ctx, Is.Not.Null);
 
             return await next(middlewareCtx.Command);
         });
@@ -66,7 +66,7 @@ public sealed class ConquerorContextCommandTests
 
         var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
         {
-            Assert.IsNotNull(ctx);
+            Assert.That(ctx, Is.Not.Null);
 
             return new(cmd.Payload);
         });
@@ -119,9 +119,9 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(3));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.AreSame(observedContexts[0], observedContexts[1]);
-        Assert.AreSame(observedContexts[0], observedContexts[2]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
+        Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -152,9 +152,9 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(2));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.IsNotNull(observedContexts[1]);
-        Assert.AreSame(observedContexts[0], observedContexts[1]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -182,9 +182,9 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(3));
-        Assert.IsNotNull(observedContexts[0]);
-        Assert.AreSame(observedContexts[0], observedContexts[1]);
-        Assert.AreSame(observedContexts[0], observedContexts[2]);
+        Assert.That(observedContexts[0], Is.Not.Null);
+        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
+        Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
     }
 
     [Test]
@@ -211,8 +211,8 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.AreSame(observedItems[0], observedItems[1]);
-        Assert.AreSame(observedItems[0], observedItems[2]);
+        Assert.That(observedItems[1], Is.SameAs(observedItems[0]));
+        Assert.That(observedItems[2], Is.SameAs(observedItems[0]));
     }
 
     [Test]
@@ -239,8 +239,8 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(3));
-        Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
-        Assert.AreSame(observedTraceIds[0], observedTraceIds[2]);
+        Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
+        Assert.That(observedTraceIds[2], Is.SameAs(observedTraceIds[0]));
     }
 
     [Test]
@@ -269,9 +269,9 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(3));
-        Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
-        Assert.AreSame(observedTraceIds[0], observedTraceIds[2]);
-        Assert.AreSame(activity.TraceId, observedTraceIds[0]);
+        Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
+        Assert.That(observedTraceIds[2], Is.SameAs(observedTraceIds[0]));
+        Assert.That(observedTraceIds[0], Is.SameAs(activity.TraceId));
     }
 
     [Test]
@@ -295,7 +295,7 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(2));
-        Assert.AreSame(observedItems[0], observedItems[1]);
+        Assert.That(observedItems[1], Is.SameAs(observedItems[0]));
     }
 
     [Test]
@@ -319,7 +319,7 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(2));
-        Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
+        Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
     }
 
     [Test]
@@ -345,8 +345,8 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(2));
-        Assert.AreSame(observedTraceIds[0], observedTraceIds[1]);
-        Assert.AreSame(activity.TraceId, observedTraceIds[0]);
+        Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
+        Assert.That(observedTraceIds[0], Is.SameAs(activity.TraceId));
     }
 
     [Test]
@@ -376,7 +376,7 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.AreSame(observedKeys[0], observedKeys[1]);
+        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
     }
 
     [Test]
@@ -407,7 +407,7 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.AreSame(observedKeys[0], observedKeys[1]);
+        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
     }
 
     [Test]
@@ -437,9 +437,9 @@ public sealed class ConquerorContextCommandTests
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.IsNull(observedItems[0]);
-        Assert.AreSame(key, observedItems[1]);
-        Assert.AreSame(key, observedItems[2]);
+        Assert.That(observedItems[0], Is.Null);
+        Assert.That(observedItems[1], Is.SameAs(key));
+        Assert.That(observedItems[2], Is.SameAs(key));
     }
 
     [Test]
@@ -457,7 +457,7 @@ public sealed class ConquerorContextCommandTests
             },
             (cmd, ctx) =>
             {
-                Assert.IsTrue(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
                 return new(cmd.Payload);
             });
 
@@ -478,7 +478,7 @@ public sealed class ConquerorContextCommandTests
             },
             (cmd, ctx) =>
             {
-                Assert.IsTrue(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
                 return new(cmd.Payload);
             });
 
@@ -500,9 +500,9 @@ public sealed class ConquerorContextCommandTests
             },
             middlewareFn: async (middlewareCtx, ctx, next) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 var r = await next(middlewareCtx.Command);
-                Assert.IsTrue(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
                 return r;
             });
 
@@ -523,9 +523,9 @@ public sealed class ConquerorContextCommandTests
             },
             middlewareFn: async (middlewareCtx, ctx, next) =>
             {
-                Assert.IsFalse(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
                 var r = await next(middlewareCtx.Command);
-                Assert.IsTrue(ctx?.Items.ContainsKey(key));
+                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
                 return r;
             });
 
@@ -553,8 +553,8 @@ public sealed class ConquerorContextCommandTests
 
         var provider = Setup((cmd, ctx) =>
         {
-            Assert.IsTrue(ctx!.Items.ContainsKey(key));
-            Assert.AreEqual(value, ctx.Items[key]);
+            Assert.That(ctx!.Items.ContainsKey(key), Is.True);
+            Assert.That(ctx.Items[key], Is.EqualTo(value));
             return new(cmd.Payload);
         });
 
@@ -574,7 +574,7 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup((cmd, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.AreEqual(expectedTraceId, ctx?.TraceId);
+            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
             return new(cmd.Payload);
         });
 
@@ -595,7 +595,7 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup((cmd, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.AreEqual(activity.TraceId, ctx?.TraceId);
+            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
             return new(cmd.Payload);
         });
 
@@ -613,8 +613,8 @@ public sealed class ConquerorContextCommandTests
 
         var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
         {
-            Assert.IsTrue(ctx!.Items.ContainsKey(key));
-            Assert.AreEqual(value, ctx.Items[key]);
+            Assert.That(ctx!.Items.ContainsKey(key), Is.True);
+            Assert.That(ctx.Items[key], Is.EqualTo(value));
             return new(cmd.Payload);
         });
 
@@ -634,7 +634,7 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.AreEqual(expectedTraceId, ctx?.TraceId);
+            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
             return new(cmd.Payload);
         });
 
@@ -655,7 +655,7 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.AreEqual(activity.TraceId, ctx?.TraceId);
+            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
             return new(cmd.Payload);
         });
 
@@ -675,13 +675,13 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(
             (cmd, ctx) =>
             {
-                Assert.AreEqual(value, ctx!.Items[key]);
+                Assert.That(ctx!.Items[key], Is.EqualTo(value));
                 ctx.Items[key] = newValue;
                 return new(cmd.Payload);
             },
             (cmd, ctx) =>
             {
-                Assert.AreEqual(newValue, ctx!.Items[key]);
+                Assert.That(ctx!.Items[key], Is.EqualTo(newValue));
                 return new(cmd.Payload);
             });
 
@@ -711,7 +711,7 @@ public sealed class ConquerorContextCommandTests
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
-        Assert.AreEqual(value, contextItems[key]);
+        Assert.That(contextItems[key], Is.EqualTo(value));
     }
 
     [Test]
@@ -733,7 +733,7 @@ public sealed class ConquerorContextCommandTests
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
-        Assert.AreEqual(value, contextItems[key]);
+        Assert.That(contextItems[key], Is.EqualTo(value));
     }
 
     [Test]
@@ -752,20 +752,20 @@ public sealed class ConquerorContextCommandTests
         {
             if (invocationCount == 0)
             {
-                Assert.AreEqual(value1, ctx!.Items[key1]);
-                Assert.IsFalse(ctx.Items.ContainsKey(key2));
+                Assert.That(ctx!.Items[key1], Is.EqualTo(value1));
+                Assert.That(ctx.Items.ContainsKey(key2), Is.False);
                 ctx.Items[key2] = value2;
             }
             else if (invocationCount == 1)
             {
-                Assert.AreEqual(value1, ctx!.Items[key1]);
-                Assert.AreEqual(value2, ctx.Items[key2]);
+                Assert.That(ctx!.Items[key1], Is.EqualTo(value1));
+                Assert.That(ctx.Items[key2], Is.EqualTo(value2));
                 ctx.Items[key1] = value3;
             }
             else if (invocationCount == 2)
             {
-                Assert.AreEqual(value3, ctx!.Items[key1]);
-                Assert.AreEqual(value2, ctx.Items[key2]);
+                Assert.That(ctx!.Items[key1], Is.EqualTo(value3));
+                Assert.That(ctx.Items[key2], Is.EqualTo(value2));
                 ctx.Items[key1] = value4;
             }
             else
@@ -788,7 +788,7 @@ public sealed class ConquerorContextCommandTests
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
-        Assert.AreSame(value4, conquerorContext.Items[key1]);
+        Assert.That(conquerorContext.Items[key1], Is.SameAs(value4));
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
