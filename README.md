@@ -242,7 +242,7 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [calling HTTP commands and queries from another application](recipes/cqs/advanced/calling-http#readme)
 - [testing code which calls HTTP commands and queries](recipes/cqs/advanced/testing-calling-http#readme)
 - [creating a clean architecture and modular monolith with commands and queries](recipes/cqs/advanced/clean-architecture#readme)
-- [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme) _(to-be-written)_
+- [moving from a modular monolith to a distributed system](recipes/cqs/advanced/monolith-to-distributed#readme)
 - [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/cqs/advanced/different-dependency-injection#readme) _(to-be-written)_
 - [customizing OpenAPI specification for HTTP commands and queries](recipes/cqs/advanced/custom-openapi-http#readme) _(to-be-written)_
 - [enforce that all command and query handlers declare a pipeline](recipes/cqs/advanced/enforce-handler-pipeline#readme) _(to-be-written)_

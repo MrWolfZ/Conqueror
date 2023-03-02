@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <!-- reference the projects if this project is opened in the Conqueror.sln (useful for development), otherwise reference packages -->
+        <ShouldReferenceProjects Condition="'$(SolutionName)'=='Conqueror'">true</ShouldReferenceProjects>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="..\..\..\..\..\src\Conqueror.CQS.Abstractions\Conqueror.CQS.Abstractions.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
+        <ProjectReference Include="..\..\..\..\..\src\Conqueror.CQS.Analyzers\Conqueror.CQS.Analyzers.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+        <ProjectReference Include="..\..\..\..\..\src\Conqueror.CQS.Transport.Http.Abstractions\Conqueror.CQS.Transport.Http.Abstractions.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
+
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror.CQS.Abstractions" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+        <PackageReference Include="Conqueror.CQS.Analyzers" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+        <PackageReference Include="Conqueror.CQS.Transport.Http.Abstractions" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+    </ItemGroup>
+
+</Project>

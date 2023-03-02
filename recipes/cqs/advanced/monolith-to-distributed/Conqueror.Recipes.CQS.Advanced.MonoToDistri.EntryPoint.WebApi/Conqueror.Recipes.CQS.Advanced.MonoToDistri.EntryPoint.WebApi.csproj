@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <!-- reference the projects if this project is opened in the Conqueror.sln (useful for development), otherwise reference packages -->
+        <ShouldReferenceProjects Condition="'$(SolutionName)'=='Conqueror'">true</ShouldReferenceProjects>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- conditional Conqueror project references -->
+        <ProjectReference Include="..\..\..\..\..\src\Conqueror.CQS.Transport.Http.Server.AspNetCore\Conqueror.CQS.Transport.Http.Server.AspNetCore.csproj" Condition="'$(ShouldReferenceProjects)'=='true'" />
+
+        <!-- conditional Conqueror package references -->
+        <PackageReference Include="Conqueror.CQS.Transport.Http.Server.AspNetCore" Version="*-*" Condition="'$(ShouldReferenceProjects)'!='true'" />
+
+        <!-- third-party packages -->
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Application\Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Application.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Infrastructure\Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Infrastructure.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.Application\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.Application.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.Infrastructure\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Contracts\Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Contracts.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.MonoToDistri.Core.Application\Conqueror.Recipes.CQS.Advanced.MonoToDistri.Core.Application.csproj" />
+        <ProjectReference Include="..\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.Contracts\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>
