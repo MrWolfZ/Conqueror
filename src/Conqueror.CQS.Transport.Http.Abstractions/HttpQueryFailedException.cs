@@ -10,7 +10,7 @@ namespace Conqueror
     [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "the standard constructors don't make sense for this class")]
     public sealed class HttpQueryFailedException : Exception
     {
-        public HttpQueryFailedException(string message, HttpResponseMessage response, Exception? innerException = null)
+        public HttpQueryFailedException(string message, HttpResponseMessage? response, Exception? innerException = null)
             : base(message, innerException)
         {
             Response = response;
@@ -25,8 +25,8 @@ namespace Conqueror
         {
         }
 
-        public HttpResponseMessage Response { get; } = default!;
+        public HttpResponseMessage? Response { get; }
 
-        public HttpStatusCode StatusCode => Response.StatusCode;
+        public HttpStatusCode? StatusCode => Response?.StatusCode;
     }
 }

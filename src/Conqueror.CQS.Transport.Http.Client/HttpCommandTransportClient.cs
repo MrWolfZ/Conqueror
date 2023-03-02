@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
@@ -46,27 +47,34 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             TracingHelper.SetTraceParentHeaderForTestClient(message.Headers, Options.HttpClient);
 
-            var response = await Options.HttpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-
-            if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.NoContent)
+            try
             {
-                var responseContent = await response.BufferAndReadContent().ConfigureAwait(false);
-                throw new HttpCommandFailedException($"command of type {typeof(TCommand).Name} failed with status code {response.StatusCode} and response content: {responseContent}", response);
-            }
+                var response = await Options.HttpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
 
-            if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var ctxValues))
+                if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.NoContent)
+                {
+                    var responseContent = await response.BufferAndReadContent().ConfigureAwait(false);
+                    throw new HttpCommandFailedException($"command of type {typeof(TCommand).Name} failed with status code {response.StatusCode} and response content: {responseContent}", response);
+                }
+
+                if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var ctxValues))
+                {
+                    var parsedContextItems = ContextValueFormatter.Parse(ctxValues);
+                    ctx.AddOrReplaceItems(parsedContextItems);
+                }
+
+                if (typeof(TResponse) == typeof(UnitCommandResponse))
+                {
+                    return (TResponse)(object)UnitCommandResponse.Instance;
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+                return result!;
+            }
+            catch (Exception ex) when (ex is not HttpCommandFailedException)
             {
-                var parsedContextItems = ContextValueFormatter.Parse(ctxValues);
-                ctx.AddOrReplaceItems(parsedContextItems);
+                throw new HttpCommandFailedException($"command of type {typeof(TCommand).Name} failed", null, ex);
             }
-
-            if (typeof(TResponse) == typeof(UnitCommandResponse))
-            {
-                return (TResponse)(object)UnitCommandResponse.Instance;
-            }
-
-            var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-            return result!;
         }
 
         private void SetHeaders(HttpHeaders headers)

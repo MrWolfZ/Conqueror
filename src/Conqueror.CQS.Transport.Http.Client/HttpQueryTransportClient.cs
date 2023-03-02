@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -55,22 +56,29 @@ namespace Conqueror.CQS.Transport.Http.Client
 
             requestMessage.RequestUri = new(Options.BaseAddress, uriString);
 
-            var response = await Options.HttpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
-
-            if (response.StatusCode != HttpStatusCode.OK)
+            try
             {
-                var content = await response.BufferAndReadContent().ConfigureAwait(false);
-                throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed with status code {response.StatusCode} and response content: {content}", response);
-            }
+                var response = await Options.HttpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 
-            if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+                if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    var content = await response.BufferAndReadContent().ConfigureAwait(false);
+                    throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed with status code {response.StatusCode} and response content: {content}", response);
+                }
+
+                if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+                {
+                    var parsedContextItems = ContextValueFormatter.Parse(values);
+                    ctx.AddOrReplaceItems(parsedContextItems);
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+                return result!;
+            }
+            catch (Exception ex) when (ex is not HttpQueryFailedException)
             {
-                var parsedContextItems = ContextValueFormatter.Parse(values);
-                ctx.AddOrReplaceItems(parsedContextItems);
+                throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed", null, ex);
             }
-
-            var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
-            return result!;
         }
 
         private void SetHeaders(HttpHeaders headers)

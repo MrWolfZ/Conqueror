@@ -15,6 +15,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
 
         private int? customResponseStatusCode;
         private Func<HttpContext, Func<Task>, Task>? middleware;
+        private bool useThrowingHttpClient;
 
         [Test]
         public async Task GivenSuccessfulHttpCall_ReturnsCommandResponse()
@@ -39,7 +40,21 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.IsNotNull(ex);
             Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
             Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-            Assert.AreEqual(ErrorPayload, await ex!.Response.Content.ReadAsStringAsync());
+            Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
+        }
+
+        [Test]
+        public void GivenExceptionDuringHttpCall_ThrowsHttpCommandFailedException()
+        {
+            useThrowingHttpClient = true;
+
+            var handler = ResolveOnClient<ITestCommandHandler>();
+
+            var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None));
+
+            Assert.IsNotNull(ex);
+            Assert.IsNull(ex?.StatusCode);
+            Assert.IsNotNull(ex?.InnerException);
         }
 
         [Test]
@@ -62,7 +77,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.IsNotNull(ex);
             Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
             Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-            Assert.AreEqual(ErrorPayload, await ex!.Response.Content.ReadAsStringAsync());
+            Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
         }
 
         [Test]
@@ -88,7 +103,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.IsNotNull(ex);
             Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
             Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-            Assert.AreEqual(ErrorPayload, await ex!.Response.Content.ReadAsStringAsync());
+            Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
         }
 
         [Test]
@@ -111,7 +126,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             Assert.IsNotNull(ex);
             Assert.AreEqual(customResponseStatusCode, (int?)ex?.StatusCode);
             Assert.IsTrue(ex?.Message.Contains(ErrorPayload));
-            Assert.AreEqual(ErrorPayload, await ex!.Response.Content.ReadAsStringAsync());
+            Assert.AreEqual(ErrorPayload, await ex!.Response!.Content.ReadAsStringAsync());
         }
 
         [Test]
@@ -223,7 +238,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             _ = services.AddConquerorCQSHttpClientServices(o =>
             {
-                _ = o.UseHttpClient(HttpClient);
+                _ = o.UseHttpClient(useThrowingHttpClient ? new ThrowingTestHttpClient() : HttpClient);
 
                 o.JsonSerializerOptions = new()
                 {
@@ -537,6 +552,14 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
                 }
 
                 return $"/api/commands/{commandType.Name}FromConvention";
+            }
+        }
+
+        private sealed class ThrowingTestHttpClient : HttpClient
+        {
+            public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                throw new HttpRequestException();
             }
         }
     }
