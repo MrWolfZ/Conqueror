@@ -9,6 +9,8 @@ namespace Conqueror
     {
         public static ICommandTransportClient UseHttp(this ICommandTransportClientBuilder builder, Uri baseAddress, Action<HttpCommandClientOptions>? configure = null)
         {
+            baseAddress = baseAddress ?? throw new ArgumentNullException(nameof(baseAddress));
+
             var registration = new HttpClientRegistration
             {
                 BaseAddress = baseAddress,

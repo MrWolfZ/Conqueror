@@ -496,11 +496,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
         {
             var services = new ServiceCollection();
             _ = services.AddConquerorCQSHttpClientServices()
-                        .AddConquerorCommandClient<ITestCommandHandler>(b =>
-                        {
-                            _ = b.UseHttp(new("/", UriKind.Relative));
-                            return new TestCommandTransportClient();
-                        });
+                        .AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(new("/", UriKind.Relative)));
 
             await using var provider = services.BuildServiceProvider();
 
@@ -525,6 +521,22 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests
             var client = provider.GetRequiredService<ITestCommandHandler>();
 
             Assert.DoesNotThrowAsync(() => client.ExecuteCommand(new(), CancellationToken.None));
+        }
+
+        [Test]
+        public async Task GivenClientConfigurationWithNullBaseAddress_WhenExecutingHandler_ThrowsArgumentNullException()
+        {
+            var services = new ServiceCollection();
+            _ = services.AddConquerorCQSHttpClientServices()
+                        .AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(null!));
+
+            await using var provider = services.BuildServiceProvider();
+
+            var client = provider.GetRequiredService<ITestCommandHandler>();
+
+            var thrownException = Assert.ThrowsAsync<ArgumentNullException>(() => client.ExecuteCommand(new(), CancellationToken.None));
+
+            Assert.That(thrownException?.ParamName, Is.EqualTo("baseAddress"));
         }
 
         [HttpCommand]

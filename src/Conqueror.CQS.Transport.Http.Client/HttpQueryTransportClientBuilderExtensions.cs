@@ -9,6 +9,8 @@ namespace Conqueror
     {
         public static IQueryTransportClient UseHttp(this IQueryTransportClientBuilder builder, Uri baseAddress, Action<HttpQueryClientOptions>? configure = null)
         {
+            baseAddress = baseAddress ?? throw new ArgumentNullException(nameof(baseAddress));
+
             var registration = new HttpClientRegistration
             {
                 BaseAddress = baseAddress,
