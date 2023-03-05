@@ -6,7 +6,7 @@ internal sealed class DataAnnotationValidationQueryMiddleware : IQueryMiddleware
     public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
-        // this will validate the object according to data annotation validations and
+        // this will validate the object according to data annotation attributes and
         // will throw a ValidationException if validation fails
         Validator.ValidateObject(ctx.Query, new(ctx.Query), true);
 

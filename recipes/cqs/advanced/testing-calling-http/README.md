@@ -75,7 +75,7 @@ public async Task GivenExistingCounter_WhenExecutingGetOperation_PrintsCounterVa
 }
 ```
 
-> Creating handlers from delegates like this is only recommended for testing purposes. In the application code itself, handlers shoud always be proper classes.
+> Creating handlers from delegates like this is only recommended for testing purposes. In the application code itself, handlers should always be proper classes.
 
 An alternative approach would be to use a mocking library like [Moq](https://github.com/moq/moq4) to create a mock for `IGetCounterValueQueryHandler` and add the mock to the services.
 

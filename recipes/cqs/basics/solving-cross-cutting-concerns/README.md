@@ -24,7 +24,7 @@ The first cross-cutting concern we are going to address is validation. You may h
 
 In **Conqueror.CQS** we use middlewares (which implement the [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) pattern) to address these concerns. Each command and query handler is executed as part of a pipeline. The pipeline consists of a set of middlewares which are executed in order. Each middleware wraps the execution of the rest of the pipeline, and can also abort the pipeline execution (e.g. due to a validation failure).
 
-> Middlewares (and pipelines) are separated for commands and queries, since the types of cross-cutting concerns that are relevant for each of them can be quite different (e.g. caching makes sense for queries, but not for commands). This means you may have to implement a middleware twice if you want to handle the same cross-cutting concern for both commands and queries. However, given that middlewares are tpyically written once and then used many times, the cost of implementing them is negligible in the big picture of your app's development. In addition, for many cross-cutting concerns **Conqueror.CQS** provides [pre-built middlewares](../../../../../..#conquerorcqs), so that you don't have to write them yourself. In the rest of this recipe we will only be building command middlewares, but you can see the equivalent query middlewares in the [completed recipe](.completed).
+> Middlewares (and pipelines) are separated for commands and queries, since the types of cross-cutting concerns that are relevant for each of them can be quite different (e.g. caching makes sense for queries, but not for commands). This means you may have to implement a middleware twice if you want to handle the same cross-cutting concern for both commands and queries. However, given that middlewares are typically written once and then used many times, the cost of implementing them is negligible in the big picture of your app's development. In addition, for many cross-cutting concerns **Conqueror.CQS** provides [pre-built middlewares](../../../../../..#conquerorcqs), so that you don't have to write them yourself. In the rest of this recipe we will only be building command middlewares, but you can see the equivalent query middlewares in the [completed recipe](.completed).
 
 All of this is quite theoretical, so let's explore it interactively by implementing a command middleware for data annotation validation. Create a new class called `DataAnnotationValidationCommandMiddleware.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/DataAnnotationValidationCommandMiddleware.cs)):
 
@@ -37,7 +37,7 @@ internal sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddle
     public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
-        // this will validate the object according to data annotation validations and
+        // this will validate the object according to data annotation attributes and
         // will throw a ValidationException if validation fails
         Validator.ValidateObject(ctx.Command, new(ctx.Command), true);
 
@@ -47,7 +47,7 @@ internal sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddle
 }
 ```
 
-> The middleware is automatically added to the application services since we are using `services.AddConquerorCQSTypesFromExecutingAssembly()` in [Program.cs](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/Program.cs). If you are not using this assembly scanning mechanism, or want your middleware to have a different lifetime (e.g. a singleton), you have to add the middleware explicitly, e.g. `services.AddSingleton<DataAnnotationValidationCommandMiddleware>();`.
+> The middleware is automatically added to the application services since we are using `services.AddConquerorCQSTypesFromExecutingAssembly()` in [Program.cs](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/Program.cs). If you are not using this assembly scanning mechanism, or want your middleware to have a different lifetime (e.g. a singleton), you have to add the middleware explicitly, e.g. `services.AddConquerorCommandMiddleware<DataAnnotationValidationCommandMiddleware>(ServiceLifetime.Singleton);`.
 
 Now we can start using the middleware in our command handler. Each handler configures its own pipeline by implementing an interface (for command handlers it is `IConfigureCommandPipeline` and for query handlers it is `IConfigureQueryPipeline`). These interfaces contain a static method `ConfigurePipeline`, which takes a pipeline builder and adds middlewares to it.
 
@@ -121,7 +121,7 @@ q
 shutting down...
 ```
 
-What is happening here is that the in-memory repository we are using to store our counters is simulating instability by making increment operations fail every once in a while. This is something that you typically have to deal with in your applications, especially if your app communicates with other services or a database, since there are many points of failure in such a communication. Often it is possible to deal with these kinds of transient errors by simply retrying the command, although care must be taken, that the command is [idempotent](https://en.wikipedia.org/wiki/Idempotence). In the application we are building here, this is the case since the exception is thrown before any counter value is changed, and therefore we can safely retry the command when it fails. We'll do that by building a retry middleware that takes care of the intermittent errors the repository is simulating.
+What is happening here is that the [in-memory repository](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/CountersRepository.cs) we are using to store our counters, is simulating instability by making increment operations fail every once in a while. This is something that you typically have to deal with in your applications, especially if your app communicates with other services or a database, since there are many points of failure in such a communication. Often it is possible to deal with these kinds of transient errors by simply retrying the command, although care must be taken, that the command is [idempotent](https://en.wikipedia.org/wiki/Idempotence). In the application we are building here, this is the case since the exception is thrown before any counter value is changed, and therefore we can safely retry the command when it fails. We'll do that by building a retry middleware that takes care of the intermittent errors the repository is simulating.
 
 Create a new class called `RetryCommandMiddleware.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddleware.cs)):
 
@@ -159,7 +159,7 @@ internal sealed class RetryCommandMiddleware : ICommandMiddleware
 }
 ```
 
-Our new middleware simply invokes the rest of the pipeline whenever an exception occurs during execution. It repeats retries up to 3 times in case the error occurs multiple times.
+Our new middleware simply invokes the rest of the pipeline whenever an exception occurs during execution. It repeats execution up to 3 times in case the error occurs multiple times.
 
 As the next step, add the new middleware to the command handler's pipeline. We need to be a bit careful here in that we want to add the retry middleware _after_ the validation middleware, since otherwise the retry middleware would retry on validation failures as well, which makes no sense since the validation would fail again every time.
 
@@ -196,7 +196,7 @@ q
 shutting down...
 ```
 
-It works! But there are a few improvements we can still make to our new middleware. As you saw when you implemented the middleware, the maximum number of retry attempts was hardcoded in the middleware. To make the middleware more re-usable it would be better if the number of attempts could be configured from the outside.
+It works! But there are a few improvements we can still make to our new middleware. As you saw when you implemented the middleware, the maximum number of retry attempts was hardcoded in the middleware's body. To make the middleware more re-usable, it would be better if the number of attempts could be configured from the outside.
 
 It is quite common for middlewares to be configurable, so let's take a look at a few options for achieving that. The simplest option is to create a class which contains the configuration parameters and then inject this class into the middleware. Create a new class `RetryMiddlewareConfiguration.cs`:
 
@@ -414,7 +414,8 @@ This concludes our recipe for solving cross-cutting concerns with **Conqueror.CQ
 
 - build your own middleware or add a package reference to one of the [pre-built middlewares](../../../../../..#conquerorcqs)
 - write custom extension methods for your own or even pre-built middlewares to customize how they are added to handler pipelines
-- create default pipelines to align pipelines across all your handlers
+- configure a middleware pipeline for each handler
+- create reusable pipelines to share them across all your handlers
 
 As the next step we recommend that you explore how to [test command and query handlers that have pipelines](../testing-handlers-with-pipelines#readme) as well as how to [test middlewares themselves](../testing-middlewares#readme). Another useful recipe is about [re-using middleware pipelines to solve cross-cutting concerns when calling external systems](../../advanced/reuse-piplines-for-external-calls#readme).
 

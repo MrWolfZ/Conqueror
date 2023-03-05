@@ -6,7 +6,7 @@ internal sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddle
     public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
-        // this will validate the object according to data annotation validations and
+        // this will validate the object according to data annotation attributes and
         // will throw a ValidationException if validation fails
         Validator.ValidateObject(ctx.Command, new(ctx.Command), true);
 

@@ -6,7 +6,7 @@ The handlers we are going to test are similar to those we built in the recipe fo
 
 > This recipe is designed to allow you to code along. [Download this recipe's folder](https://download-directory.github.io?url=https://github.com/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/testing-handlers) and open the solution file in your IDE (note that you need to have [.NET 6 or later](https://dotnet.microsoft.com/en-us/download) installed). If you prefer to just view the completed code directly, you can do so [in your browser](.completed) or with your IDE in the `completed` folder of the solution [downloaded as part of the folder](https://download-directory.github.io?url=https://github.com/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/testing-handlers).
 
-The application we will be testing is managing a set of named counters. When you use **Conqueror.CQS**, your commands and queries represent the public API for your application. In code, the API of our application under test is represented with the following types:
+The application we will be testing, is managing a set of named counters. When you use **Conqueror.CQS**, your commands and queries represent the public API for your application. In code, the API of our application under test is represented with the following types:
 
 ```cs
 public sealed record GetCounterValueQuery(string CounterName);
@@ -100,7 +100,7 @@ public async Task GivenExistingCounter_WhenGettingCounterValue_CounterValueIsRet
 }
 ```
 
-As you can see there are a few repititions, so in accordance with the [DRY principle](https://en.wikipedia.org/wiki/Don't_repeat_yourself), we can extract a constant and method:
+As you can see there are a few repetitions, so in accordance with the [DRY principle](https://en.wikipedia.org/wiki/Don't_repeat_yourself), we can extract a constant and method:
 
 ```diff
 [TestFixture]
