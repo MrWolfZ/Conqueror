@@ -153,11 +153,11 @@ If you run the increment command a few times you will find that it sometimes fai
   }
 + catch (HttpCommandFailedException commandFailedException)
 + {
-+     Console.WriteLine($"HTTP command failed with status code {(int)commandFailedException.StatusCode}");
++     Console.WriteLine($"HTTP command failed with status code {(int?)commandFailedException.StatusCode}");
 + }
 + catch (HttpQueryFailedException queryFailedException)
 + {
-+     Console.WriteLine($"HTTP query failed with status code {(int)queryFailedException.StatusCode}");
++     Console.WriteLine($"HTTP query failed with status code {(int?)queryFailedException.StatusCode}");
 + }
   catch (ValidationException vex)
   {

@@ -50,11 +50,11 @@ try
 }
 catch (HttpCommandFailedException commandFailedException)
 {
-    Console.WriteLine($"HTTP command failed with status code {(int)commandFailedException.StatusCode}");
+    Console.WriteLine($"HTTP command failed with status code {(int?)commandFailedException.StatusCode}");
 }
 catch (HttpQueryFailedException queryFailedException)
 {
-    Console.WriteLine($"HTTP query failed with status code {(int)queryFailedException.StatusCode}");
+    Console.WriteLine($"HTTP query failed with status code {(int?)queryFailedException.StatusCode}");
 }
 catch (ValidationException vex)
 {

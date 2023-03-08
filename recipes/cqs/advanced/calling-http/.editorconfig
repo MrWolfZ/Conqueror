@@ -7,3 +7,6 @@ resharper_unused_member_global_highlighting = none
 [*{Command,Query}Handler.cs]
 resharper_unused_type_global_highlighting = none
 resharper_unused_member_global_highlighting = none
+
+[Program.cs]
+resharper_localizable_element_highlighting = none

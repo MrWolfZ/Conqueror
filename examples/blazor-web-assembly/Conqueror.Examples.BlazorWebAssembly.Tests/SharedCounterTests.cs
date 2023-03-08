@@ -68,7 +68,7 @@ public sealed class SharedCounterTests : TestBase
         var exception = Assert.ThrowsAsync<HttpCommandFailedException>(() => IncrementHandler.ExecuteCommand(new() { IncrementBy = -1 }, CancellationToken.None));
 
         Assert.IsNotNull(exception);
-        Assert.AreEqual(HttpStatusCode.BadRequest, exception!.Response.StatusCode);
+        Assert.AreEqual(HttpStatusCode.BadRequest, exception?.Response?.StatusCode);
     }
 
     [Test]
