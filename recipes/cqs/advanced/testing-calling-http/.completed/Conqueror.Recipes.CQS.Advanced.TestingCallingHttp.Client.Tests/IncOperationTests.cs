@@ -1,7 +1,3 @@
-using Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-
 namespace Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Client.Tests;
 
 [TestFixture]
