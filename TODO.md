@@ -16,6 +16,25 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] in conqueror context, change items to baggage
+  - if tracing is active, using activity baggage mechanism
+  - if tracing is not active, manually adding items to baggage header
+    - ensure that values are properly escaped
+  - baggage is `string` to `string`
+    - expose explicit setter and getter methods, not directly as dictionary
+    - recommended pattern is to create helper methods with private key const in static class
+- [ ] in conqueror context, introduce ephemeral items
+  - ephemeral values are propagated in-memory
+  - ephemeral values have a `Type` key and `object?` value
+    - expose explicit setter and getter methods, not directly as dictionary
+    - the setter and getter are generic in the value type
+    - recommended pattern is to create helper methods with private key type in static class
+- [ ] expose conqueror context directly on middleware contexts
+- [ ] propagate command and query ID as baggage instead of custom headers
+  - ensure that command and query IDs are still correct set only downstream and do not leak upstream (i.e. add tests that after processing with another handler, original handler still sees its own ID)
+- [ ] remove command and query context
+- [ ] expose `IServiceProvider` on `IConquerorContext`
+- [ ] create common authentication package that exposes static extension methods for setting principal in conqueror context
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
 - [ ] write code-level documentation for all public APIs
 - [ ] cache client factory results
@@ -34,6 +53,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS middleware
 
+- [ ] in logging middleware use logging source generator with dynamic log level as seen [here]( https://andrewlock.net/exploring-dotnet-6-part-8-improving-logging-performance-with-source-generators/)
 - [ ] create projects for common middlewares, e.g.
   - [ ] `Conqueror.CQS.Middleware.FluentValidation`
   - [ ] `Conqueror.CQS.Middleware.MemoryCache`
@@ -42,6 +62,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
+- [ ] remove need for `HttpRequestExecutor` to ensure that code stays simple to navigate
+- [ ] once common authentication package exists, set user identity from ASP request in executor
 - [ ] add recipe for customizing OpenAPI specification with Swashbuckle
 - [ ] create analyzers (including code fixes)
   - [ ] when command or query does not have a version
@@ -70,6 +92,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Interactive streaming
 
+- [ ] add test to assert that disposing async enumerator calls finally blocks in handler/server
 - [ ] fix: do not register generic types during assembly scanning
 - [ ] fix: do not register nested private types during assembly scanning
 - [ ] implement middleware support
