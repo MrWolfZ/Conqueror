@@ -612,28 +612,44 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         [ApiController]
         private sealed class TestHttpQueryController : ControllerBase
         {
+            private readonly IQueryHandler<TestQuery, TestQueryResponse> queryHandler;
+            private readonly IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler;
+            private readonly IQueryHandler<TestPostQuery, TestQueryResponse> postQueryHandler;
+            private readonly IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse> postQueryWithoutPayloadHandler;
+
+            public TestHttpQueryController(IQueryHandler<TestQuery, TestQueryResponse> queryHandler,
+                                           IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler,
+                                           IQueryHandler<TestPostQuery, TestQueryResponse> postQueryHandler,
+                                           IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse> postQueryWithoutPayloadHandler)
+            {
+                this.queryHandler = queryHandler;
+                this.queryWithoutPayloadHandler = queryWithoutPayloadHandler;
+                this.postQueryHandler = postQueryHandler;
+                this.postQueryWithoutPayloadHandler = postQueryWithoutPayloadHandler;
+            }
+
             [HttpGet("/api/custom/queries/test")]
             public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
             {
-                return HttpQueryExecutor.ExecuteQuery<TestQuery, TestQueryResponse>(HttpContext, query, cancellationToken);
+                return queryHandler.ExecuteQuery(query, cancellationToken);
             }
 
             [HttpGet("/api/custom/queries/testQueryWithoutPayload")]
             public Task<TestQueryResponse> ExecuteTestQueryWithoutPayload(CancellationToken cancellationToken)
             {
-                return HttpQueryExecutor.ExecuteQuery<TestQueryWithoutPayload, TestQueryResponse>(HttpContext, cancellationToken);
+                return queryWithoutPayloadHandler.ExecuteQuery(new(), cancellationToken);
             }
 
             [HttpPost("/api/custom/queries/testPost")]
             public Task<TestQueryResponse> ExecuteTestQueryWithoutResponse(TestPostQuery query, CancellationToken cancellationToken)
             {
-                return HttpQueryExecutor.ExecuteQuery<TestPostQuery, TestQueryResponse>(HttpContext, query, cancellationToken);
+                return postQueryHandler.ExecuteQuery(query, cancellationToken);
             }
 
             [HttpPost("/api/custom/queries/testPostQueryWithoutPayload")]
             public Task<TestQueryResponse> ExecuteTestQueryWithoutResponse(CancellationToken cancellationToken)
             {
-                return HttpQueryExecutor.ExecuteQuery<TestPostQueryWithoutPayload, TestQueryResponse>(HttpContext, cancellationToken);
+                return postQueryWithoutPayloadHandler.ExecuteQuery(new(), cancellationToken);
             }
         }
 

@@ -613,28 +613,44 @@ public sealed class ConquerorContextCommandTests : TestBase
     [ApiController]
     private sealed class TestHttpCommandController : ControllerBase
     {
+        private readonly ICommandHandler<TestCommand, TestCommandResponse> commandHandler;
+        private readonly ICommandHandler<TestCommandWithoutPayload, TestCommandResponse> commandWithoutPayloadHandler;
+        private readonly ICommandHandler<TestCommandWithoutResponse> commandWithoutResponseHandler;
+        private readonly ICommandHandler<TestCommandWithoutResponseWithoutPayload> commandWithoutResponseWithoutPayloadHandler;
+
+        public TestHttpCommandController(ICommandHandler<TestCommand, TestCommandResponse> commandHandler,
+                                         ICommandHandler<TestCommandWithoutPayload, TestCommandResponse> commandWithoutPayloadHandler,
+                                         ICommandHandler<TestCommandWithoutResponse> commandWithoutResponseHandler,
+                                         ICommandHandler<TestCommandWithoutResponseWithoutPayload> commandWithoutResponseWithoutPayloadHandler)
+        {
+            this.commandHandler = commandHandler;
+            this.commandWithoutPayloadHandler = commandWithoutPayloadHandler;
+            this.commandWithoutResponseHandler = commandWithoutResponseHandler;
+            this.commandWithoutResponseWithoutPayloadHandler = commandWithoutResponseWithoutPayloadHandler;
+        }
+
         [HttpPost("/api/custom/commands/test")]
         public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
         {
-            return HttpCommandExecutor.ExecuteCommand<TestCommand, TestCommandResponse>(HttpContext, command, cancellationToken);
+            return commandHandler.ExecuteCommand(command, cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutPayload")]
         public Task<TestCommandResponse> ExecuteTestCommandWithoutPayload(CancellationToken cancellationToken)
         {
-            return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutPayload, TestCommandResponse>(HttpContext, cancellationToken);
+            return commandWithoutPayloadHandler.ExecuteCommand(new(), cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutResponse")]
         public Task ExecuteTestCommandWithoutResponse(TestCommandWithoutResponse command, CancellationToken cancellationToken)
         {
-            return HttpCommandExecutor.ExecuteCommand(HttpContext, command, cancellationToken);
+            return commandWithoutResponseHandler.ExecuteCommand(command, cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutResponseWithoutPayload")]
         public Task ExecuteTestCommandWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
         {
-            return HttpCommandExecutor.ExecuteCommand<TestCommandWithoutResponseWithoutPayload>(HttpContext, cancellationToken);
+            return commandWithoutResponseWithoutPayloadHandler.ExecuteCommand(new(), cancellationToken);
         }
     }
 

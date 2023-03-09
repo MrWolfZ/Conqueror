@@ -50,7 +50,6 @@ This file contains all the open points for extensions and improvements to the **
 ### CQS ASP Core
 
 - [ ] do not use base64 encoding for context data, but instead use cookie-like encoding
-- [ ] remove need for `HttpRequestExecutor` to ensure that code stays simple to navigate
 - [ ] once common authentication package exists, set user identity from ASP request in executor
 - [ ] add recipe for customizing OpenAPI specification with Swashbuckle
 - [ ] create analyzers (including code fixes)

@@ -21,7 +21,7 @@ internal static class DynamicCqsControllerFactory
 
     public static TypeBuilder CreateTypeBuilder(string name, HttpEndpoint endpoint)
     {
-        var typeName = $"{name}`ConquerorCqsDynamicController";
+        var typeName = $"{name}`ConquerorCqsTransportHttpServerAspNetCoreDynamicController";
         var typeBuilder = ModuleBuilder.DefineType(typeName, TypeAttributes.NotPublic | TypeAttributes.Sealed, typeof(ControllerBase));
 
         SetApiControllerAttribute(typeBuilder);

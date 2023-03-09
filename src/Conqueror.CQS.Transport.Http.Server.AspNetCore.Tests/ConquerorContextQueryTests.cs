@@ -576,16 +576,25 @@ public sealed class ConquerorContextQueryTests : TestBase
     [ApiController]
     private sealed class TestHttpQueryController : ControllerBase
     {
+        private readonly IQueryHandler<TestQuery, TestQueryResponse> queryHandler;
+        private readonly IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler;
+
+        public TestHttpQueryController(IQueryHandler<TestQuery, TestQueryResponse> queryHandler, IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler)
+        {
+            this.queryHandler = queryHandler;
+            this.queryWithoutPayloadHandler = queryWithoutPayloadHandler;
+        }
+
         [HttpGet("/api/custom/queries/test")]
         public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
         {
-            return HttpQueryExecutor.ExecuteQuery<TestQuery, TestQueryResponse>(HttpContext, query, cancellationToken);
+            return queryHandler.ExecuteQuery(query, cancellationToken);
         }
 
         [HttpGet("/api/custom/queries/testQueryWithoutPayload")]
         public Task<TestQueryResponse> ExecuteTestQueryWithoutPayload(CancellationToken cancellationToken)
         {
-            return HttpQueryExecutor.ExecuteQuery<TestQueryWithoutPayload, TestQueryResponse>(HttpContext, cancellationToken);
+            return queryWithoutPayloadHandler.ExecuteQuery(new(), cancellationToken);
         }
     }
 

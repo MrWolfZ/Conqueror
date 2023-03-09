@@ -25,7 +25,11 @@ public static class ConquerorCqsTransportHttpServerAspNetCoreMvcBuilderExtension
             ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
                 p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
 
-        _ = builder.Services.PostConfigure<MvcOptions>(options => { _ = options.Filters.Add<BadContextExceptionHandlerFilter>(); });
+        _ = builder.Services.PostConfigure<MvcOptions>(options =>
+        {
+            options.Filters.Add(new BadContextExceptionHandlerFilter());
+            options.Filters.Add(new ContextDataPropagationActionFilter());
+        });
 
         var options = new ConquerorCqsHttpTransportServerAspNetCoreOptions();
 
