@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Conqueror.Common;
 
-namespace Conqueror.CQS.Common;
+namespace Conqueror.CQS.CommandHandling;
 
-internal static class CqsCommandHandlerTypeExtensions
+internal static class CommandHandlerTypeExtensions
 {
     public static IReadOnlyCollection<(Type CommandType, Type? ResponseType)> GetCommandAndResponseTypes(this Type type)
     {

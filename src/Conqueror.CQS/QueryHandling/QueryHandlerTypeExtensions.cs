@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Conqueror.Common;
 
-namespace Conqueror.CQS.Common;
+namespace Conqueror.CQS.QueryHandling;
 
-internal static class CqsQueryHandlerTypeExtensions
+internal static class QueryHandlerTypeExtensions
 {
     public static IReadOnlyCollection<(Type QueryType, Type ResponseType)> GetQueryAndResponseTypes(this Type type)
     {

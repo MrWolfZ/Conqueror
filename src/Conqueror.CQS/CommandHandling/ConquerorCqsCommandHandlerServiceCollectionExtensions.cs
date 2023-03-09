@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.CQS.CommandHandling;
-using Conqueror.CQS.Common;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)

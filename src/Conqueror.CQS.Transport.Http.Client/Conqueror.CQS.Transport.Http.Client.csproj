@@ -11,7 +11,6 @@
         <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
         <ProjectReference Include="..\Conqueror.CQS\Conqueror.CQS.csproj" />
-        <ProjectReference Include="..\Conqueror.CQS.Common\Conqueror.CQS.Common.csproj" />
         <ProjectReference Include="..\Conqueror.CQS.Transport.Http.Abstractions\Conqueror.CQS.Transport.Http.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.CQS.Transport.Http.Common\Conqueror.CQS.Transport.Http.Common.csproj" />
     </ItemGroup>

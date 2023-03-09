@@ -1,5 +1,3 @@
-using Conqueror.CQS.Common;
-
 namespace Conqueror.CQS.Tests;
 
 public abstract class CommandClientFunctionalityTests

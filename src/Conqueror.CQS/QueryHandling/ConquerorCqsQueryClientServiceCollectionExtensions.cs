@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Common;
-using Conqueror.CQS.Common;
 using Conqueror.CQS.QueryHandling;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

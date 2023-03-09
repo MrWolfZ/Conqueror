@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror.Common;
-using Conqueror.CQS.Common;
 using Conqueror.CQS.Transport.Http.Common;
 
 namespace Conqueror.CQS.Transport.Http.Client;

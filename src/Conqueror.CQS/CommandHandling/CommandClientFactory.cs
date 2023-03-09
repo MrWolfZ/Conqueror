@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Conqueror.Common;
-using Conqueror.CQS.Common;
 
 namespace Conqueror.CQS.CommandHandling;
 

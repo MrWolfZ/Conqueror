@@ -1,6 +1,5 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.CQS.Common;
 
 namespace Conqueror.CQS.CommandHandling;
 
