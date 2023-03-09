@@ -2,18 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.Common;
 
 namespace Conqueror.CQS.QueryHandling;
 
 internal sealed class QueryPipeline
 {
-    private readonly ConquerorContextAccessor conquerorContextAccessor;
+    private readonly IConquerorContextAccessor conquerorContextAccessor;
     private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IQueryMiddlewareInvoker Invoker)> middlewares;
     private readonly QueryContextAccessor queryContextAccessor;
 
     public QueryPipeline(QueryContextAccessor queryContextAccessor,
-                         ConquerorContextAccessor conquerorContextAccessor,
+                         IConquerorContextAccessor conquerorContextAccessor,
                          List<(Type MiddlewareType, object? MiddlewareConfiguration, IQueryMiddlewareInvoker Invoker)> middlewares)
     {
         this.queryContextAccessor = queryContextAccessor;
@@ -33,7 +32,7 @@ internal sealed class QueryPipeline
 
         queryContextAccessor.QueryContext = queryContext;
 
-        using var conquerorContext = conquerorContextAccessor.GetOrCreate();
+        using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
         var transportClientBuilder = new QueryTransportClientBuilder(serviceProvider, typeof(TQuery));
 

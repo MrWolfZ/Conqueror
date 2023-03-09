@@ -60,7 +60,11 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
             if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var ctxValues))
             {
                 var parsedContextItems = ContextValueFormatter.Parse(ctxValues);
-                ctx.AddOrReplaceItems(parsedContextItems);
+
+                foreach (var (key, value) in parsedContextItems)
+                {
+                    ctx.UpstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+                }
             }
 
             if (typeof(TResponse) == typeof(UnitCommandResponse))
@@ -84,9 +88,9 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
             headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }
 
-        if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
+        if (ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
         {
-            headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
+            headers.Add(HttpConstants.ConquerorContextHeaderName, s);
         }
 
         if (commandContextAccessor.CommandContext?.CommandId is { } commandId)

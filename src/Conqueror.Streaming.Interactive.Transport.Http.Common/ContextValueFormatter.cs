@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Conqueror.CQS.Extensions.AspNetCore.Common;
+namespace Conqueror.Streaming.Interactive.Transport.Http.Common;
 
 internal static class ContextValueFormatter
 {
-    public static string Format(IEnumerable<KeyValuePair<string, string>> values)
+    public static string? Format(IConquerorContextData? values)
     {
-        return string.Join(";", values.Select(p => $"{Base64Encode(p.Key)},{Base64Encode(p.Value)}"));
+        if (values is null)
+        {
+            return null;
+        }
+
+        return string.Join(";", values.Where(t => t.Scope == ConquerorContextDataScope.AcrossTransports).Select(p => $"{Base64Encode(p.Key)},{Base64Encode((string)p.Value)}"));
     }
 
     public static IReadOnlyDictionary<string, string> Parse(string value)

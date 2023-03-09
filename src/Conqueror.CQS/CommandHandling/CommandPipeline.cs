@@ -2,18 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.Common;
 
 namespace Conqueror.CQS.CommandHandling;
 
 internal sealed class CommandPipeline
 {
     private readonly CommandContextAccessor commandContextAccessor;
-    private readonly ConquerorContextAccessor conquerorContextAccessor;
+    private readonly IConquerorContextAccessor conquerorContextAccessor;
     private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares;
 
     public CommandPipeline(CommandContextAccessor commandContextAccessor,
-                           ConquerorContextAccessor conquerorContextAccessor,
+                           IConquerorContextAccessor conquerorContextAccessor,
                            List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares)
     {
         this.commandContextAccessor = commandContextAccessor;
@@ -33,7 +32,7 @@ internal sealed class CommandPipeline
 
         commandContextAccessor.CommandContext = commandContext;
 
-        using var conquerorContext = conquerorContextAccessor.GetOrCreate();
+        using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
 
         var transportBuilder = new CommandTransportClientBuilder(serviceProvider, typeof(TCommand));
 

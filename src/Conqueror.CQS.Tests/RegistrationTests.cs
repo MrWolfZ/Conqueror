@@ -1,4 +1,3 @@
-using Conqueror.Common;
 using Conqueror.CQS.CommandHandling;
 using Conqueror.CQS.QueryHandling;
 
@@ -33,7 +32,6 @@ public sealed class RegistrationTests
         Assert.That(services.Count(d => d.ServiceType == typeof(IQueryMiddlewareRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(QueryContextAccessor)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IQueryContextAccessor)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(ConquerorContextAccessor)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)), Is.EqualTo(1));
     }
 

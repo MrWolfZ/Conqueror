@@ -69,7 +69,11 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
             if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
             {
                 var parsedContextItems = ContextValueFormatter.Parse(values);
-                ctx.AddOrReplaceItems(parsedContextItems);
+
+                foreach (var (key, value) in parsedContextItems)
+                {
+                    ctx.UpstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+                }
             }
 
             var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
@@ -88,9 +92,9 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
             headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }
 
-        if (conquerorContextAccessor.ConquerorContext?.HasItems ?? false)
+        if (ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
         {
-            headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
+            headers.Add(HttpConstants.ConquerorContextHeaderName, s);
         }
 
         if (queryContextAccessor.QueryContext?.QueryId is { } queryId)

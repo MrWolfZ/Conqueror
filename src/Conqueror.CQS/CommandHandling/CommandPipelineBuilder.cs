@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling;
@@ -97,7 +96,7 @@ internal sealed class CommandPipelineBuilder : ICommandPipelineBuilder
     public CommandPipeline Build()
     {
         return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(),
-                   ServiceProvider.GetRequiredService<ConquerorContextAccessor>(),
+                   ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
                    middlewares);
     }
 

@@ -16,7 +16,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public sealed class ConquerorContextCommandTests : TestBase
 {
-    private static readonly Dictionary<string, string> ContextItems = new()
+    private static readonly Dictionary<string, string> ContextData = new()
     {
         { "key1", "value1" },
         { "key2", "value2" },
@@ -24,6 +24,12 @@ public sealed class ConquerorContextCommandTests : TestBase
         { "key4", "valueWith,Comma" },
         { "keyWith=Equals", "value" },
         { "key6", "valueWith=Equals" },
+    };
+
+    private static readonly Dictionary<string, string> InProcessContextData = new()
+    {
+        { "key7", "value1" },
+        { "key8", "value2" },
     };
 
     private DisposableActivity? activity;
@@ -37,9 +43,9 @@ public sealed class ConquerorContextCommandTests : TestBase
     [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
     [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
     [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-    public async Task GivenContextItems_ItemsAreReturnedInHeader(string path, string data)
+    public async Task GivenContextData_DataIsReturnedInHeader(string path, string data)
     {
-        Resolve<TestObservations>().ShouldAddItems = true;
+        Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
         using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
         var response = await HttpClient.PostAsync(path, content);
@@ -49,9 +55,9 @@ public sealed class ConquerorContextCommandTests : TestBase
 
         Assert.That(exists, Is.True);
 
-        var receivedItems = ContextValueFormatter.Parse(values!);
+        var receivedData = ContextValueFormatter.Parse(values!);
 
-        CollectionAssert.AreEquivalent(ContextItems, receivedItems);
+        CollectionAssert.AreEquivalent(ContextData, receivedData.Select(t => new KeyValuePair<string, string>(t.Key, t.Value)));
     }
 
     [TestCase("/api/commands/test", "{}")]
@@ -63,19 +69,19 @@ public sealed class ConquerorContextCommandTests : TestBase
     [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
     [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
     [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-    public async Task GivenConquerorContextRequestHeader_ItemsAreReceivedByHandler(string path, string data)
+    public async Task GivenConquerorContextRequestHeader_DataIsReceivedByHandler(string path, string data)
     {
         using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
         {
-            Headers = { { HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(ContextItems) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(ContextData) } },
         };
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertSuccessStatusCode();
 
-        var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
+        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)) ?? Array.Empty<KeyValuePair<string, string>>());
     }
 
     [TestCase("/api/commands/test", "{}")]
@@ -275,14 +281,22 @@ public sealed class ConquerorContextCommandTests : TestBase
 
                         testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
                         testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-                        testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+                        testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-                        if (testObservations.ShouldAddItems)
+                        if (testObservations.ShouldAddUpstreamData)
                         {
-                            conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                            foreach (var item in ContextData)
+                            {
+                                conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                            }
+
+                            foreach (var item in InProcessContextData)
+                            {
+                                conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                            }
                         }
 
-                        return new TestDelegateCommandResponse();
+                        return new();
                     })
                     .AddSingleton<TestObservations>();
     }
@@ -373,11 +387,19 @@ public sealed class ConquerorContextCommandTests : TestBase
         {
             testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.FromResult(new TestCommandResponse());
@@ -403,11 +425,19 @@ public sealed class ConquerorContextCommandTests : TestBase
         {
             testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.CompletedTask;
@@ -433,11 +463,19 @@ public sealed class ConquerorContextCommandTests : TestBase
         {
             testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.FromResult(new TestCommandResponse());
@@ -463,11 +501,19 @@ public sealed class ConquerorContextCommandTests : TestBase
         {
             testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.CompletedTask;
@@ -496,11 +542,19 @@ public sealed class ConquerorContextCommandTests : TestBase
         {
             testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return nestedHandler.ExecuteCommand(new(), cancellationToken);
@@ -526,11 +580,19 @@ public sealed class ConquerorContextCommandTests : TestBase
         {
             testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.FromResult(new TestCommandResponse());
@@ -543,9 +605,9 @@ public sealed class ConquerorContextCommandTests : TestBase
 
         public List<string?> ReceivedTraceIds { get; } = new();
 
-        public bool ShouldAddItems { get; set; }
+        public bool ShouldAddUpstreamData { get; set; }
 
-        public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
+        public IConquerorContextData? ReceivedContextData { get; set; }
     }
 
     [ApiController]

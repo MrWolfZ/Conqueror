@@ -115,39 +115,6 @@ public sealed class ConquerorContextQueryTests
     }
 
     [Test]
-    [Combinatorial]
-    public async Task GivenQueryExecution_ConquerorContextIsTheSameInNestedHandlerRegardlessOfLifetime(
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime handlerLifetime,
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime nestedHandlerLifetime)
-    {
-        var query = new TestQuery(10);
-        var observedContexts = new List<IConquerorContext>();
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                observedContexts.Add(ctx!);
-                return new(q.Payload);
-            },
-            (q, ctx) =>
-            {
-                observedContexts.Add(ctx!);
-                return new(q.Payload);
-            },
-            handlerLifetime: handlerLifetime,
-            nestedHandlerLifetime: nestedHandlerLifetime);
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(observedContexts, Has.Count.EqualTo(2));
-        Assert.That(observedContexts[0], Is.Not.Null);
-        Assert.That(observedContexts[1], Is.Not.Null);
-        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
-    }
-
-    [Test]
     public async Task GivenQueryExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
     {
         var query = new TestQuery(10);
@@ -175,34 +142,6 @@ public sealed class ConquerorContextQueryTests
         Assert.That(observedContexts[0], Is.Not.Null);
         Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
         Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
-    }
-
-    [Test]
-    public async Task GivenQueryExecution_ContextItemsAreTheSameInHandlerMiddlewareAndNestedClass()
-    {
-        var query = new TestQuery(10);
-        var observedItems = new List<IDictionary<string, string>>();
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                observedItems.Add(ctx!.Items);
-                return new(q.Payload);
-            },
-            (q, _) => new(q.Payload),
-            (middlewareCtx, ctx, next) =>
-            {
-                observedItems.Add(ctx!.Items);
-                return next(middlewareCtx.Query);
-            },
-            (middlewareCtx, _, next) => next(middlewareCtx.Query),
-            ctx => observedItems.Add(ctx!.Items));
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.That(observedItems[1], Is.SameAs(observedItems[0]));
-        Assert.That(observedItems[2], Is.SameAs(observedItems[0]));
     }
 
     [Test]
@@ -265,30 +204,6 @@ public sealed class ConquerorContextQueryTests
     }
 
     [Test]
-    public async Task GivenQueryExecution_ContextItemsAreTheSameInNestedHandler()
-    {
-        var query = new TestQuery(10);
-        var observedItems = new List<IDictionary<string, string>>();
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                observedItems.Add(ctx!.Items);
-                return new(q.Payload);
-            },
-            (q, ctx) =>
-            {
-                observedItems.Add(ctx!.Items);
-                return new(q.Payload);
-            });
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(observedItems, Has.Count.EqualTo(2));
-        Assert.That(observedItems[1], Is.SameAs(observedItems[0]));
-    }
-
-    [Test]
     public async Task GivenQueryExecution_TraceIdIsTheSameInNestedHandler()
     {
         var query = new TestQuery(10);
@@ -340,189 +255,6 @@ public sealed class ConquerorContextQueryTests
     }
 
     [Test]
-    public async Task GivenQueryExecution_ContextItemsCanBeAddedFromSource()
-    {
-        var query = new TestQuery(10);
-        var items = new Dictionary<string, string> { { "key", "value" } };
-        var observedKeys = new List<string>();
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                ctx!.AddOrReplaceItems(items);
-                return new(q.Payload);
-            },
-            (q, _) => new(q.Payload),
-            async (middlewareCtx, ctx, next) =>
-            {
-                observedKeys.AddRange(ctx!.Items.Keys);
-                var r = await next(middlewareCtx.Query);
-                observedKeys.AddRange(ctx.Items.Keys);
-                return r;
-            },
-            (middlewareCtx, _, next) => next(middlewareCtx.Query),
-            ctx => observedKeys.AddRange(ctx!.Items.Keys));
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
-    }
-
-    [Test]
-    public async Task GivenQueryExecution_ContextItemsCanBeAddedFromSourceWithDuplicates()
-    {
-        var query = new TestQuery(10);
-        var items = new Dictionary<string, string> { { "key", "value" } };
-        var observedKeys = new List<string>();
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                ctx!.AddOrReplaceItems(items);
-                return new(q.Payload);
-            },
-            (q, _) => new(q.Payload),
-            async (middlewareCtx, ctx, next) =>
-            {
-                observedKeys.AddRange(ctx!.Items.Keys);
-                ctx.AddOrReplaceItems(items);
-                var r = await next(middlewareCtx.Query);
-                observedKeys.AddRange(ctx.Items.Keys);
-                return r;
-            },
-            (middlewareCtx, _, next) => next(middlewareCtx.Query),
-            ctx => observedKeys.AddRange(ctx!.Items.Keys));
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
-    }
-
-    [Test]
-    public async Task GivenQueryExecution_ContextItemsCanBeSet()
-    {
-        var query = new TestQuery(10);
-        var key = "test";
-        var observedItems = new List<string?>();
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                ctx!.Items[key] = key;
-                return new(q.Payload);
-            },
-            (q, _) => new(q.Payload),
-            async (middlewareCtx, ctx, next) =>
-            {
-                observedItems.Add(ctx!.Items.TryGetValue(key, out var k) ? k : null);
-                var r = await next(middlewareCtx.Query);
-                observedItems.Add(ctx.Items.TryGetValue(key, out var k2) ? k2 : null);
-                return r;
-            },
-            (middlewareCtx, _, next) => next(middlewareCtx.Query),
-            ctx => observedItems.Add(ctx!.Items.TryGetValue(key, out var k) ? k : null));
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.That(observedItems[0], Is.Null);
-        Assert.That(observedItems[1], Is.SameAs(key));
-        Assert.That(observedItems[2], Is.SameAs(key));
-    }
-
-    [Test]
-    public async Task GivenQueryExecution_ContextItemsCanBeAddedFromSourceForNestedHandler()
-    {
-        var query = new TestQuery(10);
-        var key = "key";
-        var items = new Dictionary<string, string> { { key, "value" } };
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                ctx!.AddOrReplaceItems(items);
-                return new(q.Payload);
-            },
-            (q, ctx) =>
-            {
-                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
-                return new(q.Payload);
-            });
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenQueryExecution_ContextItemsCanBeSetForNestedHandler()
-    {
-        var query = new TestQuery(10);
-        var key = "test";
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                ctx!.Items[key] = key;
-                return new(q.Payload);
-            },
-            (q, ctx) =>
-            {
-                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
-                return new(q.Payload);
-            });
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenQueryExecution_ContextItemsCanBeAddedFromSourceFromNestedHandler()
-    {
-        var query = new TestQuery(10);
-        var key = "key";
-        var items = new Dictionary<string, string> { { key, "value" } };
-
-        var provider = Setup(
-            nestedHandlerFn: (q, ctx) =>
-            {
-                ctx!.AddOrReplaceItems(items);
-                return new(q.Payload);
-            },
-            middlewareFn: async (middlewareCtx, ctx, next) =>
-            {
-                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
-                var r = await next(middlewareCtx.Query);
-                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
-                return r;
-            });
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenQueryExecution_ContextItemsCanBeSetFromNestedHandler()
-    {
-        var query = new TestQuery(10);
-        var key = "test";
-
-        var provider = Setup(
-            nestedHandlerFn: (q, ctx) =>
-            {
-                ctx!.Items[key] = key;
-                return new(q.Payload);
-            },
-            middlewareFn: async (middlewareCtx, ctx, next) =>
-            {
-                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
-                var r = await next(middlewareCtx.Query);
-                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
-                return r;
-            });
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-    }
-
-    [Test]
     public void GivenNoQueryExecution_ConquerorContextIsNotAvailable()
     {
         var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>();
@@ -532,27 +264,6 @@ public sealed class ConquerorContextQueryTests
         var provider = services.BuildServiceProvider();
 
         provider.GetRequiredService<NestedClass>().Execute();
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContextWithItems_ContextItemsAreAvailableInHandler()
-    {
-        var query = new TestQuery(10);
-        var key = "key";
-        var value = "value";
-
-        var provider = Setup((q, ctx) =>
-        {
-            Assert.That(ctx!.Items.ContainsKey(key), Is.True);
-            Assert.That(ctx.Items[key], Is.EqualTo(value));
-            return new(q.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        conquerorContext.Items[key] = value;
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
     }
 
     [Test]
@@ -595,27 +306,6 @@ public sealed class ConquerorContextQueryTests
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextWithItems_ContextItemsAreAvailableInNestedHandler()
-    {
-        var query = new TestQuery(10);
-        var key = "key";
-        var value = "value";
-
-        var provider = Setup(nestedHandlerFn: (q, ctx) =>
-        {
-            Assert.That(ctx!.Items.ContainsKey(key), Is.True);
-            Assert.That(ctx.Items[key], Is.EqualTo(value));
-            return new(q.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        conquerorContext.Items[key] = value;
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-    }
-
-    [Test]
     public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInNestedHandler()
     {
         var query = new TestQuery(10);
@@ -652,133 +342,6 @@ public sealed class ConquerorContextQueryTests
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContextWithItems_ContextItemsCanBeChangedInHandlerForNestedHandler()
-    {
-        var query = new TestQuery(10);
-        var key = "key";
-        var value = "value";
-        var newValue = "newValue";
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                Assert.That(ctx!.Items[key], Is.EqualTo(value));
-                ctx.Items[key] = newValue;
-                return new(q.Payload);
-            },
-            (q, ctx) =>
-            {
-                Assert.That(ctx!.Items[key], Is.EqualTo(newValue));
-                return new(q.Payload);
-            });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        conquerorContext.Items[key] = value;
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContext_ItemsFromHandlerAreAvailableInClientContext()
-    {
-        var query = new TestQuery(10);
-        var key = "key";
-        var value = "value";
-
-        var provider = Setup((q, ctx) =>
-        {
-            ctx!.Items[key] = value;
-            return new(q.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        var contextItems = conquerorContext.Items;
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(contextItems[key], Is.EqualTo(value));
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContext_ItemsFromNestedHandlerAreAvailableInClientContext()
-    {
-        var query = new TestQuery(10);
-        var key = "key";
-        var value = "value";
-
-        var provider = Setup(nestedHandlerFn: (q, ctx) =>
-        {
-            ctx!.Items[key] = value;
-            return new(q.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        var contextItems = conquerorContext.Items;
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(contextItems[key], Is.EqualTo(value));
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContextWithItems_ContextItemsFlowAcrossMultipleHandlerExecutions()
-    {
-        var query = new TestQuery(10);
-        var invocationCount = 0;
-        var key1 = "key 1";
-        var key2 = "key 2";
-        var value1 = "value 1";
-        var value2 = "value 2";
-        var value3 = "value 3";
-        var value4 = "value 4";
-
-        var provider = Setup((q, ctx) =>
-        {
-            if (invocationCount == 0)
-            {
-                Assert.That(ctx!.Items[key1], Is.EqualTo(value1));
-                Assert.That(ctx.Items.ContainsKey(key2), Is.False);
-                ctx.Items[key2] = value2;
-            }
-            else if (invocationCount == 1)
-            {
-                Assert.That(ctx!.Items[key1], Is.EqualTo(value1));
-                Assert.That(ctx.Items[key2], Is.EqualTo(value2));
-                ctx.Items[key1] = value3;
-            }
-            else if (invocationCount == 2)
-            {
-                Assert.That(ctx!.Items[key1], Is.EqualTo(value3));
-                Assert.That(ctx.Items[key2], Is.EqualTo(value2));
-                ctx.Items[key1] = value4;
-            }
-            else
-            {
-                Assert.Fail("should not reach this");
-            }
-
-            invocationCount += 1;
-
-            return new(q.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        conquerorContext.Items[key1] = value1;
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(conquerorContext.Items[key1], Is.SameAs(value4));
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]

@@ -12,6 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Streaming.Interactive.Abstractions\Conqueror.Streaming.Interactive.Abstractions.csproj" />
     </ItemGroup>
 

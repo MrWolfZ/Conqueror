@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Conqueror.Common;
 
@@ -14,16 +13,12 @@ internal sealed class DisposableConquerorContext : IDisposableConquerorContext
         this.wrappedContext = wrappedContext;
     }
 
-    /// <inheritdoc />
-    public IDictionary<string, string> Items => wrappedContext.Items;
-
-    /// <inheritdoc />
-    public bool HasItems => wrappedContext.HasItems;
-
-    /// <inheritdoc />
     public string TraceId => wrappedContext.TraceId;
 
-    /// <inheritdoc />
+    public IConquerorContextData DownstreamContextData => wrappedContext.DownstreamContextData;
+
+    public IConquerorContextData UpstreamContextData => wrappedContext.UpstreamContextData;
+
     public void SetTraceId(string traceId) => wrappedContext.SetTraceId(traceId);
 
     public void Dispose() => onDispose?.Invoke();

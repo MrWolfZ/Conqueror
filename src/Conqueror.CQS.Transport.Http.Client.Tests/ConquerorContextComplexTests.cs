@@ -7,7 +7,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests;
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public class ConquerorContextComplexTests : TestBase
 {
-    private static readonly Dictionary<string, string> ContextItems = new()
+    private static readonly Dictionary<string, string> ContextData = new()
     {
         { "key1", "value1" },
         { "key2", "value2" },
@@ -17,16 +17,31 @@ public class ConquerorContextComplexTests : TestBase
         { "key6", "valueWith=Equals" },
     };
 
+    private static readonly Dictionary<string, string> InProcessContextData = new()
+    {
+        { "key7", "value1" },
+        { "key8", "value2" },
+    };
+
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-    public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInDifferentCommandAndQueryHandlersAcrossMultipleInvocations()
+    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInDifferentCommandAndQueryHandlersAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
-        context.Items.Add(ContextItems.First());
+
+        foreach (var item in ContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
 
         var observations = Resolve<TestObservations>();
 
-        observations.ShouldAddItems = true;
+        observations.ShouldAddUpstreamData = true;
 
         var allReceivedKeys = new List<string>();
 
@@ -35,20 +50,17 @@ public class ConquerorContextComplexTests : TestBase
 
         _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
         _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
         _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
-        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextItems.Count * 2 + 1));
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
 
     [Test]
@@ -128,11 +140,19 @@ public class ConquerorContextComplexTests : TestBase
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.FromResult(new TestQueryResponse());
@@ -164,11 +184,19 @@ public class ConquerorContextComplexTests : TestBase
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.FromResult(new TestCommandResponse());
@@ -179,8 +207,8 @@ public class ConquerorContextComplexTests : TestBase
     {
         public List<string?> ReceivedTraceIds { get; } = new();
 
-        public bool ShouldAddItems { get; set; }
+        public bool ShouldAddUpstreamData { get; set; }
 
-        public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
+        public IConquerorContextData? ReceivedContextData { get; set; }
     }
 }

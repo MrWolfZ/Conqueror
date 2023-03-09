@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Conqueror;
 
@@ -9,34 +8,38 @@ namespace Conqueror;
 public interface IConquerorContext
 {
     /// <summary>
-    ///     Gets a key/value collection that can be used to share data across different executions (including
-    ///     across transport boundaries, e.g. HTTP).
-    /// </summary>
-    IDictionary<string, string> Items { get; }
-
-    /// <summary>
-    ///     Returns true if there are any items in the context. Using this property is preferable to accessing
-    ///     the count of <see cref="Items" /> for performance reasons, since the items may be lazily created.
-    /// </summary>
-    bool HasItems { get; }
-
-    /// <summary>
     ///     Gets a unique identifier to represent all Conqueror operations in trace logs. If there is an active
     ///     <see cref="System.Diagnostics.Activity" />, its trace ID is returned.
     /// </summary>
     string TraceId { get; }
 
     /// <summary>
-    ///     Add items from <paramref name="source" /> to <see cref="Items" />.
+    ///     The context data which flows to downstream Conqueror operations.<br />
+    ///     <br />
+    ///     For example, if command handler A executes query handler B, and query handler B calls query handler C,
+    ///     then data set in command handler A will be available in query handler B and in query handler C, but data
+    ///     set in query handler B is only available in query handler C, and not in command handler A. Note that the
+    ///     validity of the data is also affected by its scope in addition to its direction.<br />
+    ///     <br />
+    ///     The data is also available to any code running as part of the current Conqueror operation, even if that
+    ///     code is logically upstream. For example, downstream data set in a command handler is available to a
+    ///     command middleware that is part of the handler's pipeline.
     /// </summary>
-    /// <param name="source">The items to add.</param>
-    void AddOrReplaceItems(IEnumerable<KeyValuePair<string, string>> source)
-    {
-        foreach (var p in source)
-        {
-            Items[p.Key] = p.Value;
-        }
-    }
+    IConquerorContextData DownstreamContextData { get; }
+
+    /// <summary>
+    ///     The context data which flows to upstream Conqueror operations.<br />
+    ///     <br />
+    ///     For example, if command handler A executes query handler B, and query handler B calls query handler C,
+    ///     then data set in query handler C will be available in query handler B and in command handler A, but data
+    ///     set in query handler B is only available in command handler A, and not in query handler C. Note that the
+    ///     validity of the data is also affected by its scope in addition to its direction.<br />
+    ///     <br />
+    ///     The data is also available to any code running as part of the current Conqueror operation, even if that
+    ///     code is logically downstream. For example, upstream data set in a command middleware is available to the
+    ///     command handler.
+    /// </summary>
+    IConquerorContextData UpstreamContextData { get; }
 
     /// <summary>
     ///     Allows setting the <see cref="IConquerorContext.TraceId" />. This method is typically called from

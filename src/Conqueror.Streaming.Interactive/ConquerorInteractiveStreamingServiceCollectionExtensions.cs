@@ -24,8 +24,8 @@ public static class ConquerorInteractiveStreamingServiceCollectionExtensions
         //// services.TryAddSingleton<InteractiveStreamingContextAccessor>();
         //// services.TryAddSingleton<IInteractiveStreamingContextAccessor>(p => p.GetRequiredService<InteractiveStreamingContextAccessor>());
 
-        services.TryAddSingleton<ConquerorContextAccessor>();
-        services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
+        services.TryAddSingleton<DefaultConquerorContextAccessor>();
+        services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<DefaultConquerorContextAccessor>());
 
         return services;
     }

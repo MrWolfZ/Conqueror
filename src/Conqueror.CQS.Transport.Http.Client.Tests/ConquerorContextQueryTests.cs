@@ -8,7 +8,7 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests;
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public class ConquerorContextQueryTests : TestBase
 {
-    private static readonly Dictionary<string, string> ContextItems = new()
+    private static readonly Dictionary<string, string> ContextData = new()
     {
         { "key1", "value1" },
         { "key2", "value2" },
@@ -18,10 +18,16 @@ public class ConquerorContextQueryTests : TestBase
         { "key6", "valueWith=Equals" },
     };
 
-    [Test]
-    public async Task GivenManuallyCreatedContextOnClientAndContextItemsInHandler_ItemsAreReturnedInClientContext()
+    private static readonly Dictionary<string, string> InProcessContextData = new()
     {
-        Resolve<TestObservations>().ShouldAddItems = true;
+        { "key7", "value1" },
+        { "key8", "value2" },
+    };
+
+    [Test]
+    public async Task GivenManuallyCreatedContextOnClientAndContextDataInHandler_DataAreReturnedInClientContext()
+    {
+        Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
@@ -29,13 +35,13 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ContextItems, context.Items);
+        CollectionAssert.AreEquivalent(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextOnClientAndContextItemsInPostHandler_ItemsAreReturnedInClientContext()
+    public async Task GivenManuallyCreatedContextOnClientAndContextDataInPostHandler_DataAreReturnedInClientContext()
     {
-        Resolve<TestObservations>().ShouldAddItems = true;
+        Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
@@ -43,34 +49,52 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ContextItems, context.Items);
+        CollectionAssert.AreEquivalent(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandler()
+    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInHandler()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
-        context.AddOrReplaceItems(ContextItems);
+
+        foreach (var item in ContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
+        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-    public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInHandlerAcrossMultipleInvocations()
+    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInHandlerAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
-        context.Items.Add(ContextItems.First());
+
+        foreach (var item in ContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
 
         var observations = Resolve<TestObservations>();
 
-        observations.ShouldAddItems = true;
+        observations.ShouldAddUpstreamData = true;
 
         var allReceivedKeys = new List<string>();
 
@@ -78,47 +102,62 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
-        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextItems.Count * 2 + 1));
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInPostHandler()
+    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInPostHandler()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
-        context.AddOrReplaceItems(ContextItems);
+
+        foreach (var item in ContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
+        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-    public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInPostHandlerAcrossMultipleInvocations()
+    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInPostHandlerAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
-        context.Items.Add(ContextItems.First());
+
+        foreach (var item in ContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
 
         var observations = Resolve<TestObservations>();
 
-        observations.ShouldAddItems = true;
+        observations.ShouldAddUpstreamData = true;
 
         var allReceivedKeys = new List<string>();
 
@@ -126,32 +165,38 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
-        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextItems.Count * 2 + 1));
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
 
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-    public async Task GivenManuallyCreatedContextOnClientWithItems_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
+    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
-        context.Items.Add(ContextItems.First());
+
+        foreach (var item in ContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
 
         var observations = Resolve<TestObservations>();
 
-        observations.ShouldAddItems = true;
+        observations.ShouldAddUpstreamData = true;
 
         var allReceivedKeys = new List<string>();
 
@@ -160,76 +205,73 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
         _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
         _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextItems.Keys);
-        observations.ReceivedContextItems.Clear();
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
 
-        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextItems.Count * 2 + 1));
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
 
     [Test]
-    public async Task GivenContextItemsInHandler_ContextIsReceivedInOuterHandler()
+    public async Task GivenContextDataInHandler_ContextIsReceivedInOuterHandler()
     {
-        Resolve<TestObservations>().ShouldAddItems = true;
+        Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
         var handler = ResolveOnClient<IQueryHandler<OuterTestQuery, OuterTestQueryResponse>>();
 
         _ = await handler.ExecuteQuery(new(), CancellationToken.None);
 
-        var receivedContextItems = ResolveOnClient<TestObservations>().ReceivedOuterContextItems;
+        var receivedContextData = ResolveOnClient<TestObservations>().ReceivedOuterContextData;
 
-        CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
-    public async Task GivenContextItemsInPostHandler_ContextIsReceivedInOuterHandler()
+    public async Task GivenContextDataInPostHandler_ContextIsReceivedInOuterHandler()
     {
-        Resolve<TestObservations>().ShouldAddItems = true;
+        Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
         var handler = ResolveOnClient<IQueryHandler<OuterTestPostQuery, OuterTestQueryResponse>>();
 
         _ = await handler.ExecuteQuery(new(), CancellationToken.None);
 
-        var receivedContextItems = ResolveOnClient<TestObservations>().ReceivedOuterContextItems;
+        var receivedContextData = ResolveOnClient<TestObservations>().ReceivedOuterContextData;
 
-        CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
-    public async Task GivenContextItemsInOuterHandler_ContextIsReceivedInHandler()
+    public async Task GivenContextDataInOuterHandler_ContextIsReceivedInHandler()
     {
-        ResolveOnClient<TestObservations>().ShouldAddOuterItems = true;
+        ResolveOnClient<TestObservations>().ShouldAddOuterDownstreamData = true;
 
         var handler = ResolveOnClient<IQueryHandler<OuterTestQuery, OuterTestQueryResponse>>();
 
         _ = await handler.ExecuteQuery(new(), CancellationToken.None);
 
-        var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
+        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
-    public async Task GivenContextItemsInOuterHandler_ContextIsReceivedInPostHandler()
+    public async Task GivenContextDataInOuterHandler_ContextIsReceivedInPostHandler()
     {
-        ResolveOnClient<TestObservations>().ShouldAddOuterItems = true;
+        ResolveOnClient<TestObservations>().ShouldAddOuterDownstreamData = true;
 
         var handler = ResolveOnClient<IQueryHandler<OuterTestPostQuery, OuterTestQueryResponse>>();
 
         _ = await handler.ExecuteQuery(new(), CancellationToken.None);
 
-        var receivedContextItems = Resolve<TestObservations>().ReceivedContextItems;
+        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextItems, receivedContextItems);
+        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -431,11 +473,19 @@ public class ConquerorContextQueryTests : TestBase
         {
             testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.FromResult(new TestQueryResponse());
@@ -459,11 +509,19 @@ public class ConquerorContextQueryTests : TestBase
         {
             testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
-            if (testObservations.ShouldAddItems)
+            if (testObservations.ShouldAddUpstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             return Task.FromResult(new TestQueryResponse());
@@ -497,13 +555,21 @@ public class ConquerorContextQueryTests : TestBase
             testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
-            if (testObservations.ShouldAddOuterItems)
+            if (testObservations.ShouldAddOuterDownstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             _ = await nestedHandler.ExecuteQuery(new(), cancellationToken);
-            testObservations.ReceivedOuterContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedOuterContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
             return new();
         }
     }
@@ -533,13 +599,21 @@ public class ConquerorContextQueryTests : TestBase
             testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
-            if (testObservations.ShouldAddOuterItems)
+            if (testObservations.ShouldAddOuterDownstreamData)
             {
-                conquerorContextAccessor.ConquerorContext?.AddOrReplaceItems(ContextItems);
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
             }
 
             _ = await nestedHandler.ExecuteQuery(new(), cancellationToken);
-            testObservations.ReceivedOuterContextItems.AddOrReplaceRange(conquerorContextAccessor.ConquerorContext!.Items);
+            testObservations.ReceivedOuterContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
             return new();
         }
     }
@@ -550,13 +624,13 @@ public class ConquerorContextQueryTests : TestBase
 
         public List<string?> ReceivedTraceIds { get; } = new();
 
-        public bool ShouldAddItems { get; set; }
+        public bool ShouldAddUpstreamData { get; set; }
 
-        public bool ShouldAddOuterItems { get; set; }
+        public bool ShouldAddOuterDownstreamData { get; set; }
 
-        public IDictionary<string, string> ReceivedContextItems { get; } = new Dictionary<string, string>();
+        public IConquerorContextData? ReceivedContextData { get; set; }
 
-        public IDictionary<string, string> ReceivedOuterContextItems { get; } = new Dictionary<string, string>();
+        public IConquerorContextData? ReceivedOuterContextData { get; set; }
     }
 
     private sealed class WrapperQueryTransportClient : IQueryTransportClient

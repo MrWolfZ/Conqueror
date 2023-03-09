@@ -125,39 +125,6 @@ public sealed class ConquerorContextCommandTests
     }
 
     [Test]
-    [Combinatorial]
-    public async Task GivenCommandExecution_ConquerorContextIsTheSameInNestedHandlerRegardlessOfLifetime(
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime handlerLifetime,
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime nestedHandlerLifetime)
-    {
-        var command = new TestCommand(10);
-        var observedContexts = new List<IConquerorContext>();
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                observedContexts.Add(ctx!);
-                return new(cmd.Payload);
-            },
-            (cmd, ctx) =>
-            {
-                observedContexts.Add(ctx!);
-                return new(cmd.Payload);
-            },
-            handlerLifetime: handlerLifetime,
-            nestedHandlerLifetime: nestedHandlerLifetime);
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(observedContexts, Has.Count.EqualTo(2));
-        Assert.That(observedContexts[0], Is.Not.Null);
-        Assert.That(observedContexts[1], Is.Not.Null);
-        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
-    }
-
-    [Test]
     public async Task GivenCommandExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
     {
         var command = new TestCommand(10);
@@ -185,34 +152,6 @@ public sealed class ConquerorContextCommandTests
         Assert.That(observedContexts[0], Is.Not.Null);
         Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
         Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
-    }
-
-    [Test]
-    public async Task GivenCommandExecution_ContextItemsAreTheSameInHandlerMiddlewareAndNestedClass()
-    {
-        var command = new TestCommand(10);
-        var observedItems = new List<IDictionary<string, string>>();
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                observedItems.Add(ctx!.Items);
-                return new(cmd.Payload);
-            },
-            (cmd, _) => new(cmd.Payload),
-            (middlewareCtx, ctx, next) =>
-            {
-                observedItems.Add(ctx!.Items);
-                return next(middlewareCtx.Command);
-            },
-            (middlewareCtx, _, next) => next(middlewareCtx.Command),
-            ctx => observedItems.Add(ctx!.Items));
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.That(observedItems[1], Is.SameAs(observedItems[0]));
-        Assert.That(observedItems[2], Is.SameAs(observedItems[0]));
     }
 
     [Test]
@@ -275,30 +214,6 @@ public sealed class ConquerorContextCommandTests
     }
 
     [Test]
-    public async Task GivenCommandExecution_ContextItemsAreTheSameInNestedHandler()
-    {
-        var command = new TestCommand(10);
-        var observedItems = new List<IDictionary<string, string>>();
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                observedItems.Add(ctx!.Items);
-                return new(cmd.Payload);
-            },
-            (cmd, ctx) =>
-            {
-                observedItems.Add(ctx!.Items);
-                return new(cmd.Payload);
-            });
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(observedItems, Has.Count.EqualTo(2));
-        Assert.That(observedItems[1], Is.SameAs(observedItems[0]));
-    }
-
-    [Test]
     public async Task GivenCommandExecution_TraceIdIsTheSameInNestedHandler()
     {
         var command = new TestCommand(10);
@@ -350,189 +265,6 @@ public sealed class ConquerorContextCommandTests
     }
 
     [Test]
-    public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSource()
-    {
-        var command = new TestCommand(10);
-        var items = new Dictionary<string, string> { { "key", "value" } };
-        var observedKeys = new List<string>();
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                ctx!.AddOrReplaceItems(items);
-                return new(cmd.Payload);
-            },
-            (cmd, _) => new(cmd.Payload),
-            async (middlewareCtx, ctx, next) =>
-            {
-                observedKeys.AddRange(ctx!.Items.Keys);
-                var r = await next(middlewareCtx.Command);
-                observedKeys.AddRange(ctx.Items.Keys);
-                return r;
-            },
-            (middlewareCtx, _, next) => next(middlewareCtx.Command),
-            ctx => observedKeys.AddRange(ctx!.Items.Keys));
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
-    }
-
-    [Test]
-    public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSourceWithDuplicates()
-    {
-        var command = new TestCommand(10);
-        var items = new Dictionary<string, string> { { "key", "value" } };
-        var observedKeys = new List<string>();
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                ctx!.AddOrReplaceItems(items);
-                return new(cmd.Payload);
-            },
-            (cmd, _) => new(cmd.Payload),
-            async (middlewareCtx, ctx, next) =>
-            {
-                observedKeys.AddRange(ctx!.Items.Keys);
-                ctx.AddOrReplaceItems(items);
-                var r = await next(middlewareCtx.Command);
-                observedKeys.AddRange(ctx.Items.Keys);
-                return r;
-            },
-            (middlewareCtx, _, next) => next(middlewareCtx.Command),
-            ctx => observedKeys.AddRange(ctx!.Items.Keys));
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(observedKeys, Has.Count.EqualTo(2));
-        Assert.That(observedKeys[1], Is.SameAs(observedKeys[0]));
-    }
-
-    [Test]
-    public async Task GivenCommandExecution_ContextItemsCanBeSet()
-    {
-        var command = new TestCommand(10);
-        var key = "test";
-        var observedItems = new List<string?>();
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                ctx!.Items[key] = key;
-                return new(cmd.Payload);
-            },
-            (cmd, _) => new(cmd.Payload),
-            async (middlewareCtx, ctx, next) =>
-            {
-                observedItems.Add(ctx!.Items.TryGetValue(key, out var k) ? k : null);
-                var r = await next(middlewareCtx.Command);
-                observedItems.Add(ctx.Items.TryGetValue(key, out var k2) ? k2 : null);
-                return r;
-            },
-            (middlewareCtx, _, next) => next(middlewareCtx.Command),
-            ctx => observedItems.Add(ctx!.Items.TryGetValue(key, out var k) ? k : null));
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(observedItems, Has.Count.EqualTo(3));
-        Assert.That(observedItems[0], Is.Null);
-        Assert.That(observedItems[1], Is.SameAs(key));
-        Assert.That(observedItems[2], Is.SameAs(key));
-    }
-
-    [Test]
-    public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSourceForNestedHandler()
-    {
-        var command = new TestCommand(10);
-        var key = "key";
-        var items = new Dictionary<string, string> { { key, "value" } };
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                ctx!.AddOrReplaceItems(items);
-                return new(cmd.Payload);
-            },
-            (cmd, ctx) =>
-            {
-                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
-                return new(cmd.Payload);
-            });
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenCommandExecution_ContextItemsCanBeSetForNestedHandler()
-    {
-        var command = new TestCommand(10);
-        var key = "test";
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                ctx!.Items[key] = key;
-                return new(cmd.Payload);
-            },
-            (cmd, ctx) =>
-            {
-                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
-                return new(cmd.Payload);
-            });
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenCommandExecution_ContextItemsCanBeAddedFromSourceFromNestedHandler()
-    {
-        var command = new TestCommand(10);
-        var key = "key";
-        var items = new Dictionary<string, string> { { key, "value" } };
-
-        var provider = Setup(
-            nestedHandlerFn: (cmd, ctx) =>
-            {
-                ctx!.AddOrReplaceItems(items);
-                return new(cmd.Payload);
-            },
-            middlewareFn: async (middlewareCtx, ctx, next) =>
-            {
-                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
-                var r = await next(middlewareCtx.Command);
-                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
-                return r;
-            });
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenCommandExecution_ContextItemsCanBeSetFromNestedHandler()
-    {
-        var command = new TestCommand(10);
-        var key = "test";
-
-        var provider = Setup(
-            nestedHandlerFn: (cmd, ctx) =>
-            {
-                ctx!.Items[key] = key;
-                return new(cmd.Payload);
-            },
-            middlewareFn: async (middlewareCtx, ctx, next) =>
-            {
-                Assert.That(ctx?.Items.ContainsKey(key), Is.False);
-                var r = await next(middlewareCtx.Command);
-                Assert.That(ctx?.Items.ContainsKey(key), Is.True);
-                return r;
-            });
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-    }
-
-    [Test]
     public void GivenNoCommandExecution_ConquerorContextIsNotAvailable()
     {
         var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>();
@@ -542,27 +274,6 @@ public sealed class ConquerorContextCommandTests
         var provider = services.BuildServiceProvider();
 
         provider.GetRequiredService<NestedClass>().Execute();
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContextWithItems_ContextItemsAreAvailableInHandler()
-    {
-        var command = new TestCommand(10);
-        var key = "key";
-        var value = "value";
-
-        var provider = Setup((cmd, ctx) =>
-        {
-            Assert.That(ctx!.Items.ContainsKey(key), Is.True);
-            Assert.That(ctx.Items[key], Is.EqualTo(value));
-            return new(cmd.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        conquerorContext.Items[key] = value;
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
     }
 
     [Test]
@@ -605,27 +316,6 @@ public sealed class ConquerorContextCommandTests
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextWithItems_ContextItemsAreAvailableInNestedHandler()
-    {
-        var command = new TestCommand(10);
-        var key = "key";
-        var value = "value";
-
-        var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
-        {
-            Assert.That(ctx!.Items.ContainsKey(key), Is.True);
-            Assert.That(ctx.Items[key], Is.EqualTo(value));
-            return new(cmd.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        conquerorContext.Items[key] = value;
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-    }
-
-    [Test]
     public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInNestedHandler()
     {
         var command = new TestCommand(10);
@@ -662,133 +352,6 @@ public sealed class ConquerorContextCommandTests
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContextWithItems_ContextItemsCanBeChangedInHandlerForNestedHandler()
-    {
-        var command = new TestCommand(10);
-        var key = "key";
-        var value = "value";
-        var newValue = "newValue";
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                Assert.That(ctx!.Items[key], Is.EqualTo(value));
-                ctx.Items[key] = newValue;
-                return new(cmd.Payload);
-            },
-            (cmd, ctx) =>
-            {
-                Assert.That(ctx!.Items[key], Is.EqualTo(newValue));
-                return new(cmd.Payload);
-            });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        conquerorContext.Items[key] = value;
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContext_ItemsFromHandlerAreAvailableInClientContext()
-    {
-        var command = new TestCommand(10);
-        var key = "key";
-        var value = "value";
-
-        var provider = Setup((cmd, ctx) =>
-        {
-            ctx!.Items[key] = value;
-            return new(cmd.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        var contextItems = conquerorContext.Items;
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(contextItems[key], Is.EqualTo(value));
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContext_ItemsFromNestedHandlerAreAvailableInClientContext()
-    {
-        var command = new TestCommand(10);
-        var key = "key";
-        var value = "value";
-
-        var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
-        {
-            ctx!.Items[key] = value;
-            return new(cmd.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        var contextItems = conquerorContext.Items;
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(contextItems[key], Is.EqualTo(value));
-    }
-
-    [Test]
-    public async Task GivenManuallyCreatedContextWithItems_ContextItemsFlowAcrossMultipleHandlerExecutions()
-    {
-        var command = new TestCommand(10);
-        var invocationCount = 0;
-        var key1 = "key 1";
-        var key2 = "key 2";
-        var value1 = "value 1";
-        var value2 = "value 2";
-        var value3 = "value 3";
-        var value4 = "value 4";
-
-        var provider = Setup((cmd, ctx) =>
-        {
-            if (invocationCount == 0)
-            {
-                Assert.That(ctx!.Items[key1], Is.EqualTo(value1));
-                Assert.That(ctx.Items.ContainsKey(key2), Is.False);
-                ctx.Items[key2] = value2;
-            }
-            else if (invocationCount == 1)
-            {
-                Assert.That(ctx!.Items[key1], Is.EqualTo(value1));
-                Assert.That(ctx.Items[key2], Is.EqualTo(value2));
-                ctx.Items[key1] = value3;
-            }
-            else if (invocationCount == 2)
-            {
-                Assert.That(ctx!.Items[key1], Is.EqualTo(value3));
-                Assert.That(ctx.Items[key2], Is.EqualTo(value2));
-                ctx.Items[key1] = value4;
-            }
-            else
-            {
-                Assert.Fail("should not reach this");
-            }
-
-            invocationCount += 1;
-
-            return new(cmd.Payload);
-        });
-
-        using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
-
-        conquerorContext.Items[key1] = value1;
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(conquerorContext.Items[key1], Is.SameAs(value4));
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
@@ -843,10 +406,7 @@ public sealed class ConquerorContextCommandTests
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
     private IServiceProvider SetupWithoutResponse(Action<TestCommandWithoutResponse, IConquerorContext?>? handlerFn = null,
                                                   MiddlewareFn? middlewareFn = null,
-                                                  Action<IConquerorContext?>? nestedClassFn = null,
-                                                  ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
-                                                  ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
-                                                  ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
+                                                  Action<IConquerorContext?>? nestedClassFn = null)
     {
         handlerFn ??= (_, _) => { };
         middlewareFn ??= (middlewareCtx, _, next) => next(middlewareCtx.Command);
@@ -854,13 +414,11 @@ public sealed class ConquerorContextCommandTests
 
         var services = new ServiceCollection();
 
-        _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<IConquerorContextAccessor>()), nestedClassLifetime));
+        _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<IConquerorContextAccessor>()), ServiceLifetime.Transient));
 
-        _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>(p => new(handlerFn, p.GetRequiredService<IConquerorContextAccessor>(), p.GetRequiredService<NestedClass>()),
-                                                                                   handlerLifetime);
+        _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>(p => new(handlerFn, p.GetRequiredService<IConquerorContextAccessor>(), p.GetRequiredService<NestedClass>()));
 
-        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(p => new(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                          middlewareLifetime);
+        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(p => new(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()));
 
         var provider = services.BuildServiceProvider();
 

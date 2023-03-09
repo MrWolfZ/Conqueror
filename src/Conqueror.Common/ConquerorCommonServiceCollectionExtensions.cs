@@ -52,8 +52,7 @@ public static class ConquerorCommonServiceCollectionExtensions
 
     internal static IServiceCollection AddConquerorContext(this IServiceCollection services)
     {
-        services.TryAddSingleton<ConquerorContextAccessor>();
-        services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<ConquerorContextAccessor>());
+        services.TryAddSingleton<IConquerorContextAccessor, DefaultConquerorContextAccessor>();
 
         return services;
     }

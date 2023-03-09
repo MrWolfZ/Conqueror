@@ -9,7 +9,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Conqueror.CQS.Extensions.AspNetCore.Common;
 using Conqueror.Streaming.Interactive.Transport.Http.Common;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Client;
@@ -56,9 +55,9 @@ internal sealed class HttpInteractiveStreamingHandler<TRequest, TItem> : IIntera
             }
         }
 
-        if (conquerorContextAccessor?.ConquerorContext?.HasItems ?? false)
+        if (ContextValueFormatter.Format(conquerorContextAccessor?.ConquerorContext?.DownstreamContextData) is { } s)
         {
-            queryString.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext.Items));
+            queryString.Add(HttpConstants.ConquerorContextHeaderName, s);
         }
 
         if (queryString.HasKeys())

@@ -24,7 +24,7 @@ internal static class HttpRequestExecutor
 
                 foreach (var (key, value) in parsedValue)
                 {
-                    context.Items[key] = value;
+                    context.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
                 }
             }
             catch
@@ -52,9 +52,9 @@ internal static class HttpRequestExecutor
 
         var response = await executeFn().ConfigureAwait(false);
 
-        if (context.HasItems)
+        if (ContextValueFormatter.Format(context.UpstreamContextData) is { } s)
         {
-            httpContext.Response.Headers.Add(HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(context.Items));
+            httpContext.Response.Headers.Add(HttpConstants.ConquerorContextHeaderName, s);
         }
 
         return response;

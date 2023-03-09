@@ -15,8 +15,15 @@ public interface IConquerorContextAccessor
     IConquerorContext? ConquerorContext { get; }
 
     /// <summary>
-    ///     Gets the current <see cref="IConquerorContext" /> if it is active. Otherwise creates a new <see cref="IConquerorContext" /> and returns it.
+    ///     Gets the current <see cref="IConquerorContext" /> if there is one. Otherwise creates a new <see cref="IConquerorContext" /> and returns it.
     ///     When the returned object is disposed and it was created by this call, all contextual information is cleared. Otherwise the disposal is a no-op.
     /// </summary>
     IDisposableConquerorContext GetOrCreate();
+
+    /// <summary>
+    ///     Clones the current <see cref="IConquerorContext" /> if there is one. Otherwise creates a new <see cref="IConquerorContext" /> and returns it.
+    ///     Cloning the context copies all downstream context data to the new context. If a context was cloned, then disposing the returned object copies
+    ///     all upstream context data from the clone context to the original context. If a new context was created, all contextual information is cleared.
+    /// </summary>
+    IDisposableConquerorContext CloneOrCreate();
 }

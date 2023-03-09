@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling;
@@ -97,7 +96,7 @@ internal sealed class QueryPipelineBuilder : IQueryPipelineBuilder
     public QueryPipeline Build()
     {
         return new(ServiceProvider.GetRequiredService<QueryContextAccessor>(),
-                   ServiceProvider.GetRequiredService<ConquerorContextAccessor>(),
+                   ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
                    middlewares);
     }
 

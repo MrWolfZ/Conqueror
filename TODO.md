@@ -16,21 +16,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] in conqueror context, change items to baggage
-  - if tracing is active, using activity baggage mechanism
-  - if tracing is not active, manually adding items to baggage header
-    - ensure that values are properly escaped
-  - baggage is `string` to `string`
-    - expose explicit setter and getter methods, not directly as dictionary
-    - recommended pattern is to create helper methods with private key const in static class
-- [ ] in conqueror context, introduce ephemeral items
-  - ephemeral values are propagated in-memory
-  - ephemeral values have a `Type` key and `object?` value
-    - expose explicit setter and getter methods, not directly as dictionary
-    - the setter and getter are generic in the value type
-    - recommended pattern is to create helper methods with private key type in static class
 - [ ] expose conqueror context directly on middleware contexts
-- [ ] propagate command and query ID as baggage instead of custom headers
+- [ ] propagate command and query ID as context data instead of custom headers
   - ensure that command and query IDs are still correct set only downstream and do not leak upstream (i.e. add tests that after processing with another handler, original handler still sees its own ID)
 - [ ] remove command and query context
 - [ ] expose `IServiceProvider` on `IConquerorContext`
@@ -62,6 +49,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
+- [ ] do not use base64 encoding for context data, but instead use cookie-like encoding
 - [ ] remove need for `HttpRequestExecutor` to ensure that code stays simple to navigate
 - [ ] once common authentication package exists, set user identity from ASP request in executor
 - [ ] add recipe for customizing OpenAPI specification with Swashbuckle
