@@ -12,7 +12,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Conqueror.Common;
-using Conqueror.CQS.Transport.Http.Common;
 
 namespace Conqueror.CQS.Transport.Http.Client;
 

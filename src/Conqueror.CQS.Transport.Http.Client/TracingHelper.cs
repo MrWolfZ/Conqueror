@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-namespace Conqueror.CQS.Transport.Http.Common;
+namespace Conqueror.CQS.Transport.Http.Client;
 
 internal static class TracingHelper
 {
