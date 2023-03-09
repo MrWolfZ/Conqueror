@@ -43,7 +43,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
         // if we create the context, we make sure that disposing it causes the context to be cleared
         var context = new DefaultConquerorContext(Activity.Current?.TraceId.ToString() ?? ActivityTraceId.CreateRandom().ToString());
         var disposableContext = new DisposableConquerorContext(context, ClearContext);
-        ConquerorContext = context;
+        ConquerorContext = disposableContext;
         return disposableContext;
     }
 
@@ -84,7 +84,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
             ClearContext();
         });
 
-        ConquerorContext = context;
+        ConquerorContext = disposableContext;
         return disposableContext;
     }
 
