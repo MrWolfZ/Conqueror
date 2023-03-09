@@ -29,7 +29,7 @@ The application consists of a single implementation project as well as a single 
 
 > We also have a recipe for [refactoring a modular monolith into a distributed application](../monolith-to-distributed#readme), which you can take a look at after reading through this recipe.
 
-Let's first talk about when and why you would want to use a clean architecture. Many applications start out small and grow over time as more and more features are added. Initially, the application may be just fine being implemented in a single project with not much structure. However, once such an application grows beyond a certain point, certain pains are often experienced. For example, the business logic might be too tigthtly coupled to the database, making it difficult to test. Or there may be too many dependencies in all directions, making it difficult to track the flow of data and logic through the application. There are other drivers as well, many of which are discussed in [this excellent blog post](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html).
+Let's first talk about when and why you would want to use a clean architecture. Many applications start out small and grow over time as more and more features are added. Initially, the application may be just fine being implemented in a single project with not much structure. However, once such an application grows beyond a certain point, certain pains are often experienced. For example, the business logic might be too tightly coupled to the database, making it difficult to test. Or there may be too many dependencies in all directions, making it difficult to track the flow of data and logic through the application. There are other drivers as well, many of which are discussed in [this excellent blog post](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html).
 
 In this recipe we assume that a team started building the example application with **Conqueror.CQS** and is now experiencing some of those pains of a growing application (which is of course not yet the case for our simple application, but it still serves as a good illustration). Therefore, the team wants to refactor the application into a clean architecture.
 
@@ -66,7 +66,7 @@ Application/
 ├── GetCounterValueQuery.cs
 ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 └── IncrementCounterCommand.cs
-Infratructure/
+Infrastructure/
 ├── CountersRepository.cs
 └── UserHistoryRepository.cs
 EntryPoint.WebApi/
@@ -91,7 +91,7 @@ However, this won't work yet, since the command and query handlers require a ref
 + ├── ICountersRepository.cs
   ├── IncrementCounterCommand.cs
 + └── IUserHistoryRepository.cs
-  Infratructure/
+  Infrastructure/
   ├── CountersRepository.cs
   └── UserHistoryRepository.cs
   EntryPoint.WebApi/
@@ -116,7 +116,7 @@ Creating a single interface for each repository is a common approach that works 
 - ├── IUserHistoryRepository.cs
 + ├── IUserHistoryReadRepository.cs
 + └── IUserHistoryWriteRepository.cs
-  Infratructure/
+  Infrastructure/
   ├── CountersRepository.cs
   └── UserHistoryRepository.cs
   EntryPoint.WebApi/
@@ -161,7 +161,7 @@ Counters.Application/
 ├── ICountersReadRepository.cs
 ├── ICountersWriteRepository.cs
 └── IncrementCounterCommand.cs
-Counters.Infratructure/
+Counters.Infrastructure/
 └── CountersRepository.cs
 Counters.Tests/
 ├── GetCounterValueQueryTests.cs
@@ -170,7 +170,7 @@ UserHistory.Application/
 ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 ├── IUserHistoryReadRepository.cs
 └── IUserHistoryWriteRepository.cs
-UserHistory.Infratructure/
+UserHistory.Infrastructure/
 ├── CountersRepository.cs
 └── UserHistoryRepository.cs
 UserHistory.Tests/
@@ -186,7 +186,7 @@ In this structure, the `EntryPoint.WebApi` project will reference both context's
 There is still one open question: the `UserHistory` context needs to know when a counter was incremented, but how can the `Counters` context communicate this? There are a few options to do this:
 
 - we could add logic in the `Counters` context for writing to the `UserHistory` database directly (this works but violates the separation of the contexts)
-- we could add a dependency from the `Counters.Application` project to the `UserHistory.Infratructure` project, and use the `IUserHistoryWriteRepository` to update the user's history (this works, but leads to tight coupling between the contexts, which hurts long term maintainability)
+- we could add a dependency from the `Counters.Application` project to the `UserHistory.Infrastructure` project, and use the `IUserHistoryWriteRepository` to update the user's history (this works, but leads to tight coupling between the contexts, which hurts long term maintainability)
 - we can introduce a new command in the `UserHistory` context for updating the user history (this is the approach we will use in this recipe)
 - we can use the [Conqueror.Eventing](../../../../../..#conqueroreventing) library to publish a domain event from the `Counters` context and have an event observer in the `UserHistory` context (the [Conqueror.Eventing](../../../../../..#conqueroreventing) library is still experimental, but once it is stable you will be able to find a recipe [here](../../../eventing/advanced/clean-architecture#readme) which explores how our example application could look like using an event instead of a command)
 
@@ -205,7 +205,7 @@ We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can b
 + Counters.Contracts/
 + ├── GetCounterValueQuery.cs
 + └── IncrementCounterCommand.cs
-  Counters.Infratructure/
+  Counters.Infrastructure/
   └── CountersRepository.cs
   Counters.Tests/
   ├── GetCounterValueQueryTests.cs
@@ -219,7 +219,7 @@ We introduce a new `SetMostRecentlyIncrementedCounterForUserCommand` which can b
 + UserHistory.Contracts/
 + ├── GetMostRecentlyIncrementedCounterForUserQuery.cs
 + └── SetMostRecentlyIncrementedCounterForUserCommand.cs
-  UserHistory.Infratructure/
+  UserHistory.Infrastructure/
   ├── CountersRepository.cs
   └── UserHistoryRepository.cs
   UserHistory.Tests/

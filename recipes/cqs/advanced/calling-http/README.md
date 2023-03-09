@@ -24,7 +24,7 @@ Feel free to take a look at the full code for [the query](Conqueror.Recipes.CQS.
 
 The client application, from which are going to call the command and query, is a command line application (but everything would work exactly the same if, for example, the client would be a microservice calling commands and queries from another microservice). We've already prepared the core application logic in the client's [Program.cs](Conqueror.Recipes.CQS.Advanced.CallingHttp.Client/Program.cs) to be ready for calling the server.
 
-After we're done implemeting the client, we will be able to use it like this:
+After we're done implementing the client, we will be able to use it like this:
 
 ```txt
 > cd Conqueror.Recipes.CQS.Advanced.CallingHttp.Client
@@ -267,7 +267,7 @@ We also need to add a package reference to the new project to allow using certai
 dotnet add Conqueror.Recipes.CQS.Advanced.CallingHttp.Middlewares package Conqueror.CQS.Abstractions
 ```
 
-Now we can move the `DataAnnotationValidationCommandMiddleware.cs` file and the accompanying `DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions.cs` file to the new project. Since the middleware is now in a separate assembly, we also need to explictly add it to the services in both client and server. In the server's `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.CallingHttp.Server/Program.cs)) make the following change:
+Now we can move the `DataAnnotationValidationCommandMiddleware.cs` file and the accompanying `DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions.cs` file to the new project. Since the middleware is now in a separate assembly, we also need to explicitly add it to the services in both client and server. In the server's `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.CallingHttp.Server/Program.cs)) make the following change:
 
 ```diff
   builder.Services

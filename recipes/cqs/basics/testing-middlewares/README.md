@@ -6,13 +6,13 @@ The middlewares we are going to test are similar to those we built in the recipe
 
 > This recipe is designed to allow you to code along. [Download this recipe's folder](https://download-directory.github.io?url=https://github.com/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/testing-middlewares) and open the solution file in your IDE (note that you need to have [.NET 6 or later](https://dotnet.microsoft.com/en-us/download) installed). If you prefer to just view the completed code directly, you can do so [in your browser](.completed) or with your IDE in the `completed` folder of the solution [downloaded as part of the folder](https://download-directory.github.io?url=https://github.com/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/testing-middlewares).
 
-In this recipe, we will look at three different approaches to testing middlewares: testing simple middlewares, testing configurable middlewares, and testing pipelines which consist of muliple middlewares. All of these approaches have one thing in common: they always test the middleware or pipeline as part of executing a handler. This is in line with our advice from the recipe for [testing command and query handlers](../testing-handlers#readme), in that you should always your code through its public API and use it as closely as possible to how it is used in your production application code.
+In this recipe, we will look at three different approaches to testing middlewares: testing simple middlewares, testing configurable middlewares, and testing pipelines which consist of multiple middlewares. All of these approaches have one thing in common: they always test the middleware or pipeline as part of executing a handler. This is in line with our advice from the recipe for [testing command and query handlers](../testing-handlers#readme), in that you should always your code through its public API and use it as closely as possible to how it is used in your production application code.
 
-> It is of course possible to write unit tests which instantiate a middleware directly, but then you would have provide certain details like the middleware context yourself. We hope that after reading this recipe you will agree that testing middlewares through handler executions provides a sufficient level of control to obliviate the need for direct tests.
+> It is of course possible to write unit tests which instantiate a middleware directly, but then you would have provide certain details like the middleware context yourself. We hope that after reading this recipe you will agree that testing middlewares through handler executions provides a sufficient level of control to obviate the need for direct tests.
 
 The application, to which we will be adding tests, has two command middlewares: one for [data annotation validation](Conqueror.Recipes.CQS.Basics.TestingMiddlewares/DataAnnotationValidationCommandMiddleware.cs) and one for [retrying failed executions](Conqueror.Recipes.CQS.Basics.TestingMiddlewares/RetryCommandMiddleware.cs).
 
-> Testing query middlewares and pipelines works exactly like it does for commands. Therefore we'll only look at comand middlewares and pipelines in this recipe to keep it simple.
+> Testing query middlewares and pipelines works exactly like it does for commands. Therefore we'll only look at command middlewares and pipelines in this recipe to keep it simple.
 
 Let's start by writing tests for the [DataAnnotationValidationCommandMiddleware](Conqueror.Recipes.CQS.Basics.TestingMiddlewares/DataAnnotationValidationCommandMiddleware.cs). Create a new file `DataAnnotationValidationCommandMiddlewareTests.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.TestingMiddlewares.Tests/DataAnnotationValidationCommandMiddlewareTests.cs)) in the test project:
 
@@ -101,7 +101,7 @@ public sealed class RetryCommandMiddlewareTests
 }
 ```
 
-The retry middleware's behavior depends on what happens when the handler is executed (i.e. based on whether it throws an exception or not). Therefore, we need to be able to control what the handler does in our tests. **Conqueror.CQS** provides a way to create handlers from a delegate, which makes it very simple to create a handler with dynamic behavior. Let's create a dedicated test comand type and create the handler delegate:
+The retry middleware's behavior depends on what happens when the handler is executed (i.e. based on whether it throws an exception or not). Therefore, we need to be able to control what the handler does in our tests. **Conqueror.CQS** provides a way to create handlers from a delegate, which makes it very simple to create a handler with dynamic behavior. Let's create a dedicated test command type and create the handler delegate:
 
 ```cs
 private sealed record TestCommand(int Parameter);
@@ -122,7 +122,7 @@ private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestC
 }
 ```
 
-> Creating handlers from delegates like this is only recommended for testing purposes. In the application code itself, handlers shoud always be proper classes.
+> Creating handlers from delegates like this is only recommended for testing purposes. In the application code itself, handlers should always be proper classes.
 
 With the supporting code above we can now start writing tests. The first test will assert that execution is successful when the handler throws an exception once with the default configuration:
 

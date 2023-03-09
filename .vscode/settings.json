@@ -3,6 +3,7 @@
     "appsettings",
     "Autofac",
     "Blazor",
+    "classlib",
     "Distri",
     "effectful",
     "MediatR",
@@ -12,6 +13,7 @@
     "nunit",
     "polyrepo",
     "Quickstart",
+    "refactorings",
     "Swashbuckle",
     "traceparent",
     "typeof"

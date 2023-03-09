@@ -22,7 +22,7 @@ public sealed record GetCounterValueQueryResponse(bool CounterExists, int? Count
 
 Feel free to take a look at the full code for [the query](Conqueror.Recipes.CQS.Advanced.TestingHttp/GetCounterValueQuery.cs) and [the command](Conqueror.Recipes.CQS.Advanced.TestingHttp/IncrementCounterCommand.cs). The counters are stored in an [in-memory repository](Conqueror.Recipes.CQS.Advanced.TestingHttp/CountersRepository.cs).
 
-You may recall our advice from recipe for [testing command and query handlers](../../basics/testing-handlers#readme) that we recommend using [black-box testing](https://en.wikipedia.org/wiki/Black-box_testing) and focusing your tests on the public API of your aplication without any knowledge about the internal implementation. This advice still holds true for HTTP commands and queries, which means they should be tested by calling them via HTTP.
+You may recall our advice from recipe for [testing command and query handlers](../../basics/testing-handlers#readme) that we recommend using [black-box testing](https://en.wikipedia.org/wiki/Black-box_testing) and focusing your tests on the public API of your application without any knowledge about the internal implementation. This advice still holds true for HTTP commands and queries, which means they should be tested by calling them via HTTP.
 
 Fortunately, ASP.NET Core provides excellent tools for [integration testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests) with the [Microsoft.AspNetCore.Mvc.Testing](https://www.nuget.org/packages/Microsoft.AspNetCore.Mvc.Testing) package. We'll make use of those tools in the tests for our application to make them as simple as they can be (the package is already installed in our test project).
 
