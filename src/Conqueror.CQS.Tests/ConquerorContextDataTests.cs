@@ -1115,13 +1115,11 @@ public sealed class ConquerorContextDataTests
 
     private sealed class TestCommandMiddleware : ICommandMiddleware
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestDataInstructions testDataInstructions;
         private readonly TestObservations testObservations;
 
-        public TestCommandMiddleware(IConquerorContextAccessor conquerorContextAccessor, TestDataInstructions dataInstructions, TestObservations observations)
+        public TestCommandMiddleware(TestDataInstructions dataInstructions, TestObservations observations)
         {
-            this.conquerorContextAccessor = conquerorContextAccessor;
             testDataInstructions = dataInstructions;
             testObservations = observations;
         }
@@ -1131,11 +1129,11 @@ public sealed class ConquerorContextDataTests
         {
             await Task.Yield();
 
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, testDataInstructions, testObservations, Location.MiddlewarePreExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePreExecution);
 
             var response = await ctx.Next(ctx.Command, ctx.CancellationToken);
 
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, testDataInstructions, testObservations, Location.MiddlewarePostExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePostExecution);
 
             return response;
         }
@@ -1143,13 +1141,11 @@ public sealed class ConquerorContextDataTests
 
     private sealed class TestQueryMiddleware : IQueryMiddleware
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestDataInstructions testDataInstructions;
         private readonly TestObservations testObservations;
 
-        public TestQueryMiddleware(IConquerorContextAccessor conquerorContextAccessor, TestDataInstructions dataInstructions, TestObservations observations)
+        public TestQueryMiddleware(TestDataInstructions dataInstructions, TestObservations observations)
         {
-            this.conquerorContextAccessor = conquerorContextAccessor;
             testDataInstructions = dataInstructions;
             testObservations = observations;
         }
@@ -1159,11 +1155,11 @@ public sealed class ConquerorContextDataTests
         {
             await Task.Yield();
 
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, testDataInstructions, testObservations, Location.MiddlewarePreExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePreExecution);
 
             var response = await ctx.Next(ctx.Query, ctx.CancellationToken);
 
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, testDataInstructions, testObservations, Location.MiddlewarePostExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePostExecution);
 
             return response;
         }

@@ -13,6 +13,7 @@ internal sealed class QueryMiddlewareInvoker<TMiddleware, TConfiguration> : IQue
                                                      QueryMiddlewareNext<TQuery, TResponse> next,
                                                      object? middlewareConfiguration,
                                                      IServiceProvider serviceProvider,
+                                                     IConquerorContext conquerorContext,
                                                      CancellationToken cancellationToken)
         where TQuery : class
     {
@@ -28,7 +29,7 @@ internal sealed class QueryMiddlewareInvoker<TMiddleware, TConfiguration> : IQue
 
         var configuration = (TConfiguration)middlewareConfiguration;
 
-        var ctx = new DefaultQueryMiddlewareContext<TQuery, TResponse, TConfiguration>(query, next, configuration, serviceProvider, cancellationToken);
+        var ctx = new DefaultQueryMiddlewareContext<TQuery, TResponse, TConfiguration>(query, next, configuration, serviceProvider, conquerorContext, cancellationToken);
 
         if (typeof(TConfiguration) == typeof(NullQueryMiddlewareConfiguration))
         {

@@ -12,6 +12,7 @@ internal interface IQueryMiddlewareInvoker
                                               QueryMiddlewareNext<TQuery, TResponse> next,
                                               object? middlewareConfiguration,
                                               IServiceProvider serviceProvider,
+                                              IConquerorContext conquerorContext,
                                               CancellationToken cancellationToken)
         where TQuery : class;
 }

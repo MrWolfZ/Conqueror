@@ -15,12 +15,14 @@ internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse, TConfigur
                                          QueryMiddlewareNext<TQuery, TResponse> next,
                                          TConfiguration configuration,
                                          IServiceProvider serviceProvider,
+                                         IConquerorContext conquerorContext,
                                          CancellationToken cancellationToken)
     {
         this.next = next;
         Query = query;
         CancellationToken = cancellationToken;
         ServiceProvider = serviceProvider;
+        ConquerorContext = conquerorContext;
         Configuration = configuration;
     }
 
@@ -29,6 +31,8 @@ internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse, TConfigur
     public override CancellationToken CancellationToken { get; }
 
     public override IServiceProvider ServiceProvider { get; }
+
+    public override IConquerorContext ConquerorContext { get; }
 
     public override TConfiguration Configuration { get; }
 

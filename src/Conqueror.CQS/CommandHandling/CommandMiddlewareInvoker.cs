@@ -13,6 +13,7 @@ internal sealed class CommandMiddlewareInvoker<TMiddleware, TConfiguration> : IC
                                                        CommandMiddlewareNext<TCommand, TResponse> next,
                                                        object? middlewareConfiguration,
                                                        IServiceProvider serviceProvider,
+                                                       IConquerorContext conquerorContext,
                                                        CancellationToken cancellationToken)
         where TCommand : class
     {
@@ -28,7 +29,7 @@ internal sealed class CommandMiddlewareInvoker<TMiddleware, TConfiguration> : IC
 
         var configuration = (TConfiguration)middlewareConfiguration;
 
-        var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration>(command, next, configuration, serviceProvider, cancellationToken);
+        var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration>(command, next, configuration, serviceProvider, conquerorContext, cancellationToken);
 
         if (typeof(TConfiguration) == typeof(NullMiddlewareConfiguration))
         {

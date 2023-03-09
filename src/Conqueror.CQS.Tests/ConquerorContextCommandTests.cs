@@ -106,7 +106,7 @@ public sealed class ConquerorContextCommandTests
             (cmd, _) => new(cmd.Payload),
             (middlewareCtx, ctx, next) =>
             {
-                observedContexts.Add(ctx!);
+                observedContexts.Add(ctx);
                 return next(middlewareCtx.Command);
             },
             (middlewareCtx, _, next) => next(middlewareCtx.Command),
@@ -140,7 +140,7 @@ public sealed class ConquerorContextCommandTests
             async (middlewareCtx, ctx, next) =>
             {
                 await Task.Delay(10).ConfigureAwait(false);
-                observedContexts.Add(ctx!);
+                observedContexts.Add(ctx);
                 return await next(middlewareCtx.Command);
             },
             (middlewareCtx, _, next) => next(middlewareCtx.Command),
@@ -169,7 +169,7 @@ public sealed class ConquerorContextCommandTests
             (cmd, _) => new(cmd.Payload),
             (middlewareCtx, ctx, next) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx.TraceId);
                 return next(middlewareCtx.Command);
             },
             (middlewareCtx, _, next) => next(middlewareCtx.Command),
@@ -199,7 +199,7 @@ public sealed class ConquerorContextCommandTests
             (cmd, _) => new(cmd.Payload),
             (middlewareCtx, ctx, next) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx.TraceId);
                 return next(middlewareCtx.Command);
             },
             (middlewareCtx, _, next) => next(middlewareCtx.Command),
@@ -384,14 +384,11 @@ public sealed class ConquerorContextCommandTests
                                                                              p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
                                                                     handlerLifetime);
 
-        _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                          nestedHandlerLifetime);
+        _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()), nestedHandlerLifetime);
 
-        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(p => new(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                          middlewareLifetime);
+        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(_ => new(middlewareFn), middlewareLifetime);
 
-        _ = services.AddConquerorCommandMiddleware<OuterTestCommandMiddleware>(p => new(outerMiddlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                               middlewareLifetime);
+        _ = services.AddConquerorCommandMiddleware<OuterTestCommandMiddleware>(_ => new(outerMiddlewareFn), middlewareLifetime);
 
         var provider = services.BuildServiceProvider();
 
@@ -418,7 +415,7 @@ public sealed class ConquerorContextCommandTests
 
         _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>(p => new(handlerFn, p.GetRequiredService<IConquerorContextAccessor>(), p.GetRequiredService<NestedClass>()));
 
-        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(p => new(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()));
+        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(_ => new(middlewareFn));
 
         var provider = services.BuildServiceProvider();
 
@@ -468,7 +465,7 @@ public sealed class ConquerorContextCommandTests
     }
 
     private delegate Task<TestCommandResponse> MiddlewareFn(CommandMiddlewareContext<TestCommand, TestCommandResponse> middlewareCtx,
-                                                            IConquerorContext? ctx,
+                                                            IConquerorContext ctx,
                                                             Func<TestCommand, Task<TestCommandResponse>> next);
 
     private sealed record TestCommand(int Payload);
@@ -557,20 +554,18 @@ public sealed class ConquerorContextCommandTests
 
     private sealed class OuterTestCommandMiddleware : ICommandMiddleware
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly MiddlewareFn middlewareFn;
 
-        public OuterTestCommandMiddleware(MiddlewareFn middlewareFn, IConquerorContextAccessor conquerorContextAccessor)
+        public OuterTestCommandMiddleware(MiddlewareFn middlewareFn)
         {
             this.middlewareFn = middlewareFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
         }
 
         public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
             where TCommand : class
         {
             await Task.Yield();
-            return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, conquerorContextAccessor.ConquerorContext, async cmd =>
+            return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, ctx.ConquerorContext, async cmd =>
             {
                 var response = await ctx.Next((cmd as TCommand)!, ctx.CancellationToken);
                 return (response as TestCommandResponse)!;
@@ -580,20 +575,18 @@ public sealed class ConquerorContextCommandTests
 
     private sealed class TestCommandMiddleware : ICommandMiddleware
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly MiddlewareFn middlewareFn;
 
-        public TestCommandMiddleware(MiddlewareFn middlewareFn, IConquerorContextAccessor conquerorContextAccessor)
+        public TestCommandMiddleware(MiddlewareFn middlewareFn)
         {
             this.middlewareFn = middlewareFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
         }
 
         public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
             where TCommand : class
         {
             await Task.Yield();
-            return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, conquerorContextAccessor.ConquerorContext, async cmd =>
+            return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, ctx.ConquerorContext, async cmd =>
             {
                 var response = await ctx.Next((cmd as TCommand)!, ctx.CancellationToken);
                 return (response as TestCommandResponse)!;

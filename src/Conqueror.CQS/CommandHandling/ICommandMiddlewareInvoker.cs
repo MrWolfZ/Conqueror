@@ -12,6 +12,7 @@ internal interface ICommandMiddlewareInvoker
                                                 CommandMiddlewareNext<TCommand, TResponse> next,
                                                 object? middlewareConfiguration,
                                                 IServiceProvider serviceProvider,
+                                                IConquerorContext conquerorContext,
                                                 CancellationToken cancellationToken)
         where TCommand : class;
 }

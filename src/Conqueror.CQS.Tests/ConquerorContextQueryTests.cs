@@ -96,7 +96,7 @@ public sealed class ConquerorContextQueryTests
             (q, _) => new(q.Payload),
             (middlewareCtx, ctx, next) =>
             {
-                observedContexts.Add(ctx!);
+                observedContexts.Add(ctx);
                 return next(middlewareCtx.Query);
             },
             (middlewareCtx, _, next) => next(middlewareCtx.Query),
@@ -130,7 +130,7 @@ public sealed class ConquerorContextQueryTests
             async (middlewareCtx, ctx, next) =>
             {
                 await Task.Delay(10).ConfigureAwait(false);
-                observedContexts.Add(ctx!);
+                observedContexts.Add(ctx);
                 return await next(middlewareCtx.Query);
             },
             (middlewareCtx, _, next) => next(middlewareCtx.Query),
@@ -159,7 +159,7 @@ public sealed class ConquerorContextQueryTests
             (q, _) => new(q.Payload),
             (middlewareCtx, ctx, next) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx.TraceId);
                 return next(middlewareCtx.Query);
             },
             (middlewareCtx, _, next) => next(middlewareCtx.Query),
@@ -189,7 +189,7 @@ public sealed class ConquerorContextQueryTests
             (q, _) => new(q.Payload),
             (middlewareCtx, ctx, next) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx.TraceId);
                 return next(middlewareCtx.Query);
             },
             (middlewareCtx, _, next) => next(middlewareCtx.Query),
@@ -377,11 +377,9 @@ public sealed class ConquerorContextQueryTests
         _ = services.AddConquerorQueryHandler<NestedTestQueryHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
                                                                       nestedHandlerLifetime);
 
-        _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(p => new(middlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                      middlewareLifetime);
+        _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(_ => new(middlewareFn), middlewareLifetime);
 
-        _ = services.AddConquerorQueryMiddleware<OuterTestQueryMiddleware>(p => new(outerMiddlewareFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                           middlewareLifetime);
+        _ = services.AddConquerorQueryMiddleware<OuterTestQueryMiddleware>(_ => new(outerMiddlewareFn), middlewareLifetime);
 
         var provider = services.BuildServiceProvider();
 
@@ -432,7 +430,7 @@ public sealed class ConquerorContextQueryTests
     }
 
     private delegate Task<TestQueryResponse> MiddlewareFn(QueryMiddlewareContext<TestQuery, TestQueryResponse> middlewareCtx,
-                                                          IConquerorContext? ctx,
+                                                          IConquerorContext ctx,
                                                           Func<TestQuery, Task<TestQueryResponse>> next);
 
     private sealed record TestQuery(int Payload);
@@ -498,20 +496,18 @@ public sealed class ConquerorContextQueryTests
 
     private sealed class OuterTestQueryMiddleware : IQueryMiddleware
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly MiddlewareFn middlewareFn;
 
-        public OuterTestQueryMiddleware(MiddlewareFn middlewareFn, IConquerorContextAccessor conquerorContextAccessor)
+        public OuterTestQueryMiddleware(MiddlewareFn middlewareFn)
         {
             this.middlewareFn = middlewareFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
         }
 
         public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
             where TQuery : class
         {
             await Task.Yield();
-            return (TResponse)(object)await middlewareFn((ctx as QueryMiddlewareContext<TestQuery, TestQueryResponse>)!, conquerorContextAccessor.ConquerorContext, async query =>
+            return (TResponse)(object)await middlewareFn((ctx as QueryMiddlewareContext<TestQuery, TestQueryResponse>)!, ctx.ConquerorContext, async query =>
             {
                 var response = await ctx.Next((query as TQuery)!, ctx.CancellationToken);
                 return (response as TestQueryResponse)!;
@@ -521,20 +517,18 @@ public sealed class ConquerorContextQueryTests
 
     private sealed class TestQueryMiddleware : IQueryMiddleware
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly MiddlewareFn middlewareFn;
 
-        public TestQueryMiddleware(MiddlewareFn middlewareFn, IConquerorContextAccessor conquerorContextAccessor)
+        public TestQueryMiddleware(MiddlewareFn middlewareFn)
         {
             this.middlewareFn = middlewareFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
         }
 
         public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
             where TQuery : class
         {
             await Task.Yield();
-            return (TResponse)(object)await middlewareFn((ctx as QueryMiddlewareContext<TestQuery, TestQueryResponse>)!, conquerorContextAccessor.ConquerorContext, async query =>
+            return (TResponse)(object)await middlewareFn((ctx as QueryMiddlewareContext<TestQuery, TestQueryResponse>)!, ctx.ConquerorContext, async query =>
             {
                 var response = await ctx.Next((query as TQuery)!, ctx.CancellationToken);
                 return (response as TestQueryResponse)!;

@@ -38,14 +38,14 @@ internal sealed class CommandPipeline
 
         try
         {
-            return await ExecuteNextMiddleware(0, initialCommand, cancellationToken).ConfigureAwait(false);
+            return await ExecuteNextMiddleware(0, initialCommand, conquerorContext, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             commandContextAccessor.ClearContext();
         }
 
-        async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, CancellationToken token)
+        async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, IConquerorContext ctx, CancellationToken token)
         {
             commandContext.SetCommand(command);
 
@@ -58,7 +58,7 @@ internal sealed class CommandPipeline
             }
 
             var (_, middlewareConfiguration, invoker) = middlewares[index];
-            var response = await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, t), middlewareConfiguration, serviceProvider, token).ConfigureAwait(false);
+            var response = await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, ctx, t), middlewareConfiguration, serviceProvider, ctx, token).ConfigureAwait(false);
             commandContext.SetResponse(response);
             return response;
         }

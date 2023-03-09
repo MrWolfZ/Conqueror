@@ -15,6 +15,8 @@ public abstract class CommandMiddlewareContext<TCommand, TResponse>
 
     public abstract IServiceProvider ServiceProvider { get; }
 
+    public abstract IConquerorContext ConquerorContext { get; }
+
     public abstract Task<TResponse> Next(TCommand command, CancellationToken cancellationToken);
 }
 

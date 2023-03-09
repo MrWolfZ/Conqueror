@@ -38,14 +38,14 @@ internal sealed class QueryPipeline
 
         try
         {
-            return await ExecuteNextMiddleware(0, initialQuery, cancellationToken).ConfigureAwait(false);
+            return await ExecuteNextMiddleware(0, initialQuery, conquerorContext, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             queryContextAccessor.ClearContext();
         }
 
-        async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, CancellationToken token)
+        async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, IConquerorContext ctx, CancellationToken token)
         {
             queryContext.SetQuery(query);
 
@@ -58,7 +58,7 @@ internal sealed class QueryPipeline
             }
 
             var (_, middlewareConfiguration, invoker) = middlewares[index];
-            var response = await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, t), middlewareConfiguration, serviceProvider, token).ConfigureAwait(false);
+            var response = await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, ctx, t), middlewareConfiguration, serviceProvider, ctx, token).ConfigureAwait(false);
             queryContext.SetResponse(response);
             return response;
         }

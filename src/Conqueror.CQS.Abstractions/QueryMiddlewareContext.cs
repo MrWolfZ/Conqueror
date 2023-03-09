@@ -13,6 +13,8 @@ public abstract class QueryMiddlewareContext<TQuery, TResponse>
 
     public abstract IServiceProvider ServiceProvider { get; }
 
+    public abstract IConquerorContext ConquerorContext { get; }
+
     public abstract Task<TResponse> Next(TQuery query, CancellationToken cancellationToken);
 }
 

@@ -16,12 +16,14 @@ internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConf
                                            CommandMiddlewareNext<TCommand, TResponse> next,
                                            TConfiguration configuration,
                                            IServiceProvider serviceProvider,
+                                           IConquerorContext conquerorContext,
                                            CancellationToken cancellationToken)
     {
         this.next = next;
         Command = command;
         CancellationToken = cancellationToken;
         ServiceProvider = serviceProvider;
+        ConquerorContext = conquerorContext;
         Configuration = configuration;
     }
 
@@ -32,6 +34,8 @@ internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConf
     public override CancellationToken CancellationToken { get; }
 
     public override IServiceProvider ServiceProvider { get; }
+
+    public override IConquerorContext ConquerorContext { get; }
 
     public override TConfiguration Configuration { get; }
 
