@@ -73,7 +73,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -102,15 +102,15 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
@@ -136,7 +136,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -165,15 +165,15 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
@@ -205,15 +205,15 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
@@ -229,7 +229,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = ResolveOnClient<TestObservations>().ReceivedOuterContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -243,7 +243,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = ResolveOnClient<TestObservations>().ReceivedOuterContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -257,7 +257,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -271,7 +271,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -389,11 +389,9 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(baseAddress),
                                                                                                                                b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                                                               b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
                                                                                                                                b.ServiceProvider.GetRequiredService<TestObservations>()))
                     .AddConquerorQueryClient<IQueryHandler<TestPostQuery, TestQueryResponse>>(b => new WrapperQueryTransportClient(b.UseHttp(baseAddress),
                                                                                                                                    b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                                                                   b.ServiceProvider.GetRequiredService<IQueryContextAccessor>(),
                                                                                                                                    b.ServiceProvider.GetRequiredService<TestObservations>()));
 
         _ = services.AddConquerorQueryHandler<OuterTestQueryHandler>()
@@ -459,19 +457,17 @@ public class ConquerorContextQueryTests : TestBase
     public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
-        public TestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, IQueryContextAccessor queryContextAccessor, TestObservations testObservations)
+        public TestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -495,19 +491,17 @@ public class ConquerorContextQueryTests : TestBase
     public sealed class TestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
-        public TestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor, IQueryContextAccessor queryContextAccessor, TestObservations testObservations)
+        public TestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -536,23 +530,20 @@ public class ConquerorContextQueryTests : TestBase
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly IQueryHandler<TestQuery, TestQueryResponse> nestedHandler;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
         public OuterTestQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                     IQueryContextAccessor queryContextAccessor,
                                      TestObservations testObservations,
                                      IQueryHandler<TestQuery, TestQueryResponse> nestedHandler)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
             this.testObservations = testObservations;
             this.nestedHandler = nestedHandler;
         }
 
         public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
             if (testObservations.ShouldAddOuterDownstreamData)
@@ -580,23 +571,20 @@ public class ConquerorContextQueryTests : TestBase
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
         public OuterTestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                         IQueryContextAccessor queryContextAccessor,
                                          TestObservations testObservations,
                                          IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
             this.testObservations = testObservations;
             this.nestedHandler = nestedHandler;
         }
 
         public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestPostQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
             if (testObservations.ShouldAddOuterDownstreamData)
@@ -636,25 +624,22 @@ public class ConquerorContextQueryTests : TestBase
     private sealed class WrapperQueryTransportClient : IQueryTransportClient
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
         private readonly IQueryTransportClient wrapped;
 
         public WrapperQueryTransportClient(IQueryTransportClient wrapped,
                                            IConquerorContextAccessor conquerorContextAccessor,
-                                           IQueryContextAccessor queryContextAccessor,
                                            TestObservations testObservations)
         {
             this.wrapped = wrapped;
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
             where TQuery : class
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
             return wrapped.ExecuteQuery<TQuery, TResponse>(query, cancellationToken);

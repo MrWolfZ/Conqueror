@@ -24,7 +24,7 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
     {
         var logger = GetLogger(ctx);
 
-        var queryId = ctx.ServiceProvider.GetRequiredService<IQueryContextAccessor>().QueryContext!.QueryId;
+        var queryId = ctx.ConquerorContext.GetQueryId() ?? "unknown";
         var traceId = ctx.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.TraceId;
 
         var sw = Stopwatch.StartNew();

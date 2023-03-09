@@ -18,12 +18,10 @@ namespace Conqueror.CQS.Transport.Http.Client;
 internal sealed class HttpQueryTransportClient : IQueryTransportClient
 {
     private readonly IConquerorContextAccessor conquerorContextAccessor;
-    private readonly IQueryContextAccessor queryContextAccessor;
 
-    public HttpQueryTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor, IQueryContextAccessor queryContextAccessor)
+    public HttpQueryTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor)
     {
         this.conquerorContextAccessor = conquerorContextAccessor;
-        this.queryContextAccessor = queryContextAccessor;
         Options = options;
     }
 
@@ -95,11 +93,6 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
         if (ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
         {
             headers.Add(HttpConstants.ConquerorContextHeaderName, s);
-        }
-
-        if (queryContextAccessor.QueryContext?.QueryId is { } queryId)
-        {
-            headers.Add(HttpConstants.ConquerorQueryIdHeaderName, queryId);
         }
 
         if (Options.Headers is { } headersFromOptions)

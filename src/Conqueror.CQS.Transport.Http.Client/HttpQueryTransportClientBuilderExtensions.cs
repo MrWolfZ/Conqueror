@@ -20,7 +20,6 @@ public static class HttpQueryTransportClientBuilderExtensions
 
         var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
         return new HttpQueryTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration),
-                                            builder.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                                            builder.ServiceProvider.GetRequiredService<IQueryContextAccessor>());
+                                            builder.ServiceProvider.GetRequiredService<IConquerorContextAccessor>());
     }
 }

@@ -199,13 +199,13 @@ Thanks to the logging middleware we added to the command and query pipelines, yo
 
 ```log
 info: Quickstart.IncrementCounterByCommand[0]
-      Executing command with payload {"CounterName":"test","IncrementBy":2} (Command ID: cb9a2563f1fc4965acf1a5f972532e81, Trace ID: fe675fdbf9a987620af31a474bf7ae8c)
+      Executing command with payload {"CounterName":"test","IncrementBy":2} (Command ID: 1560c983e4856bd5, Trace ID: fe675fdbf9a987620af31a474bf7ae8c)
 info: Quickstart.IncrementCounterByCommand[0]
-      Executed command and got response {"NewCounterValue":2} in 4.2150ms (Command ID: cb9a2563f1fc4965acf1a5f972532e81, Trace ID: fe675fdbf9a987620af31a474bf7ae8c)
+      Executed command and got response {"NewCounterValue":2} in 4.2150ms (Command ID: 1560c983e4856bd5, Trace ID: fe675fdbf9a987620af31a474bf7ae8c)
 info: Quickstart.GetCounterValueQuery[0]
-      Executing query with payload {"CounterName":"test"} (Query ID: 802ddda5d6b14a68a725a27a1c0f7a1d, Trace ID: 8fdfa04f8c45ae3174044be0001a6e96)
+      Executing query with payload {"CounterName":"test"} (Query ID: defa354e95d67ead, Trace ID: 8fdfa04f8c45ae3174044be0001a6e96)
 info: Quickstart.GetCounterValueQuery[0]
-      Executed query and got response {"CounterValue":2} in 2.9833ms (Query ID: 802ddda5d6b14a68a725a27a1c0f7a1d, Trace ID: 8fdfa04f8c45ae3174044be0001a6e96)
+      Executed query and got response {"CounterValue":2} in 2.9833ms (Query ID: defa354e95d67ead, Trace ID: 8fdfa04f8c45ae3174044be0001a6e96)
 ```
 
 If you have swagger UI enabled, it will show the new command and query and they can be called from there.

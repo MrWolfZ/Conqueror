@@ -20,7 +20,6 @@ public static class HttpCommandTransportClientBuilderExtensions
 
         var configurationProvider = builder.ServiceProvider.GetRequiredService<ConfigurationProvider>();
         return new HttpCommandTransportClient(configurationProvider.GetOptions(builder.ServiceProvider, registration),
-                                              builder.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                                              builder.ServiceProvider.GetRequiredService<ICommandContextAccessor>());
+                                              builder.ServiceProvider.GetRequiredService<IConquerorContextAccessor>());
     }
 }

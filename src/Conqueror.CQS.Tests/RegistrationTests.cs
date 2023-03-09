@@ -22,16 +22,12 @@ public sealed class RegistrationTests
         Assert.That(services.Count(d => d.ServiceType == typeof(ICommandHandlerRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(CommandMiddlewareRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(ICommandMiddlewareRegistry)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(CommandContextAccessor)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandContextAccessor)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(QueryClientFactory)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IQueryClientFactory)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IQueryHandlerRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(QueryMiddlewareRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IQueryMiddlewareRegistry)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(QueryContextAccessor)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(IQueryContextAccessor)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)), Is.EqualTo(1));
     }
 

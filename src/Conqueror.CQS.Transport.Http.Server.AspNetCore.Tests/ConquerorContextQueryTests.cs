@@ -109,53 +109,6 @@ public sealed class ConquerorContextQueryTests : TestBase
     [TestCase("/api/queries/testDelegate?payload=10")]
     [TestCase("/api/custom/queries/test?payload=10")]
     [TestCase("/api/custom/queries/testQueryWithoutPayload")]
-    public async Task GivenQueryIdHeader_CorrectIdIsObservedByHandler(string path, string? postContent = null)
-    {
-        const string testQueryId = "TestQueryId";
-        using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorQueryIdHeaderName, testQueryId } },
-            Content = postContent != null ? content : null,
-        };
-
-        var response = await HttpClient.SendAsync(msg);
-        await response.AssertSuccessStatusCode();
-
-        var receivedQueryIds = Resolve<TestObservations>().ReceivedQueryIds;
-
-        CollectionAssert.AreEquivalent(new[] { testQueryId }, receivedQueryIds);
-    }
-
-    [Test]
-    public async Task GivenQueryIdHeader_CorrectIdsAreObservedByHandlerAndNestedHandler()
-    {
-        const string testQueryId = "TestQueryId";
-        using var msg = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/api/queries/testQueryWithNested", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorQueryIdHeaderName, testQueryId } },
-        };
-
-        var response = await HttpClient.SendAsync(msg);
-        await response.AssertSuccessStatusCode();
-
-        var receivedQueryIds = Resolve<TestObservations>().ReceivedQueryIds;
-
-        Assert.That(receivedQueryIds, Has.Count.EqualTo(2));
-        Assert.That(receivedQueryIds[0], Is.EqualTo(testQueryId));
-        Assert.That(receivedQueryIds[1], Is.Not.EqualTo(testQueryId));
-    }
-
-    [TestCase("/api/queries/test?payload=10")]
-    [TestCase("/api/queries/testQueryWithoutPayload")]
-    [TestCase("/api/queries/testPost", "{\"payload\":10}")]
-    [TestCase("/api/queries/testDelegate?payload=10")]
-    [TestCase("/api/custom/queries/test?payload=10")]
-    [TestCase("/api/custom/queries/testQueryWithoutPayload")]
     public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string? postContent = null)
     {
         const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
@@ -280,10 +233,9 @@ public sealed class ConquerorContextQueryTests : TestBase
                         await Task.CompletedTask;
 
                         var testObservations = p.GetRequiredService<TestObservations>();
-                        var queryContextAccessor = p.GetRequiredService<IQueryContextAccessor>();
                         var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
 
-                        testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+                        testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
                         testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                         testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -372,21 +324,18 @@ public sealed class ConquerorContextQueryTests : TestBase
     public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
         public TestQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                IQueryContextAccessor queryContextAccessor,
                                 TestObservations testObservations)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -410,21 +359,18 @@ public sealed class ConquerorContextQueryTests : TestBase
     public sealed class TestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
         public TestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                    IQueryContextAccessor queryContextAccessor,
                                     TestObservations testObservations)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -448,21 +394,18 @@ public sealed class ConquerorContextQueryTests : TestBase
     public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
         public TestQueryHandlerWithoutPayload(IConquerorContextAccessor conquerorContextAccessor,
-                                              IQueryContextAccessor queryContextAccessor,
                                               TestObservations testObservations)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.queryContextAccessor = queryContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -487,15 +430,12 @@ public sealed class ConquerorContextQueryTests : TestBase
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly IQueryHandler<NestedTestQuery, TestQueryResponse> nestedHandler;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
-        public TestQueryWithNestedQueryHandler(IQueryContextAccessor queryContextAccessor,
-                                               IConquerorContextAccessor conquerorContextAccessor,
+        public TestQueryWithNestedQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
                                                IQueryHandler<NestedTestQuery, TestQueryResponse> nestedHandler,
                                                TestObservations testObservations)
         {
-            this.queryContextAccessor = queryContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
             this.nestedHandler = nestedHandler;
@@ -503,7 +443,7 @@ public sealed class ConquerorContextQueryTests : TestBase
 
         public Task<TestQueryResponse> ExecuteQuery(TestQueryWithNestedQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -527,21 +467,18 @@ public sealed class ConquerorContextQueryTests : TestBase
     public sealed class NestedTestQueryHandler : IQueryHandler<NestedTestQuery, TestQueryResponse>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryContextAccessor queryContextAccessor;
         private readonly TestObservations testObservations;
 
-        public NestedTestQueryHandler(IQueryContextAccessor queryContextAccessor,
-                                      IConquerorContextAccessor conquerorContextAccessor,
+        public NestedTestQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
                                       TestObservations testObservations)
         {
-            this.queryContextAccessor = queryContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedQueryIds.Add(queryContextAccessor.QueryContext?.QueryId);
+            testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 

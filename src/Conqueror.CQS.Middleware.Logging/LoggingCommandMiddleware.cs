@@ -24,8 +24,8 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
     {
         var logger = GetLogger(ctx);
 
-        var commandId = ctx.ServiceProvider.GetRequiredService<ICommandContextAccessor>().CommandContext!.CommandId;
-        var traceId = ctx.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.TraceId;
+        var commandId = ctx.ConquerorContext.GetCommandId() ?? "unknown";
+        var traceId = ctx.ConquerorContext.TraceId;
 
         var sw = Stopwatch.StartNew();
 

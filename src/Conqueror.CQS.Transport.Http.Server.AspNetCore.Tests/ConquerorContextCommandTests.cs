@@ -113,53 +113,6 @@ public sealed class ConquerorContextCommandTests : TestBase
     [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
     [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
     [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
-    public async Task GivenCommandIdHeader_CorrectIdIsObservedByHandler(string path, string data)
-    {
-        const string testCommandId = "TestCommandId";
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers = { { HttpConstants.ConquerorCommandIdHeaderName, testCommandId } },
-        };
-
-        var response = await HttpClient.PostAsync(path, content);
-        await response.AssertSuccessStatusCode();
-
-        var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
-
-        CollectionAssert.AreEquivalent(new[] { testCommandId }, receivedCommandIds);
-    }
-
-    [Test]
-    public async Task GivenCommandIdHeader_CorrectIdsAreObservedByHandlerAndNestedHandler()
-    {
-        const string testCommandId = "TestCommandId";
-        using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
-        {
-            Headers =
-            {
-                { HttpConstants.ConquerorCommandIdHeaderName, testCommandId },
-            },
-        };
-
-        var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
-        await response.AssertSuccessStatusCode();
-
-        var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
-
-        Assert.That(receivedCommandIds, Has.Count.EqualTo(2));
-        Assert.That(receivedCommandIds[0], Is.EqualTo(testCommandId));
-        Assert.That(receivedCommandIds[1], Is.Not.EqualTo(testCommandId));
-    }
-
-    [TestCase("/api/commands/test", "{}")]
-    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
-    [TestCase("/api/commands/testCommandWithoutPayload", "")]
-    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
-    [TestCase("/api/commands/testDelegate", "{}")]
-    [TestCase("/api/custom/commands/test", "{}")]
-    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
-    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
-    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
     public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string data)
     {
         const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
@@ -276,10 +229,9 @@ public sealed class ConquerorContextCommandTests : TestBase
                         await Task.CompletedTask;
 
                         var testObservations = p.GetRequiredService<TestObservations>();
-                        var commandContextAccessor = p.GetRequiredService<ICommandContextAccessor>();
                         var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
 
-                        testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+                        testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
                         testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
                         testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -370,22 +322,19 @@ public sealed class ConquerorContextCommandTests : TestBase
 
     public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestObservations testObservations;
 
-        public TestCommandHandler(ICommandContextAccessor commandContextAccessor,
-                                  IConquerorContextAccessor conquerorContextAccessor,
+        public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
                                   TestObservations testObservations)
         {
-            this.commandContextAccessor = commandContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -408,22 +357,19 @@ public sealed class ConquerorContextCommandTests : TestBase
 
     public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestObservations testObservations;
 
-        public TestCommandHandlerWithoutResponse(ICommandContextAccessor commandContextAccessor,
-                                                 IConquerorContextAccessor conquerorContextAccessor,
+        public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor,
                                                  TestObservations testObservations)
         {
-            this.commandContextAccessor = commandContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -446,22 +392,19 @@ public sealed class ConquerorContextCommandTests : TestBase
 
     public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestObservations testObservations;
 
-        public TestCommandHandlerWithoutPayload(ICommandContextAccessor commandContextAccessor,
-                                                IConquerorContextAccessor conquerorContextAccessor,
+        public TestCommandHandlerWithoutPayload(IConquerorContextAccessor conquerorContextAccessor,
                                                 TestObservations testObservations)
         {
-            this.commandContextAccessor = commandContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -484,22 +427,19 @@ public sealed class ConquerorContextCommandTests : TestBase
 
     public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestObservations testObservations;
 
-        public TestCommandHandlerWithoutResponseWithoutPayload(ICommandContextAccessor commandContextAccessor,
-                                                               IConquerorContextAccessor conquerorContextAccessor,
+        public TestCommandHandlerWithoutResponseWithoutPayload(IConquerorContextAccessor conquerorContextAccessor,
                                                                TestObservations testObservations)
         {
-            this.commandContextAccessor = commandContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -522,17 +462,14 @@ public sealed class ConquerorContextCommandTests : TestBase
 
     public sealed class TestCommandWithNestedCommandHandler : ICommandHandler<TestCommandWithNestedCommand, TestCommandResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler;
         private readonly TestObservations testObservations;
 
-        public TestCommandWithNestedCommandHandler(ICommandContextAccessor commandContextAccessor,
-                                                   IConquerorContextAccessor conquerorContextAccessor,
+        public TestCommandWithNestedCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
                                                    ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler,
                                                    TestObservations testObservations)
         {
-            this.commandContextAccessor = commandContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
             this.nestedHandler = nestedHandler;
@@ -540,7 +477,7 @@ public sealed class ConquerorContextCommandTests : TestBase
 
         public Task<TestCommandResponse> ExecuteCommand(TestCommandWithNestedCommand command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -563,22 +500,19 @@ public sealed class ConquerorContextCommandTests : TestBase
 
     public sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, TestCommandResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestObservations testObservations;
 
-        public NestedTestCommandHandler(ICommandContextAccessor commandContextAccessor,
-                                        IConquerorContextAccessor conquerorContextAccessor,
+        public NestedTestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
                                         TestObservations testObservations)
         {
-            this.commandContextAccessor = commandContextAccessor;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 

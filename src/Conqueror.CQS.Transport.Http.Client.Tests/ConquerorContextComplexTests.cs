@@ -50,15 +50,15 @@ public class ConquerorContextComplexTests : TestBase
 
         _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }

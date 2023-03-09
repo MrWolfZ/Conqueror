@@ -16,9 +16,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] propagate command and query ID as context data instead of custom headers
-  - ensure that command and query IDs are still correct set only downstream and do not leak upstream (i.e. add tests that after processing with another handler, original handler still sees its own ID)
-- [ ] remove command and query context
 - [ ] expose `IServiceProvider` on `IConquerorContext`
 - [ ] create common authentication package that exposes static extension methods for setting principal in conqueror context
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline

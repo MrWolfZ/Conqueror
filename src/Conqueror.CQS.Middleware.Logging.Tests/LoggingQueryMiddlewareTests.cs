@@ -178,10 +178,9 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
         var testQuery = new TestQuery(10);
         LoggingQueryPreExecutionContext? seenContext = null;
 
-        var queryId = "test-query-id";
+        var queryId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<IQueryContextAccessor>().SetExternalQueryId(queryId);
         Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
@@ -190,6 +189,8 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o =>
         {
+            queryId = b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetQueryId();
+
             o.PreExecutionLogLevel = LogLevel.Debug;
 
             o.PreExecutionHook = ctx =>
@@ -231,10 +232,9 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
         var testQuery = new TestQuery(10);
         LoggingQueryPostExecutionContext? seenContext = null;
 
-        var queryId = "test-query-id";
+        var queryId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<IQueryContextAccessor>().SetExternalQueryId(queryId);
         Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
@@ -243,6 +243,8 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o =>
         {
+            queryId = b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetQueryId();
+
             o.PostExecutionLogLevel = LogLevel.Debug;
 
             o.PostExecutionHook = ctx =>
@@ -287,10 +289,9 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
         var exception = new InvalidOperationException("test exception message");
         LoggingQueryExceptionContext? seenContext = null;
 
-        var queryId = "test-query-id";
+        var queryId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<IQueryContextAccessor>().SetExternalQueryId(queryId);
         Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
@@ -299,6 +300,8 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o =>
         {
+            queryId = b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetQueryId();
+
             o.ExceptionLogLevel = LogLevel.Critical;
 
             o.ExceptionHook = ctx =>
@@ -414,13 +417,18 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
     }
 
     [Test]
-    public async Task GivenQueryId_LogsCorrectTraceId()
+    public async Task GivenQueryId_LogsCorrectQueryId()
     {
         var testQuery = new TestQuery(10);
 
-        var queryId = "test-query-id";
+        var queryId = string.Empty;
 
-        Resolve<IQueryContextAccessor>().SetExternalQueryId(queryId);
+        configurePipeline = b =>
+        {
+            queryId = b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetQueryId();
+
+            _ = b.UseLogging();
+        };
 
         _ = await Handler.ExecuteQuery(testQuery);
 

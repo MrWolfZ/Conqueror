@@ -7,16 +7,13 @@ namespace Conqueror.CQS.CommandHandling;
 
 internal sealed class CommandPipeline
 {
-    private readonly CommandContextAccessor commandContextAccessor;
-    private readonly IConquerorContextAccessor conquerorContextAccessor;
+    private readonly IConquerorContext conquerorContext;
     private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares;
 
-    public CommandPipeline(CommandContextAccessor commandContextAccessor,
-                           IConquerorContextAccessor conquerorContextAccessor,
+    public CommandPipeline(IConquerorContext conquerorContext,
                            List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares)
     {
-        this.commandContextAccessor = commandContextAccessor;
-        this.conquerorContextAccessor = conquerorContextAccessor;
+        this.conquerorContext = conquerorContext;
         this.middlewares = middlewares;
     }
 
@@ -26,41 +23,20 @@ internal sealed class CommandPipeline
                                                               CancellationToken cancellationToken)
         where TCommand : class
     {
-        var commandId = commandContextAccessor.DrainExternalCommandId() ?? Guid.NewGuid().ToString("N");
-
-        var commandContext = new DefaultCommandContext(initialCommand, commandId);
-
-        commandContextAccessor.CommandContext = commandContext;
-
-        using var conquerorContext = conquerorContextAccessor.CloneOrCreate();
-
         var transportBuilder = new CommandTransportClientBuilder(serviceProvider, typeof(TCommand));
 
-        try
-        {
-            return await ExecuteNextMiddleware(0, initialCommand, conquerorContext, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            commandContextAccessor.ClearContext();
-        }
+        return await ExecuteNextMiddleware(0, initialCommand, conquerorContext, cancellationToken).ConfigureAwait(false);
 
         async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, IConquerorContext ctx, CancellationToken token)
         {
-            commandContext.SetCommand(command);
-
             if (index >= middlewares.Count)
             {
                 var transport = await transportClientFactory(transportBuilder).ConfigureAwait(false);
-                var responseFromHandler = await transport.ExecuteCommand<TCommand, TResponse>(command, token).ConfigureAwait(false);
-                commandContext.SetResponse(responseFromHandler);
-                return responseFromHandler;
+                return await transport.ExecuteCommand<TCommand, TResponse>(command, token).ConfigureAwait(false);
             }
 
             var (_, middlewareConfiguration, invoker) = middlewares[index];
-            var response = await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, ctx, t), middlewareConfiguration, serviceProvider, ctx, token).ConfigureAwait(false);
-            commandContext.SetResponse(response);
-            return response;
+            return await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, ctx, t), middlewareConfiguration, serviceProvider, ctx, token).ConfigureAwait(false);
         }
     }
 }

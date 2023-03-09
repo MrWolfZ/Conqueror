@@ -73,7 +73,7 @@ public class ConquerorContextCommandTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -102,15 +102,15 @@ public class ConquerorContextCommandTests : TestBase
 
         _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
@@ -136,7 +136,7 @@ public class ConquerorContextCommandTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -165,15 +165,15 @@ public class ConquerorContextCommandTests : TestBase
 
         await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
@@ -205,15 +205,15 @@ public class ConquerorContextCommandTests : TestBase
 
         await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler2.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
     }
@@ -229,7 +229,7 @@ public class ConquerorContextCommandTests : TestBase
 
         var receivedContextData = ResolveOnClient<TestObservations>().ReceivedOuterContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -243,7 +243,7 @@ public class ConquerorContextCommandTests : TestBase
 
         var receivedContextData = ResolveOnClient<TestObservations>().ReceivedOuterContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -257,7 +257,7 @@ public class ConquerorContextCommandTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -271,7 +271,7 @@ public class ConquerorContextCommandTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
     }
 
     [Test]
@@ -389,11 +389,9 @@ public class ConquerorContextCommandTests : TestBase
 
         _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => new WrapperCommandTransportClient(b.UseHttp(baseAddress),
                                                                                                                                          b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                                                                         b.ServiceProvider.GetRequiredService<ICommandContextAccessor>(),
                                                                                                                                          b.ServiceProvider.GetRequiredService<TestObservations>()))
                     .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => new WrapperCommandTransportClient(b.UseHttp(baseAddress),
                                                                                                                                    b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                                                                   b.ServiceProvider.GetRequiredService<ICommandContextAccessor>(),
                                                                                                                                    b.ServiceProvider.GetRequiredService<TestObservations>()));
 
         _ = services.AddConquerorCommandHandler<OuterTestCommandHandler>()
@@ -458,22 +456,19 @@ public class ConquerorContextCommandTests : TestBase
 
     public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestObservations testObservations;
 
         public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                  ICommandContextAccessor commandContextAccessor,
                                   TestObservations testObservations)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.commandContextAccessor = commandContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -496,22 +491,19 @@ public class ConquerorContextCommandTests : TestBase
 
     public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestObservations testObservations;
 
         public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor,
-                                                 ICommandContextAccessor commandContextAccessor,
                                                  TestObservations testObservations)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.commandContextAccessor = commandContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
             testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
 
@@ -538,25 +530,22 @@ public class ConquerorContextCommandTests : TestBase
 
     public sealed class OuterTestCommandHandler : ICommandHandler<OuterTestCommand, OuterTestCommandResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly ICommandHandler<TestCommand, TestCommandResponse> nestedHandler;
         private readonly TestObservations testObservations;
 
         public OuterTestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                       ICommandContextAccessor commandContextAccessor,
                                        TestObservations testObservations,
                                        ICommandHandler<TestCommand, TestCommandResponse> nestedHandler)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.commandContextAccessor = commandContextAccessor;
             this.testObservations = testObservations;
             this.nestedHandler = nestedHandler;
         }
 
         public async Task<OuterTestCommandResponse> ExecuteCommand(OuterTestCommand command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
             if (testObservations.ShouldAddOuterDownstreamData)
@@ -582,25 +571,22 @@ public class ConquerorContextCommandTests : TestBase
 
     public sealed class OuterTestCommandWithoutResponseHandler : ICommandHandler<OuterTestCommandWithoutResponse>
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly ICommandHandler<TestCommandWithoutResponse> nestedHandler;
         private readonly TestObservations testObservations;
 
         public OuterTestCommandWithoutResponseHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                                      ICommandContextAccessor commandContextAccessor,
                                                       TestObservations testObservations,
                                                       ICommandHandler<TestCommandWithoutResponse> nestedHandler)
         {
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.commandContextAccessor = commandContextAccessor;
             this.testObservations = testObservations;
             this.nestedHandler = nestedHandler;
         }
 
         public async Task ExecuteCommand(OuterTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
             if (testObservations.ShouldAddOuterDownstreamData)
@@ -638,26 +624,23 @@ public class ConquerorContextCommandTests : TestBase
 
     private sealed class WrapperCommandTransportClient : ICommandTransportClient
     {
-        private readonly ICommandContextAccessor commandContextAccessor;
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly TestObservations testObservations;
         private readonly ICommandTransportClient wrapped;
 
         public WrapperCommandTransportClient(ICommandTransportClient wrapped,
                                              IConquerorContextAccessor conquerorContextAccessor,
-                                             ICommandContextAccessor commandContextAccessor,
                                              TestObservations testObservations)
         {
             this.wrapped = wrapped;
             this.conquerorContextAccessor = conquerorContextAccessor;
-            this.commandContextAccessor = commandContextAccessor;
             this.testObservations = testObservations;
         }
 
         public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
             where TCommand : class
         {
-            testObservations.ReceivedCommandIds.Add(commandContextAccessor.CommandContext?.CommandId);
+            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
             return wrapped.ExecuteCommand<TCommand, TResponse>(command, cancellationToken);

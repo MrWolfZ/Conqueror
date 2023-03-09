@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling;
 
@@ -20,14 +22,21 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
         this.configurePipeline = configurePipeline;
     }
 
-    public Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
+    public async Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
     {
+        using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
+
+        if (!conquerorContext.IsExecutionFromTransport())
+        {
+            conquerorContext.SetCommandId(ActivitySpanId.CreateRandom().ToString());
+        }
+
         var pipelineBuilder = new CommandPipelineBuilder(serviceProvider);
 
         configurePipeline?.Invoke(pipelineBuilder);
 
-        var pipeline = pipelineBuilder.Build();
+        var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        return pipeline.Execute<TCommand, TResponse>(serviceProvider, command, transportClientFactory, cancellationToken);
+        return await pipeline.Execute<TCommand, TResponse>(serviceProvider, command, transportClientFactory, cancellationToken).ConfigureAwait(false);
     }
 }

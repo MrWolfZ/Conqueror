@@ -226,26 +226,26 @@ If you look at the logs of the applications, you will see output like the follow
 
 ```log
 info: Counters.Contracts.IncrementCounterCommand[0]
-      Executing command with payload {"CounterName":"test","UserId":"user1"} (Command ID: 949d4daf1b5f4f1d93efad09a5f6ee24, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
+      Executing command with payload {"CounterName":"test","UserId":"user1"} (Command ID: 7583ff816241df09, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
 info: UserHistory.Contracts.SetMostRecentlyIncrementedCounterForUserCommand[0]
-      Executing command with payload {"UserId":"user1","CounterName":"test"} (Command ID: 594c0e7ff2b94f4d8ba1f1b925bc4f1f, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
+      Executing command with payload {"UserId":"user1","CounterName":"test"} (Command ID: 660d5a7f49860904, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
 info: UserHistory.Contracts.SetMostRecentlyIncrementedCounterForUserCommand[0]
-      Executed command in 33.4398ms (Command ID: 594c0e7ff2b94f4d8ba1f1b925bc4f1f, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
+      Executed command in 33.4398ms (Command ID: 660d5a7f49860904, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
 info: Counters.Contracts.IncrementCounterCommand[0]
-      Executed command and got response {"NewCounterValue":1} in 41.8021ms (Command ID: 949d4daf1b5f4f1d93efad09a5f6ee24, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
+      Executed command and got response {"NewCounterValue":1} in 41.8021ms (Command ID: 7583ff816241df09, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
 ```
 
 `UserHistory` app:
 
 ```log
 info: UserHistory.Contracts.SetMostRecentlyIncrementedCounterForUserCommand[0]
-      Executing command with payload {"UserId":"user1","CounterName":"test"} (Command ID: 594c0e7ff2b94f4d8ba1f1b925bc4f1f, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
+      Executing command with payload {"UserId":"user1","CounterName":"test"} (Command ID: 660d5a7f49860904, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
 info: UserHistory.Contracts.SetMostRecentlyIncrementedCounterForUserCommand[0]
-      Executed command in 8.0365ms (Command ID: 594c0e7ff2b94f4d8ba1f1b925bc4f1f, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
+      Executed command in 8.0365ms (Command ID: 660d5a7f49860904, Trace ID: e2da9ae516ca8503d1dab9ecb6f0625b)
 info: UserHistory.Contracts.GetMostRecentlyIncrementedCounterForUserQuery[0]
-      Executing query with payload {"UserId":"user1"} (Query ID: e9adec2aa3da4b40953b37b67419a542, Trace ID: 03ae6658701e65ae42c8b0975d81850d)
+      Executing query with payload {"UserId":"user1"} (Query ID: 8eca0c0db1c66b35, Trace ID: 03ae6658701e65ae42c8b0975d81850d)
 info: UserHistory.Contracts.GetMostRecentlyIncrementedCounterForUserQuery[0]
-      Executed query and got response {"CounterName":"test"} in 4.4410ms (Query ID: e9adec2aa3da4b40953b37b67419a542, Trace ID: 03ae6658701e65ae42c8b0975d81850d)
+      Executed query and got response {"CounterName":"test"} in 4.4410ms (Query ID: 8eca0c0db1c66b35, Trace ID: 03ae6658701e65ae42c8b0975d81850d)
 ```
 
 For the execution of the `SetMostRecentlyIncrementedCounterForUserCommand` you can see the logs on both the client (i.e. `Counters` app) and the server (i.e. `UserHistory` app). Note that the `IncrementCounterCommand` and `SetMostRecentlyIncrementedCounterForUserCommand` have the same trace ID `e2da9ae516ca8503d1dab9ecb6f0625b`, which allows you to correlate log entries (all commands and queries also have their own IDs to correlate log entries for that single command or query invocation).

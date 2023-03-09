@@ -212,10 +212,9 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         var testCommand = new TestCommand(10);
         LoggingCommandPreExecutionContext? seenContext = null;
 
-        var commandId = "test-command-id";
+        var commandId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<ICommandContextAccessor>().SetExternalCommandId(commandId);
         Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
@@ -224,6 +223,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o =>
         {
+            commandId = b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCommandId();
+
             o.PreExecutionLogLevel = LogLevel.Debug;
 
             o.PreExecutionHook = ctx =>
@@ -265,10 +266,9 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         var testCommand = new TestCommand(10);
         LoggingCommandPostExecutionContext? seenContext = null;
 
-        var commandId = "test-command-id";
+        var commandId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<ICommandContextAccessor>().SetExternalCommandId(commandId);
         Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
@@ -277,6 +277,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o =>
         {
+            commandId = b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCommandId();
+
             o.PostExecutionLogLevel = LogLevel.Debug;
 
             o.PostExecutionHook = ctx =>
@@ -321,10 +323,9 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         var exception = new InvalidOperationException("test exception message");
         LoggingCommandExceptionContext? seenContext = null;
 
-        var commandId = "test-command-id";
+        var commandId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<ICommandContextAccessor>().SetExternalCommandId(commandId);
         Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
@@ -333,6 +334,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o =>
         {
+            commandId = b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCommandId();
+
             o.ExceptionLogLevel = LogLevel.Critical;
 
             o.ExceptionHook = ctx =>
@@ -448,13 +451,18 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     }
 
     [Test]
-    public async Task GivenCommandId_LogsCorrectTraceId()
+    public async Task GivenCommandId_LogsCorrectCommandId()
     {
         var testCommand = new TestCommand(10);
 
-        var commandId = "test-command-id";
+        var commandId = string.Empty;
 
-        Resolve<ICommandContextAccessor>().SetExternalCommandId(commandId);
+        configurePipeline = b =>
+        {
+            commandId = b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCommandId();
+
+            _ = b.UseLogging();
+        };
 
         _ = await Handler.ExecuteCommand(testCommand);
 

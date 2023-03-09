@@ -14,14 +14,11 @@ namespace Conqueror.CQS.Transport.Http.Client;
 
 internal sealed class HttpCommandTransportClient : ICommandTransportClient
 {
-    private readonly ICommandContextAccessor commandContextAccessor;
-
     private readonly IConquerorContextAccessor conquerorContextAccessor;
 
-    public HttpCommandTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor, ICommandContextAccessor commandContextAccessor)
+    public HttpCommandTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor)
     {
         this.conquerorContextAccessor = conquerorContextAccessor;
-        this.commandContextAccessor = commandContextAccessor;
         Options = options;
     }
 
@@ -91,11 +88,6 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
         if (ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
         {
             headers.Add(HttpConstants.ConquerorContextHeaderName, s);
-        }
-
-        if (commandContextAccessor.CommandContext?.CommandId is { } commandId)
-        {
-            headers.Add(HttpConstants.ConquerorCommandIdHeaderName, commandId);
         }
 
         if (Options.Headers is { } headersFromOptions)

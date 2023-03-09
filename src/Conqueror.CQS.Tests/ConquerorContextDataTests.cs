@@ -44,7 +44,12 @@ public sealed class ConquerorContextDataTests
 
                             return new();
                         },
-                        pipeline => pipeline.Use<TestCommandMiddleware>())
+                        pipeline =>
+                        {
+                            SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.PipelineBuilder);
+
+                            _ = pipeline.Use<TestCommandMiddleware>();
+                        })
                     .AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
                         async (_, p, _) =>
                         {
@@ -56,7 +61,12 @@ public sealed class ConquerorContextDataTests
 
                             return new();
                         },
-                        pipeline => pipeline.Use<TestQueryMiddleware>())
+                        pipeline =>
+                        {
+                            SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.PipelineBuilder);
+
+                            _ = pipeline.Use<TestQueryMiddleware>();
+                        })
                     .AddConquerorCommandHandlerDelegate<NestedTestCommand, TestCommandResponse>(
                         (_, p, _) =>
                         {
@@ -130,6 +140,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
                     Location.HandlerPreNestedExecution,
@@ -140,6 +151,30 @@ public sealed class ConquerorContextDataTests
                     Location.NestedQueryHandler,
                 },
                 Array.Empty<string>()),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.PipelineBuilder,
+                null,
+                new[]
+                {
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PostExecution,
+                }),
         };
 
         yield return new()
@@ -162,6 +197,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                 }),
         };
 
@@ -178,6 +214,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.HandlerPostNestedExecution,
@@ -207,6 +244,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                 }),
         };
@@ -225,6 +263,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.NestedClassPreExecution,
@@ -252,6 +291,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                 }),
@@ -272,6 +312,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.NestedClassPreExecution,
@@ -293,6 +334,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
                     Location.HandlerPreNestedExecution,
@@ -316,6 +358,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
                     Location.HandlerPreNestedExecution,
@@ -339,6 +382,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                     },
                     new[]
                     {
@@ -370,6 +414,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                     }),
             };
 
@@ -382,6 +427,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                     },
                     new[]
@@ -412,6 +458,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                     }),
             };
@@ -435,6 +482,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.NestedCommandHandler,
                     }),
 
@@ -449,6 +497,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
                         Location.HandlerPreNestedExecution,
@@ -471,6 +520,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                 },
                 new[]
                 {
@@ -494,6 +544,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                 },
                 new[]
@@ -527,6 +578,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.NestedCommandHandler,
                 }),
         };
@@ -550,6 +602,7 @@ public sealed class ConquerorContextDataTests
                 new[]
                 {
                     Location.PreExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.NestedClassPreExecution,
@@ -573,6 +626,7 @@ public sealed class ConquerorContextDataTests
                 new[]
                 {
                     Location.PreExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.NestedClassPreExecution,
@@ -596,6 +650,7 @@ public sealed class ConquerorContextDataTests
                 new[]
                 {
                     Location.PreExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.NestedCommandHandler,
@@ -618,6 +673,7 @@ public sealed class ConquerorContextDataTests
                 new[]
                 {
                     Location.PreExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.NestedClassPreExecution,
@@ -643,6 +699,7 @@ public sealed class ConquerorContextDataTests
                 new[]
                 {
                     Location.PreExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.NestedCommandHandler,
                     Location.NestedQueryHandler,
@@ -663,6 +720,7 @@ public sealed class ConquerorContextDataTests
                 new[]
                 {
                     Location.PreExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.NestedClassPreExecution,
@@ -690,6 +748,7 @@ public sealed class ConquerorContextDataTests
                 new[]
                 {
                     Location.PreExecution,
+                    Location.PipelineBuilder,
                     Location.NestedCommandHandler,
                     Location.NestedQueryHandler,
                 }),
@@ -708,6 +767,7 @@ public sealed class ConquerorContextDataTests
                 new[]
                 {
                     Location.PreExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.HandlerPreNestedExecution,
                     Location.HandlerPostNestedExecution,
@@ -736,6 +796,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
                         Location.HandlerPreNestedExecution,
@@ -756,6 +817,7 @@ public sealed class ConquerorContextDataTests
                     new[]
                     {
                         Location.PreExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.HandlerPreNestedExecution,
                         Location.NestedClassPreExecution,
@@ -780,6 +842,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
                         Location.HandlerPreNestedExecution,
@@ -798,6 +861,7 @@ public sealed class ConquerorContextDataTests
                     new[]
                     {
                         Location.PreExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.HandlerPreNestedExecution,
                         Location.HandlerPostNestedExecution,
@@ -822,6 +886,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
                         Location.HandlerPreNestedExecution,
@@ -842,6 +907,7 @@ public sealed class ConquerorContextDataTests
                     new[]
                     {
                         Location.PreExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.HandlerPreNestedExecution,
                         Location.NestedClassPreExecution,
@@ -863,6 +929,7 @@ public sealed class ConquerorContextDataTests
                     new[]
                     {
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
                         Location.HandlerPreNestedExecution,
@@ -888,6 +955,7 @@ public sealed class ConquerorContextDataTests
                     new[]
                     {
                         Location.PreExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.NestedCommandHandler,
                         Location.NestedQueryHandler,
@@ -908,6 +976,7 @@ public sealed class ConquerorContextDataTests
                     {
                         Location.PreExecution,
                         Location.PostExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
                         Location.HandlerPostNestedExecution,
@@ -930,6 +999,7 @@ public sealed class ConquerorContextDataTests
                     new[]
                     {
                         Location.PreExecution,
+                        Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.HandlerPreNestedExecution,
                         Location.NestedClassPreExecution,
@@ -954,6 +1024,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
                     Location.HandlerPreNestedExecution,
@@ -978,6 +1049,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
                     Location.HandlerPreNestedExecution,
@@ -1000,6 +1072,7 @@ public sealed class ConquerorContextDataTests
                 {
                     Location.PreExecution,
                     Location.PostExecution,
+                    Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
                     Location.HandlerPreNestedExecution,
@@ -1083,6 +1156,7 @@ public sealed class ConquerorContextDataTests
     {
         public const string PreExecution = nameof(PreExecution);
         public const string PostExecution = nameof(PostExecution);
+        public const string PipelineBuilder = nameof(PipelineBuilder);
         public const string MiddlewarePreExecution = nameof(MiddlewarePreExecution);
         public const string MiddlewarePostExecution = nameof(MiddlewarePostExecution);
         public const string HandlerPreNestedExecution = nameof(HandlerPreNestedExecution);

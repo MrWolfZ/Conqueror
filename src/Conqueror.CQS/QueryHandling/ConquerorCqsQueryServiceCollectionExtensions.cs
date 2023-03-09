@@ -15,8 +15,6 @@ public static class ConquerorCqsQueryServiceCollectionExtensions
         services.TryAddSingleton<IQueryHandlerRegistry>(p => p.GetRequiredService<QueryHandlerRegistry>());
         services.TryAddSingleton<QueryMiddlewareRegistry>();
         services.TryAddSingleton<IQueryMiddlewareRegistry>(p => p.GetRequiredService<QueryMiddlewareRegistry>());
-        services.TryAddSingleton<QueryContextAccessor>();
-        services.TryAddSingleton<IQueryContextAccessor>(p => p.GetRequiredService<QueryContextAccessor>());
 
         services.AddConquerorContext();
     }

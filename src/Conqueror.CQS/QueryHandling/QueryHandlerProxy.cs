@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling;
 
@@ -18,14 +20,21 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
         this.configurePipeline = configurePipeline;
     }
 
-    public Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
+    public async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
     {
+        using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
+
+        if (!conquerorContext.IsExecutionFromTransport())
+        {
+            conquerorContext.SetQueryId(ActivitySpanId.CreateRandom().ToString());
+        }
+
         var pipelineBuilder = new QueryPipelineBuilder(serviceProvider);
 
         configurePipeline?.Invoke(pipelineBuilder);
 
-        var pipeline = pipelineBuilder.Build();
+        var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        return pipeline.Execute<TQuery, TResponse>(serviceProvider, query, transportClientFactory, cancellationToken);
+        return await pipeline.Execute<TQuery, TResponse>(serviceProvider, query, transportClientFactory, cancellationToken).ConfigureAwait(false);
     }
 }

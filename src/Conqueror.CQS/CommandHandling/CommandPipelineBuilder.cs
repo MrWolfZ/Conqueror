@@ -93,11 +93,9 @@ internal sealed class CommandPipelineBuilder : ICommandPipelineBuilder
         return this;
     }
 
-    public CommandPipeline Build()
+    public CommandPipeline Build(IConquerorContext conquerorContext)
     {
-        return new(ServiceProvider.GetRequiredService<CommandContextAccessor>(),
-                   ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                   middlewares);
+        return new(conquerorContext, middlewares);
     }
 
     private ICommandMiddlewareInvoker GetInvoker<TMiddleware>()

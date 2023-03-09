@@ -32,15 +32,7 @@ internal sealed class ContextDataPropagationActionFilter : IAsyncActionFilter
             }
         }
 
-        if (context.HttpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorCommandIdHeaderName, out var commandIdValues) && commandIdValues.FirstOrDefault() is { } commandId)
-        {
-            context.HttpContext.RequestServices.GetRequiredService<ICommandContextAccessor>().SetExternalCommandId(commandId);
-        }
-
-        if (context.HttpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorQueryIdHeaderName, out var queryIdValues) && queryIdValues.FirstOrDefault() is { } queryId)
-        {
-            context.HttpContext.RequestServices.GetRequiredService<IQueryContextAccessor>().SetExternalQueryId(queryId);
-        }
+        conquerorContext.SignalExecutionFromTransport();
 
         if (Activity.Current is null && context.HttpContext.Request.Headers.TryGetValue(HeaderNames.TraceParent, out var traceParentValues) && traceParentValues.FirstOrDefault() is { } traceParent)
         {

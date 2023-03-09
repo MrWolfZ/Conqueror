@@ -93,11 +93,9 @@ internal sealed class QueryPipelineBuilder : IQueryPipelineBuilder
         return this;
     }
 
-    public QueryPipeline Build()
+    public QueryPipeline Build(IConquerorContext conquerorContext)
     {
-        return new(ServiceProvider.GetRequiredService<QueryContextAccessor>(),
-                   ServiceProvider.GetRequiredService<IConquerorContextAccessor>(),
-                   middlewares);
+        return new(conquerorContext, middlewares);
     }
 
     private IQueryMiddlewareInvoker GetInvoker<TMiddleware>()
