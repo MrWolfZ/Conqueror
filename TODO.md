@@ -16,7 +16,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] expose `IServiceProvider` on `IConquerorContext`
 - [ ] create common authentication package that exposes static extension methods for setting principal in conqueror context
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
 - [ ] write code-level documentation for all public APIs
@@ -45,6 +44,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
+- [ ] add test to ensure that adding server services multiple times adds filters and options only once
+  - [ ] allow configuration callback to run multiple times
 - [ ] do not use base64 encoding for context data, but instead use cookie-like encoding
 - [ ] once common authentication package exists, set user identity from ASP request in executor
 - [ ] add recipe for customizing OpenAPI specification with Swashbuckle
