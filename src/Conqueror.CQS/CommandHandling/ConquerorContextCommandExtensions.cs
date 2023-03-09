@@ -12,7 +12,7 @@ public static class ConquerorContextCommandExtensions
     /// <returns>The ID of the executing command if there is one, otherwise <c>null</c></returns>
     public static string? GetCommandId(this IConquerorContext conquerorContext)
     {
-        return conquerorContext.DownstreamContextData.TryGet<string>(CommandIdKey, out var commandId) ? commandId : null;
+        return conquerorContext.DownstreamContextData.Get<string>(CommandIdKey);
     }
 
     internal static void SetCommandId(this IConquerorContext conquerorContext, string commandId)

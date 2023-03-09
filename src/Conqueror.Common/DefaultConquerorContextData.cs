@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Conqueror.Common;
 
@@ -45,24 +44,20 @@ internal sealed class DefaultConquerorContextData : IConquerorContextData
         return itemsLazy.Value.TryRemove(key, out _);
     }
 
-    public bool TryGet<T>(string key, [NotNullWhen(true)] out T? value)
+    public T? Get<T>(string key)
     {
         if (!itemsLazy.IsValueCreated)
         {
-            value = default;
-            return false;
+            return default;
         }
 
         var result = itemsLazy.Value.TryGetValue(key, out var v);
 
         if (!result)
         {
-            value = default;
-            return false;
+            return default;
         }
 
-        value = (T)v.Value;
-
-        return true;
+        return (T)v.Value;
     }
 }

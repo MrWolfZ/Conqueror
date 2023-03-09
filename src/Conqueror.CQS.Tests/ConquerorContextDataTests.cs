@@ -1114,7 +1114,7 @@ public sealed class ConquerorContextDataTests
             testObservations.ObservedDownstreamData.Add((key, value, location));
         }
 
-        if (ctx.DownstreamContextData.TryGet<object>(TestKey, out var downstreamValue))
+        if (ctx.DownstreamContextData.Get<object>(TestKey) is { } downstreamValue)
         {
             testObservations.ObservedDownstreamData.Add((TestKey, downstreamValue, location));
         }
@@ -1124,7 +1124,7 @@ public sealed class ConquerorContextDataTests
             testObservations.ObservedUpstreamData.Add((key, value, location));
         }
 
-        if (ctx.UpstreamContextData.TryGet<object>(TestKey, out var upstreamValue))
+        if (ctx.UpstreamContextData.Get<object>(TestKey) is { } upstreamValue)
         {
             testObservations.ObservedUpstreamData.Add((TestKey, upstreamValue, location));
         }

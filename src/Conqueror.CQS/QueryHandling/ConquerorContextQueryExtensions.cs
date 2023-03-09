@@ -12,7 +12,7 @@ public static class ConquerorContextQueryExtensions
     /// <returns>The ID of the executing query if there is one, otherwise <c>null</c></returns>
     public static string? GetQueryId(this IConquerorContext conquerorContext)
     {
-        return conquerorContext.DownstreamContextData.TryGet<string>(QueryIdKey, out var queryId) ? queryId : null;
+        return conquerorContext.DownstreamContextData.Get<string>(QueryIdKey);
     }
 
     internal static void SetQueryId(this IConquerorContext conquerorContext, string queryId)

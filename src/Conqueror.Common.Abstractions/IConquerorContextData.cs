@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Conqueror;
 
@@ -32,12 +31,11 @@ public interface IConquerorContextData : IEnumerable<(string Key, object Value, 
     bool Remove(string key);
 
     /// <summary>
-    ///     Try to get the value for a key.
+    ///     Get the value for a key.
     /// </summary>
     /// <param name="key">The key to get the data for</param>
-    /// <param name="value">The value for the key, if any</param>
     /// <typeparam name="T">The expected type of the value</typeparam>
-    /// <returns><c>true</c> if a value for the given key exists, otherwise <c>false</c></returns>
+    /// <returns>The value if it exists, otherwise <c>null</c></returns>
     /// <exception cref="System.InvalidCastException">If the data for the given key is not of type <see cref="T"/></exception>
-    bool TryGet<T>(string key, [NotNullWhen(true)] out T? value);
+    T? Get<T>(string key);
 }
