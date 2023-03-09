@@ -14,9 +14,10 @@ public static class ConquerorCqsTransportHttpServerAspNetCoreMvcBuilderExtension
 {
     public static IMvcBuilder AddConquerorCQSHttpControllers(this IMvcBuilder builder, Action<ConquerorCqsHttpTransportServerAspNetCoreOptions>? configureOptions = null)
     {
-        _ = builder.Services.AddConquerorCQS();
+        _ = builder.Services.AddConquerorCQS().AddHttpContextAccessor();
 
         builder.Services.TryAddSingleton<HttpEndpointRegistry>();
+        builder.Services.TryAddSingleton<CqsHttpTransportServerInvoker>();
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpEndpointConfigurationStartupFilter>());
 
@@ -27,8 +28,8 @@ public static class ConquerorCqsTransportHttpServerAspNetCoreMvcBuilderExtension
 
         _ = builder.Services.PostConfigure<MvcOptions>(options =>
         {
-            options.Filters.Add(new BadContextExceptionHandlerFilter());
-            options.Filters.Add(new ContextDataPropagationActionFilter());
+            options.Filters.Add(new FormattedConquerorContextDataInvalidExceptionFilter());
+            options.Filters.Add(new CqsHttpTransportServerInvokerActionFilter());
         });
 
         var options = new ConquerorCqsHttpTransportServerAspNetCoreOptions();

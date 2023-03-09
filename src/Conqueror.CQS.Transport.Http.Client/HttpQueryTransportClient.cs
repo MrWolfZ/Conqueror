@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Conqueror.Common;
 using Conqueror.CQS.Transport.Http.Common;
 
 namespace Conqueror.CQS.Transport.Http.Client;
@@ -66,7 +67,7 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
 
             if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
             {
-                var parsedContextItems = ContextValueFormatter.Parse(values);
+                var parsedContextItems = ConquerorContextDataFormatter.Parse(values);
 
                 foreach (var (key, value) in parsedContextItems)
                 {
@@ -90,7 +91,7 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
             headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }
 
-        if (ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
+        if (ConquerorContextDataFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
         {
             headers.Add(HttpConstants.ConquerorContextHeaderName, s);
         }

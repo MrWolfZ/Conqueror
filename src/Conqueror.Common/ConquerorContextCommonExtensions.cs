@@ -1,7 +1,6 @@
-﻿// ReSharper disable once CheckNamespace (we want these extensions to be accessible without an extra import)
-namespace Conqueror;
+﻿namespace Conqueror.Common;
 
-public static class ConquerorContextCommonExtensions
+internal static class ConquerorContextCommonExtensions
 {
     private static readonly string SignalExecutionFromTransportKey = typeof(ConquerorContextCommonExtensions).FullName + ".SignalExecutionFromTransport";
 
@@ -16,7 +15,7 @@ public static class ConquerorContextCommonExtensions
         conquerorContext.DownstreamContextData.Set(SignalExecutionFromTransportKey, string.Empty, ConquerorContextDataScope.InProcess);
     }
 
-    internal static bool IsExecutionFromTransport(this IConquerorContext conquerorContext)
+    public static bool IsExecutionFromTransport(this IConquerorContext conquerorContext)
     {
         return conquerorContext.DownstreamContextData.Remove(SignalExecutionFromTransportKey);
     }

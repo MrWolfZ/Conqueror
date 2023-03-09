@@ -7,6 +7,7 @@ using System.Net.Http.Json;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.Common;
 using Conqueror.CQS.Common;
 using Conqueror.CQS.Transport.Http.Common;
 
@@ -56,7 +57,7 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
 
             if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var ctxValues))
             {
-                var parsedContextItems = ContextValueFormatter.Parse(ctxValues);
+                var parsedContextItems = ConquerorContextDataFormatter.Parse(ctxValues);
 
                 foreach (var (key, value) in parsedContextItems)
                 {
@@ -85,7 +86,7 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
             headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }
 
-        if (ContextValueFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
+        if (ConquerorContextDataFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
         {
             headers.Add(HttpConstants.ConquerorContextHeaderName, s);
         }

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Mime;
 using System.Reflection;
-using Conqueror.CQS.Transport.Http.Common;
+using Conqueror.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
@@ -55,7 +55,7 @@ public sealed class ConquerorContextCommandTests : TestBase
 
         Assert.That(exists, Is.True);
 
-        var receivedData = ContextValueFormatter.Parse(values!);
+        var receivedData = ConquerorContextDataFormatter.Parse(values!);
 
         CollectionAssert.AreEquivalent(ContextData, receivedData.Select(t => new KeyValuePair<string, string>(t.Key, t.Value)));
     }
@@ -71,9 +71,16 @@ public sealed class ConquerorContextCommandTests : TestBase
     [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
     public async Task GivenConquerorContextRequestHeader_DataIsReceivedByHandler(string path, string data)
     {
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var (key, value) in ContextData)
+        {
+            conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+        }
+
         using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
         {
-            Headers = { { HttpConstants.ConquerorContextHeaderName, ContextValueFormatter.Format(ContextData) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.DownstreamContextData) } },
         };
 
         var response = await HttpClient.PostAsync(path, content);

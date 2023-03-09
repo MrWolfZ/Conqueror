@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling;
