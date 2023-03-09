@@ -37,11 +37,11 @@ public sealed class ConquerorContextCommandTests
         var command = new TestCommand(10);
         var response = new TestCommandResponse(11);
 
-        var provider = Setup((_, _) => response, middlewareFn: async (middlewareCtx, ctx, next) =>
+        var provider = Setup((_, _) => response, middlewareFn: async (ctx, next) =>
         {
-            Assert.That(ctx, Is.Not.Null);
+            Assert.That(ctx.ConquerorContext, Is.Not.Null);
 
-            return await next(middlewareCtx.Command);
+            return await next(ctx.Command);
         });
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
@@ -104,12 +104,12 @@ public sealed class ConquerorContextCommandTests
                 return new(cmd.Payload);
             },
             (cmd, _) => new(cmd.Payload),
-            (middlewareCtx, ctx, next) =>
+            (ctx, next) =>
             {
-                observedContexts.Add(ctx);
-                return next(middlewareCtx.Command);
+                observedContexts.Add(ctx.ConquerorContext);
+                return next(ctx.Command);
             },
-            (middlewareCtx, _, next) => next(middlewareCtx.Command),
+            (ctx, next) => next(ctx.Command),
             ctx => observedContexts.Add(ctx!),
             _ => { },
             handlerLifetime,
@@ -137,13 +137,13 @@ public sealed class ConquerorContextCommandTests
                 return new(cmd.Payload);
             },
             (cmd, _) => new(cmd.Payload),
-            async (middlewareCtx, ctx, next) =>
+            async (ctx, next) =>
             {
                 await Task.Delay(10).ConfigureAwait(false);
-                observedContexts.Add(ctx);
-                return await next(middlewareCtx.Command);
+                observedContexts.Add(ctx.ConquerorContext);
+                return await next(ctx.Command);
             },
-            (middlewareCtx, _, next) => next(middlewareCtx.Command),
+            (ctx, next) => next(ctx.Command),
             ctx => observedContexts.Add(ctx!));
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
@@ -167,12 +167,12 @@ public sealed class ConquerorContextCommandTests
                 return new(cmd.Payload);
             },
             (cmd, _) => new(cmd.Payload),
-            (middlewareCtx, ctx, next) =>
+            (ctx, next) =>
             {
-                observedTraceIds.Add(ctx.TraceId);
-                return next(middlewareCtx.Command);
+                observedTraceIds.Add(ctx.ConquerorContext.TraceId);
+                return next(ctx.Command);
             },
-            (middlewareCtx, _, next) => next(middlewareCtx.Command),
+            (ctx, next) => next(ctx.Command),
             ctx => observedTraceIds.Add(ctx!.TraceId));
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
@@ -197,12 +197,12 @@ public sealed class ConquerorContextCommandTests
                 return new(cmd.Payload);
             },
             (cmd, _) => new(cmd.Payload),
-            (middlewareCtx, ctx, next) =>
+            (ctx, next) =>
             {
-                observedTraceIds.Add(ctx.TraceId);
-                return next(middlewareCtx.Command);
+                observedTraceIds.Add(ctx.ConquerorContext.TraceId);
+                return next(ctx.Command);
             },
-            (middlewareCtx, _, next) => next(middlewareCtx.Command),
+            (ctx, next) => next(ctx.Command),
             ctx => observedTraceIds.Add(ctx!.TraceId));
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
@@ -368,8 +368,8 @@ public sealed class ConquerorContextCommandTests
     {
         handlerFn ??= (cmd, _) => new(cmd.Payload);
         nestedHandlerFn ??= (cmd, _) => new(cmd.Payload);
-        middlewareFn ??= (middlewareCtx, _, next) => next(middlewareCtx.Command);
-        outerMiddlewareFn ??= (middlewareCtx, _, next) => next(middlewareCtx.Command);
+        middlewareFn ??= (ctx, next) => next(ctx.Command);
+        outerMiddlewareFn ??= (ctx, next) => next(ctx.Command);
         nestedClassFn ??= _ => { };
         handlerPreReturnFn ??= _ => { };
 
@@ -406,7 +406,7 @@ public sealed class ConquerorContextCommandTests
                                                   Action<IConquerorContext?>? nestedClassFn = null)
     {
         handlerFn ??= (_, _) => { };
-        middlewareFn ??= (middlewareCtx, _, next) => next(middlewareCtx.Command);
+        middlewareFn ??= (ctx, next) => next(ctx.Command);
         nestedClassFn ??= _ => { };
 
         var services = new ServiceCollection();
@@ -465,7 +465,6 @@ public sealed class ConquerorContextCommandTests
     }
 
     private delegate Task<TestCommandResponse> MiddlewareFn(CommandMiddlewareContext<TestCommand, TestCommandResponse> middlewareCtx,
-                                                            IConquerorContext ctx,
                                                             Func<TestCommand, Task<TestCommandResponse>> next);
 
     private sealed record TestCommand(int Payload);
@@ -565,7 +564,7 @@ public sealed class ConquerorContextCommandTests
             where TCommand : class
         {
             await Task.Yield();
-            return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, ctx.ConquerorContext, async cmd =>
+            return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, async cmd =>
             {
                 var response = await ctx.Next((cmd as TCommand)!, ctx.CancellationToken);
                 return (response as TestCommandResponse)!;
@@ -586,7 +585,7 @@ public sealed class ConquerorContextCommandTests
             where TCommand : class
         {
             await Task.Yield();
-            return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, ctx.ConquerorContext, async cmd =>
+            return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, async cmd =>
             {
                 var response = await ctx.Next((cmd as TCommand)!, ctx.CancellationToken);
                 return (response as TestCommandResponse)!;
