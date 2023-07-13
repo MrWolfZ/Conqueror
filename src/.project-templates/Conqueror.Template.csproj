@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. [...]</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+    </ItemGroup>
+
+</Project>
