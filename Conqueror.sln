@@ -346,6 +346,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.EntryPoint.WebApi", "recipes\cqs\advanced\monolith-to-distributed\.completed\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.EntryPoint.WebApi\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.EntryPoint.WebApi.csproj", "{830E2684-E493-4C85-87E7-8A0A5A15C4B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication", "src\Conqueror.Common.Middleware.Authentication\Conqueror.Common.Middleware.Authentication.csproj", "{83D2ACA6-4844-4049-81B1-2E846D538C00}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication.Abstractions", "src\Conqueror.Common.Middleware.Authentication.Abstractions\Conqueror.Common.Middleware.Authentication.Abstractions.csproj", "{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication.AspNetCore", "src\Conqueror.Common.Middleware.Authentication.AspNetCore\Conqueror.Common.Middleware.Authentication.AspNetCore.csproj", "{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication.AspNetCore.Tests", "src\Conqueror.Common.Middleware.Authentication.AspNetCore.Tests\Conqueror.Common.Middleware.Authentication.AspNetCore.Tests.csproj", "{206E950E-13C2-40AF-A1D6-E702DB9CF32E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authentication", "src\Conqueror.CQS.Middleware.Authentication\Conqueror.CQS.Middleware.Authentication.csproj", "{315F07EB-C384-46C7-939D-C9CCA830AE53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authentication.Tests", "src\Conqueror.CQS.Middleware.Authentication.Tests\Conqueror.CQS.Middleware.Authentication.Tests.csproj", "{806A3691-CC2D-44DE-852E-E50701553307}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -815,6 +827,30 @@ Global
 		{830E2684-E493-4C85-87E7-8A0A5A15C4B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{830E2684-E493-4C85-87E7-8A0A5A15C4B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{830E2684-E493-4C85-87E7-8A0A5A15C4B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83D2ACA6-4844-4049-81B1-2E846D538C00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83D2ACA6-4844-4049-81B1-2E846D538C00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83D2ACA6-4844-4049-81B1-2E846D538C00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83D2ACA6-4844-4049-81B1-2E846D538C00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{206E950E-13C2-40AF-A1D6-E702DB9CF32E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{206E950E-13C2-40AF-A1D6-E702DB9CF32E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{206E950E-13C2-40AF-A1D6-E702DB9CF32E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{206E950E-13C2-40AF-A1D6-E702DB9CF32E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{315F07EB-C384-46C7-939D-C9CCA830AE53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{315F07EB-C384-46C7-939D-C9CCA830AE53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{315F07EB-C384-46C7-939D-C9CCA830AE53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{315F07EB-C384-46C7-939D-C9CCA830AE53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{806A3691-CC2D-44DE-852E-E50701553307}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{806A3691-CC2D-44DE-852E-E50701553307}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{806A3691-CC2D-44DE-852E-E50701553307}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{806A3691-CC2D-44DE-852E-E50701553307}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}

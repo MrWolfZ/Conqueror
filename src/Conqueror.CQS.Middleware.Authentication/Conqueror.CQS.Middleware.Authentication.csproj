@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Authentication middlewares for command-query-separation (CQS).</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Middleware.Authentication\Conqueror.Common.Middleware.Authentication.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS\Conqueror.CQS.csproj" />
+    </ItemGroup>
+
+</Project>
