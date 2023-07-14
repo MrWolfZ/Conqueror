@@ -21,10 +21,14 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineBuilderExte
     /// <summary>
     ///     Enforce that an authenticated principal is present when executing the pipeline. If no such principal
     ///     is present, then a <see cref="ConquerorAuthenticationMissingPrincipalException" /> will be thrown during
-    ///     pipeline execution.
+    ///     pipeline execution. When a principal is present but not authenticated, then a
+    ///     <see cref="ConquerorAuthenticationUnauthenticatedPrincipalException" /> will be thrown during pipeline
+    ///     execution.
     /// </summary>
     /// <param name="pipeline">The query pipeline to configure authentication for</param>
     /// <returns>The query pipeline</returns>
+    /// <exception cref="ConquerorAuthenticationMissingPrincipalException">When no principal is present</exception>
+    /// <exception cref="ConquerorAuthenticationUnauthenticatedPrincipalException">When present principal is not authenticated</exception>
     public static IQueryPipelineBuilder RequireAuthenticatedPrincipal(this IQueryPipelineBuilder pipeline)
     {
         return pipeline.Configure<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = true);

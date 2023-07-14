@@ -17,9 +17,19 @@ public sealed class AuthenticationCommandMiddleware : ICommandMiddleware<Authent
     public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, AuthenticationCommandMiddlewareConfiguration> ctx)
         where TCommand : class
     {
-        if (ctx.Configuration.RequireAuthenticatedPrincipal && authenticationContext.GetCurrentPrincipal() is null)
+        if (ctx.Configuration.RequireAuthenticatedPrincipal)
         {
-            throw new ConquerorAuthenticationMissingPrincipalException($"command of type '{typeof(TCommand).Name}' requires an authenticated principal, but none was set");
+            var currentPrincipal = authenticationContext.GetCurrentPrincipal();
+
+            if (currentPrincipal is null)
+            {
+                throw new ConquerorAuthenticationMissingPrincipalException($"command of type '{typeof(TCommand).Name}' requires an authenticated principal, but none was set");
+            }
+
+            if (!(currentPrincipal.Identity?.IsAuthenticated ?? false))
+            {
+                throw new ConquerorAuthenticationUnauthenticatedPrincipalException($"command of type '{typeof(TCommand).Name}' requires an authenticated principal, but principal is not authenticated");
+            }
         }
 
         return ctx.Next(ctx.Command, ctx.CancellationToken);

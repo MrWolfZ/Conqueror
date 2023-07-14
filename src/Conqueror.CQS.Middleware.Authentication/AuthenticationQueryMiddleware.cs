@@ -17,9 +17,19 @@ public sealed class AuthenticationQueryMiddleware : IQueryMiddleware<Authenticat
     public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, AuthenticationQueryMiddlewareConfiguration> ctx)
         where TQuery : class
     {
-        if (ctx.Configuration.RequireAuthenticatedPrincipal && authenticationContext.GetCurrentPrincipal() is null)
+        if (ctx.Configuration.RequireAuthenticatedPrincipal)
         {
-            throw new ConquerorAuthenticationMissingPrincipalException($"query of type '{typeof(TQuery).Name}' requires an authenticated principal, but none was set");
+            var currentPrincipal = authenticationContext.GetCurrentPrincipal();
+
+            if (currentPrincipal is null)
+            {
+                throw new ConquerorAuthenticationMissingPrincipalException($"query of type '{typeof(TQuery).Name}' requires an authenticated principal, but none was set");
+            }
+
+            if (!(currentPrincipal.Identity?.IsAuthenticated ?? false))
+            {
+                throw new ConquerorAuthenticationUnauthenticatedPrincipalException($"query type '{typeof(TQuery).Name}' requires an authenticated principal, but principal is not authenticated");
+            }
         }
 
         return ctx.Next(ctx.Query, ctx.CancellationToken);
