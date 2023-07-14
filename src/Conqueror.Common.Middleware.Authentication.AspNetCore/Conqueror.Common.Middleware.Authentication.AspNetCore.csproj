@@ -11,4 +11,8 @@
         <ProjectReference Include="..\Conqueror.Common.Middleware.Authentication.Abstractions\Conqueror.Common.Middleware.Authentication.Abstractions.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
 </Project>
