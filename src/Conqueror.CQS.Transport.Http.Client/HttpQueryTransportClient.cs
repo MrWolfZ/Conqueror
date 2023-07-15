@@ -64,15 +64,7 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
                 throw new HttpQueryFailedException($"query of type {typeof(TQuery).Name} failed with status code {response.StatusCode} and response content: {content}", response);
             }
 
-            if (conquerorContextAccessor.ConquerorContext is { } ctx && response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
-            {
-                var parsedContextItems = ConquerorContextDataFormatter.Parse(values);
-
-                foreach (var (key, value) in parsedContextItems)
-                {
-                    ctx.UpstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
-                }
-            }
+            ReadResponseHeaders(response.Headers);
 
             var result = await response.Content.ReadFromJsonAsync<TResponse>(Options.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
             return result!;
@@ -90,9 +82,14 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
             headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }
 
-        if (ConquerorContextDataFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } s)
+        if (ConquerorContextDataFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } downstreamData)
         {
-            headers.Add(HttpConstants.ConquerorContextHeaderName, s);
+            headers.Add(HttpConstants.ConquerorDownstreamContextHeaderName, downstreamData);
+        }
+
+        if (ConquerorContextDataFormatter.Format(conquerorContextAccessor.ConquerorContext?.ContextData) is { } data)
+        {
+            headers.Add(HttpConstants.ConquerorContextHeaderName, data);
         }
 
         if (Options.Headers is { } headersFromOptions)
@@ -100,6 +97,34 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
             foreach (var (headerName, headerValues) in headersFromOptions)
             {
                 headers.Add(headerName, headerValues);
+            }
+        }
+    }
+
+    private void ReadResponseHeaders(HttpHeaders headers)
+    {
+        if (conquerorContextAccessor.ConquerorContext is not { } ctx)
+        {
+            return;
+        }
+
+        if (headers.TryGetValues(HttpConstants.ConquerorUpstreamContextHeaderName, out var upstreamValues))
+        {
+            var upstreamData = ConquerorContextDataFormatter.Parse(upstreamValues);
+
+            foreach (var (key, value) in upstreamData)
+            {
+                ctx.UpstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+            }
+        }
+
+        if (headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
+        {
+            var data = ConquerorContextDataFormatter.Parse(values);
+
+            foreach (var (key, value) in data)
+            {
+                ctx.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
             }
         }
     }

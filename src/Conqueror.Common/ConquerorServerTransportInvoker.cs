@@ -18,11 +18,18 @@ public abstract class ConquerorServerTransportInvoker
     {
         using var conquerorContext = conquerorContextAccessor.GetOrCreate();
 
-        var parsedValue = ConquerorContextDataFormatter.Parse(GetFormattedDownstreamContextData());
+        var parsedDownstreamData = ConquerorContextDataFormatter.Parse(GetFormattedDownstreamContextData());
 
-        foreach (var (key, value) in parsedValue)
+        foreach (var (key, value) in parsedDownstreamData)
         {
             conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        var parsedData = ConquerorContextDataFormatter.Parse(GetFormattedContextData());
+
+        foreach (var (key, value) in parsedData)
+        {
+            conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
         }
 
         conquerorContext.SignalExecutionFromTransport();
@@ -36,15 +43,24 @@ public abstract class ConquerorServerTransportInvoker
 
         await executeFn().ConfigureAwait(false);
 
-        if (ConquerorContextDataFormatter.Format(conquerorContext.UpstreamContextData) is { } s)
+        if (ConquerorContextDataFormatter.Format(conquerorContext.UpstreamContextData) is { } formattedUpstreamData)
         {
-            SetFormattedUpstreamContextData(s);
+            SetFormattedUpstreamContextData(formattedUpstreamData);
+        }
+
+        if (ConquerorContextDataFormatter.Format(conquerorContext.ContextData) is { } formattedData)
+        {
+            SetFormattedContextData(formattedData);
         }
     }
 
     protected abstract IEnumerable<string> GetFormattedDownstreamContextData();
 
+    protected abstract IEnumerable<string> GetFormattedContextData();
+
     protected abstract string? GetTraceParent();
 
     protected abstract void SetFormattedUpstreamContextData(string formattedData);
+
+    protected abstract void SetFormattedContextData(string formattedData);
 }

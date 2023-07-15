@@ -18,6 +18,16 @@ internal sealed class CqsHttpTransportServerInvoker : ConquerorServerTransportIn
 
     protected override IEnumerable<string> GetFormattedDownstreamContextData()
     {
+        if (httpContextAccessor.HttpContext?.Request.Headers.TryGetValue(HttpConstants.ConquerorDownstreamContextHeaderName, out var values) ?? false)
+        {
+            return values;
+        }
+
+        return Enumerable.Empty<string>();
+    }
+
+    protected override IEnumerable<string> GetFormattedContextData()
+    {
         if (httpContextAccessor.HttpContext?.Request.Headers.TryGetValue(HttpConstants.ConquerorContextHeaderName, out var values) ?? false)
         {
             return values;
@@ -37,6 +47,11 @@ internal sealed class CqsHttpTransportServerInvoker : ConquerorServerTransportIn
     }
 
     protected override void SetFormattedUpstreamContextData(string formattedData)
+    {
+        httpContextAccessor.HttpContext?.Response.Headers.Add(HttpConstants.ConquerorUpstreamContextHeaderName, formattedData);
+    }
+
+    protected override void SetFormattedContextData(string formattedData)
     {
         httpContextAccessor.HttpContext?.Response.Headers.Add(HttpConstants.ConquerorContextHeaderName, formattedData);
     }

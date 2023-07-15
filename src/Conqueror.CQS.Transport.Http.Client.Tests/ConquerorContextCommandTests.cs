@@ -25,7 +25,7 @@ public class ConquerorContextCommandTests : TestBase
     };
 
     [Test]
-    public async Task GivenManuallyCreatedContextOnClientAndContextDataInHandler_DataAreReturnedInClientContext()
+    public async Task GivenManuallyCreatedContextOnClientAndUpstreamDataInHandler_DataIsReturnedInClientContext()
     {
         Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
@@ -36,10 +36,26 @@ public class ConquerorContextCommandTests : TestBase
         _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
         CollectionAssert.AreEquivalent(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.ContextData, Is.Empty);
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextOnClientAndContextDataInHandlerWithoutResponse_DataAreReturnedInClientContext()
+    public async Task GivenManuallyCreatedContextOnClientAndBidirectionalDataInHandler_DataIsReturnedInClientContext()
+    {
+        Resolve<TestObservations>().ShouldAddBidirectionalData = true;
+
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        CollectionAssert.AreEquivalent(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenManuallyCreatedContextOnClientAndUpstreamDataInHandlerWithoutResponse_DataIsReturnedInClientContext()
     {
         Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
@@ -50,10 +66,26 @@ public class ConquerorContextCommandTests : TestBase
         await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
         CollectionAssert.AreEquivalent(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.ContextData, Is.Empty);
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInHandler()
+    public async Task GivenManuallyCreatedContextOnClientAndBidirectionalDataInHandlerWithoutResponse_DataIsReturnedInClientContext()
+    {
+        Resolve<TestObservations>().ShouldAddBidirectionalData = true;
+
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+
+        await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        CollectionAssert.AreEquivalent(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInHandler()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
@@ -71,14 +103,40 @@ public class ConquerorContextCommandTests : TestBase
 
         _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
+        var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
         CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInHandler()
+    {
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var item in ContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
+
+        var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
+
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInHandlerAcrossMultipleInvocations()
+    public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInHandlerAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
@@ -102,21 +160,62 @@ public class ConquerorContextCommandTests : TestBase
 
         _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInHandlerWithoutResponse()
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+    public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInHandlerAcrossMultipleInvocations()
+    {
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var item in ContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
+
+        var observations = Resolve<TestObservations>();
+
+        observations.ShouldAddUpstreamData = true;
+
+        var allReceivedKeys = new List<string>();
+
+        var handler = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        _ = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+    }
+
+    [Test]
+    public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInHandlerWithoutResponse()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
@@ -134,14 +233,40 @@ public class ConquerorContextCommandTests : TestBase
 
         await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
+        var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
         CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInHandlerWithoutResponse()
+    {
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var item in ContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
+
+        var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+
+        await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
+
+        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInHandlerWithoutResponseAcrossMultipleInvocations()
+    public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInHandlerWithoutResponseAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
@@ -165,22 +290,63 @@ public class ConquerorContextCommandTests : TestBase
 
         await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
     }
 
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
+    public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInHandlerWithoutResponseAcrossMultipleInvocations()
+    {
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var item in ContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
+
+        var observations = Resolve<TestObservations>();
+
+        observations.ShouldAddUpstreamData = true;
+
+        var allReceivedKeys = new List<string>();
+
+        var handler = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+
+        await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+    }
+
+    [Test]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+    public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
@@ -205,73 +371,201 @@ public class ConquerorContextCommandTests : TestBase
 
         await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler2.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
     }
 
     [Test]
-    public async Task GivenContextDataInHandler_ContextIsReceivedInOuterHandler()
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+    public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
+    {
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var item in ContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
+
+        var observations = Resolve<TestObservations>();
+
+        var allReceivedKeys = new List<string>();
+
+        var handler1 = ResolveOnClient<ICommandHandler<TestCommandWithoutResponse>>();
+        var handler2 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        _ = await handler2.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+    }
+
+    [Test]
+    public async Task GivenUpstreamDataInHandler_ContextIsReceivedInOuterHandlerAndClient()
     {
         Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
         var handler = ResolveOnClient<ICommandHandler<OuterTestCommand, OuterTestCommandResponse>>();
 
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
         _ = await handler.ExecuteCommand(new(), CancellationToken.None);
 
-        var receivedContextData = ResolveOnClient<TestObservations>().ReceivedOuterContextData;
+        var observations = ResolveOnClient<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedOuterUpstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.ContextData, Is.Empty);
     }
 
     [Test]
-    public async Task GivenContextDataInHandlerWithoutResponse_ContextIsReceivedInOuterHandler()
+    public async Task GivenBidirectionalDataInHandler_ContextIsReceivedInOuterHandlerAndClient()
+    {
+        Resolve<TestObservations>().ShouldAddBidirectionalData = true;
+
+        var handler = ResolveOnClient<ICommandHandler<OuterTestCommand, OuterTestCommandResponse>>();
+
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+
+        var observations = ResolveOnClient<TestObservations>();
+
+        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedOuterBidirectionalContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenUpstreamDataInHandlerWithoutResponse_ContextIsReceivedInOuterHandlerAndClient()
     {
         Resolve<TestObservations>().ShouldAddUpstreamData = true;
 
         var handler = ResolveOnClient<ICommandHandler<OuterTestCommandWithoutResponse>>();
 
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
         await handler.ExecuteCommand(new(), CancellationToken.None);
 
-        var receivedContextData = ResolveOnClient<TestObservations>().ReceivedOuterContextData;
+        var observations = ResolveOnClient<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedOuterUpstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.ContextData, Is.Empty);
     }
 
     [Test]
-    public async Task GivenContextDataInOuterHandler_ContextIsReceivedInHandler()
+    public async Task GivenBidirectionalDataInHandlerWithoutResponse_ContextIsReceivedInOuterHandlerAndClient()
+    {
+        Resolve<TestObservations>().ShouldAddBidirectionalData = true;
+
+        var handler = ResolveOnClient<ICommandHandler<OuterTestCommandWithoutResponse>>();
+
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        await handler.ExecuteCommand(new(), CancellationToken.None);
+
+        var observations = ResolveOnClient<TestObservations>();
+
+        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedOuterBidirectionalContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenDownstreamDataInOuterHandler_ContextIsReceivedInHandlerButNotInClient()
     {
         ResolveOnClient<TestObservations>().ShouldAddOuterDownstreamData = true;
 
         var handler = ResolveOnClient<ICommandHandler<OuterTestCommand, OuterTestCommandResponse>>();
 
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
         _ = await handler.ExecuteCommand(new(), CancellationToken.None);
 
-        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
+        var observations = Resolve<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData, Is.Empty);
+        Assert.That(context.ContextData, Is.Empty);
     }
 
     [Test]
-    public async Task GivenContextDataInOuterHandler_ContextIsReceivedInHandlerWithoutResponse()
+    public async Task GivenBidirectionalDataInOuterHandler_ContextIsReceivedInHandlerAndClient()
+    {
+        ResolveOnClient<TestObservations>().ShouldAddOuterBidirectionalData = true;
+
+        var handler = ResolveOnClient<ICommandHandler<OuterTestCommand, OuterTestCommandResponse>>();
+
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+
+        var observations = Resolve<TestObservations>();
+
+        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedBidirectionalContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenDownstreamDataInOuterHandler_ContextIsReceivedInHandlerWithoutResponseButNotInClient()
     {
         ResolveOnClient<TestObservations>().ShouldAddOuterDownstreamData = true;
 
         var handler = ResolveOnClient<ICommandHandler<OuterTestCommandWithoutResponse>>();
 
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
         await handler.ExecuteCommand(new(), CancellationToken.None);
 
-        var receivedContextData = Resolve<TestObservations>().ReceivedContextData;
+        var observations = Resolve<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData, Is.Empty);
+        Assert.That(context.ContextData, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenBidirectionalDataInOuterHandler_ContextIsReceivedInHandlerWithoutResponseAndClient()
+    {
+        ResolveOnClient<TestObservations>().ShouldAddOuterBidirectionalData = true;
+
+        var handler = ResolveOnClient<ICommandHandler<OuterTestCommandWithoutResponse>>();
+
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        await handler.ExecuteCommand(new(), CancellationToken.None);
+
+        var observations = Resolve<TestObservations>();
+
+        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedBidirectionalContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        CollectionAssert.IsSubsetOf(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData, Is.Empty);
     }
 
     [Test]
@@ -470,7 +764,8 @@ public class ConquerorContextCommandTests : TestBase
         {
             testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
             if (testObservations.ShouldAddUpstreamData)
             {
@@ -482,6 +777,19 @@ public class ConquerorContextCommandTests : TestBase
                 foreach (var item in InProcessContextData)
                 {
                     conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
+            }
+
+            if (testObservations.ShouldAddBidirectionalData)
+            {
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
                 }
             }
 
@@ -505,7 +813,8 @@ public class ConquerorContextCommandTests : TestBase
         {
             testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
             if (testObservations.ShouldAddUpstreamData)
             {
@@ -517,6 +826,19 @@ public class ConquerorContextCommandTests : TestBase
                 foreach (var item in InProcessContextData)
                 {
                     conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
+            }
+
+            if (testObservations.ShouldAddBidirectionalData)
+            {
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
                 }
             }
 
@@ -561,8 +883,22 @@ public class ConquerorContextCommandTests : TestBase
                 }
             }
 
+            if (testObservations.ShouldAddOuterBidirectionalData)
+            {
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
+            }
+
             _ = await nestedHandler.ExecuteCommand(new(), cancellationToken);
-            testObservations.ReceivedOuterContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
+            testObservations.ReceivedOuterUpstreamContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
+            testObservations.ReceivedOuterBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
             return new();
         }
     }
@@ -602,8 +938,22 @@ public class ConquerorContextCommandTests : TestBase
                 }
             }
 
+            if (testObservations.ShouldAddOuterBidirectionalData)
+            {
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
+            }
+
             await nestedHandler.ExecuteCommand(new(), cancellationToken);
-            testObservations.ReceivedOuterContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
+            testObservations.ReceivedOuterUpstreamContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
+            testObservations.ReceivedOuterBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
         }
     }
 
@@ -615,11 +965,19 @@ public class ConquerorContextCommandTests : TestBase
 
         public bool ShouldAddUpstreamData { get; set; }
 
+        public bool ShouldAddBidirectionalData { get; set; }
+
         public bool ShouldAddOuterDownstreamData { get; set; }
 
-        public IConquerorContextData? ReceivedContextData { get; set; }
+        public bool ShouldAddOuterBidirectionalData { get; set; }
 
-        public IConquerorContextData? ReceivedOuterContextData { get; set; }
+        public IConquerorContextData? ReceivedDownstreamContextData { get; set; }
+
+        public IConquerorContextData? ReceivedBidirectionalContextData { get; set; }
+
+        public IConquerorContextData? ReceivedOuterUpstreamContextData { get; set; }
+
+        public IConquerorContextData? ReceivedOuterBidirectionalContextData { get; set; }
     }
 
     private sealed class WrapperCommandTransportClient : ICommandTransportClient

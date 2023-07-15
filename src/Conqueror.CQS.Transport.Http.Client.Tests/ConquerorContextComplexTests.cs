@@ -25,7 +25,7 @@ public class ConquerorContextComplexTests : TestBase
 
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
-    public async Task GivenManuallyCreatedContextOnClientWithData_ContextIsReceivedInDifferentCommandAndQueryHandlersAcrossMultipleInvocations()
+    public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInDifferentCommandAndQueryHandlersAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
@@ -41,7 +41,44 @@ public class ConquerorContextComplexTests : TestBase
 
         var observations = Resolve<TestObservations>();
 
-        observations.ShouldAddUpstreamData = true;
+        var allReceivedKeys = new List<string>();
+
+        var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+        var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
+        Assert.That(observations.ReceivedBidirectionalContextData, Is.Empty);
+    }
+
+    [Test]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+    public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInDifferentCommandAndQueryHandlersAcrossMultipleInvocations()
+    {
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var item in ContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
+
+        var observations = Resolve<TestObservations>();
 
         var allReceivedKeys = new List<string>();
 
@@ -50,17 +87,43 @@ public class ConquerorContextComplexTests : TestBase
 
         _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        allReceivedKeys.AddRange(observations.ReceivedContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+    }
+
+    [Test]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+    public async Task GivenManuallyCreatedContextOnClientAndHandlerWhichSetsData_ContextDataIsReceivedInFollowingHandler()
+    {
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        var observations = Resolve<TestObservations>();
+
+        observations.ShouldAddBidirectionalData = true;
+
+        var allReceivedKeys = new List<string>();
+
+        var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+        var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
@@ -140,7 +203,8 @@ public class ConquerorContextComplexTests : TestBase
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
             if (testObservations.ShouldAddUpstreamData)
             {
@@ -152,6 +216,19 @@ public class ConquerorContextComplexTests : TestBase
                 foreach (var item in InProcessContextData)
                 {
                     conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
+            }
+
+            if (testObservations.ShouldAddBidirectionalData)
+            {
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
                 }
             }
 
@@ -184,7 +261,8 @@ public class ConquerorContextComplexTests : TestBase
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
             if (testObservations.ShouldAddUpstreamData)
             {
@@ -199,6 +277,19 @@ public class ConquerorContextComplexTests : TestBase
                 }
             }
 
+            if (testObservations.ShouldAddBidirectionalData)
+            {
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
+            }
+
             return Task.FromResult(new TestCommandResponse());
         }
     }
@@ -209,6 +300,10 @@ public class ConquerorContextComplexTests : TestBase
 
         public bool ShouldAddUpstreamData { get; set; }
 
-        public IConquerorContextData? ReceivedContextData { get; set; }
+        public bool ShouldAddBidirectionalData { get; set; }
+
+        public IConquerorContextData? ReceivedDownstreamContextData { get; set; }
+
+        public IConquerorContextData? ReceivedBidirectionalContextData { get; set; }
     }
 }
