@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Abstractions for all authorization middleware packages.</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!--
+            we are intentionally violating the convention of having the root namespace
+            be the project name in order to provide a consistent experience for users
+            regardless of which Conqueror packages they include (i.e. all packages share
+            the same root namespace that only needs to be imported once via "using")
+        -->
+        <RootNamespace>Conqueror</RootNamespace>
+    </PropertyGroup>
+
+</Project>

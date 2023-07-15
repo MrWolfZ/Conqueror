@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/test.targets" />
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.20" Condition="'$(TargetFramework)' == 'net6.0'" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9" Condition="'$(TargetFramework)' == 'net7.0'" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(MvcTestingVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Middleware.Authentication.AspNetCore\Conqueror.Common.Middleware.Authentication.AspNetCore.csproj" />
+        <ProjectReference Include="..\Conqueror.Common.Middleware.Authorization.AspNetCore\Conqueror.Common.Middleware.Authorization.AspNetCore.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS.Transport.Http.Client\Conqueror.CQS.Transport.Http.Client.csproj" />
+        <ProjectReference Include="..\Conqueror.CQS.Transport.Http.Server.AspNetCore\Conqueror.CQS.Transport.Http.Server.AspNetCore.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -358,6 +358,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Au
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authentication.Tests", "src\Conqueror.CQS.Middleware.Authentication.Tests\Conqueror.CQS.Middleware.Authentication.Tests.csproj", "{806A3691-CC2D-44DE-852E-E50701553307}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authorization.Abstractions", "src\Conqueror.Common.Middleware.Authorization.Abstractions\Conqueror.Common.Middleware.Authorization.Abstractions.csproj", "{0C6C6AC7-D416-45CE-A916-1AE312D63CF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authorization", "src\Conqueror.CQS.Middleware.Authorization\Conqueror.CQS.Middleware.Authorization.csproj", "{D1F52DAA-B281-4B73-8A9F-21220271A477}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authorization.Tests", "src\Conqueror.CQS.Middleware.Authorization.Tests\Conqueror.CQS.Middleware.Authorization.Tests.csproj", "{E95592D0-8654-409D-9C30-DE86AF3B7AA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authorization.AspNetCore", "src\Conqueror.Common.Middleware.Authorization.AspNetCore\Conqueror.Common.Middleware.Authorization.AspNetCore.csproj", "{85EB580E-6DB8-41E6-B602-B76F9685B6EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authorization.AspNetCore.Tests", "src\Conqueror.Common.Middleware.Authorization.AspNetCore.Tests\Conqueror.Common.Middleware.Authorization.AspNetCore.Tests.csproj", "{E83BD112-E37A-4334-B3BB-81027756B6CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -851,6 +861,26 @@ Global
 		{806A3691-CC2D-44DE-852E-E50701553307}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{806A3691-CC2D-44DE-852E-E50701553307}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{806A3691-CC2D-44DE-852E-E50701553307}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C6C6AC7-D416-45CE-A916-1AE312D63CF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C6C6AC7-D416-45CE-A916-1AE312D63CF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C6C6AC7-D416-45CE-A916-1AE312D63CF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C6C6AC7-D416-45CE-A916-1AE312D63CF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1F52DAA-B281-4B73-8A9F-21220271A477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1F52DAA-B281-4B73-8A9F-21220271A477}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1F52DAA-B281-4B73-8A9F-21220271A477}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1F52DAA-B281-4B73-8A9F-21220271A477}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85EB580E-6DB8-41E6-B602-B76F9685B6EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85EB580E-6DB8-41E6-B602-B76F9685B6EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85EB580E-6DB8-41E6-B602-B76F9685B6EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85EB580E-6DB8-41E6-B602-B76F9685B6EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E83BD112-E37A-4334-B3BB-81027756B6CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E83BD112-E37A-4334-B3BB-81027756B6CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E83BD112-E37A-4334-B3BB-81027756B6CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E83BD112-E37A-4334-B3BB-81027756B6CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
