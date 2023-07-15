@@ -66,7 +66,20 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
             }
         }
 
-        // copy all upstream data to the parent context when this context is disposed
+        // copy over all bidirectional data
+        foreach (var (key, value, scope) in parentContext.ContextData)
+        {
+            if (value is string s)
+            {
+                context.ContextData.Set(key, s, scope);
+            }
+            else
+            {
+                context.ContextData.Set(key, value);
+            }
+        }
+
+        // copy all upstream and bidirectional data to the parent context when this context is disposed
         var disposableContext = new DisposableConquerorContext(context, () =>
         {
             foreach (var (key, value, scope) in context.UpstreamContextData)
@@ -78,6 +91,22 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
                 else
                 {
                     parentContext.UpstreamContextData.Set(key, value);
+                }
+            }
+
+            // clear parent context data before copying over data from child context, so that
+            // removals are propagated from the child context
+            parentContext.ContextData.Clear();
+
+            foreach (var (key, value, scope) in context.ContextData)
+            {
+                if (value is string s)
+                {
+                    parentContext.ContextData.Set(key, s, scope);
+                }
+                else
+                {
+                    parentContext.ContextData.Set(key, value);
                 }
             }
 

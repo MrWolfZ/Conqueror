@@ -31,6 +31,11 @@ public interface IConquerorContextData : IEnumerable<(string Key, object Value, 
     bool Remove(string key);
 
     /// <summary>
+    ///     Clear all context data.
+    /// </summary>
+    void Clear();
+
+    /// <summary>
     ///     Get the value for a key.
     /// </summary>
     /// <param name="key">The key to get the data for</param>

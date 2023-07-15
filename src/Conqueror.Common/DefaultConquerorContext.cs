@@ -13,6 +13,8 @@ internal sealed class DefaultConquerorContext : IConquerorContext
 
     public IConquerorContextData UpstreamContextData { get; } = new DefaultConquerorContextData();
 
+    public IConquerorContextData ContextData { get; } = new DefaultConquerorContextData();
+
     public void SetTraceId(string traceId)
     {
         TraceId = traceId;

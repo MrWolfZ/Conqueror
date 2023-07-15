@@ -19,6 +19,8 @@ internal sealed class DisposableConquerorContext : IDisposableConquerorContext
 
     public IConquerorContextData UpstreamContextData => wrappedContext.UpstreamContextData;
 
+    public IConquerorContextData ContextData => wrappedContext.ContextData;
+
     public void SetTraceId(string traceId) => wrappedContext.SetTraceId(traceId);
 
     public void Dispose() => onDispose?.Invoke();

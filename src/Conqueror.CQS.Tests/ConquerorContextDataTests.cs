@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Conqueror.CQS.Tests;
 
 public sealed class ConquerorContextDataTests
@@ -6,6 +8,7 @@ public sealed class ConquerorContextDataTests
 
     [Test]
     [TestCaseSource(nameof(GenerateTestCases))]
+    [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "parameter name makes sense here")]
     public async Task GivenDataSetup_WhenExecutingHandler_DataIsCorrectlyAvailable(ConquerorContextDataTestCase testCase)
     {
         const string testStringValue = "TestValue";
@@ -13,8 +16,21 @@ public sealed class ConquerorContextDataTests
         var testDataInstructions = new TestDataInstructions();
         var testObservations = new TestObservations();
 
-        var dataToSetCol = testCase.DataDirection == DataDirection.Downstream ? testDataInstructions.DownstreamDataToSet : testDataInstructions.UpstreamDataToSet;
-        var dataToRemoveCol = testCase.DataDirection == DataDirection.Downstream ? testDataInstructions.DownstreamDataToRemove : testDataInstructions.UpstreamDataToRemove;
+        var dataToSetCol = testCase.DataDirection switch
+        {
+            DataDirection.Downstream => testDataInstructions.DownstreamDataToSet,
+            DataDirection.Upstream => testDataInstructions.UpstreamDataToSet,
+            DataDirection.Bidirectional => testDataInstructions.BidirectionalDataToSet,
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+        };
+
+        var dataToRemoveCol = testCase.DataDirection switch
+        {
+            DataDirection.Downstream => testDataInstructions.DownstreamDataToRemove,
+            DataDirection.Upstream => testDataInstructions.UpstreamDataToRemove,
+            DataDirection.Bidirectional => testDataInstructions.BidirectionalDataToRemove,
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+        };
 
         foreach (var (data, i) in testCase.TestData.Select((value, i) => (value, i)))
         {
@@ -98,15 +114,23 @@ public sealed class ConquerorContextDataTests
 
         SetAndObserveContextData(conquerorContext, testDataInstructions, testObservations, Location.PostExecution);
 
-        var observedData = testCase.DataDirection == DataDirection.Downstream ? testObservations.ObservedDownstreamData : testObservations.ObservedUpstreamData;
+        var observedData = testCase.DataDirection switch
+        {
+            DataDirection.Downstream => testObservations.ObservedDownstreamData,
+            DataDirection.Upstream => testObservations.ObservedUpstreamData,
+            DataDirection.Bidirectional => testObservations.ObservedBidirectionalData,
+            _ => throw new ArgumentOutOfRangeException(nameof(testCase.DataDirection)),
+        };
 
         foreach (var (data, i) in testCase.TestData.Select((value, i) => (value, i)))
         {
             object value = data.DataType == DataType.String ? testStringValue + i : new TestDataEntry(i);
 
+            var errorMessage = $"test case:\n{JsonSerializer.Serialize(testCase, new JsonSerializerOptions { WriteIndented = true })}";
+
             // we assert on count equal to 2, because observed data should be added twice (once by enumeration and once by direct access)
-            Assert.That(data.LocationsWhereDataShouldBeAccessible.All(l => observedData.Count(d => d.Value.Equals(value) && d.Location == l) == 2), Is.True);
-            Assert.That(data.LocationsWhereDataShouldNotBeAccessible.All(l => !observedData.Any(d => d.Value.Equals(value) && d.Location == l)), Is.True);
+            Assert.That(data.LocationsWhereDataShouldBeAccessible.All(l => observedData.Count(d => d.Value.Equals(value) && d.Location == l) == 2), Is.True, errorMessage);
+            Assert.That(data.LocationsWhereDataShouldNotBeAccessible.All(l => !observedData.Any(d => d.Value.Equals(value) && d.Location == l)), Is.True, errorMessage);
         }
     }
 
@@ -124,6 +148,11 @@ public sealed class ConquerorContextDataTests
                 foreach (var testCaseData in GenerateUpstreamTestCaseData(dataType))
                 {
                     yield return new(requestType, DataDirection.Upstream, testCaseData);
+                }
+
+                foreach (var testCaseData in GenerateBidirectionalTestCaseData(dataType))
+                {
+                    yield return new(requestType, DataDirection.Bidirectional, testCaseData);
                 }
             }
         }
@@ -1083,6 +1112,533 @@ public sealed class ConquerorContextDataTests
         };
     }
 
+    private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateBidirectionalTestCaseData(string dataType)
+    {
+        yield return new()
+        {
+            new(dataType,
+                Location.PreExecution,
+                null,
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PostExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                },
+                Array.Empty<string>()),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.PipelineBuilder,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.MiddlewarePreExecution,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePreExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.MiddlewarePostExecution,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePostExecution,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.HandlerPreNestedExecution,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.HandlerPostNestedExecution,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPostNestedExecution,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.NestedClassPreExecution,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.HandlerPreNestedExecution,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.NestedClassPostExecution,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPostExecution,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.NestedCommandHandler,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler, // the query handler is executed second, so it sees the data
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.NestedClassPreExecution,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.NestedQueryHandler,
+                null,
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedQueryHandler,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedCommandHandler, // the command handler is executed first, so it doesn't see the data
+                }),
+        };
+
+        // overwrite tests
+
+        foreach (var overWriteDataType in new[] { DataType.String, DataType.Object })
+        {
+            yield return new()
+            {
+                new(dataType,
+                    Location.PreExecution,
+                    null,
+                    new[]
+                    {
+                        Location.PreExecution,
+                        Location.PipelineBuilder,
+                    },
+                    new[]
+                    {
+                        Location.PostExecution,
+                        Location.MiddlewarePreExecution,
+                        Location.MiddlewarePostExecution,
+                        Location.HandlerPreNestedExecution,
+                        Location.HandlerPostNestedExecution,
+                        Location.NestedClassPreExecution,
+                        Location.NestedClassPostExecution,
+                        Location.NestedCommandHandler,
+                        Location.NestedQueryHandler,
+                    }),
+
+                new(overWriteDataType,
+                    Location.MiddlewarePreExecution,
+                    null,
+                    new[]
+                    {
+                        Location.PostExecution,
+                        Location.MiddlewarePreExecution,
+                        Location.MiddlewarePostExecution,
+                        Location.HandlerPreNestedExecution,
+                        Location.HandlerPostNestedExecution,
+                        Location.NestedClassPreExecution,
+                        Location.NestedClassPostExecution,
+                        Location.NestedCommandHandler,
+                        Location.NestedQueryHandler,
+                    },
+                    new[]
+                    {
+                        Location.PreExecution,
+                        Location.PipelineBuilder,
+                    }),
+            };
+
+            yield return new()
+            {
+                new(dataType,
+                    Location.PreExecution,
+                    null,
+                    new[]
+                    {
+                        Location.PreExecution,
+                        Location.PipelineBuilder,
+                        Location.MiddlewarePreExecution,
+                    },
+                    new[]
+                    {
+                        Location.PostExecution,
+                        Location.MiddlewarePostExecution,
+                        Location.HandlerPreNestedExecution,
+                        Location.HandlerPostNestedExecution,
+                        Location.NestedClassPreExecution,
+                        Location.NestedClassPostExecution,
+                        Location.NestedCommandHandler,
+                        Location.NestedQueryHandler,
+                    }),
+
+                new(overWriteDataType,
+                    Location.HandlerPreNestedExecution,
+                    null,
+                    new[]
+                    {
+                        Location.PostExecution,
+                        Location.MiddlewarePostExecution,
+                        Location.HandlerPreNestedExecution,
+                        Location.HandlerPostNestedExecution,
+                        Location.NestedClassPreExecution,
+                        Location.NestedClassPostExecution,
+                        Location.NestedCommandHandler,
+                        Location.NestedQueryHandler,
+                    },
+                    new[]
+                    {
+                        Location.PreExecution,
+                        Location.PipelineBuilder,
+                        Location.MiddlewarePreExecution,
+                    }),
+            };
+
+            yield return new()
+            {
+                new(dataType,
+                    Location.MiddlewarePreExecution,
+                    null,
+                    new[]
+                    {
+                        Location.MiddlewarePreExecution,
+                        Location.HandlerPreNestedExecution,
+                        Location.NestedClassPreExecution,
+                    },
+                    new[]
+                    {
+                        Location.PreExecution,
+                        Location.PostExecution,
+                        Location.PipelineBuilder,
+                        Location.MiddlewarePostExecution,
+                        Location.HandlerPostNestedExecution,
+                        Location.NestedClassPostExecution,
+                        Location.NestedCommandHandler,
+                        Location.NestedQueryHandler, // the query handler is executed second, so it does not see the data before it is overwritten
+                    }),
+
+                new(overWriteDataType,
+                    Location.NestedCommandHandler,
+                    null,
+                    new[]
+                    {
+                        Location.PostExecution,
+                        Location.MiddlewarePostExecution,
+                        Location.HandlerPostNestedExecution,
+                        Location.NestedClassPostExecution,
+                        Location.NestedCommandHandler,
+                        Location.NestedQueryHandler, // the query handler is executed second, so it sees the data
+                    },
+                    new[]
+                    {
+                        Location.PreExecution,
+                        Location.PipelineBuilder,
+                        Location.MiddlewarePreExecution,
+                        Location.HandlerPreNestedExecution,
+                        Location.NestedClassPreExecution,
+                    }),
+            };
+        }
+
+        // removal tests
+
+        yield return new()
+        {
+            new(dataType,
+                Location.PreExecution,
+                Location.MiddlewarePreExecution,
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                },
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePreExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.PreExecution,
+                Location.HandlerPreNestedExecution,
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                },
+                new[]
+                {
+                    Location.PostExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.MiddlewarePreExecution,
+                Location.NestedCommandHandler,
+                new[]
+                {
+                    Location.MiddlewarePreExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.NestedClassPreExecution,
+                },
+                new[]
+                {
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPostExecution,
+                    Location.PreExecution,
+                    Location.PostExecution,
+                    Location.PipelineBuilder,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler, // the query handler is executed second, so it shouldn't see the removed data
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.NestedCommandHandler,
+                Location.HandlerPostNestedExecution,
+                new[]
+                {
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler, // the query handler is executed second, so it sees the data
+                    Location.NestedClassPostExecution,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PostExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPreExecution,
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.NestedQueryHandler,
+                Location.MiddlewarePostExecution,
+                new[]
+                {
+                    Location.HandlerPostNestedExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedQueryHandler,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PostExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.NestedClassPreExecution,
+                    Location.NestedCommandHandler, // the command handler is executed first, so it doesn't see the data
+                }),
+        };
+
+        yield return new()
+        {
+            new(dataType,
+                Location.NestedClassPreExecution,
+                Location.HandlerPostNestedExecution,
+                new[]
+                {
+                    Location.NestedClassPreExecution,
+                    Location.NestedClassPostExecution,
+                    Location.NestedCommandHandler,
+                    Location.NestedQueryHandler,
+                },
+                new[]
+                {
+                    Location.PreExecution,
+                    Location.PostExecution,
+                    Location.PipelineBuilder,
+                    Location.MiddlewarePreExecution,
+                    Location.MiddlewarePostExecution,
+                    Location.HandlerPreNestedExecution,
+                    Location.HandlerPostNestedExecution,
+                }),
+        };
+    }
+
     private static void SetAndObserveContextData(IConquerorContext ctx, TestDataInstructions testDataInstructions, TestObservations testObservations, string location)
     {
         foreach (var (key, value, _) in testDataInstructions.DownstreamDataToSet.Where(t => t.Location == location))
@@ -1109,6 +1665,18 @@ public sealed class ConquerorContextDataTests
             Assert.That(wasRemoved, Is.True); // catch wrong test setup where data that wasn't set is removed
         }
 
+        foreach (var (key, value, _) in testDataInstructions.BidirectionalDataToSet.Where(t => t.Location == location))
+        {
+            ctx.ContextData.Set(key, value);
+        }
+
+        foreach (var (key, _) in testDataInstructions.BidirectionalDataToRemove.Where(t => t.Location == location))
+        {
+            var wasRemoved = ctx.ContextData.Remove(key);
+
+            Assert.That(wasRemoved, Is.True); // catch wrong test setup where data that wasn't set is removed
+        }
+
         foreach (var (key, value, _) in ctx.DownstreamContextData)
         {
             testObservations.ObservedDownstreamData.Add((key, value, location));
@@ -1127,6 +1695,16 @@ public sealed class ConquerorContextDataTests
         if (ctx.UpstreamContextData.Get<object>(TestKey) is { } upstreamValue)
         {
             testObservations.ObservedUpstreamData.Add((TestKey, upstreamValue, location));
+        }
+
+        foreach (var (key, value, _) in ctx.ContextData)
+        {
+            testObservations.ObservedBidirectionalData.Add((key, value, location));
+        }
+
+        if (ctx.ContextData.Get<object>(TestKey) is { } bidirectionalValue)
+        {
+            testObservations.ObservedBidirectionalData.Add((TestKey, bidirectionalValue, location));
         }
     }
 
@@ -1150,6 +1728,7 @@ public sealed class ConquerorContextDataTests
     {
         public const string Downstream = nameof(Downstream);
         public const string Upstream = nameof(Upstream);
+        public const string Bidirectional = nameof(Bidirectional);
     }
 
     private static class Location
@@ -1280,6 +1859,10 @@ public sealed class ConquerorContextDataTests
         public List<(string Key, object Value, string Location)> UpstreamDataToSet { get; } = new();
 
         public List<(string Key, string Location)> UpstreamDataToRemove { get; } = new();
+
+        public List<(string Key, object Value, string Location)> BidirectionalDataToSet { get; } = new();
+
+        public List<(string Key, string Location)> BidirectionalDataToRemove { get; } = new();
     }
 
     private sealed class TestObservations
@@ -1287,5 +1870,7 @@ public sealed class ConquerorContextDataTests
         public List<(string Key, object Value, string Location)> ObservedDownstreamData { get; } = new();
 
         public List<(string Key, object Value, string Location)> ObservedUpstreamData { get; } = new();
+
+        public List<(string Key, object Value, string Location)> ObservedBidirectionalData { get; } = new();
     }
 }

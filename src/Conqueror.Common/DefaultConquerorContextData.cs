@@ -44,6 +44,16 @@ internal sealed class DefaultConquerorContextData : IConquerorContextData
         return itemsLazy.Value.TryRemove(key, out _);
     }
 
+    public void Clear()
+    {
+        if (!itemsLazy.IsValueCreated)
+        {
+            return;
+        }
+
+        itemsLazy.Value.Clear();
+    }
+
     public T? Get<T>(string key)
     {
         if (!itemsLazy.IsValueCreated)
