@@ -17,8 +17,7 @@ public interface IConquerorAuthenticationContext
     IDisposable SetCurrentPrincipal(ClaimsPrincipal? principal);
 
     /// <summary>
-    ///     Get the currently authenticated principal (if any).
+    ///     The currently authenticated principal, or <c>null</c> if no principal is set.
     /// </summary>
-    /// <returns>The currently authenticated principal, or <c>null</c> if no principal is set</returns>
-    ClaimsPrincipal? GetCurrentPrincipal();
+    ClaimsPrincipal? CurrentPrincipal { get; }
 }

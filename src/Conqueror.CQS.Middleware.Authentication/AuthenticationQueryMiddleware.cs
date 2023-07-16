@@ -19,7 +19,7 @@ public sealed class AuthenticationQueryMiddleware : IQueryMiddleware<Authenticat
     {
         if (ctx.Configuration.RequireAuthenticatedPrincipal)
         {
-            var currentPrincipal = authenticationContext.GetCurrentPrincipal();
+            var currentPrincipal = authenticationContext.CurrentPrincipal;
 
             if (currentPrincipal is null)
             {

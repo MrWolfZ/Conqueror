@@ -17,7 +17,7 @@ internal sealed class ConquerorAuthenticationContext : IConquerorAuthenticationC
         return new AnonymousDisposable(ClearPrincipal);
     }
 
-    public ClaimsPrincipal? GetCurrentPrincipal() => ConquerorAuthenticationContextCurrent.Value?.Principal;
+    public ClaimsPrincipal? CurrentPrincipal => ConquerorAuthenticationContextCurrent.Value?.Principal;
 
     private static void ClearPrincipal()
     {

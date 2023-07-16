@@ -17,7 +17,7 @@ public sealed class FunctionalAuthorizationQueryMiddleware : IQueryMiddleware<Fu
     public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, FunctionalAuthorizationQueryMiddlewareConfiguration> ctx)
         where TQuery : class
     {
-        if (authenticationContext.GetCurrentPrincipal() is { Identity: { IsAuthenticated: true } identity } principal)
+        if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var result = await ctx.Configuration.AuthorizationCheck(principal, typeof(TQuery)).ConfigureAwait(false);
 

@@ -77,7 +77,7 @@ public sealed class HttpQueryAuthenticationTests : TestBase
         {
             await Task.Yield();
 
-            observedPrincipal = p.GetRequiredService<IConquerorAuthenticationContext>().GetCurrentPrincipal();
+            observedPrincipal = p.GetRequiredService<IConquerorAuthenticationContext>().CurrentPrincipal;
 
             if (exceptionToThrow is not null)
             {

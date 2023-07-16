@@ -19,7 +19,7 @@ public sealed class AuthenticationCommandMiddleware : ICommandMiddleware<Authent
     {
         if (ctx.Configuration.RequireAuthenticatedPrincipal)
         {
-            var currentPrincipal = authenticationContext.GetCurrentPrincipal();
+            var currentPrincipal = authenticationContext.CurrentPrincipal;
 
             if (currentPrincipal is null)
             {

@@ -18,7 +18,7 @@ public sealed class DataAuthorizationCommandMiddleware : ICommandMiddleware<Data
     public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, DataAuthorizationCommandMiddlewareConfiguration> ctx)
         where TCommand : class
     {
-        if (authenticationContext.GetCurrentPrincipal() is { Identity: { IsAuthenticated: true } identity } principal)
+        if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var results = await Task.WhenAll(ctx.Configuration.AuthorizationChecks.Select(c => c(principal, ctx.Command))).ConfigureAwait(false);
             var failures = results.Where(r => !r.IsSuccess).ToList();

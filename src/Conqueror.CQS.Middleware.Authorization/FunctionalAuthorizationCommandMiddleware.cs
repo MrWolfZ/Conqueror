@@ -17,7 +17,7 @@ public sealed class FunctionalAuthorizationCommandMiddleware : ICommandMiddlewar
     public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, FunctionalAuthorizationCommandMiddlewareConfiguration> ctx)
         where TCommand : class
     {
-        if (authenticationContext.GetCurrentPrincipal() is { Identity: { IsAuthenticated: true } identity } principal)
+        if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var result = await ctx.Configuration.AuthorizationCheck(principal, typeof(TCommand)).ConfigureAwait(false);
 

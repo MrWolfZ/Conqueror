@@ -18,7 +18,7 @@ public sealed class DataAuthorizationQueryMiddleware : IQueryMiddleware<DataAuth
     public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, DataAuthorizationQueryMiddlewareConfiguration> ctx)
         where TQuery : class
     {
-        if (authenticationContext.GetCurrentPrincipal() is { Identity: { IsAuthenticated: true } identity } principal)
+        if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var results = await Task.WhenAll(ctx.Configuration.AuthorizationChecks.Select(c => c(principal, ctx.Query))).ConfigureAwait(false);
             var failures = results.Where(r => !r.IsSuccess).ToList();
