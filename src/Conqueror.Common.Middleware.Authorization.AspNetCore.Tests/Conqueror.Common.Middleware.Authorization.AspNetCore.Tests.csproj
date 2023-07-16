@@ -9,7 +9,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Common.Middleware.Authentication.AspNetCore\Conqueror.Common.Middleware.Authentication.AspNetCore.csproj" />
         <ProjectReference Include="..\Conqueror.Common.Middleware.Authorization.AspNetCore\Conqueror.Common.Middleware.Authorization.AspNetCore.csproj" />
         <ProjectReference Include="..\Conqueror.CQS.Transport.Http.Client\Conqueror.CQS.Transport.Http.Client.csproj" />
         <ProjectReference Include="..\Conqueror.CQS.Transport.Http.Server.AspNetCore\Conqueror.CQS.Transport.Http.Server.AspNetCore.csproj" />
