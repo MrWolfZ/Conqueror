@@ -8,7 +8,7 @@ namespace Conqueror;
 ///     principal is expected to be present but is missing.
 /// </summary>
 [Serializable]
-public sealed class ConquerorAuthenticationMissingPrincipalException : Exception
+public sealed class ConquerorAuthenticationMissingPrincipalException : ConquerorAuthenticationFailedException
 {
     public ConquerorAuthenticationMissingPrincipalException(string message)
         : base(message)

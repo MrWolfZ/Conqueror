@@ -8,7 +8,7 @@ namespace Conqueror;
 ///     principal is expected to be present but the principal is unauthenticated.
 /// </summary>
 [Serializable]
-public sealed class ConquerorAuthenticationUnauthenticatedPrincipalException : Exception
+public sealed class ConquerorAuthenticationUnauthenticatedPrincipalException : ConquerorAuthenticationFailedException
 {
     public ConquerorAuthenticationUnauthenticatedPrincipalException(string message)
         : base(message)

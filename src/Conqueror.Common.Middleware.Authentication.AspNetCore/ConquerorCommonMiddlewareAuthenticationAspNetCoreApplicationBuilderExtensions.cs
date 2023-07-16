@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,11 +18,7 @@ public static class ConquerorCommonMiddlewareAuthenticationAspNetCoreApplication
 
                 await next().ConfigureAwait(false);
             }
-            catch (ConquerorAuthenticationMissingPrincipalException)
-            {
-                await ctx.ChallengeAsync().ConfigureAwait(false);
-            }
-            catch (ConquerorAuthenticationUnauthenticatedPrincipalException)
+            catch (ConquerorAuthenticationFailedException)
             {
                 await ctx.ChallengeAsync().ConfigureAwait(false);
             }
