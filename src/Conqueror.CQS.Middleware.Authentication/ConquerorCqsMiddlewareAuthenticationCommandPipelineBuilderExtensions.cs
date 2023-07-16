@@ -27,8 +27,6 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineBuilderEx
     /// </summary>
     /// <param name="pipeline">The command pipeline to configure authentication for</param>
     /// <returns>The command pipeline</returns>
-    /// <exception cref="ConquerorAuthenticationMissingPrincipalException">When no principal is present</exception>
-    /// <exception cref="ConquerorAuthenticationUnauthenticatedPrincipalException">When present principal is not authenticated</exception>
     public static ICommandPipelineBuilder RequireAuthenticatedPrincipal(this ICommandPipelineBuilder pipeline)
     {
         return pipeline.Configure<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = true);

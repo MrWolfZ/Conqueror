@@ -27,8 +27,6 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineBuilderExte
     /// </summary>
     /// <param name="pipeline">The query pipeline to configure authentication for</param>
     /// <returns>The query pipeline</returns>
-    /// <exception cref="ConquerorAuthenticationMissingPrincipalException">When no principal is present</exception>
-    /// <exception cref="ConquerorAuthenticationUnauthenticatedPrincipalException">When present principal is not authenticated</exception>
     public static IQueryPipelineBuilder RequireAuthenticatedPrincipal(this IQueryPipelineBuilder pipeline)
     {
         return pipeline.Configure<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = true);
