@@ -14,10 +14,15 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add code coverage reports and badge
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
 
+## Common
+
+- [ ] in development environment, add problem details body to auth failures
+
 ## CQS
 
-- [ ] create common authentication package that exposes static extension methods for setting principal in conqueror context
+- [ ] add CQS to known abbreviations in rider settings and remove inconsistent naming suppressions
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
+- [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] write code-level documentation for all public APIs
 - [ ] cache client factory results
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
