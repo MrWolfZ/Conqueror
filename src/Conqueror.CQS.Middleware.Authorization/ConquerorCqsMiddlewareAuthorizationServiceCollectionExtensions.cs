@@ -20,6 +20,9 @@ public static class ConquerorCqsMiddlewareAuthorizationServiceCollectionExtensio
         services.AddConquerorCommandMiddleware<FunctionalAuthorizationCommandMiddleware>(ServiceLifetime.Singleton);
         services.AddConquerorQueryMiddleware<FunctionalAuthorizationQueryMiddleware>(ServiceLifetime.Singleton);
 
+        services.AddConquerorCommandMiddleware<DataAuthorizationCommandMiddleware>(ServiceLifetime.Singleton);
+        services.AddConquerorQueryMiddleware<DataAuthorizationQueryMiddleware>(ServiceLifetime.Singleton);
+
         return services;
     }
 }
