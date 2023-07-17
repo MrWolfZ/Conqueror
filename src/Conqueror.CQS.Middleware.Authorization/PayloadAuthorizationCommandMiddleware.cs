@@ -4,18 +4,18 @@ using System.Threading.Tasks;
 namespace Conqueror.CQS.Middleware.Authorization;
 
 /// <summary>
-///     A command middleware which adds data authorization functionality to a command pipeline.
+///     A command middleware which adds payload authorization functionality to a command pipeline.
 /// </summary>
-public sealed class DataAuthorizationCommandMiddleware : ICommandMiddleware<DataAuthorizationCommandMiddlewareConfiguration>
+public sealed class PayloadAuthorizationCommandMiddleware : ICommandMiddleware<PayloadAuthorizationCommandMiddlewareConfiguration>
 {
     private readonly IConquerorAuthenticationContext authenticationContext;
 
-    public DataAuthorizationCommandMiddleware(IConquerorAuthenticationContext authenticationContext)
+    public PayloadAuthorizationCommandMiddleware(IConquerorAuthenticationContext authenticationContext)
     {
         this.authenticationContext = authenticationContext;
     }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, DataAuthorizationCommandMiddlewareConfiguration> ctx)
+    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, PayloadAuthorizationCommandMiddlewareConfiguration> ctx)
         where TCommand : class
     {
         if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
@@ -26,7 +26,7 @@ public sealed class DataAuthorizationCommandMiddleware : ICommandMiddleware<Data
             if (failures.Any())
             {
                 var aggregatedFailure = failures.Count == 1 ? failures[0] : ConquerorAuthorizationResult.Failure(failures.SelectMany(f => f.FailureReasons).ToList());
-                throw new ConquerorDataAuthorizationFailedException($"principal '{identity.Name}' is not authorized to execute command of type '{typeof(TCommand).Name}'", aggregatedFailure);
+                throw new ConquerorOperationPayloadAuthorizationFailedException($"principal '{identity.Name}' is not authorized to execute command of type '{typeof(TCommand).Name}'", aggregatedFailure);
             }
         }
 

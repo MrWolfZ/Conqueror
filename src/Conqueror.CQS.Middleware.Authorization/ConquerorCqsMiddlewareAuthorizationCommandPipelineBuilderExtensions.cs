@@ -4,14 +4,14 @@ using Conqueror.CQS.Middleware.Authorization;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="ICommandPipelineBuilder" /> to add, configure, or remove functional authorization functionality.
+///     Extension methods for <see cref="ICommandPipelineBuilder" /> to add, configure, or remove authorization functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExtensions
 {
     /// <summary>
-    ///     Perform a functional authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.GetCurrentPrincipal" />) when executing the pipeline. If the principal
-    ///     is not authorized for the command, then a <see cref="ConquerorFunctionalAuthorizationFailedException" />
+    ///     Perform a command type authorization check for the current principal (see
+    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     is not authorized for the command type, then a <see cref="ConquerorOperationTypeAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
     ///     Note that if there is no principal present or the principal is not authenticated, then the authorization check is
@@ -19,39 +19,39 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     ///     this authorization check in place. To enforce the presence of an authenticated principal, please use the
     ///     configuration features of the Conqueror authentication middleware.
     /// </summary>
-    /// <param name="pipeline">The command pipeline to add the functional authorization middleware to</param>
-    /// <param name="authorizationCheck">The delegate to use for checking operation authorization</param>
+    /// <param name="pipeline">The command pipeline to add the command type authorization middleware to</param>
+    /// <param name="authorizationCheck">The delegate to use for checking command type authorization</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UseFunctionalAuthorization(this ICommandPipelineBuilder pipeline, ConquerorFunctionalAuthorizationCheck authorizationCheck)
+    public static ICommandPipelineBuilder UseCommandTypeAuthorization(this ICommandPipelineBuilder pipeline, ConquerorOperationTypeAuthorizationCheck authorizationCheck)
     {
-        return pipeline.Use<FunctionalAuthorizationCommandMiddleware, FunctionalAuthorizationCommandMiddlewareConfiguration>(new(authorizationCheck));
+        return pipeline.Use<OperationTypeAuthorizationCommandMiddleware, OperationTypeAuthorizationCommandMiddlewareConfiguration>(new(authorizationCheck));
     }
 
     /// <summary>
-    ///     Remove the functional authorization middleware from a command pipeline.
+    ///     Remove the <see cref="OperationTypeAuthorizationCommandMiddleware"/> from a command pipeline.
     /// </summary>
-    /// <param name="pipeline">The command pipeline with the functional authorization middleware to remove</param>
+    /// <param name="pipeline">The command pipeline with the command type authorization middleware to remove</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder WithoutFunctionalAuthorization(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipelineBuilder WithoutCommandTypeAuthorization(this ICommandPipelineBuilder pipeline)
     {
-        return pipeline.Without<FunctionalAuthorizationCommandMiddleware, FunctionalAuthorizationCommandMiddlewareConfiguration>();
+        return pipeline.Without<OperationTypeAuthorizationCommandMiddleware, OperationTypeAuthorizationCommandMiddlewareConfiguration>();
     }
 
     /// <summary>
-    ///     Enable data authorization functionality for a pipeline. By default, this middleware will not perform
-    ///     any authorization checks. Use <see cref="AddDataAuthorizationCheck{TCommand}" /> to add checks.
+    ///     Enable payload authorization functionality for a command pipeline. By default, this middleware will not perform
+    ///     any authorization checks. Use <see cref="AddPayloadAuthorizationCheck{TCommand}" /> to add checks.
     /// </summary>
-    /// <param name="pipeline">The command pipeline to add the data authorization middleware to</param>
+    /// <param name="pipeline">The command pipeline to add the payload authorization middleware to</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UseDataAuthorization(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipelineBuilder UsePayloadAuthorization(this ICommandPipelineBuilder pipeline)
     {
-        return pipeline.Use<DataAuthorizationCommandMiddleware, DataAuthorizationCommandMiddlewareConfiguration>(new());
+        return pipeline.Use<PayloadAuthorizationCommandMiddleware, PayloadAuthorizationCommandMiddlewareConfiguration>(new());
     }
 
     /// <summary>
-    ///     Perform a data authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.GetCurrentPrincipal" />) when executing the pipeline. If the principal
-    ///     is not authorized for the command, then a <see cref="ConquerorDataAuthorizationFailedException" />
+    ///     Perform a payload authorization check for the current principal (see
+    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     is not authorized for the command, then a <see cref="ConquerorOperationPayloadAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
     ///     Note that if there is no principal present or the principal is not authenticated, then the authorization check is
@@ -59,13 +59,13 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     ///     this authorization check in place. To enforce the presence of an authenticated principal, please use the
     ///     configuration features of the Conqueror authentication middleware.
     /// </summary>
-    /// <param name="pipeline">The command pipeline to add the functional authorization middleware to</param>
-    /// <param name="authorizationCheck">The delegate to use for checking operation authorization</param>
+    /// <param name="pipeline">The command pipeline to add the payload authorization check to</param>
+    /// <param name="authorizationCheck">The delegate to use for checking payload authorization</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder AddDataAuthorizationCheck<TCommand>(this ICommandPipelineBuilder pipeline, ConquerorDataAuthorizationCheck<TCommand> authorizationCheck)
+    public static ICommandPipelineBuilder AddPayloadAuthorizationCheck<TCommand>(this ICommandPipelineBuilder pipeline, ConquerorOperationPayloadAuthorizationCheck<TCommand> authorizationCheck)
         where TCommand : class
     {
-        return pipeline.Configure<DataAuthorizationCommandMiddleware, DataAuthorizationCommandMiddlewareConfiguration>(o =>
+        return pipeline.Configure<PayloadAuthorizationCommandMiddleware, PayloadAuthorizationCommandMiddlewareConfiguration>(o =>
         {
             // we assume that the user passed in a compatible command type, so we perform a simple cast
             o.AuthorizationChecks.Add((principal, command) => authorizationCheck(principal, (TCommand)command));
@@ -73,12 +73,12 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     }
 
     /// <summary>
-    ///     Remove the data authorization middleware from a command pipeline.
+    ///     Remove the payload authorization middleware from a command pipeline.
     /// </summary>
-    /// <param name="pipeline">The command pipeline with the data authorization middleware to remove</param>
+    /// <param name="pipeline">The command pipeline with the payload authorization middleware to remove</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder WithoutDataAuthorization(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipelineBuilder WithoutPayloadAuthorization(this ICommandPipelineBuilder pipeline)
     {
-        return pipeline.Without<DataAuthorizationCommandMiddleware, DataAuthorizationCommandMiddlewareConfiguration>();
+        return pipeline.Without<PayloadAuthorizationCommandMiddleware, PayloadAuthorizationCommandMiddlewareConfiguration>();
     }
 }

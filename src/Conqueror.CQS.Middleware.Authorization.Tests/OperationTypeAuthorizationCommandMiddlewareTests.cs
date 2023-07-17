@@ -3,7 +3,7 @@ using System.Security.Claims;
 namespace Conqueror.CQS.Middleware.Authorization.Tests;
 
 [TestFixture]
-public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
+public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 {
     private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
     private Action<ICommandPipelineBuilder> configurePipeline = _ => { };
@@ -22,7 +22,7 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -41,7 +41,7 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -62,7 +62,7 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -83,7 +83,7 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -102,7 +102,7 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -112,7 +112,7 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
     }
 
     [Test]
-    public void GivenFailedAuthorizationCheck_WhenExecutedWithAuthenticatedPrincipal_ThrowsFunctionalAuthorizationFailedException()
+    public void GivenFailedAuthorizationCheck_WhenExecutedWithAuthenticatedPrincipal_ThrowsOperationTypeAuthorizationFailedException()
     {
         handlerFn = _ =>
         {
@@ -120,15 +120,15 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return new();
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        _ = Assert.ThrowsAsync<ConquerorFunctionalAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
     }
 
     [Test]
-    public async Task GivenRemovedFunctionalAuthorizationMiddleware_WhenExecutedWithoutPrincipal_AllowsExecution()
+    public async Task GivenAddedAndThenRemovedMiddleware_WhenExecutedWithoutPrincipal_AllowsExecution()
     {
         var testCommand = new TestCommand();
         var expectedResponse = new TestCommandResponse();
@@ -139,8 +139,8 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
-                                                .WithoutFunctionalAuthorization();
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
+                                                .WithoutCommandTypeAuthorization();
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -148,7 +148,7 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
     }
 
     [Test]
-    public async Task GivenRemovedFunctionalAuthorizationMiddleware_WhenExecutedWithUnauthenticatedPrincipal_AllowsExecution()
+    public async Task GivenAddedAndThenRemovedMiddleware_WhenExecutedWithUnauthenticatedPrincipal_AllowsExecution()
     {
         var testCommand = new TestCommand();
         var expectedResponse = new TestCommandResponse();
@@ -159,8 +159,8 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
-                                                .WithoutFunctionalAuthorization();
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
+                                                .WithoutCommandTypeAuthorization();
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -170,7 +170,7 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
     }
 
     [Test]
-    public async Task GivenRemovedFunctionalAuthorizationMiddleware_WhenExecutedWithAuthenticatedPrincipal_AllowsExecution()
+    public async Task GivenAddedAndThenRemovedMiddleware_WhenExecutedWithAuthenticatedPrincipal_AllowsExecution()
     {
         var testCommand = new TestCommand();
         var expectedResponse = new TestCommandResponse();
@@ -181,8 +181,8 @@ public sealed class FunctionalAuthorizationCommandMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.UseFunctionalAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
-                                                .WithoutFunctionalAuthorization();
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
+                                                .WithoutCommandTypeAuthorization();
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 

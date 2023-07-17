@@ -4,14 +4,14 @@ using Conqueror.CQS.Middleware.Authorization;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipelineBuilder" /> to add, configure, or remove functional authorization functionality.
+///     Extension methods for <see cref="IQueryPipelineBuilder" /> to add, configure, or remove authorization functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineBuilderExtensions
 {
     /// <summary>
-    ///     Perform a functional authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.GetCurrentPrincipal" />) when executing the pipeline. If the principal
-    ///     is not authorized for the query, then a <see cref="ConquerorFunctionalAuthorizationFailedException" />
+    ///     Perform a query type authorization check for the current principal (see
+    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     is not authorized for the query type, then a <see cref="ConquerorOperationTypeAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
     ///     Note that if there is no principal present or the principal is not authenticated, then the authorization check is
@@ -19,39 +19,39 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineBuilderExten
     ///     this authorization check in place. To enforce the presence of an authenticated principal, please use the
     ///     configuration features of the Conqueror authentication middleware.
     /// </summary>
-    /// <param name="pipeline">The query pipeline to add the functional authorization middleware to</param>
-    /// <param name="authorizationCheck">The delegate to use for checking operation authorization</param>
+    /// <param name="pipeline">The query pipeline to add the query type authorization middleware to</param>
+    /// <param name="authorizationCheck">The delegate to use for checking query type authorization</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder UseFunctionalAuthorization(this IQueryPipelineBuilder pipeline, ConquerorFunctionalAuthorizationCheck authorizationCheck)
+    public static IQueryPipelineBuilder UseQueryTypeAuthorization(this IQueryPipelineBuilder pipeline, ConquerorOperationTypeAuthorizationCheck authorizationCheck)
     {
-        return pipeline.Use<FunctionalAuthorizationQueryMiddleware, FunctionalAuthorizationQueryMiddlewareConfiguration>(new(authorizationCheck));
+        return pipeline.Use<OperationTypeAuthorizationQueryMiddleware, OperationTypeAuthorizationQueryMiddlewareConfiguration>(new(authorizationCheck));
     }
 
     /// <summary>
-    ///     Remove the functional authorization middleware from a query pipeline.
+    ///     Remove the <see cref="OperationTypeAuthorizationQueryMiddleware"/> from a query pipeline.
     /// </summary>
-    /// <param name="pipeline">The query pipeline with the functional authorization middleware to remove</param>
+    /// <param name="pipeline">The query pipeline with the query type authorization middleware to remove</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder WithoutFunctionalAuthorization(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipelineBuilder WithoutQueryTypeAuthorization(this IQueryPipelineBuilder pipeline)
     {
-        return pipeline.Without<FunctionalAuthorizationQueryMiddleware, FunctionalAuthorizationQueryMiddlewareConfiguration>();
+        return pipeline.Without<OperationTypeAuthorizationQueryMiddleware, OperationTypeAuthorizationQueryMiddlewareConfiguration>();
     }
 
     /// <summary>
-    ///     Enable data authorization functionality for a pipeline. By default, this middleware will not perform
-    ///     any authorization checks. Use <see cref="AddDataAuthorizationCheck{TQuery}" /> to add checks.
+    ///     Enable payload authorization functionality for a query pipeline. By default, this middleware will not perform
+    ///     any authorization checks. Use <see cref="AddPayloadAuthorizationCheck{TQuery}" /> to add checks.
     /// </summary>
-    /// <param name="pipeline">The query pipeline to add the data authorization middleware to</param>
+    /// <param name="pipeline">The query pipeline to add the payload authorization middleware to</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder UseDataAuthorization(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipelineBuilder UsePayloadAuthorization(this IQueryPipelineBuilder pipeline)
     {
-        return pipeline.Use<DataAuthorizationQueryMiddleware, DataAuthorizationQueryMiddlewareConfiguration>(new());
+        return pipeline.Use<PayloadAuthorizationQueryMiddleware, PayloadAuthorizationQueryMiddlewareConfiguration>(new());
     }
 
     /// <summary>
-    ///     Perform a data authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.GetCurrentPrincipal" />) when executing the pipeline. If the principal
-    ///     is not authorized for the query, then a <see cref="ConquerorDataAuthorizationFailedException" />
+    ///     Perform a payload authorization check for the current principal (see
+    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     is not authorized for the query, then a <see cref="ConquerorOperationPayloadAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
     ///     Note that if there is no principal present or the principal is not authenticated, then the authorization check is
@@ -59,13 +59,13 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineBuilderExten
     ///     this authorization check in place. To enforce the presence of an authenticated principal, please use the
     ///     configuration features of the Conqueror authentication middleware.
     /// </summary>
-    /// <param name="pipeline">The query pipeline to add the functional authorization middleware to</param>
-    /// <param name="authorizationCheck">The delegate to use for checking operation authorization</param>
+    /// <param name="pipeline">The query pipeline to add the payload authorization check to</param>
+    /// <param name="authorizationCheck">The delegate to use for checking payload authorization</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder AddDataAuthorizationCheck<TQuery>(this IQueryPipelineBuilder pipeline, ConquerorDataAuthorizationCheck<TQuery> authorizationCheck)
+    public static IQueryPipelineBuilder AddPayloadAuthorizationCheck<TQuery>(this IQueryPipelineBuilder pipeline, ConquerorOperationPayloadAuthorizationCheck<TQuery> authorizationCheck)
         where TQuery : class
     {
-        return pipeline.Configure<DataAuthorizationQueryMiddleware, DataAuthorizationQueryMiddlewareConfiguration>(o =>
+        return pipeline.Configure<PayloadAuthorizationQueryMiddleware, PayloadAuthorizationQueryMiddlewareConfiguration>(o =>
         {
             // we assume that the user passed in a compatible query type, so we perform a simple cast
             o.AuthorizationChecks.Add((principal, query) => authorizationCheck(principal, (TQuery)query));
@@ -73,12 +73,12 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineBuilderExten
     }
 
     /// <summary>
-    ///     Remove the data authorization middleware from a query pipeline.
+    ///     Remove the payload authorization middleware from a query pipeline.
     /// </summary>
-    /// <param name="pipeline">The query pipeline with the data authorization middleware to remove</param>
+    /// <param name="pipeline">The query pipeline with the payload authorization middleware to remove</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder WithoutDataAuthorization(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipelineBuilder WithoutPayloadAuthorization(this IQueryPipelineBuilder pipeline)
     {
-        return pipeline.Without<DataAuthorizationQueryMiddleware, DataAuthorizationQueryMiddlewareConfiguration>();
+        return pipeline.Without<PayloadAuthorizationQueryMiddleware, PayloadAuthorizationQueryMiddlewareConfiguration>();
     }
 }

@@ -16,11 +16,11 @@ public sealed class HttpCommandAuthorizationTests : TestBase
     private string userId = TestUserId;
 
     [Test]
-    public async Task GivenHandlerThatThrowsFunctionalAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
+    public async Task GivenHandlerThatThrowsOperationTypeAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
     {
         var handler = ResolveOnClient<ITestCommandHandler>();
 
-        exceptionToThrow = new ConquerorFunctionalAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
+        exceptionToThrow = new ConquerorOperationTypeAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
 
         var thrownException = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }));
 
@@ -28,11 +28,11 @@ public sealed class HttpCommandAuthorizationTests : TestBase
     }
 
     [Test]
-    public async Task GivenHandlerThatThrowsDataAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
+    public async Task GivenHandlerThatThrowsOperationPayloadAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
     {
         var handler = ResolveOnClient<ITestCommandHandler>();
 
-        exceptionToThrow = new ConquerorDataAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
+        exceptionToThrow = new ConquerorOperationPayloadAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
 
         var thrownException = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }));
 

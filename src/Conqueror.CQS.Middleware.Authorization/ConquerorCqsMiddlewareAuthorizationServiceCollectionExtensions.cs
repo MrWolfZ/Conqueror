@@ -17,11 +17,11 @@ public static class ConquerorCqsMiddlewareAuthorizationServiceCollectionExtensio
     /// <returns>The service collection</returns>
     public static IServiceCollection AddConquerorCQSAuthorizationMiddlewares(this IServiceCollection services)
     {
-        services.AddConquerorCommandMiddleware<FunctionalAuthorizationCommandMiddleware>(ServiceLifetime.Singleton);
-        services.AddConquerorQueryMiddleware<FunctionalAuthorizationQueryMiddleware>(ServiceLifetime.Singleton);
+        services.AddConquerorCommandMiddleware<OperationTypeAuthorizationCommandMiddleware>(ServiceLifetime.Singleton);
+        services.AddConquerorQueryMiddleware<OperationTypeAuthorizationQueryMiddleware>(ServiceLifetime.Singleton);
 
-        services.AddConquerorCommandMiddleware<DataAuthorizationCommandMiddleware>(ServiceLifetime.Singleton);
-        services.AddConquerorQueryMiddleware<DataAuthorizationQueryMiddleware>(ServiceLifetime.Singleton);
+        services.AddConquerorCommandMiddleware<PayloadAuthorizationCommandMiddleware>(ServiceLifetime.Singleton);
+        services.AddConquerorQueryMiddleware<PayloadAuthorizationQueryMiddleware>(ServiceLifetime.Singleton);
 
         return services;
     }
