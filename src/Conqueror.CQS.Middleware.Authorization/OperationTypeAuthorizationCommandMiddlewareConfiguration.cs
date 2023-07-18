@@ -5,7 +5,7 @@ namespace Conqueror.CQS.Middleware.Authorization;
 /// </summary>
 public sealed class OperationTypeAuthorizationCommandMiddlewareConfiguration
 {
-    public OperationTypeAuthorizationCommandMiddlewareConfiguration(ConquerorOperationTypeAuthorizationCheck authorizationCheck)
+    public OperationTypeAuthorizationCommandMiddlewareConfiguration(ConquerorOperationTypeAuthorizationCheckAsync authorizationCheck)
     {
         AuthorizationCheck = authorizationCheck;
     }
@@ -13,5 +13,5 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareConfiguration
     /// <summary>
     ///     The delegate to use for checking operation type authorization. 
     /// </summary>
-    public ConquerorOperationTypeAuthorizationCheck AuthorizationCheck { get; set; }
+    public ConquerorOperationTypeAuthorizationCheckAsync AuthorizationCheck { get; set; }
 }

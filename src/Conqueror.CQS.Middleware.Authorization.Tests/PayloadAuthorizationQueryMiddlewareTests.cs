@@ -75,6 +75,28 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
     }
 
     [Test]
+    public async Task GivenSuccessfulSyncAuthorizationCheck_WhenExecutedWithAuthenticatedPrincipal_AllowsExecution()
+    {
+        var testQuery = new TestQuery();
+        var expectedResponse = new TestQueryResponse();
+
+        handlerFn = qry =>
+        {
+            Assert.That(qry, Is.SameAs(testQuery));
+            return expectedResponse;
+        };
+
+        configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => ConquerorAuthorizationResult.Success());
+
+        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+
+        var response = await Handler.ExecuteQuery(testQuery);
+
+        Assert.That(response, Is.SameAs(expectedResponse));
+    }
+
+    [Test]
     public async Task GivenMultipleSuccessfulAuthorizationChecks_WhenExecutedWithoutPrincipal_AllowsExecution()
     {
         var testQuery = new TestQuery();
@@ -88,7 +110,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => ConquerorAuthorizationResult.Success());
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -109,7 +131,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => ConquerorAuthorizationResult.Success());
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -132,7 +154,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => ConquerorAuthorizationResult.Success());
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -205,6 +227,27 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
     }
 
     [Test]
+    public void GivenFailedSyncAuthorizationCheck_WhenExecutedWithAuthenticatedPrincipal_ThrowsOperationPayloadAuthorizationFailedException()
+    {
+        handlerFn = _ =>
+        {
+            Assert.Fail("handler should not be executed");
+            return new();
+        };
+
+        var result = ConquerorAuthorizationResult.Failure("test");
+
+        configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => result);
+
+        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+
+        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.ExecuteQuery(new()));
+
+        Assert.That(thrownException?.Result, Is.SameAs(result));
+    }
+
+    [Test]
     public async Task GivenMultipleFailedAuthorizationChecks_WhenExecutedWithoutPrincipal_AllowsExecution()
     {
         var testQuery = new TestQuery();
@@ -218,7 +261,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 1")))
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 2")));
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => ConquerorAuthorizationResult.Failure("test 2"));
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -239,7 +282,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 1")))
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 2")));
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => ConquerorAuthorizationResult.Failure("test 2"));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -262,7 +305,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(result1))
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(result2));
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => result2);
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -284,7 +327,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => ConquerorAuthorizationResult.Success())
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         var response = await Handler.ExecuteQuery(testQuery);
@@ -305,7 +348,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => ConquerorAuthorizationResult.Success())
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
@@ -328,7 +371,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
         var failureResult = ConquerorAuthorizationResult.Failure("test");
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(successResult))
+                                                .AddPayloadAuthorizationCheck<TestQuery>((_, _) => successResult)
                                                 .AddPayloadAuthorizationCheck<TestQuery>((_, _) => Task.FromResult(failureResult));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));

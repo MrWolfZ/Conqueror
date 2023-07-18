@@ -72,6 +72,27 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
     }
 
     [Test]
+    public async Task GivenSuccessfulSyncAuthorizationCheck_WhenExecutedWithAuthenticatedPrincipal_AllowsExecution()
+    {
+        var testQuery = new TestQuery();
+        var expectedResponse = new TestQueryResponse();
+
+        handlerFn = qry =>
+        {
+            Assert.That(qry, Is.SameAs(testQuery));
+            return expectedResponse;
+        };
+
+        configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => ConquerorAuthorizationResult.Success());
+
+        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+
+        var response = await Handler.ExecuteQuery(testQuery);
+
+        Assert.That(response, Is.SameAs(expectedResponse));
+    }
+
+    [Test]
     public async Task GivenFailedAuthorizationCheck_WhenExecutedWithoutPrincipal_AllowsExecution()
     {
         var testQuery = new TestQuery();
@@ -121,6 +142,22 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+
+        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+
+        _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteQuery(new()));
+    }
+
+    [Test]
+    public void GivenFailedSyncAuthorizationCheck_WhenExecutedWithAuthenticatedPrincipal_ThrowsOperationTypeAuthorizationFailedException()
+    {
+        handlerFn = _ =>
+        {
+            Assert.Fail("handler should not be executed");
+            return new();
+        };
+
+        configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => ConquerorAuthorizationResult.Failure("test"));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 

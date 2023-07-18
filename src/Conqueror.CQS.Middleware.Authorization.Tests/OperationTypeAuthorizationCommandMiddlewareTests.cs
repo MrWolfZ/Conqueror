@@ -72,6 +72,27 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
     }
 
     [Test]
+    public async Task GivenSuccessfulSyncAuthorizationCheck_WhenExecutedWithAuthenticatedPrincipal_AllowsExecution()
+    {
+        var testCommand = new TestCommand();
+        var expectedResponse = new TestCommandResponse();
+
+        handlerFn = cmd =>
+        {
+            Assert.That(cmd, Is.SameAs(testCommand));
+            return expectedResponse;
+        };
+
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => ConquerorAuthorizationResult.Success());
+
+        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+
+        var response = await Handler.ExecuteCommand(testCommand);
+
+        Assert.That(response, Is.SameAs(expectedResponse));
+    }
+
+    [Test]
     public async Task GivenFailedAuthorizationCheck_WhenExecutedWithoutPrincipal_AllowsExecution()
     {
         var testCommand = new TestCommand();
@@ -121,6 +142,22 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+
+        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+
+        _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
+    }
+
+    [Test]
+    public void GivenFailedSyncAuthorizationCheck_WhenExecutedWithAuthenticatedPrincipal_ThrowsOperationTypeAuthorizationFailedException()
+    {
+        handlerFn = _ =>
+        {
+            Assert.Fail("handler should not be executed");
+            return new();
+        };
+
+        configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => ConquerorAuthorizationResult.Failure("test"));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
