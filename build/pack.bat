@@ -21,9 +21,16 @@ echo packing projects...
 mkdir .publish
 dotnet pack %srcDir%\Conqueror.Common -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Common.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Common.Middleware.Authentication -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Common.Middleware.Authentication.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Common.Middleware.Authentication.AspNetCore -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Common.Middleware.Authorization.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Common.Middleware.Authorization.AspNetCore -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Analyzers -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.CQS.Middleware.Authentication -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.CQS.Middleware.Authorization -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Middleware.DataAnnotationValidation -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Middleware.Logging -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Middleware.Polly -c Release -o %publishDir% --include-symbols

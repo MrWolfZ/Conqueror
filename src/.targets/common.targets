@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <ConquerorBaseVersion>0.5.0</ConquerorBaseVersion>
-        <ConquerorPreReleaseVersionCount>.2</ConquerorPreReleaseVersionCount>
+        <ConquerorPreReleaseVersionCount>.3</ConquerorPreReleaseVersionCount>
         <ConquerorPreReleaseVersion Condition="'$(IsExperimental)' != 'true'">-beta</ConquerorPreReleaseVersion>
         <ConquerorPreReleaseVersion Condition="'$(IsExperimental)' == 'true'">-experimental</ConquerorPreReleaseVersion>
         <ConquerorVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorVersion>
