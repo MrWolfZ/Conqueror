@@ -106,7 +106,7 @@ public class ConquerorContextQueryTests : TestBase
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
         Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [Test]
@@ -171,7 +171,7 @@ public class ConquerorContextQueryTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [Test]
@@ -236,7 +236,7 @@ public class ConquerorContextQueryTests : TestBase
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
         Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [Test]
@@ -301,7 +301,7 @@ public class ConquerorContextQueryTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [Test]
@@ -382,7 +382,7 @@ public class ConquerorContextQueryTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [Test]
