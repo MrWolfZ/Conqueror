@@ -1,7 +1,6 @@
 using System;
 using Conqueror.CQS.Transport.Http.Server.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -17,7 +16,6 @@ public static class ConquerorCqsTransportHttpServerAspNetCoreMvcBuilderExtension
         _ = builder.Services.AddConquerorCQS().AddHttpContextAccessor();
 
         builder.Services.TryAddSingleton<HttpEndpointRegistry>();
-        builder.Services.TryAddSingleton<CqsHttpTransportServerInvoker>();
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpEndpointConfigurationStartupFilter>());
 
@@ -25,12 +23,6 @@ public static class ConquerorCqsTransportHttpServerAspNetCoreMvcBuilderExtension
         builder.Services.TryAddEnumerable(
             ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
                 p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
-
-        _ = builder.Services.PostConfigure<MvcOptions>(options =>
-        {
-            options.Filters.Add(new FormattedConquerorContextDataInvalidExceptionFilter());
-            options.Filters.Add(new CqsHttpTransportServerInvokerActionFilter());
-        });
 
         var options = new ConquerorCqsHttpTransportServerAspNetCoreOptions();
 

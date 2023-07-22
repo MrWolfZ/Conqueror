@@ -338,6 +338,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Au
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authorization.Tests", "src\Conqueror.CQS.Middleware.Authorization.Tests\Conqueror.CQS.Middleware.Authorization.Tests.csproj", "{E95592D0-8654-409D-9C30-DE86AF3B7AA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Transport.Http.Abstractions", "src\Conqueror.Common.Transport.Http.Abstractions\Conqueror.Common.Transport.Http.Abstractions.csproj", "{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -843,6 +845,10 @@ Global
 		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}

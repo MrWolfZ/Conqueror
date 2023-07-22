@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using Conqueror;
+using Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests.TopLevelProgram;
+using Microsoft.AspNetCore.Mvc;
 
 [assembly: InternalsVisibleTo("Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests")]
 
@@ -18,6 +20,11 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 app.UseConqueror();
+
+app.MapGet("/customQueryEndpoint", (HttpContext ctx, int payload, ITopLevelTestQueryHandler handler) => handler.ExecuteQuery(new(payload), ctx.RequestAborted));
+
+app.MapPost("/customCommandEndpoint", (HttpContext ctx, [FromBody] TopLevelTestCommand command, ITopLevelTestCommandHandler handler) => handler.ExecuteCommand(command, ctx.RequestAborted));
+
 app.MapControllers();
 
 app.Run();
