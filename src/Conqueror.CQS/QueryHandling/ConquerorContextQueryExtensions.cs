@@ -9,13 +9,18 @@ public static class ConquerorContextQueryExtensions
     ///     Get the ID of the currently executing query (if any).
     /// </summary>
     /// <param name="conquerorContext">the conqueror context to get the query ID from</param>
-    /// <returns>The ID of the executing query if there is one, otherwise <c>null</c></returns>
+    /// <returns>the ID of the executing query if there is one, otherwise <c>null</c></returns>
     public static string? GetQueryId(this IConquerorContext conquerorContext)
     {
         return conquerorContext.DownstreamContextData.Get<string>(QueryIdKey);
     }
 
-    internal static void SetQueryId(this IConquerorContext conquerorContext, string queryId)
+    /// <summary>
+    ///     Set the ID of the currently executing query.
+    /// </summary>
+    /// <param name="conquerorContext">the conqueror context to set the query ID in</param>
+    /// <param name="queryId">the query ID to set</param>
+    public static void SetQueryId(this IConquerorContext conquerorContext, string queryId)
     {
         conquerorContext.DownstreamContextData.Set(QueryIdKey, queryId, ConquerorContextDataScope.AcrossTransports);
     }

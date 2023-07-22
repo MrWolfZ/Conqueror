@@ -14,7 +14,9 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
     private readonly IServiceProvider serviceProvider;
     private readonly Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory;
 
-    public QueryHandlerProxy(IServiceProvider serviceProvider, Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory, Action<IQueryPipelineBuilder>? configurePipeline)
+    public QueryHandlerProxy(IServiceProvider serviceProvider, 
+                             Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory, 
+                             Action<IQueryPipelineBuilder>? configurePipeline)
     {
         this.serviceProvider = serviceProvider;
         this.transportClientFactory = transportClientFactory;
@@ -25,7 +27,7 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
-        if (!conquerorContext.IsExecutionFromTransport())
+        if (!conquerorContext.IsExecutionFromTransport() || conquerorContext.GetQueryId() is null)
         {
             conquerorContext.SetQueryId(ActivitySpanId.CreateRandom().ToString());
         }

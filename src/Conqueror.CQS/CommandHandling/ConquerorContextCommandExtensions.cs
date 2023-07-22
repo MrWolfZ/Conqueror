@@ -9,13 +9,18 @@ public static class ConquerorContextCommandExtensions
     ///     Get the ID of the currently executing command (if any).
     /// </summary>
     /// <param name="conquerorContext">the conqueror context to get the command ID from</param>
-    /// <returns>The ID of the executing command if there is one, otherwise <c>null</c></returns>
+    /// <returns>the ID of the executing command if there is one, otherwise <c>null</c></returns>
     public static string? GetCommandId(this IConquerorContext conquerorContext)
     {
         return conquerorContext.DownstreamContextData.Get<string>(CommandIdKey);
     }
 
-    internal static void SetCommandId(this IConquerorContext conquerorContext, string commandId)
+    /// <summary>
+    ///     Set the ID of the currently executing command.
+    /// </summary>
+    /// <param name="conquerorContext">the conqueror context to set the command ID in</param>
+    /// <param name="commandId">the command ID to set</param>
+    public static void SetCommandId(this IConquerorContext conquerorContext, string commandId)
     {
         conquerorContext.DownstreamContextData.Set(CommandIdKey, commandId, ConquerorContextDataScope.AcrossTransports);
     }

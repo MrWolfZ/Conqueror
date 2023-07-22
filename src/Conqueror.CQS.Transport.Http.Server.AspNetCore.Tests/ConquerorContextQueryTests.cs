@@ -113,8 +113,8 @@ public sealed class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
-        Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
+        Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports().Intersect(ContextData), Is.Empty);
     }
 
     [TestCase("/api/queries/test?payload=10")]
@@ -147,7 +147,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
         Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.WhereScopeIsAcrossTransports().Intersect(ContextData), Is.Empty);
     }
 
     [TestCase("/api/queries/test?payload=10")]
@@ -190,6 +190,61 @@ public sealed class ConquerorContextQueryTests : TestBase
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertStatusCode(HttpStatusCode.BadRequest);
+    }
+
+    [TestCase("/api/queries/test?payload=10")]
+    [TestCase("/api/queries/testQueryWithoutPayload")]
+    [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+    [TestCase("/api/queries/testDelegate?payload=10")]
+    [TestCase("/api/custom/queries/test?payload=10")]
+    [TestCase("/api/custom/queries/testQueryWithoutPayload")]
+    public async Task GivenQueryIdInContext_QueryIdIsObservedByHandler(string path, string? postContent = null)
+    {
+        const string queryId = "test-query";
+        
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+        conquerorContext.SetQueryId(queryId);
+
+        using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
+        using var msg = new HttpRequestMessage
+        {
+            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
+            RequestUri = new(path, UriKind.Relative),
+            Headers = { { HttpConstants.ConquerorDownstreamContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.DownstreamContextData) } },
+            Content = postContent != null ? content : null,
+        };
+
+        var response = await HttpClient.SendAsync(msg);
+        await response.AssertSuccessStatusCode();
+
+        var receivedQueryIds = Resolve<TestObservations>().ReceivedQueryIds;
+
+        Assert.That(receivedQueryIds, Is.EqualTo(new[] { queryId }));
+    }
+
+    [TestCase("/api/queries/test?payload=10")]
+    [TestCase("/api/queries/testQueryWithoutPayload")]
+    [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+    [TestCase("/api/queries/testDelegate?payload=10")]
+    [TestCase("/api/custom/queries/test?payload=10")]
+    [TestCase("/api/custom/queries/testQueryWithoutPayload")]
+    public async Task GivenNoQueryIdInContext_NonEmptyQueryIdIsObservedByHandler(string path, string? postContent = null)
+    {
+        using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
+        using var msg = new HttpRequestMessage
+        {
+            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
+            RequestUri = new(path, UriKind.Relative),
+            Content = postContent != null ? content : null,
+        };
+
+        var response = await HttpClient.SendAsync(msg);
+        await response.AssertSuccessStatusCode();
+
+        var receivedQueryIds = Resolve<TestObservations>().ReceivedQueryIds;
+
+        Assert.That(receivedQueryIds, Has.Count.EqualTo(1));
+        Assert.That(receivedQueryIds.First(), Is.Not.Null.And.Not.Empty);
     }
 
     [TestCase("/api/queries/test?payload=10")]

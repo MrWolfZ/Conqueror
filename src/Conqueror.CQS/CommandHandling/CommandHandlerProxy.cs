@@ -27,7 +27,7 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
-        if (!conquerorContext.IsExecutionFromTransport())
+        if (!conquerorContext.IsExecutionFromTransport() || conquerorContext.GetCommandId() is null)
         {
             conquerorContext.SetCommandId(ActivitySpanId.CreateRandom().ToString());
         }

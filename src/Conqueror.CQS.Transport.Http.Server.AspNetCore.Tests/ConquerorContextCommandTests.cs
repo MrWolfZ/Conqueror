@@ -118,8 +118,8 @@ public sealed class ConquerorContextCommandTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
-        Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
+        Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports().Intersect(ContextData), Is.Empty);
     }
 
     [TestCase("/api/commands/test", "{}")]
@@ -151,7 +151,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
         Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.WhereScopeIsAcrossTransports().Intersect(ContextData), Is.Empty);
     }
 
     [TestCase("/api/commands/test", "{}")]
@@ -192,6 +192,57 @@ public sealed class ConquerorContextCommandTests : TestBase
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertStatusCode(HttpStatusCode.BadRequest);
+    }
+
+    [TestCase("/api/commands/test", "{}")]
+    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+    [TestCase("/api/commands/testDelegate", "{}")]
+    [TestCase("/api/custom/commands/test", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+    public async Task GivenCommandIdInContext_CommandIdIsObservedByHandler(string path, string data)
+    {
+        const string commandId = "test-command";
+        
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+        conquerorContext.SetCommandId(commandId);
+
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
+        {
+            Headers = { { HttpConstants.ConquerorDownstreamContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.DownstreamContextData) } },
+        };
+
+        var response = await HttpClient.PostAsync(path, content);
+        await response.AssertSuccessStatusCode();
+
+        var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
+
+        Assert.That(receivedCommandIds, Is.EqualTo(new[] { commandId }));
+    }
+
+    [TestCase("/api/commands/test", "{}")]
+    [TestCase("/api/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/commands/testCommandWithoutResponseWithoutPayload", "")]
+    [TestCase("/api/commands/testDelegate", "{}")]
+    [TestCase("/api/custom/commands/test", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponse", "{}")]
+    [TestCase("/api/custom/commands/testCommandWithoutPayload", "")]
+    [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
+    public async Task GivenNoCommandIdInContext_NonEmptyCommandIdIsObservedByHandler(string path, string data)
+    {
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+
+        var response = await HttpClient.PostAsync(path, content);
+        await response.AssertSuccessStatusCode();
+
+        var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
+
+        Assert.That(receivedCommandIds, Has.Count.EqualTo(1));
+        Assert.That(receivedCommandIds.First(), Is.Not.Null.And.Not.Empty);
     }
 
     [TestCase("/api/commands/test", "{}")]
