@@ -9,6 +9,19 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorCommonServiceCollectionExtensions
 {
+    /// <summary>
+    ///     Adds the services required for interacting with the Conqueror context. This method does typically not need to be
+    ///     called from user code, since it is called from other Conqueror registration logic.
+    /// </summary>
+    /// <param name="services">The service collection to add the Conqueror context services to</param>
+    /// <returns>The service collection</returns>
+    public static IServiceCollection AddConquerorContext(this IServiceCollection services)
+    {
+        services.TryAddSingleton<IConquerorContextAccessor, DefaultConquerorContextAccessor>();
+
+        return services;
+    }
+
     public static IServiceCollection FinalizeConquerorRegistrations(this IServiceCollection services)
     {
         if (services.Any(d => d.ServiceType == typeof(WasFinalized)))
@@ -46,13 +59,6 @@ public static class ConquerorCommonServiceCollectionExtensions
         }
 
         services.TryAddSingleton<DidYouForgetToCallFinalizeConquerorRegistrations>();
-
-        return services;
-    }
-
-    internal static IServiceCollection AddConquerorContext(this IServiceCollection services)
-    {
-        services.TryAddSingleton<IConquerorContextAccessor, DefaultConquerorContextAccessor>();
 
         return services;
     }

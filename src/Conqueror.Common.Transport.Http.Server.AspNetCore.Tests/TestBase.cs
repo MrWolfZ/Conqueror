@@ -20,7 +20,6 @@ public abstract class TestBase
     private readonly Lazy<SymmetricSecurityKey> signingKeyLazy = new(CreateSigningKey);
 
     private HttpClient? client;
-    private ServiceProvider? clientServiceProvider;
     private IHost? host;
 
     protected HttpClient HttpClient
@@ -46,19 +45,6 @@ public abstract class TestBase
             }
 
             return host;
-        }
-    }
-
-    protected IServiceProvider ClientServiceProvider
-    {
-        get
-        {
-            if (clientServiceProvider == null)
-            {
-                throw new InvalidOperationException("test fixture must be initialized before using client service provider");
-            }
-
-            return clientServiceProvider;
         }
     }
 
@@ -91,40 +77,27 @@ public abstract class TestBase
                                                              });
             });
 
-            _ = webHost.ConfigureServices(ConfigureServerServices);
+            _ = webHost.ConfigureServices(ConfigureServices);
             _ = webHost.Configure(Configure);
         });
 
         host = await hostBuilder.StartAsync();
         client = host.GetTestClient();
-
-        var services = new ServiceCollection();
-        ConfigureClientServices(services);
-        clientServiceProvider = services.BuildServiceProvider();
     }
 
     [TearDown]
     public void TearDown()
     {
-        clientServiceProvider?.Dispose();
         client?.Dispose();
         host?.Dispose();
     }
 
-    protected abstract void ConfigureServerServices(IServiceCollection services);
-
-    protected abstract void ConfigureClientServices(IServiceCollection services);
+    protected abstract void ConfigureServices(IServiceCollection services);
 
     protected abstract void Configure(IApplicationBuilder app);
 
     protected T Resolve<T>()
         where T : notnull => Host.Services.GetRequiredService<T>();
-
-    protected T ResolveOnClient<T>()
-        where T : notnull
-    {
-        return ClientServiceProvider.GetRequiredService<T>();
-    }
 
     protected void WithAuthenticatedPrincipal(HttpRequestHeaders requestHeaders, string name)
     {
