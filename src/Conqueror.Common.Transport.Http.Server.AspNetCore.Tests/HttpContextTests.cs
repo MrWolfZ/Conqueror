@@ -50,8 +50,7 @@ public sealed class HttpContextTests : TestBase
 
         var receivedData = ConquerorContextDataFormatter.Parse(values!);
 
-        CollectionAssert.AreEquivalent(ContextData, receivedData.Select(t => new KeyValuePair<string, string>(t.Key, t.Value)));
-
+        Assert.That(receivedData.AsKeyValuePairs(), Is.EquivalentTo(ContextData));
         Assert.That(response.Headers.Contains(HttpConstants.ConquerorContextHeaderName), Is.False);
     }
 
@@ -73,8 +72,7 @@ public sealed class HttpContextTests : TestBase
 
         var receivedData = ConquerorContextDataFormatter.Parse(values!);
 
-        CollectionAssert.AreEquivalent(ContextData, receivedData.Select(t => new KeyValuePair<string, string>(t.Key, t.Value)));
-
+        Assert.That(receivedData.AsKeyValuePairs(), Is.EquivalentTo(ContextData));
         Assert.That(response.Headers.Contains(HttpConstants.ConquerorUpstreamContextHeaderName), Is.False);
     }
 
@@ -101,7 +99,7 @@ public sealed class HttpContextTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)) ?? Array.Empty<KeyValuePair<string, string>>());
+        Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
     }
 
@@ -128,7 +126,7 @@ public sealed class HttpContextTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
-        CollectionAssert.AreEquivalent(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)) ?? Array.Empty<KeyValuePair<string, string>>());
+        Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData, Is.Empty);
     }
 
@@ -180,7 +178,7 @@ public sealed class HttpContextTests : TestBase
 
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-        CollectionAssert.AreEquivalent(new[] { testTraceId }, receivedTraceIds);
+        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { testTraceId }));
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -202,7 +200,7 @@ public sealed class HttpContextTests : TestBase
 
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-        CollectionAssert.AreEquivalent(new[] { a.TraceId }, receivedTraceIds);
+        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { a.TraceId }));
     }
 
     protected override void ConfigureServices(IServiceCollection services)
