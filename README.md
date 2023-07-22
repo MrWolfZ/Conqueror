@@ -31,7 +31,11 @@ Head over to our [CQS recipes](#cqs-introduction) for more guidance on how to us
 
 **Middlewares:**
 
+[![NuGet version (Conqueror.CQS.Middleware.Authentication)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Authentication?label=Conqueror.CQS.Middleware.Authentication)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Authentication/)
+[![NuGet version (Conqueror.CQS.Middleware.Authorization)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Authorization?label=Conqueror.CQS.Middleware.Authorization)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Authorization/)
+[![NuGet version (Conqueror.CQS.Middleware.DataAnnotationValidation)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.DataAnnotationValidation?label=Conqueror.CQS.Middleware.DataAnnotationValidation)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.DataAnnotationValidation/)
 [![NuGet version (Conqueror.CQS.Middleware.Logging)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Logging?label=Conqueror.CQS.Middleware.Logging)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Logging/)
+[![NuGet version (Conqueror.CQS.Middleware.Polly)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Polly?label=Conqueror.CQS.Middleware.Polly)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Polly/)
 
 **Transports:**
 
