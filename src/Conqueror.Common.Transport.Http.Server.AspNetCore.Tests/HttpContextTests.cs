@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Mime;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -59,12 +60,58 @@ public sealed class HttpContextTests : TestBase
     [TestCase("POST", "/api/testWithoutResponse", "{}")]
     [TestCase("POST", "/api/testWithoutPayload", "")]
     [TestCase("POST", "/api/testWithoutResponseWithoutPayload", "")]
+    public async Task GivenUpstreamContextDataInAFailedRequest_DataIsReturnedInHeader(string method, string path, string data)
+    {
+        Resolve<TestObservations>().ShouldAddUpstreamData = true;
+        Resolve<TestObservations>().ExceptionToThrow = new();
+
+        var response = await ExecuteRequest(method, path, data);
+        await response.AssertStatusCode(HttpStatusCode.InternalServerError);
+
+        var exists = response.Headers.TryGetValues(HttpConstants.ConquerorUpstreamContextHeaderName, out var values);
+
+        Assert.That(exists, Is.True);
+
+        var receivedData = ConquerorContextDataFormatter.Parse(values!);
+
+        Assert.That(receivedData.AsKeyValuePairs(), Is.EquivalentTo(ContextData));
+        Assert.That(response.Headers.Contains(HttpConstants.ConquerorContextHeaderName), Is.False);
+    }
+
+    [TestCase("GET", "/api/test", "")]
+    [TestCase("POST", "/api/test", "{}")]
+    [TestCase("POST", "/api/testWithoutResponse", "{}")]
+    [TestCase("POST", "/api/testWithoutPayload", "")]
+    [TestCase("POST", "/api/testWithoutResponseWithoutPayload", "")]
     public async Task GivenBidirectionalContextData_DataIsReturnedInHeader(string method, string path, string data)
     {
         Resolve<TestObservations>().ShouldAddBidirectionalData = true;
 
         var response = await ExecuteRequest(method, path, data);
         await response.AssertSuccessStatusCode();
+
+        var exists = response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values);
+
+        Assert.That(exists, Is.True);
+
+        var receivedData = ConquerorContextDataFormatter.Parse(values!);
+
+        Assert.That(receivedData.AsKeyValuePairs(), Is.EquivalentTo(ContextData));
+        Assert.That(response.Headers.Contains(HttpConstants.ConquerorUpstreamContextHeaderName), Is.False);
+    }
+
+    [TestCase("GET", "/api/test", "")]
+    [TestCase("POST", "/api/test", "{}")]
+    [TestCase("POST", "/api/testWithoutResponse", "{}")]
+    [TestCase("POST", "/api/testWithoutPayload", "")]
+    [TestCase("POST", "/api/testWithoutResponseWithoutPayload", "")]
+    public async Task GivenBidirectionalContextDataInAFailedRequest_DataIsReturnedInHeader(string method, string path, string data)
+    {
+        Resolve<TestObservations>().ShouldAddBidirectionalData = true;
+        Resolve<TestObservations>().ExceptionToThrow = new();
+
+        var response = await ExecuteRequest(method, path, data);
+        await response.AssertStatusCode(HttpStatusCode.InternalServerError);
 
         var exists = response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values);
 
@@ -239,6 +286,18 @@ public sealed class HttpContextTests : TestBase
             await next();
         });
 
+        _ = app.Use(async (ctx, next) =>
+        {
+            try
+            {
+                await next();
+            }
+            catch (Exception)
+            {
+                ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+        });
+
         _ = app.UseRouting();
         _ = app.UseConqueror();
         _ = app.UseEndpoints(b => b.MapControllers());
@@ -309,6 +368,11 @@ public sealed class HttpContextTests : TestBase
                 conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
             }
         }
+
+        if (testObservations.ExceptionToThrow is not null)
+        {
+            throw testObservations.ExceptionToThrow;
+        }
     }
 
     private static DisposableActivity CreateActivity(string name)
@@ -345,6 +409,8 @@ public sealed class HttpContextTests : TestBase
         public IConquerorContextData? ReceivedDownstreamContextData { get; set; }
 
         public IConquerorContextData? ReceivedBidirectionalContextData { get; set; }
+        
+        public Exception? ExceptionToThrow { get; set; }
     }
 
     [ApiController]
