@@ -16,10 +16,18 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Common
 
+- [ ] instead of just marking execution from a transport, set a field that contains the transport name
+  - [ ] add this name to the logging output of logging middlewares
 - [ ] in development environment, add problem details body to auth failures
+- [ ] throw on empty context data key
+- [ ] do not use base64 encoding for context data, but instead use cookie-like encoding (URL-encode the value)
 
 ## CQS
 
+- [ ] adjust lifetime tests to assert on multiple executions of the same handler "instance"
+- [ ] adapt transport interface to take and return formatted context data as a parameter
+  - [ ] use single string to encode all kinds of context data (i.e. upstream, downstream, bidirectional)
+- [ ] add tests that assert that service provider on pipeline builders is from correct scope
 - [ ] add CQS to known abbreviations in rider settings and remove inconsistent naming suppressions
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
 - [ ] add pipeline builder methods to throw on duplicate middleware
@@ -49,10 +57,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS ASP Core
 
-- [ ] add test to ensure that adding server services multiple times adds filters and options only once
+- [ ] add test to ensure that adding server services multiple times adds options only once
   - [ ] allow configuration callback to run multiple times
-- [ ] do not use base64 encoding for context data, but instead use cookie-like encoding
-- [ ] once common authentication package exists, set user identity from ASP request in executor
 - [ ] add recipe for customizing OpenAPI specification with Swashbuckle
 - [ ] create analyzers (including code fixes)
   - [ ] when command or query does not have a version
@@ -60,23 +66,20 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
+- [ ] add tests for adding event observers with custom transport
+- [ ] add tests that assert that service provider on pipeline builders is from correct scope
+- [ ] add tests for custom in-memory publishing strategies
+- [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] refactor to use transport concept
   - [ ] publisher uses attribute on event to determine on which transport to publish
   - [ ] observer requires explicit registration with transport client
   - [ ] provide HTTP websocket transport
-- [ ] fix: do not register generic types during assembly scanning
-- [ ] fix: do not register nested private types during assembly scanning
 - [ ] handling and tests for conqueror context
-- [ ] add event context
-- [ ] add handler registry
-- [ ] expose service provider on middleware context
-- [ ] make event publisher middleware pipeline configurable
 - [ ] make event publishing strategy customizable
   - [ ] ship two strategies out of the box (parallel and sequential)
     - [ ] make them available as service collection extension methods
   - [ ] sequential strategy as default
   - [ ] handle cancellation in strategy
-- [ ] add tests for service collection configuration
 - [ ] for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
 
 ## Interactive streaming
