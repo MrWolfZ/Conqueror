@@ -122,35 +122,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quickstart", "recipes\quick
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CQS", "CQS", "{11B04E5D-ECD5-4756-AA7C-448150F557F1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Eventing", "Eventing", "{FD908EA4-8AC0-42E4-B678-B2497F185F59}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Streaming.Interactive", "Streaming.Interactive", "{F8214436-D70F-47B2-91B6-CFB084C6BAB4}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Streaming.Reactive", "Streaming.Reactive", "{81D39B82-D9FF-4493-978A-5173DA95F230}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basics", "basics", "{67D09656-BB2A-42A9-86D1-73178EEA9F16}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "advanced", "advanced", "{C915D274-DCD2-47B2-B4EE-4A38F567063D}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expert", "expert", "{90F18F97-1F7A-4FDB-BA9C-19A5B24E2A6A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basics", "basics", "{283C107A-CB09-41DB-A010-E63C2413D35B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "advanced", "advanced", "{C386C00E-66FC-4182-94FB-C789BF3756C0}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expert", "expert", "{EB78F97B-B645-45B0-832C-1E6B60CA67C7}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basics", "basics", "{6C73985E-050C-4C01-AA07-FF1F491E0EFD}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "advanced", "advanced", "{FC9FB4E1-262A-4537-B149-7D4DEE13F1E5}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expert", "expert", "{95B4DD6F-38E4-4B02-A2D2-1450C7B2FC6A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "basics", "basics", "{BDD694F8-B35D-4249-8E2D-24C26721610A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "advanced", "advanced", "{9BDD505B-FBF9-415A-9260-46271557BF67}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "expert", "expert", "{A1B61F70-A567-4492-9B68-A0DD95674A1C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Logging", "src\Conqueror.CQS.Middleware.Logging\Conqueror.CQS.Middleware.Logging.csproj", "{B3522E63-DA56-4760-880D-6DB62DC15785}"
 EndProject
@@ -350,9 +324,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication.Abstractions", "src\Conqueror.Common.Middleware.Authentication.Abstractions\Conqueror.Common.Middleware.Authentication.Abstractions.csproj", "{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication.AspNetCore", "src\Conqueror.Common.Middleware.Authentication.AspNetCore\Conqueror.Common.Middleware.Authentication.AspNetCore.csproj", "{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Transport.Http.Server.AspNetCore", "src\Conqueror.Common.Transport.Http.Server.AspNetCore\Conqueror.Common.Transport.Http.Server.AspNetCore.csproj", "{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication.AspNetCore.Tests", "src\Conqueror.Common.Middleware.Authentication.AspNetCore.Tests\Conqueror.Common.Middleware.Authentication.AspNetCore.Tests.csproj", "{206E950E-13C2-40AF-A1D6-E702DB9CF32E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Transport.Http.Server.AspNetCore.Tests", "src\Conqueror.Common.Transport.Http.Server.AspNetCore.Tests\Conqueror.Common.Transport.Http.Server.AspNetCore.Tests.csproj", "{206E950E-13C2-40AF-A1D6-E702DB9CF32E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authentication", "src\Conqueror.CQS.Middleware.Authentication\Conqueror.CQS.Middleware.Authentication.csproj", "{315F07EB-C384-46C7-939D-C9CCA830AE53}"
 EndProject
@@ -363,10 +337,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authorization", "src\Conqueror.CQS.Middleware.Authorization\Conqueror.CQS.Middleware.Authorization.csproj", "{D1F52DAA-B281-4B73-8A9F-21220271A477}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Middleware.Authorization.Tests", "src\Conqueror.CQS.Middleware.Authorization.Tests\Conqueror.CQS.Middleware.Authorization.Tests.csproj", "{E95592D0-8654-409D-9C30-DE86AF3B7AA5}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authorization.AspNetCore", "src\Conqueror.Common.Middleware.Authorization.AspNetCore\Conqueror.Common.Middleware.Authorization.AspNetCore.csproj", "{85EB580E-6DB8-41E6-B602-B76F9685B6EA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authorization.AspNetCore.Tests", "src\Conqueror.Common.Middleware.Authorization.AspNetCore.Tests\Conqueror.Common.Middleware.Authorization.AspNetCore.Tests.csproj", "{E83BD112-E37A-4334-B3BB-81027756B6CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -873,14 +843,6 @@ Global
 		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E95592D0-8654-409D-9C30-DE86AF3B7AA5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{85EB580E-6DB8-41E6-B602-B76F9685B6EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{85EB580E-6DB8-41E6-B602-B76F9685B6EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{85EB580E-6DB8-41E6-B602-B76F9685B6EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{85EB580E-6DB8-41E6-B602-B76F9685B6EA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E83BD112-E37A-4334-B3BB-81027756B6CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E83BD112-E37A-4334-B3BB-81027756B6CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E83BD112-E37A-4334-B3BB-81027756B6CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E83BD112-E37A-4334-B3BB-81027756B6CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -896,21 +858,8 @@ Global
 		{054FBFF1-DDEC-40A9-9253-2A9CA1FAB7A6} = {25FD08F0-0B94-4AAE-A990-93CEBC48F670}
 		{8C596B99-B69F-4661-92C7-8EB8B0D79AE9} = {93B58C31-C6DE-4BC0-8EAF-E2B11CEF1082}
 		{11B04E5D-ECD5-4756-AA7C-448150F557F1} = {93B58C31-C6DE-4BC0-8EAF-E2B11CEF1082}
-		{FD908EA4-8AC0-42E4-B678-B2497F185F59} = {93B58C31-C6DE-4BC0-8EAF-E2B11CEF1082}
-		{F8214436-D70F-47B2-91B6-CFB084C6BAB4} = {93B58C31-C6DE-4BC0-8EAF-E2B11CEF1082}
-		{81D39B82-D9FF-4493-978A-5173DA95F230} = {93B58C31-C6DE-4BC0-8EAF-E2B11CEF1082}
 		{67D09656-BB2A-42A9-86D1-73178EEA9F16} = {11B04E5D-ECD5-4756-AA7C-448150F557F1}
 		{C915D274-DCD2-47B2-B4EE-4A38F567063D} = {11B04E5D-ECD5-4756-AA7C-448150F557F1}
-		{90F18F97-1F7A-4FDB-BA9C-19A5B24E2A6A} = {11B04E5D-ECD5-4756-AA7C-448150F557F1}
-		{283C107A-CB09-41DB-A010-E63C2413D35B} = {FD908EA4-8AC0-42E4-B678-B2497F185F59}
-		{C386C00E-66FC-4182-94FB-C789BF3756C0} = {FD908EA4-8AC0-42E4-B678-B2497F185F59}
-		{EB78F97B-B645-45B0-832C-1E6B60CA67C7} = {FD908EA4-8AC0-42E4-B678-B2497F185F59}
-		{6C73985E-050C-4C01-AA07-FF1F491E0EFD} = {F8214436-D70F-47B2-91B6-CFB084C6BAB4}
-		{FC9FB4E1-262A-4537-B149-7D4DEE13F1E5} = {F8214436-D70F-47B2-91B6-CFB084C6BAB4}
-		{95B4DD6F-38E4-4B02-A2D2-1450C7B2FC6A} = {F8214436-D70F-47B2-91B6-CFB084C6BAB4}
-		{BDD694F8-B35D-4249-8E2D-24C26721610A} = {81D39B82-D9FF-4493-978A-5173DA95F230}
-		{9BDD505B-FBF9-415A-9260-46271557BF67} = {81D39B82-D9FF-4493-978A-5173DA95F230}
-		{A1B61F70-A567-4492-9B68-A0DD95674A1C} = {81D39B82-D9FF-4493-978A-5173DA95F230}
 		{5F85F425-9A17-4B7D-9A23-4A31E34E0E1F} = {67D09656-BB2A-42A9-86D1-73178EEA9F16}
 		{9922B890-55CA-481D-8A6B-8A29C4136CDC} = {67D09656-BB2A-42A9-86D1-73178EEA9F16}
 		{A8D46A17-26E5-467E-9D55-000DDFC66B0E} = {5F85F425-9A17-4B7D-9A23-4A31E34E0E1F}

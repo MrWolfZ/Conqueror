@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Conqueror.Common.Middleware.Authentication.AspNetCore.Tests;
+namespace Conqueror.Common.Transport.Http.Server.AspNetCore.Tests;
 
 public abstract class TestBase
 {

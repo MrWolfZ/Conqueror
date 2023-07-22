@@ -23,9 +23,8 @@ dotnet pack %srcDir%\Conqueror.Common -c Release -o %publishDir% --include-symbo
 dotnet pack %srcDir%\Conqueror.Common.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Common.Middleware.Authentication -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Common.Middleware.Authentication.Abstractions -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Common.Middleware.Authentication.AspNetCore -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Common.Middleware.Authorization.Abstractions -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Common.Middleware.Authorization.AspNetCore -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Common.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.CQS.Analyzers -c Release -o %publishDir% --include-symbols

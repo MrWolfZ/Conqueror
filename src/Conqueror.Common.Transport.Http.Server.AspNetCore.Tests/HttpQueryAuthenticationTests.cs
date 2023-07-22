@@ -3,7 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace Conqueror.Common.Middleware.Authentication.AspNetCore.Tests;
+namespace Conqueror.Common.Transport.Http.Server.AspNetCore.Tests;
 
 [TestFixture]
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
@@ -118,9 +118,9 @@ public sealed class HttpQueryAuthenticationTests : TestBase
         });
 
         _ = app.UseAuthentication();
-        _ = app.UseConquerorAuthentication();
 
         _ = app.UseRouting();
+        _ = app.UseConqueror();
         _ = app.UseEndpoints(b => b.MapControllers());
     }
 

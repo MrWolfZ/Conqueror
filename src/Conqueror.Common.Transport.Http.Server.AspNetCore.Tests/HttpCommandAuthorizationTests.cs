@@ -3,50 +3,50 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace Conqueror.Common.Middleware.Authorization.AspNetCore.Tests;
+namespace Conqueror.Common.Transport.Http.Server.AspNetCore.Tests;
 
 [TestFixture]
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
-public sealed class HttpQueryAuthorizationTests : TestBase
+public sealed class HttpCommandAuthorizationTests : TestBase
 {
-    private const string TestUserId = "QueryAuthorizationTestUser";
+    private const string TestUserId = "CommandAuthorizationTestUser";
 
     private bool handlerWasCalled;
     private Exception? exceptionToThrow;
     private string userId = TestUserId;
 
     [Test]
-    public async Task GivenHandlerThatThrowsOperationTypeAuthorizationFailedException_WhenExecutingQuery_RequestFailsWithForbidden()
+    public async Task GivenHandlerThatThrowsOperationTypeAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
     {
-        var handler = ResolveOnClient<ITestQueryHandler>();
+        var handler = ResolveOnClient<ITestCommandHandler>();
 
         exceptionToThrow = new ConquerorOperationTypeAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
 
-        var thrownException = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new() { Payload = 10 }));
+        var thrownException = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }));
 
         await thrownException!.Response!.AssertStatusCode(HttpStatusCode.Forbidden);
     }
 
     [Test]
-    public async Task GivenHandlerThatThrowsOperationPayloadAuthorizationFailedException_WhenExecutingQuery_RequestFailsWithForbidden()
+    public async Task GivenHandlerThatThrowsOperationPayloadAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
     {
-        var handler = ResolveOnClient<ITestQueryHandler>();
+        var handler = ResolveOnClient<ITestCommandHandler>();
 
         exceptionToThrow = new ConquerorOperationPayloadAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
 
-        var thrownException = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new() { Payload = 10 }));
+        var thrownException = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }));
 
         await thrownException!.Response!.AssertStatusCode(HttpStatusCode.Forbidden);
     }
 
     [Test]
-    public async Task GivenAspDefaultAuthorizationPolicy_WhenExecutingQueryWithUserWhichWouldFailAspAuthorization_RequestIsPassedThroughToHandler()
+    public async Task GivenAspDefaultAuthorizationPolicy_WhenExecutingCommandWithUserWhichWouldFailAspAuthorization_RequestIsPassedThroughToHandler()
     {
-        var handler = ResolveOnClient<ITestQueryHandler>();
+        var handler = ResolveOnClient<ITestCommandHandler>();
 
         userId = "unauthorized_user";
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 });
+        var result = await handler.ExecuteCommand(new() { Payload = 10 });
         
         Assert.That(result, Is.Not.Null);
         Assert.That(handlerWasCalled, Is.True);
@@ -58,7 +58,7 @@ public sealed class HttpQueryAuthorizationTests : TestBase
 
         _ = services.AddAuthorization(o => o.DefaultPolicy = new AuthorizationPolicyBuilder().RequireUserName(TestUserId).Build());
 
-        _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (qry, _, _) =>
+        _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (cmd, _, _) =>
         {
             await Task.Yield();
 
@@ -69,7 +69,7 @@ public sealed class HttpQueryAuthorizationTests : TestBase
                 throw exceptionToThrow;
             }
 
-            return new() { Payload = qry.Payload + 1 };
+            return new() { Payload = cmd.Payload + 1 };
         });
     }
 
@@ -79,7 +79,7 @@ public sealed class HttpQueryAuthorizationTests : TestBase
 
         var baseAddress = new Uri("http://conqueror.test");
 
-        _ = services.AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(baseAddress, o => WithAuthenticatedPrincipal(o.Headers, userId)));
+        _ = services.AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(baseAddress, o => WithAuthenticatedPrincipal(o.Headers, userId)));
     }
 
     protected override void Configure(IApplicationBuilder app)
@@ -98,24 +98,24 @@ public sealed class HttpQueryAuthorizationTests : TestBase
 
         _ = app.UseAuthentication();
         _ = app.UseAuthorization();
-        _ = app.UseConquerorAuthorization();
 
         _ = app.UseRouting();
+        _ = app.UseConqueror();
         _ = app.UseEndpoints(b => b.MapControllers());
     }
 
-    [HttpQuery]
-    public sealed record TestQuery
+    [HttpCommand]
+    public sealed record TestCommand
     {
         public int Payload { get; init; }
     }
 
-    public sealed record TestQueryResponse
+    public sealed record TestCommandResponse
     {
         public int Payload { get; init; }
     }
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
     }
 }

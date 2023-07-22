@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Conqueror.Common.Middleware.Authentication.AspNetCore.Tests;
+namespace Conqueror.Common.Transport.Http.Server.AspNetCore.Tests;
 
 public static class HttpResponseMessageExtensions
 {

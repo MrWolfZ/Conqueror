@@ -4,10 +4,11 @@
 
     <!-- for NuGet -->
     <PropertyGroup>
-        <Description>Part of the Conqueror library set. ASP.NET Core integration for authorization middlewares.</Description>
+        <Description>Part of the Conqueror library set. Common ASP.NET Core integrations.</Description>
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Middleware.Authentication.Abstractions\Conqueror.Common.Middleware.Authentication.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Common.Middleware.Authorization.Abstractions\Conqueror.Common.Middleware.Authorization.Abstractions.csproj" />
     </ItemGroup>
 
