@@ -8,20 +8,19 @@ public sealed class EventObserverMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddTransient<TestEventObserver>()
-                    .AddTransient<TestEventObserverMiddleware>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
                     .AddSingleton(observations);
 
         var initialConfiguration = new TestEventObserverMiddlewareConfiguration(10);
 
-        _ = services.ConfigureEventObserverPipeline<TestEventObserver>(pipeline => { _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(initialConfiguration); });
+        _ = services.AddSingleton<Action<IEventObserverPipelineBuilder>>(pipeline => { _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(initialConfiguration); });
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
-        await observer.HandleEvent(new(), CancellationToken.None);
+        await observer.HandleEvent(new());
 
         Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
     }
@@ -32,26 +31,25 @@ public sealed class EventObserverMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddTransient<TestEventObserver>()
-                    .AddTransient<TestEventObserverMiddleware>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
                     .AddSingleton(observations);
 
         var initialConfiguration = new TestEventObserverMiddlewareConfiguration(10);
         var overwrittenConfiguration = new TestEventObserverMiddlewareConfiguration(20);
 
-        _ = services.ConfigureEventObserverPipeline<TestEventObserver>(pipeline =>
+        _ = services.AddSingleton<Action<IEventObserverPipelineBuilder>>(pipeline =>
         {
             _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(initialConfiguration);
 
             _ = pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(overwrittenConfiguration);
         });
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
-        await observer.HandleEvent(new(), CancellationToken.None);
+        await observer.HandleEvent(new());
 
         Assert.That(observations.Configurations, Is.EquivalentTo(new[] { overwrittenConfiguration }));
     }
@@ -62,25 +60,24 @@ public sealed class EventObserverMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddTransient<TestEventObserver>()
-                    .AddTransient<TestEventObserverMiddleware>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
                     .AddSingleton(observations);
 
         var initialConfiguration = new TestEventObserverMiddlewareConfiguration(10);
 
-        _ = services.ConfigureEventObserverPipeline<TestEventObserver>(pipeline =>
+        _ = services.AddSingleton<Action<IEventObserverPipelineBuilder>>(pipeline =>
         {
             _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(initialConfiguration);
 
             _ = pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(c => c.Parameter += 10);
         });
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
-        await observer.HandleEvent(new(), CancellationToken.None);
+        await observer.HandleEvent(new());
 
         Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
 
@@ -93,25 +90,24 @@ public sealed class EventObserverMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddTransient<TestEventObserver>()
-                    .AddTransient<TestEventObserverMiddleware>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
                     .AddSingleton(observations);
 
         var initialConfiguration = new TestEventObserverMiddlewareConfiguration(10);
 
-        _ = services.ConfigureEventObserverPipeline<TestEventObserver>(pipeline =>
+        _ = services.AddSingleton<Action<IEventObserverPipelineBuilder>>(pipeline =>
         {
             _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(initialConfiguration);
 
             _ = pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(c => new(c.Parameter + 10));
         });
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
-        await observer.HandleEvent(new(), CancellationToken.None);
+        await observer.HandleEvent(new());
 
         Assert.That(observations.Configurations, Has.Count.EqualTo(1));
 
@@ -124,12 +120,11 @@ public sealed class EventObserverMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddTransient<TestEventObserver>()
-                    .AddTransient<TestEventObserverMiddleware>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
                     .AddSingleton(observations);
 
-        _ = services.ConfigureEventObserverPipeline<TestEventObserver>(pipeline =>
+        _ = services.AddSingleton<Action<IEventObserverPipelineBuilder>>(pipeline =>
         {
             _ = Assert.Throws<InvalidOperationException>(
                 () => pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new TestEventObserverMiddlewareConfiguration(20)));
@@ -137,62 +132,26 @@ public sealed class EventObserverMiddlewareConfigurationTests
             _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(c => new(c.Parameter + 10)));
         });
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
 
-        await observer.HandleEvent(new(), CancellationToken.None);
-    }
-
-    [Test]
-    public async Task GivenExternalPipelineConfigurationAndHandlerWithOwnPipelineConfiguration_OwnConfigurationIsUsed()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventing()
-                    .AddTransient<TestEventObserverWithPipelineConfiguration>()
-                    .AddTransient<TestEventObserverMiddleware>()
-                    .AddSingleton(observations);
-
-        _ = services.ConfigureEventObserverPipeline<TestEventObserverWithPipelineConfiguration>(pipeline =>
-        {
-            _ = Assert.Throws<InvalidOperationException>(
-                () => pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(
-                    new(20)));
-        });
-
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new(), CancellationToken.None);
-
-        Assert.That(observations.Configurations, Has.Count.EqualTo(1));
-
-        Assert.That(observations.Configurations[0].Parameter, Is.EqualTo(10));
+        await observer.HandleEvent(new());
     }
 
     private sealed record TestEvent;
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>
+    private sealed class TestEventObserver : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
     {
-        public async Task HandleEvent(TestEvent query, CancellationToken cancellationToken)
-        {
-            await Task.Yield();
-        }
-    }
-
-    private sealed class TestEventObserverWithPipelineConfiguration : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
-    {
-        public async Task HandleEvent(TestEvent query, CancellationToken cancellationToken)
+        public async Task HandleEvent(TestEvent query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
         }
 
         public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
         {
-            _ = pipeline.Use<TestEventObserverMiddleware, TestEventObserverMiddlewareConfiguration>(new(10));
+            var configurationAction = pipeline.ServiceProvider.GetService<Action<IEventObserverPipelineBuilder>>();
+            configurationAction?.Invoke(pipeline);
         }
     }
 

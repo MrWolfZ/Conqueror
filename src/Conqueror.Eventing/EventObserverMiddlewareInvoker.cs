@@ -5,16 +5,36 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventObserverMiddlewareInvoker<TConfiguration> : IEventObserverMiddlewareInvoker
+internal interface IEventObserverMiddlewareInvoker
 {
-    public async Task Invoke<TEvent>(TEvent evt,
-                                     EventObserverMiddlewareNext<TEvent> next,
-                                     Type middlewareType,
-                                     object? middlewareConfiguration,
-                                     IServiceProvider serviceProvider,
-                                     CancellationToken cancellationToken)
+    Type MiddlewareType { get; }
+
+    Task Invoke<TEvent>(TEvent evt,
+                        Type observedEventType,
+                        EventObserverMiddlewareNext<TEvent> next,
+                        object? middlewareConfiguration,
+                        IServiceProvider serviceProvider,
+                        CancellationToken cancellationToken)
+        where TEvent : class;
+}
+
+internal sealed class EventObserverMiddlewareInvoker<TMiddleware, TConfiguration> : IEventObserverMiddlewareInvoker
+{
+    public Type MiddlewareType => typeof(TMiddleware);
+
+    public Task Invoke<TEvent>(TEvent evt,
+                               Type observedEventType,
+                               EventObserverMiddlewareNext<TEvent> next,
+                               object? middlewareConfiguration,
+                               IServiceProvider serviceProvider,
+                               CancellationToken cancellationToken)
         where TEvent : class
     {
+        if (typeof(TConfiguration) == typeof(NullObserverMiddlewareConfiguration))
+        {
+            middlewareConfiguration = new NullObserverMiddlewareConfiguration();
+        }
+
         if (middlewareConfiguration is null)
         {
             throw new ArgumentNullException(nameof(middlewareConfiguration));
@@ -22,28 +42,17 @@ internal sealed class EventObserverMiddlewareInvoker<TConfiguration> : IEventObs
 
         var configuration = (TConfiguration)middlewareConfiguration;
 
-        var ctx = new DefaultEventObserverMiddlewareContext<TEvent, TConfiguration>(evt, next, configuration, cancellationToken);
+        var ctx = new DefaultEventObserverMiddlewareContext<TEvent, TConfiguration>(evt, observedEventType, next, configuration, serviceProvider, cancellationToken);
 
-        var middleware = (IEventObserverMiddleware<TConfiguration>)serviceProvider.GetRequiredService(middlewareType);
+        if (typeof(TConfiguration) == typeof(NullObserverMiddlewareConfiguration))
+        {
+            var middleware = (IEventObserverMiddleware)serviceProvider.GetRequiredService(typeof(TMiddleware));
+            return middleware.Execute(ctx);
+        }
 
-        await middleware.Execute(ctx).ConfigureAwait(false);
+        var middlewareWithConfiguration = (IEventObserverMiddleware<TConfiguration>)serviceProvider.GetRequiredService(MiddlewareType);
+        return middlewareWithConfiguration.Execute(ctx);
     }
 }
 
-internal sealed class EventObserverMiddlewareInvoker : IEventObserverMiddlewareInvoker
-{
-    public async Task Invoke<TEvent>(TEvent evt,
-                                     EventObserverMiddlewareNext<TEvent> next,
-                                     Type middlewareType,
-                                     object? middlewareConfiguration,
-                                     IServiceProvider serviceProvider,
-                                     CancellationToken cancellationToken)
-        where TEvent : class
-    {
-        var ctx = new DefaultEventObserverMiddlewareContext<TEvent>(evt, next, cancellationToken);
-
-        var middleware = (IEventObserverMiddleware)serviceProvider.GetRequiredService(middlewareType);
-
-        await middleware.Execute(ctx).ConfigureAwait(false);
-    }
-}
+internal sealed record NullObserverMiddlewareConfiguration;

@@ -21,4 +21,8 @@
         <RootNamespace>Conqueror</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -5,23 +5,52 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventPublisherMiddlewareInvoker : IEventPublisherMiddlewareInvoker
+internal interface IEventPublisherMiddlewareInvoker
 {
-    private readonly Type middlewareType;
+    Type MiddlewareType { get; }
 
-    public EventPublisherMiddlewareInvoker(Type middlewareType)
-    {
-        this.middlewareType = middlewareType;
-    }
+    Task Invoke<TEvent>(TEvent evt,
+                        EventPublisherMiddlewareNext<TEvent> next,
+                        object? middlewareConfiguration,
+                        IServiceProvider serviceProvider,
+                        CancellationToken cancellationToken)
+        where TEvent : class;
+}
 
-    public async Task Invoke<TEvent>(TEvent evt,
-                                     EventPublisherMiddlewareNext<TEvent> next,
-                                     IServiceProvider serviceProvider,
-                                     CancellationToken cancellationToken)
+internal sealed class EventPublisherMiddlewareInvoker<TMiddleware, TConfiguration> : IEventPublisherMiddlewareInvoker
+{
+    public Type MiddlewareType => typeof(TMiddleware);
+
+    public Task Invoke<TEvent>(TEvent evt,
+                               EventPublisherMiddlewareNext<TEvent> next,
+                               object? middlewareConfiguration,
+                               IServiceProvider serviceProvider,
+                               CancellationToken cancellationToken)
         where TEvent : class
     {
-        var middleware = (IEventPublisherMiddleware)serviceProvider.GetRequiredService(middlewareType);
-        var ctx = new DefaultEventPublisherMiddlewareContext<TEvent>(evt, next, cancellationToken);
-        await middleware.Execute(ctx).ConfigureAwait(false);
+        if (typeof(TConfiguration) == typeof(NullPublisherMiddlewareConfiguration))
+        {
+            middlewareConfiguration = new NullPublisherMiddlewareConfiguration();
+        }
+
+        if (middlewareConfiguration is null)
+        {
+            throw new ArgumentNullException(nameof(middlewareConfiguration));
+        }
+
+        var configuration = (TConfiguration)middlewareConfiguration;
+
+        var ctx = new DefaultEventPublisherMiddlewareContext<TEvent, TConfiguration>(evt, next, configuration, serviceProvider, cancellationToken);
+
+        if (typeof(TConfiguration) == typeof(NullPublisherMiddlewareConfiguration))
+        {
+            var middleware = (IEventPublisherMiddleware)serviceProvider.GetRequiredService(typeof(TMiddleware));
+            return middleware.Execute(ctx);
+        }
+
+        var middlewareWithConfiguration = (IEventPublisherMiddleware<TConfiguration>)serviceProvider.GetRequiredService(MiddlewareType);
+        return middlewareWithConfiguration.Execute(ctx);
     }
 }
+
+internal sealed record NullPublisherMiddlewareConfiguration;

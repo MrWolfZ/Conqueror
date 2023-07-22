@@ -10,7 +10,7 @@ public interface IEventObserver
 public interface IEventObserver<in TEvent> : IEventObserver
     where TEvent : class
 {
-    Task HandleEvent(TEvent evt, CancellationToken cancellationToken);
+    Task HandleEvent(TEvent evt, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -21,6 +21,6 @@ public interface IEventObserver<in TEvent> : IEventObserver
 public interface IConfigureEventObserverPipeline
 {
 #if NET7_0_OR_GREATER
-        static abstract void ConfigurePipeline(IEventObserverPipelineBuilder pipeline);
+    static abstract void ConfigurePipeline(IEventObserverPipelineBuilder pipeline);
 #endif
 }

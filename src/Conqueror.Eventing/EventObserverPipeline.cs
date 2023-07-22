@@ -9,16 +9,17 @@ namespace Conqueror.Eventing;
 
 internal sealed class EventObserverPipeline
 {
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares;
+    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IEventObserverMiddlewareInvoker Invoker)> middlewares;
 
-    public EventObserverPipeline(IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration)> middlewares)
+    public EventObserverPipeline(IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration, IEventObserverMiddlewareInvoker Invoker)> middlewares)
     {
         this.middlewares = middlewares.ToList();
     }
 
     public async Task Execute<TEvent>(IServiceProvider serviceProvider,
-                                      EventObserverMetadata metadata,
+                                      Type observerType,
                                       TEvent initialEvent,
+                                      Type observedEventType,
                                       CancellationToken cancellationToken)
         where TEvent : class
     {
@@ -28,21 +29,35 @@ internal sealed class EventObserverPipeline
         {
             if (index >= middlewares.Count)
             {
-                var observer = (IEventObserver<TEvent>)serviceProvider.GetRequiredService(metadata.ObserverType);
-
+                var observer = (IEventObserver<TEvent>)serviceProvider.GetRequiredService(observerType);
                 await observer.HandleEvent(evt, token).ConfigureAwait(false);
                 return;
             }
 
-            var (middlewareType, middlewareConfiguration) = middlewares[index];
+            var (_, middlewareConfiguration, invoker) = middlewares[index];
+            await invoker.Invoke(evt, observedEventType, (e, t) => ExecuteNextMiddleware(index + 1, e, t), middlewareConfiguration, serviceProvider, token).ConfigureAwait(false);
+        }
+    }
 
-            var invokerType = middlewareConfiguration is null
-                ? typeof(EventObserverMiddlewareInvoker)
-                : typeof(EventObserverMiddlewareInvoker<>).MakeGenericType(middlewareConfiguration.GetType());
+    public async Task Execute<TEvent>(IServiceProvider serviceProvider,
+                                      Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
+                                      TEvent initialEvent,
+                                      Type observedEventType,
+                                      CancellationToken cancellationToken)
+        where TEvent : class
+    {
+        await ExecuteNextMiddleware(0, initialEvent, cancellationToken).ConfigureAwait(false);
 
-            var invoker = (IEventObserverMiddlewareInvoker)Activator.CreateInstance(invokerType)!;
+        async Task ExecuteNextMiddleware(int index, TEvent evt, CancellationToken token)
+        {
+            if (index >= middlewares.Count)
+            {
+                await observerFn(evt, serviceProvider, token).ConfigureAwait(false);
+                return;
+            }
 
-            await invoker.Invoke(evt, (e, t) => ExecuteNextMiddleware(index + 1, e, t), middlewareType, middlewareConfiguration, serviceProvider, token).ConfigureAwait(false);
+            var (_, middlewareConfiguration, invoker) = middlewares[index];
+            await invoker.Invoke(evt, observedEventType, (e, t) => ExecuteNextMiddleware(index + 1, e, t), middlewareConfiguration, serviceProvider, token).ConfigureAwait(false);
         }
     }
 }

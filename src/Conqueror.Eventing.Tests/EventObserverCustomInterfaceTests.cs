@@ -4,16 +4,112 @@ namespace Conqueror.Eventing.Tests;
 public sealed class EventObserverCustomInterfaceTests
 {
     [Test]
+    public async Task GivenEventWithPayload_ObserverReceivesEventWhenCalledThroughCustomInterface()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<ITestEventObserver>();
+
+        var evt = new TestEvent { Payload = 10 };
+
+        await observer.HandleEvent(evt);
+
+        Assert.That(observations.Events, Is.EqualTo(new[] { evt }));
+    }
+
+    [Test]
+    public async Task GivenGenericEventWithPayload_ObserverReceivesEventWhenCalledThroughCustomInterface()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorEventObserver<GenericTestEventObserver<string>>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IGenericTestEventObserver<string>>();
+
+        var evt = new GenericTestEvent<string>("test event");
+
+        await observer.HandleEvent(evt);
+
+        Assert.That(observations.Events, Is.EqualTo(new[] { evt }));
+    }
+
+    [Test]
+    public async Task GivenCancellationToken_ObserverReceivesCancellationTokenWhenCalledThroughCustomInterface()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<ITestEventObserver>();
+        using var tokenSource = new CancellationTokenSource();
+
+        await observer.HandleEvent(new() { Payload = 2 }, tokenSource.Token);
+
+        Assert.That(observations.CancellationTokens, Is.EqualTo(new[] { tokenSource.Token }));
+    }
+
+    [Test]
+    public async Task GivenNoCancellationToken_ObserverReceivesDefaultCancellationTokenWhenCalledThroughCustomInterface()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<ITestEventObserver>();
+
+        await observer.HandleEvent(new() { Payload = 2 });
+
+        Assert.That(observations.CancellationTokens, Is.EqualTo(new[] { default(CancellationToken) }));
+    }
+
+    [Test]
+    public void GivenExceptionInObserver_InvocationThrowsSameExceptionWhenCalledThroughCustomInterface()
+    {
+        var services = new ServiceCollection();
+        var exception = new Exception();
+
+        _ = services.AddConquerorEventObserver<ThrowingTestEventObserver>()
+                    .AddSingleton(exception);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IThrowingTestEventObserver>();
+
+        var evt = new TestEvent { Payload = 10 };
+
+        var thrownException = Assert.ThrowsAsync<Exception>(() => observer.HandleEvent(evt));
+
+        Assert.That(thrownException, Is.SameAs(exception));
+    }
+
+    [Test]
     public void GivenObserverWithCustomInterface_ObserverCanBeResolvedFromPlainInterface()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddTransient<TestEventObserver>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddSingleton(observations);
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<IEventObserver<TestEvent>>());
     }
@@ -24,98 +120,93 @@ public sealed class EventObserverCustomInterfaceTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddTransient<TestEventObserver>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddSingleton(observations);
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<ITestEventObserver>());
     }
 
     [Test]
-    public async Task GivenObserverWithCustomInterface_ResolvingObserverViaPlainAndCustomInterfaceReturnsEquivalentInstance()
+    public async Task GivenSingletonObserverWithCustomInterface_ResolvingObserverViaPlainAndCustomInterfaceReturnsEquivalentInstance()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddSingleton<TestEventObserver>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>(ServiceLifetime.Singleton)
                     .AddSingleton(observations);
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         var plainInterfaceObserver = provider.GetRequiredService<IEventObserver<TestEvent>>();
         var customInterfaceObserver = provider.GetRequiredService<ITestEventObserver>();
 
-        await plainInterfaceObserver.HandleEvent(new(), CancellationToken.None);
-        await customInterfaceObserver.HandleEvent(new(), CancellationToken.None);
+        await plainInterfaceObserver.HandleEvent(new());
+        await customInterfaceObserver.HandleEvent(new());
 
         Assert.That(observations.Instances, Has.Count.EqualTo(2));
         Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]
-    public async Task GivenObserverWithMultipleCustomInterfaces_ResolvingObserverViaEitherInterfaceReturnsEquivalentInstance()
+    public async Task GivenSingletonObserverWithMultipleCustomInterfaces_ResolvingObserverViaEitherInterfaceReturnsEquivalentInstance()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddSingleton<TestEventObserverWithMultipleInterfaces>()
+        _ = services.AddConquerorEventObserver<TestEventObserverWithMultipleInterfaces>(ServiceLifetime.Singleton)
                     .AddSingleton(observations);
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         var observer1 = provider.GetRequiredService<ITestEventObserver>();
         var observer2 = provider.GetRequiredService<ITestEventObserver2>();
 
-        await observer1.HandleEvent(new(), CancellationToken.None);
-        await observer2.HandleEvent(new(), CancellationToken.None);
+        await observer1.HandleEvent(new());
+        await observer2.HandleEvent(new());
 
         Assert.That(observations.Instances, Has.Count.EqualTo(2));
         Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]
-    public async Task GivenObserverWithMixedCustomAndPlainInterfaces_ResolvingObserverViaEitherInterfaceReturnsEquivalentInstance()
+    public async Task GivenSingletonObserverWithMixedCustomAndPlainInterfaces_ResolvingObserverViaEitherInterfaceReturnsEquivalentInstance()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddSingleton<TestEventObserverWithMultipleMixedInterfaces>()
+        _ = services.AddConquerorEventObserver<TestEventObserverWithMultipleMixedInterfaces>(ServiceLifetime.Singleton)
                     .AddSingleton(observations);
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
         var observer1 = provider.GetRequiredService<ITestEventObserver>();
         var observer2 = provider.GetRequiredService<IEventObserver<TestEvent2>>();
 
-        await observer1.HandleEvent(new(), CancellationToken.None);
-        await observer2.HandleEvent(new(), CancellationToken.None);
+        await observer1.HandleEvent(new());
+        await observer2.HandleEvent(new());
 
         Assert.That(observations.Instances, Has.Count.EqualTo(2));
         Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
     }
 
     [Test]
-    public async Task GivenObserverWithCustomInterface_ResolvingObserverViaPublisherAndCustomInterfaceReturnsEquivalentInstance()
+    public async Task GivenSingletonObserverWithCustomInterface_ResolvingObserverViaDispatcherAndCustomInterfaceReturnsEquivalentInstance()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventing()
-                    .AddSingleton<TestEventObserver>()
+        _ = services.AddConquerorEventObserver<TestEventObserver>(ServiceLifetime.Singleton)
                     .AddSingleton(observations);
 
-        var provider = services.FinalizeConquerorRegistrations().BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
 
-        var publisher = provider.GetRequiredService<IEventPublisher>();
+        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
         var observer = provider.GetRequiredService<ITestEventObserver>();
 
-        await publisher.PublishEvent(new TestEvent(), CancellationToken.None);
-        await observer.HandleEvent(new(), CancellationToken.None);
+        await dispatcher.DispatchEvent(new TestEvent());
+        await observer.HandleEvent(new());
 
         Assert.That(observations.Instances, Has.Count.EqualTo(2));
         Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
@@ -126,18 +217,31 @@ public sealed class EventObserverCustomInterfaceTests
     {
         var services = new ServiceCollection();
 
-        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventing().AddTransient<TestEventObserverWithCustomInterfaceWithExtraMethod>().FinalizeConquerorRegistrations());
+        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorEventObserver<TestEventObserverWithCustomInterfaceWithExtraMethod>());
     }
 
-    public sealed record TestEvent;
+    public sealed record TestEvent
+    {
+        public int Payload { get; init; }
+    }
 
     public sealed record TestEvent2;
+
+    public sealed record GenericTestEvent<TPayload>(TPayload Payload);
 
     public interface ITestEventObserver : IEventObserver<TestEvent>
     {
     }
 
     public interface ITestEventObserver2 : IEventObserver<TestEvent2>
+    {
+    }
+
+    public interface IGenericTestEventObserver<TPayload> : IEventObserver<GenericTestEvent<TPayload>>
+    {
+    }
+
+    public interface IThrowingTestEventObserver : IEventObserver<TestEvent>
     {
     }
 
@@ -155,10 +259,46 @@ public sealed class EventObserverCustomInterfaceTests
             this.observations = observations;
         }
 
-        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
+            observations.Events.Add(evt);
+            observations.CancellationTokens.Add(cancellationToken);
+        }
+    }
+
+    private sealed class GenericTestEventObserver<TPayload> : IGenericTestEventObserver<TPayload>
+    {
+        private readonly TestObservations observations;
+
+        public GenericTestEventObserver(TestObservations observations)
+        {
+            this.observations = observations;
+        }
+
+        public async Task HandleEvent(GenericTestEvent<TPayload> evt, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            observations.Instances.Add(this);
+            observations.Events.Add(evt);
+            observations.CancellationTokens.Add(cancellationToken);
+        }
+    }
+
+    private sealed class ThrowingTestEventObserver : IThrowingTestEventObserver
+    {
+        private readonly Exception exception;
+
+        public ThrowingTestEventObserver(Exception exception)
+        {
+            this.exception = exception;
+        }
+
+        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            throw exception;
         }
     }
 
@@ -171,16 +311,20 @@ public sealed class EventObserverCustomInterfaceTests
             this.observations = observations;
         }
 
-        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
+            observations.Events.Add(evt);
+            observations.CancellationTokens.Add(cancellationToken);
         }
 
-        public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken)
+        public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
+            observations.Events.Add(evt);
+            observations.CancellationTokens.Add(cancellationToken);
         }
     }
 
@@ -193,28 +337,36 @@ public sealed class EventObserverCustomInterfaceTests
             this.observations = observations;
         }
 
-        public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken)
+        public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
+            observations.Events.Add(evt);
+            observations.CancellationTokens.Add(cancellationToken);
         }
 
-        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken)
+        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
+            observations.Events.Add(evt);
+            observations.CancellationTokens.Add(cancellationToken);
         }
     }
 
     private sealed class TestEventObserverWithCustomInterfaceWithExtraMethod : ITestEventObserverWithExtraMethod
     {
-        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
         public void ExtraMethod() => throw new NotSupportedException();
     }
 
     private sealed class TestObservations
     {
-        public List<IEventObserver<TestEvent>> Instances { get; } = new();
+        public List<object> Instances { get; } = new();
+
+        public List<object> Events { get; } = new();
+
+        public List<CancellationToken> CancellationTokens { get; } = new();
     }
 }

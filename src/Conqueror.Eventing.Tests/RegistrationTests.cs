@@ -1,18 +1,25 @@
 namespace Conqueror.Eventing.Tests;
 
 [TestFixture]
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for dynamic type generation and assembly scanning to work")]
+[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "order makes sense, but some types must be private to not interfere with assembly scanning")]
 public sealed class RegistrationTests
 {
     [Test]
     public void GivenServiceCollectionWithConquerorAlreadyRegistered_DoesNotRegisterConquerorTypesAgain()
     {
-        var services = new ServiceCollection().AddConquerorEventing().AddConquerorEventing();
+        var services = new ServiceCollection().AddConquerorEventObserver<TestEventObserver>()
+                                              .AddConquerorEventObserver<TestEventObserver2>();
 
-        Assert.That(services.Count(d => d.ServiceType == typeof(IEventPublisher)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(IEventObserver<>)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(EventObserverRegistry)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(EventMiddlewaresInvoker)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(EventingRegistrationFinalizer)), Is.EqualTo(1));
+        var eventingAssemblies = new[] { typeof(IConquerorEventDispatcher).Assembly, typeof(EventDispatcher).Assembly };
+        var conquerorServices = services.Where(d => eventingAssemblies.Contains(d.ServiceType.Assembly))
+                                        .Select(d => d.ServiceType)
+                                        .Where(t => !t.Name.Contains("Registration"));
+
+        foreach (var serviceType in conquerorServices)
+        {
+            Assert.That(services.Count(d => d.ServiceType == serviceType), Is.EqualTo(1));
+        }
     }
 
     [Test]
@@ -81,8 +88,15 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(
-            services.Any(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient), Is.True);
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserverMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
+    }
+
+    [Test]
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsEventPublisherAsTransient()
+    {
+        var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
+
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventTransportPublisher) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
@@ -94,124 +108,242 @@ public sealed class RegistrationTests
     }
 
     [Test]
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsEventPublisherMiddlewareWithoutConfigurationAsTransient()
+    {
+        var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
+
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventPublisherMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
+    }
+
+    [Test]
     public void GivenServiceCollectionWithObserverAlreadyRegistered_AddingAllTypesFromAssemblyDoesNotAddObserverAgain()
     {
-        var services = new ServiceCollection().AddSingleton<TestEventObserver>().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
+        var services = new ServiceCollection().AddConquerorEventObserver<TestEventObserver>(ServiceLifetime.Singleton)
+                                              .AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
         Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestEventObserver)), Is.EqualTo(1));
     }
 
     [Test]
-    public void GivenServiceCollection_AddingAllTypesFromAssemblyDoesNotAddInterfaces()
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsCustomEventObserverInterfaces()
     {
-        var services = new ServiceCollection().AddSingleton<TestEventObserver>().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
+        var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ITestEventObserver)));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ITestEventObserver)), Is.EqualTo(1));
     }
 
     [Test]
     public void GivenServiceCollection_AddingAllTypesFromAssemblyDoesNotAddAbstractClasses()
     {
-        var services = new ServiceCollection().AddSingleton<TestEventObserver>().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
+        var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestEventObserver)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestEventObserverMiddleware)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractEventTransportPublisher)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestEventPublisherMiddleware)));
     }
 
     [Test]
-    public void GivenServiceCollectionWithConquerorEventingRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyDoesNotAddGenericClasses()
     {
-        var services = new ServiceCollection().AddConquerorEventing();
+        var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
-
-        Assert.That(ex?.InnerException, Is.InstanceOf<InvalidOperationException>());
-        Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestEventObserver<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestEventObserverMiddleware<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestEventTransportPublisher<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestEventPublisherMiddleware<>)));
     }
 
     [Test]
-    public void GivenServiceCollectionWithConquerorEventingRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyDoesNotAddPrivateClasses()
     {
-        var services = new ServiceCollection().AddConquerorEventing().FinalizeConquerorRegistrations();
+        var services = new ServiceCollection().AddConquerorEventingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestEventObserver)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestEventObserverMiddleware)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestEventTransportPublisher)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestEventPublisherMiddleware)));
     }
 
-    [Test]
-    public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringEventing()
-    {
-        var services = new ServiceCollection().FinalizeConquerorRegistrations();
+    public sealed record TestEvent;
 
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorEventing());
-    }
+    public sealed record TestEvent2;
 
-    private sealed record TestEvent;
-
-    private sealed record TestEvent2;
-
-    private interface ITestEventObserver : IEventObserver<TestEvent>
+    public interface ITestEventObserver : IEventObserver<TestEvent>
     {
     }
 
-    private interface ITestEventObserver2 : IEventObserver<TestEvent2>
+    public interface ITestEventObserver2 : IEventObserver<TestEvent2>
     {
     }
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>
+    public sealed class TestEventObserver : IEventObserver<TestEvent>
     {
-        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestEventObserverWithCustomInterface : ITestEventObserver
+    public sealed class TestEventObserver2 : IEventObserver<TestEvent>
     {
-        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestEventObserverWithMultiplePlainInterfaces : IEventObserver<TestEvent>, IEventObserver<TestEvent2>
+    public sealed class TestEventObserverWithCustomInterface : ITestEventObserver
     {
-        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
-
-        public Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestEventObserverWithMultipleCustomInterfaces : ITestEventObserver, ITestEventObserver2
+    public sealed class TestEventObserverWithMultiplePlainInterfaces : IEventObserver<TestEvent>, IEventObserver<TestEvent2>
     {
-        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
-        public Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestEventObserverWithMultipleMixedInterfaces : ITestEventObserver, IEventObserver<TestEvent2>
+    public sealed class TestEventObserverWithMultipleCustomInterfaces : ITestEventObserver, ITestEventObserver2
     {
-        public Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken) => Task.CompletedTask;
-        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private abstract class AbstractTestEventObserver : IEventObserver<TestEvent>
+    public sealed class TestEventObserverWithMultipleMixedInterfaces : ITestEventObserver, IEventObserver<TestEvent2>
     {
-        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestEventObserverMiddlewareConfiguration
+    public abstract class AbstractTestEventObserver : IEventObserver<TestEvent>
+    {
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    public sealed class GenericTestEventObserver<TEvent> : IEventObserver<TEvent>
+        where TEvent : class
+    {
+        public Task HandleEvent(TEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class PrivateTestEventObserver : IEventObserver<TestEvent>
+    {
+        public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    public sealed class TestEventObserverMiddlewareConfiguration
     {
     }
 
-    private sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
+    public sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
     {
         public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
             where TEvent : class =>
             ctx.Next(ctx.Event, ctx.CancellationToken);
     }
 
-    private sealed class TestEventObserverMiddlewareWithoutConfiguration : IEventObserverMiddleware
+    public sealed class TestEventObserverMiddlewareWithoutConfiguration : IEventObserverMiddleware
     {
         public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class =>
             ctx.Next(ctx.Event, ctx.CancellationToken);
     }
 
-    private sealed class TestEventPublisherMiddleware : IEventPublisherMiddleware
+    public abstract class AbstractTestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
+    {
+        public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
+            where TEvent : class =>
+            ctx.Next(ctx.Event, ctx.CancellationToken);
+    }
+
+    public sealed class GenericTestEventObserverMiddleware<T> : IEventObserverMiddleware<T>
+    {
+        public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, T> ctx)
+            where TEvent : class =>
+            ctx.Next(ctx.Event, ctx.CancellationToken);
+    }
+
+    private sealed class PrivateTestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
+    {
+        public Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
+            where TEvent : class =>
+            ctx.Next(ctx.Event, ctx.CancellationToken);
+    }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public sealed class TestEventTransportPublisherConfigurationAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
+    {
+    }
+
+    public sealed class TestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportPublisherConfigurationAttribute>
+    {
+        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+            where TEvent : class
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    public abstract class AbstractEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportPublisherConfigurationAttribute>
+    {
+        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+            where TEvent : class
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    public sealed class GenericTestEventTransportPublisher<T> : IConquerorEventTransportPublisher<T>
+        where T : Attribute, IConquerorEventTransportConfigurationAttribute
+    {
+        public Task PublishEvent<TEvent>(TEvent evt, T configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+            where TEvent : class
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class PrivateTestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportPublisherConfigurationAttribute>
+    {
+        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+            where TEvent : class
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    public sealed class TestEventPublisherMiddlewareConfiguration
+    {
+    }
+
+    public sealed class TestEventPublisherMiddleware : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
+    {
+        public Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent, TestEventPublisherMiddlewareConfiguration> ctx)
+            where TEvent : class =>
+            ctx.Next(ctx.Event, ctx.CancellationToken);
+    }
+
+    public sealed class TestEventPublisherMiddlewareWithoutConfiguration : IEventPublisherMiddleware
     {
         public Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
+            where TEvent : class =>
+            ctx.Next(ctx.Event, ctx.CancellationToken);
+    }
+
+    public abstract class AbstractTestEventPublisherMiddleware : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
+    {
+        public Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent, TestEventPublisherMiddlewareConfiguration> ctx)
+            where TEvent : class =>
+            ctx.Next(ctx.Event, ctx.CancellationToken);
+    }
+
+    public sealed class GenericTestEventPublisherMiddleware<T> : IEventPublisherMiddleware<T>
+    {
+        public Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent, T> ctx)
+            where TEvent : class =>
+            ctx.Next(ctx.Event, ctx.CancellationToken);
+    }
+
+    private sealed class PrivateTestEventPublisherMiddleware : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
+    {
+        public Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent, TestEventPublisherMiddlewareConfiguration> ctx)
             where TEvent : class =>
             ctx.Next(ctx.Event, ctx.CancellationToken);
     }
