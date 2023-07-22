@@ -2,11 +2,8 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
 
 internal static class CollectionExtensions
 {
-    public static void AddOrReplaceRange<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>> items)
+    public static IEnumerable<KeyValuePair<TKey, TValue>> AsKeyValuePairs<TKey, TValue>(this IEnumerable<(TKey Key, TValue Value)> items)
     {
-        foreach (var p in items)
-        {
-            dictionary[p.Key] = p.Value;
-        }
+        return items.Select(t => new KeyValuePair<TKey, TValue>(t.Key, t.Value));
     }
 }
