@@ -119,7 +119,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
         Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [TestCase("/api/commands/test", "{}")]
@@ -151,7 +151,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
         Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData, Is.Empty);
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [TestCase("/api/commands/test", "{}")]
