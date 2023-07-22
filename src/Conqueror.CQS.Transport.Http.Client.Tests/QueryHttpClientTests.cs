@@ -302,7 +302,7 @@ public sealed class QueryHttpClientTests : TestBase
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
-        CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
+        Assert.That(seenTestHeaderValues, Is.EquivalentTo(new[] { "value1", "value2" }));
     }
 
     [Test]
@@ -324,7 +324,7 @@ public sealed class QueryHttpClientTests : TestBase
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
-        CollectionAssert.AreEquivalent(new[] { "value1", "value2" }, seenTestHeaderValues);
+        Assert.That(seenTestHeaderValues, Is.EquivalentTo(new[] { "value1", "value2" }));
     }
 
     [Test]

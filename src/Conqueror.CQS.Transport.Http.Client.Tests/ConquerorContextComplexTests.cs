@@ -142,7 +142,7 @@ public class ConquerorContextComplexTests : TestBase
 
         _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(new[] { context.TraceId, context.TraceId, context.TraceId }, observations.ReceivedTraceIds);
+        Assert.That(observations.ReceivedTraceIds, Is.EquivalentTo(new[] { context.TraceId, context.TraceId, context.TraceId }));
     }
 
     protected override void ConfigureServerServices(IServiceCollection services)

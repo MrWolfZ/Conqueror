@@ -35,7 +35,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(context.ContextData, Is.Empty);
     }
 
@@ -50,7 +50,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.ContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(context.UpstreamContextData, Is.Empty);
     }
 
@@ -65,7 +65,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.UpstreamContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(context.ContextData, Is.Empty);
     }
 
@@ -80,7 +80,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(context.ContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(context.UpstreamContextData, Is.Empty);
     }
 
@@ -105,7 +105,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
-        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
         Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
     }
 
@@ -130,8 +130,8 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
-        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+        Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.AsKeyValuePairs<string>(), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
@@ -211,7 +211,7 @@ public class ConquerorContextQueryTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.AsKeyValuePairs<string>(), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
@@ -235,7 +235,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
-        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
         Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
     }
 
@@ -260,8 +260,8 @@ public class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
-        CollectionAssert.IsSubsetOf(ContextData, receivedContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+        Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.AsKeyValuePairs<string>(), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
@@ -341,7 +341,7 @@ public class ConquerorContextQueryTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.AsKeyValuePairs<string>(), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
@@ -423,7 +423,7 @@ public class ConquerorContextQueryTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.AsKeyValuePairs<string>(), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
@@ -439,8 +439,8 @@ public class ConquerorContextQueryTests : TestBase
 
         var observations = ResolveOnClient<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedOuterUpstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
-        CollectionAssert.IsSubsetOf(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(observations.ReceivedOuterUpstreamContextData?.AsKeyValuePairs<string>()));
+        Assert.That(ContextData, Is.SubsetOf(context.UpstreamContextData.AsKeyValuePairs<string>()));
     }
 
     [Test]
@@ -456,8 +456,8 @@ public class ConquerorContextQueryTests : TestBase
 
         var observations = ResolveOnClient<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedOuterBidirectionalContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
-        CollectionAssert.IsSubsetOf(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(observations.ReceivedOuterBidirectionalContextData?.AsKeyValuePairs<string>()));
+        Assert.That(ContextData, Is.SubsetOf(context.ContextData.AsKeyValuePairs<string>()));
         Assert.That(context.UpstreamContextData, Is.Empty);
     }
 
@@ -474,8 +474,8 @@ public class ConquerorContextQueryTests : TestBase
 
         var observations = ResolveOnClient<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedOuterUpstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
-        CollectionAssert.IsSubsetOf(ContextData, context.UpstreamContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(observations.ReceivedOuterUpstreamContextData?.AsKeyValuePairs<string>()));
+        Assert.That(ContextData, Is.SubsetOf(context.UpstreamContextData.AsKeyValuePairs<string>()));
         Assert.That(context.ContextData, Is.Empty);
     }
 
@@ -492,8 +492,8 @@ public class ConquerorContextQueryTests : TestBase
 
         var observations = ResolveOnClient<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedOuterBidirectionalContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
-        CollectionAssert.IsSubsetOf(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(observations.ReceivedOuterBidirectionalContextData?.AsKeyValuePairs<string>()));
+        Assert.That(ContextData, Is.SubsetOf(context.ContextData.AsKeyValuePairs<string>()));
         Assert.That(context.UpstreamContextData, Is.Empty);
     }
 
@@ -510,7 +510,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var observations = Resolve<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(observations.ReceivedDownstreamContextData?.AsKeyValuePairs<string>()));
         Assert.That(context.UpstreamContextData, Is.Empty);
         Assert.That(context.ContextData, Is.Empty);
     }
@@ -528,8 +528,8 @@ public class ConquerorContextQueryTests : TestBase
 
         var observations = Resolve<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedBidirectionalContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
-        CollectionAssert.IsSubsetOf(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(observations.ReceivedBidirectionalContextData?.AsKeyValuePairs<string>()));
+        Assert.That(ContextData, Is.SubsetOf(context.ContextData.AsKeyValuePairs<string>()));
         Assert.That(context.UpstreamContextData, Is.Empty);
     }
 
@@ -546,7 +546,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var observations = Resolve<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(observations.ReceivedDownstreamContextData?.AsKeyValuePairs<string>()));
         Assert.That(context.UpstreamContextData, Is.Empty);
         Assert.That(context.ContextData, Is.Empty);
     }
@@ -564,8 +564,8 @@ public class ConquerorContextQueryTests : TestBase
 
         var observations = Resolve<TestObservations>();
 
-        CollectionAssert.IsSubsetOf(ContextData, observations.ReceivedBidirectionalContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
-        CollectionAssert.IsSubsetOf(ContextData, context.ContextData.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)));
+        Assert.That(ContextData, Is.SubsetOf(observations.ReceivedBidirectionalContextData?.AsKeyValuePairs<string>()));
+        Assert.That(ContextData, Is.SubsetOf(context.ContextData.AsKeyValuePairs<string>()));
         Assert.That(context.UpstreamContextData, Is.Empty);
     }
 
@@ -576,7 +576,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedQueryIds, Resolve<TestObservations>().ReceivedQueryIds);
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedQueryIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedQueryIds));
     }
 
     [Test]
@@ -586,7 +586,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedQueryIds, Resolve<TestObservations>().ReceivedQueryIds);
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedQueryIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedQueryIds));
     }
 
     [Test]
@@ -596,7 +596,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
 
     [Test]
@@ -606,7 +606,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
 
     [Test]
@@ -618,7 +618,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
         Assert.That(Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault(), Is.EqualTo(activity.TraceId));
     }
 
@@ -631,7 +631,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
         Assert.That(Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault(), Is.EqualTo(activity.TraceId));
     }
 
@@ -644,7 +644,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
 
     [Test]
@@ -656,7 +656,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
 
-        CollectionAssert.AreEquivalent(ResolveOnClient<TestObservations>().ReceivedTraceIds, Resolve<TestObservations>().ReceivedTraceIds);
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
 
     protected override void ConfigureServerServices(IServiceCollection services)
