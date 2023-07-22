@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Conqueror;
 using Conqueror.Examples.BlazorWebAssembly.Application;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -33,6 +34,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseConqueror();
 app.MapControllers();
 
 app.Run();

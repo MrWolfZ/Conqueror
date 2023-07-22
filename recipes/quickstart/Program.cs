@@ -1,3 +1,5 @@
+using Conqueror;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
@@ -17,6 +19,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseConqueror();
 app.MapControllers();
 
 app.Run();

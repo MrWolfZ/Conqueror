@@ -1,3 +1,4 @@
+using Conqueror;
 using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Application;
 using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Infrastructure;
 
@@ -20,6 +21,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseConqueror();
 app.MapControllers();
 
 app.Run();

@@ -351,6 +351,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         });
 
         _ = app.UseRouting();
+        _ = app.UseConqueror();
         _ = app.UseEndpoints(b => b.MapControllers());
     }
 

@@ -311,6 +311,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
         protected override void Configure(IApplicationBuilder app)
         {
             _ = app.UseRouting();
+            _ = app.UseConqueror();
             _ = app.UseEndpoints(b => b.MapControllers());
         }
 

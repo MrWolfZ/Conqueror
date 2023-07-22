@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Conqueror;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -24,6 +25,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseConqueror();
 app.MapControllers();
 
 app.Run();

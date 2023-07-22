@@ -40,6 +40,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 _ = webHost.Configure(app =>
                 {
                     _ = app.UseRouting();
+                    _ = app.UseConqueror();
                     _ = app.UseEndpoints(b => b.MapControllers());
                 });
             });
@@ -66,6 +67,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 _ = webHost.Configure(app =>
                 {
                     _ = app.UseRouting();
+                    _ = app.UseConqueror();
                     _ = app.UseEndpoints(b => b.MapControllers());
                 });
             });
@@ -92,6 +94,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 _ = webHost.Configure(app =>
                 {
                     _ = app.UseRouting();
+                    _ = app.UseConqueror();
                     _ = app.UseEndpoints(b => b.MapControllers());
                 });
             });
@@ -118,6 +121,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 _ = webHost.Configure(app =>
                 {
                     _ = app.UseRouting();
+                    _ = app.UseConqueror();
                     _ = app.UseEndpoints(b => b.MapControllers());
                 });
             });
@@ -144,6 +148,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 _ = webHost.Configure(app =>
                 {
                     _ = app.UseRouting();
+                    _ = app.UseConqueror();
                     _ = app.UseEndpoints(b => b.MapControllers());
                 });
             });
@@ -170,6 +175,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 _ = webHost.Configure(app =>
                 {
                     _ = app.UseRouting();
+                    _ = app.UseConqueror();
                     _ = app.UseEndpoints(b => b.MapControllers());
                 });
             });
@@ -200,6 +206,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
                 _ = webHost.Configure(app =>
                 {
                     _ = app.UseRouting();
+                    _ = app.UseConqueror();
                     _ = app.UseEndpoints(b => b.MapControllers());
                 });
             });

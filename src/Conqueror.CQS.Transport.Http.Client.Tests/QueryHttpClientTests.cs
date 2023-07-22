@@ -446,6 +446,7 @@ public sealed class QueryHttpClientTests : TestBase
         _ = app.Use((ctx, next) => middleware != null ? middleware(ctx, next) : next());
 
         _ = app.UseRouting();
+        _ = app.UseConqueror();
         _ = app.UseEndpoints(b => b.MapControllers());
     }
 

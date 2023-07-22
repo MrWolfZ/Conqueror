@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Conqueror;
 
 [assembly: InternalsVisibleTo("Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests")]
 
@@ -16,6 +17,7 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
+app.UseConqueror();
 app.MapControllers();
 
 app.Run();

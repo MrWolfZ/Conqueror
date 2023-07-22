@@ -105,6 +105,10 @@ builder.Services
 builder.Services
        .AddControllers()
        .AddConquerorCQSHttpControllers();
+
+// add Conqueror to your web app (just before mapping endpoints / controllers)
+app.UseConqueror();
+app.MapControllers();
 ```
 
 In [IncrementCounterByCommand.cs](recipes/quickstart/IncrementCounterByCommand.cs) create a command that increments a named counter by a given amount (for demonstration purposes the counter is stored in an environment variable instead of a database).

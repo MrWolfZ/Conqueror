@@ -75,6 +75,7 @@ public sealed class UserHistoryProgram
         app.UseSwagger();
         app.UseSwaggerUI();
 
+        app.UseConqueror();
         app.MapControllers();
 
         app.Run();
@@ -164,6 +165,7 @@ public sealed class CountersProgram
         app.UseSwagger();
         app.UseSwaggerUI();
 
+        app.UseConqueror();
         app.MapControllers();
 
         app.Run();

@@ -26,6 +26,7 @@ public sealed class UserHistoryProgram
         app.UseSwagger();
         app.UseSwaggerUI();
 
+        app.UseConqueror();
         app.MapControllers();
 
         app.Run();

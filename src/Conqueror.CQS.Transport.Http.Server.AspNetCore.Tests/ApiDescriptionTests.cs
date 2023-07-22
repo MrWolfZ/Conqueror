@@ -386,6 +386,7 @@ public class ApiDescriptionTests : TestBase
     protected override void Configure(IApplicationBuilder app)
     {
         _ = app.UseRouting();
+        _ = app.UseConqueror();
         _ = app.UseEndpoints(b => b.MapControllers());
     }
 

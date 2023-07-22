@@ -148,6 +148,7 @@ public sealed class IncOperationTests
                           configureApp?.Invoke(app);
 
                           app.UseRouting()
+                             .UseConqueror()
                              .UseEndpoints(endpoints => endpoints.MapControllers());
                       })
                       .Build();

@@ -1,3 +1,4 @@
+using Conqueror;
 using Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Application;
 using Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Infrastructure;
 using Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.Application;
@@ -24,6 +25,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseConqueror();
 app.MapControllers();
 
 app.Run();

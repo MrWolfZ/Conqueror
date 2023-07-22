@@ -168,7 +168,7 @@ public async Task GivenExistingCounter_WhenExecutingIncOperationViaHttp_PrintsIn
                                 return command.CounterName == counterName ? new(incrementedCounterValue) : new(-1);
                             });
                         })
-                        .Configure(app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapControllers()))
+                        .Configure(app => app.UseRouting().UseConqueror().UseEndpoints(endpoints => endpoints.MapControllers()))
                         .Build();
 
     await webHost.StartAsync();
@@ -209,6 +209,7 @@ private static async Task<IWebHost> StartServerApp(Action<IServiceCollection>? c
                       configureApp?.Invoke(app);
 
                       app.UseRouting()
+                         .UseConqueror()
                          .UseEndpoints(endpoints => endpoints.MapControllers());
                   })
                   .Build();

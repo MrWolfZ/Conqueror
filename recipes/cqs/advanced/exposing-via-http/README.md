@@ -35,6 +35,20 @@ As the name of the package implies, it contains the necessary logic for register
 +        .AddConquerorCQSHttpControllers();
 ```
 
+We also need to add **Conqueror** to the ASP.NET Core middleware pipeline. Note that the call to `UseConqueror` should happen as late as possible in the pipeline, optimally just before mapping endpoints / controllers.
+
+```diff
+  var app = builder.Build();
+
+  app.UseSwagger();
+  app.UseSwaggerUI();
+
++ app.UseConqueror();
+  app.MapControllers();
+
+  app.Run();
+```
+
 Next, we need to specify which commands and queries we want to expose via HTTP. This is done by decorating a command or query with an attribute. For commands, we use the `HttpCommand` attribute, and for queries we use the `HttpQuery` attribute. Let`s add those attributes to the command and query in our application:
 
 ```diff
