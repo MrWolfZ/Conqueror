@@ -99,8 +99,8 @@ public sealed class HttpContextTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
-        Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData, Is.Empty);
+        Assert.That(receivedContextData?.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -126,8 +126,8 @@ public sealed class HttpContextTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
-        Assert.That(receivedContextData?.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData, Is.Empty);
+        Assert.That(receivedContextData?.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.WhereScopeIsAcrossTransports(), Is.Empty);
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -280,9 +280,6 @@ public sealed class HttpContextTests : TestBase
 
     private static void ObserveAndSetContextData(TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
     {
-        // TODO: find a better solution for this
-        _ = conquerorContextAccessor.ConquerorContext?.DownstreamContextData.Remove("Conqueror.Common.ConquerorContextCommonExtensions.SignalExecutionFromTransport");
-
         testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
         testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
         testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
