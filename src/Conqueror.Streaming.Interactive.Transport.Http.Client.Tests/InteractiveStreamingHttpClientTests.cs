@@ -19,7 +19,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
         var result = await handler.ExecuteRequest(new(10), TestTimeoutToken).Drain(TestTimeoutToken);
 
         Assert.That(result, Is.Not.Null);
-        CollectionAssert.AreEqual(new[] { 11, 12, 13 }, result.Select(i => i.Payload));
+        Assert.That(result.Select(i => i.Payload), Is.EqualTo(new[] { 11, 12, 13 }));
     }
 
     [Test]
@@ -30,7 +30,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
         var result = await handler.ExecuteRequest(new(), TestTimeoutToken).Drain(TestTimeoutToken);
 
         Assert.That(result, Is.Not.Null);
-        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, result.Select(i => i.Payload));
+        Assert.That(result.Select(i => i.Payload), Is.EqualTo(new[] { 1, 2, 3 }));
     }
 
     [Test]
@@ -41,7 +41,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
         var result = await handler.ExecuteRequest(new(10), TestTimeoutToken).Drain(TestTimeoutToken);
 
         Assert.That(result, Is.Not.Null);
-        CollectionAssert.AreEqual(new[] { 11, 12, 13 }, result.Select(i => i.Payload.Payload));
+        Assert.That(result.Select(i => i.Payload.Payload), Is.EqualTo(new[] { 11, 12, 13 }));
     }
 
     [Test]
@@ -52,7 +52,7 @@ public sealed class InteractiveStreamingHttpClientTests : TestBase
         var result = await handler.ExecuteRequest(new(new() { 10, 11 }), TestTimeoutToken).Drain(TestTimeoutToken);
 
         Assert.That(result, Is.Not.Null);
-        CollectionAssert.AreEqual(new[] { 22, 23, 24 }, result.Select(i => i.Payload));
+        Assert.That(result.Select(i => i.Payload), Is.EqualTo(new[] { 22, 23, 24 }));
     }
 
     [Test]
