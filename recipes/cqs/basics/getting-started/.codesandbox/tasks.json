@@ -1,0 +1,10 @@
+{
+  "setupTasks": [],
+  "tasks": {
+    "dotnet run": {
+      "name": "Run completed recipe",
+      "command": "dotnet run --project .completed/Conqueror.Recipes.CQS.Basics.GettingStarted",
+      "runAtStart": false
+    }
+  }
+}
