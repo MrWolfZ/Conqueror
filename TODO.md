@@ -24,6 +24,13 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] refactor all tests to use `Assert.That` for exceptions
+- [ ] remove middleware registries
+- [ ] add tests for overwriting handler registration with a new factory and assert that new factory is called
+- [ ] add tests for overwriting handler registration with a new lifetime and assert that new lifetime is used
+- [ ] add tests for overwriting middleware registration with a new factory and assert that new factory is called
+- [ ] add tests for overwriting middleware registration with a new lifetime and assert that new lifetime is used
+- [ ] add tests for registries for multiple delegate handlers to confirm that each handler is discoverable
 - [ ] adjust lifetime tests to assert on multiple executions of the same handler "instance"
 - [ ] adapt transport interface to take and return formatted context data as a parameter
   - [ ] use single string to encode all kinds of context data (i.e. upstream, downstream, bidirectional)
@@ -54,6 +61,7 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] `Conqueror.CQS.Middleware.MemoryCache`
   - [ ] `Conqueror.CQS.Middleware.Metrics`
   - [ ] `Conqueror.CQS.Middleware.Tracing`
+  - [ ] `Conqueror.CQS.Middleware.Synchronization`
 
 ### CQS ASP Core
 
@@ -66,21 +74,29 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
-- [ ] add tests for adding event observers with custom transport
-- [ ] add tests that assert that service provider on pipeline builders is from correct scope
-- [ ] add tests for custom in-memory publishing strategies
+- [ ] refactor all tests to use `Assert.That` for exceptions
+- [ ] add tests for overwriting observer registration with a new factory and assert that new factory is called
+- [ ] add tests for overwriting observer registration with a new lifetime and assert that new lifetime is used
+- [ ] add tests for overwriting publisher registration with a new factory and assert that new factory is called
+- [ ] add tests for overwriting publisher registration with a new lifetime and assert that new lifetime is used
+- [ ] add tests for overwriting middleware registration with a new factory and assert that new factory is called
+- [ ] add tests for overwriting middleware registration with a new lifetime and assert that new lifetime is used
+- [ ] provide HTTP websocket transport
+  - [ ] add test for edge case where different observers for the same event type are configured with different remote hosts and ensure that events are only dispatched to correct observers
+  - [ ] add test for edge case where transport initialization throws (expect that hosted service retries with exponential backoff)
+- [ ] built-in `Synchronization` observer middleware
 - [ ] add pipeline builder methods to throw on duplicate middleware
-- [ ] refactor to use transport concept
-  - [ ] publisher uses attribute on event to determine on which transport to publish
-  - [ ] observer requires explicit registration with transport client
-  - [ ] provide HTTP websocket transport
 - [ ] handling and tests for conqueror context
-- [ ] make event publishing strategy customizable
-  - [ ] ship two strategies out of the box (parallel and sequential)
-    - [ ] make them available as service collection extension methods
-  - [ ] sequential strategy as default
-  - [ ] handle cancellation in strategy
 - [ ] for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
+
+### Eventing middleware
+
+- [ ] create projects for common middlewares, e.g.
+  - [ ] `Conqueror.Eventing.Middleware.Logging`
+  - [ ] `Conqueror.Eventing.Middleware.DataAnnotationValidation` (only for publisher)
+  - [ ] `Conqueror.Eventing.Middleware.FluentValidation` (only for publisher)
+  - [ ] `Conqueror.Eventing.Middleware.Metrics`
+  - [ ] `Conqueror.Eventing.Middleware.Tracing`
 
 ## Interactive streaming
 
@@ -95,6 +111,21 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add handler registry
 - [ ] add transport for SignalR
 - [ ] for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
+
+design ideas:
+
+- [ ] request handlers and item handlers are registered separately
+  - [ ] both have independent pipelines
+  - [ ] a request handler can be used without an item handler
+  - [ ] a handler can be used without a request handler (by simply invoking the `HandleItem` method)
+    - [ ] this executes the pipeline
+- [ ] request handlers have the transport logic, item handlers are always in-process
+- [ ] `ItemHandlerRunner` service, which takes a request and item type, resolves the request and item handlers are runs it to completion
+  - [ ] e.g. `Task RunStream<TRequest, TItem>(CancellationToken cancellationToken)`
+- [ ] extra hosting package, which has a hosted service for running item handlers
+  - [ ] handlers opt into this with a custom service collection extension, e.g. `AddConquerorInteractiveStreamingBackgroundService(o => o.AddItemHandler<THandler>())`
+- [ ] create a recipe that shows how to use these handlers to read from an external stream (e.g. Kafka topic)
+  - [ ] show how to handle acknowledgement by wrapping the item in an envelope
 
 ### Interactive streaming ASP Core
 
