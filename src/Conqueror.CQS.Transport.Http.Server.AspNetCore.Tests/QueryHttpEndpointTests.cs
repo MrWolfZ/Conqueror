@@ -320,7 +320,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 #if NET7_0_OR_GREATER
         var stringContent = new StringContent(content, new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
 #else
-            var stringContent = new StringContent(content, null, MediaTypeNames.Application.Json);
+        var stringContent = new StringContent(content, null, MediaTypeNames.Application.Json);
 #endif
         return stringContent;
     }
