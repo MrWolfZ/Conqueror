@@ -6,92 +6,92 @@ using Microsoft.Extensions.DependencyInjection;
 #if !NET7_0_OR_GREATER
 #endif
 
-namespace Conqueror.Streaming.Interactive
+namespace Conqueror.Streaming.Interactive;
+
+internal sealed class InteractiveStreamingRegistrationFinalizer : IConquerorRegistrationFinalizer
 {
-    internal sealed class InteractiveStreamingRegistrationFinalizer : IConquerorRegistrationFinalizer
+    private readonly IServiceCollection services;
+
+    public InteractiveStreamingRegistrationFinalizer(IServiceCollection services)
     {
-        private readonly IServiceCollection services;
+        this.services = services;
+    }
 
-        public InteractiveStreamingRegistrationFinalizer(IServiceCollection services)
+    public int ExecutionPhase => 1;
+
+    public void Execute()
+    {
+        ConfigureHandlers(services);
+
+        //// TODO
+        //// ConfigureMiddlewares(services);
+    }
+
+    private static void ConfigureHandlers(IServiceCollection services)
+    {
+        var handlerTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
+                                   .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
+                                   .Concat(services.Where(d => !d.ServiceType.IsInterface && !d.ServiceType.IsAbstract && d.ImplementationFactory != null).Select(d => d.ServiceType))
+                                   .OfType<Type>()
+                                   .Where(t => t.IsAssignableTo(typeof(IInteractiveStreamingHandler)))
+                                   .Distinct()
+                                   .ToList();
+
+        foreach (var handlerType in handlerTypes)
         {
-            this.services = services;
-        }
-
-        public int ExecutionPhase => 1;
-
-        public void Execute()
-        {
-            ConfigureHandlers(services);
-
+            handlerType.ValidateNoInvalidInteractiveStreamingHandlerInterface();
+            RegisterHandlerMetadata(handlerType);
+            RegisterPlainInterfaces(handlerType);
+            RegisterCustomInterfaces(handlerType);
             //// TODO
-            //// ConfigureMiddlewares(services);
+            // RegisterPipelineConfiguration(handlerType);
         }
 
-        private static void ConfigureHandlers(IServiceCollection services)
+        ValidateNoDuplicateRequestTypes();
+
+        void ValidateNoDuplicateRequestTypes()
         {
-            var handlerTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
-                                       .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
-                                       .Concat(services.Where(d => !d.ServiceType.IsInterface && !d.ServiceType.IsAbstract && d.ImplementationFactory != null).Select(d => d.ServiceType))
-                                       .OfType<Type>()
-                                       .Where(t => t.IsAssignableTo(typeof(IInteractiveStreamingHandler)))
-                                       .Distinct()
-                                       .ToList();
+            var duplicateMetadata = services.Select(d => d.ImplementationInstance).OfType<InteractiveStreamingHandlerMetadata>().GroupBy(t => t.RequestType).FirstOrDefault(g => g.Count() > 1);
 
-            foreach (var handlerType in handlerTypes)
+            if (duplicateMetadata is not null)
             {
-                handlerType.ValidateNoInvalidInteractiveStreamingHandlerInterface();
-                RegisterHandlerMetadata(handlerType);
-                RegisterPlainInterfaces(handlerType);
-                RegisterCustomInterfaces(handlerType);
-                //// TODO
-                // RegisterPipelineConfiguration(handlerType);
+                var requestType = duplicateMetadata.Key;
+                var duplicateHandlerTypes = duplicateMetadata.Select(h => h.HandlerType);
+                throw new InvalidOperationException(
+                    $"only a single handler for interactive streaming request type '{requestType}' is allowed, but found multiple: {string.Join(", ", duplicateHandlerTypes)}");
             }
+        }
 
-            ValidateNoDuplicateRequestTypes();
-
-            void ValidateNoDuplicateRequestTypes()
+        void RegisterHandlerMetadata(Type handlerType)
+        {
+            foreach (var (requestType, itemType) in handlerType.GetInteractiveStreamingRequestAndItemTypes())
             {
-                var duplicateMetadata = services.Select(d => d.ImplementationInstance).OfType<InteractiveStreamingHandlerMetadata>().GroupBy(t => t.RequestType).FirstOrDefault(g => g.Count() > 1);
+                _ = services.AddSingleton(new InteractiveStreamingHandlerMetadata(requestType, itemType, handlerType));
+            }
+        }
 
-                if (duplicateMetadata is not null)
+        void RegisterPlainInterfaces(Type handlerType)
+        {
+            foreach (var (requestType, itemType) in handlerType.GetInteractiveStreamingRequestAndItemTypes())
+            {
+                _ = services.AddTransient(typeof(IInteractiveStreamingHandler<,>).MakeGenericType(requestType, itemType),
+                                          typeof(InteractiveStreamingHandlerProxy<,>).MakeGenericType(requestType, itemType));
+            }
+        }
+
+        void RegisterCustomInterfaces(Type handlerType)
+        {
+            foreach (var customInterfaceType in handlerType.GetCustomInteractiveStreamingHandlerInterfaceTypes())
+            {
+                foreach (var plainInterfaceType in customInterfaceType.GetInteractiveStreamingHandlerInterfaceTypes())
                 {
-                    var requestType = duplicateMetadata.Key;
-                    var duplicateHandlerTypes = duplicateMetadata.Select(h => h.HandlerType);
-                    throw new InvalidOperationException(
-                        $"only a single handler for interactive streaming request type '{requestType}' is allowed, but found multiple: {string.Join(", ", duplicateHandlerTypes)}");
+                    var dynamicType = DynamicType.Create(customInterfaceType, plainInterfaceType);
+                    _ = services.AddTransient(customInterfaceType, dynamicType);
                 }
             }
+        }
 
-            void RegisterHandlerMetadata(Type handlerType)
-            {
-                foreach (var (requestType, itemType) in handlerType.GetInteractiveStreamingRequestAndItemTypes())
-                {
-                    _ = services.AddSingleton(new InteractiveStreamingHandlerMetadata(requestType, itemType, handlerType));
-                }
-            }
-
-            void RegisterPlainInterfaces(Type handlerType)
-            {
-                foreach (var (requestType, itemType) in handlerType.GetInteractiveStreamingRequestAndItemTypes())
-                {
-                    _ = services.AddTransient(typeof(IInteractiveStreamingHandler<,>).MakeGenericType(requestType, itemType),
-                                              typeof(InteractiveStreamingHandlerProxy<,>).MakeGenericType(requestType, itemType));
-                }
-            }
-
-            void RegisterCustomInterfaces(Type handlerType)
-            {
-                foreach (var customInterfaceType in handlerType.GetCustomInteractiveStreamingHandlerInterfaceTypes())
-                {
-                    foreach (var plainInterfaceType in customInterfaceType.GetInteractiveStreamingHandlerInterfaceTypes())
-                    {
-                        var dynamicType = DynamicType.Create(customInterfaceType, plainInterfaceType);
-                        _ = services.AddTransient(customInterfaceType, dynamicType);
-                    }
-                }
-            }
-
-            // TODO
+        // TODO
 //             void RegisterPipelineConfiguration(Type handlerType)
 //             {
 //                 var configure = CreatePipelineConfigurationFunction(handlerType);
@@ -140,46 +140,45 @@ namespace Conqueror.Streaming.Interactive
 //                 var lambda = Expression.Lambda(body, builderParam).Compile();
 //                 return (Action<IInteractiveStreamingPipelineBuilder>)lambda;
 //             }
-        }
-
-        // private static void ConfigureMiddlewares(IServiceCollection services)
-        // {
-        //     var middlewareTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
-        //                                   .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
-        //                                   .Concat(services.Where(d => !d.ServiceType.IsInterface && !d.ServiceType.IsAbstract && d.ImplementationFactory != null).Select(d => d.ServiceType))
-        //                                   .OfType<Type>()
-        //                                   .Where(HasInteractiveStreamingMiddlewareInterface)
-        //                                   .Distinct()
-        //                                   .ToList();
-        //
-        //     foreach (var middlewareType in middlewareTypes)
-        //     {
-        //         var middlewareInterfaces = middlewareType.GetInterfaces().Where(IsInteractiveStreamingMiddlewareInterface).ToList();
-        //
-        //         switch (middlewareInterfaces.Count)
-        //         {
-        //             case < 1:
-        //                 continue;
-        //
-        //             case > 1:
-        //                 throw new ArgumentException($"type {middlewareType.Name} implements {nameof(IInteractiveStreamingMiddleware)} more than once");
-        //         }
-        //     }
-        //
-        //     foreach (var middlewareType in middlewareTypes)
-        //     {
-        //         RegisterMetadata(middlewareType);
-        //     }
-        //
-        //     void RegisterMetadata(Type middlewareType)
-        //     {
-        //         var configurationType = middlewareType.GetInterfaces().First(IsInteractiveStreamingMiddlewareInterface).GetGenericArguments().FirstOrDefault();
-        //
-        //         _ = services.AddSingleton(new InteractiveStreamingMiddlewareMetadata(middlewareType, configurationType));
-        //     }
-        //
-        //     static bool HasInteractiveStreamingMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsInteractiveStreamingMiddlewareInterface);
-        //     static bool IsInteractiveStreamingMiddlewareInterface(Type i) => i == typeof(IInteractiveStreamingMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IInteractiveStreamingMiddleware<>));
-        // }
     }
+
+    // private static void ConfigureMiddlewares(IServiceCollection services)
+    // {
+    //     var middlewareTypes = services.Where(d => d.ServiceType == d.ImplementationType || d.ServiceType == d.ImplementationInstance?.GetType())
+    //                                   .SelectMany(d => new[] { d.ImplementationType, d.ImplementationInstance?.GetType() })
+    //                                   .Concat(services.Where(d => !d.ServiceType.IsInterface && !d.ServiceType.IsAbstract && d.ImplementationFactory != null).Select(d => d.ServiceType))
+    //                                   .OfType<Type>()
+    //                                   .Where(HasInteractiveStreamingMiddlewareInterface)
+    //                                   .Distinct()
+    //                                   .ToList();
+    //
+    //     foreach (var middlewareType in middlewareTypes)
+    //     {
+    //         var middlewareInterfaces = middlewareType.GetInterfaces().Where(IsInteractiveStreamingMiddlewareInterface).ToList();
+    //
+    //         switch (middlewareInterfaces.Count)
+    //         {
+    //             case < 1:
+    //                 continue;
+    //
+    //             case > 1:
+    //                 throw new ArgumentException($"type {middlewareType.Name} implements {nameof(IInteractiveStreamingMiddleware)} more than once");
+    //         }
+    //     }
+    //
+    //     foreach (var middlewareType in middlewareTypes)
+    //     {
+    //         RegisterMetadata(middlewareType);
+    //     }
+    //
+    //     void RegisterMetadata(Type middlewareType)
+    //     {
+    //         var configurationType = middlewareType.GetInterfaces().First(IsInteractiveStreamingMiddlewareInterface).GetGenericArguments().FirstOrDefault();
+    //
+    //         _ = services.AddSingleton(new InteractiveStreamingMiddlewareMetadata(middlewareType, configurationType));
+    //     }
+    //
+    //     static bool HasInteractiveStreamingMiddlewareInterface(Type t) => t.GetInterfaces().Any(IsInteractiveStreamingMiddlewareInterface);
+    //     static bool IsInteractiveStreamingMiddlewareInterface(Type i) => i == typeof(IInteractiveStreamingMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IInteractiveStreamingMiddleware<>));
+    // }
 }
