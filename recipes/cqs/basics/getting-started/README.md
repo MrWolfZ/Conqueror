@@ -2,7 +2,7 @@
 
 This recipe shows how simple it is to get started using **Conqueror.CQS**.
 
-> This recipe is designed to allow you to code along. If you prefer to just see the completed code directly, you can either view it directly [in your browser](.completed) or you can [download this recipe's folder](https://download-directory.github.io?url=https://github.com/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/getting-started) and open the solution to view the code in your IDE. Note that you need to have [.NET 6 or later](https://dotnet.microsoft.com/en-us/download) installed.
+> This recipe is designed to allow you to code along. If you prefer to just see the completed code directly, you can either view it directly [in your browser](.completed) or you can [download this recipe's folder](https://download-directory.github.io?url=https://github.com/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/getting-started) and open the solution to view the code in your IDE. Note that you need to have [.NET 6 or later](https://dotnet.microsoft.com/en-us/download) installed. Alternatively, you can execute the completed version of this recipe in this [code sandbox](https://codesandbox.io/p/sandbox/github/MrWolfZ/Conqueror/tree/main/recipes/cqs/basics/getting-started) or fork it and work through the recipe there.
 
 The best way to explore **Conqueror.CQS** is by building an application. To keep it simple we will write a small interactive console app which manages a set of named counters. Once finished the interaction with the app will look like this:
 
