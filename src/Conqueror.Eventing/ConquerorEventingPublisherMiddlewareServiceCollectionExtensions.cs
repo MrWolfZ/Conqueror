@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Conqueror;
 using Conqueror.Eventing;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
@@ -35,12 +36,10 @@ public static class ConquerorEventingPublisherMiddlewareServiceCollectionExtensi
                                                                             Type middlewareType,
                                                                             ServiceDescriptor serviceDescriptor)
     {
-        if (services.Any(d => d.ServiceType == middlewareType))
-        {
-            return services;
-        }
+        services.AddConquerorEventing();
 
-        services.Add(serviceDescriptor);
+        services.Replace(serviceDescriptor);
+
         return services.AddConquerorEventPublisherMiddleware(middlewareType);
     }
 
@@ -57,8 +56,6 @@ public static class ConquerorEventingPublisherMiddlewareServiceCollectionExtensi
             case > 1:
                 throw new ArgumentException($"type {middlewareType.Name} implements {nameof(IEventPublisherMiddleware)} more than once");
         }
-
-        services.AddConquerorEventing();
 
         var configurationMethod = typeof(ConquerorEventingPublisherMiddlewareServiceCollectionExtensions).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
 
@@ -83,6 +80,11 @@ public static class ConquerorEventingPublisherMiddlewareServiceCollectionExtensi
 
     private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
     {
+        if (services.Any(d => d.ImplementationType == typeof(EventPublisherMiddlewareInvoker<TMiddleware, TConfiguration>)))
+        {
+            return;
+        }
+
         _ = services.AddSingleton<IEventPublisherMiddlewareInvoker, EventPublisherMiddlewareInvoker<TMiddleware, TConfiguration>>();
     }
 
