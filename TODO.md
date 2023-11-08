@@ -75,12 +75,6 @@ This file contains all the open points for extensions and improvements to the **
 ## Eventing
 
 - [ ] refactor all tests to use `Assert.That` for exceptions
-- [ ] add tests for overwriting observer registration with a new factory and assert that new factory is called
-- [ ] add tests for overwriting observer registration with a new lifetime and assert that new lifetime is used
-- [ ] add tests for overwriting publisher registration with a new factory and assert that new factory is called
-- [ ] add tests for overwriting publisher registration with a new lifetime and assert that new lifetime is used
-- [ ] add tests for overwriting middleware registration with a new factory and assert that new factory is called
-- [ ] add tests for overwriting middleware registration with a new lifetime and assert that new lifetime is used
 - [ ] provide HTTP websocket transport
   - [ ] add test for edge case where different observers for the same event type are configured with different remote hosts and ensure that events are only dispatched to correct observers
   - [ ] add test for edge case where transport initialization throws (expect that hosted service retries with exponential backoff)
