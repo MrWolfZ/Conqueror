@@ -1,5 +1,7 @@
 ﻿namespace Conqueror.Eventing.Tests;
 
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public assembly scanning to work")]
+[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "order makes sense, but some types must be private to not interfere with assembly scanning")]
 public sealed class EventObserverMiddlewareRegistrationTests
 {
     [Test]
@@ -13,14 +15,14 @@ public sealed class EventObserverMiddlewareRegistrationTests
 
         Assert.That(services.Count(d => d.ServiceType == typeof(TestEventObserverMiddleware)), Is.EqualTo(1));
     }
-    
+
     [Test]
     public void GivenAlreadyRegisteredPlainMiddlewareWithConfiguration_RegisteringSameMiddlewareAsPlainDoesNothing()
     {
         var services = new ServiceCollection();
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>()
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>();
 
@@ -58,8 +60,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var observations = new TestObservations();
         var factoryWasCalled = false;
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>()
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>(_ =>
                     {
@@ -103,8 +105,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var observations = new TestObservations();
         var singleton = new TestEventObserverMiddlewareWithConfiguration(observations);
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>()
                     .AddConquerorEventObserverMiddleware(singleton);
 
@@ -144,8 +146,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>()
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>(ServiceLifetime.Singleton)
                     .AddSingleton(observations);
@@ -158,6 +160,28 @@ public sealed class EventObserverMiddlewareRegistrationTests
         await observer.HandleEvent(new());
 
         Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1, 2 }));
+    }
+
+    [Test]
+    public void GivenAlreadyRegisteredPlainMiddleware_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareForAssemblyScanning>()
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        Assert.That(services.Count(d => d.ServiceType == typeof(TestEventObserverMiddlewareForAssemblyScanning)), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void GivenAlreadyRegisteredPlainMiddlewareWithConfiguration_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfigurationForAssemblyScanning>()
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        Assert.That(services.Count(d => d.ServiceType == typeof(TestEventObserverMiddlewareWithConfigurationForAssemblyScanning)), Is.EqualTo(1));
     }
 
     [Test]
@@ -192,8 +216,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var observations = new TestObservations();
         var factoryWasCalled = false;
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>(_ =>
                     {
                         factoryWasCalled = true;
@@ -249,8 +273,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var originalFactoryWasCalled = false;
         var newFactoryWasCalled = false;
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>(_ =>
                     {
                         originalFactoryWasCalled = true;
@@ -306,8 +330,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var singleton = new TestEventObserverMiddlewareWithConfiguration(observations);
         var factoryWasCalled = false;
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>(_ =>
                     {
                         factoryWasCalled = true;
@@ -351,8 +375,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>(_ => new(observations))
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>(_ => new(observations), ServiceLifetime.Singleton);
 
@@ -364,6 +388,54 @@ public sealed class EventObserverMiddlewareRegistrationTests
         await observer.HandleEvent(new());
 
         Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1, 2 }));
+    }
+
+    [Test]
+    public async Task GivenAlreadyRegisteredMiddlewareWithFactory_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var factoryWasCalled = false;
+
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareForAssemblyScanning>())
+                    .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareForAssemblyScanning>(_ =>
+                    {
+                        factoryWasCalled = true;
+                        return new();
+                    })
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(factoryWasCalled, Is.True);
+    }
+
+    [Test]
+    public async Task GivenAlreadyRegisteredMiddlewareWithConfigurationWithFactory_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var factoryWasCalled = false;
+
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfigurationForAssemblyScanning, TestEventObserverMiddlewareConfigurationForAssemblyScanning>(new()))
+                    .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfigurationForAssemblyScanning>(_ =>
+                    {
+                        factoryWasCalled = true;
+                        return new();
+                    })
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(factoryWasCalled, Is.True);
     }
 
     [Test]
@@ -397,8 +469,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var observations2 = new TestObservations();
         var singleton = new TestEventObserverMiddlewareWithConfiguration(observations1);
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware(singleton)
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>()
                     .AddSingleton(observations2);
@@ -450,8 +522,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var singleton = new TestEventObserverMiddlewareWithConfiguration(observations1);
         var factoryWasCalled = false;
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware(singleton)
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddlewareWithConfiguration>(_ =>
                     {
@@ -502,8 +574,8 @@ public sealed class EventObserverMiddlewareRegistrationTests
         var singleton1 = new TestEventObserverMiddlewareWithConfiguration(observations1);
         var singleton2 = new TestEventObserverMiddlewareWithConfiguration(observations2);
 
-        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask, 
-                                                                  configurePipeline: p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfiguration, TestEventObserverMiddlewareConfiguration>(new()))
                     .AddConquerorEventObserverMiddleware(singleton1)
                     .AddConquerorEventObserverMiddleware(singleton2);
 
@@ -515,6 +587,46 @@ public sealed class EventObserverMiddlewareRegistrationTests
 
         Assert.That(observations1.InvocationCounts, Is.Empty);
         Assert.That(observations2.InvocationCounts, Is.EqualTo(new[] { 1 }));
+    }
+
+    [Test]
+    public async Task GivenAlreadyRegisteredMiddlewareSingleton_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var singleton = new TestEventObserverMiddlewareForAssemblyScanning();
+
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareForAssemblyScanning>())
+                    .AddConquerorEventObserverMiddleware(singleton)
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(singleton.InvocationCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task GivenAlreadyRegisteredMiddlewareWithConfigurationSingleton_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var singleton = new TestEventObserverMiddlewareWithConfigurationForAssemblyScanning();
+
+        _ = services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => Task.CompletedTask,
+                                                                  p => p.Use<TestEventObserverMiddlewareWithConfigurationForAssemblyScanning, TestEventObserverMiddlewareConfigurationForAssemblyScanning>(new()))
+                    .AddConquerorEventObserverMiddleware(singleton)
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(singleton.InvocationCount, Is.EqualTo(1));
     }
 
     private sealed record TestEvent;
@@ -567,6 +679,32 @@ public sealed class EventObserverMiddlewareRegistrationTests
             invocationCount += 1;
             await Task.Yield();
             observations.InvocationCounts.Add(invocationCount);
+        }
+    }
+
+    public sealed class TestEventObserverMiddlewareForAssemblyScanning : IEventObserverMiddleware
+    {
+        public int InvocationCount { get; private set; }
+
+        public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
+            where TEvent : class
+        {
+            InvocationCount += 1;
+            await Task.Yield();
+        }
+    }
+
+    public sealed record TestEventObserverMiddlewareConfigurationForAssemblyScanning;
+
+    public sealed class TestEventObserverMiddlewareWithConfigurationForAssemblyScanning : IEventObserverMiddleware<TestEventObserverMiddlewareConfigurationForAssemblyScanning>
+    {
+        public int InvocationCount { get; private set; }
+
+        public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfigurationForAssemblyScanning> ctx)
+            where TEvent : class
+        {
+            InvocationCount += 1;
+            await Task.Yield();
         }
     }
 

@@ -43,6 +43,27 @@ public static class ConquerorEventingObserverMiddlewareServiceCollectionExtensio
         return services.AddConquerorEventObserverMiddleware(middlewareType);
     }
 
+    internal static bool IsEventObserverMiddlewareRegistered(this IServiceCollection services, Type middlewareType)
+    {
+        var registrationCheckMethod = typeof(ConquerorEventingObserverMiddlewareServiceCollectionExtensions).GetMethod(nameof(IsMiddlewareRegistered), BindingFlags.NonPublic | BindingFlags.Static);
+
+        if (registrationCheckMethod == null)
+        {
+            throw new InvalidOperationException($"could not find middleware registration check method '{nameof(IsMiddlewareRegistered)}'");
+        }
+
+        var genericRegistrationCheckMethod = registrationCheckMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullObserverMiddlewareConfiguration));
+
+        try
+        {
+            return (bool)genericRegistrationCheckMethod.Invoke(null, new object[] { services })!;
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            throw ex.InnerException;
+        }
+    }
+
     private static IServiceCollection AddConquerorEventObserverMiddleware(this IServiceCollection services,
                                                                           Type middlewareType)
     {
@@ -80,12 +101,17 @@ public static class ConquerorEventingObserverMiddlewareServiceCollectionExtensio
 
     private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
     {
-        if (services.Any(d => d.ImplementationType == typeof(EventObserverMiddlewareInvoker<TMiddleware, TConfiguration>)))
+        if (IsMiddlewareRegistered<TMiddleware, TConfiguration>(services))
         {
             return;
         }
 
         _ = services.AddSingleton<IEventObserverMiddlewareInvoker, EventObserverMiddlewareInvoker<TMiddleware, TConfiguration>>();
+    }
+
+    private static bool IsMiddlewareRegistered<TMiddleware, TConfiguration>(IServiceCollection services)
+    {
+        return services.Any(d => d.ImplementationType == typeof(EventObserverMiddlewareInvoker<TMiddleware, TConfiguration>));
     }
 
     private static Type? GetMiddlewareConfigurationType(Type t) => t.GetInterfaces().First(IsEventObserverMiddlewareInterface).GetGenericArguments().FirstOrDefault();

@@ -1,5 +1,7 @@
 ﻿namespace Conqueror.Eventing.Tests;
 
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public assembly scanning to work")]
+[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "order makes sense, but some types must be private to not interfere with assembly scanning")]
 public sealed class EventObserverRegistrationTests
 {
     [Test]
@@ -103,6 +105,17 @@ public sealed class EventObserverRegistrationTests
 
         Assert.That(builderConfiguration1WasCalled, Is.False);
         Assert.That(builderConfiguration2WasCalled, Is.True);
+    }
+
+    [Test]
+    public void GivenAlreadyRegisteredPlainObserver_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorEventObserver<TestEventObserverForAssemblyScanning>()
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        Assert.That(services.Count(d => d.ServiceType == typeof(TestEventObserverForAssemblyScanning)), Is.EqualTo(1));
     }
 
     [Test]
@@ -264,6 +277,28 @@ public sealed class EventObserverRegistrationTests
     }
 
     [Test]
+    public async Task GivenAlreadyRegisteredObserverWithFactory_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var factoryWasCalled = false;
+
+        _ = services.AddConquerorEventObserver<TestEventObserverForAssemblyScanning>(_ =>
+                    {
+                        factoryWasCalled = true;
+                        return new();
+                    })
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEventForAssemblyScanning>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(factoryWasCalled, Is.True);
+    }
+
+    [Test]
     public async Task GivenAlreadyRegisteredObserverSingleton_RegisteringSameObserverAsPlainOverwritesRegistration()
     {
         var services = new ServiceCollection();
@@ -364,9 +399,46 @@ public sealed class EventObserverRegistrationTests
         Assert.That(builderConfiguration2WasCalled, Is.True);
     }
 
+    [Test]
+    public async Task GivenAlreadyRegisteredObserverSingleton_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var singleton = new TestEventObserverForAssemblyScanning();
+
+        _ = services.AddConquerorEventObserver(singleton)
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEventForAssemblyScanning>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(singleton.InvocationCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void GivenValidObserverType_RegisteringAllEventingTypesViaAssemblyScanningRegistersObserver()
+    {
+        var provider = new ServiceCollection().AddConquerorEventingTypesFromExecutingAssembly()
+                                              .BuildServiceProvider();
+
+        Assert.That(() => provider.GetRequiredService<TestEventObserverForAssemblyScanning>(), Throws.Nothing);
+    }
+
+    [Test]
+    public void GivenObserverWithInvalidInterface_RegisteringObserverThrowsArgumentException()
+    {
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventObserver<TestEventObserverWithoutValidInterfaces>());
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventObserver<TestEventObserverWithoutValidInterfaces>(_ => new()));
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventObserver(new TestEventObserverWithoutValidInterfaces()));
+    }
+
     private sealed record TestEvent;
 
     private sealed record TestEvent2;
+
+    public sealed record TestEventForAssemblyScanning;
 
     private sealed class TestEventObserver : IEventObserver<TestEvent>
     {
@@ -408,6 +480,21 @@ public sealed class EventObserverRegistrationTests
             invocationCount += 1;
             await Task.Yield();
             observations.InvocationCounts.Add(invocationCount);
+        }
+    }
+
+    private sealed class TestEventObserverWithoutValidInterfaces : IEventObserver
+    {
+    }
+
+    public sealed class TestEventObserverForAssemblyScanning : IEventObserver<TestEventForAssemblyScanning>
+    {
+        public int InvocationCount { get; private set; }
+
+        public async Task HandleEvent(TestEventForAssemblyScanning evt, CancellationToken cancellationToken = default)
+        {
+            InvocationCount += 1;
+            await Task.Yield();
         }
     }
 

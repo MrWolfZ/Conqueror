@@ -1,6 +1,7 @@
 namespace Conqueror.Eventing.Tests;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for assembly scanning to work")]
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public assembly scanning to work")]
+[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "order makes sense, but some types must be private to not interfere with assembly scanning")]
 public sealed class EventTransportPublisherRegistrationTests
 {
     [Test]
@@ -101,6 +102,17 @@ public sealed class EventTransportPublisherRegistrationTests
 
         Assert.That(originalPipelineWasCalled, Is.False);
         Assert.That(newPipelineWasCalled, Is.True);
+    }
+
+    [Test]
+    public void GivenAlreadyRegisteredPlainPublisher_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorEventTransportPublisher<TestEventTransportPublisherForAssemblyScanning>()
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        Assert.That(services.Count(d => d.ServiceType == typeof(TestEventTransportPublisherForAssemblyScanning)), Is.EqualTo(1));
     }
 
     [Test]
@@ -228,6 +240,28 @@ public sealed class EventTransportPublisherRegistrationTests
     }
 
     [Test]
+    public async Task GivenAlreadyRegisteredPublisherWithFactory_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var factoryWasCalled = false;
+
+        _ = services.AddConquerorEventTransportPublisher<TestEventTransportPublisherForAssemblyScanning>(_ =>
+                    {
+                        factoryWasCalled = true;
+                        return new();
+                    })
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEventForAssemblyScanning>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(factoryWasCalled, Is.True);
+    }
+
+    [Test]
     public async Task GivenAlreadyRegisteredPublisherSingleton_RegisteringSamePublisherAsPlainOverwritesRegistration()
     {
         var services = new ServiceCollection();
@@ -325,20 +359,25 @@ public sealed class EventTransportPublisherRegistrationTests
     }
 
     [Test]
-    public void GivenEventPublishersRegisteredViaAssemblyScanning_ReturnsRegistrations()
+    public async Task GivenAlreadyRegisteredPublisherSingleton_RegisteringViaAssemblyScanningDoesNothing()
     {
-        var provider = new ServiceCollection().AddConquerorEventingTypesFromExecutingAssembly()
-                                              .BuildServiceProvider();
+        var services = new ServiceCollection();
+        var singleton = new TestEventTransportPublisherForAssemblyScanning();
 
-        var registry = provider.GetRequiredService<EventPublisherRegistry>();
+        _ = services.AddConquerorEventTransportPublisher(singleton)
+                    .AddConquerorEventingTypesFromExecutingAssembly();
 
-        var registrations = registry.GetRelevantPublishersForEventType<TestEventWithCustomPublisher>();
+        var provider = services.BuildServiceProvider();
 
-        Assert.That(registrations.Select(r => r.Registration), Contains.Item(new EventPublisherRegistration(typeof(TestEventTransportPublisherForScanning), typeof(TestEventTransportAttribute), null)));
+        var observer = provider.GetRequiredService<IEventObserver<TestEventForAssemblyScanning>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(singleton.InvocationCount, Is.EqualTo(1));
     }
 
     [Test]
-    public void GivenObserverWithInvalidInterface_RegisteringObserverThrowsArgumentException()
+    public void GivenPublisherWithInvalidInterface_RegisteringPublisherThrowsArgumentException()
     {
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventTransportPublisher<TestEventTransportPublisherWithoutValidInterfaces>());
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventTransportPublisher<TestEventTransportPublisherWithoutValidInterfaces>(_ => new()));
@@ -350,9 +389,12 @@ public sealed class EventTransportPublisherRegistrationTests
     }
 
     [TestEventTransport(Parameter = 10)]
-    public sealed record TestEventWithCustomPublisher;
+    private sealed record TestEventWithCustomPublisher;
 
-    public sealed class TestEventObserver : IEventObserver<TestEventWithCustomPublisher>
+    [TestEventTransportForAssemblyScanning]
+    private sealed record TestEventForAssemblyScanning;
+
+    private sealed class TestEventObserver : IEventObserver<TestEventWithCustomPublisher>
     {
         public async Task HandleEvent(TestEventWithCustomPublisher evt, CancellationToken cancellationToken = default)
         {
@@ -361,25 +403,14 @@ public sealed class EventTransportPublisherRegistrationTests
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class TestEventTransportAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
+    private sealed class TestEventTransportAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
     {
         public int Parameter { get; set; }
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class TestEventTransport2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute
+    private sealed class TestEventTransport2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute
     {
-    }
-
-    public sealed class TestEventTransportPublisherForScanning : IConquerorEventTransportPublisher<TestEventTransportAttribute>
-    {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
-            where TEvent : class
-        {
-            await Task.Yield();
-
-            Assert.That(configurationAttribute.Parameter, Is.EqualTo(10));
-        }
     }
 
     private sealed class TestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportAttribute>
@@ -418,6 +449,23 @@ public sealed class EventTransportPublisherRegistrationTests
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransport2Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class
         {
+            await Task.Yield();
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public sealed class TestEventTransportForAssemblyScanningAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
+    {
+    }
+
+    public sealed class TestEventTransportPublisherForAssemblyScanning : IConquerorEventTransportPublisher<TestEventTransportForAssemblyScanningAttribute>
+    {
+        public int InvocationCount { get; private set; }
+
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportForAssemblyScanningAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+            where TEvent : class
+        {
+            InvocationCount += 1;
             await Task.Yield();
         }
     }

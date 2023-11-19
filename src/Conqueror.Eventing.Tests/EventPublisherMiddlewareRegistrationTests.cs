@@ -1,5 +1,7 @@
 ﻿namespace Conqueror.Eventing.Tests;
 
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public assembly scanning to work")]
+[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "order makes sense, but some types must be private to not interfere with assembly scanning")]
 public sealed class EventPublisherMiddlewareRegistrationTests
 {
     [Test]
@@ -162,6 +164,28 @@ public sealed class EventPublisherMiddlewareRegistrationTests
         await observer.HandleEvent(new());
 
         Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1, 2 }));
+    }
+
+    [Test]
+    public void GivenAlreadyRegisteredPlainMiddleware_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorEventPublisherMiddleware<TestEventPublisherMiddlewareForAssemblyScanning>()
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        Assert.That(services.Count(d => d.ServiceType == typeof(TestEventPublisherMiddlewareForAssemblyScanning)), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void GivenAlreadyRegisteredPlainMiddlewareWithConfiguration_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorEventPublisherMiddleware<TestEventPublisherMiddlewareWithConfigurationForAssemblyScanning>()
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        Assert.That(services.Count(d => d.ServiceType == typeof(TestEventPublisherMiddlewareWithConfigurationForAssemblyScanning)), Is.EqualTo(1));
     }
 
     [Test]
@@ -375,6 +399,54 @@ public sealed class EventPublisherMiddlewareRegistrationTests
     }
 
     [Test]
+    public async Task GivenAlreadyRegisteredMiddlewareWithFactory_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var factoryWasCalled = false;
+
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorInMemoryEventPublisher(pipeline => pipeline.Use<TestEventPublisherMiddlewareForAssemblyScanning>())
+                    .AddConquerorEventPublisherMiddleware<TestEventPublisherMiddlewareForAssemblyScanning>(_ =>
+                    {
+                        factoryWasCalled = true;
+                        return new();
+                    })
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(factoryWasCalled, Is.True);
+    }
+
+    [Test]
+    public async Task GivenAlreadyRegisteredMiddlewareWithConfigurationWithFactory_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var factoryWasCalled = false;
+
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorInMemoryEventPublisher(pipeline => pipeline.Use<TestEventPublisherMiddlewareWithConfigurationForAssemblyScanning, TestEventPublisherMiddlewareConfigurationForAssemblyScanning>(new()))
+                    .AddConquerorEventPublisherMiddleware<TestEventPublisherMiddlewareWithConfigurationForAssemblyScanning>(_ =>
+                    {
+                        factoryWasCalled = true;
+                        return new();
+                    })
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(factoryWasCalled, Is.True);
+    }
+
+    [Test]
     public async Task GivenAlreadyRegisteredMiddlewareSingleton_RegisteringSameMiddlewareAsPlainOverwritesRegistration()
     {
         var services = new ServiceCollection();
@@ -528,6 +600,46 @@ public sealed class EventPublisherMiddlewareRegistrationTests
         Assert.That(observations2.InvocationCounts, Is.EqualTo(new[] { 1 }));
     }
 
+    [Test]
+    public async Task GivenAlreadyRegisteredMiddlewareSingleton_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var singleton = new TestEventPublisherMiddlewareForAssemblyScanning();
+
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorInMemoryEventPublisher(pipeline => pipeline.Use<TestEventPublisherMiddlewareForAssemblyScanning>())
+                    .AddConquerorEventPublisherMiddleware(singleton)
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(singleton.InvocationCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task GivenAlreadyRegisteredMiddlewareWithConfigurationSingleton_RegisteringViaAssemblyScanningDoesNothing()
+    {
+        var services = new ServiceCollection();
+        var singleton = new TestEventPublisherMiddlewareWithConfigurationForAssemblyScanning();
+
+        _ = services.AddConquerorEventObserver<TestEventObserver>()
+                    .AddConquerorInMemoryEventPublisher(pipeline => pipeline.Use<TestEventPublisherMiddlewareWithConfigurationForAssemblyScanning, TestEventPublisherMiddlewareConfigurationForAssemblyScanning>(new()))
+                    .AddConquerorEventPublisherMiddleware(singleton)
+                    .AddConquerorEventingTypesFromExecutingAssembly();
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await observer.HandleEvent(new());
+
+        Assert.That(singleton.InvocationCount, Is.EqualTo(1));
+    }
+
     private sealed record TestEvent;
 
     private sealed class TestEventObserver : IEventObserver<TestEvent>
@@ -575,6 +687,32 @@ public sealed class EventPublisherMiddlewareRegistrationTests
             invocationCount += 1;
             await Task.Yield();
             observations.InvocationCounts.Add(invocationCount);
+        }
+    }
+
+    public sealed class TestEventPublisherMiddlewareForAssemblyScanning : IEventPublisherMiddleware
+    {
+        public int InvocationCount { get; private set; }
+
+        public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
+            where TEvent : class
+        {
+            InvocationCount += 1;
+            await Task.Yield();
+        }
+    }
+
+    public sealed record TestEventPublisherMiddlewareConfigurationForAssemblyScanning;
+
+    public sealed class TestEventPublisherMiddlewareWithConfigurationForAssemblyScanning : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfigurationForAssemblyScanning>
+    {
+        public int InvocationCount { get; private set; }
+
+        public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent, TestEventPublisherMiddlewareConfigurationForAssemblyScanning> ctx)
+            where TEvent : class
+        {
+            InvocationCount += 1;
+            await Task.Yield();
         }
     }
 

@@ -90,4 +90,9 @@ public static class ConquerorEventingTransportPublisherServiceCollectionExtensio
 
         return services;
     }
+
+    internal static bool IsEventTransportPublisherRegistered(this IServiceCollection services, Type publisherType)
+    {
+        return services.Any(d => d.ImplementationInstance is EventPublisherRegistration r && r.PublisherType == publisherType);
+    }
 }

@@ -397,14 +397,6 @@ public sealed class EventObserverFunctionalityTests
         Assert.That(thrownException, Is.SameAs(exception));
     }
 
-    [Test]
-    public void GivenObserverWithInvalidInterface_RegisteringObserverThrowsArgumentException()
-    {
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventObserver<TestEventObserverWithoutValidInterfaces>());
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventObserver<TestEventObserverWithoutValidInterfaces>(_ => new()));
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventObserver(new TestEventObserverWithoutValidInterfaces()));
-    }
-
     private sealed record TestEvent
     {
         public int Payload { get; init; }
@@ -480,10 +472,6 @@ public sealed class EventObserverFunctionalityTests
             await Task.Yield();
             throw exception;
         }
-    }
-
-    private sealed class TestEventObserverWithoutValidInterfaces : IEventObserver
-    {
     }
 
     private sealed class TestObservations

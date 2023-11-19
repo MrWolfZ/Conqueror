@@ -43,6 +43,27 @@ public static class ConquerorEventingPublisherMiddlewareServiceCollectionExtensi
         return services.AddConquerorEventPublisherMiddleware(middlewareType);
     }
 
+    internal static bool IsEventPublisherMiddlewareRegistered(this IServiceCollection services, Type middlewareType)
+    {
+        var registrationCheckMethod = typeof(ConquerorEventingPublisherMiddlewareServiceCollectionExtensions).GetMethod(nameof(IsMiddlewareRegistered), BindingFlags.NonPublic | BindingFlags.Static);
+
+        if (registrationCheckMethod == null)
+        {
+            throw new InvalidOperationException($"could not find middleware registration check method '{nameof(IsMiddlewareRegistered)}'");
+        }
+
+        var genericRegistrationCheckMethod = registrationCheckMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullPublisherMiddlewareConfiguration));
+
+        try
+        {
+            return (bool)genericRegistrationCheckMethod.Invoke(null, new object[] { services })!;
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            throw ex.InnerException;
+        }
+    }
+
     private static IServiceCollection AddConquerorEventPublisherMiddleware(this IServiceCollection services,
                                                                            Type middlewareType)
     {
@@ -80,12 +101,17 @@ public static class ConquerorEventingPublisherMiddlewareServiceCollectionExtensi
 
     private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
     {
-        if (services.Any(d => d.ImplementationType == typeof(EventPublisherMiddlewareInvoker<TMiddleware, TConfiguration>)))
+        if (IsMiddlewareRegistered<TMiddleware, TConfiguration>(services))
         {
             return;
         }
 
         _ = services.AddSingleton<IEventPublisherMiddlewareInvoker, EventPublisherMiddlewareInvoker<TMiddleware, TConfiguration>>();
+    }
+
+    private static bool IsMiddlewareRegistered<TMiddleware, TConfiguration>(IServiceCollection services)
+    {
+        return services.Any(d => d.ImplementationType == typeof(EventPublisherMiddlewareInvoker<TMiddleware, TConfiguration>));
     }
 
     private static Type? GetMiddlewareConfigurationType(Type t) => t.GetInterfaces().First(IsEventPublisherMiddlewareInterface).GetGenericArguments().FirstOrDefault();

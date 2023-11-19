@@ -75,6 +75,11 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
                        .AddCustomObserverInterfaces(observerType);
     }
 
+    internal static bool IsEventObserverRegistered(this IServiceCollection services, Type observerType)
+    {
+        return services.Any(d => d.ImplementationInstance is EventObserverRegistration r && r.ObserverType == observerType);
+    }
+
     private static IServiceCollection AddConquerorEventObserverRegistration(this IServiceCollection services,
                                                                             Type observerType,
                                                                             Action<IEventObserverPipelineBuilder>? configurePipeline,

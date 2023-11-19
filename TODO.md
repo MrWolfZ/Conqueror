@@ -31,6 +31,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add tests for overwriting middleware registration with a new factory and assert that new factory is called
 - [ ] add tests for overwriting middleware registration with a new lifetime and assert that new lifetime is used
 - [ ] add tests for registries for multiple delegate handlers to confirm that each handler is discoverable
+- [ ] add tests that registering all types from assembly does not overwrite existing registrations
 - [ ] adjust lifetime tests to assert on multiple executions of the same handler "instance"
 - [ ] adapt transport interface to take and return formatted context data as a parameter
   - [ ] use single string to encode all kinds of context data (i.e. upstream, downstream, bidirectional)
