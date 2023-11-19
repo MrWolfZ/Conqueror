@@ -78,6 +78,9 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] provide HTTP websocket transport
   - [ ] add test for edge case where different observers for the same event type are configured with different remote hosts and ensure that events are only dispatched to correct observers
   - [ ] add test for edge case where transport initialization throws (expect that hosted service retries with exponential backoff)
+- [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
+- [ ] add pipeline builder methods to throw on duplicate middleware
+- [ ] write code-level documentation for all public APIs
 - [ ] built-in `Synchronization` observer middleware
 - [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] handling and tests for conqueror context
