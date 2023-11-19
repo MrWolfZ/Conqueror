@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsExperimental>true</IsExperimental>
+    </PropertyGroup>
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Common logic for websockets transports.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

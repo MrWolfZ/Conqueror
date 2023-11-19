@@ -358,6 +358,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "middlewares", "middlewares"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", "{146AB97D-ECA3-4F28-8081-2A8CFFE647C6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", "{34D77019-43E3-484A-A8ED-8B26019AE1BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Eventing.Transport.WebSockets.Abstractions", "src\Conqueror.Eventing.Transport.WebSockets.Abstractions\Conqueror.Eventing.Transport.WebSockets.Abstractions.csproj", "{765AE095-584F-4A2B-9A73-590471F734CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Eventing.Transport.WebSockets.Server.AspNetCore", "src\Conqueror.Eventing.Transport.WebSockets.Server.AspNetCore\Conqueror.Eventing.Transport.WebSockets.Server.AspNetCore.csproj", "{123A50ED-BC56-4227-A34D-2911D6B5547E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Eventing.Transport.WebSockets.Client", "src\Conqueror.Eventing.Transport.WebSockets.Client\Conqueror.Eventing.Transport.WebSockets.Client.csproj", "{8E285080-286E-4D40-9743-051356A957EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Eventing.Transport.WebSockets.Server.AspNetCore.Tests", "src\Conqueror.Eventing.Transport.WebSockets.Server.AspNetCore.Tests\Conqueror.Eventing.Transport.WebSockets.Server.AspNetCore.Tests.csproj", "{D30F3CDF-DD45-46D2-9733-0C7C572565F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Eventing.Transport.WebSockets.Client.Tests", "src\Conqueror.Eventing.Transport.WebSockets.Client.Tests\Conqueror.Eventing.Transport.WebSockets.Client.Tests.csproj", "{7F20DFAE-8043-4D7B-ACCE-DF537F987662}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Transport.WebSockets", "src\Conqueror.Common.Transport.WebSockets\Conqueror.Common.Transport.WebSockets.csproj", "{EA8B74D8-BE01-4D44-A352-A243A75F434D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -867,6 +881,30 @@ Global
 		{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{765AE095-584F-4A2B-9A73-590471F734CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{765AE095-584F-4A2B-9A73-590471F734CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{765AE095-584F-4A2B-9A73-590471F734CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{765AE095-584F-4A2B-9A73-590471F734CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{123A50ED-BC56-4227-A34D-2911D6B5547E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{123A50ED-BC56-4227-A34D-2911D6B5547E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{123A50ED-BC56-4227-A34D-2911D6B5547E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{123A50ED-BC56-4227-A34D-2911D6B5547E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E285080-286E-4D40-9743-051356A957EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E285080-286E-4D40-9743-051356A957EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E285080-286E-4D40-9743-051356A957EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E285080-286E-4D40-9743-051356A957EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D30F3CDF-DD45-46D2-9733-0C7C572565F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D30F3CDF-DD45-46D2-9733-0C7C572565F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D30F3CDF-DD45-46D2-9733-0C7C572565F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D30F3CDF-DD45-46D2-9733-0C7C572565F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F20DFAE-8043-4D7B-ACCE-DF537F987662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F20DFAE-8043-4D7B-ACCE-DF537F987662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F20DFAE-8043-4D7B-ACCE-DF537F987662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F20DFAE-8043-4D7B-ACCE-DF537F987662}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA8B74D8-BE01-4D44-A352-A243A75F434D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA8B74D8-BE01-4D44-A352-A243A75F434D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA8B74D8-BE01-4D44-A352-A243A75F434D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA8B74D8-BE01-4D44-A352-A243A75F434D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -1023,5 +1061,12 @@ Global
 		{3BACE28C-2A25-40EC-9C28-BA1BE95D96BB} = {146AB97D-ECA3-4F28-8081-2A8CFFE647C6}
 		{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2} = {146AB97D-ECA3-4F28-8081-2A8CFFE647C6}
 		{206E950E-13C2-40AF-A1D6-E702DB9CF32E} = {146AB97D-ECA3-4F28-8081-2A8CFFE647C6}
+		{34D77019-43E3-484A-A8ED-8B26019AE1BC} = {090A9D14-DD6B-4A5B-8EFC-01A46EE73126}
+		{765AE095-584F-4A2B-9A73-590471F734CA} = {34D77019-43E3-484A-A8ED-8B26019AE1BC}
+		{123A50ED-BC56-4227-A34D-2911D6B5547E} = {34D77019-43E3-484A-A8ED-8B26019AE1BC}
+		{8E285080-286E-4D40-9743-051356A957EB} = {34D77019-43E3-484A-A8ED-8B26019AE1BC}
+		{D30F3CDF-DD45-46D2-9733-0C7C572565F2} = {34D77019-43E3-484A-A8ED-8B26019AE1BC}
+		{7F20DFAE-8043-4D7B-ACCE-DF537F987662} = {34D77019-43E3-484A-A8ED-8B26019AE1BC}
+		{EA8B74D8-BE01-4D44-A352-A243A75F434D} = {146AB97D-ECA3-4F28-8081-2A8CFFE647C6}
 	EndGlobalSection
 EndGlobal

@@ -630,9 +630,9 @@ public sealed class QueryHttpEndpointTests : TestBase
         }
 
         [HttpGet("/api/custom/queries/test")]
-        public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
+        public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery evt, CancellationToken cancellationToken)
         {
-            return queryHandler.ExecuteQuery(query, cancellationToken);
+            return queryHandler.ExecuteQuery(evt, cancellationToken);
         }
 
         [HttpGet("/api/custom/queries/testQueryWithoutPayload")]

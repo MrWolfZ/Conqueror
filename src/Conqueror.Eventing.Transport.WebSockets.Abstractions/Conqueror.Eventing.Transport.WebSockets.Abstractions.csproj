@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsExperimental>true</IsExperimental>
+    </PropertyGroup>
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Abstractions for all eventing websockets transport extension packages.</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!--
+            we are intentionally violating the convention of having the root namespace
+            be the project name in order to provide a consistent experience for users
+            regardless of which Conqueror packages they include (i.e. all packages share
+            the same root namespace that only needs to be imported once via "using") 
+        -->
+        <RootNamespace>Conqueror</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Transport.Http.Abstractions\Conqueror.Common.Transport.Http.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing.Abstractions\Conqueror.Eventing.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>
