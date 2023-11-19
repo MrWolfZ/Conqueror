@@ -9,13 +9,12 @@ public static class ApplicationServiceCollectionExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddSingleton<SharedCounter>()
-                .AddSingleton<InMemoryEventStore>()
                 .AddTransient<IEventHub, NullEventHub>();
 
         services.AddConquerorCQSTypesFromExecutingAssembly()
                 .AddConquerorCQSTypesFromAssembly(typeof(CommandTimeoutMiddleware).Assembly)
-                .AddConquerorEventing()
-                .AddConquerorEventingTypesFromExecutingAssembly();
+                .AddConquerorEventingTypesFromExecutingAssembly()
+                .AddConquerorEventObserver<InMemoryEventStore>(ServiceLifetime.Singleton);
 
         return services;
     }
