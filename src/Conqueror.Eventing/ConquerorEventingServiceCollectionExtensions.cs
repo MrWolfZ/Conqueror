@@ -21,6 +21,8 @@ public static class ConquerorEventingServiceCollectionExtensions
 
         services.TryAddDefaultInMemoryEventPublisher();
 
+        services.AddConquerorContext();
+
         return services;
     }
 

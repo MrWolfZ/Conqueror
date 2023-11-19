@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/test.targets" />
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(MvcTestingVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing.Transport.WebSockets.Abstractions\Conqueror.Eventing.Transport.WebSockets.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing.Transport.WebSockets.Server.AspNetCore\Conqueror.Eventing.Transport.WebSockets.Server.AspNetCore.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing\Conqueror.Eventing.csproj" />
+    </ItemGroup>
+
+</Project>

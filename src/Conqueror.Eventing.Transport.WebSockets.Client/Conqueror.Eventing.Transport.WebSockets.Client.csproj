@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsExperimental>true</IsExperimental>
+    </PropertyGroup>
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Create websocket clients for servers using the Conqueror eventing server websocket transport package.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Transport.WebSockets\Conqueror.Common.Transport.WebSockets.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing\Conqueror.Eventing.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing.Transport.WebSockets.Abstractions\Conqueror.Eventing.Transport.WebSockets.Abstractions.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
+    </ItemGroup>
+
+</Project>

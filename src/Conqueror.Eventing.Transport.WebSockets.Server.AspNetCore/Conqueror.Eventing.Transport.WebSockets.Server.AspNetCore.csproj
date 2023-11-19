@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsExperimental>true</IsExperimental>
+    </PropertyGroup>
+
+    <Import Project="../.targets/lib.targets" />
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Automatically generate websockets endpoints for apps using ASP Core and the Conqueror eventing package.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Transport.Http.Server.AspNetCore\Conqueror.Common.Transport.Http.Server.AspNetCore.csproj" />
+        <ProjectReference Include="..\Conqueror.Common.Transport.WebSockets\Conqueror.Common.Transport.WebSockets.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing\Conqueror.Eventing.csproj" />
+        <ProjectReference Include="..\Conqueror.Eventing.Transport.WebSockets.Abstractions\Conqueror.Eventing.Transport.WebSockets.Abstractions.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+</Project>
