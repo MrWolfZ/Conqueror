@@ -43,7 +43,7 @@ public sealed class ConquerorContextQueryTests
         var query = new TestQuery(10);
 
         var provider = Setup(
-            nestedClassFn: Assert.IsNotNull,
+            nestedClassFn: b => Assert.That(b, Is.Not.Null),
             nestedClassLifetime: ServiceLifetime.Scoped);
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
@@ -69,7 +69,7 @@ public sealed class ConquerorContextQueryTests
     {
         var query = new TestQuery(10);
 
-        var provider = Setup(handlerPreReturnFn: Assert.IsNotNull);
+        var provider = Setup(handlerPreReturnFn: b => Assert.That(b, Is.Not.Null));
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
     }
@@ -259,7 +259,7 @@ public sealed class ConquerorContextQueryTests
     {
         var services = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>();
 
-        _ = services.AddTransient(p => new NestedClass(Assert.IsNull, p.GetRequiredService<IConquerorContextAccessor>()));
+        _ = services.AddTransient(p => new NestedClass(b => Assert.That(b, Is.Null), p.GetRequiredService<IConquerorContextAccessor>()));
 
         var provider = services.BuildServiceProvider();
 

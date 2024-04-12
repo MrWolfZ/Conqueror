@@ -18,7 +18,7 @@ public sealed class SharedCounterTests : TestBase
 
         var response = await GetValueHandler.ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.AreEqual(expectedValue, response.Value);
+        Assert.That(expectedValue, Is.EqualTo(response.Value));
     }
 
     [Test]
@@ -30,8 +30,8 @@ public sealed class SharedCounterTests : TestBase
 
         var response = await IncrementHandler.ExecuteCommand(new() { IncrementBy = incrementBy }, CancellationToken.None);
 
-        Assert.AreEqual(existingValue + incrementBy, response.ValueAfterIncrement);
-        Assert.AreEqual(sharedCounter.GetValue(), response.ValueAfterIncrement);
+        Assert.That(existingValue + incrementBy, Is.EqualTo(response.ValueAfterIncrement));
+        Assert.That(sharedCounter.GetValue(), Is.EqualTo(response.ValueAfterIncrement));
     }
 
     [Test]
@@ -67,8 +67,8 @@ public sealed class SharedCounterTests : TestBase
     {
         var exception = Assert.ThrowsAsync<HttpCommandFailedException>(() => IncrementHandler.ExecuteCommand(new() { IncrementBy = -1 }, CancellationToken.None));
 
-        Assert.IsNotNull(exception);
-        Assert.AreEqual(HttpStatusCode.BadRequest, exception?.Response?.StatusCode);
+        Assert.That(exception, Is.Not.Null);
+        Assert.That(HttpStatusCode.BadRequest, Is.EqualTo(exception?.Response?.StatusCode));
     }
 
     [Test]

@@ -53,7 +53,7 @@ public sealed class ConquerorContextCommandTests
         var command = new TestCommand(10);
 
         var provider = Setup(
-            nestedClassFn: Assert.IsNotNull,
+            nestedClassFn: b => Assert.That(b, Is.Not.Null),
             nestedClassLifetime: ServiceLifetime.Scoped);
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
@@ -79,7 +79,7 @@ public sealed class ConquerorContextCommandTests
     {
         var command = new TestCommand(10);
 
-        var provider = Setup(handlerPreReturnFn: Assert.IsNotNull);
+        var provider = Setup(handlerPreReturnFn: b => Assert.That(b, Is.Not.Null));
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
     }
@@ -269,7 +269,7 @@ public sealed class ConquerorContextCommandTests
     {
         var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>();
 
-        _ = services.AddTransient(p => new NestedClass(Assert.IsNull, p.GetRequiredService<IConquerorContextAccessor>()));
+        _ = services.AddTransient(p => new NestedClass(b => Assert.That(b, Is.Null), p.GetRequiredService<IConquerorContextAccessor>()));
 
         var provider = services.BuildServiceProvider();
 

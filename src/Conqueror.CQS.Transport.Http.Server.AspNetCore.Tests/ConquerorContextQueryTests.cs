@@ -113,7 +113,8 @@ public sealed class ConquerorContextQueryTests : TestBase
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
-        Assert.That(ContextData, Is.SubsetOf(receivedContextData?.AsKeyValuePairs<string>()));
+        Assert.That(receivedContextData, Is.Not.Null);
+        Assert.That(ContextData, Is.SubsetOf(receivedContextData!.AsKeyValuePairs<string>()));
         Assert.That(Resolve<TestObservations>().ReceivedBidirectionalContextData?.WhereScopeIsAcrossTransports().Intersect(ContextData), Is.Empty);
     }
 
