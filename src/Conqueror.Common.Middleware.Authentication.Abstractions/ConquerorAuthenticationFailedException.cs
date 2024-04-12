@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Conqueror;
 
@@ -21,11 +20,6 @@ public abstract class ConquerorAuthenticationFailedException : Exception
     }
 
     protected ConquerorAuthenticationFailedException()
-    {
-    }
-
-    protected ConquerorAuthenticationFailedException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 }

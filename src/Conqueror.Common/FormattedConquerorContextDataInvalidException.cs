@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.Serialization;
 
 namespace Conqueror.Common;
 
@@ -20,11 +19,6 @@ public sealed class FormattedConquerorContextDataInvalidException : Exception
 
     public FormattedConquerorContextDataInvalidException(string message, Exception innerException)
         : base(message, innerException)
-    {
-    }
-
-    private FormattedConquerorContextDataInvalidException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 }

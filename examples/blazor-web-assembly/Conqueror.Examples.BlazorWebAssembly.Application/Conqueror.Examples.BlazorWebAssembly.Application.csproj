@@ -3,7 +3,7 @@
     <Import Project="../../.targets/common.targets" />
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -12,7 +12,7 @@
         <PackageReference Include="Conqueror.CQS" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
         <PackageReference Include="Conqueror.CQS.Analyzers" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
         <PackageReference Include="Conqueror.Eventing" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
     </ItemGroup>
 
     <ItemGroup>

@@ -28,7 +28,7 @@ public sealed class CountersProgram
         builder.Services
                .AddConquerorCQSHttpClientServices()
                .AddConquerorCommandClient<ISetMostRecentlyIncrementedCounterForUserCommandHandler>(
-                   b => b.UseHttp(b.ServiceProvider.GetRequiredService<IConfiguration>().GetValue<Uri>("UserHistoryBaseAddress")),
+                   b => b.UseHttp(b.ServiceProvider.GetRequiredService<IConfiguration>().GetValue<Uri>("UserHistoryBaseAddress")!),
                    pipeline => pipeline.UseDefault());
 
         var app = builder.Build();

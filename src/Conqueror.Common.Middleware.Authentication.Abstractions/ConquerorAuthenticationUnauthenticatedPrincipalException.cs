@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Conqueror;
 
@@ -21,11 +20,6 @@ public sealed class ConquerorAuthenticationUnauthenticatedPrincipalException : C
     }
 
     private ConquerorAuthenticationUnauthenticatedPrincipalException()
-    {
-    }
-
-    private ConquerorAuthenticationUnauthenticatedPrincipalException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 }

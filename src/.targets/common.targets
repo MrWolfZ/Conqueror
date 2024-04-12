@@ -8,16 +8,14 @@
         <ConquerorVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorVersion>
         <ConquerorAssemblyVersion>$(ConquerorBaseVersion)$(ConquerorPreReleaseVersionCount)</ConquerorAssemblyVersion>
 
-        <LangVersion Condition="'$(TargetFramework)' == 'net6.0'">10</LangVersion>
-        <LangVersion Condition="'$(TargetFramework)' == 'net7.0'">11</LangVersion>
+        <LangVersion>12</LangVersion>
 
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <!-- common dependency versions -->
     <PropertyGroup>
-        <DependencyInjectionVersion Condition="'$(TargetFramework)' == 'net6.0'">6.0.0</DependencyInjectionVersion>
-        <DependencyInjectionVersion Condition="'$(TargetFramework)' == 'net7.0'">7.0.0</DependencyInjectionVersion>
+        <DependencyInjectionVersion>8.0.0</DependencyInjectionVersion>
     </PropertyGroup>
 
     <!-- when we clean the projects we want all output directories to be deleted to prevent erroneous remnants -->

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace Conqueror;
 
@@ -22,11 +21,6 @@ public sealed class ConquerorUnknownEventTransportPublisherException : Exception
     }
 
     public ConquerorUnknownEventTransportPublisherException()
-    {
-    }
-
-    private ConquerorUnknownEventTransportPublisherException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 }

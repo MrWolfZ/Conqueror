@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.Serialization;
 
 namespace Conqueror.Streaming.Interactive.Transport.Http.Client;
 
@@ -17,11 +16,6 @@ public sealed class HttpInteractiveStreamingException : Exception
     }
 
     private HttpInteractiveStreamingException()
-    {
-    }
-
-    private HttpInteractiveStreamingException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 }

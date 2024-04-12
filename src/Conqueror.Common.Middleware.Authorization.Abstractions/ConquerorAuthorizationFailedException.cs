@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.Serialization;
 
 namespace Conqueror;
 
@@ -10,7 +9,7 @@ namespace Conqueror;
 /// </summary>
 [Serializable]
 [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "we have equivalent constructors with one added parameter")]
-public abstract class ConquerorAuthorizationFailedException : Exception, ISerializable
+public abstract class ConquerorAuthorizationFailedException : Exception
 {
     protected ConquerorAuthorizationFailedException(string message, ConquerorAuthorizationResult result)
         : base(message)
@@ -29,20 +28,5 @@ public abstract class ConquerorAuthorizationFailedException : Exception, ISerial
         Result = result;
     }
 
-    protected ConquerorAuthorizationFailedException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
-    {
-        ArgumentNullException.ThrowIfNull(serializationInfo);
-
-        Result = (ConquerorAuthorizationResult)serializationInfo.GetValue("Result", typeof(ConquerorAuthorizationResult))!; // Do not rename (binary serialization)
-    }
-
     public ConquerorAuthorizationResult Result { get; }
-
-    void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
-    {
-        GetObjectData(info, context);
-        
-        info.AddValue("Result", Result);
-    }
 }

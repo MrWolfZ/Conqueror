@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.Serialization;
 
 namespace Conqueror;
 
@@ -17,11 +16,6 @@ public sealed class HttpCommandFailedException : Exception
     }
 
     private HttpCommandFailedException()
-    {
-    }
-
-    private HttpCommandFailedException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 

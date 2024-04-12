@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.Serialization;
 
 namespace Conqueror;
 
@@ -24,11 +23,6 @@ public sealed class ConquerorOperationTypeAuthorizationFailedException : Conquer
 
     public ConquerorOperationTypeAuthorizationFailedException(ConquerorAuthorizationResult result)
         : base(result)
-    {
-    }
-
-    private ConquerorOperationTypeAuthorizationFailedException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 }

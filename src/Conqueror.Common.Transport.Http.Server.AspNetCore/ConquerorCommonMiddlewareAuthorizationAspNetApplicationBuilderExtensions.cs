@@ -96,12 +96,12 @@ public static class ConquerorCommonMiddlewareAuthorizationAspNetApplicationBuild
         {
             if (ConquerorContextDataFormatter.Format(conquerorContext.UpstreamContextData) is { } formattedUpstreamData)
             {
-                httpContext.Response.Headers.Add(HttpConstants.ConquerorUpstreamContextHeaderName, formattedUpstreamData);
+                httpContext.Response.Headers[HttpConstants.ConquerorUpstreamContextHeaderName] = formattedUpstreamData;
             }
 
             if (ConquerorContextDataFormatter.Format(conquerorContext.ContextData) is { } formattedData)
             {
-                httpContext.Response.Headers.Add(HttpConstants.ConquerorContextHeaderName, formattedData);
+                httpContext.Response.Headers[HttpConstants.ConquerorContextHeaderName] = formattedData;
             }
 
             return Task.CompletedTask;
