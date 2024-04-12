@@ -337,44 +337,6 @@ public sealed class HttpContextTests : TestBase
         return await HttpClient.SendAsync(message);
     }
 
-    private static void ObserveAndSetContextData(TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
-    {
-        testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-        testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
-        testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
-
-        if (testObservations.ShouldAddUpstreamData)
-        {
-            foreach (var item in ContextData)
-            {
-                conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
-            }
-
-            foreach (var item in InProcessContextData)
-            {
-                conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
-            }
-        }
-
-        if (testObservations.ShouldAddBidirectionalData)
-        {
-            foreach (var item in ContextData)
-            {
-                conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
-            }
-
-            foreach (var item in InProcessContextData)
-            {
-                conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
-            }
-        }
-
-        if (testObservations.ExceptionToThrow is not null)
-        {
-            throw testObservations.ExceptionToThrow;
-        }
-    }
-
     private static DisposableActivity CreateActivity(string name)
     {
         var activitySource = new ActivitySource(name);
@@ -473,6 +435,44 @@ public sealed class HttpContextTests : TestBase
             cancellationToken.ThrowIfCancellationRequested();
 
             return Task.CompletedTask;
+        }
+
+        private static void ObserveAndSetContextData(TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
+        {
+            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
+
+            if (testObservations.ShouldAddUpstreamData)
+            {
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.UpstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
+            }
+
+            if (testObservations.ShouldAddBidirectionalData)
+            {
+                foreach (var item in ContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+                }
+
+                foreach (var item in InProcessContextData)
+                {
+                    conquerorContextAccessor.ConquerorContext?.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+                }
+            }
+
+            if (testObservations.ExceptionToThrow is not null)
+            {
+                throw testObservations.ExceptionToThrow;
+            }
         }
     }
 
