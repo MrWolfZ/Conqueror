@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Conqueror;
 using Conqueror.Common;
@@ -63,6 +64,7 @@ public static class ConquerorCommonServiceCollectionExtensions
         return services;
     }
 
+    [SuppressMessage("Minor Code Smell", "S2094:Classes should not be empty", Justification = "This is a marker type that is fine to be empty.")]
     private sealed class WasFinalized
     {
     }

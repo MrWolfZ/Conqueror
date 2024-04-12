@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,4 +43,5 @@ internal sealed class QueryMiddlewareInvoker<TMiddleware, TConfiguration> : IQue
     }
 }
 
+[SuppressMessage("Minor Code Smell", "S2094:Classes should not be empty", Justification = "It is fine for a null-object to be empty.")]
 internal sealed record NullQueryMiddlewareConfiguration;
