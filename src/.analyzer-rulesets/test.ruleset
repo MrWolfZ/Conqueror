@@ -14,4 +14,9 @@
         <!-- in controller integration tests we want to provide relative URIs as plain strings -->
         <Rule Id="CA2234" Action="None" />
     </Rules>
+
+    <Rules AnalyzerId="SonarAnalyzer.CSharp" RuleNamespace="SonarAnalyzer.CSharp">
+        <!-- empty classes can be useful for tests that test functionality depending on generics -->
+        <Rule Id="S2094" Action="None" />
+    </Rules>
 </RuleSet>
