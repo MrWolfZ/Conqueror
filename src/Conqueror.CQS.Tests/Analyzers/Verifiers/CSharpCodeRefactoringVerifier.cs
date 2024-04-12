@@ -36,18 +36,14 @@ public static class CSharpCodeRefactoringVerifier<TCodeRefactoring>
             },
             TestCode = source,
             FixedCode = fixedSource,
-#if NET7_0
-            ReferenceAssemblies = CSharpVerifierHelper.Net70ReferenceAssemblies,
-#else
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net60,
-#endif
+            ReferenceAssemblies = CSharpVerifierHelper.Net80ReferenceAssemblies,
         };
 
         test.ExpectedDiagnostics.AddRange(expected);
         await test.RunAsync(CancellationToken.None);
     }
 
-    private sealed class Test : CSharpCodeRefactoringTest<TCodeRefactoring, NUnitVerifier>
+    private sealed class Test : CSharpCodeRefactoringTest<TCodeRefactoring, MSTestVerifier>
     {
         public Test()
         {

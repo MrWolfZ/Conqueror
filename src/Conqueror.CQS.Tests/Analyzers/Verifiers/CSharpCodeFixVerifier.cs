@@ -14,15 +14,15 @@ public static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
 {
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.Diagnostic()" />
     public static DiagnosticResult Diagnostic()
-        => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, NUnitVerifier>.Diagnostic();
+        => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, MSTestVerifier>.Diagnostic();
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.Diagnostic(string)" />
     public static DiagnosticResult Diagnostic(string diagnosticId)
-        => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, NUnitVerifier>.Diagnostic(diagnosticId);
+        => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, MSTestVerifier>.Diagnostic(diagnosticId);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.Diagnostic(DiagnosticDescriptor)" />
     public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor)
-        => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, NUnitVerifier>.Diagnostic(descriptor);
+        => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, MSTestVerifier>.Diagnostic(descriptor);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, string)" />
     public static async Task VerifyCodeFixAsync(string source, string fixedSource)
@@ -47,18 +47,14 @@ public static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
             CompilerDiagnostics = CompilerDiagnostics.None,
             TestCode = source,
             FixedCode = fixedSource,
-#if NET7_0
-            ReferenceAssemblies = CSharpVerifierHelper.Net70ReferenceAssemblies,
-#else
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net60,
-#endif
+            ReferenceAssemblies = CSharpVerifierHelper.Net80ReferenceAssemblies,
         };
 
         test.ExpectedDiagnostics.AddRange(expected);
         await test.RunAsync(CancellationToken.None);
     }
 
-    private sealed class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, NUnitVerifier>
+    private sealed class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, MSTestVerifier>
     {
         public Test()
         {

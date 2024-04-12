@@ -12,15 +12,15 @@ public static class CSharpAnalyzerVerifier<TAnalyzer>
 {
     /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.Diagnostic()" />
     public static DiagnosticResult Diagnostic()
-        => CSharpAnalyzerVerifier<TAnalyzer, NUnitVerifier>.Diagnostic();
+        => CSharpAnalyzerVerifier<TAnalyzer, MSTestVerifier>.Diagnostic();
 
     /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.Diagnostic(string)" />
     public static DiagnosticResult Diagnostic(string diagnosticId)
-        => CSharpAnalyzerVerifier<TAnalyzer, NUnitVerifier>.Diagnostic(diagnosticId);
+        => CSharpAnalyzerVerifier<TAnalyzer, MSTestVerifier>.Diagnostic(diagnosticId);
 
     /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.Diagnostic(DiagnosticDescriptor)" />
     public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor)
-        => CSharpAnalyzerVerifier<TAnalyzer, NUnitVerifier>.Diagnostic(descriptor);
+        => CSharpAnalyzerVerifier<TAnalyzer, MSTestVerifier>.Diagnostic(descriptor);
 
     /// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.VerifyAnalyzerAsync(string, DiagnosticResult[])" />
     public static async Task VerifyAnalyzerAsync(string source, params DiagnosticResult[] expected)
@@ -36,11 +36,7 @@ public static class CSharpAnalyzerVerifier<TAnalyzer>
             },
             CompilerDiagnostics = CompilerDiagnostics.None,
             TestCode = source,
-#if NET7_0
-            ReferenceAssemblies = CSharpVerifierHelper.Net70ReferenceAssemblies,
-#else
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net60,
-#endif
+            ReferenceAssemblies = CSharpVerifierHelper.Net80ReferenceAssemblies,
         };
 
         test.ExpectedDiagnostics.AddRange(expected);
@@ -53,18 +49,14 @@ public static class CSharpAnalyzerVerifier<TAnalyzer>
         {
             CompilerDiagnostics = CompilerDiagnostics.None,
             TestCode = source,
-#if NET7_0
-            ReferenceAssemblies = CSharpVerifierHelper.Net70ReferenceAssemblies,
-#else
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net60,
-#endif
+            ReferenceAssemblies = CSharpVerifierHelper.Net80ReferenceAssemblies,
         };
 
         test.ExpectedDiagnostics.AddRange(expected);
         await test.RunAsync(CancellationToken.None);
     }
 
-    private sealed class Test : CSharpAnalyzerTest<TAnalyzer, NUnitVerifier>
+    private sealed class Test : CSharpAnalyzerTest<TAnalyzer, MSTestVerifier>
     {
         public Test()
         {

@@ -8,13 +8,13 @@ namespace Conqueror.CQS.Tests.Analyzers.Verifiers;
 
 public static class CSharpVerifierHelper
 {
-    private static readonly Lazy<ReferenceAssemblies> LazyNet70 = new(() =>
+    private static readonly Lazy<ReferenceAssemblies> LazyNet80 = new(() =>
                                                                           new(
-                                                                              "net7.0",
+                                                                              "net8.0",
                                                                               new(
                                                                                   "Microsoft.NETCore.App.Ref",
-                                                                                  "7.0.0-preview.5.22301.12"),
-                                                                              Path.Combine("ref", "net7.0")));
+                                                                                  "8.0.4"),
+                                                                              Path.Combine("ref", "net8.0")));
 
     private static readonly Regex LeadingAndTrailingNewlinesRegex = new(@"(^\r?\n|\r?\n\s*$)");
     private static readonly Regex LeadingWhitespaceRegex = new(@"^(\s*)");
@@ -28,7 +28,7 @@ public static class CSharpVerifierHelper
     /// </summary>
     public static ImmutableDictionary<string, ReportDiagnostic> NullableWarnings { get; } = GetNullableWarningsFromCompiler();
 
-    public static ReferenceAssemblies Net70ReferenceAssemblies => LazyNet70.Value;
+    public static ReferenceAssemblies Net80ReferenceAssemblies => LazyNet80.Value;
 
     public static string Dedent(this string s)
     {
