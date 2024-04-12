@@ -7,5 +7,5 @@ internal static class TypeExtensions
 {
     public static bool HasAnyProperties(this Type t) => t.GetProperties().Any();
 
-    public static bool HasDefaultConstructor(this Type t) => t.GetConstructors().Any(c => !c.GetParameters().Any());
+    public static bool HasDefaultConstructor(this Type t) => Array.Exists(t.GetConstructors(), c => !c.GetParameters().Any());
 }

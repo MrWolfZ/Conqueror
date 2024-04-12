@@ -11,7 +11,7 @@ internal static class CommandHandlerTypeExtensions
     {
         return GetCommandHandlerInterfaceTypes(type).Select(t =>
         {
-            var queryType = t.GetGenericArguments().First();
+            var queryType = t.GetGenericArguments()[0];
             var responseType = t.GetGenericArguments().Skip(1).FirstOrDefault();
             return (queryType, responseType);
         }).ToList();
@@ -46,11 +46,11 @@ internal static class CommandHandlerTypeExtensions
         }
     }
 
-    public static bool IsCustomCommandHandlerInterfaceType(this Type t) => t.IsInterface && t.GetInterfaces().Any(IsCommandHandlerInterfaceType);
+    public static bool IsCustomCommandHandlerInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsCommandHandlerInterfaceType);
 
     public static bool IsCustomCommandHandlerInterfaceType<TCommand, TResponse>(this Type t)
         where TCommand : class =>
-        t.IsInterface && t.GetInterfaces().Any(i => i == typeof(ICommandHandler<TCommand>) || i == typeof(ICommandHandler<TCommand, TResponse>));
+        t.IsInterface && Array.Exists(t.GetInterfaces(), i => i == typeof(ICommandHandler<TCommand>) || i == typeof(ICommandHandler<TCommand, TResponse>));
 
     public static bool IsCommandHandlerInterfaceType(this Type t) =>
         t.IsInterface && t.IsGenericType

@@ -130,7 +130,7 @@ public sealed class ConquerorContextDataTests
 
             // we assert on count equal to 2, because observed data should be added twice (once by enumeration and once by direct access)
             Assert.That(data.LocationsWhereDataShouldBeAccessible.All(l => observedData.Count(d => d.Value.Equals(value) && d.Location == l) == 2), Is.True, errorMessage);
-            Assert.That(data.LocationsWhereDataShouldNotBeAccessible.All(l => !observedData.Any(d => d.Value.Equals(value) && d.Location == l)), Is.True, errorMessage);
+            Assert.That(data.LocationsWhereDataShouldNotBeAccessible.All(l => !observedData.Exists(d => d.Value.Equals(value) && d.Location == l)), Is.True, errorMessage);
         }
     }
 

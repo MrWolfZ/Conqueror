@@ -242,7 +242,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         var receivedCommandIds = Resolve<TestObservations>().ReceivedCommandIds;
 
         Assert.That(receivedCommandIds, Has.Count.EqualTo(1));
-        Assert.That(receivedCommandIds.First(), Is.Not.Null.And.Not.Empty);
+        Assert.That(receivedCommandIds[0], Is.Not.Null.And.Not.Empty);
     }
 
     [TestCase("/api/commands/test", "{}")]

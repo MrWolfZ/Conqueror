@@ -244,7 +244,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         var receivedQueryIds = Resolve<TestObservations>().ReceivedQueryIds;
 
         Assert.That(receivedQueryIds, Has.Count.EqualTo(1));
-        Assert.That(receivedQueryIds.First(), Is.Not.Null.And.Not.Empty);
+        Assert.That(receivedQueryIds[0], Is.Not.Null.And.Not.Empty);
     }
 
     [TestCase("/api/queries/test?payload=10")]

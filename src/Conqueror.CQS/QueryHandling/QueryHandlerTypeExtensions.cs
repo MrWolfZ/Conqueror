@@ -11,7 +11,7 @@ internal static class QueryHandlerTypeExtensions
     {
         return GetQueryHandlerInterfaceTypes(type).Select(t =>
         {
-            var queryType = t.GetGenericArguments().First();
+            var queryType = t.GetGenericArguments()[0];
             var responseType = t.GetGenericArguments().Skip(1).First();
             return (queryType, responseType);
         }).ToList();
@@ -46,11 +46,11 @@ internal static class QueryHandlerTypeExtensions
         }
     }
 
-    public static bool IsCustomQueryHandlerInterfaceType(this Type t) => t.IsInterface && t.GetInterfaces().Any(IsQueryHandlerInterfaceType);
+    public static bool IsCustomQueryHandlerInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsQueryHandlerInterfaceType);
 
     public static bool IsCustomQueryHandlerInterfaceType<TQuery, TResponse>(this Type t)
         where TQuery : class =>
-        t.IsInterface && t.GetInterfaces().Any(i => i == typeof(IQueryHandler<TQuery, TResponse>));
+        t.IsInterface && Array.Exists(t.GetInterfaces(), i => i == typeof(IQueryHandler<TQuery, TResponse>));
 
     public static bool IsQueryHandlerInterfaceType(this Type t) => t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IQueryHandler<,>);
 }

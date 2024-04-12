@@ -11,7 +11,7 @@ internal static class InteractiveStreamingHandlerTypeExtensions
     {
         return GetInteractiveStreamingHandlerInterfaceTypes(type).Select(t =>
         {
-            var requestType = t.GetGenericArguments().First();
+            var requestType = t.GetGenericArguments()[0];
             var itemType = t.GetGenericArguments().Skip(1).First();
             return (requestType, itemType);
         }).ToList();
@@ -26,7 +26,7 @@ internal static class InteractiveStreamingHandlerTypeExtensions
     {
         var interfaces = type.GetInterfaces().Where(i => i.IsCustomInteractiveStreamingHandlerInterfaceType()).ToList();
 
-        var invalidInterface = interfaces.FirstOrDefault(i => i.AllMethods().Count() > 1);
+        var invalidInterface = interfaces.Find(i => i.AllMethods().Count() > 1);
         if (invalidInterface is not null)
         {
             throw new ArgumentException($"type '{type.Name}' implements custom interface '{invalidInterface.Name}' that has extra methods");
@@ -44,7 +44,7 @@ internal static class InteractiveStreamingHandlerTypeExtensions
         }
     }
 
-    public static bool IsCustomInteractiveStreamingHandlerInterfaceType(this Type t) => t.IsInterface && t.GetInterfaces().Any(IsInteractiveStreamingHandlerInterfaceType);
+    public static bool IsCustomInteractiveStreamingHandlerInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsInteractiveStreamingHandlerInterfaceType);
 
     public static bool IsInteractiveStreamingHandlerInterfaceType(this Type t) => t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IInteractiveStreamingHandler<,>);
 

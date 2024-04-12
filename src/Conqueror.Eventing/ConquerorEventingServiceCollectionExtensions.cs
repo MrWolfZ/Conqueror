@@ -38,19 +38,19 @@ public static class ConquerorEventingServiceCollectionExtensions
             services.AddConquerorEventObserver(eventObserverType, ServiceDescriptor.Transient(eventObserverType, eventObserverType), null);
         }
 
-        foreach (var eventObserverMiddlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsEventObserverMiddlewareInterface))
+        foreach (var eventObserverMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsEventObserverMiddlewareInterface))
                                                               .Where(t => !services.IsEventObserverMiddlewareRegistered(t)))
         {
             services.AddConquerorEventObserverMiddleware(eventObserverMiddlewareType, ServiceDescriptor.Transient(eventObserverMiddlewareType, eventObserverMiddlewareType));
         }
 
-        foreach (var eventPublisherType in validTypes.Where(t => t.GetInterfaces().Any(IsEventPublisherInterface))
+        foreach (var eventPublisherType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsEventPublisherInterface))
                                                      .Where(t => !services.IsEventTransportPublisherRegistered(t)))
         {
             services.AddConquerorEventTransportPublisher(eventPublisherType, ServiceDescriptor.Transient(eventPublisherType, eventPublisherType), null);
         }
 
-        foreach (var eventPublisherMiddlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsEventPublisherMiddlewareInterface))
+        foreach (var eventPublisherMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsEventPublisherMiddlewareInterface))
                                                                .Where(t => !services.IsEventPublisherMiddlewareRegistered(t)))
         {
             services.AddConquerorEventPublisherMiddleware(eventPublisherMiddlewareType, ServiceDescriptor.Transient(eventPublisherMiddlewareType, eventPublisherMiddlewareType));

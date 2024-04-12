@@ -42,9 +42,9 @@ internal sealed class InMemoryParallelPublishingStrategy : IConquerorInMemoryEve
             ExceptionDispatchInfo.Capture(canceledException).Throw();
         }
 
-        if (thrownExceptions.All(ex => ex is OperationCanceledException))
+        if (thrownExceptions.TrueForAll(ex => ex is OperationCanceledException))
         {
-            ExceptionDispatchInfo.Capture(thrownExceptions.First()).Throw();
+            ExceptionDispatchInfo.Capture(thrownExceptions[0]).Throw();
         }
 
         throw new AggregateException(thrownExceptions);

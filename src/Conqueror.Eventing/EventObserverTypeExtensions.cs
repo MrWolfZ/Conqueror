@@ -9,7 +9,7 @@ internal static class EventObserverTypeExtensions
 {
     public static IReadOnlyCollection<Type> GetObservedEventTypes(this Type type)
     {
-        return GetEventObserverInterfaceTypes(type).Select(t => t.GetGenericArguments().First()).ToList();
+        return GetEventObserverInterfaceTypes(type).Select(t => t.GetGenericArguments()[0]).ToList();
     }
 
     public static IReadOnlyCollection<Type> GetEventObserverInterfaceTypes(this Type type)
@@ -19,7 +19,7 @@ internal static class EventObserverTypeExtensions
 
     public static Type GetPublisherConfigurationAttributeType(this Type publisherType)
     {
-        return GetPublisherInterfaceTypes(publisherType).First().GetGenericArguments().First();
+        return GetPublisherInterfaceTypes(publisherType).First().GetGenericArguments()[0];
     }
 
     public static IReadOnlyCollection<Type> GetPublisherInterfaceTypes(this Type type)
@@ -70,11 +70,11 @@ internal static class EventObserverTypeExtensions
         }
     }
 
-    public static bool IsCustomEventObserverInterfaceType(this Type t) => t.IsInterface && t.GetInterfaces().Any(IsEventObserverInterfaceType);
+    public static bool IsCustomEventObserverInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsEventObserverInterfaceType);
 
     public static bool IsCustomEventObserverInterfaceType<TEvent>(this Type t)
         where TEvent : class =>
-        t.IsInterface && t.GetInterfaces().Any(i => i == typeof(IEventObserver<TEvent>));
+        t.IsInterface && Array.Exists(t.GetInterfaces(), i => i == typeof(IEventObserver<TEvent>));
 
     public static bool IsEventObserverInterfaceType(this Type t) => t is { IsInterface: true, IsGenericType: true } && t.GetGenericTypeDefinition() == typeof(IEventObserver<>);
 

@@ -28,7 +28,7 @@ internal sealed class EventPublisherRegistry
 
         foreach (var (registration, customAttribute) in from customAttribute in eventType.GetCustomAttributes()
                                                         where customAttribute is IConquerorEventTransportConfigurationAttribute
-                                                        let registration = registrations.FirstOrDefault(r => r.ConfigurationAttributeType == customAttribute.GetType())
+                                                        let registration = registrations.Find(r => r.ConfigurationAttributeType == customAttribute.GetType())
                                                         select (registration, customAttribute))
         {
             if (registration is null)
@@ -41,7 +41,7 @@ internal sealed class EventPublisherRegistry
 
         if (result.Count == 0)
         {
-            var registration = registrations.FirstOrDefault(r => r.ConfigurationAttributeType == typeof(InMemoryEventAttribute));
+            var registration = registrations.Find(r => r.ConfigurationAttributeType == typeof(InMemoryEventAttribute));
 
             if (registration is null)
             {

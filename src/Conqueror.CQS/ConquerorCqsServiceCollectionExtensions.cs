@@ -29,7 +29,7 @@ public static class ConquerorCqsServiceCollectionExtensions
             services.AddConquerorCommandHandler(commandHandlerType, ServiceDescriptor.Transient(commandHandlerType, commandHandlerType));
         }
 
-        foreach (var commandMiddlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsCommandMiddlewareInterface)))
+        foreach (var commandMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsCommandMiddlewareInterface)))
         {
             services.AddConquerorCommandMiddleware(commandMiddlewareType, ServiceDescriptor.Transient(commandMiddlewareType, commandMiddlewareType));
         }
@@ -39,7 +39,7 @@ public static class ConquerorCqsServiceCollectionExtensions
             services.AddConquerorQueryHandler(queryHandlerType, ServiceDescriptor.Transient(queryHandlerType, queryHandlerType));
         }
 
-        foreach (var queryMiddlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsQueryMiddlewareInterface)))
+        foreach (var queryMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsQueryMiddlewareInterface)))
         {
             services.AddConquerorQueryMiddleware(queryMiddlewareType, ServiceDescriptor.Transient(queryMiddlewareType, queryMiddlewareType));
         }
