@@ -14,7 +14,7 @@ internal sealed class TestLoggerProvider : ILoggerProvider
     }
 
     public ILogger CreateLogger(string categoryName) =>
-        loggers.GetOrAdd(categoryName, _ => new(categoryName, logSink));
+        loggers.GetOrAdd(categoryName, catName => new(catName, logSink));
 
     public ILogger? GetLogger(string categoryName) =>
         loggers.TryGetValue(categoryName, out var l) ? l : null;
