@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -137,6 +138,7 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
                    traceId);
     }
 
+    [SuppressMessage("Major Code Smell", "S2629:Logging templates should be constant", Justification = "The exception is already included as metadata, so we just want the message to include the full exception without adding it again as metadata.")]
     private static void OnException<TQuery, TResponse>(ILogger logger,
                                                        string queryId,
                                                        string traceId,
