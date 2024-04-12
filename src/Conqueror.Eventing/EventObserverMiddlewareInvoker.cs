@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Eventing;
 
+[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:File name should match first type name", Justification = "Having the interface for the type at the top makes sense, but we want to keep the file named after the proper type, not the interface.")]
 internal interface IEventObserverMiddlewareInvoker
 {
     Type MiddlewareType { get; }
