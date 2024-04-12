@@ -1709,9 +1709,11 @@ public sealed class ConquerorContextDataTests
     }
 
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "must be public for test method signature")]
+    [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
     public sealed record ConquerorContextDataTestCase(string RequestType, string DataDirection, List<ConquerorContextDataTestCaseData> TestData);
 
     [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "must be public for test method signature")]
+    [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
     public sealed record ConquerorContextDataTestCaseData(string DataType,
                                                           string DataSettingLocation,
                                                           string? DataRemovalLocation,
