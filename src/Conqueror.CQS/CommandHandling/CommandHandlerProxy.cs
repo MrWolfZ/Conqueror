@@ -12,10 +12,10 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
 {
     private readonly Action<ICommandPipelineBuilder>? configurePipeline;
     private readonly IServiceProvider serviceProvider;
-    private readonly Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory;
+    private readonly CommandTransportClientFactory transportClientFactory;
 
     public CommandHandlerProxy(IServiceProvider serviceProvider,
-                               Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
+                               CommandTransportClientFactory transportClientFactory,
                                Action<ICommandPipelineBuilder>? configurePipeline)
     {
         this.serviceProvider = serviceProvider;

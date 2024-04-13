@@ -102,7 +102,7 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
 
         var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(handlerType);
 
-        services.AddConquerorCommandClient(handlerType, b => new InMemoryCommandTransport(b.ServiceProvider, handlerType), pipelineConfigurationAction);
+        services.AddConquerorCommandClient(handlerType, new InMemoryCommandTransport(handlerType), pipelineConfigurationAction);
 
         return services;
 

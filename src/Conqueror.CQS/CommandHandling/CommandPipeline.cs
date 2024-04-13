@@ -19,20 +19,18 @@ internal sealed class CommandPipeline
 
     public Task<TResponse> Execute<TCommand, TResponse>(IServiceProvider serviceProvider,
                                                         TCommand initialCommand,
-                                                        Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
+                                                        CommandTransportClientFactory transportClientFactory,
                                                         CancellationToken cancellationToken)
         where TCommand : class
     {
-        var transportBuilder = new CommandTransportClientBuilder(serviceProvider, typeof(TCommand));
-
         return ExecuteNextMiddleware(0, initialCommand, conquerorContext, cancellationToken);
 
         async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, IConquerorContext ctx, CancellationToken token)
         {
             if (index >= middlewares.Count)
             {
-                var transport = await transportClientFactory(transportBuilder).ConfigureAwait(false);
-                return await transport.ExecuteCommand<TCommand, TResponse>(command, token).ConfigureAwait(false);
+                var transport = await transportClientFactory.Create(typeof(TCommand), serviceProvider).ConfigureAwait(false);
+                return await transport.ExecuteCommand<TCommand, TResponse>(command, serviceProvider, token).ConfigureAwait(false);
             }
 
             var (_, middlewareConfiguration, invoker) = middlewares[index];

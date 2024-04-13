@@ -700,7 +700,9 @@ public sealed class CommandHttpClientRegistrationTests
 
     private sealed class TestCommandTransportClient : ICommandTransportClient
     {
-        public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+        public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+                                                                   IServiceProvider serviceProvider,
+                                                                   CancellationToken cancellationToken)
             where TCommand : class
         {
             return Task.FromResult((TResponse)(object)new TestCommandResponse());

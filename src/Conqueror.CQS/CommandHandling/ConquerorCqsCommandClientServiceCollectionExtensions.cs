@@ -30,15 +30,31 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
 
     internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
                                                                  Type handlerType,
+                                                                 ICommandTransportClient transportClient,
+                                                                 Action<ICommandPipelineBuilder>? configurePipeline)
+    {
+        return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClient), configurePipeline);
+    }
+
+    internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
+                                                                 Type handlerType,
                                                                  Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                                  Action<ICommandPipelineBuilder>? configurePipeline)
     {
-        return services.AddConquerorCommandClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline);
+        return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClientFactory), configurePipeline);
     }
 
     internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
                                                                  Type handlerType,
                                                                  Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
+                                                                 Action<ICommandPipelineBuilder>? configurePipeline)
+    {
+        return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClientFactory), configurePipeline);
+    }
+
+    internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
+                                                                 Type handlerType,
+                                                                 CommandTransportClientFactory transportClientFactory,
                                                                  Action<ICommandPipelineBuilder>? configurePipeline)
     {
         handlerType.ValidateNoInvalidCommandHandlerInterface();
@@ -81,7 +97,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
     }
 
     private static void AddClient<THandler, TCommand, TResponse>(this IServiceCollection services,
-                                                                 Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
+                                                                 CommandTransportClientFactory transportClientFactory,
                                                                  Action<ICommandPipelineBuilder>? configurePipeline = null)
         where THandler : class, ICommandHandler
         where TCommand : class

@@ -1008,13 +1008,15 @@ public class ConquerorContextCommandTests : TestBase
             this.testObservations = testObservations;
         }
 
-        public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+        public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+                                                                   IServiceProvider serviceProvider,
+                                                                   CancellationToken cancellationToken)
             where TCommand : class
         {
             testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
-            return wrapped.ExecuteCommand<TCommand, TResponse>(command, cancellationToken);
+            return wrapped.ExecuteCommand<TCommand, TResponse>(command, serviceProvider, cancellationToken);
         }
     }
 

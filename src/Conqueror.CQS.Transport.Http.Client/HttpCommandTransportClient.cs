@@ -23,7 +23,9 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
 
     public ResolvedHttpClientOptions Options { get; }
 
-    public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+    public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+                                                                     IServiceProvider serviceProvider,
+                                                                     CancellationToken cancellationToken)
         where TCommand : class
     {
         var attribute = typeof(TCommand).GetCustomAttribute<HttpCommandAttribute>()!;

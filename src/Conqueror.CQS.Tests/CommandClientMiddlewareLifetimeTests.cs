@@ -680,7 +680,9 @@ public abstract class CommandClientMiddlewareLifetimeTests
             this.observations = observations;
         }
 
-        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+                                                                         IServiceProvider serviceProvider,
+                                                                         CancellationToken cancellationToken)
             where TCommand : class
         {
             await Task.Yield();

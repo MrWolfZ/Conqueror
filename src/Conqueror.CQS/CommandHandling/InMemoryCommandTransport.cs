@@ -8,15 +8,15 @@ namespace Conqueror.CQS.CommandHandling;
 internal sealed class InMemoryCommandTransport : ICommandTransportClient
 {
     private readonly Type handlerType;
-    private readonly IServiceProvider serviceProvider;
 
-    public InMemoryCommandTransport(IServiceProvider serviceProvider, Type handlerType)
+    public InMemoryCommandTransport(Type handlerType)
     {
-        this.serviceProvider = serviceProvider;
         this.handlerType = handlerType;
     }
 
-    public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, CancellationToken cancellationToken)
+    public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+                                                                     IServiceProvider serviceProvider,
+                                                                     CancellationToken cancellationToken)
         where TCommand : class
     {
         var handler = serviceProvider.GetRequiredService(handlerType);
