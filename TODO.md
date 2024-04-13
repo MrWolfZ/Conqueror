@@ -6,8 +6,6 @@ This file contains all the open points for extensions and improvements to the **
 
 - [ ] set up issues templates via yaml config
 - [ ] for each library add a quick reference handbook that showcases all capabilities in a concise fashion
-- [ ] configure build pipelines to build project with a variety of SDK versions
-  - [ ] set up dedicated example projects for .NET 6 and 7 with older SDK versions to ensure analyzers can be referenced without warnings or errors
 - [ ] create dedicated readme files for each package
 - [ ] use explicit dependency version numbers in all recipes and examples
   - [ ] add a script to bump version number across whole project
@@ -16,7 +14,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Common
 
-- [ ] instead of just marking execution from a transport, set a field that contains the transport name
+- [ ] instead of just marking execution from a transport in the conqueror context, set a field that contains the transport name
   - [ ] add this name to the logging output of logging middlewares
 - [ ] in development environment, add problem details body to auth failures
 - [ ] throw on empty context data key
@@ -24,7 +22,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] refactor all tests to use `Assert.That` for exceptions
 - [ ] remove middleware registries
 - [ ] add tests for overwriting handler registration with a new factory and assert that new factory is called
 - [ ] add tests for overwriting handler registration with a new lifetime and assert that new lifetime is used
@@ -43,7 +40,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] cache client factory results
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] create analyzers (including code fixes)
-  - [ ] do not raise analyzer error for missing `ConfigurePipeline` on .NET 7 or higher
+  - [ ] remove analyzers for missing or incorrect `ConfigurePipeline` methods
   - [ ] enforce `IConfigureCommandPipeline` interface to be present on all handler types that implement `ConfigurePipeline` method
   - [ ] non-empty `ConfigurePipeline` method
   - [ ] custom handler interfaces may not have extra methods
@@ -53,6 +50,7 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] error (optionally) when a handler is being injected directly instead of an interface
 - [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
 - [ ] re-order all code so that command comes before query (or even better split files)
+- [ ] use a source generator instead of reflection for generating proxies
 
 ### CQS middleware
 
