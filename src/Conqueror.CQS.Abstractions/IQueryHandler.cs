@@ -20,7 +20,5 @@ public interface IQueryHandler<in TQuery, TResponse> : IQueryHandler
 /// </summary>
 public interface IConfigureQueryPipeline
 {
-#if NET7_0_OR_GREATER
         static abstract void ConfigurePipeline(IQueryPipelineBuilder pipeline);
-#endif
 }

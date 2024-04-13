@@ -21,9 +21,7 @@ internal sealed class TestLogger : ILogger
     public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
 
     public IDisposable BeginScope<TState>(TState state)
-#if NET7_0_OR_GREATER
             where TState : notnull
-#endif
     {
         return new NoopDisposable();
     }

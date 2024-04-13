@@ -26,7 +26,5 @@ public interface ICommandHandler<in TCommand, TResponse> : ICommandHandler
 /// </summary>
 public interface IConfigureCommandPipeline
 {
-#if NET7_0_OR_GREATER
     static abstract void ConfigurePipeline(ICommandPipelineBuilder pipeline);
-#endif
 }

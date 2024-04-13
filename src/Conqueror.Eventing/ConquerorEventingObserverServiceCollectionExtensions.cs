@@ -189,29 +189,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
             return null;
         }
 
-#if NET7_0_OR_GREATER
         var pipelineConfigurationMethod = observerType.GetInterfaceMap(typeof(IConfigureEventObserverPipeline)).TargetMethods.Single();
-#else
-        const string configurationMethodName = "ConfigurePipeline";
-
-        var pipelineConfigurationMethod = observerType.GetMethod(configurationMethodName, BindingFlags.Public | BindingFlags.Static);
-
-        if (pipelineConfigurationMethod is null)
-        {
-            throw new InvalidOperationException(
-                $"event observer type '{observerType.Name}' implements the interface '{nameof(IConfigureEventObserverPipeline)}' but does not have a public method '{configurationMethodName}'");
-        }
-
-        var methodHasInvalidReturnType = pipelineConfigurationMethod.ReturnType != typeof(void);
-        var methodHasInvalidParameterTypes = pipelineConfigurationMethod.GetParameters().Length != 1
-                                             || pipelineConfigurationMethod.GetParameters().Single().ParameterType != typeof(IEventObserverPipelineBuilder);
-
-        if (methodHasInvalidReturnType || methodHasInvalidParameterTypes)
-        {
-            throw new InvalidOperationException(
-                $"event observer type '{observerType.Name}' has an invalid method signature for '{configurationMethodName}'; ensure that the signature is 'public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)'");
-        }
-#endif
 
         var builderParam = Expression.Parameter(typeof(IEventObserverPipelineBuilder));
         var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);

@@ -20,7 +20,5 @@ public interface IEventObserver<in TEvent> : IEventObserver
 /// </summary>
 public interface IConfigureEventObserverPipeline
 {
-#if NET7_0_OR_GREATER
     static abstract void ConfigurePipeline(IEventObserverPipelineBuilder pipeline);
-#endif
 }

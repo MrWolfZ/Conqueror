@@ -3,8 +3,6 @@ using System.Linq;
 using Conqueror.Common;
 using Conqueror.Streaming.Interactive.Common;
 using Microsoft.Extensions.DependencyInjection;
-#if !NET7_0_OR_GREATER
-#endif
 
 namespace Conqueror.Streaming.Interactive;
 

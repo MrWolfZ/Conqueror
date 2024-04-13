@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror;
@@ -114,29 +113,7 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
                 return null;
             }
 
-#if NET7_0_OR_GREATER
             var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IConfigureCommandPipeline)).TargetMethods.Single();
-#else
-            const string configurationMethodName = "ConfigurePipeline";
-
-            var pipelineConfigurationMethod = handlerType.GetMethod(configurationMethodName, BindingFlags.Public | BindingFlags.Static);
-
-            if (pipelineConfigurationMethod is null)
-            {
-                throw new InvalidOperationException(
-                    $"command handler type '{handlerType.Name}' implements the interface '{nameof(IConfigureCommandPipeline)}' but does not have a public method '{configurationMethodName}'");
-            }
-
-            var methodHasInvalidReturnType = pipelineConfigurationMethod.ReturnType != typeof(void);
-            var methodHasInvalidParameterTypes = pipelineConfigurationMethod.GetParameters().Length != 1
-                                                 || pipelineConfigurationMethod.GetParameters().Single().ParameterType != typeof(ICommandPipelineBuilder);
-
-            if (methodHasInvalidReturnType || methodHasInvalidParameterTypes)
-            {
-                throw new InvalidOperationException(
-                    $"command handler type '{handlerType.Name}' has an invalid method signature for '{configurationMethodName}'; ensure that the signature is 'public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)'");
-            }
-#endif
 
             var builderParam = Expression.Parameter(typeof(ICommandPipelineBuilder));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);

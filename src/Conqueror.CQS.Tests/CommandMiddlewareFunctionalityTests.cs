@@ -437,32 +437,6 @@ public sealed class CommandMiddlewareFunctionalityTests
         Assert.That(observations.MiddlewareTypes, Is.Empty);
     }
 
-#if !NET7_0_OR_GREATER
-    [Test]
-    public void GivenHandlerWithPipelineConfigurationInterfaceWithoutPipelineConfigurationMethod_RegisteringHandlerThrowsInvalidOperationException()
-    {
-        var services = new ServiceCollection();
-
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandHandler<TestCommandHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod>());
-    }
-
-    [Test]
-    public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodReturnType_RegisteringHandlerThrowsInvalidOperationException()
-    {
-        var services = new ServiceCollection();
-
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandHandler<TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>());
-    }
-
-    [Test]
-    public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodParameters_RegisteringHandlerThrowsInvalidOperationException()
-    {
-        var services = new ServiceCollection();
-
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorCommandHandler<TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>());
-    }
-#endif
-
     [Test]
     public async Task GivenCancellationToken_MiddlewaresReceiveCancellationTokenWhenCalled()
     {
@@ -1096,41 +1070,6 @@ public sealed class CommandMiddlewareFunctionalityTests
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 });
         }
     }
-
-#if !NET7_0_OR_GREATER
-    private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-    {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            return new(0);
-        }
-    }
-
-    private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-    {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            return new(0);
-        }
-
-        // ReSharper disable once UnusedMember.Local
-        public static ICommandPipelineBuilder ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline;
-    }
-
-    private sealed class TestCommandHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-    {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            return new(0);
-        }
-
-        // ReSharper disable once UnusedMember.Local
-        public static string ConfigurePipeline(string pipeline) => pipeline;
-    }
-#endif
 
     private sealed class TestCommandHandlerWithThrowingMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
     {

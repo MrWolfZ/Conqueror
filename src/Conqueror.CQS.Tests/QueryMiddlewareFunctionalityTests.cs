@@ -348,32 +348,6 @@ public sealed class QueryMiddlewareFunctionalityTests
         Assert.That(observations.MiddlewareTypes, Is.Empty);
     }
 
-#if !NET7_0_OR_GREATER
-    [Test]
-    public void GivenHandlerWithPipelineConfigurationInterfaceWithoutPipelineConfigurationMethod_RegisteringHandlerThrowsInvalidOperationException()
-    {
-        var services = new ServiceCollection();
-
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<TestQueryHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod>());
-    }
-
-    [Test]
-    public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodReturnType_RegisteringHandlerThrowsInvalidOperationException()
-    {
-        var services = new ServiceCollection();
-
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType>());
-    }
-
-    [Test]
-    public void GivenHandlerWithPipelineConfigurationInterfaceWithInvalidPipelineConfigurationMethodParameters_RegisteringHandlerThrowsInvalidOperationException()
-    {
-        var services = new ServiceCollection();
-
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorQueryHandler<TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters>());
-    }
-#endif
-
     [Test]
     public async Task GivenCancellationToken_MiddlewaresReceiveCancellationTokenWhenCalled()
     {
@@ -763,39 +737,6 @@ public sealed class QueryMiddlewareFunctionalityTests
             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 });
         }
     }
-
-#if !NET7_0_OR_GREATER
-    private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithoutConfigurationMethod : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
-    {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            return new(0);
-        }
-    }
-
-    private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodReturnType : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
-    {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            return new(0);
-        }
-
-        public static IQueryPipelineBuilder ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline;
-    }
-
-    private sealed class TestQueryHandlerWithPipelineConfigurationInterfaceWithInvalidConfigurationMethodParameters : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
-    {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            return new(0);
-        }
-
-        public static string ConfigurePipeline(string pipeline) => pipeline;
-    }
-#endif
 
     private sealed class TestQueryHandlerWithThrowingMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
     {

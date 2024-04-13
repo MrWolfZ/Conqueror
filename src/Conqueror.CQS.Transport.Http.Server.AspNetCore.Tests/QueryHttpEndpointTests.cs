@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Reflection;
 using System.Text.Json;
@@ -8,9 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
-#if NET7_0_OR_GREATER
-using System.Net.Http.Headers;
-#endif
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
 
@@ -317,12 +315,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     private static StringContent CreateJsonStringContent(string content)
     {
-#if NET7_0_OR_GREATER
-        var stringContent = new StringContent(content, new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
-#else
-        var stringContent = new StringContent(content, null, MediaTypeNames.Application.Json);
-#endif
-        return stringContent;
+        return new(content, new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
     }
 
     [HttpQuery]
@@ -613,10 +606,10 @@ public sealed class QueryHttpEndpointTests : TestBase
     [ApiController]
     private sealed class TestHttpQueryController : ControllerBase
     {
-        private readonly IQueryHandler<TestQuery, TestQueryResponse> queryHandler;
-        private readonly IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler;
         private readonly IQueryHandler<TestPostQuery, TestQueryResponse> postQueryHandler;
         private readonly IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse> postQueryWithoutPayloadHandler;
+        private readonly IQueryHandler<TestQuery, TestQueryResponse> queryHandler;
+        private readonly IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler;
 
         public TestHttpQueryController(IQueryHandler<TestQuery, TestQueryResponse> queryHandler,
                                        IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler,
