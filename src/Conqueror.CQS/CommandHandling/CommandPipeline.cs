@@ -17,15 +17,15 @@ internal sealed class CommandPipeline
         this.middlewares = middlewares;
     }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(IServiceProvider serviceProvider,
-                                                              TCommand initialCommand,
-                                                              Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                              CancellationToken cancellationToken)
+    public Task<TResponse> Execute<TCommand, TResponse>(IServiceProvider serviceProvider,
+                                                        TCommand initialCommand,
+                                                        Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
+                                                        CancellationToken cancellationToken)
         where TCommand : class
     {
         var transportBuilder = new CommandTransportClientBuilder(serviceProvider, typeof(TCommand));
 
-        return await ExecuteNextMiddleware(0, initialCommand, conquerorContext, cancellationToken).ConfigureAwait(false);
+        return ExecuteNextMiddleware(0, initialCommand, conquerorContext, cancellationToken);
 
         async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, IConquerorContext ctx, CancellationToken token)
         {

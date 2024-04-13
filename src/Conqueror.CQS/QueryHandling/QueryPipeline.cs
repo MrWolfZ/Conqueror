@@ -17,15 +17,15 @@ internal sealed class QueryPipeline
         this.middlewares = middlewares;
     }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(IServiceProvider serviceProvider,
-                                                            TQuery initialQuery,
-                                                            Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                            CancellationToken cancellationToken)
+    public Task<TResponse> Execute<TQuery, TResponse>(IServiceProvider serviceProvider,
+                                                      TQuery initialQuery,
+                                                      Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
+                                                      CancellationToken cancellationToken)
         where TQuery : class
     {
         var transportClientBuilder = new QueryTransportClientBuilder(serviceProvider, typeof(TQuery));
 
-        return await ExecuteNextMiddleware(0, initialQuery, conquerorContext, cancellationToken).ConfigureAwait(false);
+        return ExecuteNextMiddleware(0, initialQuery, conquerorContext, cancellationToken);
 
         async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, IConquerorContext ctx, CancellationToken token)
         {
