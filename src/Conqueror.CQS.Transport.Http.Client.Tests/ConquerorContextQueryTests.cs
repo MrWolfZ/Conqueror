@@ -1008,13 +1008,15 @@ public class ConquerorContextQueryTests : TestBase
             this.testObservations = testObservations;
         }
 
-        public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+        public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+                                                               IServiceProvider serviceProvider,
+                                                               CancellationToken cancellationToken)
             where TQuery : class
         {
             testObservations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
-            return wrapped.ExecuteQuery<TQuery, TResponse>(query, cancellationToken);
+            return wrapped.ExecuteQuery<TQuery, TResponse>(query, serviceProvider, cancellationToken);
         }
     }
 

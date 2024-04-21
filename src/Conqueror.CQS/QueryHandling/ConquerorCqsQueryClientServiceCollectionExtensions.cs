@@ -30,15 +30,31 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
     internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                                Type handlerType,
+                                                               IQueryTransportClient transportClient,
+                                                               Action<IQueryPipelineBuilder>? configurePipeline)
+    {
+        return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClient), configurePipeline);
+    }
+
+    internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
+                                                               Type handlerType,
                                                                Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
                                                                Action<IQueryPipelineBuilder>? configurePipeline)
     {
-        return services.AddConquerorQueryClient(handlerType, b => Task.FromResult(transportClientFactory(b)), configurePipeline);
+        return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClientFactory), configurePipeline);
     }
 
     internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                                Type handlerType,
                                                                Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
+                                                               Action<IQueryPipelineBuilder>? configurePipeline)
+    {
+        return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClientFactory), configurePipeline);
+    }
+
+    internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
+                                                               Type handlerType,
+                                                               QueryTransportClientFactory transportClientFactory,
                                                                Action<IQueryPipelineBuilder>? configurePipeline)
     {
         handlerType.ValidateNoInvalidQueryHandlerInterface();
@@ -80,7 +96,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
     }
 
     private static void AddClient<THandler, TQuery, TResponse>(this IServiceCollection services,
-                                                               Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
+                                                               QueryTransportClientFactory transportClientFactory,
                                                                Action<IQueryPipelineBuilder>? configurePipeline = null)
         where THandler : class, IQueryHandler
         where TQuery : class

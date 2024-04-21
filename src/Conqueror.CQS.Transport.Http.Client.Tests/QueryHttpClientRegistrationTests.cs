@@ -700,7 +700,9 @@ public sealed class QueryHttpClientRegistrationTests
 
     private sealed class TestQueryTransportClient : IQueryTransportClient
     {
-        public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+        public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+                                                               IServiceProvider serviceProvider,
+                                                               CancellationToken cancellationToken)
             where TQuery : class
         {
             return Task.FromResult((TResponse)(object)new TestQueryResponse());

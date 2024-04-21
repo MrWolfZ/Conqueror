@@ -256,7 +256,9 @@ public abstract class QueryClientFactoryTests
             this.responses = responses;
         }
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+                                                                     IServiceProvider serviceProvider,
+                                                                     CancellationToken cancellationToken)
             where TQuery : class
         {
             await Task.Yield();

@@ -12,10 +12,10 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
 {
     private readonly Action<IQueryPipelineBuilder>? configurePipeline;
     private readonly IServiceProvider serviceProvider;
-    private readonly Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory;
+    private readonly QueryTransportClientFactory transportClientFactory;
 
-    public QueryHandlerProxy(IServiceProvider serviceProvider, 
-                             Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory, 
+    public QueryHandlerProxy(IServiceProvider serviceProvider,
+                             QueryTransportClientFactory transportClientFactory,
                              Action<IQueryPipelineBuilder>? configurePipeline)
     {
         this.serviceProvider = serviceProvider;

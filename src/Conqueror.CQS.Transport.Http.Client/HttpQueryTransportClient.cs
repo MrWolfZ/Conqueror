@@ -27,7 +27,9 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
 
     public ResolvedHttpClientOptions Options { get; }
 
-    public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+    public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+                                                                 IServiceProvider serviceProvider,
+                                                                 CancellationToken cancellationToken)
         where TQuery : class
     {
         var attribute = typeof(TQuery).GetCustomAttribute<HttpQueryAttribute>()!;

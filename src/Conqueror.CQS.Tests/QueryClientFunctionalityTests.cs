@@ -142,7 +142,9 @@ public abstract class QueryClientFunctionalityTests
             this.observations = observations;
         }
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+                                                                     IServiceProvider serviceProvider,
+                                                                     CancellationToken cancellationToken)
             where TQuery : class
         {
             await Task.Yield();
@@ -163,7 +165,9 @@ public abstract class QueryClientFunctionalityTests
             this.exception = exception;
         }
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, CancellationToken cancellationToken)
+        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+                                                                     IServiceProvider serviceProvider,
+                                                                     CancellationToken cancellationToken)
             where TQuery : class
         {
             await Task.Yield();
