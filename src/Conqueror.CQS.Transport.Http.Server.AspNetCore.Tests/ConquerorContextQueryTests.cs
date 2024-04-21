@@ -24,12 +24,16 @@ public sealed class ConquerorContextQueryTests : TestBase
         { "key4", "valueWith,Comma" },
         { "keyWith=Equals", "value" },
         { "key6", "valueWith=Equals" },
+        { "keyWith|Pipe", "value" },
+        { "key8", "valueWith|Pipe" },
+        { "keyWith:Colon", "value" },
+        { "key10", "valueWith:Colon" },
     };
 
     private static readonly Dictionary<string, string> InProcessContextData = new()
     {
-        { "key7", "value1" },
-        { "key8", "value2" },
+        { "key11", "value1" },
+        { "key12", "value2" },
     };
 
     private DisposableActivity? activity;
@@ -48,15 +52,15 @@ public sealed class ConquerorContextQueryTests : TestBase
         var response = postContent != null ? await HttpClient.PostAsync(path, content) : await HttpClient.GetAsync(path);
         await response.AssertSuccessStatusCode();
 
-        var exists = response.Headers.TryGetValues(HttpConstants.ConquerorUpstreamContextHeaderName, out var values);
+        var exists = response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values);
 
         Assert.That(exists, Is.True);
 
-        var receivedData = ConquerorContextDataFormatter.Parse(values!);
+        using var ctx = CreateConquerorContext();
+        ctx.DecodeContextData(values!);
 
-        Assert.That(receivedData.AsKeyValuePairs(), Is.EquivalentTo(ContextData));
-
-        Assert.That(response.Headers.Contains(HttpConstants.ConquerorContextHeaderName), Is.False);
+        Assert.That(ctx.UpstreamContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(ctx.ContextData, Is.Empty);
     }
 
     [TestCase("/api/queries/test?payload=10")]
@@ -77,11 +81,11 @@ public sealed class ConquerorContextQueryTests : TestBase
 
         Assert.That(exists, Is.True);
 
-        var receivedData = ConquerorContextDataFormatter.Parse(values!);
+        using var ctx = CreateConquerorContext();
+        ctx.DecodeContextData(values!);
 
-        Assert.That(receivedData.AsKeyValuePairs(), Is.EquivalentTo(ContextData));
-
-        Assert.That(response.Headers.Contains(HttpConstants.ConquerorUpstreamContextHeaderName), Is.False);
+        Assert.That(ctx.UpstreamContextData, Is.Empty);
+        Assert.That(ctx.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
     }
 
     [TestCase("/api/queries/test?payload=10")]
@@ -90,7 +94,33 @@ public sealed class ConquerorContextQueryTests : TestBase
     [TestCase("/api/queries/testDelegate?payload=10")]
     [TestCase("/api/custom/queries/test?payload=10")]
     [TestCase("/api/custom/queries/testQueryWithoutPayload")]
-    public async Task GivenConquerorDownstreamContextRequestHeader_DataIsReceivedByHandler(string path, string? postContent = null)
+    public async Task GivenUpstreamAndBidirectionalContextData_DataIsReturnedInHeader(string path, string? postContent = null)
+    {
+        Resolve<TestObservations>().ShouldAddUpstreamData = true;
+        Resolve<TestObservations>().ShouldAddBidirectionalData = true;
+
+        using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
+        var response = postContent != null ? await HttpClient.PostAsync(path, content) : await HttpClient.GetAsync(path);
+        await response.AssertSuccessStatusCode();
+
+        var exists = response.Headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values);
+
+        Assert.That(exists, Is.True);
+
+        using var ctx = CreateConquerorContext();
+        ctx.DecodeContextData(values!);
+
+        Assert.That(ctx.UpstreamContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+        Assert.That(ctx.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(ContextData));
+    }
+
+    [TestCase("/api/queries/test?payload=10")]
+    [TestCase("/api/queries/testQueryWithoutPayload")]
+    [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+    [TestCase("/api/queries/testDelegate?payload=10")]
+    [TestCase("/api/custom/queries/test?payload=10")]
+    [TestCase("/api/custom/queries/testQueryWithoutPayload")]
+    public async Task GivenConquerorContextRequestHeaderWithDownstreamData_DataIsReceivedByHandler(string path, string? postContent = null)
     {
         using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
 
@@ -104,7 +134,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         {
             Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
             RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorDownstreamContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.DownstreamContextData) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
             Content = postContent != null ? content : null,
         };
 
@@ -124,7 +154,7 @@ public sealed class ConquerorContextQueryTests : TestBase
     [TestCase("/api/queries/testDelegate?payload=10")]
     [TestCase("/api/custom/queries/test?payload=10")]
     [TestCase("/api/custom/queries/testQueryWithoutPayload")]
-    public async Task GivenConquerorBidirectionalContextRequestHeader_DataIsReceivedByHandler(string path, string? postContent = null)
+    public async Task GivenConquerorContextRequestHeaderWithBidirectionalData_DataIsReceivedByHandler(string path, string? postContent = null)
     {
         using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
 
@@ -138,7 +168,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         {
             Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
             RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.ContextData) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
             Content = postContent != null ? content : null,
         };
 
@@ -157,19 +187,35 @@ public sealed class ConquerorContextQueryTests : TestBase
     [TestCase("/api/queries/testDelegate?payload=10")]
     [TestCase("/api/custom/queries/test?payload=10")]
     [TestCase("/api/custom/queries/testQueryWithoutPayload")]
-    public async Task GivenInvalidConquerorDownstreamContextRequestHeader_ReturnsBadRequest(string path, string? postContent = null)
+    public async Task GivenConquerorContextRequestHeaderWithDownstreamAndBidirectionalData_DataIsReceivedByHandler(string path, string? postContent = null)
     {
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var (key, value) in ContextData)
+        {
+            conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+            conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+        }
+
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
         using var msg = new HttpRequestMessage
         {
             Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
             RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorDownstreamContextHeaderName, "foo=bar" } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
             Content = postContent != null ? content : null,
         };
 
         var response = await HttpClient.SendAsync(msg);
-        await response.AssertStatusCode(HttpStatusCode.BadRequest);
+        await response.AssertSuccessStatusCode();
+
+        var receivedDownstreamContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
+        var receivedBidirectionalContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
+
+        Assert.That(receivedDownstreamContextData, Is.Not.Null);
+        Assert.That(receivedBidirectionalContextData, Is.Not.Null);
+        Assert.That(ContextData, Is.SubsetOf(receivedDownstreamContextData!.AsKeyValuePairs<string>()));
+        Assert.That(ContextData, Is.SubsetOf(receivedBidirectionalContextData!.AsKeyValuePairs<string>()));
     }
 
     [TestCase("/api/queries/test?payload=10")]
@@ -178,7 +224,58 @@ public sealed class ConquerorContextQueryTests : TestBase
     [TestCase("/api/queries/testDelegate?payload=10")]
     [TestCase("/api/custom/queries/test?payload=10")]
     [TestCase("/api/custom/queries/testQueryWithoutPayload")]
-    public async Task GivenInvalidConquerorBidirectionalContextRequestHeader_ReturnsBadRequest(string path, string? postContent = null)
+    public async Task GivenMultipleConquerorContextRequestHeadersWithDownstreamAndBidirectionalData_DataIsReceivedByHandler(string path, string? postContent = null)
+    {
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var (key, value) in ContextData)
+        {
+            conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+            conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        var encodedData1 = conquerorContext.EncodeDownstreamContextData();
+
+        conquerorContext.DownstreamContextData.Clear();
+        conquerorContext.ContextData.Clear();
+
+        conquerorContext.DownstreamContextData.Set("extraKey", "extraValue", ConquerorContextDataScope.AcrossTransports);
+        conquerorContext.ContextData.Set("extraKey", "extraValue", ConquerorContextDataScope.AcrossTransports);
+
+        var encodedData2 = conquerorContext.EncodeDownstreamContextData();
+
+        using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
+        using var msg = new HttpRequestMessage
+        {
+            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
+            RequestUri = new(path, UriKind.Relative),
+            Headers =
+            {
+                { HttpConstants.ConquerorContextHeaderName, encodedData1 },
+                { HttpConstants.ConquerorContextHeaderName, encodedData2 },
+            },
+            Content = postContent != null ? content : null,
+        };
+
+        var response = await HttpClient.SendAsync(msg);
+        await response.AssertSuccessStatusCode();
+
+        var receivedDownstreamContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
+        var receivedBidirectionalContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
+
+        Assert.That(receivedDownstreamContextData, Is.Not.Null);
+        Assert.That(receivedBidirectionalContextData, Is.Not.Null);
+        Assert.That(ContextData.Concat([new("extraKey", "extraValue")]), Is.SubsetOf(receivedDownstreamContextData!.AsKeyValuePairs<string>()));
+        Assert.That(ContextData.Concat([new("extraKey", "extraValue")]), Is.SubsetOf(receivedBidirectionalContextData!.AsKeyValuePairs<string>()));
+    }
+
+    [TestCase("/api/queries/test?payload=10")]
+    [TestCase("/api/queries/testQueryWithoutPayload")]
+    [TestCase("/api/queries/testPost", "{\"payload\":10}")]
+    [TestCase("/api/queries/testDelegate?payload=10")]
+    [TestCase("/api/custom/queries/test?payload=10")]
+    [TestCase("/api/custom/queries/testQueryWithoutPayload")]
+    public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path, string? postContent = null)
     {
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
         using var msg = new HttpRequestMessage
@@ -202,7 +299,7 @@ public sealed class ConquerorContextQueryTests : TestBase
     public async Task GivenQueryIdInContext_QueryIdIsObservedByHandler(string path, string? postContent = null)
     {
         const string queryId = "test-query";
-        
+
         using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
         conquerorContext.SetQueryId(queryId);
 
@@ -211,7 +308,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         {
             Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
             RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorDownstreamContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.DownstreamContextData) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
             Content = postContent != null ? content : null,
         };
 
@@ -412,6 +509,11 @@ public sealed class ConquerorContextQueryTests : TestBase
         _ = app.UseRouting();
         _ = app.UseConqueror();
         _ = app.UseEndpoints(b => b.MapControllers());
+    }
+
+    private IDisposableConquerorContext CreateConquerorContext()
+    {
+        return Resolve<IConquerorContextAccessor>().GetOrCreate();
     }
 
     private static void ObserveAndSetContextData(TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)

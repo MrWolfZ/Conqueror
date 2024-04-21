@@ -29,8 +29,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add tests for registries for multiple delegate handlers to confirm that each handler is discoverable
 - [ ] add tests that registering all types from assembly does not overwrite existing registrations
 - [ ] adjust lifetime tests to assert on multiple executions of the same handler "instance"
-- [ ] adapt transport interface to take and return formatted context data as a parameter
-  - [ ] use single string to encode all kinds of context data (i.e. upstream, downstream, bidirectional)
 - [ ] add tests that assert that service provider on pipeline builders is from correct scope
 - [ ] add CQS to known abbreviations in rider settings and remove inconsistent naming suppressions
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline

@@ -49,7 +49,7 @@ public sealed class TopLevelProgramTests : IDisposable
         {
             Method = HttpMethod.Get,
             RequestUri = new("/api/queries/topLevelTest?payload=10", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.ContextData) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
         };
 
         var response = await HttpClient.SendAsync(msg);
@@ -59,9 +59,10 @@ public sealed class TopLevelProgramTests : IDisposable
         var responseContextHeader = response.Headers.GetValues(HttpConstants.ConquerorContextHeaderName).ToList();
         Assert.That(responseContextHeader, Is.Not.Null);
 
-        var parsedContextData = ConquerorContextDataFormatter.Parse(responseContextHeader);
+        conquerorContext.ContextData.Clear();
+        conquerorContext.DecodeContextData(responseContextHeader);
 
-        Assert.That(parsedContextData, Is.EquivalentTo(new[] { ("testKey", "testValue") }));
+        Assert.That(conquerorContext.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(new Dictionary<string, string> { { "testKey", "testValue" } }));
     }
 
     [Test]
@@ -86,7 +87,7 @@ public sealed class TopLevelProgramTests : IDisposable
         {
             Method = HttpMethod.Get,
             RequestUri = new("/customQueryEndpoint?payload=10", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.ContextData) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
         };
 
         var response = await HttpClient.SendAsync(msg);
@@ -96,9 +97,10 @@ public sealed class TopLevelProgramTests : IDisposable
         var responseContextHeader = response.Headers.GetValues(HttpConstants.ConquerorContextHeaderName).ToList();
         Assert.That(responseContextHeader, Is.Not.Null);
 
-        var parsedContextData = ConquerorContextDataFormatter.Parse(responseContextHeader);
+        conquerorContext.ContextData.Clear();
+        conquerorContext.DecodeContextData(responseContextHeader);
 
-        Assert.That(parsedContextData, Is.EquivalentTo(new[] { ("testKey", "testValue") }));
+        Assert.That(conquerorContext.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(new Dictionary<string, string> { { "testKey", "testValue" } }));
     }
 
     [Test]
@@ -125,7 +127,7 @@ public sealed class TopLevelProgramTests : IDisposable
         {
             Method = HttpMethod.Post,
             RequestUri = new("/api/commands/topLevelTest", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.ContextData) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
             Content = content,
         };
 
@@ -136,9 +138,10 @@ public sealed class TopLevelProgramTests : IDisposable
         var responseContextHeader = response.Headers.GetValues(HttpConstants.ConquerorContextHeaderName).ToList();
         Assert.That(responseContextHeader, Is.Not.Null);
 
-        var parsedContextData = ConquerorContextDataFormatter.Parse(responseContextHeader);
+        conquerorContext.ContextData.Clear();
+        conquerorContext.DecodeContextData(responseContextHeader);
 
-        Assert.That(parsedContextData, Is.EquivalentTo(new[] { ("testKey", "testValue") }));
+        Assert.That(conquerorContext.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(new Dictionary<string, string> { { "testKey", "testValue" } }));
     }
 
     [Test]
@@ -165,7 +168,7 @@ public sealed class TopLevelProgramTests : IDisposable
         {
             Method = HttpMethod.Post,
             RequestUri = new("/customCommandEndpoint", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, ConquerorContextDataFormatter.Format(conquerorContext.ContextData) } },
+            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
             Content = content,
         };
 
@@ -176,8 +179,14 @@ public sealed class TopLevelProgramTests : IDisposable
         var responseContextHeader = response.Headers.GetValues(HttpConstants.ConquerorContextHeaderName).ToList();
         Assert.That(responseContextHeader, Is.Not.Null);
 
-        var parsedContextData = ConquerorContextDataFormatter.Parse(responseContextHeader);
+        conquerorContext.ContextData.Clear();
+        conquerorContext.DecodeContextData(responseContextHeader);
 
-        Assert.That(parsedContextData, Is.EquivalentTo(new[] { ("testKey", "testValue") }));
+        Assert.That(conquerorContext.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(new Dictionary<string, string> { { "testKey", "testValue" } }));
+    }
+
+    private IDisposableConquerorContext CreateConquerorContext()
+    {
+        return applicationFactory.Services.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
     }
 }

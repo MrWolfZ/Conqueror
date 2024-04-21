@@ -15,12 +15,16 @@ public class ConquerorContextComplexTests : TestBase
         { "key4", "valueWith,Comma" },
         { "keyWith=Equals", "value" },
         { "key6", "valueWith=Equals" },
+        { "keyWith|Pipe", "value" },
+        { "key8", "valueWith|Pipe" },
+        { "keyWith:Colon", "value" },
+        { "key10", "valueWith:Colon" },
     };
 
     private static readonly Dictionary<string, string> InProcessContextData = new()
     {
-        { "key7", "value1" },
-        { "key8", "value2" },
+        { "key11", "value1" },
+        { "key12", "value2" },
     };
 
     [Test]
@@ -99,6 +103,51 @@ public class ConquerorContextComplexTests : TestBase
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
         Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+    }
+
+    [Test]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
+    public async Task GivenManuallyCreatedContextOnClientWithDownstreamAndBidirectionalData_ContextIsReceivedInDifferentCommandAndQueryHandlersAcrossMultipleInvocations()
+    {
+        using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
+
+        foreach (var item in ContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.AcrossTransports);
+        }
+
+        foreach (var item in InProcessContextData)
+        {
+            context.DownstreamContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+            context.ContextData.Set(item.Key, item.Value, ConquerorContextDataScope.InProcess);
+        }
+
+        var observations = Resolve<TestObservations>();
+
+        var allReceivedKeys = new List<string>();
+
+        var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
+        var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+
+        allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+        allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
+
+        Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 6));
+        Assert.That(ContextData, Is.SubsetOf(Resolve<TestObservations>().ReceivedDownstreamContextData!.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value))));
+        Assert.That(ContextData, Is.SubsetOf(Resolve<TestObservations>().ReceivedBidirectionalContextData!.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value))));
     }
 
     [Test]

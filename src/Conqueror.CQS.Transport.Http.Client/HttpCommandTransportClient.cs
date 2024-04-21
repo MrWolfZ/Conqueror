@@ -78,12 +78,7 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
             headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }
 
-        if (ConquerorContextDataFormatter.Format(conquerorContextAccessor.ConquerorContext?.DownstreamContextData) is { } downstreamData)
-        {
-            headers.Add(HttpConstants.ConquerorDownstreamContextHeaderName, downstreamData);
-        }
-
-        if (ConquerorContextDataFormatter.Format(conquerorContextAccessor.ConquerorContext?.ContextData) is { } data)
+        if (conquerorContextAccessor.ConquerorContext?.EncodeDownstreamContextData() is { } data)
         {
             headers.Add(HttpConstants.ConquerorContextHeaderName, data);
         }
@@ -104,24 +99,9 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
             return;
         }
 
-        if (headers.TryGetValues(HttpConstants.ConquerorUpstreamContextHeaderName, out var upstreamValues))
-        {
-            var upstreamData = ConquerorContextDataFormatter.Parse(upstreamValues);
-
-            foreach (var (key, value) in upstreamData)
-            {
-                ctx.UpstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
-            }
-        }
-
         if (headers.TryGetValues(HttpConstants.ConquerorContextHeaderName, out var values))
         {
-            var data = ConquerorContextDataFormatter.Parse(values);
-
-            foreach (var (key, value) in data)
-            {
-                ctx.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
-            }
+            ctx.DecodeContextData(values);
         }
     }
 }
