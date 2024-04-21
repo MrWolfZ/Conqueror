@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-// ReSharper disable InconsistentNaming
-
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 

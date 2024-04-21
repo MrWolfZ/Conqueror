@@ -1,5 +1,3 @@
-// ReSharper disable InconsistentNaming
-
 using Conqueror.CQS.Middleware.Authorization;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)

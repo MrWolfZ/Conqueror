@@ -30,7 +30,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add tests that registering all types from assembly does not overwrite existing registrations
 - [ ] adjust lifetime tests to assert on multiple executions of the same handler "instance"
 - [ ] add tests that assert that service provider on pipeline builders is from correct scope
-- [ ] add CQS to known abbreviations in rider settings and remove inconsistent naming suppressions
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
 - [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] write code-level documentation for all public APIs

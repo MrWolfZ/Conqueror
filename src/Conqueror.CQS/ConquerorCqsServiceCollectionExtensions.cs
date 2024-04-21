@@ -3,8 +3,6 @@ using System.Linq;
 using System.Reflection;
 using Conqueror;
 
-// ReSharper disable InconsistentNaming
-
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 

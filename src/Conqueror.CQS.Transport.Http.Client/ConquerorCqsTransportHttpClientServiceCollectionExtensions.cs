@@ -2,8 +2,6 @@ using System;
 using Conqueror.CQS.Transport.Http.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-// ReSharper disable InconsistentNaming
-
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
 
