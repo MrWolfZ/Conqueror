@@ -10,17 +10,20 @@ namespace Conqueror.CQS.CommandHandling;
 internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler<TCommand, TResponse>
     where TCommand : class
 {
+    private readonly CommandMiddlewareRegistry commandMiddlewareRegistry;
     private readonly Action<ICommandPipelineBuilder>? configurePipeline;
     private readonly IServiceProvider serviceProvider;
     private readonly CommandTransportClientFactory transportClientFactory;
 
     public CommandHandlerProxy(IServiceProvider serviceProvider,
                                CommandTransportClientFactory transportClientFactory,
-                               Action<ICommandPipelineBuilder>? configurePipeline)
+                               Action<ICommandPipelineBuilder>? configurePipeline,
+                               CommandMiddlewareRegistry commandMiddlewareRegistry)
     {
         this.serviceProvider = serviceProvider;
         this.transportClientFactory = transportClientFactory;
         this.configurePipeline = configurePipeline;
+        this.commandMiddlewareRegistry = commandMiddlewareRegistry;
     }
 
     public async Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
@@ -32,7 +35,7 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
             conquerorContext.SetCommandId(ActivitySpanId.CreateRandom().ToString());
         }
 
-        var pipelineBuilder = new CommandPipelineBuilder(serviceProvider);
+        var pipelineBuilder = new CommandPipelineBuilder(serviceProvider, commandMiddlewareRegistry);
 
         configurePipeline?.Invoke(pipelineBuilder);
 

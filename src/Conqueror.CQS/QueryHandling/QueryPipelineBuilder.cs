@@ -1,18 +1,17 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling;
 
 internal sealed class QueryPipelineBuilder : IQueryPipelineBuilder
 {
-    private readonly IReadOnlyDictionary<Type, IQueryMiddlewareInvoker> middlewareInvokersByMiddlewareTypes;
     private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IQueryMiddlewareInvoker Invoker)> middlewares = new();
+    private readonly QueryMiddlewareRegistry queryMiddlewareRegistry;
 
-    public QueryPipelineBuilder(IServiceProvider serviceProvider)
+    public QueryPipelineBuilder(IServiceProvider serviceProvider, QueryMiddlewareRegistry queryMiddlewareRegistry)
     {
+        this.queryMiddlewareRegistry = queryMiddlewareRegistry;
         ServiceProvider = serviceProvider;
-        middlewareInvokersByMiddlewareTypes = serviceProvider.GetRequiredService<QueryMiddlewareRegistry>().GetQueryMiddlewareInvokers();
     }
 
     public IServiceProvider ServiceProvider { get; }
@@ -99,13 +98,14 @@ internal sealed class QueryPipelineBuilder : IQueryPipelineBuilder
     }
 
     private IQueryMiddlewareInvoker GetInvoker<TMiddleware>()
+        where TMiddleware : IQueryMiddlewareMarker
     {
-        if (!middlewareInvokersByMiddlewareTypes.TryGetValue(typeof(TMiddleware), out var invoker))
+        if (queryMiddlewareRegistry.GetQueryMiddlewareInvoker<TMiddleware>() is { } invoker)
         {
-            throw new InvalidOperationException(
-                $"trying to use unregistered middleware type '{typeof(TMiddleware).Name}' in pipeline; ensure that the middleware is registered in the DI container");
+            return invoker;
         }
 
-        return invoker;
+        throw new InvalidOperationException(
+            $"trying to use unregistered middleware type '{typeof(TMiddleware).Name}' in pipeline; ensure that the middleware is registered in the DI container");
     }
 }

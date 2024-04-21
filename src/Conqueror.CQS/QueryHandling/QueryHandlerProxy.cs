@@ -11,16 +11,19 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
     where TQuery : class
 {
     private readonly Action<IQueryPipelineBuilder>? configurePipeline;
+    private readonly QueryMiddlewareRegistry queryMiddlewareRegistry;
     private readonly IServiceProvider serviceProvider;
     private readonly QueryTransportClientFactory transportClientFactory;
 
     public QueryHandlerProxy(IServiceProvider serviceProvider,
                              QueryTransportClientFactory transportClientFactory,
-                             Action<IQueryPipelineBuilder>? configurePipeline)
+                             Action<IQueryPipelineBuilder>? configurePipeline,
+                             QueryMiddlewareRegistry queryMiddlewareRegistry)
     {
         this.serviceProvider = serviceProvider;
         this.transportClientFactory = transportClientFactory;
         this.configurePipeline = configurePipeline;
+        this.queryMiddlewareRegistry = queryMiddlewareRegistry;
     }
 
     public async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
@@ -32,7 +35,7 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
             conquerorContext.SetQueryId(ActivitySpanId.CreateRandom().ToString());
         }
 
-        var pipelineBuilder = new QueryPipelineBuilder(serviceProvider);
+        var pipelineBuilder = new QueryPipelineBuilder(serviceProvider, queryMiddlewareRegistry);
 
         configurePipeline?.Invoke(pipelineBuilder);
 

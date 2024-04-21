@@ -60,10 +60,6 @@ public static class ConquerorCqsCommandMiddlewareServiceCollectionExtensions
 
         services.AddConquerorCqsCommandServices();
 
-        var registration = new CommandMiddlewareRegistration(middlewareType, GetMiddlewareConfigurationType(middlewareType));
-
-        _ = services.AddSingleton(registration);
-
         var configurationMethod = typeof(ConquerorCqsCommandMiddlewareServiceCollectionExtensions).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
 
         if (configurationMethod == null)

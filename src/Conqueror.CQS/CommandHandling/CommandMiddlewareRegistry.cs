@@ -4,18 +4,18 @@ using System.Linq;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class CommandMiddlewareRegistry : ICommandMiddlewareRegistry
+internal sealed class CommandMiddlewareRegistry
 {
     private readonly IReadOnlyDictionary<Type, ICommandMiddlewareInvoker> invokers;
-    private readonly IReadOnlyCollection<CommandMiddlewareRegistration> registrations;
 
-    public CommandMiddlewareRegistry(IEnumerable<CommandMiddlewareRegistration> registrations, IEnumerable<ICommandMiddlewareInvoker> invokers)
+    public CommandMiddlewareRegistry(IEnumerable<ICommandMiddlewareInvoker> invokers)
     {
-        this.registrations = registrations.ToList();
         this.invokers = invokers.ToDictionary(i => i.MiddlewareType);
     }
 
-    public IReadOnlyCollection<CommandMiddlewareRegistration> GetCommandMiddlewareRegistrations() => registrations;
-
-    internal IReadOnlyDictionary<Type, ICommandMiddlewareInvoker> GetCommandMiddlewareInvokers() => invokers;
+    public ICommandMiddlewareInvoker? GetCommandMiddlewareInvoker<TMiddleware>()
+        where TMiddleware : ICommandMiddlewareMarker
+    {
+        return invokers.GetValueOrDefault(typeof(TMiddleware));
+    }
 }

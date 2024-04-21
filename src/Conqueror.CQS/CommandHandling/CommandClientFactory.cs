@@ -9,6 +9,13 @@ namespace Conqueror.CQS.CommandHandling;
 // TODO: improve performance by caching creation functions via compiled expressions
 internal sealed class CommandClientFactory
 {
+    private readonly CommandMiddlewareRegistry commandMiddlewareRegistry;
+
+    public CommandClientFactory(CommandMiddlewareRegistry commandMiddlewareRegistry)
+    {
+        this.commandMiddlewareRegistry = commandMiddlewareRegistry;
+    }
+
     public THandler CreateCommandClient<THandler>(IServiceProvider serviceProvider,
                                                   Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
                                                   Action<ICommandPipelineBuilder>? configurePipeline)
@@ -45,7 +52,7 @@ internal sealed class CommandClientFactory
 
         try
         {
-            var result = genericCreationMethod.Invoke(null, new object?[] { serviceProvider, transportClientFactory, configurePipeline });
+            var result = genericCreationMethod.Invoke(null, [serviceProvider, transportClientFactory, configurePipeline, commandMiddlewareRegistry]);
 
             if (result is not THandler handler)
             {
@@ -62,11 +69,12 @@ internal sealed class CommandClientFactory
 
     private static THandler CreateCommandClientInternal<THandler, TCommand, TResponse>(IServiceProvider serviceProvider,
                                                                                        Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                                                       Action<ICommandPipelineBuilder>? configurePipeline)
+                                                                                       Action<ICommandPipelineBuilder>? configurePipeline,
+                                                                                       CommandMiddlewareRegistry commandMiddlewareRegistry)
         where THandler : class, ICommandHandler
         where TCommand : class
     {
-        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, new(transportClientFactory), configurePipeline);
+        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, new(transportClientFactory), configurePipeline, commandMiddlewareRegistry);
 
         if (typeof(THandler) == typeof(ICommandHandler<TCommand>))
         {

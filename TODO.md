@@ -22,7 +22,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] remove middleware registries
 - [ ] add tests for overwriting handler registration with a new factory and assert that new factory is called
 - [ ] add tests for overwriting handler registration with a new lifetime and assert that new lifetime is used
 - [ ] add tests for overwriting middleware registration with a new factory and assert that new factory is called

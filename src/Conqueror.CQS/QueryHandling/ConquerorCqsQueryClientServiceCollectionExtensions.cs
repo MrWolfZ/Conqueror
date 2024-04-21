@@ -106,7 +106,13 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
         void RegisterPlainInterface()
         {
-            _ = services.Replace(ServiceDescriptor.Transient<IQueryHandler<TQuery, TResponse>>(p => new QueryHandlerProxy<TQuery, TResponse>(p, transportClientFactory, configurePipeline)));
+            _ = services.Replace(ServiceDescriptor.Transient<IQueryHandler<TQuery, TResponse>>(CreateProxy));
+        }
+
+        QueryHandlerProxy<TQuery, TResponse> CreateProxy(IServiceProvider serviceProvider)
+        {
+            var queryMiddlewareRegistry = serviceProvider.GetRequiredService<QueryMiddlewareRegistry>();
+            return new(serviceProvider, transportClientFactory, configurePipeline, queryMiddlewareRegistry);
         }
 
         void RegisterCustomInterface()

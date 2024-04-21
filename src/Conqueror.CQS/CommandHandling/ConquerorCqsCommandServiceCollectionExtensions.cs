@@ -14,7 +14,6 @@ public static class ConquerorCqsCommandServiceCollectionExtensions
         services.TryAddSingleton<CommandHandlerRegistry>();
         services.TryAddSingleton<ICommandHandlerRegistry>(p => p.GetRequiredService<CommandHandlerRegistry>());
         services.TryAddSingleton<CommandMiddlewareRegistry>();
-        services.TryAddSingleton<ICommandMiddlewareRegistry>(p => p.GetRequiredService<CommandMiddlewareRegistry>());
 
         services.AddConquerorContext();
     }

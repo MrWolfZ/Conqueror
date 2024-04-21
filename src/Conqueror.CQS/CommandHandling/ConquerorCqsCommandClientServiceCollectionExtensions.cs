@@ -112,7 +112,13 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
                 services.TryAddTransient<ICommandHandler<TCommand>, CommandWithoutResponseAdapter<TCommand>>();
             }
 
-            _ = services.Replace(ServiceDescriptor.Transient<ICommandHandler<TCommand, TResponse>>(p => new CommandHandlerProxy<TCommand, TResponse>(p, transportClientFactory, configurePipeline)));
+            _ = services.Replace(ServiceDescriptor.Transient<ICommandHandler<TCommand, TResponse>>(CreateProxy));
+        }
+
+        CommandHandlerProxy<TCommand, TResponse> CreateProxy(IServiceProvider serviceProvider)
+        {
+            var commandMiddlewareRegistry = serviceProvider.GetRequiredService<CommandMiddlewareRegistry>();
+            return new(serviceProvider, transportClientFactory, configurePipeline, commandMiddlewareRegistry);
         }
 
         void RegisterCustomInterface()

@@ -67,9 +67,6 @@ public static class ConquerorCqsQueryMiddlewareServiceCollectionExtensions
             throw new InvalidOperationException($"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'");
         }
 
-        var registration = new QueryMiddlewareRegistration(middlewareType, GetMiddlewareConfigurationType(middlewareType));
-        _ = services.AddSingleton(registration);
-
         var genericConfigurationMethod = configurationMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullQueryMiddlewareConfiguration));
 
         try
