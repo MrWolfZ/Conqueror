@@ -21,7 +21,7 @@ public abstract class ConquerorStreamingWithRequestPayloadWebsocketTransportCont
 {
     protected async Task ExecuteRequest(TRequest request, CancellationToken cancellationToken)
     {
-        var handler = Request.HttpContext.RequestServices.GetRequiredService<IStreamingHandler<TRequest, TItem>>();
+        var handler = Request.HttpContext.RequestServices.GetRequiredService<IStreamingRequestHandler<TRequest, TItem>>();
         await HandleWebSocketConnection(handler.ExecuteRequest(request, cancellationToken)).ConfigureAwait(false);
     }
 }
@@ -33,7 +33,7 @@ public abstract class ConquerorStreamingWithoutRequestPayloadWebsocketTransportC
 {
     protected async Task ExecuteRequest(CancellationToken cancellationToken)
     {
-        var handler = Request.HttpContext.RequestServices.GetRequiredService<IStreamingHandler<TRequest, TItem>>();
+        var handler = Request.HttpContext.RequestServices.GetRequiredService<IStreamingRequestHandler<TRequest, TItem>>();
         await HandleWebSocketConnection(handler.ExecuteRequest(new(), cancellationToken)).ConfigureAwait(false);
     }
 }

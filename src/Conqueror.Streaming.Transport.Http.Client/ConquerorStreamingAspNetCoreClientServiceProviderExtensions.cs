@@ -9,7 +9,7 @@ public static class ConquerorStreamingAspNetCoreClientServiceProviderExtensions
 {
     public static TStreamingHandler CreateStreamingHttpClient<TStreamingHandler>(this IServiceProvider provider,
                                                                                  Func<IServiceProvider, Uri> baseAddressFactory)
-        where TStreamingHandler : class, IStreamingHandler
+        where TStreamingHandler : class, IStreamingRequestHandler
     {
         return provider.GetRequiredService<IConquerorStreamingHttpClientFactory>().CreateStreamingHttpClient<TStreamingHandler>(baseAddressFactory);
     }
@@ -17,7 +17,7 @@ public static class ConquerorStreamingAspNetCoreClientServiceProviderExtensions
     public static TStreamingHandler CreateStreamingHttpClient<TStreamingHandler>(this IServiceProvider provider,
                                                                                  Func<IServiceProvider, Uri> baseAddressFactory,
                                                                                  Action<ConquerorStreamingHttpClientOptions> configure)
-        where TStreamingHandler : class, IStreamingHandler
+        where TStreamingHandler : class, IStreamingRequestHandler
     {
         return provider.GetRequiredService<IConquerorStreamingHttpClientFactory>().CreateStreamingHttpClient<TStreamingHandler>(baseAddressFactory, configure);
     }

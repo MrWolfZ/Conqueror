@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text.RegularExpressions;
-using Conqueror.Streaming.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
@@ -12,25 +11,25 @@ internal sealed class DynamicStreamingControllerFactory : DynamicStreamingBaseCo
 {
     private const string ApiGroupName = "Streams";
 
-    public Type Create(StreamingHandlerMetadata metadata, HttpStreamingRequestAttribute attribute)
+    public Type Create(StreamingRequestHandlerRegistration registration, HttpStreamingRequestAttribute attribute)
     {
-        var typeName = metadata.RequestType.FullName ?? metadata.RequestType.Name;
+        var typeName = registration.StreamingRequestType.FullName ?? registration.StreamingRequestType.Name;
 
-        return Create(typeName, () => CreateType(typeName, metadata, attribute));
+        return Create(typeName, () => CreateType(typeName, registration, attribute));
     }
 
-    private Type CreateType(string typeName, StreamingHandlerMetadata metadata, HttpStreamingRequestAttribute attribute)
+    private Type CreateType(string typeName, StreamingRequestHandlerRegistration registration, HttpStreamingRequestAttribute attribute)
     {
-        var name = metadata.RequestType.Name;
+        var name = registration.StreamingRequestType.Name;
 
         // TODO: use service
         var regex = new Regex("(Stream(ing)?)?Request$");
         var route = $"/api/streams/{regex.Replace(name, string.Empty)}";
 
-        var hasPayload = metadata.RequestType.HasAnyProperties() || !metadata.RequestType.HasDefaultConstructor();
+        var hasPayload = registration.StreamingRequestType.HasAnyProperties() || !registration.StreamingRequestType.HasDefaultConstructor();
 
         var genericBaseControllerType = hasPayload ? typeof(ConquerorStreamingWithRequestPayloadWebsocketTransportControllerBase<,>) : typeof(ConquerorStreamingWithoutRequestPayloadWebsocketTransportControllerBase<,>);
-        var baseControllerType = genericBaseControllerType.MakeGenericType(metadata.RequestType, metadata.ItemType);
+        var baseControllerType = genericBaseControllerType.MakeGenericType(registration.StreamingRequestType, registration.ItemType);
 
         var typeBuilder = CreateTypeBuilder(typeName, ApiGroupName, baseControllerType, route);
 

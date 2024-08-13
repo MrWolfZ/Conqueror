@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Conqueror.Streaming.Common;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,7 +27,7 @@ internal sealed class StreamingHttpServerAspNetCoreRegistrationFinalizer : IConq
 
         if (!applicationPartManager.FeatureProviders.Any(p => p is HttpQueryControllerFeatureProvider))
         {
-            var handlerMetadata = services.Select(d => d.ImplementationInstance).OfType<StreamingHandlerMetadata>();
+            var handlerMetadata = services.Select(d => d.ImplementationInstance).OfType<StreamingRequestHandlerRegistration>();
             applicationPartManager.FeatureProviders.Add(new HttpQueryControllerFeatureProvider(new(), handlerMetadata));
         }
     }

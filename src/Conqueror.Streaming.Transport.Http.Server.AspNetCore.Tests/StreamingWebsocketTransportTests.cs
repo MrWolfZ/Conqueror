@@ -133,11 +133,11 @@ public sealed class StreamingWebsocketTransportTests : TestBase
     {
         _ = services.AddMvc().AddConquerorStreaming();
 
-        _ = services.AddTransient<TestStreamingHandler>()
-                    .AddTransient<TestStreamingHandlerWithoutPayload>()
-                    .AddTransient<TestStreamingHandlerWithError>();
+        _ = services.AddTransient<TestStreamingRequestHandler>()
+                    .AddTransient<TestStreamingRequestHandlerWithoutPayload>()
+                    .AddTransient<TestStreamingRequestHandlerWithError>();
 
-        _ = services.AddConquerorStreaming().FinalizeConquerorRegistrations();
+        _ = services.AddConquerorStreaming();
     }
 
     protected override void Configure(IApplicationBuilder app)
@@ -162,9 +162,9 @@ public sealed class StreamingWebsocketTransportTests : TestBase
 
     public sealed record TestItem(int Payload);
 
-    private sealed class TestStreamingHandler : IStreamingHandler<TestRequest, TestItem>
+    private sealed class TestStreamingRequestHandler : IStreamingRequestHandler<TestRequest, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             yield return new(request.Payload + 1);
@@ -176,9 +176,9 @@ public sealed class StreamingWebsocketTransportTests : TestBase
     [HttpStreamingRequest]
     public sealed record TestRequestWithoutPayload;
 
-    private sealed class TestStreamingHandlerWithoutPayload : IStreamingHandler<TestRequestWithoutPayload, TestItem>
+    private sealed class TestStreamingRequestHandlerWithoutPayload : IStreamingRequestHandler<TestRequestWithoutPayload, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithoutPayload request, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithoutPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             yield return new(1);
@@ -188,9 +188,9 @@ public sealed class StreamingWebsocketTransportTests : TestBase
     [HttpStreamingRequest]
     public sealed record TestRequestWithError;
 
-    private sealed class TestStreamingHandlerWithError : IStreamingHandler<TestRequestWithError, TestItem>
+    private sealed class TestStreamingRequestHandlerWithError : IStreamingRequestHandler<TestRequestWithError, TestItem>
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithError request, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithError request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             yield return new(1);

@@ -18,7 +18,7 @@ internal sealed class HttpClientFactory
     public TStreamingHandler CreateStreamingHttpClient<TStreamingHandler>(IServiceProvider serviceProvider,
                                                                           Func<IServiceProvider, Uri> baseAddressFactory,
                                                                           Action<ConquerorStreamingHttpClientOptions>? configureOptions = null)
-        where TStreamingHandler : class, IStreamingHandler
+        where TStreamingHandler : class, IStreamingRequestHandler
     {
         var (requestType, itemType) = typeof(TStreamingHandler).GetStreamingRequestAndItemTypes().Single();
         requestType.AssertRequestIsHttpStream();
@@ -35,10 +35,10 @@ internal sealed class HttpClientFactory
     }
 
     private object? CreateTypedQueryClientGeneric<TStreamingHandler, TRequest, TItem>(IServiceProvider serviceProvider, HttpClientRegistration registration)
-        where TStreamingHandler : class, IStreamingHandler
+        where TStreamingHandler : class, IStreamingRequestHandler
         where TRequest : class
     {
-        var handler = new HttpStreamingHandler<TRequest, TItem>(configurationProvider.GetOptions(serviceProvider, registration),
+        var handler = new HttpStreamingRequestHandler<TRequest, TItem>(configurationProvider.GetOptions(serviceProvider, registration),
                                                                 serviceProvider.GetService<IConquerorContextAccessor>());
 
         if (!typeof(TStreamingHandler).IsCustomStreamingHandlerInterfaceType())
@@ -46,7 +46,7 @@ internal sealed class HttpClientFactory
             return handler;
         }
 
-        var dynamicType = DynamicType.Create(typeof(TStreamingHandler), typeof(IStreamingHandler<TRequest, TItem>));
+        var dynamicType = DynamicType.Create(typeof(TStreamingHandler), typeof(IStreamingRequestHandler<TRequest, TItem>));
         return Activator.CreateInstance(dynamicType, handler);
     }
 }

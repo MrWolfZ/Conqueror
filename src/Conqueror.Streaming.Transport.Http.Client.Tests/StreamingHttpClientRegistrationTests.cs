@@ -10,70 +10,70 @@ public sealed class StreamingHttpClientRegistrationTests
     [Test]
     public void GivenRegisteredPlainClient_CanResolvePlainClient()
     {
-        using var provider = RegisterClient<IStreamingHandler<TestRequest, TestItem>>();
+        using var provider = RegisterClient<IStreamingRequestHandler<TestRequest, TestItem>>();
 
-        Assert.DoesNotThrow(() => provider.GetRequiredService<IStreamingHandler<TestRequest, TestItem>>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<IStreamingRequestHandler<TestRequest, TestItem>>());
     }
 
     [Test]
     public void GivenRegisteredCustomClient_CanResolvePlainClient()
     {
-        using var provider = RegisterClient<ITestStreamingHandler>();
+        using var provider = RegisterClient<ITestStreamingRequestHandler>();
 
-        Assert.DoesNotThrow(() => provider.GetRequiredService<IStreamingHandler<TestRequest, TestItem>>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<IStreamingRequestHandler<TestRequest, TestItem>>());
     }
 
     [Test]
     public void GivenRegisteredCustomClient_CanResolveCustomClient()
     {
-        using var provider = RegisterClient<ITestStreamingHandler>();
+        using var provider = RegisterClient<ITestStreamingRequestHandler>();
 
-        Assert.DoesNotThrow(() => provider.GetRequiredService<ITestStreamingHandler>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<ITestStreamingRequestHandler>());
     }
 
     [Test]
     public void GivenUnregisteredPlainClient_ThrowsInvalidOperationException()
     {
-        using var provider = RegisterClient<ITestStreamingHandler>();
-        _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IStreamingHandler<NonHttpTestRequest, TestItem>>());
+        using var provider = RegisterClient<ITestStreamingRequestHandler>();
+        _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IStreamingRequestHandler<NonHttpTestRequest, TestItem>>());
     }
 
     [Test]
     public void GivenUnregisteredCustomClient_ThrowsInvalidOperationException()
     {
-        using var provider = RegisterClient<ITestStreamingHandler>();
-        _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<INonHttpTestStreamingHandler>());
+        using var provider = RegisterClient<ITestStreamingRequestHandler>();
+        _ = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<INonHttpTestStreamingRequestHandler>());
     }
 
     [Test]
     public void GivenNonHttpPlainStreamingHandlerType_RegistrationThrowsArgumentException()
     {
-        _ = Assert.Throws<ArgumentException>(() => RegisterClient<IStreamingHandler<NonHttpTestRequest, TestItem>>());
+        _ = Assert.Throws<ArgumentException>(() => RegisterClient<IStreamingRequestHandler<NonHttpTestRequest, TestItem>>());
     }
 
     [Test]
     public void GivenNonHttpCustomStreamingHandlerType_RegistrationThrowsArgumentException()
     {
-        _ = Assert.Throws<ArgumentException>(() => RegisterClient<INonHttpTestStreamingHandler>());
+        _ = Assert.Throws<ArgumentException>(() => RegisterClient<INonHttpTestStreamingRequestHandler>());
     }
 
     [Test]
     public void GivenRegisteredPlainClient_CanResolvePlainClientWithoutHavingServicesExplicitlyRegistered()
     {
-        var provider = new ServiceCollection().AddConquerorStreamingHttpClient<IStreamingHandler<TestRequest, TestItem>>(_ => new("http://localhost"))
+        var provider = new ServiceCollection().AddConquerorStreamingHttpClient<IStreamingRequestHandler<TestRequest, TestItem>>(_ => new("http://localhost"))
                                               .BuildServiceProvider();
 
-        Assert.DoesNotThrow(() => provider.GetRequiredService<IStreamingHandler<TestRequest, TestItem>>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<IStreamingRequestHandler<TestRequest, TestItem>>());
     }
 
     [Test]
     public void GivenAlreadyRegisteredHandlerWhenRegistering_ThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
-        _ = services.AddConquerorStreamingHttpClientServices().AddConquerorStreamingHttpClient<ITestStreamingHandler>(_ => new("http://localhost"));
+        _ = services.AddConquerorStreamingHttpClientServices().AddConquerorStreamingHttpClient<ITestStreamingRequestHandler>(_ => new("http://localhost"));
 
         _ = Assert.Throws<InvalidOperationException>(() => services.AddConquerorStreamingHttpClientServices()
-                                                                   .AddConquerorStreamingHttpClient<ITestStreamingHandler>(_ => new("http://localhost")));
+                                                                   .AddConquerorStreamingHttpClient<ITestStreamingRequestHandler>(_ => new("http://localhost")));
     }
 
     [Test]
@@ -92,11 +92,11 @@ public sealed class StreamingHttpClientRegistrationTests
                             return new TestWebSocket();
                         };
                     })
-                    .AddConquerorStreamingHttpClient<ITestStreamingHandler>(_ => expectedAddress);
+                    .AddConquerorStreamingHttpClient<ITestStreamingRequestHandler>(_ => expectedAddress);
 
         await using var provider = services.BuildServiceProvider();
 
-        _ = await provider.GetRequiredService<ITestStreamingHandler>()
+        _ = await provider.GetRequiredService<ITestStreamingRequestHandler>()
                           .ExecuteRequest(new(), CancellationToken.None)
                           .GetAsyncEnumerator()
                           .MoveNextAsync();
@@ -119,7 +119,7 @@ public sealed class StreamingHttpClientRegistrationTests
                             return new TestWebSocket();
                         };
                     })
-                    .AddConquerorStreamingHttpClient<ITestStreamingHandler>(_ => new("http://localhost"));
+                    .AddConquerorStreamingHttpClient<ITestStreamingRequestHandler>(_ => new("http://localhost"));
 
         _ = services.AddScoped<ScopingTest>();
 
@@ -128,13 +128,13 @@ public sealed class StreamingHttpClientRegistrationTests
         using var scope1 = provider.CreateScope();
 
         _ = await scope1.ServiceProvider
-                        .GetRequiredService<ITestStreamingHandler>()
+                        .GetRequiredService<ITestStreamingRequestHandler>()
                         .ExecuteRequest(new(), CancellationToken.None)
                         .GetAsyncEnumerator()
                         .MoveNextAsync();
 
         _ = await scope1.ServiceProvider
-                        .GetRequiredService<ITestStreamingHandler>()
+                        .GetRequiredService<ITestStreamingRequestHandler>()
                         .ExecuteRequest(new(), CancellationToken.None)
                         .GetAsyncEnumerator()
                         .MoveNextAsync();
@@ -142,7 +142,7 @@ public sealed class StreamingHttpClientRegistrationTests
         using var scope2 = provider.CreateScope();
 
         _ = await scope2.ServiceProvider
-                        .GetRequiredService<ITestStreamingHandler>()
+                        .GetRequiredService<ITestStreamingRequestHandler>()
                         .ExecuteRequest(new(), CancellationToken.None)
                         .GetAsyncEnumerator()
                         .MoveNextAsync();
@@ -151,7 +151,7 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     private static ServiceProvider RegisterClient<TStreamingHandler>()
-        where TStreamingHandler : class, IStreamingHandler
+        where TStreamingHandler : class, IStreamingRequestHandler
     {
         return new ServiceCollection().AddConquerorStreamingHttpClientServices()
                                       .AddConquerorStreamingHttpClient<TStreamingHandler>(_ => new("http://localhost"))
@@ -173,9 +173,9 @@ public sealed class StreamingHttpClientRegistrationTests
         public int Payload { get; init; }
     }
 
-    private sealed class TestStreamingHandler : ITestStreamingHandler
+    private sealed class TestStreamingRequestHandler : ITestStreamingRequestHandler
     {
-        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -183,7 +183,7 @@ public sealed class StreamingHttpClientRegistrationTests
         }
     }
 
-    public interface ITestStreamingHandler : IStreamingHandler<TestRequest, TestItem>
+    public interface ITestStreamingRequestHandler : IStreamingRequestHandler<TestRequest, TestItem>
     {
     }
 
@@ -192,12 +192,12 @@ public sealed class StreamingHttpClientRegistrationTests
         public int Payload { get; init; }
     }
 
-    private sealed class NonHttpTestStreamingHandler : INonHttpTestStreamingHandler
+    private sealed class NonHttpTestStreamingRequestHandler : INonHttpTestStreamingRequestHandler
     {
-        public IAsyncEnumerable<TestItem> ExecuteRequest(NonHttpTestRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public IAsyncEnumerable<TestItem> ExecuteRequest(NonHttpTestRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    public interface INonHttpTestStreamingHandler : IStreamingHandler<NonHttpTestRequest, TestItem>
+    public interface INonHttpTestStreamingRequestHandler : IStreamingRequestHandler<NonHttpTestRequest, TestItem>
     {
     }
 

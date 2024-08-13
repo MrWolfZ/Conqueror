@@ -15,7 +15,6 @@
         <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
         <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Streaming.Abstractions\Conqueror.Streaming.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.Streaming.Common\Conqueror.Streaming.Common.csproj" />
     </ItemGroup>
 
 </Project>

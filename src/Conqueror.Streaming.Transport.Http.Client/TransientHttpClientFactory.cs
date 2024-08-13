@@ -14,13 +14,13 @@ internal sealed class TransientHttpClientFactory : IConquerorStreamingHttpClient
     }
 
     public THandler CreateStreamingHttpClient<THandler>(Func<IServiceProvider, Uri> baseAddressFactory)
-        where THandler : class, IStreamingHandler
+        where THandler : class, IStreamingRequestHandler
     {
         return innerFactory.CreateStreamingHttpClient<THandler>(serviceProvider, baseAddressFactory);
     }
 
     public THandler CreateStreamingHttpClient<THandler>(Func<IServiceProvider, Uri> baseAddressFactory, Action<ConquerorStreamingHttpClientOptions> configure)
-        where THandler : class, IStreamingHandler
+        where THandler : class, IStreamingRequestHandler
     {
         return innerFactory.CreateStreamingHttpClient<THandler>(serviceProvider, baseAddressFactory, configure);
     }

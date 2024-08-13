@@ -38,15 +38,15 @@ internal static class StreamingHandlerTypeExtensions
     public static void ValidateNoInvalidStreamingHandlerInterface(this Type type)
     {
         var interfaces = type.GetInterfaces();
-        if (interfaces.Length == 1 && interfaces[0] == typeof(IStreamingHandler))
+        if (interfaces.Length == 1 && interfaces[0] == typeof(IStreamingRequestHandler))
         {
-            throw new ArgumentException($"type '{type.Name}' implements non-generic streaming handler interface '{nameof(IStreamingHandler)}'");
+            throw new ArgumentException($"type '{type.Name}' implements non-generic streaming handler interface '{nameof(IStreamingRequestHandler)}'");
         }
     }
 
     public static bool IsCustomStreamingHandlerInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsStreamingHandlerInterfaceType);
 
-    public static bool IsStreamingHandlerInterfaceType(this Type t) => t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IStreamingHandler<,>);
+    public static bool IsStreamingHandlerInterfaceType(this Type t) => t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IStreamingRequestHandler<,>);
 
     private static IEnumerable<MethodInfo> AllMethods(this Type t) => t.GetInterfaces().Concat(new[] { t }).SelectMany(s => s.GetMethods());
 }

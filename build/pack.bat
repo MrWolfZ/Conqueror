@@ -42,7 +42,6 @@ dotnet pack %srcDir%\Conqueror.Eventing -c Release -o %publishDir% --include-sym
 dotnet pack %srcDir%\Conqueror.Eventing.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Abstractions -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Streaming.Common -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Common -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Client -c Release -o %publishDir% --include-symbols

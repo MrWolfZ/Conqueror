@@ -1,7 +1,7 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using Conqueror;
-using Conqueror.Common;
 using Conqueror.Streaming;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -12,40 +12,36 @@ public static class ConquerorStreamingServiceCollectionExtensions
 {
     public static IServiceCollection AddConquerorStreaming(this IServiceCollection services)
     {
-        services.AddFinalizationCheck();
+        services.TryAddTransient<IStreamingRequestClientFactory, TransientStreamingRequestHandlerClientFactory>();
+        services.TryAddSingleton<StreamingRequestClientFactory>();
+        services.TryAddSingleton<StreamingRequestHandlerRegistry>();
+        services.TryAddSingleton<IStreamingRequestHandlerRegistry>(p => p.GetRequiredService<StreamingRequestHandlerRegistry>());
+        services.TryAddSingleton<StreamingRequestMiddlewareRegistry>();
 
-        services.TryAddSingleton<StreamingHandlerRegistry>();
-        //// TODO
-        //// services.TryAddSingleton<StreamingMiddlewaresInvoker>();
-        services.TryAddSingleton(new StreamingRegistrationFinalizer(services));
-        //// TODO
-        //// services.TryAddSingleton<StreamingContextAccessor>();
-        //// services.TryAddSingleton<IStreamingContextAccessor>(p => p.GetRequiredService<StreamingContextAccessor>());
-
-        services.TryAddSingleton<DefaultConquerorContextAccessor>();
-        services.TryAddSingleton<IConquerorContextAccessor>(p => p.GetRequiredService<DefaultConquerorContextAccessor>());
+        services.AddConquerorContext();
 
         return services;
     }
 
     public static IServiceCollection AddConquerorStreamingTypesFromAssembly(this IServiceCollection services, Assembly assembly)
     {
-        var validTypes = assembly.GetTypes().Where(t => !t.IsInterface && !t.IsAbstract).ToList();
+        var validTypes = assembly.GetTypes()
+                                 .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false })
+                                 .ToList();
 
-        foreach (var handlerType in validTypes.Where(t => t.IsAssignableTo(typeof(IStreamingHandler))))
+        foreach (var requestHandlerType in validTypes.Where(t => t.IsAssignableTo(typeof(IStreamingRequestHandler))))
         {
-            services.TryAddTransient(handlerType);
+            services.AddConquerorStreamingRequestHandler(requestHandlerType, ServiceDescriptor.Transient(requestHandlerType, requestHandlerType));
         }
 
-        // TODO
-        // foreach (var middlewareType in validTypes.Where(t => t.GetInterfaces().Any(IsStreamingMiddlewareInterface)))
-        // {
-        //     services.TryAddTransient(middlewareType);
-        // }
+        foreach (var requestMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsStreamingRequestMiddlewareInterface)))
+        {
+            services.AddConquerorStreamingRequestMiddleware(requestMiddlewareType, ServiceDescriptor.Transient(requestMiddlewareType, requestMiddlewareType));
+        }
 
         return services;
 
-        // static bool IsStreamingMiddlewareInterface(Type i) => i == typeof(IStreamingMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamingMiddleware<>));
+        static bool IsStreamingRequestMiddlewareInterface(Type i) => i == typeof(IStreamingRequestMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamingRequestMiddleware<>));
     }
 
     public static IServiceCollection AddConquerorStreamingTypesFromExecutingAssembly(this IServiceCollection services)

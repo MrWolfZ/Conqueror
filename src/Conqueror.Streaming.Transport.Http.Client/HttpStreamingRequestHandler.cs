@@ -13,21 +13,21 @@ using Conqueror.Streaming.Transport.Http.Common;
 
 namespace Conqueror.Streaming.Transport.Http.Client;
 
-internal sealed class HttpStreamingHandler<TRequest, TItem> : IStreamingHandler<TRequest, TItem>
+internal sealed class HttpStreamingRequestHandler<TRequest, TItem> : IStreamingRequestHandler<TRequest, TItem>
     where TRequest : class
 {
     private readonly HttpStreamingRequestAttribute attribute;
     private readonly IConquerorContextAccessor? conquerorContextAccessor;
     private readonly ResolvedHttpClientOptions options;
 
-    public HttpStreamingHandler(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
+    public HttpStreamingRequestHandler(ResolvedHttpClientOptions options, IConquerorContextAccessor? conquerorContextAccessor)
     {
         this.options = options;
         this.conquerorContextAccessor = conquerorContextAccessor;
         attribute = typeof(TRequest).GetCustomAttribute<HttpStreamingRequestAttribute>()!;
     }
 
-    public async IAsyncEnumerable<TItem> ExecuteRequest(TRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<TItem> ExecuteRequest(TRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         _ = attribute;
 
