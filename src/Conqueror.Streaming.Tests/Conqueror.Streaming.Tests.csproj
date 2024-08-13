@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/test.targets" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Streaming\Conqueror.Streaming.csproj" />
+    </ItemGroup>
+
+</Project>

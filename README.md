@@ -60,31 +60,21 @@ Head over to our [eventing recipes](#eventing-introduction) for more guidance on
 [![NuGet version (Conqueror.Eventing)](https://img.shields.io/nuget/v/Conqueror.Eventing?label=Conqueror.Eventing)](https://www.nuget.org/packages/Conqueror.Eventing/)
 [![NuGet version (Conqueror.Eventing.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Eventing.Abstractions?label=Conqueror.Eventing.Abstractions)](https://www.nuget.org/packages/Conqueror.Eventing.Abstractions/)
 
-### **Conqueror.Streaming.Interactive**
+### **Conqueror.Streaming**
 
-[![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
+[![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming/)
 
-Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace using a pull-based interactive approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
+Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace using a pull-based approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
 
-Head over to our [interactive streaming recipes](#interactive-streaming-introduction) for more guidance on how to use this library.
+Head over to our [streaming recipes](#streaming-introduction) for more guidance on how to use this library.
 
-[![NuGet version (Conqueror.Streaming.Interactive)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive?label=Conqueror.Streaming.Interactive)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
-[![NuGet version (Conqueror.Streaming.Interactive.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive.Abstractions?label=Conqueror.Streaming.Interactive.Abstractions)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive.Abstractions/)
+[![NuGet version (Conqueror.Streaming)](https://img.shields.io/nuget/v/Conqueror.Streaming?label=Conqueror.Streaming)](https://www.nuget.org/packages/Conqueror.Streaming/)
+[![NuGet version (Conqueror.Streaming.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Streaming.Abstractions?label=Conqueror.Streaming.Abstractions)](https://www.nuget.org/packages/Conqueror.Streaming.Abstractions/)
 
 **Transports:**
 
-[![NuGet version (Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore?label=Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive.Transport.Http.Server.AspNetCore/)
-[![NuGet version (Conqueror.Streaming.Interactive.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.Streaming.Interactive.Transport.Http.Client?label=Conqueror.Streaming.Interactive.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive.Transport.Http.Client/)
-
-### **Conqueror.Streaming.Reactive**
-
-[![status-only-concept](https://img.shields.io/badge/status-only%20concept-red)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
-
-Allow your applications to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) for which they cannot control the frequency using a push-based reactive approach. Handle cross-cutting concerns like logging, throttling, filtering etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
-
-Head over to our [reactive streaming recipes](#reactive-streaming-introduction) for more guidance on how to use this library.
-
-[![NuGet version (Conqueror.Streaming.Reactive)](https://img.shields.io/nuget/v/Conqueror.Streaming.Reactive?label=Conqueror.Streaming.Reactive)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
+[![NuGet version (Conqueror.Streaming.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.Streaming.Transport.Http.Server.AspNetCore?label=Conqueror.Streaming.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.Streaming.Transport.Http.Server.AspNetCore/)
+[![NuGet version (Conqueror.Streaming.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.Streaming.Transport.Http.Client?label=Conqueror.Streaming.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.Streaming.Transport.Http.Client/)
 
 </details>
 
@@ -324,73 +314,51 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [metrics for events](recipes/eventing/cross-cutting-concerns/metrics#readme) _(to-be-written)_
 - [tracing events](recipes/eventing/cross-cutting-concerns/tracing#readme) _(to-be-written)_
 
-### Interactive Streaming Introduction
+### Streaming Introduction
 
-[![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming.Interactive/)
+[![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming/)
 
-For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are generally two high-level approaches: interactive / pull-based (i.e. consumer is in control of the pace) and reactive / push-based (i.e. the producer is in control of the pace). Here we focus on interactive streaming, which is a good approach for use cases like paging and event sourcing.
+For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** uses a pull-based approach where the consumer controls the pace (using `IAsyncEnumerable`), which is a good approach for use cases like paging and event sourcing.
 
-#### Interactive Streaming Basics
+#### Streaming Basics
 
-- [getting started](recipes/streaming.interactive/basics/getting-started#readme) _(to-be-written)_
-- [testing streaming request handlers](recipes/streaming.interactive/basics/testing-handlers#readme) _(to-be-written)_
-- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](recipes/streaming.interactive/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
-- [testing streaming request handlers that have middleware pipelines](recipes/streaming.interactive/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
-- [testing middlewares](recipes/streaming.interactive/basics/testing-middlewares#readme) _(to-be-written)_
+- [getting started](recipes/streaming/basics/getting-started#readme) _(to-be-written)_
+- [testing streaming request handlers](recipes/streaming/basics/testing-handlers#readme) _(to-be-written)_
+- [solving cross-cutting concerns with middlewares (e.g. validation or retrying on failure)](recipes/streaming/basics/solving-cross-cutting-concerns#readme) _(to-be-written)_
+- [testing streaming request handlers that have middleware pipelines](recipes/streaming/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
+- [testing middlewares](recipes/streaming/basics/testing-middlewares#readme) _(to-be-written)_
 
-#### Interactive Streaming Advanced
+#### Streaming Advanced
 
-- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/streaming.interactive/advanced/different-dependency-injection#readme) _(to-be-written)_
-- [reading interactive streams from a messaging system (e.g. Kafka or RabbitMQ)](recipes/streaming.interactive/advanced/reading-from-messaging-system#readme) _(to-be-written)_
-- [exposing streams via HTTP](recipes/streaming.interactive/advanced/exposing-via-http#readme) _(to-be-written)_
-- [testing HTTP streams](recipes/streaming.interactive/advanced/testing-http#readme) _(to-be-written)_
-- [consuming HTTP streams from another application](recipes/streaming.interactive/advanced/consuming-http#readme) _(to-be-written)_
-- [using middlewares for interactive streaming HTTP clients](recipes/streaming.interactive/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
-- [optimize HTTP streaming performance with pre-fetching](recipes/streaming.interactive/advanced/optimize-http-performance#readme) _(to-be-written)_
-- [enforce that all streaming request handlers declare a pipeline](recipes/streaming.interactive/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
-- [re-use middleware pipelines to solve cross-cutting concerns when consuming interactive streams from external systems (e.g. logging or retrying failed calls)](recipes/streaming.interactive/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
-- [authenticating and authorizing streaming requests](recipes/streaming.interactive/advanced/auth#readme) _(to-be-written)_
-- [moving from a modular monolith to a distributed system](recipes/streaming.interactive/advanced/monolith-to-distributed#readme) _(to-be-written)_
+- [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/streaming/advanced/different-dependency-injection#readme) _(to-be-written)_
+- [reading streams from a messaging system (e.g. Kafka or RabbitMQ)](recipes/streaming/advanced/reading-from-messaging-system#readme) _(to-be-written)_
+- [exposing streams via HTTP](recipes/streaming/advanced/exposing-via-http#readme) _(to-be-written)_
+- [testing HTTP streams](recipes/streaming/advanced/testing-http#readme) _(to-be-written)_
+- [consuming HTTP streams from another application](recipes/streaming/advanced/consuming-http#readme) _(to-be-written)_
+- [using middlewares for streaming HTTP clients](recipes/streaming/advanced/middlewares-for-http-clients#readme) _(to-be-written)_
+- [optimize HTTP streaming performance with pre-fetching](recipes/streaming/advanced/optimize-http-performance#readme) _(to-be-written)_
+- [enforce that all streaming request handlers declare a pipeline](recipes/streaming/advanced/enforce-handler-pipeline#readme) _(to-be-written)_
+- [re-use middleware pipelines to solve cross-cutting concerns when consuming streams from external systems (e.g. logging or retrying failed calls)](recipes/streaming/advanced/reuse-piplines-for-external-calls#readme) _(to-be-written)_
+- [authenticating and authorizing streaming requests](recipes/streaming/advanced/auth#readme) _(to-be-written)_
+- [moving from a modular monolith to a distributed system](recipes/streaming/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
-#### Interactive Streaming Expert
+#### Streaming Expert
 
-- [store and access background context information in the scope of a single streaming request](recipes/streaming.interactive/expert/streaming-request-context#readme) _(to-be-written)_
-- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/streaming.interactive/expert/conqueror-context#readme) _(to-be-written)_
-- [accessing properties of streaming requests in middlewares](recipes/streaming.interactive/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
-- [exposing and consuming interactive streams via other transports (e.g. SignalR)](recipes/streaming.interactive/expert/exposing-via-other-transports#readme) _(to-be-written)_
-- [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming.interactive/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
+- [store and access background context information in the scope of a single streaming request](recipes/streaming/expert/streaming-request-context#readme) _(to-be-written)_
+- [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/streaming/expert/conqueror-context#readme) _(to-be-written)_
+- [accessing properties of streaming requests in middlewares](recipes/streaming/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
+- [exposing and consuming streams via other transports (e.g. SignalR)](recipes/streaming/expert/exposing-via-other-transports#readme) _(to-be-written)_
+- [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
 
-#### Interactive Streaming Cross-Cutting Concerns
+#### Streaming Cross-Cutting Concerns
 
-- [authenticating and authorizing streaming requests](recipes/streaming.interactive/cross-cutting-concerns/auth#readme) _(to-be-written)_
-- [logging streaming requests and items](recipes/streaming.interactive/cross-cutting-concerns/logging#readme) _(to-be-written)_
-- [validating streaming requests](recipes/streaming.interactive/cross-cutting-concerns/validation#readme) _(to-be-written)_
-- [retrying failed streaming requests](recipes/streaming.interactive/cross-cutting-concerns/retry#readme) _(to-be-written)_
-- [timeouts for streaming requests and items](recipes/streaming.interactive/cross-cutting-concerns/timeouts#readme) _(to-be-written)_
-- [metrics for streaming requests and items](recipes/streaming.interactive/cross-cutting-concerns/metrics#readme) _(to-be-written)_
-- [tracing streaming requests and items](recipes/streaming.interactive/cross-cutting-concerns/tracing#readme) _(to-be-written)_
-
-### Reactive Streaming Introduction
-
-[![library-status-only-concept](https://img.shields.io/badge/library%20status-only%20concept-red)](https://www.nuget.org/packages/Conqueror.Streaming.Reactive/)
-
-For [data streaming](https://en.wikipedia.org/wiki/Data_stream) there are generally two high-level approaches: interactive / pull-based (i.e. consumer is in control of the pace) and reactive / push-based (i.e. the producer is in control of the pace). Here we focus on reactive streaming, which is a good approach when you do not control the source of the stream yourself, and therefore need to handle stream items at whatever pace the producer provides (e.g. handling sensor data from IoT devices).
-
-#### Reactive Streaming Basics
-
-- [tbd](recipes/streaming.reactive/basics/tbd#readme) _(to-be-written)_
-
-#### Reactive Streaming Advanced
-
-- [tbd](recipes/streaming.reactive/advanced/tbd#readme) _(to-be-written)_
-
-#### Reactive Streaming Expert
-
-- [tbd](recipes/streaming.reactive/expert/tbd#readme) _(to-be-written)_
-
-#### Reactive Streaming Cross-Cutting Concerns
-
-- [tbd](recipes/streaming.reactive/cross-cutting-concerns/tbd#readme) _(to-be-written)_
+- [authenticating and authorizing streaming requests](recipes/streaming/cross-cutting-concerns/auth#readme) _(to-be-written)_
+- [logging streaming requests and items](recipes/streaming/cross-cutting-concerns/logging#readme) _(to-be-written)_
+- [validating streaming requests](recipes/streaming/cross-cutting-concerns/validation#readme) _(to-be-written)_
+- [retrying failed streaming requests](recipes/streaming/cross-cutting-concerns/retry#readme) _(to-be-written)_
+- [timeouts for streaming requests and items](recipes/streaming/cross-cutting-concerns/timeouts#readme) _(to-be-written)_
+- [metrics for streaming requests and items](recipes/streaming/cross-cutting-concerns/metrics#readme) _(to-be-written)_
+- [tracing streaming requests and items](recipes/streaming/cross-cutting-concerns/tracing#readme) _(to-be-written)_
 
 </details>
 

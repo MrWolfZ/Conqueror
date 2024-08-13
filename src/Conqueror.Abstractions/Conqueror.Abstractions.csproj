@@ -10,8 +10,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Conqueror.CQS.Abstractions\Conqueror.CQS.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Eventing.Abstractions\Conqueror.Eventing.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.Streaming.Interactive.Abstractions\Conqueror.Streaming.Interactive.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.Streaming.Reactive.Abstractions\Conqueror.Streaming.Reactive.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Streaming.Abstractions\Conqueror.Streaming.Abstractions.csproj" />
     </ItemGroup>
 
 </Project>

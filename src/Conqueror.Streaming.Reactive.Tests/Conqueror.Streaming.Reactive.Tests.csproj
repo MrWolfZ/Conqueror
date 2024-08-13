@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="../.targets/test.targets" />
-
-    <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Streaming.Reactive\Conqueror.Streaming.Reactive.csproj" />
-    </ItemGroup>
-
-</Project>
