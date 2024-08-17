@@ -19,6 +19,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] in development environment, add problem details body to auth failures
 - [ ] throw on empty context data key
 - [ ] do not use base64 encoding for context data, but instead use cookie-like encoding (URL-encode the value)
+- [ ] add pipeline configuration methods to base handler interface (virtual with default implementation instead of abstract) and deal with generics limitation by introducing an intermediate interface
 
 ## CQS
 
@@ -90,7 +91,7 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] `Conqueror.Eventing.Middleware.Metrics`
   - [ ] `Conqueror.Eventing.Middleware.Tracing`
 
-## Interactive streaming
+## Streaming
 
 - [ ] add test to assert that disposing async enumerator calls finally blocks in handler/server
 - [ ] fix: do not register generic types during assembly scanning
@@ -129,8 +130,3 @@ design ideas:
 - [ ] propagate conqueror context
 - [ ] delegate route path creation to service
 - [ ] allow setting prefetch options (e.g. buffer size, prefetch batch size)
-
-## Reactive streaming
-
-- [ ] implement basic version
-- [ ] implement middleware support
