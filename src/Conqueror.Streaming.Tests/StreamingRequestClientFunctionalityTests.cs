@@ -175,10 +175,10 @@ public abstract class StreamingRequestClientFunctionalityTests
             observations.Requests.Add(request);
             observations.CancellationTokens.Add(cancellationToken);
 
-            var cmd = (TestStreamingRequest)(object)request;
-            yield return (TItem)(object)new TestItem(cmd.Payload + 1);
-            yield return (TItem)(object)new TestItem(cmd.Payload + 2);
-            yield return (TItem)(object)new TestItem(cmd.Payload + 3);
+            var req = (TestStreamingRequest)(object)request;
+            yield return (TItem)(object)new TestItem(req.Payload + 1);
+            yield return (TItem)(object)new TestItem(req.Payload + 2);
+            yield return (TItem)(object)new TestItem(req.Payload + 3);
         }
     }
 
