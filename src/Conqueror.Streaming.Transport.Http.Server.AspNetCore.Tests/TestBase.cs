@@ -1,13 +1,10 @@
 using System.Diagnostics;
 using System.Net.WebSockets;
-using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests;
 
@@ -57,8 +54,6 @@ public abstract class TestBase
             return host;
         }
     }
-
-    protected JsonSerializerOptions JsonSerializerOptions => Resolve<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
 
     protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(2);
 
@@ -117,8 +112,8 @@ public abstract class TestBase
     protected T Resolve<T>()
         where T : notnull => Host.Services.GetRequiredService<T>();
 
-    protected Task<WebSocket> ConnectToWebSocket(string path, string query)
+    protected Task<WebSocket> ConnectToWebSocket(string path)
     {
-        return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
+        return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path }.Uri, CancellationToken.None);
     }
 }

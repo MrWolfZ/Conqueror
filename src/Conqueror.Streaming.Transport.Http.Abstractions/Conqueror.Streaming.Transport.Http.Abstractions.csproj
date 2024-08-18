@@ -22,6 +22,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common.Transport.Http.Abstractions\Conqueror.Common.Transport.Http.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Streaming.Abstractions\Conqueror.Streaming.Abstractions.csproj" />
     </ItemGroup>
 

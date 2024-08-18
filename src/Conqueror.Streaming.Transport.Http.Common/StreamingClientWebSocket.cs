@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Transport.Http.Common;
 
-internal sealed class StreamingClientWebSocket<T> : IDisposable
+internal sealed class StreamingClientWebSocket<TRequest, TItem> : IDisposable
+    where TRequest : class
 {
     private readonly JsonWebSocket socket;
 
@@ -20,10 +21,15 @@ internal sealed class StreamingClientWebSocket<T> : IDisposable
 
         static Type LookupMessageType(string discriminator) => discriminator switch
         {
-            StreamingMessageEnvelope<T>.Discriminator => typeof(StreamingMessageEnvelope<T>),
+            StreamingMessageEnvelope<TItem>.Discriminator => typeof(StreamingMessageEnvelope<TItem>),
             ErrorMessage.Discriminator => typeof(ErrorMessage),
             _ => throw new ArgumentOutOfRangeException(nameof(discriminator), discriminator, null),
         };
+    }
+
+    public async Task<bool> SendInitialRequest(TRequest request, CancellationToken cancellationToken)
+    {
+        return await socket.Send(new InitialRequestMessage<TRequest>(InitialRequestMessage<TRequest>.Discriminator, request), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> RequestNextItem(CancellationToken cancellationToken)

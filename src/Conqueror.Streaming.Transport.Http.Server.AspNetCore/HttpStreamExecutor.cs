@@ -13,61 +13,47 @@ using Microsoft.Extensions.Options;
 
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
-[ApiController]
-[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:File name should match first type name", Justification = "the file name makes sense for these related classes")]
-public abstract class ConquerorStreamingWithRequestPayloadWebsocketTransportControllerBase<TRequest, TItem> : ConquerorStreamingWebsocketTransportControllerBase<TItem>
-    where TRequest : class
-    where TItem : notnull
+internal static class HttpStreamExecutor
 {
-    protected async Task ExecuteRequest(TRequest request, CancellationToken cancellationToken)
+    public static async Task ExecuteStreamingRequest<TRequest, TItem>(HttpContext httpContext, CancellationToken cancellationToken)
+        where TRequest : class
     {
-        var handler = Request.HttpContext.RequestServices.GetRequiredService<IStreamingRequestHandler<TRequest, TItem>>();
-        await HandleWebSocketConnection(handler.ExecuteRequest(request, cancellationToken)).ConfigureAwait(false);
+        var handler = httpContext.RequestServices.GetRequiredService<IStreamingRequestHandler<TRequest, TItem>>();
+        await HandleWebSocketConnection(httpContext, handler, cancellationToken).ConfigureAwait(false);
     }
-}
 
-[ApiController]
-public abstract class ConquerorStreamingWithoutRequestPayloadWebsocketTransportControllerBase<TRequest, TItem> : ConquerorStreamingWebsocketTransportControllerBase<TItem>
-    where TRequest : class, new()
-    where TItem : notnull
-{
-    protected async Task ExecuteRequest(CancellationToken cancellationToken)
-    {
-        var handler = Request.HttpContext.RequestServices.GetRequiredService<IStreamingRequestHandler<TRequest, TItem>>();
-        await HandleWebSocketConnection(handler.ExecuteRequest(new(), cancellationToken)).ConfigureAwait(false);
-    }
-}
-
-public abstract class ConquerorStreamingWebsocketTransportControllerBase<T> : ControllerBase
-    where T : notnull
-{
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "all sockets are disposed in a chain when the server socket is disposed")]
-    protected async Task HandleWebSocketConnection(IAsyncEnumerable<T> enumerable)
+    private static async Task HandleWebSocketConnection<TRequest, TItem>(HttpContext httpContext,
+                                                                         IStreamingRequestHandler<TRequest, TItem> handler,
+                                                                         CancellationToken cancellationToken)
+        where TRequest : class
     {
-        if (HttpContext.WebSockets.IsWebSocketRequest)
+        if (httpContext.WebSockets.IsWebSocketRequest)
         {
-            var logger = HttpContext.RequestServices.GetRequiredService<ILogger<ConquerorStreamingWebsocketTransportControllerBase<T>>>();
-            var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
-            var jsonSerializerOptions = HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
+            var logger = httpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(HttpStreamExecutor));
+            var webSocket = await httpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+            var jsonSerializerOptions = httpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
             var textWebSocket = new TextWebSocketWithHeartbeat(new(webSocket), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
             var jsonWebSocket = new JsonWebSocket(textWebSocket, jsonSerializerOptions);
-            using var streamingServerWebsocket = new StreamingServerWebSocket<T>(jsonWebSocket);
-            await HandleWebSocketConnection(streamingServerWebsocket, enumerable, logger).ConfigureAwait(false);
+            using var streamingServerWebsocket = new StreamingServerWebSocket<TRequest, TItem>(jsonWebSocket);
+            await HandleWebSocketConnection(streamingServerWebsocket, handler, logger, cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+            httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
         }
     }
 
     [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "disposal works correctly")]
-    private static async Task HandleWebSocketConnection(StreamingServerWebSocket<T> socket, IAsyncEnumerable<T> enumerable, ILogger logger)
+    private static async Task HandleWebSocketConnection<TRequest, TItem>(StreamingServerWebSocket<TRequest, TItem> socket,
+                                                                         IStreamingRequestHandler<TRequest, TItem> handler,
+                                                                         ILogger logger,
+                                                                         CancellationToken cancellationToken)
+        where TRequest : class
     {
         var channel = Channel.CreateBounded<object?>(new BoundedChannelOptions(8));
 
-        using var cts = new CancellationTokenSource();
-
-        var sourceEnumerator = enumerable.GetAsyncEnumerator(cts.Token);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         try
         {
@@ -75,9 +61,9 @@ public abstract class ConquerorStreamingWebsocketTransportControllerBase<T> : Co
         }
         finally
         {
-            cts.Cancel();
-
             await socket.Close(CancellationToken.None).ConfigureAwait(false);
+
+            await cts.CancelAsync().ConfigureAwait(false);
         }
 
         async Task ReadFromSocket()
@@ -107,10 +93,21 @@ public abstract class ConquerorStreamingWebsocketTransportControllerBase<T> : Co
         {
             try
             {
+                IAsyncEnumerator<TItem>? sourceEnumerator = null;
+
                 while (await channel.Reader.WaitToReadAsync(cts.Token).ConfigureAwait(false))
                 {
-                    while (channel.Reader.TryRead(out _))
+                    while (channel.Reader.TryRead(out var msg))
                     {
+                        if (msg is InitialRequestMessage<TRequest> requestMessage)
+                        {
+                            sourceEnumerator = handler.ExecuteRequest(requestMessage.Payload, cts.Token).GetAsyncEnumerator(cts.Token);
+                        }
+                        else if (sourceEnumerator == null)
+                        {
+                            throw new InvalidOperationException("received request for next item before initial request");
+                        }
+
                         if (!await sourceEnumerator.MoveNextAsync().ConfigureAwait(false))
                         {
                             return;

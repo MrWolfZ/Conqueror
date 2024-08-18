@@ -1,76 +1,165 @@
-using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 
-namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests;
-
-[TestFixture]
-public class RegistrationTests
+namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 {
-    [Test]
-    public void GivenServiceCollectionWithConquerorAlreadyRegistered_DoesNotRegisterConquerorTypesAgain()
+    [TestFixture]
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
+    public class RegistrationTests
     {
-        var services = new ServiceCollection();
+        [Test]
+        public void GivenServiceCollectionWithConquerorAlreadyRegistered_DoesNotRegisterConquerorTypesAgain()
+        {
+            var services = new ServiceCollection();
 
-        _ = services.AddMvc().AddConquerorStreaming();
+            _ = services.AddControllers().AddConquerorStreamingHttpControllers();
 
-        Assert.That(services.Count(d => d.ServiceType == typeof(StreamingHttpServerAspNetCoreRegistrationFinalizer)), Is.EqualTo(1));
+            Assert.That(services.Count(d => d.ServiceType == typeof(HttpEndpointRegistry)), Is.EqualTo(1));
+            Assert.That(services.Count(d => d.ServiceType == typeof(HttpEndpointActionDescriptorChangeProvider)), Is.EqualTo(1));
+            Assert.That(services.Count(d => d.ImplementationType == typeof(HttpEndpointConfigurationStartupFilter)), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void GivenServiceCollectionWithDuplicateStreamName_StartingHostThrowsInvalidOperationException()
+        {
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
+
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorStreamingHttpControllers();
+
+                    _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
+                                .AddConquerorStreamingRequestHandler<DuplicateStreamName.TestStreamingRequestHandler>();
+                });
+
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseConqueror();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
+        }
+
+        [Test]
+        public void GivenServiceCollectionWithDuplicateStreamNameFromDelegate_StartingHostThrowsInvalidOperationException()
+        {
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
+
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorStreamingHttpControllers();
+
+                    _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
+                                .AddConquerorStreamingRequestHandlerDelegate<DuplicateStreamName.TestStreamingRequest, TestItem>((_, _, _) => AsyncEnumerableHelper.Of(new TestItem()));
+                });
+
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseConqueror();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
+        }
+
+        [Test]
+        public void GivenServiceCollectionWithDuplicateStreamPathFromConvention_StartingHostThrowsInvalidOperationException()
+        {
+            var hostBuilder = new HostBuilder().ConfigureWebHost(webHost =>
+            {
+                _ = webHost.UseTestServer();
+
+                _ = webHost.ConfigureServices(services =>
+                {
+                    _ = services.AddControllers()
+                                .AddConquerorStreamingHttpControllers(o => o.PathConvention = new HttpStreamPathConventionWithDuplicates());
+
+                    _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
+                                .AddConquerorStreamingRequestHandler<TestStreamingRequest2Handler>();
+                });
+
+                _ = webHost.Configure(app =>
+                {
+                    _ = app.UseRouting();
+                    _ = app.UseConqueror();
+                    _ = app.UseEndpoints(b => b.MapControllers());
+                });
+            });
+
+            _ = Assert.ThrowsAsync<InvalidOperationException>(() => hostBuilder.StartAsync());
+        }
+
+        [HttpStream]
+        public sealed record TestStreamingRequest;
+
+        public sealed record TestItem;
+
+        [HttpStream]
+        public sealed record TestStreamingRequest2;
+
+        public sealed record TestItem2;
+
+        public sealed class TestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>
+        {
+            public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return new();
+            }
+        }
+
+        public sealed class TestStreamingRequest2Handler : IStreamingRequestHandler<TestStreamingRequest2, TestItem2>
+        {
+            public async IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return new();
+            }
+        }
+
+        private sealed class HttpStreamPathConventionWithDuplicates : IHttpStreamPathConvention
+        {
+            public string GetStreamPath(Type requestType, HttpStreamAttribute attribute)
+            {
+                return "/duplicate";
+            }
+        }
     }
 
-    [Test]
-    public void GivenServiceCollectionWithConquerorRegistered_FinalizeConquerorRegistrationsAddsFeatureProviders()
+#pragma warning disable SA1403 // okay for testing purposes
+
+    namespace DuplicateStreamName
     {
-        var services = new ServiceCollection();
+        [HttpStream]
+        public sealed record TestStreamingRequest;
 
-        _ = services.AddMvc().AddConquerorStreaming();
+        public sealed record TestItem;
 
-        _ = services.FinalizeConquerorRegistrations();
-
-        var applicationPartManager = services.Select(d => d.ImplementationInstance).OfType<ApplicationPartManager>().Single();
-
-        Assert.That(applicationPartManager.FeatureProviders.SingleOrDefault(p => p is HttpQueryControllerFeatureProvider), Is.Not.Null);
-    }
-
-    [Test]
-    public void GivenServiceCollectionWithStreamingControllerRegistrationWithoutFinalization_ThrowsExceptionWhenBuildingServiceProviderWithValidation()
-    {
-        var services = new ServiceCollection();
-
-        _ = services.AddLogging()
-                    .AddSingleton<IHostEnvironment>(_ => throw new())
-                    .AddSingleton<IWebHostEnvironment>(_ => throw new())
-                    .AddSingleton<DiagnosticListener>(_ => throw new())
-                    .AddControllers()
-                    .AddConquerorStreaming();
-
-        // remove some service registrations that fail validation
-        _ = services.RemoveAll<IActionInvokerProvider>();
-
-        var ex = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true }));
-
-        Assert.That(ex?.InnerException, Is.InstanceOf<InvalidOperationException>());
-        Assert.That(ex?.InnerException?.Message, Contains.Substring("DidYouForgetToCallFinalizeConquerorRegistrations"));
-    }
-
-    [Test]
-    public void GivenServiceCollectionWithStreamingControllerRegistrationWithFinalization_ThrowsExceptionWhenCallingFinalizationAgain()
-    {
-        var services = new ServiceCollection();
-
-        _ = services.AddMvc().AddConquerorStreaming();
-
-        _ = services.FinalizeConquerorRegistrations();
-
-        _ = Assert.Throws<InvalidOperationException>(() => services.FinalizeConquerorRegistrations());
-    }
-
-    [Test]
-    public void GivenServiceCollectionWithFinalization_ThrowsExceptionWhenRegisteringStreaming()
-    {
-        var services = new ServiceCollection().FinalizeConquerorRegistrations();
-
-        _ = Assert.Throws<InvalidOperationException>(() => services.AddMvc().AddConquerorStreaming());
+        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "okay for testing purposes")]
+        public sealed class TestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>
+        {
+            public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+            {
+                await Task.Yield();
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return new();
+            }
+        }
     }
 }

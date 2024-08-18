@@ -1,76 +1,90 @@
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
-internal sealed class DynamicStreamingControllerFactory : DynamicStreamingBaseControllerFactory
+internal static class DynamicStreamingControllerFactory
 {
-    private const string ApiGroupName = "Streams";
+    private static readonly AssemblyBuilder DynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new("ConquerorStreamingTransportHttpServerAspNetCoreDynamic"), AssemblyBuilderAccess.Run);
+    private static readonly ModuleBuilder ModuleBuilder = DynamicAssembly.DefineDynamicModule("ConquerorStreamingTransportHttpServerAspNetCoreDynamicModule");
+    private static readonly ConcurrentDictionary<string, Lazy<Type>> DynamicTypeDictionary = new();
 
-    public Type Create(StreamingRequestHandlerRegistration registration, HttpStreamingRequestAttribute attribute)
+    public static Type Create(string name, Func<Type> typeFactory)
     {
-        var typeName = registration.StreamingRequestType.FullName ?? registration.StreamingRequestType.Name;
-
-        return Create(typeName, () => CreateType(typeName, registration, attribute));
+        return DynamicTypeDictionary.GetOrAdd(name, _ => new(typeFactory)).Value;
     }
 
-    private Type CreateType(string typeName, StreamingRequestHandlerRegistration registration, HttpStreamingRequestAttribute attribute)
+    public static TypeBuilder CreateTypeBuilder(string name, HttpEndpoint endpoint)
     {
-        var name = registration.StreamingRequestType.Name;
+        var typeName = $"{name}`ConquerorStreamingTransportHttpServerAspNetCoreDynamicController";
+        var typeBuilder = ModuleBuilder.DefineType(typeName, TypeAttributes.NotPublic | TypeAttributes.Sealed, typeof(ControllerBase));
 
-        // TODO: use service
-        var regex = new Regex("(Stream(ing)?)?Request$");
-        var route = $"/api/streams/{regex.Replace(name, string.Empty)}";
+        SetApiControllerAttribute(typeBuilder);
+        SetRouteAttribute(typeBuilder, endpoint.Path);
+        SetControllerRouteValueAttribute(typeBuilder, endpoint.ControllerName);
+        SetApiExplorerSettingsAttribute(typeBuilder, endpoint.ApiGroupName);
 
-        var hasPayload = registration.StreamingRequestType.HasAnyProperties() || !registration.StreamingRequestType.HasDefaultConstructor();
+        return typeBuilder;
+    }
 
-        var genericBaseControllerType = hasPayload ? typeof(ConquerorStreamingWithRequestPayloadWebsocketTransportControllerBase<,>) : typeof(ConquerorStreamingWithoutRequestPayloadWebsocketTransportControllerBase<,>);
-        var baseControllerType = genericBaseControllerType.MakeGenericType(registration.StreamingRequestType, registration.ItemType);
+    public static void ApplyHttpMethodAttribute(MethodBuilder methodBuilder, Type attributeType, string name)
+    {
+        var ctor = attributeType.GetConstructors().First(c => c.GetParameters().Length == 0);
+        var nameParam = attributeType.GetProperties().First(p => p.Name == nameof(HttpMethodAttribute.Name));
+        var attributeBuilder = new CustomAttributeBuilder(ctor, Array.Empty<object>(), new[] { nameParam }, new object[] { name });
+        methodBuilder.SetCustomAttribute(attributeBuilder);
+    }
 
-        var typeBuilder = CreateTypeBuilder(typeName, ApiGroupName, baseControllerType, route);
+    public static void ApplyProducesResponseTypeAttribute(MethodBuilder methodBuilder, int statusCode)
+    {
+        var ctor = typeof(ProducesResponseTypeAttribute).GetConstructors().First(c => c.GetParameters().Length == 1 && c.GetParameters().Single().ParameterType == typeof(int));
+        var attributeBuilder = new CustomAttributeBuilder(ctor, new object[] { statusCode }, Array.Empty<FieldInfo>(), Array.Empty<object>());
+        methodBuilder.SetCustomAttribute(attributeBuilder);
+    }
 
-        EmitExecuteMethod();
+    public static void ApplyParameterSourceAttribute(ParameterBuilder parameterBuilder, Type attributeType)
+    {
+        var ctor = attributeType.GetConstructors().First(c => c.GetParameters().Length == 0);
+        var attributeBuilder = new CustomAttributeBuilder(ctor, Array.Empty<object>());
+        parameterBuilder.SetCustomAttribute(attributeBuilder);
+    }
 
-        return typeBuilder.CreateType()!;
+    private static void SetApiControllerAttribute(TypeBuilder typeBuilder)
+    {
+        var ctor = typeof(ApiControllerAttribute).GetConstructors().First(c => c.GetParameters().Length == 0);
+        var attributeBuilder = new CustomAttributeBuilder(ctor, Array.Empty<object>());
+        typeBuilder.SetCustomAttribute(attributeBuilder);
+    }
 
-        void EmitExecuteMethod()
+    private static void SetControllerRouteValueAttribute(TypeBuilder typeBuilder, string groupName)
+    {
+        var ctor = typeof(ConquerorStreamingControllerRouteValueAttribute).GetConstructors().First(c => c.GetParameters().Length == 1 && c.GetParameters().Single().ParameterType == typeof(string));
+        var attributeBuilder = new CustomAttributeBuilder(ctor, new object[] { groupName });
+        typeBuilder.SetCustomAttribute(attributeBuilder);
+    }
+
+    private static void SetApiExplorerSettingsAttribute(TypeBuilder typeBuilder, string? groupName)
+    {
+        if (groupName is null)
         {
-            var baseMethod = baseControllerType.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == "ExecuteRequest");
-            var parameterTypes = baseMethod.GetParameters().Select(p => p.ParameterType).ToArray();
-
-            var methodBuilder = typeBuilder.DefineMethod(
-                $"Execute{name}",
-                MethodAttributes.Public | MethodAttributes.Virtual,
-                baseMethod.ReturnType,
-                parameterTypes);
-
-            ApplyHttpMethodAttribute(methodBuilder, typeof(HttpGetAttribute), $"streams.{regex.Replace(name, string.Empty)}");
-
-            if (hasPayload)
-            {
-                var paramBuilder = methodBuilder.DefineParameter(1, ParameterAttributes.None, "request");
-
-                ApplyParameterSourceAttribute(paramBuilder, typeof(FromQueryAttribute));
-            }
-
-            _ = methodBuilder.DefineParameter(parameterTypes.Length, ParameterAttributes.None, "cancellationToken");
-
-            var ilGenerator = methodBuilder.GetILGenerator();
-
-            ilGenerator.Emit(OpCodes.Ldarg_0);
-            ilGenerator.Emit(OpCodes.Ldarg_1);
-
-            if (hasPayload)
-            {
-                ilGenerator.Emit(OpCodes.Ldarg_2);
-            }
-
-            ilGenerator.Emit(OpCodes.Call, baseMethod);
-            ilGenerator.Emit(OpCodes.Ret);
+            return;
         }
+
+        var ctor = typeof(ApiExplorerSettingsAttribute).GetConstructors().First(c => c.GetParameters().Length == 0);
+        var nameParam = typeof(ApiExplorerSettingsAttribute).GetProperties().First(p => p.Name == nameof(ApiExplorerSettingsAttribute.GroupName));
+        var attributeBuilder = new CustomAttributeBuilder(ctor, Array.Empty<object>(), new[] { nameParam }, new object[] { groupName });
+        typeBuilder.SetCustomAttribute(attributeBuilder);
+    }
+
+    private static void SetRouteAttribute(TypeBuilder typeBuilder, string route)
+    {
+        var ctor = typeof(RouteAttribute).GetConstructors().First(c => c.GetParameters().Length == 1 && c.GetParameters().Single().ParameterType == typeof(string));
+        var attributeBuilder = new CustomAttributeBuilder(ctor, new object[] { route });
+        typeBuilder.SetCustomAttribute(attributeBuilder);
     }
 }

@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 
@@ -139,8 +141,23 @@ public abstract class TestBase
         return ClientServiceProvider.GetRequiredService<T>();
     }
 
-    protected Task<WebSocket> ConnectToWebSocket(string path, string query)
+    protected async Task<WebSocket> ConnectToWebSocket(string path, HttpRequestHeaders headers)
     {
-        return WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path, Query = query }.Uri, CancellationToken.None);
+        WebSocketClient.ConfigureRequest = req =>
+        {
+            foreach (var (key, values) in headers)
+            {
+                req.Headers.Append(key, new(values.ToArray()));
+            }
+        };
+
+        try
+        {
+            return await WebSocketClient.ConnectAsync(new UriBuilder(HttpClient.BaseAddress!) { Scheme = "ws", Path = path }.Uri, TestTimeoutToken);
+        }
+        finally
+        {
+            WebSocketClient.ConfigureRequest = null;
+        }
     }
 }

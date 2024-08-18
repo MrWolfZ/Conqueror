@@ -12,7 +12,6 @@ namespace Conqueror.Streaming.Transport.Http.Common;
 
 internal sealed class TextWebSocket : IDisposable
 {
-    private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly WebSocket socket;
 
     public TextWebSocket(WebSocket socket)
@@ -25,14 +24,10 @@ internal sealed class TextWebSocket : IDisposable
     public void Dispose()
     {
         socket.Dispose();
-        cancellationTokenSource.Dispose();
     }
 
     public async IAsyncEnumerable<string> Read([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
-        var linkedToken = cts.Token;
-
         // we receive messages in a separate task so that close messages are processed without
         // the client needing to continue enumerating the messages; we expect that we will only
         // ever need to read one message ahead, so we create a bounded channel with capacity 1
@@ -42,7 +37,7 @@ internal sealed class TextWebSocket : IDisposable
 
         // run foreach loop instead of returning the channel enumerable directly to ensure
         // the linked cancellation token source has the correct lifetime
-        await foreach (var msg in channel.Reader.ReadAllAsync(linkedToken))
+        await foreach (var msg in channel.Reader.ReadAllAsync(cancellationToken))
         {
             yield return msg;
         }
@@ -55,14 +50,17 @@ internal sealed class TextWebSocket : IDisposable
             {
                 while (true)
                 {
-                    var receiveResult = await socket.ReceiveAsync(buffer, linkedToken).ConfigureAwait(false);
+                    var receiveResult = await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
 
                     if (receiveResult.CloseStatus.HasValue)
                     {
-                        await socket.CloseAsync(
-                            receiveResult.CloseStatus.Value,
-                            receiveResult.CloseStatusDescription,
-                            cancellationToken).ConfigureAwait(false);
+                        if (socket.State == WebSocketState.CloseReceived)
+                        {
+                            await socket.CloseOutputAsync(
+                                receiveResult.CloseStatus.Value,
+                                receiveResult.CloseStatusDescription,
+                                cancellationToken).ConfigureAwait(false);
+                        }
 
                         channel.Writer.Complete();
                         return;
@@ -75,7 +73,7 @@ internal sealed class TextWebSocket : IDisposable
 
                     if (receiveResult.EndOfMessage)
                     {
-                        await channel.Writer.WriteAsync(Encoding.UTF8.GetString(buffer, 0, receiveResult.Count), linkedToken).ConfigureAwait(false);
+                        await channel.Writer.WriteAsync(Encoding.UTF8.GetString(buffer, 0, receiveResult.Count), cancellationToken).ConfigureAwait(false);
                         continue;
                     }
 
@@ -85,11 +83,11 @@ internal sealed class TextWebSocket : IDisposable
 
                     while (!receiveResult.EndOfMessage)
                     {
-                        receiveResult = await socket.ReceiveAsync(buffer, linkedToken).ConfigureAwait(false);
+                        receiveResult = await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
                         allBytes.AddRange(new ArraySegment<byte>(buffer, 0, receiveResult.Count));
                     }
 
-                    await channel.Writer.WriteAsync(Encoding.UTF8.GetString(allBytes.ToArray()), linkedToken).ConfigureAwait(false);
+                    await channel.Writer.WriteAsync(Encoding.UTF8.GetString(allBytes.ToArray()), cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -123,8 +121,6 @@ internal sealed class TextWebSocket : IDisposable
         {
             return;
         }
-
-        cancellationTokenSource.Cancel();
 
         try
         {

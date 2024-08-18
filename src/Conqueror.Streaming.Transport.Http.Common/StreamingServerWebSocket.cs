@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Transport.Http.Common;
 
-internal sealed class StreamingServerWebSocket<T> : IDisposable
-    where T : notnull
+internal sealed class StreamingServerWebSocket<TRequest, TItem> : IDisposable
 {
     private readonly JsonWebSocket socket;
 
@@ -26,14 +25,15 @@ internal sealed class StreamingServerWebSocket<T> : IDisposable
 
         static Type LookupMessageType(string discriminator) => discriminator switch
         {
+            InitialRequestMessage<TRequest>.Discriminator => typeof(InitialRequestMessage<TRequest>),
             RequestNextItemMessage.Discriminator => typeof(RequestNextItemMessage),
             _ => throw new ArgumentOutOfRangeException(nameof(discriminator), discriminator, null),
         };
     }
 
-    public async Task<bool> SendMessage(T? message, CancellationToken cancellationToken)
+    public async Task<bool> SendMessage(TItem? message, CancellationToken cancellationToken)
     {
-        return await socket.Send(new StreamingMessageEnvelope<T>(StreamingMessageEnvelope<T>.Discriminator, message), cancellationToken).ConfigureAwait(false);
+        return await socket.Send(new StreamingMessageEnvelope<TItem>(StreamingMessageEnvelope<TItem>.Discriminator, message), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> SendError(string message, CancellationToken cancellationToken)
@@ -42,6 +42,11 @@ internal sealed class StreamingServerWebSocket<T> : IDisposable
     }
 
     public async Task Close(CancellationToken cancellationToken) => await socket.Close(cancellationToken).ConfigureAwait(false);
+}
+
+internal sealed record InitialRequestMessage<TRequest>(string Type, TRequest Payload)
+{
+    public const string Discriminator = "initial";
 }
 
 internal sealed record RequestNextItemMessage(string Type)

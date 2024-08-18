@@ -4,15 +4,9 @@ namespace Conqueror.Streaming.Transport.Http.Client;
 
 internal sealed class HttpClientRegistration
 {
-    public HttpClientRegistration(Type handlerType, Func<IServiceProvider, Uri> baseAddressFactory)
-    {
-        HandlerType = handlerType;
-        BaseAddressFactory = baseAddressFactory;
-    }
+    public Action<HttpStreamClientOptions>? StreamConfigurationAction { get; init; }
 
-    public Type HandlerType { get; }
+    public Uri BaseAddress { get; init; } = default!;
 
-    public Func<IServiceProvider, Uri> BaseAddressFactory { get; }
-
-    public Action<ConquerorStreamingHttpClientOptions>? ConfigurationAction { get; init; }
+    public Type? RequestType { get; init; }
 }
