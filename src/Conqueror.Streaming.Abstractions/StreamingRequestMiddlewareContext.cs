@@ -15,7 +15,7 @@ public abstract class StreamingRequestMiddlewareContext<TRequest, TItem>
 
     public abstract IConquerorContext ConquerorContext { get; }
 
-    public abstract IAsyncEnumerable<TItem> Next(TRequest command, CancellationToken cancellationToken);
+    public abstract IAsyncEnumerable<TItem> Next(TRequest request, CancellationToken cancellationToken);
 }
 
 public abstract class StreamingRequestMiddlewareContext<TRequest, TItem, TConfiguration> : StreamingRequestMiddlewareContext<TRequest, TItem>

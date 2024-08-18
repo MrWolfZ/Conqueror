@@ -1,12 +1,21 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Conqueror.Streaming;
 
 internal sealed class StreamingRequestMiddlewareRegistry
 {
-    public void GetStreamingRequestMiddlewareInvoker<TMiddleware>()
+    private readonly IReadOnlyDictionary<Type, IStreamingRequestMiddlewareInvoker> invokers;
+
+    public StreamingRequestMiddlewareRegistry(IEnumerable<IStreamingRequestMiddlewareInvoker> invokers)
+    {
+        this.invokers = invokers.ToDictionary(i => i.MiddlewareType);
+    }
+
+    public IStreamingRequestMiddlewareInvoker? GetStreamingRequestMiddlewareInvoker<TMiddleware>()
         where TMiddleware : IStreamingRequestMiddlewareMarker
     {
-        throw new NotImplementedException();
+        return invokers.GetValueOrDefault(typeof(TMiddleware));
     }
 }

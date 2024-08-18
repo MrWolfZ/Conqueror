@@ -70,11 +70,11 @@ internal sealed class StreamingRequestClientFactory
     private static THandler CreateClientInternal<THandler, TRequest, TItem>(IServiceProvider serviceProvider,
                                                                             Func<IStreamingRequestTransportClientBuilder, Task<IStreamingRequestTransportClient>> transportClientFactory,
                                                                             Action<IStreamingRequestPipelineBuilder>? configurePipeline,
-                                                                            StreamingRequestMiddlewareRegistry queryMiddlewareRegistry)
+                                                                            StreamingRequestMiddlewareRegistry requestMiddlewareRegistry)
         where THandler : class, IStreamingRequestHandler
         where TRequest : class
     {
-        var proxy = new StreamingRequestHandlerProxy<TRequest, TItem>(serviceProvider, new(transportClientFactory), configurePipeline, queryMiddlewareRegistry);
+        var proxy = new StreamingRequestHandlerProxy<TRequest, TItem>(serviceProvider, new(transportClientFactory), configurePipeline, requestMiddlewareRegistry);
 
         if (typeof(THandler) == typeof(IStreamingRequestHandler<TRequest, TItem>))
         {
@@ -87,6 +87,6 @@ internal sealed class StreamingRequestClientFactory
             return (THandler)Activator.CreateInstance(dynamicType, proxy)!;
         }
 
-        throw new InvalidOperationException($"query handler type '{typeof(THandler).Name}' does not implement a known query handler interface");
+        throw new InvalidOperationException($"streaming request handler type '{typeof(THandler).Name}' does not implement a known streaming request handler interface");
     }
 }

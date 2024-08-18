@@ -41,11 +41,11 @@ public abstract class StreamingRequestClientCustomInterfaceTests
 
     private sealed class TestStreamingRequestTransport : IStreamingRequestTransportClient
     {
-        private readonly TestObservations responses;
+        private readonly TestObservations observations;
 
-        public TestStreamingRequestTransport(TestObservations responses)
+        public TestStreamingRequestTransport(TestObservations observations)
         {
-            this.responses = responses;
+            this.observations = observations;
         }
 
         public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
@@ -54,7 +54,7 @@ public abstract class StreamingRequestClientCustomInterfaceTests
             where TRequest : class
         {
             await Task.Yield();
-            responses.Requests.Add(request);
+            observations.Requests.Add(request);
 
             yield return (TItem)(object)new TestItem();
         }

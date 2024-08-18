@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using Conqueror;
+using Conqueror.Streaming;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
 namespace Microsoft.Extensions.DependencyInjection;
@@ -58,31 +60,31 @@ public static class ConquerorStreamingRequestMiddlewareServiceCollectionExtensio
 
         services.AddConquerorStreaming();
 
-        // var configurationMethod = typeof(ConquerorStreamingRequestMiddlewareServiceCollectionExtensions).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
-        //
-        // if (configurationMethod == null)
-        // {
-        //     throw new InvalidOperationException($"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'");
-        // }
-        //
-        // var genericConfigurationMethod = configurationMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullStreamingRequestMiddlewareConfiguration));
-        //
-        // try
-        // {
-        //     _ = genericConfigurationMethod.Invoke(null, new object[] { services });
-        // }
-        // catch (TargetInvocationException ex) when (ex.InnerException != null)
-        // {
-        //     throw ex.InnerException;
-        // }
+        var configurationMethod = typeof(ConquerorStreamingRequestMiddlewareServiceCollectionExtensions).GetMethod(nameof(ConfigureMiddleware), BindingFlags.NonPublic | BindingFlags.Static);
+
+        if (configurationMethod == null)
+        {
+            throw new InvalidOperationException($"could not find middleware configuration method '{nameof(ConfigureMiddleware)}'");
+        }
+
+        var genericConfigurationMethod = configurationMethod.MakeGenericMethod(middlewareType, GetMiddlewareConfigurationType(middlewareType) ?? typeof(NullStreamingRequestMiddlewareConfiguration));
+
+        try
+        {
+            _ = genericConfigurationMethod.Invoke(null, new object[] { services });
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            throw ex.InnerException;
+        }
 
         return services;
     }
 
-    // private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
-    // {
-    //     _ = services.AddSingleton<IStreamingRequestMiddlewareInvoker, StreamingRequestMiddlewareInvoker<TMiddleware, TConfiguration>>();
-    // }
+    private static void ConfigureMiddleware<TMiddleware, TConfiguration>(IServiceCollection services)
+    {
+        _ = services.AddSingleton<IStreamingRequestMiddlewareInvoker, StreamingRequestMiddlewareInvoker<TMiddleware, TConfiguration>>();
+    }
 
     private static Type? GetMiddlewareConfigurationType(Type t) => t.GetInterfaces().First(IsStreamingRequestMiddlewareInterface).GetGenericArguments().FirstOrDefault();
 
