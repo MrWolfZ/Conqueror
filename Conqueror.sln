@@ -350,6 +350,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.UI", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.UI\Conqueror.Examples.BlazorWebAssembly.UI.csproj", "{756F0129-307B-491F-B58E-7B705C140131}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Benchmarks", "src\Conqueror.CQS.Benchmarks\Conqueror.CQS.Benchmarks.csproj", "{0A011017-B8CD-453A-92C0-7EDC3475CC8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -843,6 +845,10 @@ Global
 		{756F0129-307B-491F-B58E-7B705C140131}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{756F0129-307B-491F-B58E-7B705C140131}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{756F0129-307B-491F-B58E-7B705C140131}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A011017-B8CD-453A-92C0-7EDC3475CC8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A011017-B8CD-453A-92C0-7EDC3475CC8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A011017-B8CD-453A-92C0-7EDC3475CC8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A011017-B8CD-453A-92C0-7EDC3475CC8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -996,5 +1002,6 @@ Global
 		{2A5AAAFE-7D34-441F-980B-2EABC305E326} = {6E208A99-685B-484D-AD3C-8FF4C1C70154}
 		{C2DF1455-7EAE-42F9-B228-78765270DEE9} = {6E208A99-685B-484D-AD3C-8FF4C1C70154}
 		{756F0129-307B-491F-B58E-7B705C140131} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
+		{0A011017-B8CD-453A-92C0-7EDC3475CC8A} = {91B0C909-F877-4B28-A5CE-DE0A66F72C1E}
 	EndGlobalSection
 EndGlobal
