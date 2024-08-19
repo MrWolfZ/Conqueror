@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 namespace Conqueror.Streaming.Transport.Http.Client.Tests;
 
 [TestFixture]
+[Parallelizable(ParallelScope.None)]
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "request, response, and interface types must be public for dynamic type generation to work")]
 public sealed class StreamingHttpClientNonTestHostTests
 {
@@ -14,26 +15,11 @@ public sealed class StreamingHttpClientNonTestHostTests
     [Test]
     public async Task GivenSuccessfulWebSocketConnection_StreamsItems()
     {
-        var builder = WebApplication.CreateBuilder();
+        await using var app = CreateWebApp();
+        await using var d = RunWebApp(app);
 
-        ConfigureServerServices(builder.Services);
-
-        await using var app = builder.Build();
-
-        Configure(app);
-
-        var appTask = app.RunAsync(ListenAddress);
-
-        using var cts = new CancellationTokenSource();
-
-        if (!Debugger.IsAttached)
-        {
-            cts.CancelAfter(TimeSpan.FromSeconds(10));
-        }
-
-        var serviceCollection = new ServiceCollection();
-        ConfigureClientServices(serviceCollection);
-        await using var serviceProvider = serviceCollection.BuildServiceProvider();
+        await using var serviceProvider = CreateClientSideServiceProvider();
+        using var cts = CreateCancellationTokenSource();
 
         var handler = serviceProvider.GetRequiredService<ITestStreamingRequestHandler>();
 
@@ -41,16 +27,99 @@ public sealed class StreamingHttpClientNonTestHostTests
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Select(i => i.Payload), Is.EquivalentTo(new[] { 11, 12, 13 }));
+    }
 
-        app.Services.GetRequiredService<IHostApplicationLifetime>().StopApplication();
+    [Test]
+    public async Task GivenSuccessfulWebSocketConnection_WhenClientCancelsEnumeration_CancellationIsPropagatedToServer()
+    {
+        await using var app = CreateWebApp();
+        await using var d = RunWebApp(app);
 
-        await appTask;
+        await using var serviceProvider = CreateClientSideServiceProvider();
+        using var cts = CreateCancellationTokenSource();
+
+        var handler = serviceProvider.GetRequiredService<ITestStreamingRequestHandler>();
+
+        var enumerator = handler.ExecuteRequest(new(10), cts.Token).GetAsyncEnumerator(cts.Token);
+
+        _ = await enumerator.MoveNextAsync();
+        _ = await enumerator.MoveNextAsync();
+
+        await cts.CancelAsync();
+
+        var observations = app.Services.GetRequiredService<TestObservations>();
+
+        Assert.That(() => observations.CancellationWasRequested, Is.True.After(1).Seconds.PollEvery(100).MilliSeconds);
+    }
+
+    [Test]
+    public async Task GivenSuccessfulWebSocketConnection_WhenExceptionOccursOnServer_ErrorIsPropagatedToClient()
+    {
+        await using var app = CreateWebApp();
+        await using var d = RunWebApp(app);
+
+        await using var serviceProvider = CreateClientSideServiceProvider();
+        using var cts = CreateCancellationTokenSource();
+
+        var handler = serviceProvider.GetRequiredService<ITestStreamingRequestHandler>();
+
+        var p = app.Services.GetRequiredService<TestParams>();
+
+        p.ExceptionToThrow = new("Test exception");
+
+        var ex = Assert.ThrowsAsync<HttpStreamFailedException>(() => handler.ExecuteRequest(new(10), cts.Token).Drain());
+        Assert.That(ex.Message, Is.EqualTo(p.ExceptionToThrow.Message));
+    }
+
+    private WebApplication CreateWebApp()
+    {
+        var builder = WebApplication.CreateBuilder();
+
+        ConfigureServerServices(builder.Services);
+
+        var app = builder.Build();
+
+        Configure(app);
+
+        return app;
+    }
+
+    private static AnonymousAsyncDisposable RunWebApp(WebApplication app)
+    {
+        var appTask = app.RunAsync(ListenAddress);
+
+        return new(() =>
+        {
+            app.Services.GetRequiredService<IHostApplicationLifetime>().StopApplication();
+            return appTask;
+        });
+    }
+
+    private ServiceProvider CreateClientSideServiceProvider()
+    {
+        var serviceCollection = new ServiceCollection();
+        ConfigureClientServices(serviceCollection);
+        return serviceCollection.BuildServiceProvider();
+    }
+
+    private CancellationTokenSource CreateCancellationTokenSource()
+    {
+        var cts = new CancellationTokenSource();
+
+        if (!Debugger.IsAttached)
+        {
+            cts.CancelAfter(TimeSpan.FromSeconds(10));
+        }
+
+        return cts;
     }
 
     private void ConfigureServerServices(IServiceCollection services)
     {
         _ = services.AddControllers().AddConquerorStreamingHttpControllers();
         _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>();
+        _ = services.AddSingleton<TestObservations>()
+                    .AddSingleton<TestParams>();
     }
 
     private void ConfigureClientServices(IServiceCollection services)
@@ -81,14 +150,39 @@ public sealed class StreamingHttpClientNonTestHostTests
 
     public interface ITestStreamingRequestHandler : IStreamingRequestHandler<TestRequest, TestItem>;
 
-    private sealed class TestStreamingRequestHandler : ITestStreamingRequestHandler
+    private sealed class TestStreamingRequestHandler(TestObservations observations, TestParams p) : ITestStreamingRequestHandler
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            await using var d = cancellationToken.Register(() => observations.CancellationWasRequested = true);
+
             await Task.Yield();
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);
             yield return new(request.Payload + 3);
+
+            if (p.ExceptionToThrow != null)
+            {
+                throw p.ExceptionToThrow;
+            }
+        }
+    }
+
+    private sealed class TestObservations
+    {
+        public bool CancellationWasRequested { get; set; }
+    }
+
+    private sealed class TestParams
+    {
+        public Exception? ExceptionToThrow { get; set; }
+    }
+
+    private sealed class AnonymousAsyncDisposable(Func<Task> dispose) : IAsyncDisposable
+    {
+        public async ValueTask DisposeAsync()
+        {
+            await dispose();
         }
     }
 }
