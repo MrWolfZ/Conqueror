@@ -18,9 +18,7 @@ public static class ConquerorStreamingTransportHttpServerAspNetCoreMvcBuilderExt
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpEndpointConfigurationStartupFilter>());
 
         builder.Services.TryAddSingleton<HttpEndpointActionDescriptorChangeProvider>();
-        builder.Services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
-                p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
 
         var options = new ConquerorStreamingHttpTransportServerAspNetCoreOptions();
 

@@ -8,12 +8,12 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 internal sealed class HttpEndpointRegistry
 {
     private const string DefaultControllerName = "Streams";
-    private readonly IStreamingRequestHandlerRegistry handlerRegistry;
     private readonly ConquerorStreamingHttpTransportServerAspNetCoreOptions options;
+    private readonly IStreamProducerRegistry producerRegistry;
 
-    public HttpEndpointRegistry(IStreamingRequestHandlerRegistry handlerRegistry, ConquerorStreamingHttpTransportServerAspNetCoreOptions options)
+    public HttpEndpointRegistry(IStreamProducerRegistry producerRegistry, ConquerorStreamingHttpTransportServerAspNetCoreOptions options)
     {
-        this.handlerRegistry = handlerRegistry;
+        this.producerRegistry = producerRegistry;
         this.options = options;
     }
 
@@ -39,19 +39,19 @@ internal sealed class HttpEndpointRegistry
     {
         foreach (var query in GetHttpStreams())
         {
-            var attribute = query.StreamingRequestType.GetCustomAttribute<HttpStreamAttribute>()!;
+            var attribute = query.RequestType.GetCustomAttribute<HttpStreamAttribute>()!;
 
-            var path = options.PathConvention?.GetStreamPath(query.StreamingRequestType, attribute) ?? DefaultHttpStreamPathConvention.Instance.GetStreamPath(query.StreamingRequestType, attribute);
+            var path = options.PathConvention?.GetStreamPath(query.RequestType, attribute) ?? DefaultHttpStreamPathConvention.Instance.GetStreamPath(query.RequestType, attribute);
 
             var endpoint = new HttpEndpoint
             {
                 Path = path,
                 Version = attribute.Version,
-                Name = query.StreamingRequestType.Name,
-                OperationId = attribute.OperationId ?? query.StreamingRequestType.FullName ?? query.StreamingRequestType.Name,
+                Name = query.RequestType.Name,
+                OperationId = attribute.OperationId ?? query.RequestType.FullName ?? query.RequestType.Name,
                 ControllerName = attribute.ApiGroupName ?? DefaultControllerName,
                 ApiGroupName = attribute.ApiGroupName,
-                RequestType = query.StreamingRequestType,
+                RequestType = query.RequestType,
                 ItemType = query.ItemType,
             };
 
@@ -59,6 +59,6 @@ internal sealed class HttpEndpointRegistry
         }
     }
 
-    private IEnumerable<StreamingRequestHandlerRegistration> GetHttpStreams() => handlerRegistry.GetStreamingRequestHandlerRegistrations()
-                                                                                                .Where(m => m.StreamingRequestType.GetCustomAttributes(typeof(HttpStreamAttribute), true).Any());
+    private IEnumerable<StreamProducerRegistration> GetHttpStreams() => producerRegistry.GetStreamProducerRegistrations()
+                                                                                        .Where(m => m.RequestType.GetCustomAttributes(typeof(HttpStreamAttribute), true).Any());
 }

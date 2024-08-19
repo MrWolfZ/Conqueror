@@ -7,9 +7,9 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
 internal sealed class HttpEndpointConfigurationStartupFilter : IStartupFilter
 {
+    private readonly HttpEndpointActionDescriptorChangeProvider actionDescriptorChangeProvider;
     private readonly ApplicationPartManager applicationPartManager;
     private readonly HttpEndpointRegistry httpEndpointRegistry;
-    private readonly HttpEndpointActionDescriptorChangeProvider actionDescriptorChangeProvider;
 
     public HttpEndpointConfigurationStartupFilter(ApplicationPartManager applicationPartManager,
                                                   HttpEndpointRegistry httpEndpointRegistry,

@@ -8,7 +8,7 @@ namespace Conqueror.Streaming.Tests;
 public sealed class ConquerorContextStreamingRequestTests
 {
     [Test]
-    public async Task GivenRequestExecution_ConquerorContextIsAvailableInHandler()
+    public async Task GivenRequestExecution_ConquerorContextIsAvailableInProducer()
     {
         var request = new TestStreamingRequest(10);
 
@@ -19,7 +19,7 @@ public sealed class ConquerorContextStreamingRequestTests
             return AsyncEnumerableHelper.Of(new TestItem(q.Payload));
         });
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
@@ -37,7 +37,7 @@ public sealed class ConquerorContextStreamingRequestTests
             return next(ctx.Request);
         });
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
@@ -50,47 +50,47 @@ public sealed class ConquerorContextStreamingRequestTests
         var provider = Setup(nestedClassFn: b => Assert.That(b, Is.Not.Null),
                              nestedClassLifetime: ServiceLifetime.Scoped);
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
 
     [Test]
-    public async Task GivenRequestExecution_ConquerorContextIsAvailableInNestedHandler()
+    public async Task GivenRequestExecution_ConquerorContextIsAvailableInNestedProducer()
     {
         var request = new TestStreamingRequest(10);
 
-        var provider = Setup(nestedHandlerFn: (q, ctx) =>
+        var provider = Setup(nestedProducerFn: (q, ctx) =>
         {
             Assert.That(ctx, Is.Not.Null);
 
             return AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload));
         });
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
 
     [Test]
-    public async Task GivenRequestExecution_ConquerorContextIsAvailableInHandlerAfterExecutionOfNestedHandler()
+    public async Task GivenRequestExecution_ConquerorContextIsAvailableInProducerAfterExecutionOfNestedProducer()
     {
         var request = new TestStreamingRequest(10);
 
-        var provider = Setup(handlerPreReturnFn: b => Assert.That(b, Is.Not.Null));
+        var provider = Setup(producerPreReturnFn: b => Assert.That(b, Is.Not.Null));
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
 
     [Test]
     [Combinatorial]
-    public async Task GivenRequestExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassRegardlessOfLifetime([Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)] ServiceLifetime handlerLifetime,
-                                                                                                                           [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-                                                                                                                           ServiceLifetime middlewareLifetime,
-                                                                                                                           [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-                                                                                                                           ServiceLifetime nestedClassLifetime)
+    public async Task GivenRequestExecution_ConquerorContextIsTheSameInMiddlewareProducerAndNestedClassRegardlessOfLifetime([Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)] ServiceLifetime producerLifetime,
+                                                                                                                            [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+                                                                                                                            ServiceLifetime middlewareLifetime,
+                                                                                                                            [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+                                                                                                                            ServiceLifetime nestedClassLifetime)
     {
         var request = new TestStreamingRequest(10);
         var observedContexts = new List<IConquerorContext>();
@@ -109,11 +109,11 @@ public sealed class ConquerorContextStreamingRequestTests
                              (ctx, next) => next(ctx.Request),
                              ctx => observedContexts.Add(ctx!),
                              _ => { },
-                             handlerLifetime,
+                             producerLifetime,
                              middlewareLifetime,
                              nestedClassLifetime);
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
 
@@ -124,7 +124,7 @@ public sealed class ConquerorContextStreamingRequestTests
     }
 
     [Test]
-    public async Task GivenRequestExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
+    public async Task GivenRequestExecution_ConquerorContextIsTheSameInMiddlewareProducerAndNestedClassWithConfigureAwait()
     {
         var request = new TestStreamingRequest(10);
         var observedContexts = new List<IConquerorContext>();
@@ -139,7 +139,7 @@ public sealed class ConquerorContextStreamingRequestTests
                              (ctx, next) => next(ctx.Request),
                              ctx => observedContexts.Add(ctx!));
 
-        async IAsyncEnumerable<TestItem> NestedMiddlewareFn(StreamingRequestMiddlewareContext<TestStreamingRequest, TestItem> ctx,
+        async IAsyncEnumerable<TestItem> NestedMiddlewareFn(StreamProducerMiddlewareContext<TestStreamingRequest, TestItem> ctx,
                                                             Func<TestStreamingRequest, IAsyncEnumerable<TestItem>> next)
         {
             await Task.Delay(10).ConfigureAwait(false);
@@ -151,7 +151,7 @@ public sealed class ConquerorContextStreamingRequestTests
             }
         }
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
 
@@ -162,7 +162,7 @@ public sealed class ConquerorContextStreamingRequestTests
     }
 
     [Test]
-    public async Task GivenRequestExecution_TraceIdIsTheSameInHandlerMiddlewareAndNestedClass()
+    public async Task GivenRequestExecution_TraceIdIsTheSameInProducerMiddlewareAndNestedClass()
     {
         var request = new TestStreamingRequest(10);
         var observedTraceIds = new List<string>();
@@ -181,7 +181,7 @@ public sealed class ConquerorContextStreamingRequestTests
                              (ctx, next) => next(ctx.Request),
                              ctx => observedTraceIds.Add(ctx!.TraceId));
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
 
@@ -191,9 +191,9 @@ public sealed class ConquerorContextStreamingRequestTests
     }
 
     [Test]
-    public async Task GivenRequestExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInHandlerMiddlewareAndNestedClass()
+    public async Task GivenRequestExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInProducerMiddlewareAndNestedClass()
     {
-        using var activity = StartActivity(nameof(GivenRequestExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInHandlerMiddlewareAndNestedClass));
+        using var activity = StartActivity(nameof(GivenRequestExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInProducerMiddlewareAndNestedClass));
 
         var request = new TestStreamingRequest(10);
         var observedTraceIds = new List<string>();
@@ -212,7 +212,7 @@ public sealed class ConquerorContextStreamingRequestTests
                              (ctx, next) => next(ctx.Request),
                              ctx => observedTraceIds.Add(ctx!.TraceId));
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
 
@@ -223,7 +223,7 @@ public sealed class ConquerorContextStreamingRequestTests
     }
 
     [Test]
-    public async Task GivenRequestExecution_TraceIdIsTheSameInNestedHandler()
+    public async Task GivenRequestExecution_TraceIdIsTheSameInNestedProducer()
     {
         var request = new TestStreamingRequest(10);
         var observedTraceIds = new List<string>();
@@ -239,7 +239,7 @@ public sealed class ConquerorContextStreamingRequestTests
                                  return AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload));
                              });
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
 
@@ -248,9 +248,9 @@ public sealed class ConquerorContextStreamingRequestTests
     }
 
     [Test]
-    public async Task GivenRequestExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInNestedHandler()
+    public async Task GivenRequestExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInNestedProducer()
     {
-        using var activity = StartActivity(nameof(GivenRequestExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInNestedHandler));
+        using var activity = StartActivity(nameof(GivenRequestExecutionWithActiveActivity_TraceIdIsFromActivityAndIsTheSameInNestedProducer));
 
         var request = new TestStreamingRequest(10);
         var observedTraceIds = new List<string>();
@@ -266,7 +266,7 @@ public sealed class ConquerorContextStreamingRequestTests
                                  return AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload));
                              });
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
 
@@ -278,7 +278,7 @@ public sealed class ConquerorContextStreamingRequestTests
     [Test]
     public void GivenNoRequestExecution_ConquerorContextIsNotAvailable()
     {
-        var services = new ServiceCollection().AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>();
+        var services = new ServiceCollection().AddConquerorStreamProducer<TestStreamProducer>();
 
         _ = services.AddTransient(p => new NestedClass(b => Assert.That(b, Is.Null), p.GetRequiredService<IConquerorContextAccessor>()));
 
@@ -288,7 +288,7 @@ public sealed class ConquerorContextStreamingRequestTests
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInHandler()
+    public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInProducer()
     {
         var request = new TestStreamingRequest(10);
         var expectedTraceId = string.Empty;
@@ -304,15 +304,15 @@ public sealed class ConquerorContextStreamingRequestTests
 
         expectedTraceId = conquerorContext.TraceId;
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInHandler()
+    public async Task GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInProducer()
     {
-        using var activity = StartActivity(nameof(GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInHandler));
+        using var activity = StartActivity(nameof(GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInProducer));
 
         var request = new TestStreamingRequest(10);
 
@@ -325,18 +325,18 @@ public sealed class ConquerorContextStreamingRequestTests
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInNestedHandler()
+    public async Task GivenManuallyCreatedContext_TraceIdIsAvailableInNestedProducer()
     {
         var request = new TestStreamingRequest(10);
         var expectedTraceId = string.Empty;
 
-        var provider = Setup(nestedHandlerFn: (q, ctx) =>
+        var provider = Setup(nestedProducerFn: (q, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
             Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
@@ -347,19 +347,19 @@ public sealed class ConquerorContextStreamingRequestTests
 
         expectedTraceId = conquerorContext.TraceId;
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
 
     [Test]
-    public async Task GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInNestedHandler()
+    public async Task GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInNestedProducer()
     {
-        using var activity = StartActivity(nameof(GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInNestedHandler));
+        using var activity = StartActivity(nameof(GivenManuallyCreatedContextWithActiveActivity_TraceIdIsFromActivityAndIsAvailableInNestedProducer));
 
         var request = new TestStreamingRequest(10);
 
-        var provider = Setup(nestedHandlerFn: (q, ctx) =>
+        var provider = Setup(nestedProducerFn: (q, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
             Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
@@ -368,54 +368,54 @@ public sealed class ConquerorContextStreamingRequestTests
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider Setup(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>>? handlerFn = null,
-                                   Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>>? nestedHandlerFn = null,
+    private IServiceProvider Setup(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>>? producerFn = null,
+                                   Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>>? nestedProducerFn = null,
                                    MiddlewareFn? middlewareFn = null,
                                    MiddlewareFn? outerMiddlewareFn = null,
                                    Action<IConquerorContext?>? nestedClassFn = null,
-                                   Action<IConquerorContext?>? handlerPreReturnFn = null,
-                                   ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
-                                   ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
+                                   Action<IConquerorContext?>? producerPreReturnFn = null,
+                                   ServiceLifetime producerLifetime = ServiceLifetime.Transient,
+                                   ServiceLifetime nestedProducerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
     {
-        handlerFn ??= (request, _) => AsyncEnumerableHelper.Of(new TestItem(request.Payload));
-        nestedHandlerFn ??= (request, _) => AsyncEnumerableHelper.Of(new NestedTestItem(request.Payload));
+        producerFn ??= (request, _) => AsyncEnumerableHelper.Of(new TestItem(request.Payload));
+        nestedProducerFn ??= (request, _) => AsyncEnumerableHelper.Of(new NestedTestItem(request.Payload));
         middlewareFn ??= (middlewareCtx, next) => next(middlewareCtx.Request);
         outerMiddlewareFn ??= (middlewareCtx, next) => next(middlewareCtx.Request);
         nestedClassFn ??= _ => { };
-        handlerPreReturnFn ??= _ => { };
+        producerPreReturnFn ??= _ => { };
 
         var services = new ServiceCollection();
 
         _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<IConquerorContextAccessor>()), nestedClassLifetime));
 
-        _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>(p => new(handlerFn,
-                                                                                               handlerPreReturnFn,
-                                                                                               p.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                               p.GetRequiredService<NestedClass>(),
-                                                                                               p.GetRequiredService<IStreamingRequestHandler<NestedTestStreamingRequest, NestedTestItem>>()),
-                                                                                      handlerLifetime);
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>(p => new(producerFn,
+                                                                             producerPreReturnFn,
+                                                                             p.GetRequiredService<IConquerorContextAccessor>(),
+                                                                             p.GetRequiredService<NestedClass>(),
+                                                                             p.GetRequiredService<IStreamProducer<NestedTestStreamingRequest, NestedTestItem>>()),
+                                                                    producerLifetime);
 
-        _ = services.AddConquerorStreamingRequestHandler<NestedTestStreamingRequestHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                                            nestedHandlerLifetime);
+        _ = services.AddConquerorStreamProducer<NestedTestStreamProducer>(p => new(nestedProducerFn, p.GetRequiredService<IConquerorContextAccessor>()),
+                                                                          nestedProducerLifetime);
 
-        _ = services.AddConquerorStreamingRequestMiddleware<TestStreamingRequestMiddleware>(_ => new(middlewareFn), middlewareLifetime);
+        _ = services.AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(_ => new(middlewareFn), middlewareLifetime);
 
-        _ = services.AddConquerorStreamingRequestMiddleware<OuterTestStreamingRequestMiddleware>(_ => new(outerMiddlewareFn), middlewareLifetime);
+        _ = services.AddConquerorStreamProducerMiddleware<OuterTestStreamProducerMiddleware>(_ => new(outerMiddlewareFn), middlewareLifetime);
 
         var provider = services.BuildServiceProvider();
 
         _ = provider.GetRequiredService<NestedClass>();
-        _ = provider.GetRequiredService<TestStreamingRequestHandler>();
-        _ = provider.GetRequiredService<TestStreamingRequestMiddleware>();
-        _ = provider.GetRequiredService<OuterTestStreamingRequestMiddleware>();
+        _ = provider.GetRequiredService<TestStreamProducer>();
+        _ = provider.GetRequiredService<TestStreamProducerMiddleware>();
+        _ = provider.GetRequiredService<OuterTestStreamProducerMiddleware>();
 
         return provider.CreateScope().ServiceProvider;
     }
@@ -458,7 +458,7 @@ public sealed class ConquerorContextStreamingRequestTests
         }
     }
 
-    private delegate IAsyncEnumerable<TestItem> MiddlewareFn(StreamingRequestMiddlewareContext<TestStreamingRequest, TestItem> middlewareCtx,
+    private delegate IAsyncEnumerable<TestItem> MiddlewareFn(StreamProducerMiddlewareContext<TestStreamingRequest, TestItem> middlewareCtx,
                                                              Func<TestStreamingRequest, IAsyncEnumerable<TestItem>> next);
 
     private sealed record TestStreamingRequest(int Payload);
@@ -469,33 +469,33 @@ public sealed class ConquerorContextStreamingRequestTests
 
     private sealed record NestedTestItem(int Payload);
 
-    private sealed class TestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>, IConfigureStreamingRequestPipeline
+    private sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> handlerFn;
         private readonly NestedClass nestedClass;
-        private readonly IStreamingRequestHandler<NestedTestStreamingRequest, NestedTestItem> nestedStreamingRequestHandler;
+        private readonly IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer;
         private readonly Action<IConquerorContext?> preReturnFn;
+        private readonly Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn;
 
-        public TestStreamingRequestHandler(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> handlerFn,
-                                           Action<IConquerorContext?> preReturnFn,
-                                           IConquerorContextAccessor conquerorContextAccessor,
-                                           NestedClass nestedClass,
-                                           IStreamingRequestHandler<NestedTestStreamingRequest, NestedTestItem> nestedStreamingRequestHandler)
+        public TestStreamProducer(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn,
+                                  Action<IConquerorContext?> preReturnFn,
+                                  IConquerorContextAccessor conquerorContextAccessor,
+                                  NestedClass nestedClass,
+                                  IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer)
         {
-            this.handlerFn = handlerFn;
+            this.producerFn = producerFn;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.nestedClass = nestedClass;
-            this.nestedStreamingRequestHandler = nestedStreamingRequestHandler;
+            this.nestedStreamProducer = nestedStreamProducer;
             this.preReturnFn = preReturnFn;
         }
 
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
-            var response = handlerFn(request, conquerorContextAccessor.ConquerorContext);
+            var response = producerFn(request, conquerorContextAccessor.ConquerorContext);
             nestedClass.Execute();
-            _ = await nestedStreamingRequestHandler.ExecuteRequest(new(request.Payload), cancellationToken).Drain();
+            _ = await nestedStreamProducer.ExecuteRequest(new(request.Payload), cancellationToken).Drain();
             preReturnFn(conquerorContextAccessor.ConquerorContext);
             await foreach (var item in response)
             {
@@ -503,18 +503,18 @@ public sealed class ConquerorContextStreamingRequestTests
             }
         }
 
-        public static void ConfigurePipeline(IStreamingRequestPipelineBuilder pipeline) => pipeline.Use<OuterTestStreamingRequestMiddleware>()
-                                                                                                   .Use<TestStreamingRequestMiddleware>();
+        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) => pipeline.Use<OuterTestStreamProducerMiddleware>()
+                                                                                                 .Use<TestStreamProducerMiddleware>();
     }
 
-    private sealed class NestedTestStreamingRequestHandler : IStreamingRequestHandler<NestedTestStreamingRequest, NestedTestItem>
+    private sealed class NestedTestStreamProducer : IStreamProducer<NestedTestStreamingRequest, NestedTestItem>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> handlerFn;
+        private readonly Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn;
 
-        public NestedTestStreamingRequestHandler(Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> handlerFn, IConquerorContextAccessor conquerorContextAccessor)
+        public NestedTestStreamProducer(Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn, IConquerorContextAccessor conquerorContextAccessor)
         {
-            this.handlerFn = handlerFn;
+            this.producerFn = producerFn;
             this.conquerorContextAccessor = conquerorContextAccessor;
         }
 
@@ -522,27 +522,27 @@ public sealed class ConquerorContextStreamingRequestTests
         {
             await Task.Yield();
 
-            await foreach (var item in handlerFn(request, conquerorContextAccessor.ConquerorContext))
+            await foreach (var item in producerFn(request, conquerorContextAccessor.ConquerorContext))
             {
                 yield return item;
             }
         }
     }
 
-    private sealed class OuterTestStreamingRequestMiddleware : IStreamingRequestMiddleware
+    private sealed class OuterTestStreamProducerMiddleware : IStreamProducerMiddleware
     {
         private readonly MiddlewareFn middlewareFn;
 
-        public OuterTestStreamingRequestMiddleware(MiddlewareFn middlewareFn)
+        public OuterTestStreamProducerMiddleware(MiddlewareFn middlewareFn)
         {
             this.middlewareFn = middlewareFn;
         }
 
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
             await Task.Yield();
-            var castedCtx = (ctx as StreamingRequestMiddlewareContext<TestStreamingRequest, TestItem>)!;
+            var castedCtx = (ctx as StreamProducerMiddlewareContext<TestStreamingRequest, TestItem>)!;
 
             await foreach (var item in middlewareFn(castedCtx, MiddlewareFn))
             {
@@ -561,20 +561,20 @@ public sealed class ConquerorContextStreamingRequestTests
         }
     }
 
-    private sealed class TestStreamingRequestMiddleware : IStreamingRequestMiddleware
+    private sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware
     {
         private readonly MiddlewareFn middlewareFn;
 
-        public TestStreamingRequestMiddleware(MiddlewareFn middlewareFn)
+        public TestStreamProducerMiddleware(MiddlewareFn middlewareFn)
         {
             this.middlewareFn = middlewareFn;
         }
 
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
             await Task.Yield();
-            var castedCtx = (ctx as StreamingRequestMiddlewareContext<TestStreamingRequest, TestItem>)!;
+            var castedCtx = (ctx as StreamProducerMiddlewareContext<TestStreamingRequest, TestItem>)!;
 
             await foreach (var item in middlewareFn(castedCtx, MiddlewareFn))
             {

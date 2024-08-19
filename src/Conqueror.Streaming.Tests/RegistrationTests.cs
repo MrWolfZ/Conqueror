@@ -6,16 +6,16 @@ namespace Conqueror.Streaming.Tests;
 public sealed class RegistrationTests
 {
     [Test]
-    public void GivenServiceCollectionWithMultipleRegisteredHandlers_DoesNotRegisterConquerorTypesMultipleTimes()
+    public void GivenServiceCollectionWithMultipleRegisteredProducers_DoesNotRegisterConquerorTypesMultipleTimes()
     {
-        var services = new ServiceCollection().AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
-                                              .AddConquerorStreamingRequestHandler<TestStreamingRequest2Handler>();
+        var services = new ServiceCollection().AddConquerorStreamProducer<TestStreamProducer>()
+                                              .AddConquerorStreamProducer<TestStreamProducer2>();
 
-        Assert.That(services.Count(d => d.ServiceType == typeof(StreamingRequestClientFactory)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(IStreamingRequestClientFactory)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(StreamingRequestHandlerRegistry)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(IStreamingRequestHandlerRegistry)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(StreamingRequestMiddlewareRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(StreamProducerClientFactory)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IStreamProducerClientFactory)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(StreamProducerRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IStreamProducerRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(StreamProducerMiddlewareRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)), Is.EqualTo(1));
     }
 
@@ -30,44 +30,44 @@ public sealed class RegistrationTests
     }
 
     [Test]
-    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsStreamingRequestHandlerWithPlainInterfaceAsTransient()
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsStreamProducerWithPlainInterfaceAsTransient()
     {
         var services = new ServiceCollection().AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingRequestHandler) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamProducer) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
-    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsStreamingRequestHandlerWithCustomInterfaceAsTransient()
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsStreamProducerWithCustomInterfaceAsTransient()
     {
         var services = new ServiceCollection().AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingRequestHandlerWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamProducerWithCustomInterface) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
-    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsStreamingRequestMiddlewareAsTransient()
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsStreamProducerMiddlewareAsTransient()
     {
         var services = new ServiceCollection().AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingRequestMiddleware) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamProducerMiddleware) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
-    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsStreamingRequestMiddlewareWithoutConfigurationAsTransient()
+    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsStreamProducerMiddlewareWithoutConfigurationAsTransient()
     {
         var services = new ServiceCollection().AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingRequestMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamProducerMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
     }
 
     [Test]
-    public void GivenServiceCollectionWithHandlerAlreadyRegistered_AddingAllTypesFromAssemblyDoesNotAddHandlerAgain()
+    public void GivenServiceCollectionWithProducerAlreadyRegistered_AddingAllTypesFromAssemblyDoesNotAddProducerAgain()
     {
-        var services = new ServiceCollection().AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>(ServiceLifetime.Singleton)
+        var services = new ServiceCollection().AddConquerorStreamProducer<TestStreamProducer>(ServiceLifetime.Singleton)
                                               .AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamingRequestHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestStreamProducer)), Is.EqualTo(1));
     }
 
     [Test]
@@ -75,8 +75,8 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services.Count(d => d.ServiceType == typeof(IStreamingRequestHandler<TestStreamingRequest, TestItem>)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(ITestStreamingRequestHandler)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IStreamProducer<TestStreamingRequest, TestItem>)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ITestStreamProducer)), Is.EqualTo(1));
     }
 
     [Test]
@@ -84,9 +84,9 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestStreamingRequestHandler)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestStreamingRequestHandlerWithCustomInterface)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestStreamingRequestMiddleware)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestStreamProducer)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestStreamProducerWithCustomInterface)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestStreamProducerMiddleware)));
     }
 
     [Test]
@@ -94,8 +94,8 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestStreamingRequestHandler<>)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestStreamingRequestMiddleware<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestStreamProducer<>)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestStreamProducerMiddleware<>)));
     }
 
     [Test]
@@ -103,8 +103,8 @@ public sealed class RegistrationTests
     {
         var services = new ServiceCollection().AddConquerorStreamingTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestStreamingRequestHandler)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestStreamingRequestMiddleware)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestStreamProducer)));
+        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestStreamProducerMiddleware)));
     }
 
     public sealed record TestStreamingRequest;
@@ -117,81 +117,81 @@ public sealed class RegistrationTests
 
     public sealed record TestStreamingRequestWithCustomInterface;
 
-    public interface ITestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequestWithCustomInterface, TestItem>
+    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequestWithCustomInterface, TestItem>
     {
     }
 
-    public sealed class TestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>
+    public sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
     {
         public IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, CancellationToken cancellationToken = default) => AsyncEnumerableHelper.Empty<TestItem>();
     }
 
-    public sealed class TestStreamingRequestHandlerWithCustomInterface : ITestStreamingRequestHandler
+    public sealed class TestStreamProducerWithCustomInterface : ITestStreamProducer
     {
         public IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithCustomInterface request, CancellationToken cancellationToken = default) => AsyncEnumerableHelper.Empty<TestItem>();
     }
 
-    public sealed class TestStreamingRequest2Handler : IStreamingRequestHandler<TestStreamingRequest2, TestItem2>
+    public sealed class TestStreamProducer2 : IStreamProducer<TestStreamingRequest2, TestItem2>
     {
         public IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 request, CancellationToken cancellationToken = default) => AsyncEnumerableHelper.Empty<TestItem2>();
     }
 
-    public abstract class AbstractTestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>
+    public abstract class AbstractTestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
     {
         public IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, CancellationToken cancellationToken = default) => AsyncEnumerableHelper.Empty<TestItem>();
     }
 
-    public sealed class GenericTestStreamingRequestHandler<T> : IStreamingRequestHandler<TestStreamingRequest, T>
+    public sealed class GenericTestStreamProducer<T> : IStreamProducer<TestStreamingRequest, T>
         where T : new()
     {
         public IAsyncEnumerable<T> ExecuteRequest(TestStreamingRequest request, CancellationToken cancellationToken = default) => AsyncEnumerableHelper.Empty<T>();
     }
 
-    public abstract class AbstractTestStreamingRequestHandlerWithCustomInterface : ITestStreamingRequestHandler
+    public abstract class AbstractTestStreamProducerWithCustomInterface : ITestStreamProducer
     {
         public IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithCustomInterface request, CancellationToken cancellationToken = default) => AsyncEnumerableHelper.Empty<TestItem>();
     }
 
-    private sealed class PrivateTestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>
+    private sealed class PrivateTestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
     {
         public IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, CancellationToken cancellationToken = default) => AsyncEnumerableHelper.Empty<TestItem>();
     }
 
-    public sealed class TestStreamingRequestMiddlewareConfiguration
+    public sealed class TestStreamProducerMiddlewareConfiguration
     {
     }
 
-    public sealed class TestStreamingRequestMiddleware : IStreamingRequestMiddleware<TestStreamingRequestMiddlewareConfiguration>
+    public sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
     {
-        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem, TestStreamingRequestMiddlewareConfiguration> ctx)
+        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx)
             where TRequest : class =>
             ctx.Next(ctx.Request, ctx.CancellationToken);
     }
 
-    public sealed class TestStreamingRequestMiddlewareWithoutConfiguration : IStreamingRequestMiddleware
+    public sealed class TestStreamProducerMiddlewareWithoutConfiguration : IStreamProducerMiddleware
     {
-        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem> ctx)
+        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class =>
             ctx.Next(ctx.Request, ctx.CancellationToken);
     }
 
-    public abstract class AbstractTestStreamingRequestMiddleware : IStreamingRequestMiddleware<TestStreamingRequestMiddlewareConfiguration>
+    public abstract class AbstractTestStreamProducerMiddleware : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
     {
-        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem, TestStreamingRequestMiddlewareConfiguration> ctx)
+        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx)
             where TRequest : class =>
             ctx.Next(ctx.Request, ctx.CancellationToken);
     }
 
-    public sealed class GenericTestStreamingRequestMiddleware<T> : IStreamingRequestMiddleware<T>
+    public sealed class GenericTestStreamProducerMiddleware<T> : IStreamProducerMiddleware<T>
     {
-        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem, T> ctx)
+        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, T> ctx)
             where TRequest : class =>
             ctx.Next(ctx.Request, ctx.CancellationToken);
     }
 
-    private sealed class PrivateTestStreamingRequestMiddleware : IStreamingRequestMiddleware<TestStreamingRequestMiddlewareConfiguration>
+    private sealed class PrivateTestStreamProducerMiddleware : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
     {
-        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem, TestStreamingRequestMiddlewareConfiguration> ctx)
+        public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx)
             where TRequest : class =>
             ctx.Next(ctx.Request, ctx.CancellationToken);
     }

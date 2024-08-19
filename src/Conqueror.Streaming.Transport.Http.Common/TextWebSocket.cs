@@ -56,10 +56,9 @@ internal sealed class TextWebSocket : IDisposable
                     {
                         if (socket.State == WebSocketState.CloseReceived)
                         {
-                            await socket.CloseOutputAsync(
-                                receiveResult.CloseStatus.Value,
-                                receiveResult.CloseStatusDescription,
-                                cancellationToken).ConfigureAwait(false);
+                            await socket.CloseOutputAsync(receiveResult.CloseStatus.Value,
+                                                          receiveResult.CloseStatusDescription,
+                                                          cancellationToken).ConfigureAwait(false);
                         }
 
                         channel.Writer.Complete();
@@ -106,11 +105,10 @@ internal sealed class TextWebSocket : IDisposable
 
         var messageBytes = Encoding.UTF8.GetBytes(message);
 
-        await socket.SendAsync(
-            new(messageBytes, 0, messageBytes.Length),
-            WebSocketMessageType.Text,
-            true,
-            cancellationToken).ConfigureAwait(false);
+        await socket.SendAsync(new(messageBytes, 0, messageBytes.Length),
+                               WebSocketMessageType.Text,
+                               true,
+                               cancellationToken).ConfigureAwait(false);
 
         return true;
     }
@@ -124,10 +122,9 @@ internal sealed class TextWebSocket : IDisposable
 
         try
         {
-            await socket.CloseAsync(
-                WebSocketCloseStatus.NormalClosure,
-                nameof(WebSocketCloseStatus.NormalClosure),
-                cancellationToken).ConfigureAwait(false);
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure,
+                                    nameof(WebSocketCloseStatus.NormalClosure),
+                                    cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is ObjectDisposedException or IOException { InnerException: ObjectDisposedException })
         {

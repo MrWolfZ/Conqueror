@@ -127,15 +127,15 @@ public class ApiDescriptionTests : TestBase
     {
         _ = services.AddMvc().AddConquerorStreamingHttpControllers(o => { o.PathConvention = new TestHttpStreamPathConvention(); });
 
-        _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandler2>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandler3>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandlerWithoutPayload>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandlerWithComplexPayload>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestWithCustomPathHandler>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestWithVersionHandler>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestWithOperationIdHandler>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestWithApiGroupNameHandler>();
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
+                    .AddConquerorStreamProducer<TestStreamingRequestHandler2>()
+                    .AddConquerorStreamProducer<TestStreamingRequestHandler3>()
+                    .AddConquerorStreamProducer<TestStreamProducerWithoutPayload>()
+                    .AddConquerorStreamProducer<TestStreamProducerWithComplexPayload>()
+                    .AddConquerorStreamProducer<TestStreamingRequestWithCustomPathHandler>()
+                    .AddConquerorStreamProducer<TestStreamingRequestWithVersionHandler>()
+                    .AddConquerorStreamProducer<TestStreamingRequestWithOperationIdHandler>()
+                    .AddConquerorStreamProducer<TestStreamingRequestWithApiGroupNameHandler>();
     }
 
     protected override void Configure(IApplicationBuilder app)
@@ -199,11 +199,11 @@ public class ApiDescriptionTests : TestBase
         public int Payload { get; init; }
     }
 
-    public interface ITestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>
+    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
     {
     }
 
-    public sealed class TestStreamingRequestHandler : ITestStreamingRequestHandler
+    public sealed class TestStreamProducer : ITestStreamProducer
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -213,7 +213,7 @@ public class ApiDescriptionTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandler2 : IStreamingRequestHandler<TestStreamingRequest2, TestItem2>
+    public sealed class TestStreamingRequestHandler2 : IStreamProducer<TestStreamingRequest2, TestItem2>
     {
         public IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 query, CancellationToken cancellationToken = default)
         {
@@ -221,7 +221,7 @@ public class ApiDescriptionTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandler3 : IStreamingRequestHandler<TestStreamingRequest3, TestItem>
+    public sealed class TestStreamingRequestHandler3 : IStreamProducer<TestStreamingRequest3, TestItem>
     {
         public IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest3 query, CancellationToken cancellationToken = default)
         {
@@ -229,7 +229,7 @@ public class ApiDescriptionTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandlerWithoutPayload : IStreamingRequestHandler<TestStreamingRequestWithoutPayload, TestItem>
+    public sealed class TestStreamProducerWithoutPayload : IStreamProducer<TestStreamingRequestWithoutPayload, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithoutPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -239,7 +239,7 @@ public class ApiDescriptionTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandlerWithComplexPayload : IStreamingRequestHandler<TestStreamingRequestWithComplexPayload, TestItem>
+    public sealed class TestStreamProducerWithComplexPayload : IStreamProducer<TestStreamingRequestWithComplexPayload, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithComplexPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -249,7 +249,7 @@ public class ApiDescriptionTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestWithCustomPathHandler : IStreamingRequestHandler<TestStreamingRequestWithCustomPath, TestItem>
+    public sealed class TestStreamingRequestWithCustomPathHandler : IStreamProducer<TestStreamingRequestWithCustomPath, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithCustomPath request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -259,7 +259,7 @@ public class ApiDescriptionTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestWithVersionHandler : IStreamingRequestHandler<TestStreamingRequestWithVersion, TestItem>
+    public sealed class TestStreamingRequestWithVersionHandler : IStreamProducer<TestStreamingRequestWithVersion, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithVersion request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -269,7 +269,7 @@ public class ApiDescriptionTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestWithOperationIdHandler : IStreamingRequestHandler<TestStreamingRequestWithOperationId, TestItem>
+    public sealed class TestStreamingRequestWithOperationIdHandler : IStreamProducer<TestStreamingRequestWithOperationId, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithOperationId request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -279,7 +279,7 @@ public class ApiDescriptionTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestWithApiGroupNameHandler : IStreamingRequestHandler<TestStreamingRequestWithApiGroupName, TestItem>
+    public sealed class TestStreamingRequestWithApiGroupNameHandler : IStreamProducer<TestStreamingRequestWithApiGroupName, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithApiGroupName request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {

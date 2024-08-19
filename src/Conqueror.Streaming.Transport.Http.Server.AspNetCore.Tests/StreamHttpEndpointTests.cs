@@ -423,18 +423,18 @@ public sealed class StreamHttpEndpointTests : TestBase
         _ = services.AddMvc().AddConquerorStreamingHttpControllers(o => o.PathConvention = new TestHttpStreamPathConvention());
         _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestStreamingRequestWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-        _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandler2>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandler3>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandler4>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandlerWithoutPayload>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandlerWithComplexPayload>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestWithCustomSerializedPayloadTypeHandler>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestWithCustomPathHandler>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestWithVersionHandler>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandlerWithError>()
-                    .AddConquerorStreamingRequestHandler<TestStreamingRequestHandlerWithOneItem>()
-                    .AddConquerorStreamingRequestHandlerDelegate<TestDelegateStreamingRequest, TestDelegateItem>((command, _, cancellationToken) =>
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>()
+                    .AddConquerorStreamProducer<TestStreamingRequestHandler2>()
+                    .AddConquerorStreamProducer<TestStreamingRequestHandler3>()
+                    .AddConquerorStreamProducer<TestStreamingRequestHandler4>()
+                    .AddConquerorStreamProducer<TestStreamProducerWithoutPayload>()
+                    .AddConquerorStreamProducer<TestStreamProducerWithComplexPayload>()
+                    .AddConquerorStreamProducer<TestStreamingRequestWithCustomSerializedPayloadTypeHandler>()
+                    .AddConquerorStreamProducer<TestStreamingRequestWithCustomPathHandler>()
+                    .AddConquerorStreamProducer<TestStreamingRequestWithVersionHandler>()
+                    .AddConquerorStreamProducer<TestStreamProducerWithError>()
+                    .AddConquerorStreamProducer<TestStreamProducerWithOneItem>()
+                    .AddConquerorStreamProducerDelegate<TestDelegateStreamingRequest, TestDelegateItem>((command, _, cancellationToken) =>
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         return AsyncEnumerableHelper.Of(new TestDelegateItem(command.Payload + 1), new TestDelegateItem(command.Payload + 2), new TestDelegateItem(command.Payload + 3));
@@ -510,11 +510,11 @@ public sealed class StreamHttpEndpointTests : TestBase
     [HttpStream]
     public sealed record TestRequestWithOneItem;
 
-    public interface ITestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>;
+    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
-    public interface ITestStreamingRequestWithCustomSerializedPayloadTypeHandler : IStreamingRequestHandler<TestStreamingRequestWithCustomSerializedPayloadType, TestStreamingRequestWithCustomSerializedPayloadTypeResponse>;
+    public interface ITestStreamingRequestWithCustomSerializedPayloadTypeHandler : IStreamProducer<TestStreamingRequestWithCustomSerializedPayloadType, TestStreamingRequestWithCustomSerializedPayloadTypeResponse>;
 
-    public sealed class TestStreamingRequestHandler : ITestStreamingRequestHandler
+    public sealed class TestStreamProducer : ITestStreamProducer
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -526,7 +526,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandler2 : IStreamingRequestHandler<TestStreamingRequest2, TestItem2>
+    public sealed class TestStreamingRequestHandler2 : IStreamProducer<TestStreamingRequest2, TestItem2>
     {
         public IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 request, CancellationToken cancellationToken = default)
         {
@@ -534,7 +534,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandler3 : IStreamingRequestHandler<TestStreamingRequest3, TestItem>
+    public sealed class TestStreamingRequestHandler3 : IStreamProducer<TestStreamingRequest3, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest3 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -546,7 +546,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandler4 : IStreamingRequestHandler<TestStreamingRequest4, TestItem>
+    public sealed class TestStreamingRequestHandler4 : IStreamProducer<TestStreamingRequest4, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest4 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -558,7 +558,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandlerWithoutPayload : IStreamingRequestHandler<TestStreamingRequestWithoutPayload, TestItem>
+    public sealed class TestStreamProducerWithoutPayload : IStreamProducer<TestStreamingRequestWithoutPayload, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithoutPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -570,7 +570,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestHandlerWithComplexPayload : IStreamingRequestHandler<TestStreamingRequestWithComplexPayload, TestItem>
+    public sealed class TestStreamProducerWithComplexPayload : IStreamProducer<TestStreamingRequestWithComplexPayload, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithComplexPayload request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -617,7 +617,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestWithCustomPathHandler : IStreamingRequestHandler<TestStreamingRequestWithCustomPath, TestItem>
+    public sealed class TestStreamingRequestWithCustomPathHandler : IStreamProducer<TestStreamingRequestWithCustomPath, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithCustomPath request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -629,7 +629,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    public sealed class TestStreamingRequestWithVersionHandler : IStreamingRequestHandler<TestStreamingRequestWithVersion, TestItem>
+    public sealed class TestStreamingRequestWithVersionHandler : IStreamProducer<TestStreamingRequestWithVersion, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequestWithVersion request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -641,7 +641,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    private sealed class TestStreamingRequestHandlerWithError : IStreamingRequestHandler<TestRequestWithError, TestItem>
+    private sealed class TestStreamProducerWithError : IStreamProducer<TestRequestWithError, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithError request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -651,7 +651,7 @@ public sealed class StreamHttpEndpointTests : TestBase
         }
     }
 
-    private sealed class TestStreamingRequestHandlerWithOneItem : IStreamingRequestHandler<TestRequestWithOneItem, TestItem>
+    private sealed class TestStreamProducerWithOneItem : IStreamProducer<TestRequestWithOneItem, TestItem>
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequestWithOneItem request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {

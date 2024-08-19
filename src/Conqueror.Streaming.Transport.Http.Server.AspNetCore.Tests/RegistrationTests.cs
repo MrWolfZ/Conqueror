@@ -34,8 +34,8 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
                     _ = services.AddControllers()
                                 .AddConquerorStreamingHttpControllers();
 
-                    _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
-                                .AddConquerorStreamingRequestHandler<DuplicateStreamName.TestStreamingRequestHandler>();
+                    _ = services.AddConquerorStreamProducer<TestStreamProducer>()
+                                .AddConquerorStreamProducer<DuplicateStreamName.TestStreamProducer>();
                 });
 
                 _ = webHost.Configure(app =>
@@ -61,8 +61,8 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
                     _ = services.AddControllers()
                                 .AddConquerorStreamingHttpControllers();
 
-                    _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
-                                .AddConquerorStreamingRequestHandlerDelegate<DuplicateStreamName.TestStreamingRequest, TestItem>((_, _, _) => AsyncEnumerableHelper.Of(new TestItem()));
+                    _ = services.AddConquerorStreamProducer<TestStreamProducer>()
+                                .AddConquerorStreamProducerDelegate<DuplicateStreamName.TestStreamingRequest, TestItem>((_, _, _) => AsyncEnumerableHelper.Of(new TestItem()));
                 });
 
                 _ = webHost.Configure(app =>
@@ -88,8 +88,8 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
                     _ = services.AddControllers()
                                 .AddConquerorStreamingHttpControllers(o => o.PathConvention = new HttpStreamPathConventionWithDuplicates());
 
-                    _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>()
-                                .AddConquerorStreamingRequestHandler<TestStreamingRequest2Handler>();
+                    _ = services.AddConquerorStreamProducer<TestStreamProducer>()
+                                .AddConquerorStreamProducer<TestStreamingRequest2Handler>();
                 });
 
                 _ = webHost.Configure(app =>
@@ -113,7 +113,7 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 
         public sealed record TestItem2;
 
-        public sealed class TestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>
+        public sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
         {
             public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
             {
@@ -123,7 +123,7 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
             }
         }
 
-        public sealed class TestStreamingRequest2Handler : IStreamingRequestHandler<TestStreamingRequest2, TestItem2>
+        public sealed class TestStreamingRequest2Handler : IStreamProducer<TestStreamingRequest2, TestItem2>
         {
             public async IAsyncEnumerable<TestItem2> ExecuteRequest(TestStreamingRequest2 request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
             {
@@ -152,7 +152,7 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
         public sealed record TestItem;
 
         [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "okay for testing purposes")]
-        public sealed class TestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>
+        public sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
         {
             public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
             {

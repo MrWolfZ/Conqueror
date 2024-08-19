@@ -5,7 +5,7 @@ namespace Conqueror.Streaming.Tests;
 public sealed class StreamingRequestIdTests
 {
     [Test]
-    public async Task GivenRequestExecution_RequestIdIsTheSameInHandlerAndMiddlewareAndNestedClass()
+    public async Task GivenRequestExecution_RequestIdIsTheSameInProducerAndMiddlewareAndNestedClass()
     {
         var request = new TestStreamingRequest(10);
         var observedRequestIds = new List<string?>();
@@ -24,7 +24,7 @@ public sealed class StreamingRequestIdTests
                              (ctx, next) => next(ctx.Request),
                              ctx => { observedRequestIds.Add(ctx!.GetStreamingRequestId()); });
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
 
@@ -34,7 +34,7 @@ public sealed class StreamingRequestIdTests
     }
 
     [Test]
-    public async Task GivenRequestExecution_RequestIdIsNotTheSameInNestedHandler()
+    public async Task GivenRequestExecution_RequestIdIsNotTheSameInNestedProducer()
     {
         var request = new TestStreamingRequest(10);
         var observedRequestIds = new List<string?>();
@@ -50,7 +50,7 @@ public sealed class StreamingRequestIdTests
                                  return AsyncEnumerableHelper.Of(new NestedTestItem(req.Payload));
                              });
 
-        _ = await provider.GetRequiredService<IStreamingRequestHandler<TestStreamingRequest, TestItem>>()
+        _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
                           .Drain();
 
@@ -59,14 +59,14 @@ public sealed class StreamingRequestIdTests
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider Setup(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>>? handlerFn = null,
-                                   Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>>? nestedHandlerFn = null,
+    private IServiceProvider Setup(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>>? producerFn = null,
+                                   Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>>? nestedProducerFn = null,
                                    MiddlewareFn? middlewareFn = null,
                                    MiddlewareFn? outerMiddlewareFn = null,
                                    Action<IConquerorContext?>? nestedClassFn = null)
     {
-        handlerFn ??= (request, _) => AsyncEnumerableHelper.Of(new TestItem(request.Payload));
-        nestedHandlerFn ??= (request, _) => AsyncEnumerableHelper.Of(new NestedTestItem(request.Payload));
+        producerFn ??= (request, _) => AsyncEnumerableHelper.Of(new TestItem(request.Payload));
+        nestedProducerFn ??= (request, _) => AsyncEnumerableHelper.Of(new NestedTestItem(request.Payload));
         middlewareFn ??= (ctx, next) => next(ctx.Request);
         outerMiddlewareFn ??= (ctx, next) => next(ctx.Request);
         nestedClassFn ??= _ => { };
@@ -75,28 +75,28 @@ public sealed class StreamingRequestIdTests
 
         _ = services.Add(ServiceDescriptor.Describe(typeof(NestedClass), p => new NestedClass(nestedClassFn, p.GetRequiredService<IConquerorContextAccessor>()), ServiceLifetime.Transient));
 
-        _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>(p => new(handlerFn,
-                                                                                               p.GetRequiredService<IConquerorContextAccessor>(),
-                                                                                               p.GetRequiredService<NestedClass>(),
-                                                                                               p.GetRequiredService<IStreamingRequestHandler<NestedTestStreamingRequest, NestedTestItem>>()));
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>(p => new(producerFn,
+                                                                             p.GetRequiredService<IConquerorContextAccessor>(),
+                                                                             p.GetRequiredService<NestedClass>(),
+                                                                             p.GetRequiredService<IStreamProducer<NestedTestStreamingRequest, NestedTestItem>>()));
 
-        _ = services.AddConquerorStreamingRequestHandler<NestedTestStreamingRequestHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()));
+        _ = services.AddConquerorStreamProducer<NestedTestStreamProducer>(p => new(nestedProducerFn, p.GetRequiredService<IConquerorContextAccessor>()));
 
-        _ = services.AddConquerorStreamingRequestMiddleware<TestStreamingRequestMiddleware>(_ => new(middlewareFn));
+        _ = services.AddConquerorStreamProducerMiddleware<TestStreamProducerMiddleware>(_ => new(middlewareFn));
 
-        _ = services.AddConquerorStreamingRequestMiddleware<OuterTestStreamingRequestMiddleware>(_ => new(outerMiddlewareFn));
+        _ = services.AddConquerorStreamProducerMiddleware<OuterTestStreamProducerMiddleware>(_ => new(outerMiddlewareFn));
 
         var provider = services.BuildServiceProvider();
 
         _ = provider.GetRequiredService<NestedClass>();
-        _ = provider.GetRequiredService<TestStreamingRequestHandler>();
-        _ = provider.GetRequiredService<TestStreamingRequestMiddleware>();
-        _ = provider.GetRequiredService<OuterTestStreamingRequestMiddleware>();
+        _ = provider.GetRequiredService<TestStreamProducer>();
+        _ = provider.GetRequiredService<TestStreamProducerMiddleware>();
+        _ = provider.GetRequiredService<OuterTestStreamProducerMiddleware>();
 
         return provider.CreateScope().ServiceProvider;
     }
 
-    private delegate IAsyncEnumerable<TestItem> MiddlewareFn(StreamingRequestMiddlewareContext<TestStreamingRequest, TestItem> middlewareCtx,
+    private delegate IAsyncEnumerable<TestItem> MiddlewareFn(StreamProducerMiddlewareContext<TestStreamingRequest, TestItem> middlewareCtx,
                                                              Func<TestStreamingRequest, IAsyncEnumerable<TestItem>> next);
 
     private sealed record TestStreamingRequest(int Payload);
@@ -107,30 +107,30 @@ public sealed class StreamingRequestIdTests
 
     private sealed record NestedTestItem(int Payload);
 
-    private sealed class TestStreamingRequestHandler : IStreamingRequestHandler<TestStreamingRequest, TestItem>, IConfigureStreamingRequestPipeline
+    private sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> handlerFn;
         private readonly NestedClass nestedClass;
-        private readonly IStreamingRequestHandler<NestedTestStreamingRequest, NestedTestItem> nestedStreamingRequestHandler;
+        private readonly IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer;
+        private readonly Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn;
 
-        public TestStreamingRequestHandler(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> handlerFn,
-                                           IConquerorContextAccessor conquerorContextAccessor,
-                                           NestedClass nestedClass,
-                                           IStreamingRequestHandler<NestedTestStreamingRequest, NestedTestItem> nestedStreamingRequestHandler)
+        public TestStreamProducer(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn,
+                                  IConquerorContextAccessor conquerorContextAccessor,
+                                  NestedClass nestedClass,
+                                  IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer)
         {
-            this.handlerFn = handlerFn;
+            this.producerFn = producerFn;
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.nestedClass = nestedClass;
-            this.nestedStreamingRequestHandler = nestedStreamingRequestHandler;
+            this.nestedStreamProducer = nestedStreamProducer;
         }
 
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
-            var response = handlerFn(request, conquerorContextAccessor.ConquerorContext);
+            var response = producerFn(request, conquerorContextAccessor.ConquerorContext);
             nestedClass.Execute();
-            _ = await nestedStreamingRequestHandler.ExecuteRequest(new(request.Payload), cancellationToken).Drain();
+            _ = await nestedStreamProducer.ExecuteRequest(new(request.Payload), cancellationToken).Drain();
 
             await foreach (var item in response)
             {
@@ -138,45 +138,45 @@ public sealed class StreamingRequestIdTests
             }
         }
 
-        public static void ConfigurePipeline(IStreamingRequestPipelineBuilder pipeline) => pipeline.Use<OuterTestStreamingRequestMiddleware>()
-                                                                                                   .Use<TestStreamingRequestMiddleware>();
+        public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) => pipeline.Use<OuterTestStreamProducerMiddleware>()
+                                                                                                 .Use<TestStreamProducerMiddleware>();
     }
 
-    private sealed class NestedTestStreamingRequestHandler : IStreamingRequestHandler<NestedTestStreamingRequest, NestedTestItem>
+    private sealed class NestedTestStreamProducer : IStreamProducer<NestedTestStreamingRequest, NestedTestItem>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> handlerFn;
+        private readonly Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn;
 
-        public NestedTestStreamingRequestHandler(Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> handlerFn, IConquerorContextAccessor conquerorContextAccessor)
+        public NestedTestStreamProducer(Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn, IConquerorContextAccessor conquerorContextAccessor)
         {
-            this.handlerFn = handlerFn;
+            this.producerFn = producerFn;
             this.conquerorContextAccessor = conquerorContextAccessor;
         }
 
         public async IAsyncEnumerable<NestedTestItem> ExecuteRequest(NestedTestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
-            await foreach (var item in handlerFn(request, conquerorContextAccessor.ConquerorContext))
+            await foreach (var item in producerFn(request, conquerorContextAccessor.ConquerorContext))
             {
                 yield return item;
             }
         }
     }
 
-    private sealed class OuterTestStreamingRequestMiddleware : IStreamingRequestMiddleware
+    private sealed class OuterTestStreamProducerMiddleware : IStreamProducerMiddleware
     {
         private readonly MiddlewareFn middlewareFn;
 
-        public OuterTestStreamingRequestMiddleware(MiddlewareFn middlewareFn)
+        public OuterTestStreamProducerMiddleware(MiddlewareFn middlewareFn)
         {
             this.middlewareFn = middlewareFn;
         }
 
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
             await Task.Yield();
-            var castedCtx = (ctx as StreamingRequestMiddlewareContext<TestStreamingRequest, TestItem>)!;
+            var castedCtx = (ctx as StreamProducerMiddlewareContext<TestStreamingRequest, TestItem>)!;
 
             await foreach (var item in middlewareFn(castedCtx, MiddlewareFn))
             {
@@ -195,20 +195,20 @@ public sealed class StreamingRequestIdTests
         }
     }
 
-    private sealed class TestStreamingRequestMiddleware : IStreamingRequestMiddleware
+    private sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware
     {
         private readonly MiddlewareFn middlewareFn;
 
-        public TestStreamingRequestMiddleware(MiddlewareFn middlewareFn)
+        public TestStreamProducerMiddleware(MiddlewareFn middlewareFn)
         {
             this.middlewareFn = middlewareFn;
         }
 
-        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamingRequestMiddlewareContext<TRequest, TItem> ctx)
+        public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
             await Task.Yield();
-            var castedCtx = (ctx as StreamingRequestMiddlewareContext<TestStreamingRequest, TestItem>)!;
+            var castedCtx = (ctx as StreamProducerMiddlewareContext<TestStreamingRequest, TestItem>)!;
 
             await foreach (var item in middlewareFn(castedCtx, MiddlewareFn))
             {

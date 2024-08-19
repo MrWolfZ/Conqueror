@@ -21,9 +21,9 @@ public sealed class StreamingHttpClientNonTestHostTests
         await using var serviceProvider = CreateClientSideServiceProvider();
         using var cts = CreateCancellationTokenSource();
 
-        var handler = serviceProvider.GetRequiredService<ITestStreamingRequestHandler>();
+        var producer = serviceProvider.GetRequiredService<ITestStreamProducer>();
 
-        var result = await handler.ExecuteRequest(new(10), cts.Token).Drain();
+        var result = await producer.ExecuteRequest(new(10), cts.Token).Drain();
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Select(i => i.Payload), Is.EquivalentTo(new[] { 11, 12, 13 }));
@@ -38,9 +38,9 @@ public sealed class StreamingHttpClientNonTestHostTests
         await using var serviceProvider = CreateClientSideServiceProvider();
         using var cts = CreateCancellationTokenSource();
 
-        var handler = serviceProvider.GetRequiredService<ITestStreamingRequestHandler>();
+        var producer = serviceProvider.GetRequiredService<ITestStreamProducer>();
 
-        var enumerator = handler.ExecuteRequest(new(10), cts.Token).GetAsyncEnumerator(cts.Token);
+        var enumerator = producer.ExecuteRequest(new(10), cts.Token).GetAsyncEnumerator(cts.Token);
 
         _ = await enumerator.MoveNextAsync();
         _ = await enumerator.MoveNextAsync();
@@ -61,13 +61,13 @@ public sealed class StreamingHttpClientNonTestHostTests
         await using var serviceProvider = CreateClientSideServiceProvider();
         using var cts = CreateCancellationTokenSource();
 
-        var handler = serviceProvider.GetRequiredService<ITestStreamingRequestHandler>();
+        var producer = serviceProvider.GetRequiredService<ITestStreamProducer>();
 
         var p = app.Services.GetRequiredService<TestParams>();
 
         p.ExceptionToThrow = new("Test exception");
 
-        var ex = Assert.ThrowsAsync<HttpStreamFailedException>(() => handler.ExecuteRequest(new(10), cts.Token).Drain());
+        var ex = Assert.ThrowsAsync<HttpStreamFailedException>(() => producer.ExecuteRequest(new(10), cts.Token).Drain());
         Assert.That(ex.Message, Is.EqualTo(p.ExceptionToThrow.Message));
     }
 
@@ -117,7 +117,7 @@ public sealed class StreamingHttpClientNonTestHostTests
     private void ConfigureServerServices(IServiceCollection services)
     {
         _ = services.AddControllers().AddConquerorStreamingHttpControllers();
-        _ = services.AddConquerorStreamingRequestHandler<TestStreamingRequestHandler>();
+        _ = services.AddConquerorStreamProducer<TestStreamProducer>();
         _ = services.AddSingleton<TestObservations>()
                     .AddSingleton<TestParams>();
     }
@@ -132,7 +132,7 @@ public sealed class StreamingHttpClientNonTestHostTests
             };
         });
 
-        _ = services.AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b => b.UseWebSocket(new UriBuilder(ListenAddress) { Scheme = "ws" }.Uri));
+        _ = services.AddConquerorStreamProducerClient<ITestStreamProducer>(b => b.UseWebSocket(new UriBuilder(ListenAddress) { Scheme = "ws" }.Uri));
     }
 
     private void Configure(IApplicationBuilder app)
@@ -148,9 +148,9 @@ public sealed class StreamingHttpClientNonTestHostTests
 
     public sealed record TestItem(int Payload);
 
-    public interface ITestStreamingRequestHandler : IStreamingRequestHandler<TestRequest, TestItem>;
+    public interface ITestStreamProducer : IStreamProducer<TestRequest, TestItem>;
 
-    private sealed class TestStreamingRequestHandler(TestObservations observations, TestParams p) : ITestStreamingRequestHandler
+    private sealed class TestStreamProducer(TestObservations observations, TestParams p) : ITestStreamProducer
     {
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {

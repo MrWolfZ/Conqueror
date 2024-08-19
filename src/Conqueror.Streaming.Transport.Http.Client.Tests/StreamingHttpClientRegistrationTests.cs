@@ -16,18 +16,18 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactory(expectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -47,11 +47,11 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactory(factory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b => b.UseWebSocket(expectedBaseAddress));
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b => b.UseWebSocket(expectedBaseAddress));
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -67,18 +67,18 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactoryForStream<TestRequest>(expectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -94,18 +94,18 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactory(unexpectedFactory).UseWebSocketFactoryForStream<TestRequest>(expectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -123,18 +123,18 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactoryForStream<TestRequest>(expectedFactory).UseWebSocketFactory(unexpectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -151,18 +151,18 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactory(expectedFactory).UseWebSocketFactoryForStream<TestRequest2>(unexpectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -178,18 +178,18 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactoryForStream<TestRequest2>(unexpectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -204,18 +204,18 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactoryForTypesFromAssembly(typeof(TestRequest).Assembly, expectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -230,18 +230,18 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactoryForTypesFromAssembly(typeof(string).Assembly, unexpectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -258,18 +258,18 @@ public sealed class StreamingHttpClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactory(unexpectedFactory)
                                                                    .UseWebSocketFactoryForTypesFromAssembly(typeof(TestRequest).Assembly, expectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -287,18 +287,18 @@ public sealed class StreamingHttpClientRegistrationTests
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => o.UseWebSocketFactoryForStream<TestRequest>(expectedFactory)
                                                                    .UseWebSocketFactoryForTypesFromAssembly(typeof(TestRequest).Assembly, unexpectedFactory))
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var transportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
 
                         seenFactory = transportClient?.Options.SocketFactory;
 
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -313,10 +313,10 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => { _ = seenInstances.Add(o.ServiceProvider.GetRequiredService<ScopingTest>()); })
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
                         _ = b.UseWebSocket(new("http://localhost"));
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         _ = services.AddScoped<ScopingTest>();
@@ -325,15 +325,15 @@ public sealed class StreamingHttpClientRegistrationTests
 
         using var scope1 = provider.CreateScope();
 
-        var client1 = scope1.ServiceProvider.GetRequiredService<ITestStreamingRequestHandler>();
-        var client2 = scope1.ServiceProvider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client1 = scope1.ServiceProvider.GetRequiredService<ITestStreamProducer>();
+        var client2 = scope1.ServiceProvider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client1.ExecuteRequest(new()).Drain();
         _ = await client2.ExecuteRequest(new()).Drain();
 
         using var scope2 = provider.CreateScope();
 
-        var client3 = scope2.ServiceProvider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client3 = scope2.ServiceProvider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client3.ExecuteRequest(new()).Drain();
 
@@ -341,23 +341,23 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenGlobalJsonSerializerOptions_WhenExecutingHandler_UsesGlobalJsonSerializerOptions()
+    public async Task GivenGlobalJsonSerializerOptions_WhenExecutingProducer_UsesGlobalJsonSerializerOptions()
     {
         var expectedOptions = new JsonSerializerOptions();
         JsonSerializerOptions? seenOptions = null;
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => { o.JsonSerializerOptions = expectedOptions; })
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var httpTransportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var httpTransportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
                         seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -365,23 +365,23 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenClientJsonSerializerOptions_WhenExecutingHandler_UsesClientJsonSerializerOptions()
+    public async Task GivenClientJsonSerializerOptions_WhenExecutingProducer_UsesClientJsonSerializerOptions()
     {
         var expectedOptions = new JsonSerializerOptions();
         JsonSerializerOptions? seenOptions = null;
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices()
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var httpTransportClient = b.UseWebSocket(new("http://localhost"), o => o.JsonSerializerOptions = expectedOptions) as HttpStreamingRequestTransportClient;
+                        var httpTransportClient = b.UseWebSocket(new("http://localhost"), o => o.JsonSerializerOptions = expectedOptions) as HttpStreamProducerTransportClient;
                         seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -389,7 +389,7 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenGlobalAndClientJsonSerializerOptions_WhenExecutingHandler_UsesClientJsonSerializerOptions()
+    public async Task GivenGlobalAndClientJsonSerializerOptions_WhenExecutingProducer_UsesClientJsonSerializerOptions()
     {
         var globalOptions = new JsonSerializerOptions();
         var expectedOptions = new JsonSerializerOptions();
@@ -397,16 +397,16 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => { o.JsonSerializerOptions = globalOptions; })
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var httpTransportClient = b.UseWebSocket(new("http://localhost"), o => o.JsonSerializerOptions = expectedOptions) as HttpStreamingRequestTransportClient;
+                        var httpTransportClient = b.UseWebSocket(new("http://localhost"), o => o.JsonSerializerOptions = expectedOptions) as HttpStreamProducerTransportClient;
                         seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -415,23 +415,23 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenGlobalPathConvention_WhenExecutingHandler_UsesGlobalPathConvention()
+    public async Task GivenGlobalPathConvention_WhenExecutingProducer_UsesGlobalPathConvention()
     {
         var expectedConvention = new TestHttpStreamPathConvention() as IHttpStreamPathConvention;
         IHttpStreamPathConvention? seenConvention = null;
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => { o.PathConvention = expectedConvention; })
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var httpTransportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var httpTransportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
                         seenConvention = httpTransportClient?.Options.PathConvention;
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -439,23 +439,23 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenClientPathConvention_WhenExecutingHandler_UsesClientPathConvention()
+    public async Task GivenClientPathConvention_WhenExecutingProducer_UsesClientPathConvention()
     {
         var expectedConvention = new TestHttpStreamPathConvention() as IHttpStreamPathConvention;
         IHttpStreamPathConvention? seenConvention = null;
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices()
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var httpTransportClient = b.UseWebSocket(new("http://localhost"), o => o.PathConvention = expectedConvention) as HttpStreamingRequestTransportClient;
+                        var httpTransportClient = b.UseWebSocket(new("http://localhost"), o => o.PathConvention = expectedConvention) as HttpStreamProducerTransportClient;
                         seenConvention = httpTransportClient?.Options.PathConvention;
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -463,7 +463,7 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenGlobalAndClientPathConvention_WhenExecutingHandler_UsesClientPathConvention()
+    public async Task GivenGlobalAndClientPathConvention_WhenExecutingProducer_UsesClientPathConvention()
     {
         var globalConvention = new TestHttpStreamPathConvention() as IHttpStreamPathConvention;
         var expectedConvention = new TestHttpStreamPathConvention() as IHttpStreamPathConvention;
@@ -471,16 +471,16 @@ public sealed class StreamingHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices(o => { o.PathConvention = globalConvention; })
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var httpTransportClient = b.UseWebSocket(new("http://localhost"), o => o.PathConvention = expectedConvention) as HttpStreamingRequestTransportClient;
+                        var httpTransportClient = b.UseWebSocket(new("http://localhost"), o => o.PathConvention = expectedConvention) as HttpStreamProducerTransportClient;
                         seenConvention = httpTransportClient?.Options.PathConvention;
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -489,7 +489,7 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenMultipleOptionsConfigurationsFromAddServices_WhenExecutingHandler_UsesMergedOptions()
+    public async Task GivenMultipleOptionsConfigurationsFromAddServices_WhenExecutingProducer_UsesMergedOptions()
     {
         var unexpectedOptions = new JsonSerializerOptions();
         var expectedOptions = new JsonSerializerOptions();
@@ -504,17 +504,17 @@ public sealed class StreamingHttpClientRegistrationTests
                         o.PathConvention = expectedConvention;
                     })
                     .AddConquerorStreamingHttpClientServices(o => { o.JsonSerializerOptions = expectedOptions; })
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var httpTransportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var httpTransportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
                         seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                         seenConvention = httpTransportClient?.Options.PathConvention;
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -524,7 +524,7 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenMultipleOptionsConfigurations_WhenExecutingHandler_UsesMergedOptions()
+    public async Task GivenMultipleOptionsConfigurations_WhenExecutingProducer_UsesMergedOptions()
     {
         var unexpectedOptions = new JsonSerializerOptions();
         var expectedOptions = new JsonSerializerOptions();
@@ -539,17 +539,17 @@ public sealed class StreamingHttpClientRegistrationTests
                         o.PathConvention = expectedConvention;
                     })
                     .ConfigureConquerorCQSHttpClientOptions(o => { o.JsonSerializerOptions = expectedOptions; })
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b =>
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b =>
                     {
-                        var httpTransportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamingRequestTransportClient;
+                        var httpTransportClient = b.UseWebSocket(new("http://localhost")) as HttpStreamProducerTransportClient;
                         seenOptions = httpTransportClient?.Options.JsonSerializerOptions;
                         seenConvention = httpTransportClient?.Options.PathConvention;
-                        return new TestStreamingRequestTransport();
+                        return new TestStreamProducerTransport();
                     });
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = await client.ExecuteRequest(new()).Drain();
 
@@ -559,29 +559,29 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenClientConfigurationWithRelativeBaseAddress_WhenExecutingHandler_ThrowsInvalidOperationException()
+    public async Task GivenClientConfigurationWithRelativeBaseAddress_WhenExecutingProducer_ThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices()
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b => b.UseWebSocket(new("/", UriKind.Relative)));
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b => b.UseWebSocket(new("/", UriKind.Relative)));
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteRequest(new(), CancellationToken.None).Drain());
     }
 
     [Test]
-    public async Task GivenClientConfigurationWithNullBaseAddress_WhenExecutingHandler_ThrowsArgumentNullException()
+    public async Task GivenClientConfigurationWithNullBaseAddress_WhenExecutingProducer_ThrowsArgumentNullException()
     {
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices()
-                    .AddConquerorStreamingRequestClient<ITestStreamingRequestHandler>(b => b.UseWebSocket(null!));
+                    .AddConquerorStreamProducerClient<ITestStreamProducer>(b => b.UseWebSocket(null!));
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<ITestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<ITestStreamProducer>();
 
         var thrownException = Assert.ThrowsAsync<ArgumentNullException>(() => client.ExecuteRequest(new(), CancellationToken.None).Drain());
 
@@ -589,29 +589,29 @@ public sealed class StreamingHttpClientRegistrationTests
     }
 
     [Test]
-    public async Task GivenNonHttpPlainHandlerInterface_WhenExecutingHandler_ThrowsInvalidOperationException()
+    public async Task GivenNonHttpPlainProducerInterface_WhenExecutingProducer_ThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices()
-                    .AddConquerorStreamingRequestClient<IStreamingRequestHandler<NonHttpTestRequest, TestItem>>(b => b.UseWebSocket(new("http://localhost")));
+                    .AddConquerorStreamProducerClient<IStreamProducer<NonHttpTestRequest, TestItem>>(b => b.UseWebSocket(new("http://localhost")));
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<IStreamingRequestHandler<NonHttpTestRequest, TestItem>>();
+        var client = provider.GetRequiredService<IStreamProducer<NonHttpTestRequest, TestItem>>();
 
         _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteRequest(new(), CancellationToken.None).Drain());
     }
 
     [Test]
-    public async Task GivenNonHttpCustomHandlerInterface_WhenExecutingHandler_ThrowsInvalidOperationException()
+    public async Task GivenNonHttpCustomProducerInterface_WhenExecutingProducer_ThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
         _ = services.AddConquerorStreamingHttpClientServices()
-                    .AddConquerorStreamingRequestClient<INonHttpTestStreamingRequestHandler>(b => b.UseWebSocket(new("http://localhost")));
+                    .AddConquerorStreamProducerClient<INonHttpTestStreamProducer>(b => b.UseWebSocket(new("http://localhost")));
 
         await using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<INonHttpTestStreamingRequestHandler>();
+        var client = provider.GetRequiredService<INonHttpTestStreamProducer>();
 
         _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteRequest(new(), CancellationToken.None).Drain());
     }
@@ -632,11 +632,11 @@ public sealed class StreamingHttpClientRegistrationTests
 
     public sealed record NonHttpTestRequest;
 
-    public interface ITestStreamingRequestHandler : IStreamingRequestHandler<TestRequest, TestItem>;
+    public interface ITestStreamProducer : IStreamProducer<TestRequest, TestItem>;
 
-    public interface INonHttpTestStreamingRequestHandler : IStreamingRequestHandler<NonHttpTestRequest, TestItem>;
+    public interface INonHttpTestStreamProducer : IStreamProducer<NonHttpTestRequest, TestItem>;
 
-    private sealed class TestStreamingRequestTransport : IStreamingRequestTransportClient
+    private sealed class TestStreamProducerTransport : IStreamProducerTransportClient
     {
         public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
                                                                              IServiceProvider serviceProvider,

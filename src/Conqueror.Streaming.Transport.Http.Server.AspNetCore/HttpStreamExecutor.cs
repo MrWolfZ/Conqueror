@@ -18,13 +18,13 @@ internal static class HttpStreamExecutor
     public static async Task ExecuteStreamingRequest<TRequest, TItem>(HttpContext httpContext, CancellationToken cancellationToken)
         where TRequest : class
     {
-        var handler = httpContext.RequestServices.GetRequiredService<IStreamingRequestHandler<TRequest, TItem>>();
-        await HandleWebSocketConnection(httpContext, handler, cancellationToken).ConfigureAwait(false);
+        var producer = httpContext.RequestServices.GetRequiredService<IStreamProducer<TRequest, TItem>>();
+        await HandleWebSocketConnection(httpContext, producer, cancellationToken).ConfigureAwait(false);
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "all sockets are disposed in a chain when the server socket is disposed")]
     private static async Task HandleWebSocketConnection<TRequest, TItem>(HttpContext httpContext,
-                                                                         IStreamingRequestHandler<TRequest, TItem> handler,
+                                                                         IStreamProducer<TRequest, TItem> producer,
                                                                          CancellationToken cancellationToken)
         where TRequest : class
     {
@@ -36,7 +36,7 @@ internal static class HttpStreamExecutor
             var textWebSocket = new TextWebSocketWithHeartbeat(new(webSocket), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
             var jsonWebSocket = new JsonWebSocket(textWebSocket, jsonSerializerOptions);
             using var streamingServerWebsocket = new StreamingServerWebSocket<TRequest, TItem>(jsonWebSocket);
-            await HandleWebSocketConnection(streamingServerWebsocket, handler, logger, cancellationToken).ConfigureAwait(false);
+            await HandleWebSocketConnection(streamingServerWebsocket, producer, logger, cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -46,7 +46,7 @@ internal static class HttpStreamExecutor
 
     [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "disposal works correctly")]
     private static async Task HandleWebSocketConnection<TRequest, TItem>(StreamingServerWebSocket<TRequest, TItem> socket,
-                                                                         IStreamingRequestHandler<TRequest, TItem> handler,
+                                                                         IStreamProducer<TRequest, TItem> producer,
                                                                          ILogger logger,
                                                                          CancellationToken cancellationToken)
         where TRequest : class
@@ -101,7 +101,7 @@ internal static class HttpStreamExecutor
                     {
                         if (msg is InitialRequestMessage<TRequest> requestMessage)
                         {
-                            sourceEnumerator = handler.ExecuteRequest(requestMessage.Payload, cts.Token).GetAsyncEnumerator(cts.Token);
+                            sourceEnumerator = producer.ExecuteRequest(requestMessage.Payload, cts.Token).GetAsyncEnumerator(cts.Token);
                         }
                         else if (sourceEnumerator == null)
                         {

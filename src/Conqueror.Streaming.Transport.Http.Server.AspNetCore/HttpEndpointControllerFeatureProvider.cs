@@ -14,9 +14,8 @@ internal sealed class HttpEndpointControllerFeatureProvider : IApplicationFeatur
         this.endpoints = endpoints;
     }
 
-    public void PopulateFeature(
-        IEnumerable<ApplicationPart> parts,
-        ControllerFeature feature)
+    public void PopulateFeature(IEnumerable<ApplicationPart> parts,
+                                ControllerFeature feature)
     {
         foreach (var endpoint in endpoints)
         {
