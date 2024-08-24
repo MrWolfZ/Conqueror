@@ -13,7 +13,10 @@ internal static class TypeExtensions
         return methods.FirstOrDefault(m => m.HasParameters(parameterTypes));
     }
 
-    public static IEnumerable<MethodInfo> AllMethods(this Type t) => t.GetInterfaces().Concat(new[] { t }).SelectMany(s => s.GetMethods());
+    public static IEnumerable<MethodInfo> AllMethods(this Type t) => t.GetInterfaces()
+                                                                      .Concat(new[] { t })
+                                                                      .SelectMany(s => s.GetMethods())
+                                                                      .Where(mi => !mi.IsStatic);
 
     private static bool HasParameters(this MethodInfo method, Type[] parameterTypes)
     {

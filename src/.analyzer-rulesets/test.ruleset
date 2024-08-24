@@ -8,6 +8,9 @@
         <!-- allow underscores in identifiers (necessary for test naming conventions) -->
         <Rule Id="CA1707" Action="None" />
 
+        <!-- do not suggest 'static readonly' fields over constant array arguments since we often construct ad-hoc arrays for assertions -->
+        <Rule Id="CA1861" Action="None" />
+
         <!-- it is fine to await tasks directly in test code -->
         <Rule Id="CA2007" Action="None" />
 

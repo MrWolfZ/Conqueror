@@ -18,6 +18,10 @@ public static class ConquerorStreamingServiceCollectionExtensions
         services.TryAddSingleton<IStreamProducerRegistry>(p => p.GetRequiredService<StreamProducerRegistry>());
         services.TryAddSingleton<StreamProducerMiddlewareRegistry>();
 
+        services.TryAddTransient<StreamConsumerFactory>();
+        services.TryAddTransient<IStreamConsumerFactory>(p => p.GetRequiredService<StreamConsumerFactory>());
+        services.TryAddSingleton<StreamConsumerMiddlewareRegistry>();
+
         services.AddConquerorContext();
 
         return services;
@@ -39,9 +43,21 @@ public static class ConquerorStreamingServiceCollectionExtensions
             services.AddConquerorStreamProducerMiddleware(producerMiddlewareType, ServiceDescriptor.Transient(producerMiddlewareType, producerMiddlewareType));
         }
 
+        foreach (var consumerType in validTypes.Where(t => t.IsAssignableTo(typeof(IStreamConsumer))))
+        {
+            services.AddConquerorStreamConsumer(consumerType, ServiceDescriptor.Transient(consumerType, consumerType), null);
+        }
+
+        foreach (var consumerMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsStreamConsumerMiddlewareInterface)))
+        {
+            services.AddConquerorStreamConsumerMiddleware(consumerMiddlewareType, ServiceDescriptor.Transient(consumerMiddlewareType, consumerMiddlewareType));
+        }
+
         return services;
 
         static bool IsStreamProducerMiddlewareInterface(Type i) => i == typeof(IStreamProducerMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamProducerMiddleware<>));
+
+        static bool IsStreamConsumerMiddlewareInterface(Type i) => i == typeof(IStreamConsumerMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStreamConsumerMiddleware<>));
     }
 
     public static IServiceCollection AddConquerorStreamingTypesFromExecutingAssembly(this IServiceCollection services)
