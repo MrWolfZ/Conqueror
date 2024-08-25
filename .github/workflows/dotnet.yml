@@ -22,8 +22,8 @@ jobs:
             8.0.x
           dotnet-quality: ga
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore Conqueror.sln
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build Conqueror.sln --no-restore
       - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test Conqueror.sln --no-build --verbosity normal
