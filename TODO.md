@@ -23,6 +23,10 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] integrate pipeline configuration interface into handler interface
+- [ ] make pipeline builder interface generic
+- [ ] improve performance by using loop instead of recursion in pipeline
+- [ ] move command and query tests into dedicated directories
 - [ ] add tests for overwriting handler registration with a new factory and assert that new factory is called
 - [ ] add tests for overwriting handler registration with a new lifetime and assert that new lifetime is used
 - [ ] add tests for overwriting middleware registration with a new factory and assert that new factory is called
@@ -35,6 +39,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] write code-level documentation for all public APIs
 - [ ] cache client factory results
+- [ ] allow multiple server-side transports (e.g. can offer query through HTTP and other transport at once) but on client enforce that a client uses a single transport
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] create analyzers (including code fixes)
   - [ ] remove analyzers for missing or incorrect `ConfigurePipeline` methods
@@ -70,6 +75,10 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
+- [ ] integrate pipeline configuration interface into observer interface
+- [ ] make pipeline builder interface generic
+- [ ] improve performance by using loop instead of recursion in pipeline
+- [ ] move publisher and observer code into dedicated directories
 - [ ] refactor all tests to use `Assert.That` for exceptions
 - [ ] provide HTTP websocket transport
   - [ ] add test for edge case where different observers for the same event type are configured with different remote hosts and ensure that events are only dispatched to correct observers
@@ -80,7 +89,8 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] built-in `Synchronization` observer middleware
 - [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] handling and tests for conqueror context
-- [ ] for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
+- [ ] for event observers, create one background service per transport that inits all the observers for that transport
+- [ ] for event observers, ignore missing transports even if event type is annotated with that transport
 
 ### Eventing middleware
 
@@ -93,40 +103,29 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Streaming
 
+- [ ] integrate pipeline configuration interface into observer interface
+- [ ] make pipeline builder interface generic
+- [ ] improve performance by using loop instead of recursion in pipeline
+- [ ] move publisher and observer code into dedicated directories
 - [ ] add test to assert that disposing async enumerator calls finally blocks in handler/server
-- [ ] fix: do not register generic types during assembly scanning
-- [ ] fix: do not register nested private types during assembly scanning
-- [ ] implement middleware support
-- [ ] implement clients and transport infrastructure
-- [ ] expose service provider on middleware context
-- [ ] handling and tests for conqueror context
-- [ ] add streaming request context
-- [ ] add handler registry
+- [ ] add context support to consumer
 - [ ] add transport for SignalR
-- [ ] for .NET 6 add analyzer that ensures the `ConfigurePipeline` method is present on all handlers with pipeline configuration interface (including code fix)
+- [ ] add recipes
+  - [ ] create a recipe that shows how to use these handlers to read from an external stream (e.g. Kafka topic)
+    - [ ] show how to handle acknowledgement by wrapping the item in an envelope
 
-design ideas:
+### Streaming middleware
 
-- [ ] request handlers and item handlers are registered separately
-  - [ ] both have independent pipelines
-  - [ ] a request handler can be used without an item handler
-  - [ ] a handler can be used without a request handler (by simply invoking the `HandleItem` method)
-    - [ ] this executes the pipeline
-- [ ] request handlers have the transport logic, item handlers are always in-process
-- [ ] `ItemHandlerRunner` service, which takes a request and item type, resolves the request and item handlers are runs it to completion
-  - [ ] e.g. `Task RunStream<TRequest, TItem>(CancellationToken cancellationToken)`
-- [ ] extra hosting package, which has a hosted service for running item handlers
-  - [ ] handlers opt into this with a custom service collection extension, e.g. `AddConquerorInteractiveStreamingBackgroundService(o => o.AddItemHandler<THandler>())`
-- [ ] create a recipe that shows how to use these handlers to read from an external stream (e.g. Kafka topic)
-  - [ ] show how to handle acknowledgement by wrapping the item in an envelope
+- [ ] create projects for common middlewares, e.g.
+  - [ ] `Conqueror.Streaming.Middleware.Logging`
+  - [ ] `Conqueror.Streaming.Middleware.DataAnnotationValidation` (only for publisher)
+  - [ ] `Conqueror.Streaming.Middleware.FluentValidation` (only for publisher)
+  - [ ] `Conqueror.Streaming.Middleware.Metrics`
+  - [ ] `Conqueror.Streaming.Middleware.Tracing`
 
-### Interactive streaming ASP Core
+### Streaming HTTP transport
 
-- [ ] refactor implementation to use transport client
-- [ ] add path convention mechanism
-- [ ] ensure api description works
 - [ ] add tests for behavior when websocket connection is interrupted (i.e. disconnect without proper close handshake)
   - [ ] consider adding explicit message for signaling the end of the stream
 - [ ] propagate conqueror context
-- [ ] delegate route path creation to service
 - [ ] allow setting prefetch options (e.g. buffer size, prefetch batch size)
