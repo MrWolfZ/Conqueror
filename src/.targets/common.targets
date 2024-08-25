@@ -15,6 +15,7 @@
 
     <!-- common dependency versions -->
     <PropertyGroup>
+        <DependencyInjectionAbstractionsVersion>8.0.1</DependencyInjectionAbstractionsVersion>
         <DependencyInjectionVersion>8.0.0</DependencyInjectionVersion>
     </PropertyGroup>
 
