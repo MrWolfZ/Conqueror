@@ -17,7 +17,6 @@ builder.Services.AddCors(c => c.AddPolicy("allow-all", b => b.AllowAnyOrigin().A
 builder.Services.AddTransient(p => p.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions);
 
 builder.Services.AddApplication();
-builder.Services.FinalizeConquerorRegistrations();
 
 var app = builder.Build();
 
