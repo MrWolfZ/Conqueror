@@ -23,10 +23,18 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] move command and query tests into dedicated directories
+- [ ] move delegate handler logic into dedicated factory instead of service collection
 - [ ] integrate pipeline configuration interface into handler interface
 - [ ] make pipeline builder interface generic
 - [ ] improve performance by using loop instead of recursion in pipeline
-- [ ] move command and query tests into dedicated directories
+- [ ] add support for delegate middlewares
+- [ ] refactor all code to .NET 8
+- [ ] add tests for middleware service collection extensions (i.e. registration tests)
+- [ ] align all tests names to `Given_When_Then` style
+- [ ] create benchmark app
+  - [ ] add benchmarks for running with and without context items
+- [ ] add tests for middleware lifetimes when applied to different handler types
 - [ ] add tests for overwriting handler registration with a new factory and assert that new factory is called
 - [ ] add tests for overwriting handler registration with a new lifetime and assert that new lifetime is used
 - [ ] add tests for overwriting middleware registration with a new factory and assert that new factory is called
@@ -43,11 +51,9 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
 - [ ] create analyzers (including code fixes)
   - [ ] remove analyzers for missing or incorrect `ConfigurePipeline` methods
-  - [ ] enforce `IConfigureCommandPipeline` interface to be present on all handler types that implement `ConfigurePipeline` method
   - [ ] non-empty `ConfigurePipeline` method
   - [ ] custom handler interfaces may not have extra methods
   - [ ] handler must not implement multiple custom interfaces for same command
-  - [ ] enforce `IConfigureCommandPipeline` interface to only be present on command handler types
   - [ ] middlewares must not implement more than one middleware interface of the same type (i.e. not implement interface with and without configuration)
   - [ ] error (optionally) when a handler is being injected directly instead of an interface
 - [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
@@ -75,14 +81,24 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
+- [ ] move publisher and observer code into dedicated directories
+- [ ] move delegate handler logic into dedicated factory instead of service collection
 - [ ] integrate pipeline configuration interface into observer interface
 - [ ] make pipeline builder interface generic
 - [ ] improve performance by using loop instead of recursion in pipeline
-- [ ] move publisher and observer code into dedicated directories
+- [ ] add support for delegate middlewares
+- [ ] refactor all code to .NET 8
+- [ ] add tests for middleware service collection extensions (i.e. registration tests)
+- [ ] align all tests names to `Given_When_Then` style
+- [ ] create benchmark app
+  - [ ] add benchmarks for running with and without context items
+- [ ] add tests for middleware lifetimes when applied to different handler types
 - [ ] refactor all tests to use `Assert.That` for exceptions
 - [ ] provide HTTP websocket transport
   - [ ] add test for edge case where different observers for the same event type are configured with different remote hosts and ensure that events are only dispatched to correct observers
   - [ ] add test for edge case where transport initialization throws (expect that hosted service retries with exponential backoff)
+- [ ] provide file system transport
+  - [ ] use file system as persistent queue with file watcher / poller on observer side
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
 - [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] write code-level documentation for all public APIs
@@ -106,8 +122,15 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] integrate pipeline configuration interface into observer interface
 - [ ] make pipeline builder interface generic
 - [ ] improve performance by using loop instead of recursion in pipeline
-- [ ] move publisher and observer code into dedicated directories
+- [ ] move producer and consumer code into dedicated directories
+- [ ] add support for delegate middlewares
+- [ ] refactor all code to .NET 8
+- [ ] add tests for middleware service collection extensions (i.e. registration tests)
+- [ ] align all tests names to `Given_When_Then` style
+- [ ] create benchmark app
+  - [ ] add benchmarks for running with and without context items
 - [ ] add test to assert that disposing async enumerator calls finally blocks in handler/server
+- [ ] add tests for middleware lifetimes when applied to different handler types
 - [ ] add context support to consumer
 - [ ] add transport for SignalR
 - [ ] add recipes
