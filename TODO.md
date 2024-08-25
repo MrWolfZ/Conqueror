@@ -23,7 +23,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] move command and query tests into dedicated directories
 - [ ] move delegate handler logic into dedicated factory instead of service collection
 - [ ] integrate pipeline configuration interface into handler interface
 - [ ] make pipeline builder interface generic
