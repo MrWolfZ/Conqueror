@@ -5,12 +5,7 @@ This file contains all the open points for extensions and improvements to the **
 ## General
 
 - [ ] set up issues templates via yaml config
-- [ ] for each library add a quick reference handbook that showcases all capabilities in a concise fashion
-- [ ] create dedicated readme files for each package
-- [ ] use explicit dependency version numbers in all recipes and examples
-  - [ ] add a script to bump version number across whole project
 - [ ] add code coverage reports and badge
-- [ ] add null checks to public API methods to support users that do not use nullable reference types
 
 ## Common
 
@@ -23,7 +18,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] move delegate handler logic into dedicated factory instead of service collection
 - [ ] integrate pipeline configuration interface into handler interface
 - [ ] make pipeline builder interface generic
 - [ ] improve performance by using loop instead of recursion in pipeline
@@ -45,6 +39,7 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
 - [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] write code-level documentation for all public APIs
+- [ ] add null checks to public API methods to support users that do not use nullable reference types
 - [ ] cache client factory results
 - [ ] allow multiple server-side transports (e.g. can offer query through HTTP and other transport at once) but on client enforce that a client uses a single transport
 - [ ] add tests for handlers that throw exceptions to assert contexts are properly cleared
@@ -58,6 +53,10 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
 - [ ] re-order all code so that command comes before query (or even better split files)
 - [ ] use a source generator instead of reflection for generating proxies
+- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
+- [ ] create dedicated readme files for each package
+- [ ] use explicit dependency version numbers in all recipes and examples
+  - [ ] add a script to bump version number across whole project
 
 ### CQS middleware
 
@@ -104,8 +103,13 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] built-in `Synchronization` observer middleware
 - [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] handling and tests for conqueror context
+- [ ] add null checks to public API methods to support users that do not use nullable reference types
 - [ ] for event observers, create one background service per transport that inits all the observers for that transport
 - [ ] for event observers, ignore missing transports even if event type is annotated with that transport
+- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
+- [ ] create dedicated readme files for each package
+- [ ] use explicit dependency version numbers in all recipes and examples
+  - [ ] add a script to bump version number across whole project
 
 ### Eventing middleware
 
@@ -131,10 +135,15 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add test to assert that disposing async enumerator calls finally blocks in handler/server
 - [ ] add tests for middleware lifetimes when applied to different handler types
 - [ ] add context support to consumer
+- [ ] add null checks to public API methods to support users that do not use nullable reference types
 - [ ] add transport for SignalR
 - [ ] add recipes
   - [ ] create a recipe that shows how to use these handlers to read from an external stream (e.g. Kafka topic)
     - [ ] show how to handle acknowledgement by wrapping the item in an envelope
+- [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
+- [ ] create dedicated readme files for each package
+- [ ] use explicit dependency version numbers in all recipes and examples
+  - [ ] add a script to bump version number across whole project
 
 ### Streaming middleware
 
