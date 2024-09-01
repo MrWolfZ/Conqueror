@@ -11,7 +11,7 @@ public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQue
 {
 }
 
-internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler, IConfigureQueryPipeline
+internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
 {
     // add logging to the query pipeline and configure the pre-execution log level (only for demonstration purposes since the default is the same)
     public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Information);

@@ -80,7 +80,7 @@ public sealed class QueryServiceCollectionConfigurationTests
         public Task<TestQueryResponse2> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestQueryHandlerWithMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
 

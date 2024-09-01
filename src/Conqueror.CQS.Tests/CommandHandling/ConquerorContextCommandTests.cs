@@ -477,7 +477,7 @@ public sealed class ConquerorContextCommandTests
 
     private sealed record NestedTestCommandResponse(int Payload);
 
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly Func<TestCommand, IConquerorContext?, TestCommandResponse> handlerFn;

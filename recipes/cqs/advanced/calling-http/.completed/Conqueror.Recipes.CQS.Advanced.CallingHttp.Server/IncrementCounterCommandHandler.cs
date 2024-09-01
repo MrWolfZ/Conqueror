@@ -1,6 +1,6 @@
 namespace Conqueror.Recipes.CQS.Advanced.CallingHttp.Server;
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler, IConfigureCommandPipeline
+internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
 {
     private readonly CountersRepository repository;
 

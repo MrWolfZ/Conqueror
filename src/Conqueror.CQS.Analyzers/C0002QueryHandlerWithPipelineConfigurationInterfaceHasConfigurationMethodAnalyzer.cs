@@ -18,7 +18,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
     private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.Analyzer0002Title), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.Analyzer0002MessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.Analyzer0002Description), Resources.ResourceManager, typeof(Resources));
-    private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, true, Description);
+    private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Hidden, true, Description);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -35,7 +35,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
         var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-        if (!symbol.IsQueryHandlerType(context) || !symbol.HasConfigureQueryPipelineInterface(context))
+        if (!symbol.IsQueryHandlerType(context))
         {
             return;
         }

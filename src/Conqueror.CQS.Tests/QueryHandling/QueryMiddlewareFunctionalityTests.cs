@@ -327,28 +327,6 @@ public sealed class QueryMiddlewareFunctionalityTests
     }
 
     [Test]
-    public async Task GivenHandlerWithPipelineConfigurationMethodWithoutPipelineConfigurationInterface_MiddlewaresAreNotCalled()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorQueryHandler<TestQueryHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-        var query = new TestQuery(10);
-
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(observations.QueriesFromMiddlewares, Is.Empty);
-        Assert.That(observations.MiddlewareTypes, Is.Empty);
-    }
-
-    [Test]
     public async Task GivenCancellationToken_MiddlewaresReceiveCancellationTokenWhenCalled()
     {
         var services = new ServiceCollection();
@@ -581,7 +559,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
     private sealed record TestQueryResponse(int Payload);
 
-    private sealed class TestQueryHandlerWithSingleMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithSingleMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly TestObservations observations;
 
@@ -604,7 +582,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryHandlerWithSingleMiddlewareWithParameter : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithSingleMiddlewareWithParameter : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly TestObservations observations;
 
@@ -627,7 +605,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly TestObservations observations;
 
@@ -651,7 +629,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryHandlerWithoutMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithoutMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly TestObservations observations;
 
@@ -674,7 +652,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly TestObservations observations;
 
@@ -699,7 +677,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryHandlerWithMultipleMutatingMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithMultipleMutatingMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly TestObservations observations;
 
@@ -723,22 +701,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            return new(0);
-        }
-
-        // ReSharper disable once UnusedMember.Local
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
-        {
-            _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 });
-        }
-    }
-
-    private sealed class TestQueryHandlerWithThrowingMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithThrowingMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {

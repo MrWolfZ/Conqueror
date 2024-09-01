@@ -142,7 +142,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
     private sealed record TestCommandResponse;
 
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken = default)
         {

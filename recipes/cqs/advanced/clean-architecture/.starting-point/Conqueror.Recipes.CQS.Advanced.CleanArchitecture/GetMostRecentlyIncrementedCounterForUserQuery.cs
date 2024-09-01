@@ -9,7 +9,7 @@ public interface IGetMostRecentlyIncrementedCounterForUserQueryHandler : IQueryH
 {
 }
 
-internal sealed class GetMostRecentlyIncrementedCounterForUserQueryHandler : IGetMostRecentlyIncrementedCounterForUserQueryHandler, IConfigureQueryPipeline
+internal sealed class GetMostRecentlyIncrementedCounterForUserQueryHandler : IGetMostRecentlyIncrementedCounterForUserQueryHandler
 {
     private readonly UserHistoryRepository repository;
 

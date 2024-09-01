@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror;
@@ -60,43 +62,67 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
         return services.AddConquerorQueryHandler(handlerType, configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
-                                                                Type handlerType,
-                                                                Action<IQueryPipelineBuilder>? configurePipeline)
+    private static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
+                                                               Type handlerType,
+                                                               Action<IQueryPipelineBuilder>? configurePipeline)
+    {
+        handlerType.ValidateNoInvalidQueryHandlerInterface();
+
+        var addHandlerMethod = typeof(ConquerorCqsQueryHandlerServiceCollectionExtensions).GetMethod(nameof(AddHandler), BindingFlags.NonPublic | BindingFlags.Static);
+
+        if (addHandlerMethod == null)
+        {
+            throw new InvalidOperationException($"could not find method '{nameof(AddHandler)}'");
+        }
+
+        foreach (var (commandType, responseType) in handlerType.GetQueryAndResponseTypes())
+        {
+            var genericAddMethod = addHandlerMethod.MakeGenericMethod(handlerType, commandType, responseType);
+
+            try
+            {
+                _ = genericAddMethod.Invoke(null, [services, configurePipeline]);
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
+            {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            }
+        }
+
+        return services;
+    }
+
+    private static IServiceCollection AddHandler<THandler, TQuery, TResponse>(this IServiceCollection services,
+                                                                              Action<IQueryPipelineBuilder>? configurePipeline)
+        where TQuery : class
     {
         var existingRegistrations = services.Where(d => d.ImplementationInstance is QueryHandlerRegistration)
                                             .ToDictionary(d => ((QueryHandlerRegistration)d.ImplementationInstance!).QueryType);
 
-        foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
+        if (existingRegistrations.TryGetValue(typeof(TQuery), out var existingDescriptor))
         {
-            if (existingRegistrations.TryGetValue(queryType, out var existingDescriptor))
+            if (typeof(THandler) != ((QueryHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
             {
-                if (handlerType == ((QueryHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
-                {
-                    continue;
-                }
-
                 services.Remove(existingDescriptor);
+                var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler));
+                services.AddSingleton(registration);
             }
-
-            var registration = new QueryHandlerRegistration(queryType, responseType, handlerType);
+        }
+        else
+        {
+            var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler));
             services.AddSingleton(registration);
         }
 
-        var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(handlerType);
+        var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
 
-        services.AddConquerorQueryClient(handlerType, new InMemoryQueryTransport(handlerType), pipelineConfigurationAction);
+        services.AddConquerorQueryClient(typeof(THandler), new InMemoryQueryTransport(typeof(THandler)), pipelineConfigurationAction);
 
         return services;
 
-        static Action<IQueryPipelineBuilder>? CreatePipelineConfigurationFunction(Type handlerType)
+        static Action<IQueryPipelineBuilder> CreatePipelineConfigurationFunction(Type handlerType)
         {
-            if (!handlerType.IsAssignableTo(typeof(IConfigureQueryPipeline)))
-            {
-                return null;
-            }
-
-            var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IConfigureQueryPipeline)).TargetMethods.Single();
+            var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IQueryHandler<TQuery, TResponse>)).TargetMethods.Single(m => m.Name == nameof(IQueryHandler<TQuery, TResponse>.ConfigurePipeline));
 
             var builderParam = Expression.Parameter(typeof(IQueryPipelineBuilder));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);

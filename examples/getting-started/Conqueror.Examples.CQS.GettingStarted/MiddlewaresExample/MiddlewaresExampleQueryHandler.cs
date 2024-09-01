@@ -8,7 +8,7 @@ public interface IMiddlewaresExampleQueryHandler : IQueryHandler<MiddlewaresExam
 {
 }
 
-public sealed class MiddlewaresExampleQueryHandler : IMiddlewaresExampleQueryHandler, IConfigureQueryPipeline
+public sealed class MiddlewaresExampleQueryHandler : IMiddlewaresExampleQueryHandler
 {
     // ReSharper disable once UnusedMember.Global
     public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>

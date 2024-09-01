@@ -12,7 +12,7 @@ public interface IIncrementCounterByCommandHandler : ICommandHandler<IncrementCo
 {
 }
 
-internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler, IConfigureCommandPipeline
+internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
 {
     private readonly CountersRepository repository;
 

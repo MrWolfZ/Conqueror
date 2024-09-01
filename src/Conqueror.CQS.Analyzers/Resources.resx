@@ -119,15 +119,15 @@
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
     <data name="Analyzer0001Title" xml:space="preserve">
-        <value>Command handler type with pipeline configuration interface does not implement pipeline configuration method</value>
+        <value>Command handler type does not implement pipeline configuration method</value>
         <comment>The title of the diagnostic.</comment>
     </data>
     <data name="Analyzer0001Description" xml:space="preserve">
-        <value>Command handler types with pipeline configuration interface should implement pipeline configuration method.</value>
+        <value>Command handler types should implement pipeline configuration method.</value>
         <comment>An optional longer localizable description of the diagnostic.</comment>
     </data>
     <data name="Analyzer0001MessageFormat" xml:space="preserve">
-        <value>Command handler type '{0}' with pipeline configuration interface does not implement pipeline configuration method</value>
+        <value>Command handler type '{0}' does not implement pipeline configuration method</value>
         <comment>The format-able message the diagnostic displays.</comment>
     </data>
     <data name="Analyzer0001CodeFixTitle" xml:space="preserve">
@@ -135,83 +135,19 @@
         <comment>The title of the code fix.</comment>
     </data>
     <data name="Analyzer0002Title" xml:space="preserve">
-        <value>Query handler type with pipeline configuration interface does not implement pipeline configuration method</value>
+        <value>Query handler type does not implement pipeline configuration method</value>
         <comment>The title of the diagnostic.</comment>
     </data>
     <data name="Analyzer0002Description" xml:space="preserve">
-        <value>Query handler types with pipeline configuration interface should implement pipeline configuration method.</value>
+        <value>Query handler types should implement pipeline configuration method.</value>
         <comment>An optional longer localizable description of the diagnostic.</comment>
     </data>
     <data name="Analyzer0002MessageFormat" xml:space="preserve">
-        <value>Query handler type '{0}' with pipeline configuration interface does not implement pipeline configuration method</value>
+        <value>Query handler type '{0}' does not implement pipeline configuration method</value>
         <comment>The format-able message the diagnostic displays.</comment>
     </data>
     <data name="Analyzer0002CodeFixTitle" xml:space="preserve">
         <value>Add query pipeline configuration method</value>
-        <comment>The title of the code fix.</comment>
-    </data>
-    <data name="Analyzer0003Title" xml:space="preserve">s
-        <value>Command handler pipeline configuration method has wrong signature</value>
-        <comment>The title of the diagnostic.</comment>
-    </data>
-    <data name="Analyzer0003Description" xml:space="preserve">
-        <value>Command handler pipeline configuration method must be static, return void, and take a single parameter of type 'ICommandPipelineBuilder'.</value>
-        <comment>An optional longer localizable description of the diagnostic.</comment>
-    </data>
-    <data name="Analyzer0003MessageFormat" xml:space="preserve">
-        <value>Command handler pipeline configuration method has wrong signature, it must be static, return void, and take a single parameter of type 'ICommandPipelineBuilder'</value>
-        <comment>The format-able message the diagnostic displays.</comment>
-    </data>
-    <data name="Analyzer0003CodeFixTitle" xml:space="preserve">
-        <value>Fix command pipeline configuration method signature</value>
-        <comment>The title of the code fix.</comment>
-    </data>
-    <data name="Analyzer0004Title" xml:space="preserve">
-        <value>Query handler pipeline configuration method has wrong signature</value>
-        <comment>The title of the diagnostic.</comment>
-    </data>
-    <data name="Analyzer0004Description" xml:space="preserve">
-        <value>Query handler pipeline configuration method must be static, return void, and take a single parameter of type 'IQueryPipelineBuilder'.</value>
-        <comment>An optional longer localizable description of the diagnostic.</comment>
-    </data>
-    <data name="Analyzer0004MessageFormat" xml:space="preserve">
-        <value>Query handler pipeline configuration method has wrong signature, it must be static, return void, and take a single parameter of type 'IQueryPipelineBuilder'</value>
-        <comment>The format-able message the diagnostic displays.</comment>
-    </data>
-    <data name="Analyzer0004CodeFixTitle" xml:space="preserve">
-        <value>Fix query pipeline configuration method signature</value>
-        <comment>The title of the code fix.</comment>
-    </data>
-    <data name="Analyzer0005Title" xml:space="preserve">
-        <value>Command handler type must implement command pipeline configuration interface</value>
-        <comment>The title of the diagnostic.</comment>
-    </data>
-    <data name="Analyzer0005Description" xml:space="preserve">
-        <value>Command handler type must implement command pipeline configuration interface 'IConfigureCommandPipeline'.</value>
-        <comment>An optional longer localizable description of the diagnostic.</comment>
-    </data>
-    <data name="Analyzer0005MessageFormat" xml:space="preserve">
-        <value>Command handler type '{0}' must implement command pipeline configuration interface 'IConfigureCommandPipeline'</value>
-        <comment>The format-able message the diagnostic displays.</comment>
-    </data>
-    <data name="Analyzer0005CodeFixTitle" xml:space="preserve">
-        <value>Implement command pipeline configuration interface</value>
-        <comment>The title of the code fix.</comment>
-    </data>
-    <data name="Analyzer0006Title" xml:space="preserve">
-        <value>Query handler type must implement query pipeline configuration interface</value>
-        <comment>The title of the diagnostic.</comment>
-    </data>
-    <data name="Analyzer0006Description" xml:space="preserve">
-        <value>Query handler type must implement query pipeline configuration interface 'IConfigureQueryPipeline'.</value>
-        <comment>An optional longer localizable description of the diagnostic.</comment>
-    </data>
-    <data name="Analyzer0006MessageFormat" xml:space="preserve">
-        <value>Query handler type '{0}' must implement query pipeline configuration interface 'IConfigureQueryPipeline'</value>
-        <comment>The format-able message the diagnostic displays.</comment>
-    </data>
-    <data name="Analyzer0006CodeFixTitle" xml:space="preserve">
-        <value>Implement query pipeline configuration interface</value>
         <comment>The title of the code fix.</comment>
     </data>
 </root>

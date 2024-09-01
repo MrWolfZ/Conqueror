@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror;
@@ -77,43 +79,71 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
         return services.AddConquerorCommandHandler(handlerType, configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorCommandHandler(this IServiceCollection services,
-                                                                  Type handlerType,
-                                                                  Action<ICommandPipelineBuilder>? configurePipeline)
+    private static IServiceCollection AddConquerorCommandHandler(this IServiceCollection services,
+                                                                 Type handlerType,
+                                                                 Action<ICommandPipelineBuilder>? configurePipeline)
+    {
+        handlerType.ValidateNoInvalidCommandHandlerInterface();
+
+        var addHandlerMethod = typeof(ConquerorCqsCommandHandlerServiceCollectionExtensions).GetMethod(nameof(AddHandler), BindingFlags.NonPublic | BindingFlags.Static);
+
+        if (addHandlerMethod == null)
+        {
+            throw new InvalidOperationException($"could not find method '{nameof(AddHandler)}'");
+        }
+
+        foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
+        {
+            var genericAddMethod = addHandlerMethod.MakeGenericMethod(handlerType, commandType, responseType ?? typeof(UnitCommandResponse));
+
+            try
+            {
+                _ = genericAddMethod.Invoke(null, [services, configurePipeline]);
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
+            {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            }
+        }
+
+        return services;
+    }
+
+    private static IServiceCollection AddHandler<THandler, TCommand, TResponse>(this IServiceCollection services,
+                                                                                Action<ICommandPipelineBuilder>? configurePipeline)
+        where TCommand : class
     {
         var existingRegistrations = services.Where(d => d.ImplementationInstance is CommandHandlerRegistration)
                                             .ToDictionary(d => ((CommandHandlerRegistration)d.ImplementationInstance!).CommandType);
 
-        foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
+        if (existingRegistrations.TryGetValue(typeof(TCommand), out var existingDescriptor))
         {
-            if (existingRegistrations.TryGetValue(commandType, out var existingDescriptor))
+            if (typeof(THandler) != ((CommandHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
             {
-                if (handlerType == ((CommandHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
-                {
-                    continue;
-                }
-
                 services.Remove(existingDescriptor);
+                var responseType = typeof(TResponse) == typeof(UnitCommandResponse) ? null : typeof(TResponse);
+                var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler));
+                services.AddSingleton(registration);
             }
-
-            var registration = new CommandHandlerRegistration(commandType, responseType, handlerType);
+        }
+        else
+        {
+            var responseType = typeof(TResponse) == typeof(UnitCommandResponse) ? null : typeof(TResponse);
+            var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler));
             services.AddSingleton(registration);
         }
 
-        var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(handlerType);
+        var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
 
-        services.AddConquerorCommandClient(handlerType, new InMemoryCommandTransport(handlerType), pipelineConfigurationAction);
+        services.AddConquerorCommandClient(typeof(THandler), new InMemoryCommandTransport(typeof(THandler)), pipelineConfigurationAction);
 
         return services;
 
-        static Action<ICommandPipelineBuilder>? CreatePipelineConfigurationFunction(Type handlerType)
+        static Action<ICommandPipelineBuilder> CreatePipelineConfigurationFunction(Type handlerType)
         {
-            if (!handlerType.IsAssignableTo(typeof(IConfigureCommandPipeline)))
-            {
-                return null;
-            }
-
-            var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IConfigureCommandPipeline)).TargetMethods.Single();
+            var pipelineConfigurationMethod = handlerType.IsAssignableTo(typeof(ICommandHandler<TCommand>))
+                ? handlerType.GetInterfaceMap(typeof(ICommandHandler<TCommand>)).TargetMethods.Single(m => m.Name == nameof(ICommandHandler<TCommand>.ConfigurePipeline))
+                : handlerType.GetInterfaceMap(typeof(ICommandHandler<TCommand, TResponse>)).TargetMethods.Single(m => m.Name == nameof(ICommandHandler<TCommand, TResponse>.ConfigurePipeline));
 
             var builderParam = Expression.Parameter(typeof(ICommandPipelineBuilder));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);

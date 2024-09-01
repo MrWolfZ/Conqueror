@@ -3,7 +3,7 @@ using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounters;
 
-internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValueQueryHandler, IConfigureQueryPipeline
+internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValueQueryHandler
 {
     private readonly SharedCounter counter;
 

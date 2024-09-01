@@ -11,7 +11,7 @@ namespace Conqueror.CQS.Tests.Analyzers;
 public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerTests
 {
     [Test]
-    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutMethod_DiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -22,7 +22,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                 {
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
                         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
@@ -41,7 +41,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
     }
 
     [Test]
-    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
+    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceWithoutMethod_DiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -53,7 +53,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
-                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler
                     {
                         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
@@ -72,7 +72,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
     }
 
     [Test]
-    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
     {
         var source = @"
                 using Conqueror;
@@ -83,7 +83,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                 {
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
                         private string field = string.Empty;
 
@@ -109,7 +109,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                 {
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
                         private string field = string.Empty;
 
@@ -136,7 +136,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
     }
 
     [Test]
-    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
+    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
     {
         var source = @"
                 using Conqueror;
@@ -148,7 +148,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
-                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler
                     {
                         private string field = string.Empty;
 
@@ -175,7 +175,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
-                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler
                     {
                         private string field = string.Empty;
 
@@ -213,7 +213,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                 {
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
                     }
                 }
@@ -228,7 +228,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                 {
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
                         public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => throw new System.NotImplementedException();
                     }
@@ -254,7 +254,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                 {
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
                         private string field = string.Empty;
 
@@ -274,7 +274,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                 {
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
                         private string field = string.Empty;
 
@@ -295,157 +295,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
     }
 
     [Test]
-    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestQuery;
-                    public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
-                    {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-
-                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
-                        {
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestQuery;
-                    public sealed record TestQueryResponse;
-                    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
-                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler, IConfigureQueryPipeline
-                    {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-
-                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
-                        {
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceAndConfigurationInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestQuery;
-                    public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
-                    {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-
-                        public string ConfigurePipeline(IQueryPipelineBuilder pipeline)
-                        {
-                            return string.Empty;
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceAndConfigurationInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestQuery;
-                    public sealed record TestQueryResponse;
-                    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
-                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler, IConfigureQueryPipeline
-                    {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-
-                        public string ConfigurePipeline(IQueryPipelineBuilder pipeline)
-                        {
-                            return string.Empty;
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithoutMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestQuery;
-                    public sealed record TestQueryResponse;
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
-                    {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithoutConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithMethod_NoDiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -466,6 +316,100 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
                         public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
                         {
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceWithMethod_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestQuery;
+                    public sealed record TestQueryResponse;
+                    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
+                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler
+                    {
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                            return new();
+                        }
+
+                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+                        {
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenQueryHandlerWithPlainQueryHandlerInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestQuery;
+                    public sealed record TestQueryResponse;
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
+                    {
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                            return new();
+                        }
+
+                        public string ConfigurePipeline(IQueryPipelineBuilder pipeline)
+                        {
+                            return string.Empty;
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenQueryHandlerWithCustomQueryHandlerInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestQuery;
+                    public sealed record TestQueryResponse;
+                    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
+                    public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler
+                    {
+                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                            return new();
+                        }
+
+                        public string ConfigurePipeline(IQueryPipelineBuilder pipeline)
+                        {
+                            return string.Empty;
                         }
                     }
                 }
@@ -487,7 +431,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public sealed record TestQuery;
                     public sealed record TestQueryResponse;
                     public interface IQueryHandler<TQuery, TResponse> {}
-                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+                    public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
                         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {

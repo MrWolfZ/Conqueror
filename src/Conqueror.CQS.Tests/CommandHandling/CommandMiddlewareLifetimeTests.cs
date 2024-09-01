@@ -681,7 +681,7 @@ public sealed class CommandMiddlewareLifetimeTests
 
     private sealed record TestCommandWithoutResponse;
 
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
@@ -692,7 +692,7 @@ public sealed class CommandMiddlewareLifetimeTests
         public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
     }
 
-    private sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>, IConfigureCommandPipeline
+    private sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
     {
         public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
         {
@@ -703,7 +703,7 @@ public sealed class CommandMiddlewareLifetimeTests
         public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
     }
 
-    private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
     {
         public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
@@ -713,7 +713,7 @@ public sealed class CommandMiddlewareLifetimeTests
         public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
     }
 
-    private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
     {
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
@@ -728,7 +728,7 @@ public sealed class CommandMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestCommandHandlerWithMultipleMiddlewares2 : ICommandHandler<TestCommand2, TestCommandResponse2>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithMultipleMiddlewares2 : ICommandHandler<TestCommand2, TestCommandResponse2>
     {
         public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
         {
@@ -743,7 +743,7 @@ public sealed class CommandMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>
     {
         public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
@@ -757,7 +757,7 @@ public sealed class CommandMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestCommandHandlerWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand, TestCommandResponse>
     {
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken = default)
         {
@@ -768,7 +768,7 @@ public sealed class CommandMiddlewareLifetimeTests
         public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
     }
 
-    private sealed class TestCommandHandlerWithoutResponseWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutResponseWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand>
     {
         public async Task ExecuteCommand(TestCommand query, CancellationToken cancellationToken = default)
         {
@@ -778,7 +778,7 @@ public sealed class CommandMiddlewareLifetimeTests
         public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
     }
 
-    private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
     {
         private readonly TestObservations observations;
         private int invocationCount;

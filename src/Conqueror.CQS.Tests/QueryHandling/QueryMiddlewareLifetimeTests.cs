@@ -595,7 +595,7 @@ public sealed class QueryMiddlewareLifetimeTests
 
     private sealed record TestQueryResponse2;
 
-    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
@@ -606,7 +606,7 @@ public sealed class QueryMiddlewareLifetimeTests
         public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
     }
 
-    private sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>, IConfigureQueryPipeline
+    private sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
     {
         public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
         {
@@ -617,7 +617,7 @@ public sealed class QueryMiddlewareLifetimeTests
         public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
     }
 
-    private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
@@ -632,7 +632,7 @@ public sealed class QueryMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestQueryHandlerWithMultipleMiddlewares2 : IQueryHandler<TestQuery2, TestQueryResponse2>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithMultipleMiddlewares2 : IQueryHandler<TestQuery2, TestQueryResponse2>
     {
         public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
         {
@@ -647,7 +647,7 @@ public sealed class QueryMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestQueryHandlerWithSameMiddlewareMultipleTimes : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithSameMiddlewareMultipleTimes : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
@@ -658,7 +658,7 @@ public sealed class QueryMiddlewareLifetimeTests
         public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>();
     }
 
-    private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly TestObservations observations;
         private int invocationCount;

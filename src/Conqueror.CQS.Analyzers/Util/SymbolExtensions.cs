@@ -31,23 +31,6 @@ public static class SymbolExtensions
         return IsCommandHandlerType(declaredTypeSymbol, context);
     }
 
-    public static bool HasConfigureCommandPipelineInterface(this ITypeSymbol symbol, SyntaxNodeAnalysisContext context)
-    {
-        return symbol?.Interfaces.Any(i => i.IsConfigureCommandPipelineInterfaceType(context)) ?? false;
-    }
-
-    public static bool IsConfigureCommandPipelineInterfaceType(this INamedTypeSymbol symbol, SyntaxNodeAnalysisContext context)
-    {
-        var interfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IConfigureCommandPipeline");
-
-        if (interfaceType == null)
-        {
-            return false;
-        }
-
-        return symbol.IsEquivalent(interfaceType);
-    }
-
     public static bool IsQueryHandlerType(this ITypeSymbol symbol, SyntaxNodeAnalysisContext context)
     {
         return symbol?.Interfaces.Any(i => i.IsQueryHandlerInterfaceType(context)) ?? false;
@@ -70,23 +53,6 @@ public static class SymbolExtensions
         var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(symbol.ToString());
 
         return IsQueryHandlerType(declaredTypeSymbol, context);
-    }
-
-    public static bool HasConfigureQueryPipelineInterface(this ITypeSymbol symbol, SyntaxNodeAnalysisContext context)
-    {
-        return symbol?.Interfaces.Any(i => i.IsConfigureQueryPipelineInterfaceType(context)) ?? false;
-    }
-
-    public static bool IsConfigureQueryPipelineInterfaceType(this INamedTypeSymbol symbol, SyntaxNodeAnalysisContext context)
-    {
-        var interfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IConfigureQueryPipeline");
-
-        if (interfaceType == null)
-        {
-            return false;
-        }
-
-        return symbol.IsEquivalent(interfaceType);
     }
 
     public static bool IsEquivalent(this ISymbol symbol1, ISymbol symbol2)

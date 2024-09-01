@@ -9,7 +9,7 @@ public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQue
 {
 }
 
-internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler, IConfigureQueryPipeline
+internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
 {
     private readonly ICountersReadRepository repository;
 

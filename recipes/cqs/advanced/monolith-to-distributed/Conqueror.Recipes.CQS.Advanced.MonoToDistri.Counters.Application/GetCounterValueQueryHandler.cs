@@ -1,6 +1,6 @@
 namespace Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Application;
 
-internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler, IConfigureQueryPipeline
+internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
 {
     private readonly ICountersReadRepository repository;
 

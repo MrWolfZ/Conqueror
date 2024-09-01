@@ -11,7 +11,7 @@ namespace Conqueror.CQS.Tests.Analyzers;
 public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerTests
 {
     [Test]
-    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
+    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceWithoutMethod_DiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -22,7 +22,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -41,7 +41,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
+    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceWithoutMethod_DiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -51,7 +51,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 namespace ConsoleApplication1
                 {
                     public sealed record TestCommand;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -69,7 +69,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
+    public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceWithoutMethod_DiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -81,7 +81,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
                     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -100,7 +100,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_DiagnosticsAreProduced()
+    public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceWithoutMethod_DiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -111,7 +111,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -129,7 +129,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
+    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
     {
         var source = @"
                 using Conqueror;
@@ -140,7 +140,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
                         private string field = string.Empty;
 
@@ -166,7 +166,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
                         private string field = string.Empty;
 
@@ -193,7 +193,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
+    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
     {
         var source = @"
                 using Conqueror;
@@ -203,7 +203,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 namespace ConsoleApplication1
                 {
                     public sealed record TestCommand;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
                         private string field = string.Empty;
 
@@ -227,7 +227,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 namespace ConsoleApplication1
                 {
                     public sealed record TestCommand;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
                         private string field = string.Empty;
 
@@ -253,7 +253,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
+    public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
     {
         var source = @"
                 using Conqueror;
@@ -265,7 +265,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
                     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
                         private string field = string.Empty;
 
@@ -292,7 +292,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
                     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
                         private string field = string.Empty;
 
@@ -319,7 +319,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
+    public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceWithoutMethod_CodeFixIsAppliedCorrectly()
     {
         var source = @"
                 using Conqueror;
@@ -330,7 +330,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
                         private string field = string.Empty;
 
@@ -355,7 +355,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
                         private string field = string.Empty;
 
@@ -392,7 +392,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
                     }
                 }
@@ -407,7 +407,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
                         public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
                     }
@@ -433,7 +433,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
                         private string field = string.Empty;
 
@@ -453,7 +453,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
                         private string field = string.Empty;
 
@@ -474,297 +474,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-                    {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>, IConfigureCommandPipeline
-                    {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                        }
-
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public sealed record TestCommandResponse;
-                    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
-                    {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
-                    {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                        }
-
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
-                    {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-
-                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                            return string.Empty;
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceAndConfigurationInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>, IConfigureCommandPipeline
-                    {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                        }
-
-                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                            return string.Empty;
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public sealed record TestCommandResponse;
-                    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
-                    {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-
-                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                            return string.Empty;
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceAndConfigurationInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
-                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler, IConfigureCommandPipeline
-                    {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                        }
-
-                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
-                        {
-                            return string.Empty;
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceWithoutConfigurationInterfaceWithoutMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public sealed record TestCommandResponse;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
-                    {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                            return new();
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceWithoutConfigurationInterfaceWithoutMethod_NoDiagnosticsAreProduced()
-    {
-        var source = @"
-                using Conqueror;
-                using System.Threading;
-                using System.Threading.Tasks;
-
-                namespace ConsoleApplication1
-                {
-                    public sealed record TestCommand;
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
-                    {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-                        {
-                            await Task.Yield();
-                        }
-                    }
-                }
-            ".Dedent();
-
-        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
-    }
-
-    [Test]
-    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceWithoutConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
+    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceWithMethod_NoDiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -794,7 +504,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     }
 
     [Test]
-    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceWithoutConfigurationInterfaceWithMethod_NoDiagnosticsAreProduced()
+    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceWithMethod_NoDiagnosticsAreProduced()
     {
         var source = @"
                 using Conqueror;
@@ -813,6 +523,188 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
                         {
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceWithMethod_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public sealed record TestCommandResponse;
+                    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
+                    {
+                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                            return new();
+                        }
+
+                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        {
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceWithMethod_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
+                    {
+                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                        }
+
+                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        {
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenCommandHandlerWithPlainCommandHandlerInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public sealed record TestCommandResponse;
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
+                    {
+                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                            return new();
+                        }
+
+                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        {
+                            return string.Empty;
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenCommandHandlerWithoutResponseWithPlainCommandHandlerInterfaceWithMethodWithWrongSignature_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
+                    {
+                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                        }
+
+                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        {
+                            return string.Empty;
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenCommandHandlerWithCustomCommandHandlerInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public sealed record TestCommandResponse;
+                    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
+                    {
+                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                            return new();
+                        }
+
+                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        {
+                            return string.Empty;
+                        }
+                    }
+                }
+            ".Dedent();
+
+        await AnalyzerVerifier.VerifyAnalyzerAsync(source);
+    }
+
+    [Test]
+    public async Task GivenCommandHandlerWithoutResponseWithCustomCommandHandlerInterfaceWithMethodWrongSignature_NoDiagnosticsAreProduced()
+    {
+        var source = @"
+                using Conqueror;
+                using System.Threading;
+                using System.Threading.Tasks;
+
+                namespace ConsoleApplication1
+                {
+                    public sealed record TestCommand;
+                    public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
+                    public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
+                    {
+                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        {
+                            await Task.Yield();
+                        }
+
+                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        {
+                            return string.Empty;
                         }
                     }
                 }
@@ -834,7 +726,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommand;
                     public sealed record TestCommandResponse;
                     public interface ICommandHandler<TCommand, TResponse> {}
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -860,7 +752,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                 {
                     public sealed record TestCommand;
                     public interface ICommandHandler<TCommand> {}
-                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>, IConfigureCommandPipeline
+                    public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {

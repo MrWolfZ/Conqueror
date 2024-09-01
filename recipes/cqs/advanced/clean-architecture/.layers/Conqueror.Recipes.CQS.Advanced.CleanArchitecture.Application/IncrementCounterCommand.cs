@@ -9,7 +9,7 @@ public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCoun
 {
 }
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler, IConfigureCommandPipeline
+internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
 {
     private readonly ICountersReadRepository countersReadRepository;
     private readonly ICountersWriteRepository countersWriteRepository;

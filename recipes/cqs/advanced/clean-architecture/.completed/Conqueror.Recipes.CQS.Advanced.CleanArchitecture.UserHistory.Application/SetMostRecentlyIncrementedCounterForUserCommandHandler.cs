@@ -1,6 +1,6 @@
 namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Application;
 
-internal sealed class SetMostRecentlyIncrementedCounterForUserCommandHandler : ISetMostRecentlyIncrementedCounterForUserCommandHandler, IConfigureCommandPipeline
+internal sealed class SetMostRecentlyIncrementedCounterForUserCommandHandler : ISetMostRecentlyIncrementedCounterForUserCommandHandler
 {
     private readonly IUserHistoryWriteRepository userHistoryWriteRepository;
 

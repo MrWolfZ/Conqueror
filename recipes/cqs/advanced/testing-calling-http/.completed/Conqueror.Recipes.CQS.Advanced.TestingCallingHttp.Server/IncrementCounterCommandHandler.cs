@@ -2,7 +2,7 @@ using Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Contracts;
 
 namespace Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server;
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler, IConfigureCommandPipeline
+internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
 {
     private readonly CountersRepository repository;
 

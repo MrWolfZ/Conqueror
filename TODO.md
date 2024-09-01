@@ -18,7 +18,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] integrate pipeline configuration interface into handler interface
 - [ ] make pipeline builder interface generic
 - [ ] improve performance by using loop instead of recursion in pipeline
 - [ ] add support for delegate middlewares

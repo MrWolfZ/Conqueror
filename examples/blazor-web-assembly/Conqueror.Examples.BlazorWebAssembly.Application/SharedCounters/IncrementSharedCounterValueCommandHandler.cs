@@ -3,7 +3,7 @@ using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounters;
 
-internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementSharedCounterValueCommandHandler, IConfigureCommandPipeline
+internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementSharedCounterValueCommandHandler
 {
     private readonly SharedCounter counter;
     private readonly ISharedCounterIncrementedEventObserver eventObserver;

@@ -121,7 +121,7 @@ public sealed class CommandServiceCollectionConfigurationTests
         public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
     {
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
 

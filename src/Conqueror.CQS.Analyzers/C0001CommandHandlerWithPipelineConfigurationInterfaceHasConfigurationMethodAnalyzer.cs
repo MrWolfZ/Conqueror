@@ -18,7 +18,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
     private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.Analyzer0001Title), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.Analyzer0001MessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.Analyzer0001Description), Resources.ResourceManager, typeof(Resources));
-    private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, true, Description);
+    private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Hidden, true, Description);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -35,7 +35,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
         var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-        if (!symbol.IsCommandHandlerType(context) || !symbol.HasConfigureCommandPipelineInterface(context))
+        if (!symbol.IsCommandHandlerType(context))
         {
             return;
         }

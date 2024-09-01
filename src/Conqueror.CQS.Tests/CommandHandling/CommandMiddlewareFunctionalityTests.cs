@@ -416,28 +416,6 @@ public sealed class CommandMiddlewareFunctionalityTests
     }
 
     [Test]
-    public async Task GivenHandlerWithPipelineConfigurationMethodWithoutPipelineConfigurationInterface_MiddlewaresAreNotCalled()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCommandHandler<TestCommandHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface>()
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-        var command = new TestCommand(10);
-
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(observations.CommandsFromMiddlewares, Is.Empty);
-        Assert.That(observations.MiddlewareTypes, Is.Empty);
-    }
-
-    [Test]
     public async Task GivenCancellationToken_MiddlewaresReceiveCancellationTokenWhenCalled()
     {
         var services = new ServiceCollection();
@@ -802,7 +780,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
     private sealed record TestCommandWithoutResponse(int Payload);
 
-    private sealed class TestCommandHandlerWithSingleMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithSingleMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
     {
         private readonly TestObservations observations;
 
@@ -825,7 +803,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithSingleMiddlewareWithParameter : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithSingleMiddlewareWithParameter : ICommandHandler<TestCommand, TestCommandResponse>
     {
         private readonly TestObservations observations;
 
@@ -848,7 +826,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponseWithSingleMiddleware : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutResponseWithSingleMiddleware : ICommandHandler<TestCommandWithoutResponse>
     {
         private readonly TestObservations observations;
 
@@ -870,7 +848,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponseWithSingleMiddlewareWithParameter : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutResponseWithSingleMiddlewareWithParameter : ICommandHandler<TestCommandWithoutResponse>
     {
         private readonly TestObservations observations;
 
@@ -892,7 +870,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
     {
         private readonly TestObservations observations;
 
@@ -916,7 +894,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutResponseWithMultipleMiddlewares : ICommandHandler<TestCommandWithoutResponse>
     {
         private readonly TestObservations observations;
 
@@ -939,7 +917,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
     {
         private readonly TestObservations observations;
 
@@ -962,7 +940,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponseWithoutMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutResponseWithoutMiddlewares : ICommandHandler<TestCommandWithoutResponse>
     {
         private readonly TestObservations observations;
 
@@ -984,7 +962,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
     {
         private readonly TestObservations observations;
 
@@ -1009,7 +987,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithMultipleMutatingMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithMultipleMutatingMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
     {
         private readonly TestObservations observations;
 
@@ -1033,7 +1011,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponseWithMultipleMutatingMiddlewares : ICommandHandler<TestCommandWithoutResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithoutResponseWithMultipleMutatingMiddlewares : ICommandHandler<TestCommandWithoutResponse>
     {
         private readonly TestObservations observations;
 
@@ -1056,22 +1034,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithPipelineConfigurationWithoutPipelineConfigurationInterface : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            return new(0);
-        }
-
-        // ReSharper disable once UnusedMember.Local
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
-        {
-            _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 });
-        }
-    }
-
-    private sealed class TestCommandHandlerWithThrowingMiddleware : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+    private sealed class TestCommandHandlerWithThrowingMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
     {
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {

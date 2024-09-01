@@ -440,7 +440,7 @@ public sealed class ConquerorContextQueryTests
 
     private sealed record NestedTestQueryResponse(int Payload);
 
-    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
         private readonly IConquerorContextAccessor conquerorContextAccessor;
         private readonly Func<TestQuery, IConquerorContext?, TestQueryResponse> handlerFn;

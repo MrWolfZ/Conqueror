@@ -2,7 +2,7 @@ using Conqueror.Recipes.CQS.Advanced.CleanArchitecture.UserHistory.Contracts;
 
 namespace Conqueror.Recipes.CQS.Advanced.CleanArchitecture.Counters.Application;
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler, IConfigureCommandPipeline
+internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
 {
     private readonly ICountersReadRepository countersReadRepository;
     private readonly ICountersWriteRepository countersWriteRepository;

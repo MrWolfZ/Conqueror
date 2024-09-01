@@ -142,7 +142,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
     private sealed record TestQueryResponse;
 
-    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>, IConfigureQueryPipeline
+    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
