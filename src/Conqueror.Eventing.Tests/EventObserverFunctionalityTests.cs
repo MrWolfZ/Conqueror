@@ -397,6 +397,26 @@ public sealed class EventObserverFunctionalityTests
         Assert.That(thrownException, Is.SameAs(exception));
     }
 
+    [Test]
+    public async Task GivenDisposableHandler_WhenServiceProviderIsDisposed_ThenHandlerIsDisposed()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorEventObserver<DisposableEventObserver>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IEventObserver<TestEvent>>();
+
+        await handler.HandleEvent(new(), CancellationToken.None);
+
+        await provider.DisposeAsync();
+
+        Assert.That(observations.DisposedTypes, Is.EquivalentTo(new[] { typeof(DisposableEventObserver) }));
+    }
+
     private sealed record TestEvent
     {
         public int Payload { get; init; }
@@ -474,6 +494,19 @@ public sealed class EventObserverFunctionalityTests
         }
     }
 
+    private sealed class DisposableEventObserver(TestObservations observations) : IEventObserver<TestEvent>, IDisposable
+    {
+        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+        }
+
+        public void Dispose()
+        {
+            observations.DisposedTypes.Add(GetType());
+        }
+    }
+
     private sealed class TestObservations
     {
         public List<object> Events { get; } = new();
@@ -481,5 +514,7 @@ public sealed class EventObserverFunctionalityTests
         public List<(object Event, Type ObserverType)> EventsWithObserverTypes { get; } = new();
 
         public List<CancellationToken> CancellationTokens { get; } = new();
+
+        public List<Type> DisposedTypes { get; } = new();
     }
 }

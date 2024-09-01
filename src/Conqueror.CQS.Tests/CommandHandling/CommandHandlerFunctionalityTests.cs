@@ -330,6 +330,26 @@ public sealed class CommandHandlerFunctionalityTests
     }
 
     [Test]
+    public async Task GivenDisposableHandler_WhenServiceProviderIsDisposed_ThenHandlerIsDisposed()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorCommandHandler<DisposableCommandHandler>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        _ = await handler.ExecuteCommand(new(10), CancellationToken.None);
+
+        await provider.DisposeAsync();
+
+        Assert.That(observations.DisposedTypes, Is.EquivalentTo(new[] { typeof(DisposableCommandHandler) }));
+    }
+
+    [Test]
     public void GivenHandlerWithInvalidInterface_RegisteringHandlerThrowsArgumentException()
     {
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithoutValidInterfaces>());
@@ -433,6 +453,20 @@ public sealed class CommandHandlerFunctionalityTests
         }
     }
 
+    private sealed class DisposableCommandHandler(TestObservations observations) : ICommandHandler<TestCommand, TestCommandResponse>, IDisposable
+    {
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            return new(command.Payload);
+        }
+
+        public void Dispose()
+        {
+            observations.DisposedTypes.Add(GetType());
+        }
+    }
+
     private sealed class TestCommandHandlerWithoutValidInterfaces : ICommandHandler
     {
     }
@@ -442,5 +476,7 @@ public sealed class CommandHandlerFunctionalityTests
         public List<object> Commands { get; } = new();
 
         public List<CancellationToken> CancellationTokens { get; } = new();
+
+        public List<Type> DisposedTypes { get; } = new();
     }
 }

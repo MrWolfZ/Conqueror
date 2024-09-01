@@ -220,6 +220,26 @@ public sealed class QueryHandlerFunctionalityTests
     }
 
     [Test]
+    public async Task GivenDisposableHandler_WhenServiceProviderIsDisposed_ThenHandlerIsDisposed()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler<DisposableQueryHandler>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        _ = await handler.ExecuteQuery(new(10), CancellationToken.None);
+
+        await provider.DisposeAsync();
+
+        Assert.That(observations.DisposedTypes, Is.EquivalentTo(new[] { typeof(DisposableQueryHandler) }));
+    }
+
+    [Test]
     public void GivenHandlerWithInvalidInterface_RegisteringHandlerThrowsArgumentException()
     {
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithoutValidInterfaces>());
@@ -287,6 +307,20 @@ public sealed class QueryHandlerFunctionalityTests
         }
     }
 
+    private sealed class DisposableQueryHandler(TestObservations observations) : IQueryHandler<TestQuery, TestQueryResponse>, IDisposable
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            return new(command.Payload);
+        }
+
+        public void Dispose()
+        {
+            observations.DisposedTypes.Add(GetType());
+        }
+    }
+
     private sealed class TestQueryHandlerWithoutValidInterfaces : IQueryHandler
     {
     }
@@ -296,5 +330,7 @@ public sealed class QueryHandlerFunctionalityTests
         public List<object> Queries { get; } = new();
 
         public List<CancellationToken> CancellationTokens { get; } = new();
+
+        public List<Type> DisposedTypes { get; } = new();
     }
 }

@@ -260,6 +260,26 @@ public sealed class StreamConsumerFunctionalityTests
     }
 
     [Test]
+    public async Task GivenDisposableHandler_WhenServiceProviderIsDisposed_ThenHandlerIsDisposed()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorStreamConsumer<DisposableStreamConsumer>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IStreamConsumer<TestItem>>();
+
+        await handler.HandleItem(new(10), CancellationToken.None);
+
+        await provider.DisposeAsync();
+
+        Assert.That(observations.DisposedTypes, Is.EquivalentTo(new[] { typeof(DisposableStreamConsumer) }));
+    }
+
+    [Test]
     public void GivenStreamConsumerWithInvalidInterface_RegisteringConsumerThrowsArgumentException()
     {
         Assert.That(() => new ServiceCollection().AddConquerorStreamConsumer<TestStreamConsumerWithoutValidInterfaces>(), Throws.ArgumentException);
@@ -313,6 +333,19 @@ public sealed class StreamConsumerFunctionalityTests
         }
     }
 
+    private sealed class DisposableStreamConsumer(TestObservations observations) : IStreamConsumer<TestItem>, IDisposable
+    {
+        public async Task HandleItem(TestItem item, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+        }
+
+        public void Dispose()
+        {
+            observations.DisposedTypes.Add(GetType());
+        }
+    }
+
     private sealed class TestStreamConsumerWithoutValidInterfaces : IStreamConsumer
     {
     }
@@ -324,5 +357,7 @@ public sealed class StreamConsumerFunctionalityTests
         public List<object> Items { get; } = new();
 
         public List<CancellationToken> CancellationTokens { get; } = new();
+
+        public List<Type> DisposedTypes { get; } = new();
     }
 }

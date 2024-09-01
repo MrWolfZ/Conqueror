@@ -261,6 +261,26 @@ public sealed class StreamProducerFunctionalityTests
     }
 
     [Test]
+    public async Task GivenDisposableHandler_WhenServiceProviderIsDisposed_ThenHandlerIsDisposed()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorStreamProducer<DisposableStreamProducer>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>();
+
+        _ = await handler.ExecuteRequest(new(10), CancellationToken.None).Drain();
+
+        await provider.DisposeAsync();
+
+        Assert.That(observations.DisposedTypes, Is.EquivalentTo(new[] { typeof(DisposableStreamProducer) }));
+    }
+
+    [Test]
     public void GivenProducerWithInvalidInterface_RegisteringProducerThrowsArgumentException()
     {
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorStreamProducer<TestStreamProducerWithoutValidInterfaces>());
@@ -338,6 +358,20 @@ public sealed class StreamProducerFunctionalityTests
         }
     }
 
+    private sealed class DisposableStreamProducer(TestObservations observations) : IStreamProducer<TestStreamingRequest, TestItem>, IDisposable
+    {
+        public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest command, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            yield return new(command.Payload);
+        }
+
+        public void Dispose()
+        {
+            observations.DisposedTypes.Add(GetType());
+        }
+    }
+
     private sealed class TestStreamProducerWithoutValidInterfaces : IStreamProducer
     {
     }
@@ -347,5 +381,7 @@ public sealed class StreamProducerFunctionalityTests
         public List<object> Requests { get; } = new();
 
         public List<CancellationToken> CancellationTokens { get; } = new();
+
+        public List<Type> DisposedTypes { get; } = new();
     }
 }
