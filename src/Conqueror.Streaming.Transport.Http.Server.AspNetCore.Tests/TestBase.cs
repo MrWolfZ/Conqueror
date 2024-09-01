@@ -55,7 +55,7 @@ public abstract class TestBase
         }
     }
 
-    protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(2);
+    protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 2 : 10);
 
     protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
 
