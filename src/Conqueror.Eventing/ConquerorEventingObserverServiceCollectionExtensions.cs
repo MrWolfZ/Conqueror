@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror;
@@ -136,7 +137,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
-                throw ex.InnerException;
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
             }
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using Conqueror;
 using Conqueror.CQS.CommandHandling;
 
@@ -75,7 +76,7 @@ public static class ConquerorCqsCommandMiddlewareServiceCollectionExtensions
         }
         catch (TargetInvocationException ex) when (ex.InnerException != null)
         {
-            throw ex.InnerException;
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
         }
 
         return services;

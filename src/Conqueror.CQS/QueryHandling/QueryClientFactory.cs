@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Conqueror.Common;
 
@@ -63,7 +64,8 @@ internal sealed class QueryClientFactory
         }
         catch (TargetInvocationException ex) when (ex.InnerException != null)
         {
-            throw ex.InnerException;
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw; // unreachable code that is necessary so that the compiler knows the catch throws
         }
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Common;
@@ -89,7 +90,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
-                throw ex.InnerException;
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
             }
         }
 
