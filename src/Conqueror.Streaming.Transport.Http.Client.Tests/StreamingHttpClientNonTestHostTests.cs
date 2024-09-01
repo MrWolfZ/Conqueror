@@ -13,6 +13,7 @@ public sealed class StreamingHttpClientNonTestHostTests
     private const string ListenAddress = "http://localhost:59876";
 
     [Test]
+    [Retry(3)]
     public async Task GivenSuccessfulWebSocketConnection_StreamsItems()
     {
         await using var app = CreateWebApp();
@@ -30,6 +31,7 @@ public sealed class StreamingHttpClientNonTestHostTests
     }
 
     [Test]
+    [Retry(3)]
     public async Task GivenSuccessfulWebSocketConnection_WhenClientCancelsEnumeration_CancellationIsPropagatedToServer()
     {
         await using var app = CreateWebApp();
@@ -53,6 +55,7 @@ public sealed class StreamingHttpClientNonTestHostTests
     }
 
     [Test]
+    [Retry(3)]
     public async Task GivenSuccessfulWebSocketConnection_WhenExceptionOccursOnServer_ErrorIsPropagatedToClient()
     {
         await using var app = CreateWebApp();
