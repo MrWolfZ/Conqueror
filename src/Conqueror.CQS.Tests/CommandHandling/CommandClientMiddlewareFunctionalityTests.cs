@@ -1008,7 +1008,7 @@ public sealed class CommandClientMiddlewareFunctionalityWithSyncFactoryTests : C
                                                        Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                        Action<ICommandPipelineBuilder>? configurePipeline = null)
     {
-        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline);
+        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
     }
 }
 
@@ -1025,6 +1025,6 @@ public sealed class CommandClientMiddlewareFunctionalityWithAsyncFactoryTests : 
                                                              await Task.Delay(1);
                                                              return transportClientFactory(b);
                                                          },
-                                                         configurePipeline);
+                                                         configurePipeline ?? (_ => { }));
     }
 }

@@ -656,7 +656,7 @@ public sealed class QueryClientMiddlewareLifetimeWithSyncFactoryTests : QueryCli
                                                      Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
                                                      Action<IQueryPipelineBuilder>? configurePipeline = null)
     {
-        _ = services.AddConquerorQueryClient<THandler>(transportClientFactory, configurePipeline);
+        _ = services.AddConquerorQueryClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
     }
 }
 
@@ -673,6 +673,6 @@ public sealed class QueryClientMiddlewareLifetimeWithAsyncFactoryTests : QueryCl
                                                            await Task.Delay(1);
                                                            return transportClientFactory(b);
                                                        },
-                                                       configurePipeline);
+                                                       configurePipeline ?? (_ => { }));
     }
 }

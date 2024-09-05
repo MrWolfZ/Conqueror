@@ -106,7 +106,7 @@ public sealed class CommandClientCustomInterfaceWithSyncFactoryTests : CommandCl
                                                        Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                        Action<ICommandPipelineBuilder>? configurePipeline = null)
     {
-        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline);
+        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
     }
 }
 
@@ -123,6 +123,6 @@ public sealed class CommandClientCustomInterfaceWithAsyncFactoryTests : CommandC
                                                              await Task.Delay(1);
                                                              return transportClientFactory(b);
                                                          },
-                                                         configurePipeline);
+                                                         configurePipeline ?? (_ => { }));
     }
 }

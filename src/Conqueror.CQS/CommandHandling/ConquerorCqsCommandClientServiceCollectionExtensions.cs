@@ -14,16 +14,30 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class ConquerorCqsCommandClientServiceCollectionExtensions
 {
     public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
+                                                                         Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
+        where THandler : class, ICommandHandler
+    {
+        return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, null);
+    }
+
+    public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
                                                                          Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                                         Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                                         Action<ICommandPipelineBuilder> configurePipeline)
         where THandler : class, ICommandHandler
     {
         return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline);
     }
 
     public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
+                                                                         Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory)
+        where THandler : class, ICommandHandler
+    {
+        return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, null);
+    }
+
+    public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
                                                                          Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                                         Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                                         Action<ICommandPipelineBuilder> configurePipeline)
         where THandler : class, ICommandHandler
     {
         return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline);
@@ -37,26 +51,26 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
         return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClient), configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
-                                                                 Type handlerType,
-                                                                 Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                                 Action<ICommandPipelineBuilder>? configurePipeline)
+    private static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
+                                                                Type handlerType,
+                                                                Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
+                                                                Action<ICommandPipelineBuilder>? configurePipeline)
     {
         return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClientFactory), configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
-                                                                 Type handlerType,
-                                                                 Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                                 Action<ICommandPipelineBuilder>? configurePipeline)
+    private static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
+                                                                Type handlerType,
+                                                                Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
+                                                                Action<ICommandPipelineBuilder>? configurePipeline)
     {
         return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClientFactory), configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
-                                                                 Type handlerType,
-                                                                 CommandTransportClientFactory transportClientFactory,
-                                                                 Action<ICommandPipelineBuilder>? configurePipeline)
+    private static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
+                                                                Type handlerType,
+                                                                CommandTransportClientFactory transportClientFactory,
+                                                                Action<ICommandPipelineBuilder>? configurePipeline)
     {
         handlerType.ValidateNoInvalidCommandHandlerInterface();
 
@@ -153,8 +167,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
 
             if (customHandlerInterface.AllMethods().Count() > 1)
             {
-                throw new ArgumentException(
-                    $"command handler type '{typeof(THandler).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom command handler interface types are not allowed to have any additional methods beside the '{nameof(ICommandHandler<object>.ExecuteCommand)}' inherited from '{typeof(ICommandHandler<>).Name}'");
+                throw new ArgumentException($"command handler type '{typeof(THandler).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom command handler interface types are not allowed to have any additional methods beside the '{nameof(ICommandHandler<object>.ExecuteCommand)}' inherited from '{typeof(ICommandHandler<>).Name}'");
             }
 
             return customHandlerInterface;

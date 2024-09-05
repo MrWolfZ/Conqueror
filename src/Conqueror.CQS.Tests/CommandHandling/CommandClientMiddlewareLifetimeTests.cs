@@ -739,7 +739,7 @@ public sealed class CommandClientMiddlewareLifetimeWithSyncFactoryTests : Comman
                                                        Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
                                                        Action<ICommandPipelineBuilder>? configurePipeline = null)
     {
-        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline);
+        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
     }
 }
 
@@ -756,6 +756,6 @@ public sealed class CommandClientMiddlewareLifetimeWithAsyncFactoryTests : Comma
                                                              await Task.Delay(1);
                                                              return transportClientFactory(b);
                                                          },
-                                                         configurePipeline);
+                                                         configurePipeline ?? (_ => { }));
     }
 }

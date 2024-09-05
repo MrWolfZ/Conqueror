@@ -14,16 +14,30 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class ConquerorCqsQueryClientServiceCollectionExtensions
 {
     public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
+                                                                       Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
+        where THandler : class, IQueryHandler
+    {
+        return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, null);
+    }
+
+    public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
                                                                        Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                                       Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                                       Action<IQueryPipelineBuilder> configurePipeline)
         where THandler : class, IQueryHandler
     {
         return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, configurePipeline);
     }
 
     public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
+                                                                       Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
+        where THandler : class, IQueryHandler
+    {
+        return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, null);
+    }
+
+    public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
                                                                        Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                                       Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                                       Action<IQueryPipelineBuilder> configurePipeline)
         where THandler : class, IQueryHandler
     {
         return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, configurePipeline);
@@ -37,26 +51,26 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
         return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClient), configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
-                                                               Type handlerType,
-                                                               Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                               Action<IQueryPipelineBuilder>? configurePipeline)
+    private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
+                                                              Type handlerType,
+                                                              Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
+                                                              Action<IQueryPipelineBuilder>? configurePipeline)
     {
         return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClientFactory), configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
-                                                               Type handlerType,
-                                                               Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                               Action<IQueryPipelineBuilder>? configurePipeline)
+    private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
+                                                              Type handlerType,
+                                                              Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
+                                                              Action<IQueryPipelineBuilder>? configurePipeline)
     {
         return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClientFactory), configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
-                                                               Type handlerType,
-                                                               QueryTransportClientFactory transportClientFactory,
-                                                               Action<IQueryPipelineBuilder>? configurePipeline)
+    private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
+                                                              Type handlerType,
+                                                              QueryTransportClientFactory transportClientFactory,
+                                                              Action<IQueryPipelineBuilder>? configurePipeline)
     {
         handlerType.ValidateNoInvalidQueryHandlerInterface();
 
@@ -146,8 +160,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
             if (customHandlerInterface.AllMethods().Count() > 1)
             {
-                throw new ArgumentException(
-                    $"query handler type '{typeof(THandler).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom query handler interface types are not allowed to have any additional methods beside the '{nameof(IQueryHandler<object, object>.ExecuteQuery)}' inherited from '{typeof(IQueryHandler<,>).Name}'");
+                throw new ArgumentException($"query handler type '{typeof(THandler).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom query handler interface types are not allowed to have any additional methods beside the '{nameof(IQueryHandler<object, object>.ExecuteQuery)}' inherited from '{typeof(IQueryHandler<,>).Name}'");
             }
 
             return customHandlerInterface;
