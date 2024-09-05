@@ -85,8 +85,8 @@ internal sealed class StreamProducerClientFactory
 
         if (typeof(TProducer).IsAssignableTo(typeof(IStreamProducer<TRequest, TItem>)))
         {
-            var dynamicType = DynamicType.Create(typeof(TProducer), typeof(IStreamProducer<TRequest, TItem>));
-            return (TProducer)Activator.CreateInstance(dynamicType, proxy)!;
+            var proxyType = ProxyTypeGenerator.Create(typeof(TProducer), typeof(IStreamProducer<TRequest, TItem>), typeof(StreamProducerGeneratedProxyBase<TRequest, TItem>));
+            return (TProducer)Activator.CreateInstance(proxyType, proxy)!;
         }
 
         throw new InvalidOperationException($"stream producer type '{typeof(TProducer).Name}' does not implement a known stream producer interface");

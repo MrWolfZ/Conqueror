@@ -85,8 +85,8 @@ internal sealed class QueryClientFactory
 
         if (typeof(THandler).IsAssignableTo(typeof(IQueryHandler<TQuery, TResponse>)))
         {
-            var dynamicType = DynamicType.Create(typeof(THandler), typeof(IQueryHandler<TQuery, TResponse>));
-            return (THandler)Activator.CreateInstance(dynamicType, proxy)!;
+            var proxyType = ProxyTypeGenerator.Create(typeof(THandler), typeof(IQueryHandler<TQuery, TResponse>), typeof(QueryHandlerGeneratedProxyBase<TQuery, TResponse>));
+            return (THandler)Activator.CreateInstance(proxyType, proxy)!;
         }
 
         throw new InvalidOperationException($"query handler type '{typeof(THandler).Name}' does not implement a known query handler interface");

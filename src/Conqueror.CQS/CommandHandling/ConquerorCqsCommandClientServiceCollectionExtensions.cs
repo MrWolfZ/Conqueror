@@ -141,8 +141,9 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
             if (GetCustomCommandHandlerInterfaceType() is { } customInterfaceType)
             {
                 var plainHandlerInterface = typeof(TResponse) == typeof(UnitCommandResponse) ? typeof(ICommandHandler<TCommand>) : typeof(ICommandHandler<TCommand, TResponse>);
-                var dynamicType = DynamicType.Create(customInterfaceType, plainHandlerInterface);
-                services.TryAddTransient(customInterfaceType, dynamicType);
+                var baseType = typeof(TResponse) == typeof(UnitCommandResponse) ? typeof(CommandHandlerGeneratedProxyBase<TCommand>) : typeof(CommandHandlerGeneratedProxyBase<TCommand, TResponse>);
+                var proxyType = ProxyTypeGenerator.Create(customInterfaceType, plainHandlerInterface, baseType);
+                services.TryAddTransient(customInterfaceType, proxyType);
             }
         }
 

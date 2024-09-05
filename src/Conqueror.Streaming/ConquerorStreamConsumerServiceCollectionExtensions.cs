@@ -141,15 +141,15 @@ public static class ConquerorStreamConsumerServiceCollectionExtensions
         {
             if (GetCustomStreamConsumerInterfaceType() is { } customInterfaceType)
             {
-                var dynamicType = DynamicType.Create(customInterfaceType, typeof(IStreamConsumer<TItem>));
+                var proxyType = ProxyTypeGenerator.Create(customInterfaceType, typeof(IStreamConsumer<TItem>), typeof(StreamConsumerGeneratedProxyBase<TItem>));
 
                 if (key is null)
                 {
-                    services.TryAddTransient(customInterfaceType, dynamicType);
+                    services.TryAddTransient(customInterfaceType, proxyType);
                 }
                 else
                 {
-                    services.TryAddKeyedTransient(customInterfaceType, key, (p, k) => Activator.CreateInstance(dynamicType, p.GetRequiredKeyedService(typeof(IStreamConsumer<TItem>), k))!);
+                    services.TryAddKeyedTransient(customInterfaceType, key, (p, k) => Activator.CreateInstance(proxyType, p.GetRequiredKeyedService(typeof(IStreamConsumer<TItem>), k))!);
                 }
             }
         }

@@ -134,8 +134,8 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
         {
             if (GetCustomQueryHandlerInterfaceType() is { } customInterfaceType)
             {
-                var dynamicType = DynamicType.Create(customInterfaceType, typeof(IQueryHandler<TQuery, TResponse>));
-                services.TryAddTransient(customInterfaceType, dynamicType);
+                var proxyType = ProxyTypeGenerator.Create(customInterfaceType, typeof(IQueryHandler<TQuery, TResponse>), typeof(QueryHandlerGeneratedProxyBase<TQuery, TResponse>));
+                services.TryAddTransient(customInterfaceType, proxyType);
             }
         }
 

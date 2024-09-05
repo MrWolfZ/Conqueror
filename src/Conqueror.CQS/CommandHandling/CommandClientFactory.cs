@@ -90,15 +90,15 @@ internal sealed class CommandClientFactory
 
         if (typeof(THandler).IsAssignableTo(typeof(ICommandHandler<TCommand>)))
         {
-            var dynamicType = DynamicType.Create(typeof(THandler), typeof(ICommandHandler<TCommand>));
+            var proxyType = ProxyTypeGenerator.Create(typeof(THandler), typeof(ICommandHandler<TCommand>), typeof(CommandHandlerGeneratedProxyBase<TCommand>));
             var adapter = new CommandWithoutResponseAdapter<TCommand>((ICommandHandler<TCommand, UnitCommandResponse>)(object)proxy);
-            return (THandler)Activator.CreateInstance(dynamicType, adapter)!;
+            return (THandler)Activator.CreateInstance(proxyType, adapter)!;
         }
 
         if (typeof(THandler).IsAssignableTo(typeof(ICommandHandler<TCommand, TResponse>)))
         {
-            var dynamicType = DynamicType.Create(typeof(THandler), typeof(ICommandHandler<TCommand, TResponse>));
-            return (THandler)Activator.CreateInstance(dynamicType, proxy)!;
+            var proxyType = ProxyTypeGenerator.Create(typeof(THandler), typeof(ICommandHandler<TCommand, TResponse>), typeof(CommandHandlerGeneratedProxyBase<TCommand, TResponse>));
+            return (THandler)Activator.CreateInstance(proxyType, proxy)!;
         }
 
         throw new InvalidOperationException($"command handler type '{typeof(THandler).Name}' does not implement a known command handler interface");

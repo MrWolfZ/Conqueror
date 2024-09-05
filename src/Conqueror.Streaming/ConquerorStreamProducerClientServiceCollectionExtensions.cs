@@ -120,8 +120,8 @@ public static class ConquerorStreamProducerClientServiceCollectionExtensions
         {
             if (GetCustomStreamProducerInterfaceType() is { } customInterfaceType)
             {
-                var dynamicType = DynamicType.Create(customInterfaceType, typeof(IStreamProducer<TRequest, TItem>));
-                services.TryAddTransient(customInterfaceType, dynamicType);
+                var proxyType = ProxyTypeGenerator.Create(customInterfaceType, typeof(IStreamProducer<TRequest, TItem>), typeof(StreamProducerGeneratedProxyBase<TRequest, TItem>));
+                services.TryAddTransient(customInterfaceType, proxyType);
             }
         }
 

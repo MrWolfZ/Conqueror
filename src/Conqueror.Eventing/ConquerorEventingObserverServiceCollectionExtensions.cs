@@ -150,8 +150,8 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
     {
         if (GetCustomEventObserverInterfaceType() is { } customInterfaceType)
         {
-            var dynamicType = DynamicType.Create(customInterfaceType, typeof(IEventObserver<TEvent>));
-            services.TryAddTransient(customInterfaceType, dynamicType);
+            var proxyType = ProxyTypeGenerator.Create(customInterfaceType, typeof(IEventObserver<TEvent>), typeof(EventObserverGeneratedProxyBase<TEvent>));
+            services.TryAddTransient(customInterfaceType, proxyType);
         }
 
         static Type? GetCustomEventObserverInterfaceType()
