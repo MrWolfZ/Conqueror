@@ -169,8 +169,7 @@ public abstract class CommandClientFunctionalityTests
     }
 
     protected abstract void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
         where THandler : class, ICommandHandler;
 
     private sealed record TestCommand(int Payload);
@@ -237,10 +236,9 @@ public abstract class CommandClientFunctionalityTests
 public sealed class CommandClientFunctionalityWithSyncFactoryTests : CommandClientFunctionalityTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
-        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
+        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory);
     }
 }
 
@@ -249,14 +247,12 @@ public sealed class CommandClientFunctionalityWithSyncFactoryTests : CommandClie
 public sealed class CommandClientFunctionalityWithAsyncFactoryTests : CommandClientFunctionalityTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
         _ = services.AddConquerorCommandClient<THandler>(async b =>
                                                          {
                                                              await Task.Delay(1);
                                                              return transportClientFactory(b);
-                                                         },
-                                                         configurePipeline ?? (_ => { }));
+                                                         });
     }
 }

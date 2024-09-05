@@ -110,12 +110,12 @@ public abstract class CommandClientFactoryTests
         var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
         var client = CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(clientFactory,
-                                                                                            b => b.ServiceProvider.GetRequiredService<TestCommandTransport>(),
-                                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+                                                                                            b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
         var command = new TestCommand();
 
-        _ = await client.ExecuteCommand(command, CancellationToken.None);
+        _ = await client.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                        .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
     }
@@ -134,13 +134,12 @@ public abstract class CommandClientFactoryTests
 
         var clientFactory = provider.GetRequiredService<ICommandClientFactory>();
 
-        var client = CreateCommandClient<ITestCommandHandler>(clientFactory,
-                                                              b => b.ServiceProvider.GetRequiredService<TestCommandTransport>(),
-                                                              p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        var client = CreateCommandClient<ITestCommandHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
         var command = new TestCommand();
 
-        _ = await client.ExecuteCommand(command, CancellationToken.None);
+        _ = await client.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                        .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
     }
@@ -231,8 +230,7 @@ public abstract class CommandClientFactoryTests
     }
 
     protected abstract THandler CreateCommandClient<THandler>(ICommandClientFactory clientFactory,
-                                                              Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                              Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                              Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
         where THandler : class, ICommandHandler;
 
     public sealed record TestCommand;
@@ -332,10 +330,9 @@ public abstract class CommandClientFactoryTests
 public sealed class CommandClientFactoryWithSyncFactoryTests : CommandClientFactoryTests
 {
     protected override THandler CreateCommandClient<THandler>(ICommandClientFactory clientFactory,
-                                                              Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                              Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                              Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
-        return clientFactory.CreateCommandClient<THandler>(transportClientFactory, configurePipeline);
+        return clientFactory.CreateCommandClient<THandler>(transportClientFactory);
     }
 }
 
@@ -344,14 +341,12 @@ public sealed class CommandClientFactoryWithSyncFactoryTests : CommandClientFact
 public sealed class CommandClientFactoryWithAsyncFactoryTests : CommandClientFactoryTests
 {
     protected override THandler CreateCommandClient<THandler>(ICommandClientFactory clientFactory,
-                                                              Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                              Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                              Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
         return clientFactory.CreateCommandClient<THandler>(async b =>
                                                            {
                                                                await Task.Delay(1);
                                                                return transportClientFactory(b);
-                                                           },
-                                                           configurePipeline);
+                                                           });
     }
 }

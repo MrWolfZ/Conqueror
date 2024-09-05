@@ -288,16 +288,14 @@ In the client's `Program.cs` ([view completed file](.completed/Conqueror.Recipes
 +         .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly);
 ```
 
-Now we can configure our command client to use the middleware in its pipeline:
+Now we can configure our command client to use the middleware in a pipeline:
 
 ```diff
-  services.AddConquerorCQSHttpClientServices()
--         .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")))
-+         .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")),
-+                                                                     pipeline => pipeline.UseDataAnnotationValidation())
- 
-          // add all middlewares from the shared project
-          .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly);
+          var incrementHandler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
+-         var incResponse = await incrementHandler.ExecuteCommand(new(counterName));
++         var incResponse = await incrementHandler.WithPipeline(pipeline => pipeline.UseDataAnnotationValidation())
++                                                 .ExecuteCommand(new(counterName));
+          Console.WriteLine($"incremented counter '{counterName}'; new value: {incResponse.NewCounterValue}");
 ```
 
 If you now run the application with invalid input as before, you get a different better error message:
@@ -312,18 +310,39 @@ That looks much better. Being able to use the same middlewares in both server an
 Similar to the default pipelines we created in the recipe for [solving cross-cutting concerns](../../basics/solving-cross-cutting-concerns#readme), it can be useful to create shared pipelines for your command and query clients. For example, you could create a shared pipeline that ensures all outgoing commands are validated and retried on failure:
 
 ```cs
-public static ICommandPipelineBuilder UseHttpClientDefault(this ICommandPipelineBuilder pipeline)
+public static ICommandPipelineBuilder UseClientDefault(this ICommandPipelineBuilder pipeline)
 {
     return pipeline.UseDataAnnotationValidation()
                    .UseRetry();
 }
 ```
 
-With this extension method, configuring multiple clients becomes very simple:
+With this extension method, using a client with the default pipeline becomes very simple:
 
 ```cs
-services.AddConquerorCommandClient<IMyFirstCommandHandler>(b => b.UseMyServerHttpApi(), p => p.UseHttpClientDefault())
-        .AddConquerorCommandClient<IMySecondCommandHandler>(b => b.UseMyServerHttpApi(), p => p.UseHttpClientDefault());
+await incrementHandler.WithPipeline(pipeline => pipeline.UseClientDefault()).ExecuteCommand(new(counterName));
+```
+
+For even more convenience you can go one step further and create default pipeline methods directly on the handler interfaces:
+
+```cs
+public static ICommandHandler<TCommand, TResponse> WithDefaultClientPipeline<TCommand, TResponse>(this ICommandHandler<TCommand, TResponse> handler)
+    where TCommand : class
+{
+    return handler.WithPipeline(pipeline => pipeline.UseDefault());
+}
+
+public static ICommandHandler<TCommand> WithDefaultClientPipeline<TCommand>(this ICommandHandler<TCommand> handler)
+    where TCommand : class
+{
+    return handler.WithPipeline(pipeline => pipeline.UseDefault());
+}
+```
+
+This simplifies the handler call even further:
+
+```cs
+await incrementHandler.WithDefaultClientPipeline().ExecuteCommand(new(counterName));
 ```
 
 > You can even reuse the same shared pipelines in both clients and handlers, since they use the same pipeline builder interfaces and underlying mechanism.

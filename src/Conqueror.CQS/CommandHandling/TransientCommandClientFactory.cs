@@ -14,9 +14,9 @@ internal sealed class TransientCommandClientFactory : ICommandClientFactory
         this.serviceProvider = serviceProvider;
     }
 
-    public THandler CreateCommandClient<THandler>(Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory, Action<ICommandPipelineBuilder>? configurePipeline = null)
+    public THandler CreateCommandClient<THandler>(Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory)
         where THandler : class, ICommandHandler
     {
-        return innerFactory.CreateCommandClient<THandler>(serviceProvider, transportClientFactory, configurePipeline);
+        return innerFactory.CreateCommandClient<THandler>(serviceProvider, transportClientFactory);
     }
 }

@@ -14,9 +14,9 @@ internal sealed class TransientQueryClientFactory : IQueryClientFactory
         this.serviceProvider = serviceProvider;
     }
 
-    public THandler CreateQueryClient<THandler>(Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory, Action<IQueryPipelineBuilder>? configurePipeline = null)
+    public THandler CreateQueryClient<THandler>(Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
         where THandler : class, IQueryHandler
     {
-        return innerFactory.CreateQueryClient<THandler>(serviceProvider, transportClientFactory, configurePipeline);
+        return innerFactory.CreateQueryClient<THandler>(serviceProvider, transportClientFactory);
     }
 }

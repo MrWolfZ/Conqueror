@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,5 +17,10 @@ internal sealed class CommandWithoutResponseAdapter<TCommand> : ICommandHandler<
     public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
     {
         return wrapped.ExecuteCommand(command, cancellationToken);
+    }
+
+    public ICommandHandler<TCommand> WithPipeline(Action<ICommandPipelineBuilder> configure)
+    {
+        return new CommandWithoutResponseAdapter<TCommand>(wrapped.WithPipeline(configure));
     }
 }

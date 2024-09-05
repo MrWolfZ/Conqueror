@@ -1,5 +1,6 @@
 namespace Conqueror.CQS.Tests.QueryHandling;
 
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
 public abstract class QueryClientMiddlewareFunctionalityTests
 {
     [Test]
@@ -32,9 +33,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -46,7 +45,8 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
@@ -58,9 +58,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 }));
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -70,7 +68,8 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(10), CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 }))
+                         .ExecuteQuery(new(10), CancellationToken.None);
 
         Assert.That(observations.ConfigurationFromMiddlewares, Is.EquivalentTo(new[] { new TestQueryMiddlewareConfiguration { Parameter = 10 } }));
     }
@@ -81,10 +80,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -96,7 +92,9 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware2>())
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware), typeof(TestQueryMiddleware2) }));
@@ -108,10 +106,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware2>()
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                     .AddSingleton(observations);
@@ -122,7 +117,9 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware2>()
+                                             .Use<TestQueryMiddleware2>())
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2), typeof(TestQueryMiddleware2) }));
@@ -134,12 +131,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Use<TestQueryMiddleware2>()
-                                                                          .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Without<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -151,7 +143,11 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware2>()
+                                             .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Without<TestQueryMiddleware2>())
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware), typeof(TestQueryMiddleware) }));
@@ -163,12 +159,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware2>()
-                                                                          .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Use<TestQueryMiddleware2>()
-                                                                          .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -180,7 +171,11 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware2>()
+                                             .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware2>()
+                                             .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>())
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2), typeof(TestQueryMiddleware2) }));
@@ -192,13 +187,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Use<TestQueryMiddleware2>()
-                                                                          .Use<TestQueryMiddleware2>()
-                                                                          .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Without<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -210,7 +199,12 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware2>()
+                                             .Use<TestQueryMiddleware2>()
+                                             .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Without<TestQueryMiddleware2>())
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware), typeof(TestQueryMiddleware) }));
@@ -222,13 +216,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware2>()
-                                                                          .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Use<TestQueryMiddleware2>()
-                                                                          .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -240,7 +228,12 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware2>()
+                                             .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware2>()
+                                             .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>())
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2), typeof(TestQueryMiddleware2) }));
@@ -252,11 +245,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware2>()
-                                                                          .Without<TestQueryMiddleware2>()
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -268,7 +257,10 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware2>()
+                                             .Without<TestQueryMiddleware2>()
+                                             .Use<TestQueryMiddleware2>())
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2) }));
@@ -280,11 +272,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>()
-                                                                          .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -296,7 +284,10 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>()
+                                             .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
@@ -308,11 +299,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryRetryMiddleware>()
-                                                                          .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
@@ -325,7 +312,10 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                             .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware2>())
+                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query, query, query, query, query }));
         Assert.That(observations.MiddlewareTypes,
@@ -341,10 +331,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -355,7 +342,9 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await handler.ExecuteQuery(new(10), tokenSource.Token);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware2>())
+                         .ExecuteQuery(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(new[] { tokenSource.Token, tokenSource.Token }));
     }
@@ -367,10 +356,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<MutatingTestQueryMiddleware>()
-                                                                          .Use<MutatingTestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<MutatingTestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware2>()
@@ -381,7 +367,9 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(0), CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<MutatingTestQueryMiddleware>()
+                                             .Use<MutatingTestQueryMiddleware2>())
+                         .ExecuteQuery(new(0), CancellationToken.None);
 
         var query1 = new TestQuery(0);
         var query2 = new TestQuery(1);
@@ -398,10 +386,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<MutatingTestQueryMiddleware>()
-                                                                          .Use<MutatingTestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<MutatingTestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware2>()
@@ -412,7 +397,9 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var response = await handler.ExecuteQuery(new(0), CancellationToken.None);
+        var response = await handler.WithPipeline(p => p.Use<MutatingTestQueryMiddleware>()
+                                                        .Use<MutatingTestQueryMiddleware2>())
+                                    .ExecuteQuery(new(0), CancellationToken.None);
 
         var response1 = new TestQueryResponse(4);
         var response2 = new TestQueryResponse(5);
@@ -429,10 +416,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false) } };
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<MutatingTestQueryMiddleware>()
-                                                                          .Use<MutatingTestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<MutatingTestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<MutatingTestQueryMiddleware2>()
@@ -443,7 +427,9 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(0), tokens.CancellationTokens[0]);
+        _ = await handler.WithPipeline(p => p.Use<MutatingTestQueryMiddleware>()
+                                             .Use<MutatingTestQueryMiddleware2>())
+                         .ExecuteQuery(new(0), tokens.CancellationTokens[0]);
 
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
         Assert.That(observations.CancellationTokensFromTransports, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
@@ -456,9 +442,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var observedInstances = new List<TestService>();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()));
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddScoped<TestService>()
                     .AddSingleton(observations);
@@ -472,13 +456,66 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler3 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteQuery(new(10), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(10), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(10), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                          .ExecuteQuery(new(10), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                          .ExecuteQuery(new(10), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                          .ExecuteQuery(new(10), CancellationToken.None);
 
         Assert.That(observedInstances, Has.Count.EqualTo(3));
         Assert.That(observedInstances[1], Is.Not.SameAs(observedInstances[0]));
         Assert.That(observedInstances[2], Is.SameAs(observedInstances[0]));
+    }
+
+    [Test]
+    public async Task GivenClientForInProcessHandlerWithMiddlewares_MiddlewaresFromClientAndFromHandlerAreCalled()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                    .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ITestQueryHandler>();
+
+        var command = new TestQuery(10);
+
+        _ = await handler.WithPipeline(pipeline => pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                         .ExecuteQuery(command, CancellationToken.None);
+
+        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware), typeof(TestQueryMiddleware2) }));
+    }
+
+    [Test]
+    public async Task GivenClientWithMultiplePipelineConfigurations_PipelinesAreCalledInReverseOrder()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
+
+        _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                    .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        var command = new TestQuery(10);
+
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                         .WithPipeline(p => p.Use<TestQueryMiddleware2>())
+                         .ExecuteQuery(command, CancellationToken.None);
+
+        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2), typeof(TestQueryMiddleware) }));
     }
 
     [Test]
@@ -487,9 +524,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddSingleton(observations);
 
@@ -497,7 +532,8 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.WithPipeline(p => p.Use<TestQueryMiddleware2>())
+                                                                                   .ExecuteQuery(new(10), CancellationToken.None));
 
         Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
         Assert.That(exception?.Message, Contains.Substring(nameof(TestQueryMiddleware2)));
@@ -509,9 +545,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddSingleton(observations);
 
@@ -519,7 +553,8 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                                                                                   .ExecuteQuery(new(10), CancellationToken.None));
 
         Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
         Assert.That(exception?.Message, Contains.Substring(nameof(TestQueryMiddleware)));
@@ -531,9 +566,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var exception = new Exception();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<ThrowingTestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<ThrowingTestQueryMiddleware>()
                     .AddSingleton(exception);
@@ -542,14 +575,14 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use<ThrowingTestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                                                                         .ExecuteQuery(new(10), CancellationToken.None));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
 
     protected abstract void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
         where THandler : class, IQueryHandler;
 
     private static IQueryTransportClient CreateTransport(IQueryTransportClientBuilder builder)
@@ -557,13 +590,25 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         return new TestQueryTransport(builder.ServiceProvider.GetRequiredService<TestObservations>());
     }
 
-    private sealed record TestQuery(int Payload);
+    public sealed record TestQuery(int Payload);
 
-    private sealed record TestQueryResponse(int Payload);
+    public sealed record TestQueryResponse(int Payload);
 
     private sealed record TestQueryMiddlewareConfiguration
     {
         public int Parameter { get; set; }
+    }
+
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
+
+    private class TestQueryHandler : ITestQueryHandler
+    {
+        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new TestQueryResponse(query.Payload));
+        }
+
+        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware2>();
     }
 
     private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
@@ -781,10 +826,9 @@ public abstract class QueryClientMiddlewareFunctionalityTests
 public sealed class QueryClientMiddlewareFunctionalityWithSyncFactoryTests : QueryClientMiddlewareFunctionalityTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
-        _ = services.AddConquerorQueryClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
+        _ = services.AddConquerorQueryClient<THandler>(transportClientFactory);
     }
 }
 
@@ -793,14 +837,12 @@ public sealed class QueryClientMiddlewareFunctionalityWithSyncFactoryTests : Que
 public sealed class QueryClientMiddlewareFunctionalityWithAsyncFactoryTests : QueryClientMiddlewareFunctionalityTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
         _ = services.AddConquerorQueryClient<THandler>(async b =>
-                                                       {
-                                                           await Task.Delay(1);
-                                                           return transportClientFactory(b);
-                                                       },
-                                                       configurePipeline ?? (_ => { }));
+        {
+            await Task.Delay(1);
+            return transportClientFactory(b);
+        });
     }
 }

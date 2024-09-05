@@ -43,4 +43,22 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
 
         return await pipeline.Execute<TQuery, TResponse>(serviceProvider, query, transportClientFactory, cancellationToken).ConfigureAwait(false);
     }
+
+    public IQueryHandler<TQuery, TResponse> WithPipeline(Action<IQueryPipelineBuilder> configure)
+    {
+        if (configurePipeline is not null)
+        {
+            var originalConfigure = configure;
+            configure = pipeline =>
+            {
+                originalConfigure(pipeline);
+                configurePipeline(pipeline);
+            };
+        }
+
+        return new QueryHandlerProxy<TQuery, TResponse>(serviceProvider,
+                                                        transportClientFactory,
+                                                        configure,
+                                                        queryMiddlewareRegistry);
+    }
 }

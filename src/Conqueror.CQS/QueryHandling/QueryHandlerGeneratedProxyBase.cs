@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror.CQS.QueryHandling;
@@ -16,5 +17,10 @@ internal abstract class QueryHandlerGeneratedProxyBase<TQuery, TResponse> : IQue
     public Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
     {
         return target.ExecuteQuery(query, cancellationToken);
+    }
+
+    public IQueryHandler<TQuery, TResponse> WithPipeline(Action<IQueryPipelineBuilder> configure)
+    {
+        return target.WithPipeline(configure);
     }
 }

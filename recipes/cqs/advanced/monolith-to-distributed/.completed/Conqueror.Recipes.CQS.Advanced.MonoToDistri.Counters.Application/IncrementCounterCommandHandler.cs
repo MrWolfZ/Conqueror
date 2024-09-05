@@ -24,7 +24,10 @@ internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandH
         var counterValue = await countersReadRepository.GetCounterValue(command.CounterName);
         var newCounterValue = (counterValue ?? 0) + 1;
         await countersWriteRepository.SetCounterValue(command.CounterName, newCounterValue);
-        await setMostRecentlyIncrementedCounterForUserCommandHandler.ExecuteCommand(new(command.UserId, command.CounterName), cancellationToken);
+
+        await setMostRecentlyIncrementedCounterForUserCommandHandler.WithDefaultClientPipeline()
+                                                                    .ExecuteCommand(new(command.UserId, command.CounterName), cancellationToken);
+
         return new(newCounterValue);
     }
 }

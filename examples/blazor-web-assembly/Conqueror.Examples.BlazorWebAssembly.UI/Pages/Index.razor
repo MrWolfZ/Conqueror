@@ -24,14 +24,13 @@ else
 
     private async Task IncrementCount()
     {
-        var result = await IncrementHandler.ExecuteCommand(new() { IncrementBy = 1 }, CancellationToken.None);
+        var result = await IncrementHandler.WithDefaultClientPipeline().ExecuteCommand(new() { IncrementBy = 1 });
         currentCount = result.ValueAfterIncrement;
     }
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await GetValueHandler.ExecuteQuery(new(), CancellationToken.None);
+        var result = await GetValueHandler.WithDefaultClientPipeline().ExecuteQuery(new());
         currentCount = result.Value;
     }
-
 }

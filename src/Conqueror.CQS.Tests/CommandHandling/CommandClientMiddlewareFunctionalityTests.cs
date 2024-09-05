@@ -1,5 +1,6 @@
 namespace Conqueror.CQS.Tests.CommandHandling;
 
+[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
 public abstract class CommandClientMiddlewareFunctionalityTests
 {
     [Test]
@@ -56,9 +57,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -70,7 +69,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
@@ -82,9 +82,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 }));
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -94,7 +92,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new(10), CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 }))
+                         .ExecuteCommand(new(10), CancellationToken.None);
 
         Assert.That(observations.ConfigurationFromMiddlewares, Is.EquivalentTo(new[] { new TestCommandMiddlewareConfiguration { Parameter = 10 } }));
     }
@@ -105,9 +104,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -119,7 +116,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommandWithoutResponse(10);
 
-        await handler.ExecuteCommand(command, CancellationToken.None);
+        await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                     .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
@@ -131,9 +129,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 }));
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -143,7 +139,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        await handler.ExecuteCommand(new(10), CancellationToken.None);
+        await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 }))
+                     .ExecuteCommand(new(10), CancellationToken.None);
 
         Assert.That(observations.ConfigurationFromMiddlewares, Is.EquivalentTo(new[] { new TestCommandMiddlewareConfiguration { Parameter = 10 } }));
     }
@@ -154,10 +151,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -169,7 +163,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware2>())
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware), typeof(TestCommandMiddleware2) }));
@@ -181,10 +177,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                            .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -196,7 +189,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommandWithoutResponse(10);
 
-        await handler.ExecuteCommand(command, CancellationToken.None);
+        await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                         .Use<TestCommandMiddleware2>())
+                     .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware), typeof(TestCommandMiddleware2) }));
@@ -208,10 +203,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware2>()
-                                                                                  .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                     .AddSingleton(observations);
@@ -222,7 +214,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware2>()
+                                             .Use<TestCommandMiddleware2>())
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware2) }));
@@ -234,12 +228,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Use<TestCommandMiddleware2>()
-                                                                                  .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Without<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -251,7 +240,11 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware2>()
+                                             .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Without<TestCommandMiddleware2>())
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware), typeof(TestCommandMiddleware) }));
@@ -263,12 +256,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware2>()
-                                                                                  .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Use<TestCommandMiddleware2>()
-                                                                                  .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -280,7 +268,11 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware2>()
+                                             .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware2>()
+                                             .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>())
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware2) }));
@@ -292,13 +284,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Use<TestCommandMiddleware2>()
-                                                                                  .Use<TestCommandMiddleware2>()
-                                                                                  .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Without<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -310,7 +296,12 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware2>()
+                                             .Use<TestCommandMiddleware2>()
+                                             .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Without<TestCommandMiddleware2>())
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware), typeof(TestCommandMiddleware) }));
@@ -322,13 +313,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware2>()
-                                                                                  .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Use<TestCommandMiddleware2>()
-                                                                                  .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -340,7 +325,12 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware2>()
+                                             .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware2>()
+                                             .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>())
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware2) }));
@@ -352,11 +342,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware2>()
-                                                                                  .Without<TestCommandMiddleware2>()
-                                                                                  .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -368,7 +354,10 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware2>()
+                                             .Without<TestCommandMiddleware2>()
+                                             .Use<TestCommandMiddleware2>())
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2) }));
@@ -380,11 +369,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>()
-                                                                                  .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -396,7 +381,10 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>()
+                                             .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
@@ -409,10 +397,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
 
         AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandRetryMiddleware>()
-                                                                                  .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Use<TestCommandMiddleware2>());
+                                                                            CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
@@ -425,7 +410,10 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                             .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware2>())
+                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command, command, command, command }));
         Assert.That(observations.MiddlewareTypes,
@@ -441,10 +429,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
-                                                                                  .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -455,7 +440,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await handler.ExecuteCommand(new(10), tokenSource.Token);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware2>())
+                         .ExecuteCommand(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(new[] { tokenSource.Token, tokenSource.Token }));
     }
@@ -467,10 +454,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<MutatingTestCommandMiddleware>()
-                                                                                  .Use<MutatingTestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<MutatingTestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<MutatingTestCommandMiddleware2>()
@@ -481,7 +465,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new(0), CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<MutatingTestCommandMiddleware>()
+                                             .Use<MutatingTestCommandMiddleware2>())
+                         .ExecuteCommand(new(0), CancellationToken.None);
 
         var command1 = new TestCommand(0);
         var command2 = new TestCommand(1);
@@ -498,10 +484,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<MutatingTestCommandMiddleware>()
-                                                                            .Use<MutatingTestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<MutatingTestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<MutatingTestCommandMiddleware2>()
@@ -512,7 +495,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        await handler.ExecuteCommand(new(0), CancellationToken.None);
+        await handler.WithPipeline(p => p.Use<MutatingTestCommandMiddleware>()
+                                         .Use<MutatingTestCommandMiddleware2>())
+                     .ExecuteCommand(new(0), CancellationToken.None);
 
         var command1 = new TestCommandWithoutResponse(0);
         var command2 = new TestCommandWithoutResponse(1);
@@ -529,10 +514,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<MutatingTestCommandMiddleware>()
-                                                                                  .Use<MutatingTestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<MutatingTestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<MutatingTestCommandMiddleware2>()
@@ -543,7 +525,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var response = await handler.ExecuteCommand(new(0), CancellationToken.None);
+        var response = await handler.WithPipeline(p => p.Use<MutatingTestCommandMiddleware>()
+                                                        .Use<MutatingTestCommandMiddleware2>())
+                                    .ExecuteCommand(new(0), CancellationToken.None);
 
         var response1 = new TestCommandResponse(4);
         var response2 = new TestCommandResponse(5);
@@ -560,10 +544,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false) } };
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<MutatingTestCommandMiddleware>()
-                                                                                  .Use<MutatingTestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<MutatingTestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<MutatingTestCommandMiddleware2>()
@@ -574,7 +555,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new(0), tokens.CancellationTokens[0]);
+        _ = await handler.WithPipeline(p => p.Use<MutatingTestCommandMiddleware>()
+                                             .Use<MutatingTestCommandMiddleware2>())
+                         .ExecuteCommand(new(0), tokens.CancellationTokens[0]);
 
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
         Assert.That(observations.CancellationTokensFromTransports, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
@@ -587,9 +570,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var observedInstances = new List<TestService>();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()));
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddScoped<TestService>()
                     .AddSingleton(observations);
@@ -603,9 +584,12 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler3 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(10), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(10), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(10), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                          .ExecuteCommand(new(10), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                          .ExecuteCommand(new(10), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                          .ExecuteCommand(new(10), CancellationToken.None);
 
         Assert.That(observedInstances, Has.Count.EqualTo(3));
         Assert.That(observedInstances[1], Is.Not.SameAs(observedInstances[0]));
@@ -619,9 +603,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var observedInstances = new List<TestService>();
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()));
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddScoped<TestService>()
                     .AddSingleton(observations);
@@ -635,13 +617,116 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
         var handler3 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        await handler1.ExecuteCommand(new(10), CancellationToken.None);
-        await handler2.ExecuteCommand(new(10), CancellationToken.None);
-        await handler3.ExecuteCommand(new(10), CancellationToken.None);
+        await handler1.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                      .ExecuteCommand(new(10), CancellationToken.None);
+        await handler2.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                      .ExecuteCommand(new(10), CancellationToken.None);
+        await handler3.WithPipeline(p => observedInstances.Add(p.ServiceProvider.GetRequiredService<TestService>()))
+                      .ExecuteCommand(new(10), CancellationToken.None);
 
         Assert.That(observedInstances, Has.Count.EqualTo(3));
         Assert.That(observedInstances[1], Is.Not.SameAs(observedInstances[0]));
         Assert.That(observedInstances[2], Is.SameAs(observedInstances[0]));
+    }
+
+    [Test]
+    public async Task GivenClientForInProcessHandlerWithMiddlewares_MiddlewaresFromClientAndFromHandlerAreCalled()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ITestCommandHandler>();
+
+        var command = new TestCommand(10);
+
+        _ = await handler.WithPipeline(pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                         .ExecuteCommand(command, CancellationToken.None);
+
+        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware), typeof(TestCommandMiddleware2) }));
+    }
+
+    [Test]
+    public async Task GivenClientWithoutResponseForInProcessHandlerWithMiddlewares_MiddlewaresFromClientAndFromHandlerAreCalled()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ITestCommandHandlerWithoutResponse>();
+
+        var command = new TestCommandWithoutResponse(10);
+
+        await handler.WithPipeline(pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                     .ExecuteCommand(command, CancellationToken.None);
+
+        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware), typeof(TestCommandMiddleware2) }));
+    }
+
+    [Test]
+    public async Task GivenClientWithMultiplePipelineConfigurations_PipelinesAreCalledInReverseOrder()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
+
+        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        var command = new TestCommand(10);
+
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                         .WithPipeline(p => p.Use<TestCommandMiddleware2>())
+                         .ExecuteCommand(command, CancellationToken.None);
+
+        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware) }));
+    }
+
+    [Test]
+    public async Task GivenClientWithoutResponseWithMultiplePipelineConfigurations_PipelinesAreCalledInReverseOrder()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
+
+        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
+
+        var command = new TestCommandWithoutResponse(10);
+
+        await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                     .WithPipeline(p => p.Use<TestCommandMiddleware2>())
+                     .ExecuteCommand(command, CancellationToken.None);
+
+        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command, command }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware) }));
     }
 
     [Test]
@@ -650,9 +735,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddSingleton(observations);
 
@@ -660,7 +743,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.WithPipeline(p => p.Use<TestCommandMiddleware2>())
+                                                                                   .ExecuteCommand(new(10), CancellationToken.None));
 
         Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
         Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware2)));
@@ -672,9 +756,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddSingleton(observations);
 
@@ -682,7 +764,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.WithPipeline(p => p.Use<TestCommandMiddleware2>())
+                                                                                   .ExecuteCommand(new(10), CancellationToken.None));
 
         Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
         Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware2)));
@@ -694,9 +777,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddSingleton(observations);
 
@@ -704,7 +785,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                                                                                   .ExecuteCommand(new(10), CancellationToken.None));
 
         Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
         Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware)));
@@ -716,9 +798,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddSingleton(observations);
 
@@ -726,7 +806,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                                                                                   .ExecuteCommand(new(10), CancellationToken.None));
 
         Assert.That(exception?.Message, Contains.Substring("trying to use unregistered middleware type"));
         Assert.That(exception?.Message, Contains.Substring(nameof(TestCommandMiddleware)));
@@ -738,9 +819,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var exception = new Exception();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<ThrowingTestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<ThrowingTestCommandMiddleware>()
                     .AddSingleton(exception);
@@ -749,14 +828,14 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use<ThrowingTestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+                                                                         .ExecuteCommand(new(10), CancellationToken.None));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
 
     protected abstract void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
         where THandler : class, ICommandHandler;
 
     private static ICommandTransportClient CreateTransport(ICommandTransportClientBuilder builder)
@@ -764,15 +843,39 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         return new TestCommandTransport(builder.ServiceProvider.GetRequiredService<TestObservations>());
     }
 
-    private sealed record TestCommand(int Payload);
+    public sealed record TestCommand(int Payload);
 
-    private sealed record TestCommandResponse(int Payload);
+    public sealed record TestCommandResponse(int Payload);
 
-    private sealed record TestCommandWithoutResponse(int Payload);
+    public sealed record TestCommandWithoutResponse(int Payload);
 
     private sealed record TestCommandMiddlewareConfiguration
     {
         public int Parameter { get; set; }
+    }
+
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
+
+    public interface ITestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>;
+
+    private class TestCommandHandler : ITestCommandHandler
+    {
+        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new TestCommandResponse(command.Payload));
+        }
+
+        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware2>();
+    }
+
+    private class TestCommandHandlerWithoutResponse : ITestCommandHandlerWithoutResponse
+    {
+        public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware2>();
     }
 
     private sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
@@ -1005,10 +1108,9 @@ public abstract class CommandClientMiddlewareFunctionalityTests
 public sealed class CommandClientMiddlewareFunctionalityWithSyncFactoryTests : CommandClientMiddlewareFunctionalityTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
-        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
+        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory);
     }
 }
 
@@ -1017,14 +1119,12 @@ public sealed class CommandClientMiddlewareFunctionalityWithSyncFactoryTests : C
 public sealed class CommandClientMiddlewareFunctionalityWithAsyncFactoryTests : CommandClientMiddlewareFunctionalityTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
         _ = services.AddConquerorCommandClient<THandler>(async b =>
-                                                         {
-                                                             await Task.Delay(1);
-                                                             return transportClientFactory(b);
-                                                         },
-                                                         configurePipeline ?? (_ => { }));
+        {
+            await Task.Delay(1);
+            return transportClientFactory(b);
+        });
     }
 }

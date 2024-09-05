@@ -26,8 +26,7 @@ public abstract class QueryClientCustomInterfaceTests
     }
 
     protected abstract void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
         where THandler : class, IQueryHandler;
 
     public sealed record TestQuery;
@@ -70,10 +69,9 @@ public abstract class QueryClientCustomInterfaceTests
 public sealed class QueryClientCustomInterfaceWithSyncFactoryTests : QueryClientCustomInterfaceTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
-        _ = services.AddConquerorQueryClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
+        _ = services.AddConquerorQueryClient<THandler>(transportClientFactory);
     }
 }
 
@@ -82,14 +80,12 @@ public sealed class QueryClientCustomInterfaceWithSyncFactoryTests : QueryClient
 public sealed class QueryClientCustomInterfaceWithAsyncFactoryTests : QueryClientCustomInterfaceTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
         _ = services.AddConquerorQueryClient<THandler>(async b =>
                                                        {
                                                            await Task.Delay(1);
                                                            return transportClientFactory(b);
-                                                       },
-                                                       configurePipeline ?? (_ => { }));
+                                                       });
     }
 }

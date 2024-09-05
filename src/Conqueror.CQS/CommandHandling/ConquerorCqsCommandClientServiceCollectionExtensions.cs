@@ -21,26 +21,10 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
     }
 
     public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
-                                                                         Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                                         Action<ICommandPipelineBuilder> configurePipeline)
-        where THandler : class, ICommandHandler
-    {
-        return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline);
-    }
-
-    public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
                                                                          Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory)
         where THandler : class, ICommandHandler
     {
         return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, null);
-    }
-
-    public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
-                                                                         Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                                         Action<ICommandPipelineBuilder> configurePipeline)
-        where THandler : class, ICommandHandler
-    {
-        return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, configurePipeline);
     }
 
     internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,

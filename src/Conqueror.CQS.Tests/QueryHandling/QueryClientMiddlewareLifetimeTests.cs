@@ -8,9 +8,9 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddSingleton(observations);
@@ -26,11 +26,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1 }));
     }
@@ -41,9 +41,9 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Scoped)
                     .AddSingleton(observations);
@@ -59,11 +59,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -74,9 +74,9 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
                     .AddSingleton(observations);
@@ -92,11 +92,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 5 }));
     }
@@ -107,13 +107,9 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
@@ -130,11 +126,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
     }
@@ -145,13 +141,9 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Scoped)
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>(ServiceLifetime.Scoped)
@@ -168,11 +160,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 2, 2, 3, 3, 1, 1, 2, 2 }));
     }
@@ -183,13 +175,9 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>(ServiceLifetime.Singleton)
@@ -206,11 +194,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5 }));
     }
@@ -221,13 +209,9 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>(ServiceLifetime.Singleton)
@@ -244,11 +228,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware2>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 3, 1, 4, 1, 5 }));
     }
@@ -259,11 +243,7 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryRetryMiddleware>()
-                                                                          .Use<TestQueryMiddleware>()
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
@@ -278,8 +258,14 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                              .Use<TestQueryMiddleware>()
+                                              .Use<TestQueryMiddleware2>())
+                          .ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                              .Use<TestQueryMiddleware>()
+                                              .Use<TestQueryMiddleware2>())
+                          .ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
     }
@@ -290,11 +276,7 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryRetryMiddleware>()
-                                                                          .Use<TestQueryMiddleware>()
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Scoped)
@@ -309,8 +291,14 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                              .Use<TestQueryMiddleware>()
+                                              .Use<TestQueryMiddleware2>())
+                          .ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                              .Use<TestQueryMiddleware>()
+                                              .Use<TestQueryMiddleware2>())
+                          .ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 1, 1, 2, 1 }));
     }
@@ -321,11 +309,7 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryRetryMiddleware>()
-                                                                          .Use<TestQueryMiddleware>()
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
@@ -340,8 +324,14 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                              .Use<TestQueryMiddleware>()
+                                              .Use<TestQueryMiddleware2>())
+                          .ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                              .Use<TestQueryMiddleware>()
+                                              .Use<TestQueryMiddleware2>())
+                          .ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 3, 1, 4, 1 }));
     }
@@ -352,11 +342,7 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
-                                                                    p => p.Use<TestQueryRetryMiddleware>()
-                                                                          .Use<TestQueryMiddleware>()
-                                                                          .Use<TestQueryMiddleware2>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
         _ = services.AddTransient<TestQueryTransport>()
                     .AddConquerorQueryMiddleware<TestQueryRetryMiddleware>()
@@ -372,8 +358,14 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler1 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler2 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                              .Use<TestQueryMiddleware>()
+                                              .Use<TestQueryMiddleware2>())
+                          .ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryRetryMiddleware>()
+                                              .Use<TestQueryMiddleware>()
+                                              .Use<TestQueryMiddleware2>())
+                          .ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.TransportInvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1 }));
     }
@@ -384,9 +376,7 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services,
-                                                                    CreateTransport,
-                                                                    p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddSingleton(observations);
@@ -395,7 +385,7 @@ public abstract class QueryClientMiddlewareLifetimeTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
     }
@@ -406,8 +396,8 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
@@ -424,11 +414,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -439,8 +429,8 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Scoped)
                     .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
@@ -457,11 +447,11 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -472,8 +462,8 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
-        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport, p => p.Use<TestQueryMiddleware>());
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
+        AddQueryClient<IQueryHandler<TestQuery2, TestQueryResponse2>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
                     .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
@@ -490,18 +480,17 @@ public abstract class QueryClientMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse2>>();
 
-        _ = await handler1.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler2.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler3.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler4.ExecuteQuery(new(), CancellationToken.None);
-        _ = await handler5.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler4.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
 
     protected abstract void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
         where THandler : class, IQueryHandler;
 
     private static IQueryTransportClient CreateTransport(IQueryTransportClientBuilder builder)
@@ -653,10 +642,9 @@ public abstract class QueryClientMiddlewareLifetimeTests
 public sealed class QueryClientMiddlewareLifetimeWithSyncFactoryTests : QueryClientMiddlewareLifetimeTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
-        _ = services.AddConquerorQueryClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
+        _ = services.AddConquerorQueryClient<THandler>(transportClientFactory);
     }
 }
 
@@ -665,14 +653,12 @@ public sealed class QueryClientMiddlewareLifetimeWithSyncFactoryTests : QueryCli
 public sealed class QueryClientMiddlewareLifetimeWithAsyncFactoryTests : QueryClientMiddlewareLifetimeTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,
-                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                     Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                     Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
         _ = services.AddConquerorQueryClient<THandler>(async b =>
-                                                       {
-                                                           await Task.Delay(1);
-                                                           return transportClientFactory(b);
-                                                       },
-                                                       configurePipeline ?? (_ => { }));
+        {
+            await Task.Delay(1);
+            return transportClientFactory(b);
+        });
     }
 }

@@ -206,11 +206,10 @@ Then, add an HTTP client for the command in `CountersProgram.cs` ([view complete
 builder.Services
        .AddConquerorCQSHttpClientServices()
        .AddConquerorCommandClient<ISetMostRecentlyIncrementedCounterForUserCommandHandler>(
-           b => b.UseHttp(b.ServiceProvider.GetRequiredService<IConfiguration>().GetValue<Uri>("UserHistoryBaseAddress")),
-           pipeline => pipeline.UseDefault());
+           b => b.UseHttp(b.ServiceProvider.GetRequiredService<IConfiguration>().GetValue<Uri>("UserHistoryBaseAddress")));
 ```
 
-The client is configured to use the `UserHistory` context's base address from the configuration, and we also configure the client's pipeline to use the same default pipeline that our handlers are using to add validation and logging (in a more complex application, you would likely want to create a dedicated default pipeline for HTTP command and query clients).
+The client is configured to use the `UserHistory` context's base address from the configuration.
 
 With these changes in place, you can run both the `UserHistory` app and the `Counters` app, and invoke the `IncrementCounterCommand` as well as the `GetMostRecentlyIncrementedCounterForUserQuery`:
 

@@ -8,8 +8,7 @@ var serverAddress = new Uri("http://localhost:5000");
 var host = await new HostBuilder().ConfigureServices(services =>
 {
     services.AddConquerorCQSHttpClientServices()
-            .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")),
-                                                                        pipeline => pipeline.UseDataAnnotationValidation())
+            .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")))
             .AddConquerorQueryClient<IGetCounterValueQueryHandler>(b => b.UseHttp(serverAddress))
             .AddConquerorCQSDataAnnotationValidationMiddlewares();
 }).StartAsync();
@@ -30,7 +29,8 @@ try
     {
         case "inc":
             var incrementHandler = host.Services.GetRequiredService<IIncrementCounterCommandHandler>();
-            var incResponse = await incrementHandler.ExecuteCommand(new(counterName));
+            var incResponse = await incrementHandler.WithPipeline(pipeline => pipeline.UseDataAnnotationValidation())
+                                                    .ExecuteCommand(new(counterName));
             Console.WriteLine($"incremented counter '{counterName}'; new value: {incResponse.NewCounterValue}");
             break;
 

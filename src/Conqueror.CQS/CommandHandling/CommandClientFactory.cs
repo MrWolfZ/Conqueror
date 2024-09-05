@@ -18,8 +18,7 @@ internal sealed class CommandClientFactory
     }
 
     public THandler CreateCommandClient<THandler>(IServiceProvider serviceProvider,
-                                                  Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                  Action<ICommandPipelineBuilder>? configurePipeline)
+                                                  Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory)
         where THandler : class, ICommandHandler
     {
         typeof(THandler).ValidateNoInvalidCommandHandlerInterface();
@@ -53,7 +52,7 @@ internal sealed class CommandClientFactory
 
         try
         {
-            var result = genericCreationMethod.Invoke(null, [serviceProvider, transportClientFactory, configurePipeline, commandMiddlewareRegistry]);
+            var result = genericCreationMethod.Invoke(null, [serviceProvider, transportClientFactory, commandMiddlewareRegistry]);
 
             if (result is not THandler handler)
             {
@@ -71,12 +70,11 @@ internal sealed class CommandClientFactory
 
     private static THandler CreateCommandClientInternal<THandler, TCommand, TResponse>(IServiceProvider serviceProvider,
                                                                                        Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                                                       Action<ICommandPipelineBuilder>? configurePipeline,
                                                                                        CommandMiddlewareRegistry commandMiddlewareRegistry)
         where THandler : class, ICommandHandler
         where TCommand : class
     {
-        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, new(transportClientFactory), configurePipeline, commandMiddlewareRegistry);
+        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, new(transportClientFactory), null, commandMiddlewareRegistry);
 
         if (typeof(THandler) == typeof(ICommandHandler<TCommand>))
         {

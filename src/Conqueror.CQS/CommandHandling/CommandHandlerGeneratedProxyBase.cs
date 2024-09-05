@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror.CQS.CommandHandling;
@@ -17,6 +18,11 @@ internal abstract class CommandHandlerGeneratedProxyBase<TCommand, TResponse> : 
     {
         return target.ExecuteCommand(command, cancellationToken);
     }
+
+    public ICommandHandler<TCommand, TResponse> WithPipeline(Action<ICommandPipelineBuilder> configure)
+    {
+        return target.WithPipeline(configure);
+    }
 }
 
 internal abstract class CommandHandlerGeneratedProxyBase<TCommand> : ICommandHandler<TCommand>
@@ -32,5 +38,10 @@ internal abstract class CommandHandlerGeneratedProxyBase<TCommand> : ICommandHan
     public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
     {
         return target.ExecuteCommand(command, cancellationToken);
+    }
+
+    public ICommandHandler<TCommand> WithPipeline(Action<ICommandPipelineBuilder> configure)
+    {
+        return target.WithPipeline(configure);
     }
 }

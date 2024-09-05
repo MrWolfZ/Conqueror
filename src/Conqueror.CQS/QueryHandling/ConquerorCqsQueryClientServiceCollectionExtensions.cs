@@ -21,26 +21,10 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
     }
 
     public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
-                                                                       Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                                       Action<IQueryPipelineBuilder> configurePipeline)
-        where THandler : class, IQueryHandler
-    {
-        return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, configurePipeline);
-    }
-
-    public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
                                                                        Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
         where THandler : class, IQueryHandler
     {
         return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, null);
-    }
-
-    public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
-                                                                       Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                                       Action<IQueryPipelineBuilder> configurePipeline)
-        where THandler : class, IQueryHandler
-    {
-        return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, configurePipeline);
     }
 
     internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,

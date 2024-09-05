@@ -43,4 +43,22 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
 
         return await pipeline.Execute<TCommand, TResponse>(serviceProvider, command, transportClientFactory, cancellationToken).ConfigureAwait(false);
     }
+
+    public ICommandHandler<TCommand, TResponse> WithPipeline(Action<ICommandPipelineBuilder> configure)
+    {
+        if (configurePipeline is not null)
+        {
+            var originalConfigure = configure;
+            configure = pipeline =>
+            {
+                originalConfigure(pipeline);
+                configurePipeline(pipeline);
+            };
+        }
+
+        return new CommandHandlerProxy<TCommand, TResponse>(serviceProvider,
+                                                            transportClientFactory,
+                                                            configure,
+                                                            commandMiddlewareRegistry);
+    }
 }

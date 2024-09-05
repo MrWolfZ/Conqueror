@@ -18,8 +18,7 @@ internal sealed class QueryClientFactory
     }
 
     public THandler CreateQueryClient<THandler>(IServiceProvider serviceProvider,
-                                                Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                Action<IQueryPipelineBuilder>? configurePipeline)
+                                                Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
         where THandler : class, IQueryHandler
     {
         typeof(THandler).ValidateNoInvalidQueryHandlerInterface();
@@ -53,7 +52,7 @@ internal sealed class QueryClientFactory
 
         try
         {
-            var result = genericCreationMethod.Invoke(null, [serviceProvider, transportClientFactory, configurePipeline, queryMiddlewareRegistry]);
+            var result = genericCreationMethod.Invoke(null, [serviceProvider, transportClientFactory, queryMiddlewareRegistry]);
 
             if (result is not THandler handler)
             {
@@ -71,12 +70,11 @@ internal sealed class QueryClientFactory
 
     private static THandler CreateQueryClientInternal<THandler, TQuery, TResponse>(IServiceProvider serviceProvider,
                                                                                    Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                                                   Action<IQueryPipelineBuilder>? configurePipeline,
                                                                                    QueryMiddlewareRegistry queryMiddlewareRegistry)
         where THandler : class, IQueryHandler
         where TQuery : class
     {
-        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider, new(transportClientFactory), configurePipeline, queryMiddlewareRegistry);
+        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider, new(transportClientFactory), null, queryMiddlewareRegistry);
 
         if (typeof(THandler) == typeof(IQueryHandler<TQuery, TResponse>))
         {

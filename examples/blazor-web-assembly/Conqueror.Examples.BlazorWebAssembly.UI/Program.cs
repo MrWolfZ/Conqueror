@@ -13,8 +13,8 @@ builder.Services
        .AddConquerorCQSTypesFromExecutingAssembly()
        .AddConquerorCQSTypesFromAssembly(typeof(CommandTimeoutMiddleware).Assembly)
        .AddConquerorCQSHttpClientServices()
-       .AddConquerorQueryClient<IGetSharedCounterValueQueryHandler>(b => b.UseHttpApi(), pipeline => pipeline.UseDefaultHttpPipeline())
-       .AddConquerorCommandClient<IIncrementSharedCounterValueCommandHandler>(b => b.UseHttpApi(), pipeline => pipeline.UseDefaultHttpPipeline())
+       .AddConquerorQueryClient<IGetSharedCounterValueQueryHandler>(b => b.UseHttpApi())
+       .AddConquerorCommandClient<IIncrementSharedCounterValueCommandHandler>(b => b.UseHttpApi())
        .AddSingleton(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
 await builder.Build().RunAsync();

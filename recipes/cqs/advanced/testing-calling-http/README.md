@@ -136,13 +136,12 @@ public async Task GivenExistingCounter_WhenExecutingIncOperation_PrintsIncrement
 The biggest advantage of this approach is that it is very simple. However, let's recall how the `IIncrementCounterCommandHandler` HTTP client is configured:
 
 ```cs
-services.AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")),
-                                                                    pipeline => pipeline.UseDataAnnotationValidation())
+services.AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")))
 ```
 
-The client adds a custom HTTP header and also declares a middleware pipeline that performs data annotation validation on the client before the command is sent to the server. With the unit testing approach above, these two aspects are not tested at all, since we completely replaced the `IIncrementCounterCommandHandler`. If we want to test these aspects, we need to do something else.
+The client adds a custom HTTP header. With the unit testing approach above, this aspect is not tested at all, since we completely replaced the `IIncrementCounterCommandHandler`. If we want to test this aspects, we need to do something else.
 
-What we are going to do is to create a simple web host that is configured to use the ASP.NET Core test server. In this web server, we are going to add our command handler delegate and then we will configure the **Conqueror.CQS** HTTP client services to use the test server's test client. With that setup, the command client execution will go through the full middleware pipeline and HTTP invocation, allowing us to test those aspects as well.
+What we are going to do is to create a simple web host that is configured to use the ASP.NET Core test server. In this web server, we are going to add our command handler delegate and then we will configure the **Conqueror.CQS** HTTP client services to use the test server's test client. With that setup, the command client execution will go through the full HTTP invocation, allowing us to test aspects like HTTP headers as well.
 
 > The test project is already configured with all the required dependencies. You need the [Microsoft.AspNetCore.Mvc.Testing](https://www.nuget.org/packages/Microsoft.AspNetCore.Mvc.Testing) and [Conqueror.CQS.Transport.Http.Server.AspNetCore](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Server.AspNetCore) packages.
 

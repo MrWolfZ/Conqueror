@@ -64,12 +64,12 @@ public abstract class QueryClientFactoryTests
         var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
         var client = CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(clientFactory,
-                                                                                    b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
-                                                                                    p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+                                                                                    b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
         var query = new TestQuery();
 
-        _ = await client.ExecuteQuery(query, CancellationToken.None);
+        _ = await client.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                        .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
     }
@@ -89,12 +89,12 @@ public abstract class QueryClientFactoryTests
         var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
         var client = CreateQueryClient<ITestQueryHandler>(clientFactory,
-                                                          b => b.ServiceProvider.GetRequiredService<TestQueryTransport>(),
-                                                          p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+                                                          b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
 
         var query = new TestQuery();
 
-        _ = await client.ExecuteQuery(query, CancellationToken.None);
+        _ = await client.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+                        .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
     }
@@ -185,8 +185,7 @@ public abstract class QueryClientFactoryTests
     }
 
     protected abstract THandler CreateQueryClient<THandler>(IQueryClientFactory clientFactory,
-                                                            Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                            Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                            Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
         where THandler : class, IQueryHandler;
 
     public sealed record TestQuery;
@@ -281,10 +280,9 @@ public abstract class QueryClientFactoryTests
 public sealed class QueryClientFactoryWithSyncFactoryTests : QueryClientFactoryTests
 {
     protected override THandler CreateQueryClient<THandler>(IQueryClientFactory clientFactory,
-                                                            Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                            Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                            Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
-        return clientFactory.CreateQueryClient<THandler>(transportClientFactory, configurePipeline);
+        return clientFactory.CreateQueryClient<THandler>(transportClientFactory);
     }
 }
 
@@ -293,14 +291,12 @@ public sealed class QueryClientFactoryWithSyncFactoryTests : QueryClientFactoryT
 public sealed class QueryClientFactoryWithAsyncFactoryTests : QueryClientFactoryTests
 {
     protected override THandler CreateQueryClient<THandler>(IQueryClientFactory clientFactory,
-                                                            Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                            Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                            Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
         return clientFactory.CreateQueryClient<THandler>(async b =>
                                                          {
                                                              await Task.Delay(1);
                                                              return transportClientFactory(b);
-                                                         },
-                                                         configurePipeline);
+                                                         });
     }
 }

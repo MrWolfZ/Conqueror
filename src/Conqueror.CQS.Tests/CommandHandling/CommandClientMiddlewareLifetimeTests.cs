@@ -8,9 +8,9 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddSingleton(observations);
@@ -28,13 +28,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1, 1 }));
     }
@@ -45,9 +45,9 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Scoped)
                     .AddSingleton(observations);
@@ -65,13 +65,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 1, 2, 3 }));
     }
@@ -82,9 +82,9 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
                     .AddSingleton(observations);
@@ -102,13 +102,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 7 }));
     }
@@ -119,17 +119,11 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services,
-                                                                              CreateTransport,
-                                                                              p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
@@ -148,13 +142,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
     }
@@ -165,17 +159,11 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services,
-                                                                              CreateTransport,
-                                                                              p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Scoped)
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>(ServiceLifetime.Scoped)
@@ -194,13 +182,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 2, 2, 3, 3 }));
     }
@@ -211,17 +199,11 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services,
-                                                                              CreateTransport,
-                                                                              p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>(ServiceLifetime.Singleton)
@@ -240,13 +222,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7 }));
     }
@@ -257,17 +239,11 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services,
-                                                                              CreateTransport,
-                                                                              p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>(ServiceLifetime.Singleton)
@@ -286,13 +262,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware2>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 3, 1, 4, 1, 5, 1, 6, 1, 7 }));
     }
@@ -303,11 +279,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandRetryMiddleware>()
-                                                                                  .Use<TestCommandMiddleware>()
-                                                                                  .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
@@ -322,8 +294,14 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                              .Use<TestCommandMiddleware>()
+                                              .Use<TestCommandMiddleware2>())
+                          .ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                              .Use<TestCommandMiddleware>()
+                                              .Use<TestCommandMiddleware2>())
+                          .ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }));
     }
@@ -334,11 +312,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandRetryMiddleware>()
-                                                                                  .Use<TestCommandMiddleware>()
-                                                                                  .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Scoped)
@@ -353,8 +327,14 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                              .Use<TestCommandMiddleware>()
+                                              .Use<TestCommandMiddleware2>())
+                          .ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                              .Use<TestCommandMiddleware>()
+                                              .Use<TestCommandMiddleware2>())
+                          .ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 1, 1, 2, 1 }));
     }
@@ -365,11 +345,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandRetryMiddleware>()
-                                                                                  .Use<TestCommandMiddleware>()
-                                                                                  .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
@@ -384,8 +360,14 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                              .Use<TestCommandMiddleware>()
+                                              .Use<TestCommandMiddleware2>())
+                          .ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                              .Use<TestCommandMiddleware>()
+                                              .Use<TestCommandMiddleware2>())
+                          .ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 2, 1, 1, 3, 1, 4, 1 }));
     }
@@ -396,11 +378,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            b => b.ServiceProvider.GetRequiredService<TestCommandTransport>(),
-                                                                            p => p.Use<TestCommandRetryMiddleware>()
-                                                                                  .Use<TestCommandMiddleware>()
-                                                                                  .Use<TestCommandMiddleware2>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
 
         _ = services.AddTransient<TestCommandTransport>()
                     .AddConquerorCommandMiddleware<TestCommandRetryMiddleware>()
@@ -416,8 +394,14 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                              .Use<TestCommandMiddleware>()
+                                              .Use<TestCommandMiddleware2>())
+                          .ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandRetryMiddleware>()
+                                              .Use<TestCommandMiddleware>()
+                                              .Use<TestCommandMiddleware2>())
+                          .ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.TransportInvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1 }));
     }
@@ -428,9 +412,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services,
-                                                                            CreateTransport,
-                                                                            p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddSingleton(observations);
@@ -439,7 +421,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
     }
@@ -450,9 +432,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services,
-                                                                      CreateTransport,
-                                                                      p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>());
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddSingleton(observations);
@@ -461,7 +441,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        await handler.ExecuteCommand(new(), CancellationToken.None);
+        await handler.WithPipeline(p => p.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.InvocationCounts, Is.EquivalentTo(new[] { 1, 1 }));
     }
@@ -472,9 +452,9 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
@@ -493,13 +473,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 1, 2, 3 }));
     }
@@ -510,9 +490,9 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Scoped)
                     .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
@@ -531,13 +511,13 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 1, 2, 3 }));
     }
@@ -548,9 +528,9 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
-        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport, p => p.Use<TestCommandMiddleware>());
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommand2, TestCommandResponse2>>(services, CreateTransport);
+        AddCommandClient<ICommandHandler<TestCommandWithoutResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
                     .AddScoped<DependencyResolvedDuringMiddlewareExecution>()
@@ -569,20 +549,19 @@ public abstract class CommandClientMiddlewareLifetimeTests
         var handler6 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse2>>();
         var handler7 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
 
-        _ = await handler1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler2.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler3.ExecuteCommand(new(), CancellationToken.None);
-        await handler4.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler5.ExecuteCommand(new(), CancellationToken.None);
-        _ = await handler6.ExecuteCommand(new(), CancellationToken.None);
-        await handler7.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler1.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler2.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler3.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler4.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler5.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler6.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        await handler7.WithPipeline(p => p.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 1, 2, 3 }));
     }
 
     protected abstract void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
         where THandler : class, ICommandHandler;
 
     private static ICommandTransportClient CreateTransport(ICommandTransportClientBuilder builder)
@@ -736,10 +715,9 @@ public abstract class CommandClientMiddlewareLifetimeTests
 public sealed class CommandClientMiddlewareLifetimeWithSyncFactoryTests : CommandClientMiddlewareLifetimeTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
-        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory, configurePipeline ?? (_ => { }));
+        _ = services.AddConquerorCommandClient<THandler>(transportClientFactory);
     }
 }
 
@@ -748,14 +726,12 @@ public sealed class CommandClientMiddlewareLifetimeWithSyncFactoryTests : Comman
 public sealed class CommandClientMiddlewareLifetimeWithAsyncFactoryTests : CommandClientMiddlewareLifetimeTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,
-                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                       Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                       Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
         _ = services.AddConquerorCommandClient<THandler>(async b =>
-                                                         {
-                                                             await Task.Delay(1);
-                                                             return transportClientFactory(b);
-                                                         },
-                                                         configurePipeline ?? (_ => { }));
+        {
+            await Task.Delay(1);
+            return transportClientFactory(b);
+        });
     }
 }
