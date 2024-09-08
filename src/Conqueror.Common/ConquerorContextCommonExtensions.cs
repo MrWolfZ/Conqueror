@@ -10,13 +10,16 @@ internal static class ConquerorContextCommonExtensions
     ///     This method is typically called from a server-side transport implementation and does not need to be called by user-code.
     /// </summary>
     /// <param name="conquerorContext">The conqueror context to mark</param>
-    public static void SignalExecutionFromTransport(this IConquerorContext conquerorContext)
+    /// <param name="transportTypeName">The name of the transport type that was executed</param>
+    public static void SignalExecutionFromTransport(this IConquerorContext conquerorContext, string transportTypeName)
     {
-        conquerorContext.DownstreamContextData.Set(SignalExecutionFromTransportKey, string.Empty, ConquerorContextDataScope.InProcess);
+        conquerorContext.DownstreamContextData.Set(SignalExecutionFromTransportKey, transportTypeName, ConquerorContextDataScope.InProcess);
     }
 
-    public static bool IsExecutionFromTransport(this IConquerorContext conquerorContext)
+    public static string? DrainExecutionTransportTypeName(this IConquerorContext conquerorContext)
     {
-        return conquerorContext.DownstreamContextData.Remove(SignalExecutionFromTransportKey);
+        var value = conquerorContext.DownstreamContextData.Get<string>(SignalExecutionFromTransportKey);
+        _ = conquerorContext.DownstreamContextData.Remove(SignalExecutionFromTransportKey);
+        return value;
     }
 }

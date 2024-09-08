@@ -30,7 +30,8 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
-        if (!conquerorContext.IsExecutionFromTransport() || conquerorContext.GetCommandId() is null)
+        var transportTypeName = conquerorContext.DrainExecutionTransportTypeName();
+        if (transportTypeName is null || conquerorContext.GetCommandId() is null)
         {
             conquerorContext.SetCommandId(ActivitySpanId.CreateRandom().ToString());
         }
@@ -41,7 +42,12 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
 
         var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        return await pipeline.Execute<TCommand, TResponse>(serviceProvider, command, transportClientFactory, cancellationToken).ConfigureAwait(false);
+        return await pipeline.Execute<TCommand, TResponse>(serviceProvider,
+                                                           command,
+                                                           transportClientFactory,
+                                                           transportTypeName,
+                                                           cancellationToken)
+                             .ConfigureAwait(false);
     }
 
     public ICommandHandler<TCommand, TResponse> WithPipeline(Action<ICommandPipelineBuilder> configure)

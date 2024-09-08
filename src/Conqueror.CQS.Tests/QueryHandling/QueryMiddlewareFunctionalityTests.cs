@@ -1,3 +1,5 @@
+using Conqueror.CQS.QueryHandling;
+
 namespace Conqueror.CQS.Tests.QueryHandling;
 
 public sealed class QueryMiddlewareFunctionalityTests
@@ -345,6 +347,28 @@ public sealed class QueryMiddlewareFunctionalityTests
         _ = await handler.ExecuteQuery(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(new[] { tokenSource.Token, tokenSource.Token }));
+    }
+
+    [Test]
+    public async Task GivenHandler_MiddlewareContextContainsTransportType()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleMiddlewares>()
+                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                    .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        using var tokenSource = new CancellationTokenSource();
+
+        _ = await handler.ExecuteQuery(new(10), tokenSource.Token);
+
+        var transportType = new QueryTransportType(InMemoryQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server);
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(new[] { transportType, transportType }));
     }
 
     [Test]
@@ -736,6 +760,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
             observations.ConfigurationFromMiddlewares.Add(ctx.Configuration);
 
             return await ctx.Next(ctx.Query, ctx.CancellationToken);
@@ -758,6 +783,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             return await ctx.Next(ctx.Query, ctx.CancellationToken);
         }
@@ -779,6 +805,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             _ = await ctx.Next(ctx.Query, ctx.CancellationToken);
             return await ctx.Next(ctx.Query, ctx.CancellationToken);
@@ -803,6 +830,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             var query = ctx.Query;
 
@@ -842,6 +870,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             var query = ctx.Query;
 
@@ -907,6 +936,8 @@ public sealed class QueryMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
 
         public List<object> ConfigurationFromMiddlewares { get; } = new();
+
+        public List<QueryTransportType> TransportTypesFromMiddlewares { get; } = new();
     }
 
     private sealed class CancellationTokensToUse

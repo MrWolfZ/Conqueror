@@ -448,6 +448,31 @@ public abstract class CommandClientMiddlewareFunctionalityTests
     }
 
     [Test]
+    public async Task GivenClient_MiddlewareContextContainsTransportTypeFromTransportClient()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
+
+        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+        using var tokenSource = new CancellationTokenSource();
+
+        _ = await handler.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
+                                             .Use<TestCommandMiddleware2>())
+                         .ExecuteCommand(new(10), tokenSource.Token);
+
+        var transportType = new CommandTransportType("test", CommandTransportRole.Client);
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(new[] { transportType, transportType }));
+    }
+
+    [Test]
     public async Task GivenMiddlewares_MiddlewaresCanChangeTheCommand()
     {
         var services = new ServiceCollection();
@@ -896,6 +921,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
             observations.ConfigurationFromMiddlewares.Add(ctx.Configuration);
 
             return await ctx.Next(ctx.Command, ctx.CancellationToken);
@@ -918,6 +944,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             return await ctx.Next(ctx.Command, ctx.CancellationToken);
         }
@@ -939,6 +966,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             _ = await ctx.Next(ctx.Command, ctx.CancellationToken);
             return await ctx.Next(ctx.Command, ctx.CancellationToken);
@@ -963,6 +991,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             var command = ctx.Command;
 
@@ -1007,6 +1036,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             var command = ctx.Command;
 
@@ -1059,6 +1089,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
             this.observations = observations;
         }
 
+        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)
@@ -1093,6 +1125,8 @@ public abstract class CommandClientMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
 
         public List<object> ConfigurationFromMiddlewares { get; } = new();
+
+        public List<CommandTransportType> TransportTypesFromMiddlewares { get; } = new();
     }
 
     private sealed class CancellationTokensToUse

@@ -16,6 +16,7 @@ internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConf
                                            TConfiguration configuration,
                                            IServiceProvider serviceProvider,
                                            IConquerorContext conquerorContext,
+                                           CommandTransportType transportType,
                                            CancellationToken cancellationToken)
     {
         this.next = next;
@@ -23,6 +24,7 @@ internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConf
         CancellationToken = cancellationToken;
         ServiceProvider = serviceProvider;
         ConquerorContext = conquerorContext;
+        TransportType = transportType;
         Configuration = configuration;
     }
 
@@ -35,6 +37,8 @@ internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConf
     public override IServiceProvider ServiceProvider { get; }
 
     public override IConquerorContext ConquerorContext { get; }
+
+    public override CommandTransportType TransportType { get; }
 
     public override TConfiguration Configuration { get; }
 

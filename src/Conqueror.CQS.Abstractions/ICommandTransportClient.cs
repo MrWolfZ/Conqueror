@@ -10,4 +10,6 @@ public interface ICommandTransportClient
                                                         IServiceProvider serviceProvider,
                                                         CancellationToken cancellationToken)
         where TCommand : class;
+
+    CommandTransportType TransportType { get; }
 }

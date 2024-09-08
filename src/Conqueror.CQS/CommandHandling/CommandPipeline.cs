@@ -20,10 +20,11 @@ internal sealed class CommandPipeline
     public async Task<TResponse> Execute<TCommand, TResponse>(IServiceProvider serviceProvider,
                                                               TCommand initialCommand,
                                                               CommandTransportClientFactory transportClientFactory,
+                                                              string? transportTypeName,
                                                               CancellationToken cancellationToken)
         where TCommand : class
     {
-        var transportClient = await transportClientFactory.Create(typeof(TCommand), serviceProvider).ConfigureAwait(false);
+        var transportClient = await transportClientFactory.Create(typeof(TCommand), typeof(TResponse), serviceProvider).ConfigureAwait(false);
         return await ExecuteNextMiddleware(0, initialCommand, conquerorContext, cancellationToken).ConfigureAwait(false);
 
         async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, IConquerorContext ctx, CancellationToken token)
@@ -34,7 +35,15 @@ internal sealed class CommandPipeline
             }
 
             var (_, middlewareConfiguration, invoker) = middlewares[index];
-            return await invoker.Invoke(command, (c, t) => ExecuteNextMiddleware(index + 1, c, ctx, t), middlewareConfiguration, serviceProvider, ctx, token).ConfigureAwait(false);
+            var transportType = transportClient.TransportType with { Name = transportTypeName ?? transportClient.TransportType.Name };
+            return await invoker.Invoke(command,
+                                        (c, t) => ExecuteNextMiddleware(index + 1, c, ctx, t),
+                                        middlewareConfiguration,
+                                        serviceProvider,
+                                        ctx,
+                                        transportType,
+                                        token)
+                                .ConfigureAwait(false);
         }
     }
 }

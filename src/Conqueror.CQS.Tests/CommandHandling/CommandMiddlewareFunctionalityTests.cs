@@ -1,3 +1,5 @@
+using Conqueror.CQS.CommandHandling;
+
 namespace Conqueror.CQS.Tests.CommandHandling;
 
 public sealed class CommandMiddlewareFunctionalityTests
@@ -434,6 +436,28 @@ public sealed class CommandMiddlewareFunctionalityTests
         _ = await handler.ExecuteCommand(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(new[] { tokenSource.Token, tokenSource.Token }));
+    }
+
+    [Test]
+    public async Task GivenHandler_MiddlewareContextContainsTransportType()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorCommandHandler<TestCommandHandlerWithMultipleMiddlewares>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+        using var tokenSource = new CancellationTokenSource();
+
+        _ = await handler.ExecuteCommand(new(10), tokenSource.Token);
+
+        var transportType = new CommandTransportType(InMemoryCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server);
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(new[] { transportType, transportType }));
     }
 
     [Test]
@@ -1069,6 +1093,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
             observations.ConfigurationFromMiddlewares.Add(ctx.Configuration);
 
             return await ctx.Next(ctx.Command, ctx.CancellationToken);
@@ -1091,6 +1116,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             return await ctx.Next(ctx.Command, ctx.CancellationToken);
         }
@@ -1112,6 +1138,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             _ = await ctx.Next(ctx.Command, ctx.CancellationToken);
             return await ctx.Next(ctx.Command, ctx.CancellationToken);
@@ -1136,6 +1163,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             var command = ctx.Command;
 
@@ -1180,6 +1208,8 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.CommandsFromMiddlewares.Add(ctx.Command);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             var command = ctx.Command;
 
@@ -1250,6 +1280,8 @@ public sealed class CommandMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
 
         public List<object> ConfigurationFromMiddlewares { get; } = new();
+
+        public List<CommandTransportType> TransportTypesFromMiddlewares { get; } = new();
     }
 
     private sealed class CancellationTokensToUse

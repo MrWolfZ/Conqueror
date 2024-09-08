@@ -25,6 +25,8 @@ internal sealed class HttpQueryTransportClient : IQueryTransportClient
         Options = options;
     }
 
+    public QueryTransportType TransportType => new(HttpConstants.TransportName, QueryTransportRole.Client);
+
     public ResolvedHttpClientOptions Options { get; }
 
     public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,

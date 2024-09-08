@@ -14,6 +14,8 @@ internal sealed class InMemoryCommandTransport : ICommandTransportClient
         this.handlerType = handlerType;
     }
 
+    public CommandTransportType TransportType => new(InMemoryCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server);
+
     public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)

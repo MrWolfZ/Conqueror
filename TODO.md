@@ -78,6 +78,12 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
+- [ ] refactor context data tests to use smarter test case generation
+- [ ] create transport client before pipeline execution
+- [ ] expose transport type on middleware context
+  - [ ] including http and client/server
+  - [ ] add helper methods to check transport type
+  - [ ] expose `UseInMemory` transport builder extension method
 - [ ] move publisher and observer code into dedicated directories
 - [ ] move delegate handler logic into dedicated factory instead of service collection
 - [ ] integrate pipeline configuration interface into observer interface
@@ -121,6 +127,12 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Streaming
 
+- [ ] refactor context data tests to use smarter test case generation
+- [ ] create transport client before pipeline execution
+- [ ] expose transport type on middleware context
+  - [ ] including http and client/server
+  - [ ] add helper methods to check transport type
+  - [ ] expose `UseInMemory` transport builder extension method
 - [ ] integrate pipeline configuration interface into observer interface
 - [ ] make pipeline builder interface generic
 - [ ] improve performance by using loop instead of recursion in pipeline

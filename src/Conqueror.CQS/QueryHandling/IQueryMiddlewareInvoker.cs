@@ -13,6 +13,7 @@ internal interface IQueryMiddlewareInvoker
                                               object? middlewareConfiguration,
                                               IServiceProvider serviceProvider,
                                               IConquerorContext conquerorContext,
+                                              QueryTransportType transportType,
                                               CancellationToken cancellationToken)
         where TQuery : class;
 }

@@ -7,4 +7,6 @@ public interface ICommandTransportClientBuilder
     IServiceProvider ServiceProvider { get; }
 
     Type CommandType { get; }
+
+    Type ResponseType { get; }
 }

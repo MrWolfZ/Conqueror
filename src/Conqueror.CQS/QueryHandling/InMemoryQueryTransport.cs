@@ -14,6 +14,8 @@ internal sealed class InMemoryQueryTransport : IQueryTransportClient
         this.handlerType = handlerType;
     }
 
+    public QueryTransportType TransportType => new(InMemoryQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server);
+
     public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                            IServiceProvider serviceProvider,
                                                            CancellationToken cancellationToken)

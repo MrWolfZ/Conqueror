@@ -677,6 +677,27 @@ public sealed class CommandHttpClientRegistrationTests
         _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteCommand(new(), CancellationToken.None));
     }
 
+    [Test]
+    public async Task GivenHttpClient_WhenExecutingMiddleware_MiddlewareContextContainsCorrectTransportType()
+    {
+        using var testClient = new TestHttpClient();
+
+        var services = new ServiceCollection();
+        _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(testClient))
+                    .AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
+                    .AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(new("http://expected.localhost")));
+
+        await using var provider = services.BuildServiceProvider();
+
+        var client = provider.GetRequiredService<ITestCommandHandler>();
+
+        _ = await client.WithPipeline(pipeline => pipeline.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+
+        var seenTransportType = provider.GetRequiredService<TestCommandMiddleware>().SeenTransportType;
+        Assert.That(seenTransportType?.IsHttp(), Is.True);
+        Assert.That(seenTransportType?.Role, Is.EqualTo(CommandTransportRole.Client));
+    }
+
     [HttpCommand]
     public sealed record TestCommand
     {
@@ -698,8 +719,22 @@ public sealed class CommandHttpClientRegistrationTests
     {
     }
 
+    private sealed class TestCommandMiddleware : ICommandMiddleware
+    {
+        public CommandTransportType? SeenTransportType { get; private set; }
+
+        public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+            where TCommand : class
+        {
+            SeenTransportType = ctx.TransportType;
+            return ctx.Next(ctx.Command, ctx.CancellationToken);
+        }
+    }
+
     private sealed class TestCommandTransportClient : ICommandTransportClient
     {
+        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+
         public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                    IServiceProvider serviceProvider,
                                                                    CancellationToken cancellationToken)

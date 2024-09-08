@@ -586,6 +586,8 @@ public abstract class QueryClientMiddlewareLifetimeTests
             this.observations = observations;
         }
 
+        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
+
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)

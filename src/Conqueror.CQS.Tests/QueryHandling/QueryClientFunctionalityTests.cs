@@ -141,6 +141,8 @@ public abstract class QueryClientFunctionalityTests
             this.observations = observations;
         }
 
+        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
+
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)
@@ -163,6 +165,8 @@ public abstract class QueryClientFunctionalityTests
         {
             this.exception = exception;
         }
+
+        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
 
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,

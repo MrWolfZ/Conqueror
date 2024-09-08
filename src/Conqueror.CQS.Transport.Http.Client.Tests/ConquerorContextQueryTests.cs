@@ -265,7 +265,7 @@ public class ConquerorContextQueryTests : TestBase
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
         Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.AsKeyValuePairs<string>(), Is.Not.SubsetOf(ContextData));
     }
-    
+
     [Test]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
     public async Task GivenManuallyCreatedContextOnClientWithDownstreamAndBidirectionalData_ContextIsReceivedInHandlerAcrossMultipleInvocations()
@@ -1103,6 +1103,8 @@ public class ConquerorContextQueryTests : TestBase
             this.conquerorContextAccessor = conquerorContextAccessor;
             this.testObservations = testObservations;
         }
+
+        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
 
         public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                IServiceProvider serviceProvider,

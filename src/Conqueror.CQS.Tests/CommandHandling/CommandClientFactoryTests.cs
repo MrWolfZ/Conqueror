@@ -300,6 +300,8 @@ public abstract class CommandClientFactoryTests
             this.responses = responses;
         }
 
+        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)

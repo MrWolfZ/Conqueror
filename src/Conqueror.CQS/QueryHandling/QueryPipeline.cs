@@ -20,10 +20,11 @@ internal sealed class QueryPipeline
     public async Task<TResponse> Execute<TQuery, TResponse>(IServiceProvider serviceProvider,
                                                             TQuery initialQuery,
                                                             QueryTransportClientFactory transportClientFactory,
+                                                            string? transportTypeName,
                                                             CancellationToken cancellationToken)
         where TQuery : class
     {
-        var transportClient = await transportClientFactory.Create(typeof(TQuery), serviceProvider).ConfigureAwait(false);
+        var transportClient = await transportClientFactory.Create(typeof(TQuery), typeof(TResponse), serviceProvider).ConfigureAwait(false);
         return await ExecuteNextMiddleware(0, initialQuery, conquerorContext, cancellationToken).ConfigureAwait(false);
 
         async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, IConquerorContext ctx, CancellationToken token)
@@ -34,7 +35,15 @@ internal sealed class QueryPipeline
             }
 
             var (_, middlewareConfiguration, invoker) = middlewares[index];
-            return await invoker.Invoke(query, (q, t) => ExecuteNextMiddleware(index + 1, q, ctx, t), middlewareConfiguration, serviceProvider, ctx, token).ConfigureAwait(false);
+            var transportType = transportClient.TransportType with { Name = transportTypeName ?? transportClient.TransportType.Name };
+            return await invoker.Invoke(query,
+                                        (q, t) => ExecuteNextMiddleware(index + 1, q, ctx, t),
+                                        middlewareConfiguration,
+                                        serviceProvider,
+                                        ctx,
+                                        transportType,
+                                        token)
+                                .ConfigureAwait(false);
         }
     }
 }

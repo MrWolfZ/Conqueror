@@ -34,7 +34,7 @@ internal sealed class StreamProducerProxy<TRequest, TItem> : IStreamProducer<TRe
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
-        if (!conquerorContext.IsExecutionFromTransport() || conquerorContext.GetStreamingRequestId() is null)
+        if (conquerorContext.DrainExecutionTransportTypeName() is null || conquerorContext.GetStreamingRequestId() is null)
         {
             conquerorContext.SetStreamingRequestId(ActivitySpanId.CreateRandom().ToString());
         }

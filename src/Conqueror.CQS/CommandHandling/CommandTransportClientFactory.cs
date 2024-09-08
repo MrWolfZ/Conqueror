@@ -24,14 +24,14 @@ internal sealed class CommandTransportClientFactory
         this.asyncTransportClientFactory = asyncTransportClientFactory;
     }
 
-    public Task<ICommandTransportClient> Create(Type commandType, IServiceProvider serviceProvider)
+    public Task<ICommandTransportClient> Create(Type commandType, Type responseType, IServiceProvider serviceProvider)
     {
         if (transportClient is not null)
         {
             return Task.FromResult(transportClient);
         }
 
-        var transportBuilder = new CommandTransportClientBuilder(serviceProvider, commandType);
+        var transportBuilder = new CommandTransportClientBuilder(serviceProvider, commandType, responseType);
 
         if (syncTransportClientFactory is not null)
         {

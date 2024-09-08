@@ -350,6 +350,31 @@ public abstract class QueryClientMiddlewareFunctionalityTests
     }
 
     [Test]
+    public async Task GivenClient_MiddlewareContextContainsTransportTypeFromTransportClient()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
+
+        _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>()
+                    .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+        using var tokenSource = new CancellationTokenSource();
+
+        _ = await handler.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
+                                             .Use<TestQueryMiddleware2>())
+                         .ExecuteQuery(new(10), tokenSource.Token);
+
+        var transportType = new QueryTransportType("test", QueryTransportRole.Client);
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(new[] { transportType, transportType }));
+    }
+
+    [Test]
     public async Task GivenMiddlewares_MiddlewaresCanChangeTheQuery()
     {
         var services = new ServiceCollection();
@@ -630,6 +655,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
             observations.ConfigurationFromMiddlewares.Add(ctx.Configuration);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             return await ctx.Next(ctx.Query, ctx.CancellationToken);
         }
@@ -651,6 +677,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             return await ctx.Next(ctx.Query, ctx.CancellationToken);
         }
@@ -672,6 +699,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             _ = await ctx.Next(ctx.Query, ctx.CancellationToken);
             return await ctx.Next(ctx.Query, ctx.CancellationToken);
@@ -696,6 +724,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             var query = ctx.Query;
 
@@ -735,6 +764,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
             observations.MiddlewareTypes.Add(GetType());
             observations.QueriesFromMiddlewares.Add(ctx.Query);
             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
 
             var query = ctx.Query;
 
@@ -782,6 +812,8 @@ public abstract class QueryClientMiddlewareFunctionalityTests
             this.observations = observations;
         }
 
+        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
+
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)
@@ -811,6 +843,8 @@ public abstract class QueryClientMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
 
         public List<object> ConfigurationFromMiddlewares { get; } = new();
+
+        public List<QueryTransportType> TransportTypesFromMiddlewares { get; } = new();
     }
 
     private sealed class CancellationTokensToUse

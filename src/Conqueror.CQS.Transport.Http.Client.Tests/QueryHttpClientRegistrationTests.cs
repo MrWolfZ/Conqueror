@@ -677,6 +677,27 @@ public sealed class QueryHttpClientRegistrationTests
         _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteQuery(new(), CancellationToken.None));
     }
 
+    [Test]
+    public async Task GivenHttpClient_WhenExecutingMiddleware_MiddlewareContextContainsCorrectTransportType()
+    {
+        using var testClient = new TestHttpClient();
+
+        var services = new ServiceCollection();
+        _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(testClient))
+                    .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
+                    .AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(new("http://expected.localhost")));
+
+        await using var provider = services.BuildServiceProvider();
+
+        var client = provider.GetRequiredService<ITestQueryHandler>();
+
+        _ = await client.WithPipeline(pipeline => pipeline.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+
+        var seenTransportType = provider.GetRequiredService<TestQueryMiddleware>().SeenTransportType;
+        Assert.That(seenTransportType?.IsHttp(), Is.True);
+        Assert.That(seenTransportType?.Role, Is.EqualTo(QueryTransportRole.Client));
+    }
+
     [HttpQuery]
     public sealed record TestQuery
     {
@@ -698,8 +719,22 @@ public sealed class QueryHttpClientRegistrationTests
     {
     }
 
+    private sealed class TestQueryMiddleware : IQueryMiddleware
+    {
+        public QueryTransportType? SeenTransportType { get; private set; }
+
+        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
+            where TQuery : class
+        {
+            SeenTransportType = ctx.TransportType;
+            return ctx.Next(ctx.Query, ctx.CancellationToken);
+        }
+    }
+
     private sealed class TestQueryTransportClient : IQueryTransportClient
     {
+        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
+
         public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                IServiceProvider serviceProvider,
                                                                CancellationToken cancellationToken)

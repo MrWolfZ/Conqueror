@@ -15,6 +15,8 @@ public abstract class QueryMiddlewareContext<TQuery, TResponse>
 
     public abstract IConquerorContext ConquerorContext { get; }
 
+    public abstract QueryTransportType TransportType { get; }
+
     public abstract Task<TResponse> Next(TQuery query, CancellationToken cancellationToken);
 }
 

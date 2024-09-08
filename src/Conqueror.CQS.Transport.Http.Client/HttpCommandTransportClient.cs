@@ -21,6 +21,8 @@ internal sealed class HttpCommandTransportClient : ICommandTransportClient
         Options = options;
     }
 
+    public CommandTransportType TransportType => new(HttpConstants.TransportName, CommandTransportRole.Client);
+
     public ResolvedHttpClientOptions Options { get; }
 
     public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,

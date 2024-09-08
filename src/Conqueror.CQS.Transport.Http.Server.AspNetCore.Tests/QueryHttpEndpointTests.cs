@@ -265,6 +265,29 @@ public sealed class QueryHttpEndpointTests : TestBase
         Assert.That(result!.Payload, Is.EqualTo(11));
     }
 
+    [Test]
+    public async Task GivenHttpQueryWithHandlerWithMiddleware_WhenCallingEndpoint_MiddlewareContextContainsCorrectTransportType()
+    {
+        var response = await HttpClient.GetAsync("/api/queries/testWithMiddleware?payload=10");
+        await response.AssertStatusCode(HttpStatusCode.OK);
+
+        var seenTransportType = Resolve<TestQueryMiddleware>().SeenTransportType;
+        Assert.That(seenTransportType?.IsHttp(), Is.True);
+        Assert.That(seenTransportType?.Role, Is.EqualTo(QueryTransportRole.Server));
+    }
+
+    [Test]
+    public async Task GivenHttpPostQueryWithHandlerWithMiddleware_WhenCallingEndpoint_MiddlewareContextContainsCorrectTransportType()
+    {
+        using var content = CreateJsonStringContent("{\"payload\":10}");
+        var response = await HttpClient.PostAsync("/api/queries/testPostWithMiddleware", content);
+        await response.AssertStatusCode(HttpStatusCode.OK);
+
+        var seenTransportType = Resolve<TestQueryMiddleware>().SeenTransportType;
+        Assert.That(seenTransportType?.IsHttp(), Is.True);
+        Assert.That(seenTransportType?.Role, Is.EqualTo(QueryTransportRole.Server));
+    }
+
     protected override void ConfigureServices(IServiceCollection services)
     {
         var applicationPartManager = new ApplicationPartManager();
@@ -276,17 +299,20 @@ public sealed class QueryHttpEndpointTests : TestBase
         _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
         _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-        _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+        _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
+                    .AddConquerorQueryHandler<TestQueryHandler>()
                     .AddConquerorQueryHandler<TestQueryHandler2>()
                     .AddConquerorQueryHandler<TestQueryHandler3>()
                     .AddConquerorQueryHandler<TestQueryHandler4>()
                     .AddConquerorQueryHandler<TestQueryHandlerWithoutPayload>()
+                    .AddConquerorQueryHandler<TestQueryHandlerWithMiddleware>()
                     .AddConquerorQueryHandler<TestQueryHandlerWithComplexPayload>()
                     .AddConquerorQueryHandler<TestQueryWithCustomPathHandler>()
                     .AddConquerorQueryHandler<TestQueryWithVersionHandler>()
                     .AddConquerorQueryHandler<TestPostQueryHandler>()
                     .AddConquerorQueryHandler<TestPostQueryHandler2>()
                     .AddConquerorQueryHandler<TestPostQueryHandlerWithoutPayload>()
+                    .AddConquerorQueryHandler<TestPostQueryHandlerWithMiddleware>()
                     .AddConquerorQueryHandler<TestPostQueryWithCustomSerializedPayloadTypeHandler>()
                     .AddConquerorQueryHandler<TestPostQueryWithCustomPathHandler>()
                     .AddConquerorQueryHandler<TestPostQueryWithVersionHandler>()
@@ -377,6 +403,12 @@ public sealed class QueryHttpEndpointTests : TestBase
         public int Payload { get; init; }
     }
 
+    [HttpQuery]
+    public sealed record TestWithMiddlewareQuery
+    {
+        public int Payload { get; init; }
+    }
+
     [HttpQuery(UsePost = true)]
     public sealed record TestPostQuery
     {
@@ -413,6 +445,12 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     [HttpQuery(UsePost = true)]
     public sealed record TestPostDelegateQuery
+    {
+        public int Payload { get; init; }
+    }
+
+    [HttpQuery(UsePost = true)]
+    public sealed record TestPostWithMiddlewareQuery
     {
         public int Payload { get; init; }
     }
@@ -477,6 +515,19 @@ public sealed class QueryHttpEndpointTests : TestBase
         }
     }
 
+    public sealed class TestQueryHandlerWithMiddleware : IQueryHandler<TestWithMiddlewareQuery, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestWithMiddlewareQuery query, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = 11 };
+        }
+
+        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
+            pipeline.Use<TestQueryMiddleware>();
+    }
+
     public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
     {
         public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
@@ -537,6 +588,19 @@ public sealed class QueryHttpEndpointTests : TestBase
         }
     }
 
+    public sealed class TestPostQueryHandlerWithMiddleware : IQueryHandler<TestPostWithMiddlewareQuery, TestQueryResponse>
+    {
+        public async Task<TestQueryResponse> ExecuteQuery(TestPostWithMiddlewareQuery query, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            return new() { Payload = 11 };
+        }
+
+        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
+            pipeline.Use<TestQueryMiddleware>();
+    }
+
     public sealed class TestPostQueryWithCustomSerializedPayloadTypeHandler : ITestPostQueryWithCustomSerializedPayloadTypeHandler
     {
         public async Task<TestPostQueryWithCustomSerializedPayloadTypeResponse> ExecuteQuery(TestPostQueryWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
@@ -587,6 +651,18 @@ public sealed class QueryHttpEndpointTests : TestBase
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
             return new() { Payload = query.Payload + 1 };
+        }
+    }
+
+    private sealed class TestQueryMiddleware : IQueryMiddleware
+    {
+        public QueryTransportType? SeenTransportType { get; private set; }
+
+        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
+            where TQuery : class
+        {
+            SeenTransportType = ctx.TransportType;
+            return ctx.Next(ctx.Query, ctx.CancellationToken);
         }
     }
 

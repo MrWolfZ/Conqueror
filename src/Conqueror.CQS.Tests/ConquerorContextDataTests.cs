@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Conqueror.CQS.CommandHandling;
-using Conqueror.CQS.QueryHandling;
 
 namespace Conqueror.CQS.Tests;
 
@@ -106,7 +104,7 @@ public sealed class ConquerorContextDataTests
                                                .CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b =>
                                                {
                                                    SetAndObserveContextData(b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.TransportBuilder);
-                                                   return new InMemoryCommandTransport(typeof(ICommandHandler<TestCommand, TestCommandResponse>));
+                                                   return b.UseInMemory();
                                                });
 
             _ = await handlerClient.WithPipeline(pipeline =>
@@ -122,7 +120,7 @@ public sealed class ConquerorContextDataTests
                                                .CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b =>
                                                {
                                                    SetAndObserveContextData(b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.TransportBuilder);
-                                                   return new InMemoryQueryTransport(typeof(IQueryHandler<TestQuery, TestQueryResponse>));
+                                                   return b.UseInMemory();
                                                });
 
             _ = await handlerClient.WithPipeline(pipeline =>

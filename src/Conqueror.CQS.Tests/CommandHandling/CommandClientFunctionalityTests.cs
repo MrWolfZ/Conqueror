@@ -187,6 +187,8 @@ public abstract class CommandClientFunctionalityTests
             this.observations = observations;
         }
 
+        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)
@@ -214,6 +216,8 @@ public abstract class CommandClientFunctionalityTests
         {
             this.exception = exception;
         }
+
+        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, IServiceProvider serviceProvider, CancellationToken cancellationToken)
             where TCommand : class

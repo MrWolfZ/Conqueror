@@ -30,7 +30,8 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
-        if (!conquerorContext.IsExecutionFromTransport() || conquerorContext.GetQueryId() is null)
+        var transportTypeName = conquerorContext.DrainExecutionTransportTypeName();
+        if (transportTypeName is null || conquerorContext.GetQueryId() is null)
         {
             conquerorContext.SetQueryId(ActivitySpanId.CreateRandom().ToString());
         }
@@ -41,7 +42,12 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
 
         var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        return await pipeline.Execute<TQuery, TResponse>(serviceProvider, query, transportClientFactory, cancellationToken).ConfigureAwait(false);
+        return await pipeline.Execute<TQuery, TResponse>(serviceProvider,
+                                                         query,
+                                                         transportClientFactory,
+                                                         transportTypeName,
+                                                         cancellationToken)
+                             .ConfigureAwait(false);
     }
 
     public IQueryHandler<TQuery, TResponse> WithPipeline(Action<IQueryPipelineBuilder> configure)

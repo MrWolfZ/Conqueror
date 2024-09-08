@@ -10,4 +10,6 @@ public interface IQueryTransportClient
                                                     IServiceProvider serviceProvider,
                                                     CancellationToken cancellationToken)
         where TQuery : class;
+
+    QueryTransportType TransportType { get; }
 }

@@ -659,6 +659,8 @@ public abstract class CommandClientMiddlewareLifetimeTests
             this.observations = observations;
         }
 
+        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)

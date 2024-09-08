@@ -14,8 +14,8 @@ public static class ConquerorServerTransportHelper
         }
     }
 
-    public static void SignalExecution(IConquerorContext conquerorContext)
+    public static void SignalExecution(IConquerorContext conquerorContext, string transportTypeName)
     {
-        conquerorContext.SignalExecutionFromTransport();
+        conquerorContext.SignalExecutionFromTransport(transportTypeName);
     }
 }

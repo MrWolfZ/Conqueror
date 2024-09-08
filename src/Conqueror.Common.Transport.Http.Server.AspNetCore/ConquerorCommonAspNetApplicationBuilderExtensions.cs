@@ -42,7 +42,7 @@ public static class ConquerorCommonAspNetApplicationBuilderExtensions
 
                 ReadContextDataFromRequest(conquerorContext, httpContext);
 
-                ConquerorServerTransportHelper.SignalExecution(conquerorContext);
+                ConquerorServerTransportHelper.SignalExecution(conquerorContext, HttpConstants.TransportName);
 
                 ConquerorServerTransportHelper.HandleTraceParent(conquerorContext, GetTraceParent(httpContext));
 
