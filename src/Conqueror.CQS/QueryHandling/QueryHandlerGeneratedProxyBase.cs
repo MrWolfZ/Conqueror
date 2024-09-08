@@ -19,7 +19,7 @@ internal abstract class QueryHandlerGeneratedProxyBase<TQuery, TResponse> : IQue
         return target.ExecuteQuery(query, cancellationToken);
     }
 
-    public IQueryHandler<TQuery, TResponse> WithPipeline(Action<IQueryPipelineBuilder> configure)
+    public IQueryHandler<TQuery, TResponse> WithPipeline(Action<IQueryPipeline<TQuery, TResponse>> configure)
     {
         return target.WithPipeline(configure);
     }

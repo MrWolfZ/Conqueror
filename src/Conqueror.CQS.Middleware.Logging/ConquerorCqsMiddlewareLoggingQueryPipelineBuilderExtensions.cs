@@ -5,7 +5,7 @@ using Conqueror.CQS.Middleware.Logging;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipelineBuilder" /> to add, configure, or remove logging functionality.
+///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove logging functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareLoggingQueryPipelineBuilderExtensions
 {
@@ -23,7 +23,9 @@ public static class ConquerorCqsMiddlewareLoggingQueryPipelineBuilderExtensions
     ///     for the full list of configuration options)
     /// </param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder UseLogging(this IQueryPipelineBuilder pipeline, Action<LoggingQueryMiddlewareConfiguration>? configure = null)
+    public static IQueryPipeline<TQuery, TResponse> UseLogging<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                  Action<LoggingQueryMiddlewareConfiguration>? configure = null)
+        where TQuery : class
     {
         return pipeline.Use<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>(new())
                        .ConfigureLogging(configure ?? (_ => { }));
@@ -38,7 +40,9 @@ public static class ConquerorCqsMiddlewareLoggingQueryPipelineBuilderExtensions
     ///     for the full list of configuration options)
     /// </param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder ConfigureLogging(this IQueryPipelineBuilder pipeline, Action<LoggingQueryMiddlewareConfiguration> configure)
+    public static IQueryPipeline<TQuery, TResponse> ConfigureLogging<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                        Action<LoggingQueryMiddlewareConfiguration> configure)
+        where TQuery : class
     {
         return pipeline.Configure<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>(configure);
     }
@@ -48,7 +52,8 @@ public static class ConquerorCqsMiddlewareLoggingQueryPipelineBuilderExtensions
     /// </summary>
     /// <param name="pipeline">The query pipeline with the logging middleware to remove</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder WithoutLogging(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> WithoutLogging<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Without<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>();
     }

@@ -4,7 +4,8 @@ namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
 public static class DefaultQueryPipelineBuilderExtensions
 {
-    public static IQueryPipelineBuilder UseDefault(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> UseDefault<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.UseMetrics()
                        .UseLogging()

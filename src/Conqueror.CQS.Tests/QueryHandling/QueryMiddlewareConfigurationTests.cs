@@ -14,7 +14,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         var initialConfiguration = new TestQueryMiddlewareConfiguration(10);
 
-        _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline => { _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration); });
+        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline => { _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration); });
 
         var provider = services.BuildServiceProvider();
 
@@ -38,7 +38,7 @@ public sealed class QueryMiddlewareConfigurationTests
         var initialConfiguration = new TestQueryMiddlewareConfiguration(10);
         var overwrittenConfiguration = new TestQueryMiddlewareConfiguration(20);
 
-        _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration);
 
@@ -66,7 +66,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         var initialConfiguration = new TestQueryMiddlewareConfiguration(10);
 
-        _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration);
 
@@ -96,7 +96,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         var initialConfiguration = new TestQueryMiddlewareConfiguration(10);
 
-        _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration);
 
@@ -124,7 +124,7 @@ public sealed class QueryMiddlewareConfigurationTests
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
             _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new TestQueryMiddlewareConfiguration(20)));
             _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(c => c.Parameter += 10));
@@ -150,9 +150,9 @@ public sealed class QueryMiddlewareConfigurationTests
             return new();
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
-            pipeline.ServiceProvider.GetService<Action<IQueryPipelineBuilder>>()?.Invoke(pipeline);
+            pipeline.ServiceProvider.GetService<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>()?.Invoke(pipeline);
         }
     }
 

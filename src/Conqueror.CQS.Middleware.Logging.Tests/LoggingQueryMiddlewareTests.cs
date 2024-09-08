@@ -8,7 +8,8 @@ namespace Conqueror.CQS.Middleware.Logging.Tests;
 public sealed class LoggingQueryMiddlewareTests : TestBase
 {
     private Func<TestQuery, TestQueryResponse> handlerFn = qry => new(qry.Payload);
-    private Action<IQueryPipelineBuilder> configurePipeline = b => b.UseLogging();
+    private Action<IQueryPipeline<TestQuery, TestQueryResponse>> configurePipeline = b => b.UseLogging();
+    private Action<IQueryPipeline<TestQueryWithoutPayload, TestQueryResponse>> configurePipelineWithoutPayload = b => b.UseLogging();
 
     [Test]
     public async Task GivenDefaultLoggingMiddlewareConfiguration_LogsQueryWithPayloadPreExecution()
@@ -74,7 +75,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
     {
         var testQuery = new TestQueryWithoutPayload();
 
-        configurePipeline = b => b.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
+        configurePipelineWithoutPayload = b => b.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
 
         _ = await HandlerWithoutPayload.ExecuteQuery(testQuery);
 
@@ -129,7 +130,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
     {
         var testQuery = new TestQueryWithoutPayload();
 
-        configurePipeline = b => b.UseLogging(o => o.OmitJsonSerializedQueryPayload = true);
+        configurePipelineWithoutPayload = b => b.UseLogging(o => o.OmitJsonSerializedQueryPayload = true);
 
         _ = await HandlerWithoutPayload.ExecuteQuery(testQuery);
 
@@ -505,7 +506,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
                             await Task.Yield();
                             return new(0);
                         },
-                        pipeline => configurePipeline(pipeline));
+                        pipeline => configurePipelineWithoutPayload(pipeline));
     }
 
     private sealed record TestQuery(int Payload);

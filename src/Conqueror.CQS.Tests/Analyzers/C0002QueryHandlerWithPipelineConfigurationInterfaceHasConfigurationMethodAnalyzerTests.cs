@@ -117,7 +117,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
                         public string Property { get; set; }
 
-                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => throw new System.NotImplementedException();
 
                         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
@@ -183,7 +183,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
                         public string Property { get; set; }
 
-                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => throw new System.NotImplementedException();
 
                         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
                         {
@@ -230,7 +230,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
-                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => throw new System.NotImplementedException();
                     }
                 }
             ".Dedent();
@@ -282,7 +282,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
                         public string Property { get; set; }
 
-                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => throw new System.NotImplementedException();
                     }
                 }
             ".Dedent();
@@ -314,7 +314,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                             return new();
                         }
 
-                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+                        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
                         {
                         }
                     }
@@ -345,7 +345,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                             return new();
                         }
 
-                        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+                        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
                         {
                         }
                     }
@@ -375,7 +375,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                             return new();
                         }
 
-                        public string ConfigurePipeline(IQueryPipelineBuilder pipeline)
+                        public string ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
                         {
                             return string.Empty;
                         }
@@ -407,7 +407,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                             return new();
                         }
 
-                        public string ConfigurePipeline(IQueryPipelineBuilder pipeline)
+                        public string ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
                         {
                             return string.Empty;
                         }

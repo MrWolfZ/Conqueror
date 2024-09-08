@@ -4,7 +4,7 @@ using Conqueror.CQS.Middleware.DataAnnotationValidation;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipelineBuilder" /> to add, configure, or remove data annotation validation functionality.
+///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove data annotation validation functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareDataAnnotationValidationQueryPipelineBuilderExtensions
 {
@@ -13,7 +13,8 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationQueryPipelineB
     /// </summary>
     /// <param name="pipeline">The query pipeline to add data annotation validation to</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder UseDataAnnotationValidation(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> UseDataAnnotationValidation<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Use<DataAnnotationValidationQueryMiddleware>();
     }
@@ -23,7 +24,8 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationQueryPipelineB
     /// </summary>
     /// <param name="pipeline">The query pipeline with the data annotation validation middleware to remove</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder WithoutDataAnnotationValidation(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> WithoutDataAnnotationValidation<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Without<DataAnnotationValidationQueryMiddleware>();
     }

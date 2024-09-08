@@ -9,12 +9,12 @@ public interface IQueryHandler
 {
 }
 
-public interface IQueryHandler<in TQuery, TResponse> : IQueryHandler
+public interface IQueryHandler<TQuery, TResponse> : IQueryHandler
     where TQuery : class
 {
     Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default);
 
-    static virtual void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+    static virtual void ConfigurePipeline(IQueryPipeline<TQuery, TResponse> pipeline)
     {
         // by default, we use an empty pipeline
     }

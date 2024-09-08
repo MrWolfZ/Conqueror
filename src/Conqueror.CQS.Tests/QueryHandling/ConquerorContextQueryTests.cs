@@ -471,8 +471,8 @@ public sealed class ConquerorContextQueryTests
             return response;
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<OuterTestQueryMiddleware>()
-                                                                                        .Use<TestQueryMiddleware>();
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => pipeline.Use<OuterTestQueryMiddleware>()
+                                                                                                                      .Use<TestQueryMiddleware>();
     }
 
     private sealed class NestedTestQueryHandler : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>

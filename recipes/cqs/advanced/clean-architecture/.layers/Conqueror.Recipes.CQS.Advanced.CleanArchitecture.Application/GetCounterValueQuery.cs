@@ -18,7 +18,7 @@ internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
         this.repository = repository;
     }
 
-    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.UseDefault();
+    public static void ConfigurePipeline(IQueryPipeline<GetCounterValueQuery, GetCounterValueQueryResponse> pipeline) => pipeline.UseDefault();
 
     public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query, CancellationToken cancellationToken = default)
     {

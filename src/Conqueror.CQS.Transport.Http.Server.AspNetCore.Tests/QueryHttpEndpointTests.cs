@@ -524,7 +524,7 @@ public sealed class QueryHttpEndpointTests : TestBase
             return new() { Payload = 11 };
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
+        public static void ConfigurePipeline(IQueryPipeline<TestWithMiddlewareQuery, TestQueryResponse> pipeline) =>
             pipeline.Use<TestQueryMiddleware>();
     }
 
@@ -597,7 +597,7 @@ public sealed class QueryHttpEndpointTests : TestBase
             return new() { Payload = 11 };
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
+        public static void ConfigurePipeline(IQueryPipeline<TestPostWithMiddlewareQuery, TestQueryResponse> pipeline) =>
             pipeline.Use<TestQueryMiddleware>();
     }
 

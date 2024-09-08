@@ -17,49 +17,45 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
                                                                        Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
         where THandler : class, IQueryHandler
     {
-        return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, null);
+        return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory);
     }
 
     public static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
                                                                        Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
         where THandler : class, IQueryHandler
     {
-        return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory, null);
+        return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory);
     }
 
-    internal static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
-                                                               Type handlerType,
-                                                               IQueryTransportClient transportClient,
-                                                               Action<IQueryPipelineBuilder>? configurePipeline)
+    internal static IServiceCollection AddConquerorQueryClient<THandler, TQuery, TResponse>(this IServiceCollection services,
+                                                                                            IQueryTransportClient transportClient,
+                                                                                            Action<IQueryPipeline<TQuery, TResponse>> configurePipeline)
+        where THandler : class, IQueryHandler
+        where TQuery : class
     {
-        return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClient), configurePipeline);
-    }
-
-    private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
-                                                              Type handlerType,
-                                                              Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory,
-                                                              Action<IQueryPipelineBuilder>? configurePipeline)
-    {
-        return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClientFactory), configurePipeline);
+        services.AddClient<THandler, TQuery, TResponse>(new(transportClient), configurePipeline);
+        return services;
     }
 
     private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                               Type handlerType,
-                                                              Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                              Action<IQueryPipelineBuilder>? configurePipeline)
+                                                              Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
-        return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClientFactory), configurePipeline);
+        return services.AddConquerorQueryClient(handlerType, new(transportClientFactory), null);
+    }
+
+    private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
+                                                              Type handlerType,
+                                                              Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
+    {
+        return services.AddConquerorQueryClient(handlerType, new(transportClientFactory), null);
     }
 
     private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                               Type handlerType,
                                                               QueryTransportClientFactory transportClientFactory,
-                                                              Action<IQueryPipelineBuilder>? configurePipeline)
+                                                              Delegate? configurePipeline)
     {
-        handlerType.ValidateNoInvalidQueryHandlerInterface();
-
-        services.AddConquerorCqsQueryServices();
-
         var addClientMethod = typeof(ConquerorCqsQueryClientServiceCollectionExtensions).GetMethod(nameof(AddClient), BindingFlags.NonPublic | BindingFlags.Static);
 
         if (addClientMethod == null)
@@ -67,18 +63,8 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
             throw new InvalidOperationException($"could not find method '{nameof(AddClient)}'");
         }
 
-        var existingQueryRegistrations = services.Select(d => d.ServiceType)
-                                                 .Where(t => t.IsQueryHandlerInterfaceType())
-                                                 .SelectMany(t => t.GetQueryAndResponseTypes())
-                                                 .ToDictionary(t => t.QueryType, t => t.ResponseType);
-
         foreach (var (queryType, responseType) in handlerType.GetQueryAndResponseTypes())
         {
-            if (existingQueryRegistrations.TryGetValue(queryType, out var existingResponseType) && responseType != existingResponseType)
-            {
-                throw new InvalidOperationException($"client for query type '{queryType.Name}' is already registered with response type '{existingResponseType.Name}', but tried to add client with different response type '{responseType.Name}'");
-            }
-
             var genericAddClientMethod = addClientMethod.MakeGenericMethod(handlerType, queryType, responseType);
 
             try
@@ -96,10 +82,24 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
     private static void AddClient<THandler, TQuery, TResponse>(this IServiceCollection services,
                                                                QueryTransportClientFactory transportClientFactory,
-                                                               Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                               Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline)
         where THandler : class, IQueryHandler
         where TQuery : class
     {
+        typeof(THandler).ValidateNoInvalidQueryHandlerInterface();
+
+        var existingQueryRegistrations = services.Select(d => d.ServiceType)
+                                                 .Where(t => t.IsQueryHandlerInterfaceType())
+                                                 .SelectMany(t => t.GetQueryAndResponseTypes())
+                                                 .ToDictionary(t => t.QueryType, t => t.ResponseType);
+
+        if (existingQueryRegistrations.TryGetValue(typeof(TQuery), out var existingResponseType) && typeof(TResponse) != existingResponseType)
+        {
+            throw new InvalidOperationException($"client for query type '{typeof(TQuery)}' is already registered with response type '{existingResponseType}', but tried to add client with different response type '{typeof(TResponse)}'");
+        }
+
+        services.AddConquerorCqsQueryServices();
+
         RegisterPlainInterface();
         RegisterCustomInterface();
 

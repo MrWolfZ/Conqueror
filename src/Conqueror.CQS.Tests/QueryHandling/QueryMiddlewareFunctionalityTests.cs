@@ -102,7 +102,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestQueryMiddleware2>()
                                     .Use<TestQueryMiddleware2>();
@@ -130,7 +130,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                     .Use<TestQueryMiddleware2>()
@@ -160,7 +160,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestQueryMiddleware2>()
                                     .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
@@ -190,7 +190,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                     .Use<TestQueryMiddleware2>()
@@ -221,7 +221,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestQueryMiddleware2>()
                                     .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
@@ -252,7 +252,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestQueryMiddleware2>()
                                     .Without<TestQueryMiddleware2>()
@@ -281,7 +281,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                     .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddConquerorQueryMiddleware<TestQueryMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<IQueryPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                                     .Without<TestQueryMiddleware, TestQueryMiddlewareConfiguration>()
@@ -459,7 +459,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                     .AddScoped<TestService>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
+        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
 
         var provider = services.BuildServiceProvider();
 
@@ -488,7 +488,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline => pipeline.Use<TestQueryMiddleware2>());
+        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline => pipeline.Use<TestQueryMiddleware2>());
 
         var provider = services.BuildServiceProvider();
 
@@ -509,7 +509,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         _ = services.AddConquerorQueryHandler<TestQueryHandlerWithoutMiddlewares>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<IQueryPipelineBuilder>>(pipeline => pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
+        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline => pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()));
 
         var provider = services.BuildServiceProvider();
 
@@ -600,7 +600,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             return new(query.Payload + 1);
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
         }
@@ -623,7 +623,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             return new(query.Payload + 1);
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new() { Parameter = 10 });
         }
@@ -646,7 +646,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
             _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
                         .Use<TestQueryMiddleware2>();
@@ -670,9 +670,9 @@ public sealed class QueryMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
-            pipeline.ServiceProvider.GetService<Action<IQueryPipelineBuilder>>()?.Invoke(pipeline);
+            pipeline.ServiceProvider.GetService<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>()?.Invoke(pipeline);
         }
     }
 
@@ -693,7 +693,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
             _ = pipeline.Use<TestQueryRetryMiddleware>()
                         .Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new())
@@ -718,7 +718,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
             _ = pipeline.Use<MutatingTestQueryMiddleware>()
                         .Use<MutatingTestQueryMiddleware2>();
@@ -733,7 +733,7 @@ public sealed class QueryMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
             _ = pipeline.Use<ThrowingTestQueryMiddleware, TestQueryMiddlewareConfiguration>(new());
         }

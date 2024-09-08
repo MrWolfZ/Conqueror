@@ -14,7 +14,8 @@ public sealed class QueryValidationMiddleware : IQueryMiddleware
 
 public static class ValidationQueryPipelineBuilderExtensions
 {
-    public static IQueryPipelineBuilder UseValidation(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> UseValidation<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Use<QueryValidationMiddleware>();
     }

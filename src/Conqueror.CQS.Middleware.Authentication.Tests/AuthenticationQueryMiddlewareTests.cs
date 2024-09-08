@@ -6,7 +6,7 @@ namespace Conqueror.CQS.Middleware.Authentication.Tests;
 public sealed class AuthenticationQueryMiddlewareTests : TestBase
 {
     private Func<TestQuery, TestQueryResponse> handlerFn = _ => new();
-    private Action<IQueryPipelineBuilder> configurePipeline = _ => { };
+    private Action<IQueryPipeline<TestQuery, TestQueryResponse>> configurePipeline = _ => { };
 
     private IConquerorAuthenticationContext AuthenticationContext => Resolve<IConquerorAuthenticationContext>();
 

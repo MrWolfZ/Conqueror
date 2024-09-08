@@ -19,7 +19,8 @@ public static class DefaultPipelines
         return handler.WithPipeline(pipeline => pipeline.UseDefault());
     }
 
-    public static IQueryPipelineBuilder UseDefault(this IQueryPipelineBuilder pipeline) =>
+    public static IQueryPipeline<TQuery, TResponse> UseDefault<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class =>
         // remove the common project prefix from the logger name to reduce the noise in the logs
         pipeline.UseLogging(o => o.LoggerNameFactory = query => query.GetType().FullName?.Replace("Conqueror.Recipes.CQS.Advanced.MonoToDistri.", ""))
                 .UseDataAnnotationValidation();

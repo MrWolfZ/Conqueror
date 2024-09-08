@@ -603,7 +603,7 @@ public sealed class QueryMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => pipeline.Use<TestQueryMiddleware>();
     }
 
     private sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
@@ -614,7 +614,7 @@ public sealed class QueryMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery2, TestQueryResponse2> pipeline) => pipeline.Use<TestQueryMiddleware>();
     }
 
     private sealed class TestQueryHandlerWithMultipleMiddlewares : IQueryHandler<TestQuery, TestQueryResponse>
@@ -625,7 +625,7 @@ public sealed class QueryMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
             _ = pipeline.Use<TestQueryMiddleware>()
                         .Use<TestQueryMiddleware2>();
@@ -640,7 +640,7 @@ public sealed class QueryMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery2, TestQueryResponse2> pipeline)
         {
             _ = pipeline.Use<TestQueryMiddleware>()
                         .Use<TestQueryMiddleware2>();
@@ -655,7 +655,7 @@ public sealed class QueryMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>();
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => pipeline.Use<TestQueryMiddleware>().Use<TestQueryMiddleware>();
     }
 
     private sealed class TestQueryHandlerWithRetryMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
@@ -676,7 +676,7 @@ public sealed class QueryMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline)
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
         {
             _ = pipeline.Use<TestQueryRetryMiddleware>()
                         .Use<TestQueryMiddleware>()

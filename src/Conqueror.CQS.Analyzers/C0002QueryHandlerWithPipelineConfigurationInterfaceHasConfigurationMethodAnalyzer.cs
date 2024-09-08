@@ -35,7 +35,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
         var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-        if (!symbol.IsQueryHandlerType(context))
+        if (!symbol.IsQueryHandlerType(context.Compilation))
         {
             return;
         }

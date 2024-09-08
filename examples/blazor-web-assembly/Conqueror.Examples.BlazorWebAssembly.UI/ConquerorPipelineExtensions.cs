@@ -23,7 +23,8 @@ public static class ConquerorPipelineExtensions
         return handler.WithPipeline(pipeline => pipeline.UseDefaultClientPipeline());
     }
 
-    public static IQueryPipelineBuilder UseDefaultClientPipeline(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> UseDefaultClientPipeline<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.UseLogging()
                        .UseTimeout(TimeSpan.FromMinutes(1))

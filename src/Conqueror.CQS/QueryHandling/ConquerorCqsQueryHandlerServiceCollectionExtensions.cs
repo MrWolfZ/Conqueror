@@ -45,7 +45,7 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
 
     public static IServiceCollection AddConquerorQueryHandlerDelegate<TQuery, TResponse>(this IServiceCollection services,
                                                                                          Func<TQuery, IServiceProvider, CancellationToken, Task<TResponse>> handlerFn,
-                                                                                         Action<IQueryPipelineBuilder> configurePipeline)
+                                                                                         Action<IQueryPipeline<TQuery, TResponse>> configurePipeline)
         where TQuery : class
     {
         return services.AddConquerorQueryHandler(typeof(DelegateQueryHandler<TQuery, TResponse>),
@@ -55,8 +55,17 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
 
     internal static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
                                                                 Type handlerType,
-                                                                ServiceDescriptor serviceDescriptor,
-                                                                Action<IQueryPipelineBuilder>? configurePipeline = null)
+                                                                ServiceDescriptor serviceDescriptor)
+    {
+        services.TryAdd(serviceDescriptor);
+        return services.AddConquerorQueryHandler(handlerType, (Delegate?)null);
+    }
+
+    private static IServiceCollection AddConquerorQueryHandler<TQuery, TResponse>(this IServiceCollection services,
+                                                                                  Type handlerType,
+                                                                                  ServiceDescriptor serviceDescriptor,
+                                                                                  Action<IQueryPipeline<TQuery, TResponse>> configurePipeline)
+        where TQuery : class
     {
         services.TryAdd(serviceDescriptor);
         return services.AddConquerorQueryHandler(handlerType, configurePipeline);
@@ -64,7 +73,7 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
 
     private static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
                                                                Type handlerType,
-                                                               Action<IQueryPipelineBuilder>? configurePipeline)
+                                                               Delegate? configurePipeline)
     {
         handlerType.ValidateNoInvalidQueryHandlerInterface();
 
@@ -93,7 +102,8 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
     }
 
     private static IServiceCollection AddHandler<THandler, TQuery, TResponse>(this IServiceCollection services,
-                                                                              Action<IQueryPipelineBuilder>? configurePipeline)
+                                                                              Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline)
+        where THandler : class, IQueryHandler
         where TQuery : class
     {
         var existingRegistrations = services.Where(d => d.ImplementationInstance is QueryHandlerRegistration)
@@ -116,18 +126,18 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
 
         var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
 
-        services.AddConquerorQueryClient(typeof(THandler), new InMemoryQueryTransport(typeof(THandler)), pipelineConfigurationAction);
+        services.AddConquerorQueryClient<THandler, TQuery, TResponse>(new InMemoryQueryTransport(typeof(THandler)), pipelineConfigurationAction);
 
         return services;
 
-        static Action<IQueryPipelineBuilder> CreatePipelineConfigurationFunction(Type handlerType)
+        static Action<IQueryPipeline<TQuery, TResponse>> CreatePipelineConfigurationFunction(Type handlerType)
         {
             var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IQueryHandler<TQuery, TResponse>)).TargetMethods.Single(m => m.Name == nameof(IQueryHandler<TQuery, TResponse>.ConfigurePipeline));
 
-            var builderParam = Expression.Parameter(typeof(IQueryPipelineBuilder));
+            var builderParam = Expression.Parameter(typeof(IQueryPipeline<TQuery, TResponse>));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
             var lambda = Expression.Lambda(body, builderParam).Compile();
-            return (Action<IQueryPipelineBuilder>)lambda;
+            return (Action<IQueryPipeline<TQuery, TResponse>>)lambda;
         }
     }
 }

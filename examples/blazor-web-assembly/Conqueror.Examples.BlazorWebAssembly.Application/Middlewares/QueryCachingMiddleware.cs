@@ -19,20 +19,22 @@ public sealed class QueryCachingMiddleware : IQueryMiddleware<QueryCachingMiddle
 
 public static class CachingQueryPipelineBuilderExtensions
 {
-    public static IQueryPipelineBuilder UseCaching(this IQueryPipelineBuilder pipeline,
-                                                   TimeSpan invalidateResultsAfter,
-                                                   int? maxCacheSizeInMegabytes = null,
-                                                   Type[]? invalidateResultsOnEventTypes = null)
+    public static IQueryPipeline<TQuery, TResponse> UseCaching<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                  TimeSpan invalidateResultsAfter,
+                                                                                  int? maxCacheSizeInMegabytes = null,
+                                                                                  Type[]? invalidateResultsOnEventTypes = null)
+        where TQuery : class
     {
         var configuration = new QueryCachingMiddlewareConfiguration(invalidateResultsAfter);
         return pipeline.Use<QueryCachingMiddleware, QueryCachingMiddlewareConfiguration>(configuration)
                        .ConfigureCaching(invalidateResultsAfter, maxCacheSizeInMegabytes, invalidateResultsOnEventTypes);
     }
 
-    public static IQueryPipelineBuilder ConfigureCaching(this IQueryPipelineBuilder pipeline,
-                                                         TimeSpan invalidateResultsAfter,
-                                                         int? maxCacheSizeInMegabytes = null,
-                                                         Type[]? invalidateResultsOnEventTypes = null)
+    public static IQueryPipeline<TQuery, TResponse> ConfigureCaching<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                        TimeSpan invalidateResultsAfter,
+                                                                                        int? maxCacheSizeInMegabytes = null,
+                                                                                        Type[]? invalidateResultsOnEventTypes = null)
+        where TQuery : class
     {
         return pipeline.Configure<QueryCachingMiddleware, QueryCachingMiddlewareConfiguration>(c =>
         {

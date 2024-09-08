@@ -14,18 +14,20 @@ public sealed class QueryRetryMiddleware : IQueryMiddleware<QueryRetryMiddleware
 
 public static class RetryQueryPipelineBuilderExtensions
 {
-    public static IQueryPipelineBuilder UseRetry(this IQueryPipelineBuilder pipeline,
-                                                 int maxNumberOfAttempts = 3,
-                                                 TimeSpan? retryInterval = null)
+    public static IQueryPipeline<TQuery, TResponse> UseRetry<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                int maxNumberOfAttempts = 3,
+                                                                                TimeSpan? retryInterval = null)
+        where TQuery : class
     {
         var configuration = new QueryRetryMiddlewareConfiguration(maxNumberOfAttempts, retryInterval ?? TimeSpan.FromSeconds(1));
 
         return pipeline.Use<QueryRetryMiddleware, QueryRetryMiddlewareConfiguration>(configuration);
     }
 
-    public static IQueryPipelineBuilder ConfigureRetry(this IQueryPipelineBuilder pipeline,
-                                                       int? maxNumberOfAttempts = null,
-                                                       TimeSpan? retryInterval = null)
+    public static IQueryPipeline<TQuery, TResponse> ConfigureRetry<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                      int? maxNumberOfAttempts = null,
+                                                                                      TimeSpan? retryInterval = null)
+        where TQuery : class
     {
         return pipeline.Configure<QueryRetryMiddleware, QueryRetryMiddlewareConfiguration>(c =>
         {

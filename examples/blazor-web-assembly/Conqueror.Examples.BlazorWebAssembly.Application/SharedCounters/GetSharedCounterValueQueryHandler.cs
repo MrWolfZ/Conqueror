@@ -19,7 +19,7 @@ internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValue
     }
 
     // ReSharper disable once UnusedMember.Global
-    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
+    public static void ConfigurePipeline(IQueryPipeline<GetSharedCounterValueQuery, GetSharedCounterValueQueryResponse> pipeline) =>
         pipeline.UseDefault()
                 .UseCaching(TimeSpan.FromMinutes(1), invalidateResultsOnEventTypes: new[] { typeof(SharedCounterIncrementedEvent) })
                 .ConfigureTimeout(TimeSpan.FromSeconds(10))

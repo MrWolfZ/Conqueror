@@ -6,7 +6,7 @@ public static class Constants
 
     public const string CommandPipelineBuilderInterfaceName = "ICommandPipelineBuilder";
 
-    public const string QueryPipelineBuilderInterfaceName = "IQueryPipelineBuilder";
+    public const string QueryPipelineInterfaceName = "IQueryPipeline";
 
     public const string AbstractionsAssemblyName = "Conqueror.CQS.Abstractions";
 }

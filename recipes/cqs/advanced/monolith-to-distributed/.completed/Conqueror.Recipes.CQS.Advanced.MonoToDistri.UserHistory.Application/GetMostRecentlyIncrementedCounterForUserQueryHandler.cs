@@ -9,7 +9,7 @@ internal sealed class GetMostRecentlyIncrementedCounterForUserQueryHandler : IGe
         this.repository = repository;
     }
 
-    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.UseDefault();
+    public static void ConfigurePipeline(IQueryPipeline<GetMostRecentlyIncrementedCounterForUserQuery, GetMostRecentlyIncrementedCounterForUserQueryResponse> pipeline) => pipeline.UseDefault();
 
     public async Task<GetMostRecentlyIncrementedCounterForUserQueryResponse> ExecuteQuery(GetMostRecentlyIncrementedCounterForUserQuery query, CancellationToken cancellationToken = default)
     {

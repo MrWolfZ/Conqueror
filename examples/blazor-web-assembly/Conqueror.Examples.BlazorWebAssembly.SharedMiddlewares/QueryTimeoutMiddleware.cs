@@ -14,12 +14,16 @@ public sealed class QueryTimeoutMiddleware : IQueryMiddleware<QueryTimeoutMiddle
 
 public static class TimeoutQueryPipelineBuilderExtensions
 {
-    public static IQueryPipelineBuilder UseTimeout(this IQueryPipelineBuilder pipeline, TimeSpan timeoutAfter)
+    public static IQueryPipeline<TQuery, TResponse> UseTimeout<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                  TimeSpan timeoutAfter)
+        where TQuery : class
     {
         return pipeline.Use<QueryTimeoutMiddleware, QueryTimeoutMiddlewareConfiguration>(new(timeoutAfter));
     }
 
-    public static IQueryPipelineBuilder ConfigureTimeout(this IQueryPipelineBuilder pipeline, TimeSpan timeoutAfter)
+    public static IQueryPipeline<TQuery, TResponse> ConfigureTimeout<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                        TimeSpan timeoutAfter)
+        where TQuery : class
     {
         return pipeline.Configure<QueryTimeoutMiddleware, QueryTimeoutMiddlewareConfiguration>(new QueryTimeoutMiddlewareConfiguration(timeoutAfter));
     }

@@ -31,14 +31,14 @@ public static class SymbolExtensions
         return IsCommandHandlerType(declaredTypeSymbol, context);
     }
 
-    public static bool IsQueryHandlerType(this ITypeSymbol symbol, SyntaxNodeAnalysisContext context)
+    public static bool IsQueryHandlerType(this ITypeSymbol symbol, Compilation compilation)
     {
-        return symbol?.Interfaces.Any(i => i.IsQueryHandlerInterfaceType(context)) ?? false;
+        return symbol?.Interfaces.Any(i => i.IsQueryHandlerInterfaceType(compilation)) ?? false;
     }
 
-    public static bool IsQueryHandlerInterfaceType(this INamedTypeSymbol symbol, SyntaxNodeAnalysisContext context)
+    public static bool IsQueryHandlerInterfaceType(this INamedTypeSymbol symbol, Compilation compilation)
     {
-        var queryHandlerInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.IQueryHandler`2");
+        var queryHandlerInterfaceType = compilation.GetTypeByMetadataName("Conqueror.IQueryHandler`2");
 
         if (queryHandlerInterfaceType == null)
         {
@@ -50,9 +50,9 @@ public static class SymbolExtensions
             return true;
         }
 
-        var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(symbol.ToString());
+        var declaredTypeSymbol = compilation.GetTypeByMetadataName(symbol.ToString());
 
-        return IsQueryHandlerType(declaredTypeSymbol, context);
+        return IsQueryHandlerType(declaredTypeSymbol, compilation);
     }
 
     public static bool IsEquivalent(this ISymbol symbol1, ISymbol symbol2)

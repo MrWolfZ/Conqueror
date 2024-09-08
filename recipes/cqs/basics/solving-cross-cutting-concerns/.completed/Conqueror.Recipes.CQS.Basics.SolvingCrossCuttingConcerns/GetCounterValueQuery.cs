@@ -17,7 +17,7 @@ internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
         this.repository = repository;
     }
 
-    public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) =>
+    public static void ConfigurePipeline(IQueryPipeline<GetCounterValueQuery, GetCounterValueQueryResponse> pipeline) =>
         pipeline.UseDefault()
                 .ConfigureRetry(o => o.RetryAttemptLimit = 3);
 

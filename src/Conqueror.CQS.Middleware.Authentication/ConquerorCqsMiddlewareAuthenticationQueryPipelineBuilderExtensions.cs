@@ -4,7 +4,7 @@ using Conqueror.CQS.Middleware.Authentication;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipelineBuilder" /> to add, configure, or remove authentication functionality.
+///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove authentication functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineBuilderExtensions
 {
@@ -13,7 +13,8 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineBuilderExte
     /// </summary>
     /// <param name="pipeline">The query pipeline to add the authentication middleware to</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder UseAuthentication(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> UseAuthentication<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Use<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>(new());
     }
@@ -27,7 +28,8 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineBuilderExte
     /// </summary>
     /// <param name="pipeline">The query pipeline to configure authentication for</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder RequireAuthenticatedPrincipal(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> RequireAuthenticatedPrincipal<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Configure<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = true);
     }
@@ -37,7 +39,8 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineBuilderExte
     /// </summary>
     /// <param name="pipeline">The query pipeline to configure authentication for</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder AllowAnonymousAccess(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> AllowAnonymousAccess<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Configure<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = false);
     }
@@ -47,7 +50,8 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineBuilderExte
     /// </summary>
     /// <param name="pipeline">The query pipeline with the authentication middleware to remove</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipelineBuilder WithoutAuthentication(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> WithoutAuthentication<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Without<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>();
     }

@@ -635,7 +635,7 @@ public abstract class QueryClientMiddlewareFunctionalityTests
             return Task.FromResult(new TestQueryResponse(query.Payload));
         }
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware2>();
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => pipeline.Use<TestQueryMiddleware2>();
     }
 
     private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>

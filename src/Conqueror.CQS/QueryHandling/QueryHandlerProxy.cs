@@ -10,14 +10,14 @@ namespace Conqueror.CQS.QueryHandling;
 internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuery, TResponse>
     where TQuery : class
 {
-    private readonly Action<IQueryPipelineBuilder>? configurePipeline;
+    private readonly Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline;
     private readonly QueryMiddlewareRegistry queryMiddlewareRegistry;
     private readonly IServiceProvider serviceProvider;
     private readonly QueryTransportClientFactory transportClientFactory;
 
     public QueryHandlerProxy(IServiceProvider serviceProvider,
                              QueryTransportClientFactory transportClientFactory,
-                             Action<IQueryPipelineBuilder>? configurePipeline,
+                             Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline,
                              QueryMiddlewareRegistry queryMiddlewareRegistry)
     {
         this.serviceProvider = serviceProvider;
@@ -36,7 +36,7 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
             conquerorContext.SetQueryId(ActivitySpanId.CreateRandom().ToString());
         }
 
-        var pipelineBuilder = new QueryPipelineBuilder(serviceProvider, queryMiddlewareRegistry);
+        var pipelineBuilder = new QueryPipeline<TQuery, TResponse>(serviceProvider, queryMiddlewareRegistry);
 
         configurePipeline?.Invoke(pipelineBuilder);
 
@@ -50,7 +50,7 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
                              .ConfigureAwait(false);
     }
 
-    public IQueryHandler<TQuery, TResponse> WithPipeline(Action<IQueryPipelineBuilder> configure)
+    public IQueryHandler<TQuery, TResponse> WithPipeline(Action<IQueryPipeline<TQuery, TResponse>> configure)
     {
         if (configurePipeline is not null)
         {

@@ -84,7 +84,7 @@ public sealed class QueryServiceCollectionConfigurationTests
     {
         public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
 
-        public static void ConfigurePipeline(IQueryPipelineBuilder pipeline) => pipeline.Use<TestQueryMiddleware>();
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => pipeline.Use<TestQueryMiddleware>();
     }
 
     private sealed class TestQueryMiddleware : IQueryMiddleware

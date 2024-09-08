@@ -14,17 +14,20 @@ public sealed class QueryAuthorizationMiddleware : IQueryMiddleware<QueryAuthori
 
 public static class AuthorizationQueryPipelineBuilderExtensions
 {
-    public static IQueryPipelineBuilder UseAuthorization(this IQueryPipelineBuilder pipeline)
+    public static IQueryPipeline<TQuery, TResponse> UseAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
+        where TQuery : class
     {
         return pipeline.Use<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(new(null));
     }
 
-    public static IQueryPipelineBuilder UsePermission(this IQueryPipelineBuilder pipeline, string permission)
+    public static IQueryPipeline<TQuery, TResponse> UsePermission<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline, string permission)
+        where TQuery : class
     {
         return pipeline.Use<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(new(permission));
     }
 
-    public static IQueryPipelineBuilder RequirePermission(this IQueryPipelineBuilder pipeline, string permission)
+    public static IQueryPipeline<TQuery, TResponse> RequirePermission<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline, string permission)
+        where TQuery : class
     {
         return pipeline.Configure<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(c => c with { Permission = permission });
     }

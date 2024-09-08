@@ -52,6 +52,25 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
         var notImplementedExceptionType = SyntaxFactory.ParseTypeName("System.NotImplementedException");
 
+        var queryTypeName = "Query";
+        var responseTypeName = "Response";
+
+        var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+
+        if (semanticModel is not null)
+        {
+            foreach (var baseType in typeDecl.BaseList?.Types ?? [])
+            {
+                var typeInfo = semanticModel.GetTypeInfo(baseType.Type, cancellationToken);
+
+                if (typeInfo.Type is INamedTypeSymbol s && s.Interfaces.Concat([s]).FirstOrDefault(t => t.IsQueryHandlerInterfaceType(semanticModel.Compilation)) is { } i)
+                {
+                    queryTypeName = i.TypeArguments.ElementAtOrDefault(0)?.Name ?? "Query";
+                    responseTypeName = i.TypeArguments.ElementAtOrDefault(1)?.Name ?? "Response";
+                }
+            }
+        }
+
         var methodDeclaration = SyntaxFactory.MethodDeclaration(default,
                                                                 SyntaxTokenList.Create(SyntaxFactory.Token(SyntaxKind.PublicKeyword)).Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword)),
                                                                 SyntaxFactory.ParseTypeName("void"),
@@ -62,7 +81,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                                                                 {
                                                                     SyntaxFactory.Parameter(default,
                                                                                             default,
-                                                                                            SyntaxFactory.ParseTypeName(Constants.QueryPipelineBuilderInterfaceName),
+                                                                                            SyntaxFactory.ParseTypeName($"{Constants.QueryPipelineInterfaceName}<{queryTypeName}, {responseTypeName}>"),
                                                                                             SyntaxFactory.Identifier("pipeline"),
                                                                                             null),
                                                                 })),

@@ -7,7 +7,7 @@ namespace Conqueror;
 public static class ConquerorCqsQueryClientExtensions
 {
     public static IQueryHandler<TQuery, TResponse> WithPipeline<TQuery, TResponse>(this IQueryHandler<TQuery, TResponse> handler,
-                                                                                   Action<IQueryPipelineBuilder> configurePipeline)
+                                                                                   Action<IQueryPipeline<TQuery, TResponse>> configurePipeline)
         where TQuery : class
     {
         if (handler is QueryHandlerProxy<TQuery, TResponse> proxy)
