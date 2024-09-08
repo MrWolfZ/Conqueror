@@ -373,7 +373,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
     }
 
     [Test]
-    public async Task GivenTransientTransportWithRetryMiddleware_EachRetryGetsNewTransportInstance()
+    public async Task GivenTransientTransportWithRetryMiddleware_EachRetryUsesSameTransportInstance()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -403,7 +403,7 @@ public abstract class CommandClientMiddlewareLifetimeTests
                                               .Use<TestCommandMiddleware2>())
                           .ExecuteCommand(new(), CancellationToken.None);
 
-        Assert.That(observations.TransportInvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1 }));
+        Assert.That(observations.TransportInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 2 }));
     }
 
     [Test]

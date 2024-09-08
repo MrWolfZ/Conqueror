@@ -596,8 +596,8 @@ public sealed class ConquerorContextDataTests
         [
             (1, 1, Location.PreExecution),
             (2, 1, Location.ClientPipelineBuilder),
-            (2, 1, Location.ClientMiddlewarePreExecution),
             (2, 1, Location.TransportBuilder),
+            (2, 1, Location.ClientMiddlewarePreExecution),
             (3, 1, Location.PipelineBuilder),
             (3, 1, Location.MiddlewarePreExecution),
             (3, 1, Location.HandlerPreNestedExecution),

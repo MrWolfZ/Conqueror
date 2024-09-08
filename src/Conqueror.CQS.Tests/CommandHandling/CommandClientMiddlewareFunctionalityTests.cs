@@ -817,11 +817,13 @@ public abstract class CommandClientMiddlewareFunctionalityTests
     public void GivenMiddlewareThatThrows_InvocationThrowsSameException()
     {
         var services = new ServiceCollection();
+        var observations = new TestObservations();
         var exception = new Exception();
 
         AddCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorCommandMiddleware<ThrowingTestCommandMiddleware>()
+                    .AddSingleton(observations)
                     .AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();

@@ -564,11 +564,13 @@ public abstract class QueryClientMiddlewareFunctionalityTests
     public void GivenMiddlewareThatThrows_InvocationThrowsSameException()
     {
         var services = new ServiceCollection();
+        var observations = new TestObservations();
         var exception = new Exception();
 
         AddQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(services, CreateTransport);
 
         _ = services.AddConquerorQueryMiddleware<ThrowingTestQueryMiddleware>()
+                    .AddSingleton(observations)
                     .AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();

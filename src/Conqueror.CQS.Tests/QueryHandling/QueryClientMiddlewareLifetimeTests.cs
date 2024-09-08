@@ -337,7 +337,7 @@ public abstract class QueryClientMiddlewareLifetimeTests
     }
 
     [Test]
-    public async Task GivenTransientTransportWithRetryMiddleware_EachRetryGetsNewTransportInstance()
+    public async Task GivenTransientTransportWithRetryMiddleware_EachRetryUsesSameTransportInstance()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -367,7 +367,7 @@ public abstract class QueryClientMiddlewareLifetimeTests
                                               .Use<TestQueryMiddleware2>())
                           .ExecuteQuery(new(), CancellationToken.None);
 
-        Assert.That(observations.TransportInvocationCounts, Is.EquivalentTo(new[] { 1, 1, 1, 1 }));
+        Assert.That(observations.TransportInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 1, 2 }));
     }
 
     [Test]
