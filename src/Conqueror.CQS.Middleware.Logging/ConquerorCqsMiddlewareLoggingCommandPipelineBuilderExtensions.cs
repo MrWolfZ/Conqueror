@@ -5,7 +5,7 @@ using Conqueror.CQS.Middleware.Logging;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="ICommandPipelineBuilder" /> to add, configure, or remove logging functionality.
+///     Extension methods for <see cref="ICommandPipeline" /> to add, configure, or remove logging functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareLoggingCommandPipelineBuilderExtensions
 {
@@ -23,7 +23,9 @@ public static class ConquerorCqsMiddlewareLoggingCommandPipelineBuilderExtension
     ///     for the full list of configuration options)
     /// </param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UseLogging(this ICommandPipelineBuilder pipeline, Action<LoggingCommandMiddlewareConfiguration>? configure = null)
+    public static ICommandPipeline<TCommand, TResponse> UseLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                        Action<LoggingCommandMiddlewareConfiguration>? configure = null)
+        where TCommand : class
     {
         return pipeline.Use<LoggingCommandMiddleware, LoggingCommandMiddlewareConfiguration>(new())
                        .ConfigureLogging(configure ?? (_ => { }));
@@ -38,7 +40,9 @@ public static class ConquerorCqsMiddlewareLoggingCommandPipelineBuilderExtension
     ///     for the full list of configuration options)
     /// </param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder ConfigureLogging(this ICommandPipelineBuilder pipeline, Action<LoggingCommandMiddlewareConfiguration> configure)
+    public static ICommandPipeline<TCommand, TResponse> ConfigureLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                              Action<LoggingCommandMiddlewareConfiguration> configure)
+        where TCommand : class
     {
         return pipeline.Configure<LoggingCommandMiddleware, LoggingCommandMiddlewareConfiguration>(configure);
     }
@@ -48,7 +52,8 @@ public static class ConquerorCqsMiddlewareLoggingCommandPipelineBuilderExtension
     /// </summary>
     /// <param name="pipeline">The command pipeline with the logging middleware to remove</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder WithoutLogging(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> WithoutLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Without<LoggingCommandMiddleware, LoggingCommandMiddlewareConfiguration>();
     }

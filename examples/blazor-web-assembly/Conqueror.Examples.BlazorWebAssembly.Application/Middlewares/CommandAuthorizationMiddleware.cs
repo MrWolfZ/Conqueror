@@ -14,17 +14,20 @@ public sealed class CommandAuthorizationMiddleware : ICommandMiddleware<CommandA
 
 public static class AuthorizationCommandPipelineBuilderExtensions
 {
-    public static ICommandPipelineBuilder UseAuthorization(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> UseAuthorization<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Use<CommandAuthorizationMiddleware, CommandAuthorizationMiddlewareConfiguration>(new(null));
     }
 
-    public static ICommandPipelineBuilder UsePermission(this ICommandPipelineBuilder pipeline, string permission)
+    public static ICommandPipeline<TCommand, TResponse> UsePermission<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, string permission)
+        where TCommand : class
     {
         return pipeline.Use<CommandAuthorizationMiddleware, CommandAuthorizationMiddlewareConfiguration>(new(permission));
     }
 
-    public static ICommandPipelineBuilder RequirePermission(this ICommandPipelineBuilder pipeline, string permission)
+    public static ICommandPipeline<TCommand, TResponse> RequirePermission<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, string permission)
+        where TCommand : class
     {
         return pipeline.Configure<CommandAuthorizationMiddleware, CommandAuthorizationMiddlewareConfiguration>(c => c with { Permission = permission });
     }

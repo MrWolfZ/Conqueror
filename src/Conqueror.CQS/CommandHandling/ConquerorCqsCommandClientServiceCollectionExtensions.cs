@@ -17,48 +17,46 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
                                                                          Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
         where THandler : class, ICommandHandler
     {
-        return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, null);
+        return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory);
     }
 
     public static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
                                                                          Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory)
         where THandler : class, ICommandHandler
     {
-        return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory, null);
+        return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory);
     }
 
-    internal static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
-                                                                 Type handlerType,
-                                                                 ICommandTransportClient transportClient,
-                                                                 Action<ICommandPipelineBuilder>? configurePipeline)
+    internal static IServiceCollection AddConquerorCommandClient<THandler, TCommand, TResponse>(this IServiceCollection services,
+                                                                                                ICommandTransportClient transportClient,
+                                                                                                Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline)
+        where THandler : class, ICommandHandler
+        where TCommand : class
     {
-        return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClient), configurePipeline);
-    }
-
-    private static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
-                                                                Type handlerType,
-                                                                Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory,
-                                                                Action<ICommandPipelineBuilder>? configurePipeline)
-    {
-        return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClientFactory), configurePipeline);
+        services.AddClient<THandler, TCommand, TResponse>(new(transportClient), configurePipeline);
+        return services;
     }
 
     private static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
                                                                 Type handlerType,
-                                                                Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory,
-                                                                Action<ICommandPipelineBuilder>? configurePipeline)
+                                                                Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
     {
-        return services.AddConquerorCommandClient(handlerType, new CommandTransportClientFactory(transportClientFactory), configurePipeline);
+        return services.AddConquerorCommandClient(handlerType, new(transportClientFactory), null);
+    }
+
+    private static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
+                                                                Type handlerType,
+                                                                Func<ICommandTransportClientBuilder, Task<ICommandTransportClient>> transportClientFactory)
+    {
+        return services.AddConquerorCommandClient(handlerType, new(transportClientFactory), null);
     }
 
     private static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
                                                                 Type handlerType,
                                                                 CommandTransportClientFactory transportClientFactory,
-                                                                Action<ICommandPipelineBuilder>? configurePipeline)
+                                                                Delegate? configurePipeline)
     {
         handlerType.ValidateNoInvalidCommandHandlerInterface();
-
-        services.AddConquerorCqsCommandServices();
 
         var addClientMethod = typeof(ConquerorCqsCommandClientServiceCollectionExtensions).GetMethod(nameof(AddClient), BindingFlags.NonPublic | BindingFlags.Static);
 
@@ -67,19 +65,8 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
             throw new InvalidOperationException($"could not find method '{nameof(AddClient)}'");
         }
 
-        var existingCommandRegistrations = services.Select(d => d.ServiceType)
-                                                   .Where(t => t.IsCommandHandlerInterfaceType())
-                                                   .SelectMany(t => t.GetCommandAndResponseTypes())
-                                                   .Where(t => t.ResponseType != typeof(UnitCommandResponse))
-                                                   .ToDictionary(t => t.CommandType, t => t.ResponseType);
-
         foreach (var (commandType, responseType) in handlerType.GetCommandAndResponseTypes())
         {
-            if (existingCommandRegistrations.TryGetValue(commandType, out var existingResponseType) && responseType != existingResponseType)
-            {
-                throw new InvalidOperationException($"client for command type '{commandType.Name}' is already registered with response type '{(existingResponseType ?? typeof(UnitCommandResponse)).Name}', but tried to add client with different response type '{(responseType ?? typeof(UnitCommandResponse)).Name}'");
-            }
-
             var genericAddClientMethod = addClientMethod.MakeGenericMethod(handlerType, commandType, responseType ?? typeof(UnitCommandResponse));
 
             try
@@ -97,10 +84,28 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
 
     private static void AddClient<THandler, TCommand, TResponse>(this IServiceCollection services,
                                                                  CommandTransportClientFactory transportClientFactory,
-                                                                 Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                                 Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline)
         where THandler : class, ICommandHandler
         where TCommand : class
     {
+        typeof(THandler).ValidateNoInvalidCommandHandlerInterface();
+
+        var existingCommandRegistrations = services.Select(d => d.ServiceType)
+                                                   .Where(t => t.IsCommandHandlerInterfaceType())
+                                                   .SelectMany(t => t.GetCommandAndResponseTypes())
+
+                                                   // filter out the proxy registrations for handlers without response so that we only
+                                                   // get the response-less handler registrations
+                                                   .Where(t => t.ResponseType != typeof(UnitCommandResponse))
+                                                   .ToDictionary(t => t.CommandType, t => t.ResponseType);
+
+        if (existingCommandRegistrations.TryGetValue(typeof(TCommand), out var existingResponseType) && typeof(TResponse) != (existingResponseType ?? typeof(UnitCommandResponse)))
+        {
+            throw new InvalidOperationException($"client for command type '{typeof(TCommand)}' is already registered with response type '{existingResponseType}', but tried to add client with different response type '{typeof(TResponse)}'");
+        }
+
+        services.AddConquerorCqsCommandServices();
+
         RegisterPlainInterface();
         RegisterCustomInterface();
 
@@ -108,7 +113,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
         {
             if (typeof(TResponse) == typeof(UnitCommandResponse))
             {
-                services.TryAddTransient<ICommandHandler<TCommand>, CommandWithoutResponseAdapter<TCommand>>();
+                services.TryAddTransient<ICommandHandler<TCommand>, CommandHandlerWithoutResponseAdapter<TCommand>>();
             }
 
             _ = services.Replace(ServiceDescriptor.Transient<ICommandHandler<TCommand, TResponse>>(CreateProxy));

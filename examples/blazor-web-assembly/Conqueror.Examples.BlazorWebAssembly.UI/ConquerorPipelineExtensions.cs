@@ -4,7 +4,8 @@ namespace Conqueror.Examples.BlazorWebAssembly.UI;
 
 public static class ConquerorPipelineExtensions
 {
-    public static ICommandPipelineBuilder UseDefaultClientPipeline(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> UseDefaultClientPipeline<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.UseLogging()
                        .UseTimeout(TimeSpan.FromMinutes(1))

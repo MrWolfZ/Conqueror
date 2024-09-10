@@ -19,7 +19,7 @@ internal abstract class CommandHandlerGeneratedProxyBase<TCommand, TResponse> : 
         return target.ExecuteCommand(command, cancellationToken);
     }
 
-    public ICommandHandler<TCommand, TResponse> WithPipeline(Action<ICommandPipelineBuilder> configure)
+    public ICommandHandler<TCommand, TResponse> WithPipeline(Action<ICommandPipeline<TCommand, TResponse>> configure)
     {
         return target.WithPipeline(configure);
     }
@@ -40,7 +40,7 @@ internal abstract class CommandHandlerGeneratedProxyBase<TCommand> : ICommandHan
         return target.ExecuteCommand(command, cancellationToken);
     }
 
-    public ICommandHandler<TCommand> WithPipeline(Action<ICommandPipelineBuilder> configure)
+    public ICommandHandler<TCommand> WithPipeline(Action<ICommandPipeline<TCommand>> configure)
     {
         return target.WithPipeline(configure);
     }

@@ -49,7 +49,7 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] handler must not implement multiple custom interfaces for same command
   - [ ] middlewares must not implement more than one middleware interface of the same type (i.e. not implement interface with and without configuration)
   - [ ] error (optionally) when a handler is being injected directly instead of an interface
-- [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action<ICommandPipelineBuilder> configurePipeline)`
+- [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly)`
 - [ ] re-order all code so that command comes before query (or even better split files)
 - [ ] use a source generator instead of reflection for generating proxies
 - [ ] add a quick reference handbook that showcases all capabilities in a concise fashion

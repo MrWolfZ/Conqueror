@@ -689,7 +689,7 @@ public sealed class CommandMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use<TestCommandMiddleware>();
     }
 
     private sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
@@ -700,7 +700,7 @@ public sealed class CommandMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand2, TestCommandResponse2> pipeline) => pipeline.Use<TestCommandMiddleware>();
     }
 
     private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
@@ -710,7 +710,7 @@ public sealed class CommandMiddlewareLifetimeTests
             await Task.Yield();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline) => pipeline.Use<TestCommandMiddleware>();
     }
 
     private sealed class TestCommandHandlerWithMultipleMiddlewares : ICommandHandler<TestCommand, TestCommandResponse>
@@ -721,7 +721,7 @@ public sealed class CommandMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware>()
                         .Use<TestCommandMiddleware2>();
@@ -736,7 +736,7 @@ public sealed class CommandMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand2, TestCommandResponse2> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware>()
                         .Use<TestCommandMiddleware2>();
@@ -750,7 +750,7 @@ public sealed class CommandMiddlewareLifetimeTests
             await Task.Yield();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware>()
                         .Use<TestCommandMiddleware2>();
@@ -765,7 +765,7 @@ public sealed class CommandMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
     }
 
     private sealed class TestCommandHandlerWithoutResponseWithSameMiddlewareMultipleTimes : ICommandHandler<TestCommand>
@@ -775,7 +775,7 @@ public sealed class CommandMiddlewareLifetimeTests
             await Task.Yield();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand> pipeline) => pipeline.Use<TestCommandMiddleware>().Use<TestCommandMiddleware>();
     }
 
     private sealed class TestCommandHandlerWithRetryMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
@@ -796,7 +796,7 @@ public sealed class CommandMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandRetryMiddleware>()
                         .Use<TestCommandMiddleware>()

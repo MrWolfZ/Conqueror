@@ -3,7 +3,7 @@ namespace Conqueror.Recipes.CQS.Basics.TestingMiddlewares.Tests;
 [TestFixture]
 public sealed class DefaultCommandPipelineTests : TestBase
 {
-    private Action<ICommandPipelineBuilder> configurePipeline = pipeline => pipeline.UseDefault();
+    private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = pipeline => pipeline.UseDefault();
 
     private Func<TestCommand, Task<TestCommandResponse>> handlerExecutionFn = cmd => Task.FromResult(new TestCommandResponse(cmd.Parameter));
 

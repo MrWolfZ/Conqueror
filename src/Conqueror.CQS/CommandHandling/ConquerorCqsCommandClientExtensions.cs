@@ -7,7 +7,7 @@ namespace Conqueror;
 public static class ConquerorCqsCommandClientExtensions
 {
     public static ICommandHandler<TCommand, TResponse> WithPipeline<TCommand, TResponse>(this ICommandHandler<TCommand, TResponse> handler,
-                                                                                         Action<ICommandPipelineBuilder> configurePipeline)
+                                                                                         Action<ICommandPipeline<TCommand, TResponse>> configurePipeline)
         where TCommand : class
     {
         if (handler is CommandHandlerProxy<TCommand, TResponse> proxy)
@@ -24,10 +24,10 @@ public static class ConquerorCqsCommandClientExtensions
     }
 
     public static ICommandHandler<TCommand> WithPipeline<TCommand>(this ICommandHandler<TCommand> handler,
-                                                                   Action<ICommandPipelineBuilder> configurePipeline)
+                                                                   Action<ICommandPipeline<TCommand>> configurePipeline)
         where TCommand : class
     {
-        if (handler is CommandWithoutResponseAdapter<TCommand> adapter)
+        if (handler is CommandHandlerWithoutResponseAdapter<TCommand> adapter)
         {
             return adapter.WithPipeline(configurePipeline);
         }

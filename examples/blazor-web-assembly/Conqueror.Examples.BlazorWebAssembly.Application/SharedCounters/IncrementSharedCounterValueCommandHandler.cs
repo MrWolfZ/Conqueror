@@ -22,7 +22,7 @@ internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementShar
     }
 
     // ReSharper disable once UnusedMember.Global
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+    public static void ConfigurePipeline(ICommandPipeline<IncrementSharedCounterValueCommand, IncrementSharedCounterValueCommandResponse> pipeline) =>
         pipeline.UseDefault()
                 .ConfigureTimeout(TimeSpan.FromSeconds(10))
                 .RequirePermission(Permissions.UseSharedCounter)

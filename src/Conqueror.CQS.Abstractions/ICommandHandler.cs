@@ -9,23 +9,23 @@ public interface ICommandHandler
 {
 }
 
-public interface ICommandHandler<in TCommand> : ICommandHandler
+public interface ICommandHandler<TCommand> : ICommandHandler
     where TCommand : class
 {
     Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default);
 
-    static virtual void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+    static virtual void ConfigurePipeline(ICommandPipeline<TCommand> pipeline)
     {
         // by default, we use an empty pipeline
     }
 }
 
-public interface ICommandHandler<in TCommand, TResponse> : ICommandHandler
+public interface ICommandHandler<TCommand, TResponse> : ICommandHandler
     where TCommand : class
 {
     Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default);
 
-    static virtual void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+    static virtual void ConfigurePipeline(ICommandPipeline<TCommand, TResponse> pipeline)
     {
         // by default, we use an empty pipeline
     }

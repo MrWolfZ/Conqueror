@@ -5,7 +5,7 @@ using Conqueror.CQS.Middleware.Authorization;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="ICommandPipelineBuilder" /> to add, configure, or remove authorization functionality.
+///     Extension methods for <see cref="ICommandPipeline" /> to add, configure, or remove authorization functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExtensions
 {
@@ -23,7 +23,9 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     /// <param name="pipeline">The command pipeline to add the command type authorization middleware to</param>
     /// <param name="authorizationCheck">The delegate to use for checking command type authorization</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UseCommandTypeAuthorization(this ICommandPipelineBuilder pipeline, ConquerorOperationTypeAuthorizationCheckAsync authorizationCheck)
+    public static ICommandPipeline<TCommand, TResponse> UseCommandTypeAuthorization<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                                         ConquerorOperationTypeAuthorizationCheckAsync authorizationCheck)
+        where TCommand : class
     {
         return pipeline.Use<OperationTypeAuthorizationCommandMiddleware, OperationTypeAuthorizationCommandMiddlewareConfiguration>(new(authorizationCheck));
     }
@@ -42,7 +44,9 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     /// <param name="pipeline">The command pipeline to add the command type authorization middleware to</param>
     /// <param name="authorizationCheck">The delegate to use for checking command type authorization</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UseCommandTypeAuthorization(this ICommandPipelineBuilder pipeline, ConquerorOperationTypeAuthorizationCheck authorizationCheck)
+    public static ICommandPipeline<TCommand, TResponse> UseCommandTypeAuthorization<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                                         ConquerorOperationTypeAuthorizationCheck authorizationCheck)
+        where TCommand : class
     {
         return pipeline.UseCommandTypeAuthorization((principal, operationType) => Task.FromResult(authorizationCheck(principal, operationType)));
     }
@@ -52,18 +56,20 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     /// </summary>
     /// <param name="pipeline">The command pipeline with the command type authorization middleware to remove</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder WithoutCommandTypeAuthorization(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> WithoutCommandTypeAuthorization<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Without<OperationTypeAuthorizationCommandMiddleware, OperationTypeAuthorizationCommandMiddlewareConfiguration>();
     }
 
     /// <summary>
     ///     Enable payload authorization functionality for a command pipeline. By default, this middleware will not perform
-    ///     any authorization checks. Use <see cref="AddPayloadAuthorizationCheck{TCommand}(Conqueror.ICommandPipelineBuilder,Conqueror.ConquerorOperationPayloadAuthorizationCheckAsync{TCommand})" /> to add checks.
+    ///     any authorization checks. Use <see cref="AddPayloadAuthorizationCheck{TCommand, TResponse}(ICommandPipeline,Conqueror.ConquerorOperationPayloadAuthorizationCheckAsync{TCommand})" /> to add checks.
     /// </summary>
     /// <param name="pipeline">The command pipeline to add the payload authorization middleware to</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UsePayloadAuthorization(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> UsePayloadAuthorization<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Use<PayloadAuthorizationCommandMiddleware, PayloadAuthorizationCommandMiddlewareConfiguration>(new());
     }
@@ -82,7 +88,8 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     /// <param name="pipeline">The command pipeline to add the payload authorization check to</param>
     /// <param name="authorizationCheck">The delegate to use for checking payload authorization</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder AddPayloadAuthorizationCheck<TCommand>(this ICommandPipelineBuilder pipeline, ConquerorOperationPayloadAuthorizationCheckAsync<TCommand> authorizationCheck)
+    public static ICommandPipeline<TCommand, TResponse> AddPayloadAuthorizationCheck<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                                          ConquerorOperationPayloadAuthorizationCheckAsync<TCommand> authorizationCheck)
         where TCommand : class
     {
         return pipeline.Configure<PayloadAuthorizationCommandMiddleware, PayloadAuthorizationCommandMiddlewareConfiguration>(o =>
@@ -106,10 +113,11 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     /// <param name="pipeline">The command pipeline to add the payload authorization check to</param>
     /// <param name="authorizationCheck">The delegate to use for checking payload authorization</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder AddPayloadAuthorizationCheck<TCommand>(this ICommandPipelineBuilder pipeline, ConquerorOperationPayloadAuthorizationCheck<TCommand> authorizationCheck)
+    public static ICommandPipeline<TCommand, TResponse> AddPayloadAuthorizationCheck<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                                          ConquerorOperationPayloadAuthorizationCheck<TCommand> authorizationCheck)
         where TCommand : class
     {
-        return pipeline.AddPayloadAuthorizationCheck<TCommand>((principal, command) => Task.FromResult(authorizationCheck(principal, command)));
+        return pipeline.AddPayloadAuthorizationCheck((principal, command) => Task.FromResult(authorizationCheck(principal, command)));
     }
 
     /// <summary>
@@ -117,7 +125,8 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExt
     /// </summary>
     /// <param name="pipeline">The command pipeline with the payload authorization middleware to remove</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder WithoutPayloadAuthorization(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> WithoutPayloadAuthorization<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Without<PayloadAuthorizationCommandMiddleware, PayloadAuthorizationCommandMiddlewareConfiguration>();
     }

@@ -14,18 +14,20 @@ public sealed class CommandRetryMiddleware : ICommandMiddleware<CommandRetryMidd
 
 public static class RetryCommandPipelineBuilderExtensions
 {
-    public static ICommandPipelineBuilder UseRetry(this ICommandPipelineBuilder pipeline,
-                                                   int maxNumberOfAttempts = 3,
-                                                   TimeSpan? retryInterval = null)
+    public static ICommandPipeline<TCommand, TResponse> UseRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                      int maxNumberOfAttempts = 3,
+                                                                                      TimeSpan? retryInterval = null)
+        where TCommand : class
     {
         var configuration = new CommandRetryMiddlewareConfiguration(maxNumberOfAttempts, retryInterval ?? TimeSpan.FromSeconds(1));
 
         return pipeline.Use<CommandRetryMiddleware, CommandRetryMiddlewareConfiguration>(configuration);
     }
 
-    public static ICommandPipelineBuilder ConfigureRetry(this ICommandPipelineBuilder pipeline,
-                                                         int? maxNumberOfAttempts = null,
-                                                         TimeSpan? retryInterval = null)
+    public static ICommandPipeline<TCommand, TResponse> ConfigureRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                            int? maxNumberOfAttempts = null,
+                                                                                            TimeSpan? retryInterval = null)
+        where TCommand : class
     {
         return pipeline.Configure<CommandRetryMiddleware, CommandRetryMiddlewareConfiguration>(c =>
         {

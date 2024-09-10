@@ -191,7 +191,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutMiddlewares>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestCommandMiddleware2>()
                                     .Use<TestCommandMiddleware2>();
@@ -219,7 +219,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                                     .Use<TestCommandMiddleware2>()
@@ -249,7 +249,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestCommandMiddleware2>()
                                     .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
@@ -279,7 +279,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                                     .Use<TestCommandMiddleware2>()
@@ -310,7 +310,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestCommandMiddleware2>()
                                     .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
@@ -341,7 +341,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestCommandMiddleware2>()
                                     .Without<TestCommandMiddleware2>()
@@ -370,7 +370,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware2>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
                     {
                         _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                                     .Without<TestCommandMiddleware, TestCommandMiddlewareConfiguration>()
@@ -575,7 +575,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                     .AddScoped<TestService>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
 
         var provider = services.BuildServiceProvider();
 
@@ -606,7 +606,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                     .AddScoped<TestService>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommandWithoutResponse>>>(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()));
 
         var provider = services.BuildServiceProvider();
 
@@ -635,7 +635,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutMiddlewares>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline => pipeline.Use<TestCommandMiddleware2>());
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline => pipeline.Use<TestCommandMiddleware2>());
 
         var provider = services.BuildServiceProvider();
 
@@ -656,7 +656,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutMiddlewares>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline => pipeline.Use<TestCommandMiddleware2>());
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommandWithoutResponse>>>(pipeline => pipeline.Use<TestCommandMiddleware2>());
 
         var provider = services.BuildServiceProvider();
 
@@ -677,7 +677,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutMiddlewares>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
 
         var provider = services.BuildServiceProvider();
 
@@ -698,7 +698,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponseWithoutMiddlewares>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommandWithoutResponse>>>(pipeline => pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()));
 
         var provider = services.BuildServiceProvider();
 
@@ -821,7 +821,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             return new(command.Payload + 1);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
         }
@@ -844,7 +844,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             return new(command.Payload + 1);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 });
         }
@@ -866,7 +866,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.CancellationTokensFromHandlers.Add(cancellationToken);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
         }
@@ -888,7 +888,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.CancellationTokensFromHandlers.Add(cancellationToken);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new() { Parameter = 10 });
         }
@@ -911,7 +911,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                         .Use<TestCommandMiddleware2>();
@@ -934,7 +934,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.CancellationTokensFromHandlers.Add(cancellationToken);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
                         .Use<TestCommandMiddleware2>();
@@ -958,9 +958,9 @@ public sealed class CommandMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
-            pipeline.ServiceProvider.GetService<Action<ICommandPipelineBuilder>>()?.Invoke(pipeline);
+            pipeline.ServiceProvider.GetService<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>()?.Invoke(pipeline);
         }
     }
 
@@ -980,9 +980,9 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.CancellationTokensFromHandlers.Add(cancellationToken);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline)
         {
-            pipeline.ServiceProvider.GetService<Action<ICommandPipelineBuilder>>()?.Invoke(pipeline);
+            pipeline.ServiceProvider.GetService<Action<ICommandPipeline<TestCommandWithoutResponse>>>()?.Invoke(pipeline);
         }
     }
 
@@ -1003,7 +1003,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
             _ = pipeline.Use<TestCommandRetryMiddleware>()
                         .Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new())
@@ -1028,7 +1028,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
             _ = pipeline.Use<MutatingTestCommandMiddleware>()
                         .Use<MutatingTestCommandMiddleware2>();
@@ -1051,7 +1051,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             observations.CancellationTokensFromHandlers.Add(cancellationToken);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline)
         {
             _ = pipeline.Use<MutatingTestCommandMiddleware>()
                         .Use<MutatingTestCommandMiddleware2>();
@@ -1066,7 +1066,7 @@ public sealed class CommandMiddlewareFunctionalityTests
             return new(0);
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
             _ = pipeline.Use<ThrowingTestCommandMiddleware, TestCommandMiddlewareConfiguration>(new());
         }

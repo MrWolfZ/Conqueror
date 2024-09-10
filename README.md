@@ -123,11 +123,11 @@ public interface IIncrementCounterByCommandHandler
 }
 
 internal sealed class IncrementCounterByCommandHandler
-    : IIncrementCounterByCommandHandler, IConfigureCommandPipeline
+    : IIncrementCounterByCommandHandler
 {
     // add logging to the command pipeline and configure the pre-execution log
     // level (only for demonstration purposes since the default is the same)
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+    public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) =>
         pipeline.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Information);
 
     public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command,

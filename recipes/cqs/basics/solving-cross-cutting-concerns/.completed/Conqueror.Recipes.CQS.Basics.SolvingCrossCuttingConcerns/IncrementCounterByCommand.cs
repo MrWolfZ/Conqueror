@@ -21,7 +21,7 @@ internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByComm
         this.repository = repository;
     }
 
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+    public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) =>
         pipeline.UseDefault()
                 .ConfigureRetry(o => o.RetryAttemptLimit = 3);
 

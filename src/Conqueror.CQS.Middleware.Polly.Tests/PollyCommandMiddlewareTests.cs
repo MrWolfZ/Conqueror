@@ -6,7 +6,7 @@ namespace Conqueror.CQS.Middleware.Polly.Tests;
 public sealed class PollyCommandMiddlewareTests : TestBase
 {
     private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
-    private Action<ICommandPipelineBuilder> configurePipeline = _ => { };
+    private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = _ => { };
 
     [Test]
     public async Task GivenDefaultMiddlewareConfiguration_ExecutesHandlerWithoutModification()

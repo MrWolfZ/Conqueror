@@ -5,7 +5,7 @@ using Polly;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="ICommandPipelineBuilder" /> to add, configure, or remove Polly functionality.
+///     Extension methods for <see cref="ICommandPipeline" /> to add, configure, or remove Polly functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewarePollyCommandPipelineBuilderExtensions
 {
@@ -15,7 +15,9 @@ public static class ConquerorCqsMiddlewarePollyCommandPipelineBuilderExtensions
     /// <param name="pipeline">The command pipeline to add the Polly middleware to</param>
     /// <param name="policy">The policy to use to wrap the rest of the pipeline execution</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UsePolly(this ICommandPipelineBuilder pipeline, AsyncPolicy policy)
+    public static ICommandPipeline<TCommand, TResponse> UsePolly<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                      AsyncPolicy policy)
+        where TCommand : class
     {
         return pipeline.Use<PollyCommandMiddleware, PollyCommandMiddlewareConfiguration>(new() { Policy = policy });
     }
@@ -26,7 +28,9 @@ public static class ConquerorCqsMiddlewarePollyCommandPipelineBuilderExtensions
     /// <param name="pipeline">The command pipeline to configure the Polly middleware in</param>
     /// <param name="policy">The policy to use in the Polly middleware</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder ConfigurePollyPolicy(this ICommandPipelineBuilder pipeline, AsyncPolicy policy)
+    public static ICommandPipeline<TCommand, TResponse> ConfigurePollyPolicy<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                                  AsyncPolicy policy)
+        where TCommand : class
     {
         return pipeline.Configure<PollyCommandMiddleware, PollyCommandMiddlewareConfiguration>(o => o.Policy = policy);
     }
@@ -36,7 +40,8 @@ public static class ConquerorCqsMiddlewarePollyCommandPipelineBuilderExtensions
     /// </summary>
     /// <param name="pipeline">The command pipeline with the Polly middleware to remove</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder WithoutPolly(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> WithoutPolly<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Without<PollyCommandMiddleware, PollyCommandMiddlewareConfiguration>();
     }

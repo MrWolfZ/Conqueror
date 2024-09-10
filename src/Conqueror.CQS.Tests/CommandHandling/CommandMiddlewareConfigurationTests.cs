@@ -14,7 +14,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
         var initialConfiguration = new TestCommandMiddlewareConfiguration(10);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline => { _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration); });
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline => { _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration); });
 
         var provider = services.BuildServiceProvider();
 
@@ -38,7 +38,7 @@ public sealed class CommandMiddlewareConfigurationTests
         var initialConfiguration = new TestCommandMiddlewareConfiguration(10);
         var overwrittenConfiguration = new TestCommandMiddlewareConfiguration(20);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration);
 
@@ -66,7 +66,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
         var initialConfiguration = new TestCommandMiddlewareConfiguration(10);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration);
 
@@ -96,7 +96,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
         var initialConfiguration = new TestCommandMiddlewareConfiguration(10);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
             _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration);
 
@@ -124,7 +124,7 @@ public sealed class CommandMiddlewareConfigurationTests
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<ICommandPipelineBuilder>>(pipeline =>
+        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
             _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new TestCommandMiddlewareConfiguration(20)));
             _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(c => c.Parameter += 10));
@@ -150,9 +150,9 @@ public sealed class CommandMiddlewareConfigurationTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
         {
-            pipeline.ServiceProvider.GetService<Action<ICommandPipelineBuilder>>()?.Invoke(pipeline);
+            pipeline.ServiceProvider.GetService<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>()?.Invoke(pipeline);
         }
     }
 

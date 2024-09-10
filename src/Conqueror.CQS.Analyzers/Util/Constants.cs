@@ -4,7 +4,7 @@ public static class Constants
 {
     public const string ConfigurePipelineMethodName = "ConfigurePipeline";
 
-    public const string CommandPipelineBuilderInterfaceName = "ICommandPipelineBuilder";
+    public const string CommandPipelineInterfaceName = "ICommandPipeline";
 
     public const string QueryPipelineInterfaceName = "IQueryPipeline";
 

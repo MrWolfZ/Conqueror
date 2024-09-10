@@ -29,7 +29,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
 
     private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) =>
             pipeline.UseDataAnnotationValidation();
 
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)

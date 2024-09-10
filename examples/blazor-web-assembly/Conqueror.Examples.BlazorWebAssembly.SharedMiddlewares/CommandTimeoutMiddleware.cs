@@ -14,12 +14,14 @@ public sealed class CommandTimeoutMiddleware : ICommandMiddleware<CommandTimeout
 
 public static class TimeoutCommandPipelineBuilderExtensions
 {
-    public static ICommandPipelineBuilder UseTimeout(this ICommandPipelineBuilder pipeline, TimeSpan timeoutAfter)
+    public static ICommandPipeline<TCommand, TResponse> UseTimeout<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, TimeSpan timeoutAfter)
+        where TCommand : class
     {
         return pipeline.Use<CommandTimeoutMiddleware, CommandTimeoutMiddlewareConfiguration>(new(timeoutAfter));
     }
 
-    public static ICommandPipelineBuilder ConfigureTimeout(this ICommandPipelineBuilder pipeline, TimeSpan timeoutAfter)
+    public static ICommandPipeline<TCommand, TResponse> ConfigureTimeout<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, TimeSpan timeoutAfter)
+        where TCommand : class
     {
         return pipeline.Configure<CommandTimeoutMiddleware, CommandTimeoutMiddlewareConfiguration>(new CommandTimeoutMiddlewareConfiguration(timeoutAfter));
     }

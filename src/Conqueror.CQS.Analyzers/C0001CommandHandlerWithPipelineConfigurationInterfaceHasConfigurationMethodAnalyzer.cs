@@ -35,7 +35,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
         var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
 
-        if (!symbol.IsCommandHandlerType(context))
+        if (!symbol.IsCommandHandlerType(context.Compilation))
         {
             return;
         }

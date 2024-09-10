@@ -4,7 +4,7 @@ using Conqueror.CQS.Middleware.Authentication;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="ICommandPipelineBuilder" /> to add, configure, or remove authentication functionality.
+///     Extension methods for <see cref="ICommandPipeline" /> to add, configure, or remove authentication functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineBuilderExtensions
 {
@@ -13,7 +13,8 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineBuilderEx
     /// </summary>
     /// <param name="pipeline">The command pipeline to add the authentication middleware to</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UseAuthentication(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> UseAuthentication<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Use<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>(new());
     }
@@ -27,7 +28,8 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineBuilderEx
     /// </summary>
     /// <param name="pipeline">The command pipeline to configure authentication for</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder RequireAuthenticatedPrincipal(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> RequireAuthenticatedPrincipal<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Configure<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = true);
     }
@@ -37,7 +39,8 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineBuilderEx
     /// </summary>
     /// <param name="pipeline">The command pipeline to configure authentication for</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder AllowAnonymousAccess(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> AllowAnonymousAccess<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Configure<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = false);
     }
@@ -47,7 +50,8 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineBuilderEx
     /// </summary>
     /// <param name="pipeline">The command pipeline with the authentication middleware to remove</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder WithoutAuthentication(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> WithoutAuthentication<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Without<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>();
     }

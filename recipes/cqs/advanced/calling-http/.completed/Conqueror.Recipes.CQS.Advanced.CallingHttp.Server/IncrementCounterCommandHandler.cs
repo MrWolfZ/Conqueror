@@ -9,7 +9,7 @@ internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandH
         this.repository = repository;
     }
 
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.UseDataAnnotationValidation();
+    public static void ConfigurePipeline(ICommandPipeline<IncrementCounterCommand, IncrementCounterCommandResponse> pipeline) => pipeline.UseDataAnnotationValidation();
 
     public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {

@@ -20,7 +20,7 @@ internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandH
         this.userHistoryRepository = userHistoryRepository;
     }
 
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.UseDefault();
+    public static void ConfigurePipeline(ICommandPipeline<IncrementCounterCommand, IncrementCounterCommandResponse> pipeline) => pipeline.UseDefault();
 
     public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {

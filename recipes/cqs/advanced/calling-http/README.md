@@ -310,7 +310,8 @@ That looks much better. Being able to use the same middlewares in both server an
 Similar to the default pipelines we created in the recipe for [solving cross-cutting concerns](../../basics/solving-cross-cutting-concerns#readme), it can be useful to create shared pipelines for your command and query clients. For example, you could create a shared pipeline that ensures all outgoing commands are validated and retried on failure:
 
 ```cs
-public static ICommandPipelineBuilder UseClientDefault(this ICommandPipelineBuilder pipeline)
+public static ICommandPipeline<TCommand, TResponse> UseClientDefault<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+    where TCommand : class
 {
     return pipeline.UseDataAnnotationValidation()
                    .UseRetry();

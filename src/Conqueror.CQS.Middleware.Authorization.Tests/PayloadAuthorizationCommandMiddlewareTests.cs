@@ -6,7 +6,7 @@ namespace Conqueror.CQS.Middleware.Authorization.Tests;
 public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 {
     private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
-    private Action<ICommandPipelineBuilder> configurePipeline = _ => { };
+    private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = _ => { };
 
     private IConquerorAuthenticationContext AuthenticationContext => Resolve<IConquerorAuthenticationContext>();
 
@@ -23,7 +23,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -43,7 +43,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -65,7 +65,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -87,7 +87,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => ConquerorAuthorizationResult.Success());
+                                                .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Success());
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -109,8 +109,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => ConquerorAuthorizationResult.Success());
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
+                                                .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Success());
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -130,8 +130,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => ConquerorAuthorizationResult.Success());
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
+                                                .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Success());
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -153,8 +153,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => ConquerorAuthorizationResult.Success());
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
+                                                .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Success());
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -176,7 +176,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -196,7 +196,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -217,7 +217,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         var result = ConquerorAuthorizationResult.Failure("test");
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(result));
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(result));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -238,7 +238,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         var result = ConquerorAuthorizationResult.Failure("test");
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => result);
+                                                .AddPayloadAuthorizationCheck((_, _) => result);
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -260,8 +260,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 1")))
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => ConquerorAuthorizationResult.Failure("test 2"));
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 1")))
+                                                .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Failure("test 2"));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -281,8 +281,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 1")))
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => ConquerorAuthorizationResult.Failure("test 2"));
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 1")))
+                                                .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Failure("test 2"));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -304,8 +304,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         var result2 = ConquerorAuthorizationResult.Failure("test 2");
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(result1))
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => result2);
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(result1))
+                                                .AddPayloadAuthorizationCheck((_, _) => result2);
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -327,8 +327,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => ConquerorAuthorizationResult.Success())
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+                                                .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Success())
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -348,8 +348,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => ConquerorAuthorizationResult.Success())
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
+                                                .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Success())
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
 
@@ -371,8 +371,8 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         var failureResult = ConquerorAuthorizationResult.Failure("test");
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => successResult)
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(failureResult));
+                                                .AddPayloadAuthorizationCheck((_, _) => successResult)
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(failureResult));
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
@@ -394,7 +394,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutPayloadAuthorization();
 
         var response = await Handler.ExecuteCommand(testCommand);
@@ -415,7 +415,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutPayloadAuthorization();
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new());
@@ -438,7 +438,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         };
 
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<TestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
+                                                .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutPayloadAuthorization();
 
         using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
@@ -446,22 +446,6 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         var response = await Handler.ExecuteCommand(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
-    }
-
-    [Test]
-    public async Task GivenAuthorizationCheckForBaseCommandType_WhenExecutedWithAuthenticatedPrincipal_AllowsExecution()
-    {
-        var testCommand = new SubTestCommand();
-        var expectedResponse = new TestCommandResponse();
-
-        configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
-                                                .AddPayloadAuthorizationCheck<BaseTestCommand>((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
-
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
-
-        var response = await Resolve<ICommandHandler<SubTestCommand, TestCommandResponse>>().ExecuteCommand(testCommand);
-
-        Assert.That(response, Is.EqualTo(expectedResponse));
     }
 
     private ICommandHandler<TestCommand, TestCommandResponse> Handler => Resolve<ICommandHandler<TestCommand, TestCommandResponse>>();
@@ -476,21 +460,10 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
                             await Task.Yield();
                             return handlerFn(command);
                         },
-                        pipeline => configurePipeline(pipeline))
-                    .AddConquerorCommandHandlerDelegate<SubTestCommand, TestCommandResponse>(
-                        async (_, _, _) =>
-                        {
-                            await Task.Yield();
-                            return new();
-                        },
                         pipeline => configurePipeline(pipeline));
     }
 
     private sealed record TestCommand;
 
     private sealed record TestCommandResponse;
-
-    private sealed record SubTestCommand : BaseTestCommand;
-
-    private abstract record BaseTestCommand;
 }

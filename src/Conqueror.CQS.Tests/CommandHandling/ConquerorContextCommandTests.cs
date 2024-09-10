@@ -508,8 +508,8 @@ public sealed class ConquerorContextCommandTests
             return response;
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<OuterTestCommandMiddleware>()
-                                                                                          .Use<TestCommandMiddleware>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use<OuterTestCommandMiddleware>()
+                                                                                                                     .Use<TestCommandMiddleware>();
     }
 
     private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>

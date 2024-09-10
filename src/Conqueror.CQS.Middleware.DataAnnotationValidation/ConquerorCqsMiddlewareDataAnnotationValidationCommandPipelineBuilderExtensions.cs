@@ -4,7 +4,7 @@ using Conqueror.CQS.Middleware.DataAnnotationValidation;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="ICommandPipelineBuilder" /> to add, configure, or remove data annotation validation functionality.
+///     Extension methods for <see cref="ICommandPipeline" /> to add, configure, or remove data annotation validation functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareDataAnnotationValidationCommandPipelineBuilderExtensions
 {
@@ -13,7 +13,8 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationCommandPipelin
     /// </summary>
     /// <param name="pipeline">The command pipeline to add data annotation validation to</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder UseDataAnnotationValidation(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> UseDataAnnotationValidation<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Use<DataAnnotationValidationCommandMiddleware>();
     }
@@ -23,7 +24,8 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationCommandPipelin
     /// </summary>
     /// <param name="pipeline">The command pipeline with the data annotation validation middleware to remove</param>
     /// <returns>The command pipeline</returns>
-    public static ICommandPipelineBuilder WithoutDataAnnotationValidation(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> WithoutDataAnnotationValidation<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Without<DataAnnotationValidationCommandMiddleware>();
     }

@@ -1,20 +1,19 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Conqueror.CQS.Analyzers.Util;
 
 public static class SymbolExtensions
 {
-    public static bool IsCommandHandlerType(this ITypeSymbol symbol, SyntaxNodeAnalysisContext context)
+    public static bool IsCommandHandlerType(this ITypeSymbol symbol, Compilation compilation)
     {
-        return symbol?.Interfaces.Any(i => i.IsCommandHandlerInterfaceType(context)) ?? false;
+        return symbol?.Interfaces.Any(i => i.IsCommandHandlerInterfaceType(compilation)) ?? false;
     }
 
-    public static bool IsCommandHandlerInterfaceType(this INamedTypeSymbol symbol, SyntaxNodeAnalysisContext context)
+    public static bool IsCommandHandlerInterfaceType(this INamedTypeSymbol symbol, Compilation compilation)
     {
-        var commandHandlerWithoutResponseInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.ICommandHandler`1");
-        var commandHandlerInterfaceType = context.Compilation.GetTypeByMetadataName("Conqueror.ICommandHandler`2");
+        var commandHandlerWithoutResponseInterfaceType = compilation.GetTypeByMetadataName("Conqueror.ICommandHandler`1");
+        var commandHandlerInterfaceType = compilation.GetTypeByMetadataName("Conqueror.ICommandHandler`2");
 
         if (commandHandlerInterfaceType == null || commandHandlerWithoutResponseInterfaceType == null)
         {
@@ -26,9 +25,9 @@ public static class SymbolExtensions
             return true;
         }
 
-        var declaredTypeSymbol = context.Compilation.GetTypeByMetadataName(symbol.ToString());
+        var declaredTypeSymbol = compilation.GetTypeByMetadataName(symbol.ToString());
 
-        return IsCommandHandlerType(declaredTypeSymbol, context);
+        return IsCommandHandlerType(declaredTypeSymbol, compilation);
     }
 
     public static bool IsQueryHandlerType(this ITypeSymbol symbol, Compilation compilation)

@@ -14,12 +14,14 @@ public sealed class CommandTransactionMiddleware : ICommandMiddleware<CommandTra
 
 public static class TransactionCommandPipelineBuilderExtensions
 {
-    public static ICommandPipelineBuilder UseTransaction(this ICommandPipelineBuilder pipeline, bool enlistInAmbientTransaction = true)
+    public static ICommandPipeline<TCommand, TResponse> UseTransaction<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, bool enlistInAmbientTransaction = true)
+        where TCommand : class
     {
         return pipeline.Use<CommandTransactionMiddleware, CommandTransactionMiddlewareConfiguration>(new(enlistInAmbientTransaction));
     }
 
-    public static ICommandPipelineBuilder OutsideOfAmbientTransaction(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> OutsideOfAmbientTransaction<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Configure<CommandTransactionMiddleware, CommandTransactionMiddlewareConfiguration>(c => c with { EnlistInAmbientTransaction = false });
     }

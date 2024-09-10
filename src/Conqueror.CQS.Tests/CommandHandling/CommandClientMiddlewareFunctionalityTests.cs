@@ -892,7 +892,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
             return Task.FromResult(new TestCommandResponse(command.Payload));
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware2>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use<TestCommandMiddleware2>();
     }
 
     private class TestCommandHandlerWithoutResponse : ITestCommandHandlerWithoutResponse
@@ -902,7 +902,7 @@ public abstract class CommandClientMiddlewareFunctionalityTests
             return Task.CompletedTask;
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware2>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline) => pipeline.Use<TestCommandMiddleware2>();
     }
 
     private sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>

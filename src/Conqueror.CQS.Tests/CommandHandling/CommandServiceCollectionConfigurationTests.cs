@@ -125,7 +125,7 @@ public sealed class CommandServiceCollectionConfigurationTests
     {
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.Use<TestCommandMiddleware>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use<TestCommandMiddleware>();
     }
 
     private sealed class TestCommandMiddleware : ICommandMiddleware

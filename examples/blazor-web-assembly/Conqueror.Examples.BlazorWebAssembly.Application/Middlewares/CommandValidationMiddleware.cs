@@ -14,7 +14,8 @@ public sealed class CommandValidationMiddleware : ICommandMiddleware
 
 public static class ValidationCommandPipelineBuilderExtensions
 {
-    public static ICommandPipelineBuilder UseValidation(this ICommandPipelineBuilder pipeline)
+    public static ICommandPipeline<TCommand, TResponse> UseValidation<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class
     {
         return pipeline.Use<CommandValidationMiddleware>();
     }

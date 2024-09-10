@@ -430,7 +430,7 @@ public sealed class CommandHttpEndpointTests : TestBase
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+        public static void ConfigurePipeline(ICommandPipeline<TestWithMiddlewareCommand> pipeline) =>
             pipeline.Use<TestCommandMiddleware>();
     }
 
@@ -460,7 +460,7 @@ public sealed class CommandHttpEndpointTests : TestBase
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+        public static void ConfigurePipeline(ICommandPipeline<TestWithMiddlewareWithoutResponseCommand> pipeline) =>
             pipeline.Use<TestCommandMiddleware>();
     }
 

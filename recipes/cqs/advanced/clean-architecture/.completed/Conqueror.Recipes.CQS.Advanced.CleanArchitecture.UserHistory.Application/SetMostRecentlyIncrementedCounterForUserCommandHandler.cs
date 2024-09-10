@@ -9,7 +9,7 @@ internal sealed class SetMostRecentlyIncrementedCounterForUserCommandHandler : I
         this.userHistoryWriteRepository = userHistoryWriteRepository;
     }
 
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => pipeline.UseDefault();
+    public static void ConfigurePipeline(ICommandPipeline<SetMostRecentlyIncrementedCounterForUserCommand> pipeline) => pipeline.UseDefault();
 
     public async Task ExecuteCommand(SetMostRecentlyIncrementedCounterForUserCommand command, CancellationToken cancellationToken = default)
     {

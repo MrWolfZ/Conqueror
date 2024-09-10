@@ -72,13 +72,13 @@ public sealed class RetryCommandMiddlewareTests
     private sealed record TestCommandResponse(int Value);
 
     private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn,
-                                                        Action<ICommandPipelineBuilder>? configurePipeline = null)
+                                                        Action<ICommandPipeline<TestCommand, TestCommandResponse>>? configurePipeline = null)
     {
         return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
 
                                       // create a handler from a delegate
-                                      .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecuteFn(command),
-                                                                                                            configurePipeline ?? (pipeline => pipeline.UseRetry()))
+                                      .AddConquerorCommandHandlerDelegate((command, _, _) => handlerExecuteFn(command),
+                                                                          configurePipeline ?? (pipeline => pipeline.UseRetry()))
 
                                       // add the retry middleware's default configuration
                                       .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })

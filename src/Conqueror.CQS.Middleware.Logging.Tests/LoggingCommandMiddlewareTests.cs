@@ -8,7 +8,9 @@ namespace Conqueror.CQS.Middleware.Logging.Tests;
 public sealed class LoggingCommandMiddlewareTests : TestBase
 {
     private Func<TestCommand, TestCommandResponse> handlerFn = cmd => new(cmd.Payload);
-    private Action<ICommandPipelineBuilder> configurePipeline = b => b.UseLogging();
+    private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = b => b.UseLogging();
+    private Action<ICommandPipeline<TestCommandWithoutPayload, TestCommandResponse>> configurePipelineWithoutPayload = b => b.UseLogging();
+    private Action<ICommandPipeline<TestCommandWithoutResponse>> configurePipelineWithoutResponse = b => b.UseLogging();
 
     [Test]
     public async Task GivenDefaultLoggingMiddlewareConfiguration_LogsCommandWithPayloadPreExecution()
@@ -84,7 +86,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         var testCommand = new TestCommandWithoutPayload();
 
-        configurePipeline = b => b.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
+        configurePipelineWithoutPayload = b => b.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
 
         _ = await HandlerWithoutPayload.ExecuteCommand(testCommand);
 
@@ -108,7 +110,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         var testCommand = new TestCommandWithoutResponse(10);
 
-        configurePipeline = b => b.UseLogging(o => o.PostExecutionLogLevel = LogLevel.Debug);
+        configurePipelineWithoutResponse = b => b.UseLogging(o => o.PostExecutionLogLevel = LogLevel.Debug);
 
         await HandlerWithoutResponse.ExecuteCommand(testCommand);
 
@@ -151,7 +153,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         var testCommand = new TestCommandWithoutPayload();
 
-        configurePipeline = b => b.UseLogging(o => o.OmitJsonSerializedCommandPayload = true);
+        configurePipelineWithoutPayload = b => b.UseLogging(o => o.OmitJsonSerializedCommandPayload = true);
 
         _ = await HandlerWithoutPayload.ExecuteCommand(testCommand);
 
@@ -175,7 +177,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         var testCommand = new TestCommandWithoutResponse(10);
 
-        configurePipeline = b => b.UseLogging(o => o.OmitJsonSerializedResponsePayload = true);
+        configurePipelineWithoutResponse = b => b.UseLogging(o => o.OmitJsonSerializedResponsePayload = true);
 
         await HandlerWithoutResponse.ExecuteCommand(testCommand);
 
@@ -502,7 +504,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
             return;
         }
 
-        var regexWithPayload = new Regex(@"Executing command with payload " + Regex.Escape(expectedSerializedCommand) + @" \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+        var regexWithPayload = new Regex("Executing command with payload " + Regex.Escape(expectedSerializedCommand) + @" \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
         AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
     }
 
@@ -515,7 +517,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
             return;
         }
 
-        var regexWithPayload = new Regex(@"Executed command and got response " + Regex.Escape(expectedSerializedResponse) + @" in [0-9.]+ms \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+        var regexWithPayload = new Regex("Executed command and got response " + Regex.Escape(expectedSerializedResponse) + @" in [0-9.]+ms \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
         AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
     }
 
@@ -537,14 +539,14 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
                         pipeline => configurePipeline(pipeline))
                     .AddConquerorCommandHandlerDelegate<TestCommandWithoutResponse>(
                         async (_, _, _) => { await Task.Yield(); },
-                        pipeline => configurePipeline(pipeline))
+                        pipeline => configurePipelineWithoutResponse(pipeline))
                     .AddConquerorCommandHandlerDelegate<TestCommandWithoutPayload, TestCommandResponse>(
                         async (_, _, _) =>
                         {
                             await Task.Yield();
                             return new(0);
                         },
-                        pipeline => configurePipeline(pipeline));
+                        pipeline => configurePipelineWithoutPayload(pipeline));
     }
 
     private sealed record TestCommand(int Payload);

@@ -78,7 +78,7 @@ internal sealed class CommandClientFactory
 
         if (typeof(THandler) == typeof(ICommandHandler<TCommand>))
         {
-            return (THandler)(object)new CommandWithoutResponseAdapter<TCommand>((ICommandHandler<TCommand, UnitCommandResponse>)(object)proxy);
+            return (THandler)(object)new CommandHandlerWithoutResponseAdapter<TCommand>((ICommandHandler<TCommand, UnitCommandResponse>)(object)proxy);
         }
 
         if (typeof(THandler) == typeof(ICommandHandler<TCommand, TResponse>))
@@ -89,7 +89,7 @@ internal sealed class CommandClientFactory
         if (typeof(THandler).IsAssignableTo(typeof(ICommandHandler<TCommand>)))
         {
             var proxyType = ProxyTypeGenerator.Create(typeof(THandler), typeof(ICommandHandler<TCommand>), typeof(CommandHandlerGeneratedProxyBase<TCommand>));
-            var adapter = new CommandWithoutResponseAdapter<TCommand>((ICommandHandler<TCommand, UnitCommandResponse>)(object)proxy);
+            var adapter = new CommandHandlerWithoutResponseAdapter<TCommand>((ICommandHandler<TCommand, UnitCommandResponse>)(object)proxy);
             return (THandler)Activator.CreateInstance(proxyType, adapter)!;
         }
 

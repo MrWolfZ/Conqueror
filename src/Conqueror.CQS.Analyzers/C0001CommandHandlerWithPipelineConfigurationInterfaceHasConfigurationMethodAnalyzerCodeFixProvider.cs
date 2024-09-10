@@ -52,6 +52,25 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
         var notImplementedExceptionType = SyntaxFactory.ParseTypeName("System.NotImplementedException");
 
+        var commandTypeName = "Command";
+        string responseTypeName = null;
+
+        var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+
+        if (semanticModel is not null)
+        {
+            foreach (var baseType in typeDecl.BaseList?.Types ?? [])
+            {
+                var typeInfo = semanticModel.GetTypeInfo(baseType.Type, cancellationToken);
+
+                if (typeInfo.Type is INamedTypeSymbol s && s.Interfaces.Concat([s]).FirstOrDefault(t => t.IsCommandHandlerInterfaceType(semanticModel.Compilation)) is { } i)
+                {
+                    commandTypeName = i.TypeArguments.ElementAtOrDefault(0)?.Name ?? "Command";
+                    responseTypeName = i.TypeArguments.ElementAtOrDefault(1)?.Name;
+                }
+            }
+        }
+
         var methodDeclaration = SyntaxFactory.MethodDeclaration(default,
                                                                 SyntaxTokenList.Create(SyntaxFactory.Token(SyntaxKind.PublicKeyword)).Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword)),
                                                                 SyntaxFactory.ParseTypeName("void"),
@@ -62,7 +81,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                                                                 {
                                                                     SyntaxFactory.Parameter(default,
                                                                                             default,
-                                                                                            SyntaxFactory.ParseTypeName(Constants.CommandPipelineBuilderInterfaceName),
+                                                                                            SyntaxFactory.ParseTypeName($"{Constants.CommandPipelineInterfaceName}<{commandTypeName}{(responseTypeName is not null ? $", {responseTypeName}" : string.Empty)}>"),
                                                                                             SyntaxFactory.Identifier("pipeline"),
                                                                                             null),
                                                                 })),

@@ -1,49 +1,111 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class CommandPipeline
+internal sealed class CommandPipeline<TCommand, TResponse> : ICommandPipeline<TCommand, TResponse>
+    where TCommand : class
 {
-    private readonly IConquerorContext conquerorContext;
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares;
+    private readonly CommandMiddlewareRegistry commandMiddlewareRegistry;
+    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares = new();
 
-    public CommandPipeline(IConquerorContext conquerorContext,
-                           List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares)
+    public CommandPipeline(IServiceProvider serviceProvider, CommandMiddlewareRegistry commandMiddlewareRegistry)
     {
-        this.conquerorContext = conquerorContext;
-        this.middlewares = middlewares;
+        this.commandMiddlewareRegistry = commandMiddlewareRegistry;
+        ServiceProvider = serviceProvider;
     }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(IServiceProvider serviceProvider,
-                                                              TCommand initialCommand,
-                                                              CommandTransportClientFactory transportClientFactory,
-                                                              string? transportTypeName,
-                                                              CancellationToken cancellationToken)
-        where TCommand : class
-    {
-        var transportClient = await transportClientFactory.Create(typeof(TCommand), typeof(TResponse), serviceProvider).ConfigureAwait(false);
-        return await ExecuteNextMiddleware(0, initialCommand, conquerorContext, cancellationToken).ConfigureAwait(false);
+    public IServiceProvider ServiceProvider { get; }
 
-        async Task<TResponse> ExecuteNextMiddleware(int index, TCommand command, IConquerorContext ctx, CancellationToken token)
+    public ICommandPipeline<TCommand, TResponse> Use<TMiddleware>()
+        where TMiddleware : ICommandMiddleware
+    {
+        middlewares.Add((typeof(TMiddleware), null, GetInvoker<TMiddleware>()));
+        return this;
+    }
+
+    public ICommandPipeline<TCommand, TResponse> Use<TMiddleware, TConfiguration>(TConfiguration configuration)
+        where TMiddleware : ICommandMiddleware<TConfiguration>
+    {
+        middlewares.Add((typeof(TMiddleware), configuration, GetInvoker<TMiddleware>()));
+        return this;
+    }
+
+    public ICommandPipeline<TCommand, TResponse> Without<TMiddleware>()
+        where TMiddleware : ICommandMiddleware
+    {
+        while (true)
         {
-            if (index >= middlewares.Count)
+            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+            if (index < 0)
             {
-                return await transportClient.ExecuteCommand<TCommand, TResponse>(command, serviceProvider, token).ConfigureAwait(false);
+                return this;
             }
 
-            var (_, middlewareConfiguration, invoker) = middlewares[index];
-            var transportType = transportClient.TransportType with { Name = transportTypeName ?? transportClient.TransportType.Name };
-            return await invoker.Invoke(command,
-                                        (c, t) => ExecuteNextMiddleware(index + 1, c, ctx, t),
-                                        middlewareConfiguration,
-                                        serviceProvider,
-                                        ctx,
-                                        transportType,
-                                        token)
-                                .ConfigureAwait(false);
+            middlewares.RemoveAt(index);
         }
+    }
+
+    public ICommandPipeline<TCommand, TResponse> Without<TMiddleware, TConfiguration>()
+        where TMiddleware : ICommandMiddleware<TConfiguration>
+    {
+        while (true)
+        {
+            var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+            if (index < 0)
+            {
+                return this;
+            }
+
+            middlewares.RemoveAt(index);
+        }
+    }
+
+    public ICommandPipeline<TCommand, TResponse> Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
+        where TMiddleware : ICommandMiddleware<TConfiguration>
+    {
+        return Configure<TMiddleware, TConfiguration>(_ => configuration);
+    }
+
+    public ICommandPipeline<TCommand, TResponse> Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configure)
+        where TMiddleware : ICommandMiddleware<TConfiguration>
+    {
+        return Configure<TMiddleware, TConfiguration>(c =>
+        {
+            configure(c);
+            return c;
+        });
+    }
+
+    public ICommandPipeline<TCommand, TResponse> Configure<TMiddleware, TConfiguration>(Func<TConfiguration, TConfiguration> configure)
+        where TMiddleware : ICommandMiddleware<TConfiguration>
+    {
+        var index = middlewares.FindIndex(tuple => tuple.MiddlewareType == typeof(TMiddleware));
+
+        if (index < 0)
+        {
+            throw new InvalidOperationException($"middleware ${typeof(TMiddleware).Name} cannot be configured for this pipeline since it is not used");
+        }
+
+        middlewares[index] = (typeof(TMiddleware), configure((TConfiguration)middlewares[index].MiddlewareConfiguration!), GetInvoker<TMiddleware>());
+        return this;
+    }
+
+    public CommandPipelineRunner Build(IConquerorContext conquerorContext)
+    {
+        return new(conquerorContext, middlewares);
+    }
+
+    private ICommandMiddlewareInvoker GetInvoker<TMiddleware>()
+        where TMiddleware : ICommandMiddlewareMarker
+    {
+        if (commandMiddlewareRegistry.GetCommandMiddlewareInvoker<TMiddleware>() is { } invoker)
+        {
+            return invoker;
+        }
+
+        throw new InvalidOperationException($"trying to use unregistered middleware type '{typeof(TMiddleware).Name}' in pipeline; ensure that the middleware is registered in the DI container");
     }
 }

@@ -72,15 +72,17 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware<CommandLogging
 
 public static class LoggingCommandPipelineBuilderExtensions
 {
-    public static ICommandPipelineBuilder UseLogging(this ICommandPipelineBuilder pipeline,
-                                                     Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration>? configure = null)
+    public static ICommandPipeline<TCommand, TResponse> UseLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                        Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration>? configure = null)
+        where TCommand : class
     {
         return pipeline.Use<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>(new())
                        .ConfigureLogging(configure ?? (c => c));
     }
 
-    public static ICommandPipelineBuilder ConfigureLogging(this ICommandPipelineBuilder pipeline,
-                                                           Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration> configure)
+    public static ICommandPipeline<TCommand, TResponse> ConfigureLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                              Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration> configure)
+        where TCommand : class
     {
         return pipeline.Configure<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>(configure);
     }

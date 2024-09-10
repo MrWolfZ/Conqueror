@@ -13,7 +13,7 @@ Let's take a look at the `IncrementCounterByCommandHandler` from the [recipe abo
 > Everything discussed here is the same for query handlers, so we'll only look at a command handler in this recipe for simplicity.
 
 ```cs
-internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler, IConfigureCommandPipeline
+internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
 {
     private readonly CountersRepository repository;
 
@@ -22,7 +22,7 @@ internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByComm
         this.repository = repository;
     }
 
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => 
+    public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) => 
         pipeline.UseDataAnnotationValidation();
 
     public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)

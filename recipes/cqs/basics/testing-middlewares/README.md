@@ -38,9 +38,9 @@ private sealed record TestCommand(int Parameter)
 
 private sealed record TestCommandResponse(int Value);
 
-private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, IConfigureCommandPipeline
+private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
 {
-    public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) =>
+    public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) =>
         pipeline.UseDataAnnotationValidation();
 
     public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
@@ -169,7 +169,7 @@ You may have noticed that we referred to the default configuration, but currentl
 ```diff
 - private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn)
 + private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn,
-+                                                     Action<ICommandPipelineBuilder>? configurePipeline = null)
++                                                     Action<ICommandPipeline<TestCommand, TestCommandResponse>>? configurePipeline = null)
   {
       return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
 
@@ -287,7 +287,7 @@ public sealed class DefaultCommandPipelineTests : TestBase
 We are still going to use a custom test command and a delegate handler, but the setup looks slightly different:
 
 ```cs
-private Action<ICommandPipelineBuilder> configurePipeline = pipeline => pipeline.UseDefault();
+private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = pipeline => pipeline.UseDefault();
 
 private Func<TestCommand, Task<TestCommandResponse>> handlerExecutionFn = cmd => Task.FromResult(new TestCommandResponse(cmd.Parameter));
 

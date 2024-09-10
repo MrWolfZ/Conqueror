@@ -11,13 +11,13 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
     where TCommand : class
 {
     private readonly CommandMiddlewareRegistry commandMiddlewareRegistry;
-    private readonly Action<ICommandPipelineBuilder>? configurePipeline;
+    private readonly Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline;
     private readonly IServiceProvider serviceProvider;
     private readonly CommandTransportClientFactory transportClientFactory;
 
     public CommandHandlerProxy(IServiceProvider serviceProvider,
                                CommandTransportClientFactory transportClientFactory,
-                               Action<ICommandPipelineBuilder>? configurePipeline,
+                               Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline,
                                CommandMiddlewareRegistry commandMiddlewareRegistry)
     {
         this.serviceProvider = serviceProvider;
@@ -36,7 +36,7 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
             conquerorContext.SetCommandId(ActivitySpanId.CreateRandom().ToString());
         }
 
-        var pipelineBuilder = new CommandPipelineBuilder(serviceProvider, commandMiddlewareRegistry);
+        var pipelineBuilder = new CommandPipeline<TCommand, TResponse>(serviceProvider, commandMiddlewareRegistry);
 
         configurePipeline?.Invoke(pipelineBuilder);
 
@@ -50,7 +50,7 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
                              .ConfigureAwait(false);
     }
 
-    public ICommandHandler<TCommand, TResponse> WithPipeline(Action<ICommandPipelineBuilder> configure)
+    public ICommandHandler<TCommand, TResponse> WithPipeline(Action<ICommandPipeline<TCommand, TResponse>> configure)
     {
         if (configurePipeline is not null)
         {

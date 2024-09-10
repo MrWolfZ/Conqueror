@@ -174,7 +174,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => throw new System.NotImplementedException();
 
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -235,7 +235,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand> pipeline) => throw new System.NotImplementedException();
 
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -300,7 +300,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => throw new System.NotImplementedException();
 
                         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -363,7 +363,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand> pipeline) => throw new System.NotImplementedException();
 
                         public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
                         {
@@ -409,7 +409,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommandResponse;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => throw new System.NotImplementedException();
                     }
                 }
             ".Dedent();
@@ -461,7 +461,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline) => throw new System.NotImplementedException();
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => throw new System.NotImplementedException();
                     }
                 }
             ".Dedent();
@@ -493,7 +493,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                             return new();
                         }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
                         {
                         }
                     }
@@ -521,7 +521,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                             await Task.Yield();
                         }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand> pipeline)
                         {
                         }
                     }
@@ -552,7 +552,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                             return new();
                         }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
                         {
                         }
                     }
@@ -581,7 +581,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                             await Task.Yield();
                         }
 
-                        public static void ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        public static void ConfigurePipeline(ICommandPipeline<TestCommand> pipeline)
                         {
                         }
                     }
@@ -611,7 +611,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                             return new();
                         }
 
-                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        public string ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
                         {
                             return string.Empty;
                         }
@@ -640,7 +640,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                             await Task.Yield();
                         }
 
-                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        public string ConfigurePipeline(ICommandPipeline<TestCommand> pipeline)
                         {
                             return string.Empty;
                         }
@@ -672,7 +672,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                             return new();
                         }
 
-                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        public string ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
                         {
                             return string.Empty;
                         }
@@ -702,7 +702,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                             await Task.Yield();
                         }
 
-                        public string ConfigurePipeline(ICommandPipelineBuilder pipeline)
+                        public string ConfigurePipeline(ICommandPipeline<TestCommand> pipeline)
                         {
                             return string.Empty;
                         }

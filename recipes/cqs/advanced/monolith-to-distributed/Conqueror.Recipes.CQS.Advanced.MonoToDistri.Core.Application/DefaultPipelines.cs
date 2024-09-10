@@ -2,7 +2,8 @@ namespace Conqueror.Recipes.CQS.Advanced.MonoToDistri.Core.Application;
 
 public static class DefaultPipelines
 {
-    public static ICommandPipelineBuilder UseDefault(this ICommandPipelineBuilder pipeline) =>
+    public static ICommandPipeline<TCommand, TResponse> UseDefault<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
+        where TCommand : class =>
         // remove the common project prefix from the logger name to reduce the noise in the logs
         pipeline.UseLogging(o => o.LoggerNameFactory = command => command.GetType().FullName?.Replace("Conqueror.Recipes.CQS.Advanced.MonoToDistri.", ""))
                 .UseDataAnnotationValidation();
