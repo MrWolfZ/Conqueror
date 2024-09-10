@@ -168,6 +168,12 @@ public abstract class CommandClientFunctionalityTests
         Assert.That(thrownException, Is.SameAs(exception));
     }
 
+    [Test]
+    public void GivenHandlerWithInvalidInterface_RegisteringClientThrowsArgumentException()
+    {
+        _ = Assert.Throws<ArgumentException>(() => AddCommandClient<ITestCommandHandlerWithoutValidInterfaces>(new ServiceCollection(), _ => new ThrowingTestCommandTransport(new())));
+    }
+
     protected abstract void AddCommandClient<THandler>(IServiceCollection services,
                                                        Func<ICommandTransportClientBuilder, ICommandTransportClient> transportClientFactory)
         where THandler : class, ICommandHandler;
@@ -177,6 +183,8 @@ public abstract class CommandClientFunctionalityTests
     private sealed record TestCommandResponse(int Payload);
 
     private sealed record TestCommandWithoutResponse(int Payload);
+
+    private interface ITestCommandHandlerWithoutValidInterfaces : ICommandHandler;
 
     private sealed class TestCommandTransport : ICommandTransportClient
     {

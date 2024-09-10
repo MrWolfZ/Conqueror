@@ -124,6 +124,12 @@ public abstract class QueryClientFunctionalityTests
         Assert.That(thrownException, Is.SameAs(exception));
     }
 
+    [Test]
+    public void GivenHandlerWithInvalidInterface_RegisteringClientThrowsArgumentException()
+    {
+        _ = Assert.Throws<ArgumentException>(() => AddQueryClient<ITestQueryHandlerWithoutValidInterfaces>(new ServiceCollection(), _ => new ThrowingTestQueryTransport(new())));
+    }
+
     protected abstract void AddQueryClient<THandler>(IServiceCollection services,
                                                      Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
         where THandler : class, IQueryHandler;
@@ -131,6 +137,8 @@ public abstract class QueryClientFunctionalityTests
     private sealed record TestQuery(int Payload);
 
     private sealed record TestQueryResponse(int Payload);
+
+    private interface ITestQueryHandlerWithoutValidInterfaces : IQueryHandler;
 
     private sealed class TestQueryTransport : IQueryTransportClient
     {

@@ -56,6 +56,8 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
                                                               QueryTransportClientFactory transportClientFactory,
                                                               Delegate? configurePipeline)
     {
+        handlerType.ValidateNoInvalidQueryHandlerInterface();
+
         var addClientMethod = typeof(ConquerorCqsQueryClientServiceCollectionExtensions).GetMethod(nameof(AddClient), BindingFlags.NonPublic | BindingFlags.Static);
 
         if (addClientMethod == null)
