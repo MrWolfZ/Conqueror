@@ -5,7 +5,7 @@ using Polly;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="ICommandPipeline" /> to add, configure, or remove Polly functionality.
+///     Extension methods for <see cref="ICommandPipeline{TCommand,TResponse}" /> to add, configure, or remove Polly functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewarePollyCommandPipelineExtensions
 {

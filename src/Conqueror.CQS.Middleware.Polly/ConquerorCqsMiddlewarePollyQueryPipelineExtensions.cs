@@ -5,7 +5,7 @@ using Polly;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove Polly functionality.
+///     Extension methods for <see cref="IQueryPipeline{TQuery,TResponse}" /> to add, configure, or remove Polly functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewarePollyQueryPipelineExtensions
 {

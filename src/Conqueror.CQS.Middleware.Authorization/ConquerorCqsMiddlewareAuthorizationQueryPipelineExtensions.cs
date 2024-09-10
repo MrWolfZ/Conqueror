@@ -5,7 +5,7 @@ using Conqueror.CQS.Middleware.Authorization;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove authorization functionality.
+///     Extension methods for <see cref="IQueryPipeline{TQuery,TResponse}" /> to add, configure, or remove authorization functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
 {

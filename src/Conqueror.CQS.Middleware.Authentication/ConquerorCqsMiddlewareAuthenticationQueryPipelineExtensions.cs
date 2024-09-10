@@ -4,7 +4,7 @@ using Conqueror.CQS.Middleware.Authentication;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove authentication functionality.
+///     Extension methods for <see cref="IQueryPipeline{TQuery,TResponse}" /> to add, configure, or remove authentication functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
 {

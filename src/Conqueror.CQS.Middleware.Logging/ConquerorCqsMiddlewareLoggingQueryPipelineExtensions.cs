@@ -5,7 +5,7 @@ using Conqueror.CQS.Middleware.Logging;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove logging functionality.
+///     Extension methods for <see cref="IQueryPipeline{TQuery,TResponse}" /> to add, configure, or remove logging functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareLoggingQueryPipelineExtensions
 {

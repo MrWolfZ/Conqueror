@@ -4,7 +4,7 @@ using Conqueror.CQS.Middleware.DataAnnotationValidation;
 namespace Conqueror;
 
 /// <summary>
-///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove data annotation validation functionality.
+///     Extension methods for <see cref="IQueryPipeline{TQuery,TResponse}" /> to add, configure, or remove data annotation validation functionality.
 /// </summary>
 public static class ConquerorCqsMiddlewareDataAnnotationValidationQueryPipelineExtensions
 {
