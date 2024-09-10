@@ -6,7 +6,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove authentication functionality.
 /// </summary>
-public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineBuilderExtensions
+public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
 {
     /// <summary>
     ///     Enable authentication functionality for a pipeline.

@@ -7,7 +7,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove Polly functionality.
 /// </summary>
-public static class ConquerorCqsMiddlewarePollyQueryPipelineBuilderExtensions
+public static class ConquerorCqsMiddlewarePollyQueryPipelineExtensions
 {
     /// <summary>
     ///     Wrap the execution of the rest of the query pipeline in a Polly <see cref="Polly.AsyncPolicy" />.

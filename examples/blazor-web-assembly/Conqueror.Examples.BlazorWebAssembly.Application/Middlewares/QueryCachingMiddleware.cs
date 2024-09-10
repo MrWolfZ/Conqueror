@@ -17,7 +17,7 @@ public sealed class QueryCachingMiddleware : IQueryMiddleware<QueryCachingMiddle
     }
 }
 
-public static class CachingQueryPipelineBuilderExtensions
+public static class CachingQueryPipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseCaching<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
                                                                                   TimeSpan invalidateResultsAfter,

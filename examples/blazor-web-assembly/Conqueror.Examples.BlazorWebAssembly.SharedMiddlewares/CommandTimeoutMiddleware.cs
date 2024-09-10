@@ -12,7 +12,7 @@ public sealed class CommandTimeoutMiddleware : ICommandMiddleware<CommandTimeout
     }
 }
 
-public static class TimeoutCommandPipelineBuilderExtensions
+public static class TimeoutCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseTimeout<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, TimeSpan timeoutAfter)
         where TCommand : class

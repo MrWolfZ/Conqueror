@@ -1,6 +1,6 @@
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
-internal static class RetryQueryMiddlewarePipelineBuilderExtensions
+internal static class RetryQueryMiddlewarePipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseRetry<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
                                                                                 int? retryAttemptLimit = null)

@@ -10,7 +10,7 @@ public sealed class QueryMetricsMiddleware : IQueryMiddleware
     }
 }
 
-public static class MetricsQueryPipelineBuilderExtensions
+public static class MetricsQueryPipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseMetrics<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class

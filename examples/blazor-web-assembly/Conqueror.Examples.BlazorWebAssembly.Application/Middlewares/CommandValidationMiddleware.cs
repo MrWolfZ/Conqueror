@@ -12,7 +12,7 @@ public sealed class CommandValidationMiddleware : ICommandMiddleware
     }
 }
 
-public static class ValidationCommandPipelineBuilderExtensions
+public static class ValidationCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseValidation<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class

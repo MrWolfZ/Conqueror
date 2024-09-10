@@ -10,7 +10,7 @@ public sealed class CommandMetricsMiddleware : ICommandMiddleware
     }
 }
 
-public static class MetricsCommandPipelineBuilderExtensions
+public static class MetricsCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseMetrics<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class

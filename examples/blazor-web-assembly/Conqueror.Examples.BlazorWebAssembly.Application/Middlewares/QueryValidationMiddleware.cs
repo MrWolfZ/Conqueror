@@ -12,7 +12,7 @@ public sealed class QueryValidationMiddleware : IQueryMiddleware
     }
 }
 
-public static class ValidationQueryPipelineBuilderExtensions
+public static class ValidationQueryPipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseValidation<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class

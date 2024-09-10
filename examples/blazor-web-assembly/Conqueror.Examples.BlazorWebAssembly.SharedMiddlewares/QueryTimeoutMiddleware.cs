@@ -12,7 +12,7 @@ public sealed class QueryTimeoutMiddleware : IQueryMiddleware<QueryTimeoutMiddle
     }
 }
 
-public static class TimeoutQueryPipelineBuilderExtensions
+public static class TimeoutQueryPipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseTimeout<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
                                                                                   TimeSpan timeoutAfter)

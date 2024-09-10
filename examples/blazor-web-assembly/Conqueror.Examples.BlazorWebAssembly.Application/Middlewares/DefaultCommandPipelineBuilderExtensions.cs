@@ -2,7 +2,7 @@ using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public static class DefaultCommandPipelineBuilderExtensions
+public static class DefaultCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseDefault<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class

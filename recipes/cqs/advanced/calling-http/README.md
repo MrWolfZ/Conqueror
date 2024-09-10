@@ -267,7 +267,7 @@ We also need to add a package reference to the new project to allow using certai
 dotnet add Conqueror.Recipes.CQS.Advanced.CallingHttp.Middlewares package Conqueror.CQS.Abstractions
 ```
 
-Now we can move the `DataAnnotationValidationCommandMiddleware.cs` file and the accompanying `DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions.cs` file to the new project. Since the middleware is now in a separate assembly, we also need to explicitly add it to the services in both client and server. In the server's `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.CallingHttp.Server/Program.cs)) make the following change:
+Now we can move the `DataAnnotationValidationCommandMiddleware.cs` file and the accompanying `DataAnnotationValidationCommandMiddlewarePipelineExtensions.cs` file to the new project. Since the middleware is now in a separate assembly, we also need to explicitly add it to the services in both client and server. In the server's `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.CallingHttp.Server/Program.cs)) make the following change:
 
 ```diff
   builder.Services

@@ -70,7 +70,7 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware<CommandLogging
     private string Serialize<T>(T value) => JsonSerializer.Serialize(value, jsonSerializerOptions);
 }
 
-public static class LoggingCommandPipelineBuilderExtensions
+public static class LoggingCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
                                                                                         Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration>? configure = null)

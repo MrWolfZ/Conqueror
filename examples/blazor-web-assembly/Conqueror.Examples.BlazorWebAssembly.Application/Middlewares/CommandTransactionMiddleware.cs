@@ -12,7 +12,7 @@ public sealed class CommandTransactionMiddleware : ICommandMiddleware<CommandTra
     }
 }
 
-public static class TransactionCommandPipelineBuilderExtensions
+public static class TransactionCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseTransaction<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, bool enlistInAmbientTransaction = true)
         where TCommand : class

@@ -7,7 +7,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="ICommandPipeline" /> to add, configure, or remove authorization functionality.
 /// </summary>
-public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineBuilderExtensions
+public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineExtensions
 {
     /// <summary>
     ///     Perform a command type authorization check for the current principal (see

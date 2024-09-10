@@ -7,7 +7,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove authorization functionality.
 /// </summary>
-public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineBuilderExtensions
+public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
 {
     /// <summary>
     ///     Perform a query type authorization check for the current principal (see

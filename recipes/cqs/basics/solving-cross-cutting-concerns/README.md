@@ -264,12 +264,12 @@ public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand,
               pipeline.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>());
 ```
 
-That's a lot of extra code for configuring the pipeline. Fortunately, the pipeline configuration uses the [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), which, together with C#'s excellent [extension methods](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods), allows us to simplify this quite a bit. The recommended approach for providing middlewares is to accompany them with a set of extension methods for configuring pipelines. Let's add such an extension method for our retry middleware in a new class `RetryCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineBuilderExtensions.cs)):
+That's a lot of extra code for configuring the pipeline. Fortunately, the pipeline configuration uses the [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), which, together with C#'s excellent [extension methods](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods), allows us to simplify this quite a bit. The recommended approach for providing middlewares is to accompany them with a set of extension methods for configuring pipelines. Let's add such an extension method for our retry middleware in a new class `RetryCommandMiddlewarePipelineExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineExtensions.cs)):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
-internal static class RetryCommandMiddlewarePipelineBuilderExtensions
+internal static class RetryCommandMiddlewarePipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
@@ -280,12 +280,12 @@ internal static class RetryCommandMiddlewarePipelineBuilderExtensions
 }
 ```
 
-While we're at it we'll also create an extension method for the data annotation validation middleware in a new class `DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions.cs)):
+While we're at it we'll also create an extension method for the data annotation validation middleware in a new class `DataAnnotationValidationCommandMiddlewarePipelineExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/DataAnnotationValidationCommandMiddlewarePipelineExtensions.cs)):
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
-internal static class DataAnnotationValidationCommandMiddlewarePipelineBuilderExtensions
+internal static class DataAnnotationValidationCommandMiddlewarePipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseDataAnnotationValidation(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
@@ -303,12 +303,12 @@ public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand,
             .UseRetry();
 ```
 
-Much better. There's still room for improvement though. As it stands, all handlers would have the same retry attempt limit. However, it might be useful to allow each handler to define its own limit. This can easily be done by adding a parameter to the middleware's extension method in `RetryCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineBuilderExtensions.cs)):
+Much better. There's still room for improvement though. As it stands, all handlers would have the same retry attempt limit. However, it might be useful to allow each handler to define its own limit. This can easily be done by adding a parameter to the middleware's extension method in `RetryCommandMiddlewarePipelineExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineExtensions.cs)):
 
 ```diff
   namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
-  internal static class RetryCommandMiddlewarePipelineBuilderExtensions
+  internal static class RetryCommandMiddlewarePipelineExtensions
   {
 -     public static ICommandPipeline<TCommand, TResponse>  UseRetry<TCommand, TResponse> (this ICommandPipeline<TCommand, TResponse>  pipeline)
 +     public static ICommandPipeline<TCommand, TResponse>  UseRetry<TCommand, TResponse> (this ICommandPipeline<TCommand, TResponse>  pipeline, int? retryAttemptLimit = null)
@@ -361,7 +361,7 @@ Firstly, in our default pipeline example above, we lost the ability to provide a
 
 Therefore, **Conqueror.CQS** offers a way to configure middlewares on a reusable pipeline as well as for removing middlewares from such a pipeline. The only aspect for which we don't provide a built-in solution is injecting a middleware into the middle of a pipeline. We'll discuss the reasons behind this below, but first we will take a look at the other two aspects.
 
-Let's add two new extension methods `ConfigureRetry` and `WithoutRetry` in `RetryCommandMiddlewarePipelineBuilderExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineBuilderExtensions.cs)):
+Let's add two new extension methods `ConfigureRetry` and `WithoutRetry` in `RetryCommandMiddlewarePipelineExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineExtensions.cs)):
 
 ```cs
 public static ICommandPipeline<TCommand, TResponse> ConfigureRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, 

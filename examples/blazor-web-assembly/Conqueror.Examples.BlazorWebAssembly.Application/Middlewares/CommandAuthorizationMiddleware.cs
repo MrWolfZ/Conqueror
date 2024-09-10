@@ -12,7 +12,7 @@ public sealed class CommandAuthorizationMiddleware : ICommandMiddleware<CommandA
     }
 }
 
-public static class AuthorizationCommandPipelineBuilderExtensions
+public static class AuthorizationCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseAuthorization<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class

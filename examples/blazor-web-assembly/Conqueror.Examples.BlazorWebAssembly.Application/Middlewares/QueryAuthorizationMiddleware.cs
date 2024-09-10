@@ -12,7 +12,7 @@ public sealed class QueryAuthorizationMiddleware : IQueryMiddleware<QueryAuthori
     }
 }
 
-public static class AuthorizationQueryPipelineBuilderExtensions
+public static class AuthorizationQueryPipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class

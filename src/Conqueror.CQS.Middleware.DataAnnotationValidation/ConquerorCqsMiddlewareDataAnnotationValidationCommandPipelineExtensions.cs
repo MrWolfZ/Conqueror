@@ -6,7 +6,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="ICommandPipeline" /> to add, configure, or remove data annotation validation functionality.
 /// </summary>
-public static class ConquerorCqsMiddlewareDataAnnotationValidationCommandPipelineBuilderExtensions
+public static class ConquerorCqsMiddlewareDataAnnotationValidationCommandPipelineExtensions
 {
     /// <summary>
     ///     Add data annotation validation functionality to a command pipeline.

@@ -12,7 +12,7 @@ public sealed class QueryRetryMiddleware : IQueryMiddleware<QueryRetryMiddleware
     }
 }
 
-public static class RetryQueryPipelineBuilderExtensions
+public static class RetryQueryPipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseRetry<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
                                                                                 int maxNumberOfAttempts = 3,

@@ -7,7 +7,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="IQueryPipeline" /> to add, configure, or remove logging functionality.
 /// </summary>
-public static class ConquerorCqsMiddlewareLoggingQueryPipelineBuilderExtensions
+public static class ConquerorCqsMiddlewareLoggingQueryPipelineExtensions
 {
     /// <summary>
     ///     Add logging functionality to a query pipeline. By default the following messages are logged:

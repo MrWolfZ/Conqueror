@@ -12,7 +12,7 @@ public sealed class CommandRetryMiddleware : ICommandMiddleware<CommandRetryMidd
     }
 }
 
-public static class RetryCommandPipelineBuilderExtensions
+public static class RetryCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
                                                                                       int maxNumberOfAttempts = 3,

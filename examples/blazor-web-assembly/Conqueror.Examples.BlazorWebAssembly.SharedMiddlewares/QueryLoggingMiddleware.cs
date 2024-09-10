@@ -70,7 +70,7 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddle
     private string Serialize<T>(T value) => JsonSerializer.Serialize(value, jsonSerializerOptions);
 }
 
-public static class LoggingQueryPipelineBuilderExtensions
+public static class LoggingQueryPipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseLogging<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
                                                                                   Func<QueryLoggingMiddlewareConfiguration, QueryLoggingMiddlewareConfiguration>? configure = null)
