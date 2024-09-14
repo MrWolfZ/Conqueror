@@ -15,6 +15,6 @@ public static class MetricsQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> UseMetrics<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use<QueryMetricsMiddleware>();
+        return pipeline.Use(new QueryMetricsMiddleware());
     }
 }

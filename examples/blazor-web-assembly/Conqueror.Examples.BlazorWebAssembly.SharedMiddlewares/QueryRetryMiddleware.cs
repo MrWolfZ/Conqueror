@@ -1,10 +1,17 @@
 namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
-public sealed record QueryRetryMiddlewareConfiguration(int MaxNumberOfAttempts, TimeSpan RetryInterval);
-
-public sealed class QueryRetryMiddleware : IQueryMiddleware<QueryRetryMiddlewareConfiguration>
+public sealed record QueryRetryMiddlewareConfiguration
 {
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, QueryRetryMiddlewareConfiguration> ctx)
+    public required int MaxNumberOfAttempts { get; set; }
+
+    public required  TimeSpan RetryInterval { get; set; }
+}
+
+public sealed class QueryRetryMiddleware : IQueryMiddleware
+{
+    public required QueryRetryMiddlewareConfiguration Configuration { get; init; }
+
+    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
         // .. in a real application you would place the logic here
@@ -19,9 +26,13 @@ public static class RetryQueryPipelineExtensions
                                                                                 TimeSpan? retryInterval = null)
         where TQuery : class
     {
-        var configuration = new QueryRetryMiddlewareConfiguration(maxNumberOfAttempts, retryInterval ?? TimeSpan.FromSeconds(1));
+        var configuration = new QueryRetryMiddlewareConfiguration
+        {
+            MaxNumberOfAttempts = maxNumberOfAttempts,
+            RetryInterval = retryInterval ?? TimeSpan.FromSeconds(1),
+        };
 
-        return pipeline.Use<QueryRetryMiddleware, QueryRetryMiddlewareConfiguration>(configuration);
+        return pipeline.Use(new QueryRetryMiddleware { Configuration = configuration });
     }
 
     public static IQueryPipeline<TQuery, TResponse> ConfigureRetry<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
@@ -29,19 +40,17 @@ public static class RetryQueryPipelineExtensions
                                                                                       TimeSpan? retryInterval = null)
         where TQuery : class
     {
-        return pipeline.Configure<QueryRetryMiddleware, QueryRetryMiddlewareConfiguration>(c =>
+        return pipeline.Configure<QueryRetryMiddleware>(m =>
         {
             if (maxNumberOfAttempts is not null)
             {
-                c = c with { MaxNumberOfAttempts = maxNumberOfAttempts.Value };
+                m.Configuration.MaxNumberOfAttempts = maxNumberOfAttempts.Value;
             }
 
             if (retryInterval is not null)
             {
-                c = c with { RetryInterval = retryInterval.Value };
+                m.Configuration.RetryInterval = retryInterval.Value;
             }
-
-            return c;
         });
     }
 }

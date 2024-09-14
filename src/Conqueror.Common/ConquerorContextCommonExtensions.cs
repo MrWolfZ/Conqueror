@@ -16,10 +16,8 @@ internal static class ConquerorContextCommonExtensions
         conquerorContext.DownstreamContextData.Set(SignalExecutionFromTransportKey, transportTypeName, ConquerorContextDataScope.InProcess);
     }
 
-    public static string? DrainExecutionTransportTypeName(this IConquerorContext conquerorContext)
+    public static string? GetExecutionTransportTypeName(this IConquerorContext conquerorContext)
     {
-        var value = conquerorContext.DownstreamContextData.Get<string>(SignalExecutionFromTransportKey);
-        _ = conquerorContext.DownstreamContextData.Remove(SignalExecutionFromTransportKey);
-        return value;
+        return conquerorContext.DownstreamContextData.Get<string>(SignalExecutionFromTransportKey);
     }
 }

@@ -19,7 +19,7 @@ public static class ConquerorCqsMiddlewarePollyQueryPipelineExtensions
                                                                                 AsyncPolicy policy)
         where TQuery : class
     {
-        return pipeline.Use<PollyQueryMiddleware, PollyQueryMiddlewareConfiguration>(new() { Policy = policy });
+        return pipeline.Use(new PollyQueryMiddleware { Configuration = new() { Policy = policy } });
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public static class ConquerorCqsMiddlewarePollyQueryPipelineExtensions
                                                                                             AsyncPolicy policy)
         where TQuery : class
     {
-        return pipeline.Configure<PollyQueryMiddleware, PollyQueryMiddlewareConfiguration>(o => o.Policy = policy);
+        return pipeline.Configure<PollyQueryMiddleware>(m => m.Configuration.Policy = policy);
     }
 
     /// <summary>
@@ -43,6 +43,6 @@ public static class ConquerorCqsMiddlewarePollyQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> WithoutPolly<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Without<PollyQueryMiddleware, PollyQueryMiddlewareConfiguration>();
+        return pipeline.Without<PollyQueryMiddleware>();
     }
 }

@@ -18,7 +18,6 @@ public static class ConquerorCqsMiddlewareAuthenticationServiceCollectionExtensi
         services.AddConquerorCommonMiddlewareAuthentication();
 
         services.AddConquerorCommandMiddleware<AuthenticationCommandMiddleware>(ServiceLifetime.Singleton);
-        services.AddConquerorQueryMiddleware<AuthenticationQueryMiddleware>(ServiceLifetime.Singleton);
 
         return services;
     }

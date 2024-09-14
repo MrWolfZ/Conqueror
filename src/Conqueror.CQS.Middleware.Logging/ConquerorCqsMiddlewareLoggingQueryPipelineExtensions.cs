@@ -10,7 +10,7 @@ namespace Conqueror;
 public static class ConquerorCqsMiddlewareLoggingQueryPipelineExtensions
 {
     /// <summary>
-    ///     Add logging functionality to a query pipeline. By default the following messages are logged:
+    ///     Add logging functionality to a query pipeline. By default, the following messages are logged:
     ///     <list type="bullet">
     ///         <item>Before the query is executed (including the JSON-serialized query payload, if any)</item>
     ///         <item>After the query was executed successfully (including the JSON-serialized response payload)</item>
@@ -27,8 +27,9 @@ public static class ConquerorCqsMiddlewareLoggingQueryPipelineExtensions
                                                                                   Action<LoggingQueryMiddlewareConfiguration>? configure = null)
         where TQuery : class
     {
-        return pipeline.Use<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>(new())
-                       .ConfigureLogging(configure ?? (_ => { }));
+        var configuration = new LoggingQueryMiddlewareConfiguration();
+        configure?.Invoke(configuration);
+        return pipeline.Use(new LoggingQueryMiddleware { Configuration = configuration });
     }
 
     /// <summary>
@@ -44,7 +45,7 @@ public static class ConquerorCqsMiddlewareLoggingQueryPipelineExtensions
                                                                                         Action<LoggingQueryMiddlewareConfiguration> configure)
         where TQuery : class
     {
-        return pipeline.Configure<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>(configure);
+        return pipeline.Configure<LoggingQueryMiddleware>(m => configure(m.Configuration));
     }
 
     /// <summary>
@@ -55,6 +56,6 @@ public static class ConquerorCqsMiddlewareLoggingQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> WithoutLogging<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Without<LoggingQueryMiddleware, LoggingQueryMiddlewareConfiguration>();
+        return pipeline.Without<LoggingQueryMiddleware>();
     }
 }

@@ -495,8 +495,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        _ = services.AddConquerorCQSLoggingMiddlewares()
-                    .AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
+        _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
                         async (query, _, _) =>
                         {
                             await Task.Yield();

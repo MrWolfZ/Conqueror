@@ -25,7 +25,6 @@ public sealed class RegistrationTests
         Assert.That(services.Count(d => d.ServiceType == typeof(IQueryClientFactory)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IQueryHandlerRegistry)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(QueryMiddlewareRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)), Is.EqualTo(1));
     }
 
@@ -89,22 +88,6 @@ public sealed class RegistrationTests
     }
 
     [Test]
-    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsQueryMiddlewareAsTransient()
-    {
-        var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
-
-        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryMiddleware) && d.Lifetime == ServiceLifetime.Transient));
-    }
-
-    [Test]
-    public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsQueryMiddlewareWithoutConfigurationAsTransient()
-    {
-        var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
-
-        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestQueryMiddlewareWithoutConfiguration) && d.Lifetime == ServiceLifetime.Transient));
-    }
-
-    [Test]
     public void GivenServiceCollection_AddingAllTypesFromAssemblyAddsCommandMiddlewareAsTransient()
     {
         var services = new ServiceCollection().AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
@@ -150,7 +133,6 @@ public sealed class RegistrationTests
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestQueryHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestCommandHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestCommandHandlerWithCustomInterface)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestQueryMiddleware)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestCommandMiddleware)));
     }
 
@@ -161,7 +143,6 @@ public sealed class RegistrationTests
 
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestQueryHandler<>)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestCommandHandler<>)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestQueryMiddleware<>)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestCommandMiddleware<>)));
     }
 
@@ -172,7 +153,6 @@ public sealed class RegistrationTests
 
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestQueryHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestCommandHandler)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestQueryMiddleware)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestCommandMiddleware)));
     }
 
@@ -219,45 +199,6 @@ public sealed class RegistrationTests
     private sealed class PrivateTestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
-    }
-
-    public sealed class TestQueryMiddlewareConfiguration
-    {
-    }
-
-    public sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
-    {
-        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
-            where TQuery : class =>
-            ctx.Next(ctx.Query, ctx.CancellationToken);
-    }
-
-    public sealed class TestQueryMiddlewareWithoutConfiguration : IQueryMiddleware
-    {
-        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class =>
-            ctx.Next(ctx.Query, ctx.CancellationToken);
-    }
-
-    public abstract class AbstractTestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
-    {
-        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
-            where TQuery : class =>
-            ctx.Next(ctx.Query, ctx.CancellationToken);
-    }
-
-    public sealed class GenericTestQueryMiddleware<T> : IQueryMiddleware<T>
-    {
-        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, T> ctx)
-            where TQuery : class =>
-            ctx.Next(ctx.Query, ctx.CancellationToken);
-    }
-
-    private sealed class PrivateTestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
-    {
-        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
-            where TQuery : class =>
-            ctx.Next(ctx.Query, ctx.CancellationToken);
     }
 
     public sealed record TestCommand;

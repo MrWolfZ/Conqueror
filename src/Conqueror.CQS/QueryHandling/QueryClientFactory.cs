@@ -10,13 +10,6 @@ namespace Conqueror.CQS.QueryHandling;
 // TODO: improve performance by caching creation functions via compiled expressions
 internal sealed class QueryClientFactory
 {
-    private readonly QueryMiddlewareRegistry queryMiddlewareRegistry;
-
-    public QueryClientFactory(QueryMiddlewareRegistry queryMiddlewareRegistry)
-    {
-        this.queryMiddlewareRegistry = queryMiddlewareRegistry;
-    }
-
     public THandler CreateQueryClient<THandler>(IServiceProvider serviceProvider,
                                                 Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
         where THandler : class, IQueryHandler
@@ -52,7 +45,7 @@ internal sealed class QueryClientFactory
 
         try
         {
-            var result = genericCreationMethod.Invoke(null, [serviceProvider, transportClientFactory, queryMiddlewareRegistry]);
+            var result = genericCreationMethod.Invoke(null, [serviceProvider, transportClientFactory]);
 
             if (result is not THandler handler)
             {
@@ -69,12 +62,11 @@ internal sealed class QueryClientFactory
     }
 
     private static THandler CreateQueryClientInternal<THandler, TQuery, TResponse>(IServiceProvider serviceProvider,
-                                                                                   Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory,
-                                                                                   QueryMiddlewareRegistry queryMiddlewareRegistry)
+                                                                                   Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
         where THandler : class, IQueryHandler
         where TQuery : class
     {
-        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider, new(transportClientFactory), null, queryMiddlewareRegistry);
+        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider, new(transportClientFactory), null);
 
         if (typeof(THandler) == typeof(IQueryHandler<TQuery, TResponse>))
         {

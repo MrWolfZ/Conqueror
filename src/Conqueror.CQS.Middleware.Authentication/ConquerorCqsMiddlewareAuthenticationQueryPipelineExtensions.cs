@@ -1,4 +1,5 @@
 using Conqueror.CQS.Middleware.Authentication;
+using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
 namespace Conqueror;
@@ -16,7 +17,7 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> UseAuthentication<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>(new());
+        return pipeline.Use(new AuthenticationQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<IConquerorAuthenticationContext>()));
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> RequireAuthenticatedPrincipal<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Configure<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = true);
+        return pipeline.Configure<AuthenticationQueryMiddleware>(m => m.Configuration.RequireAuthenticatedPrincipal = true);
     }
 
     /// <summary>
@@ -42,7 +43,7 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> AllowAnonymousAccess<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Configure<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = false);
+        return pipeline.Configure<AuthenticationQueryMiddleware>(m => m.Configuration.RequireAuthenticatedPrincipal = false);
     }
 
     /// <summary>
@@ -53,6 +54,6 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> WithoutAuthentication<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Without<AuthenticationQueryMiddleware, AuthenticationQueryMiddlewareConfiguration>();
+        return pipeline.Without<AuthenticationQueryMiddleware>();
     }
 }

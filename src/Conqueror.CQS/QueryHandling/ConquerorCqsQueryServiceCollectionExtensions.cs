@@ -13,7 +13,6 @@ public static class ConquerorCqsQueryServiceCollectionExtensions
         services.TryAddSingleton<QueryClientFactory>();
         services.TryAddSingleton<QueryHandlerRegistry>();
         services.TryAddSingleton<IQueryHandlerRegistry>(p => p.GetRequiredService<QueryHandlerRegistry>());
-        services.TryAddSingleton<QueryMiddlewareRegistry>();
 
         services.AddConquerorContext();
     }

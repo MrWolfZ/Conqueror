@@ -16,7 +16,6 @@ public static class ConquerorCqsMiddlewarePollyServiceCollectionExtensions
     public static IServiceCollection AddConquerorCQSPollyMiddlewares(this IServiceCollection services)
     {
         services.AddConquerorCommandMiddleware<PollyCommandMiddleware>(ServiceLifetime.Singleton);
-        services.AddConquerorQueryMiddleware<PollyQueryMiddleware>(ServiceLifetime.Singleton);
 
         return services;
     }

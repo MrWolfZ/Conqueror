@@ -49,16 +49,6 @@ public sealed class QueryServiceCollectionConfigurationTests
         Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
     }
 
-    [Test]
-    public void GivenMiddlewareTypeWithInstanceFactory_AddedMiddlewareCanBeUsedInPipeline()
-    {
-        var provider = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithMiddleware>()
-                                              .AddConquerorQueryMiddleware(_ => new TestQueryMiddleware())
-                                              .BuildServiceProvider();
-
-        Assert.DoesNotThrowAsync(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new(), CancellationToken.None));
-    }
-
     private sealed record TestQuery;
 
     private sealed record TestQueryResponse;
@@ -78,21 +68,5 @@ public sealed class QueryServiceCollectionConfigurationTests
     private sealed class DuplicateTestQueryHandlerWithDifferentResponseType : IQueryHandler<TestQuery, TestQueryResponse2>
     {
         public Task<TestQueryResponse2> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-    }
-
-    private sealed class TestQueryHandlerWithMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
-
-        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => pipeline.Use<TestQueryMiddleware>();
-    }
-
-    private sealed class TestQueryMiddleware : IQueryMiddleware
-    {
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
-        {
-            return await ctx.Next(ctx.Query, ctx.CancellationToken);
-        }
     }
 }

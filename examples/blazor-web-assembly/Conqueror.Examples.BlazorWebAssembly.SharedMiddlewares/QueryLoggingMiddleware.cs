@@ -1,18 +1,19 @@
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 public sealed record QueryLoggingMiddlewareConfiguration
 {
-    public bool LogException { get; init; } = true;
+    public bool LogException { get; set; } = true;
 
-    public bool LogQueryPayload { get; init; } = true;
+    public bool LogQueryPayload { get; set; } = true;
 
-    public bool LogResponsePayload { get; init; } = true;
+    public bool LogResponsePayload { get; set; } = true;
 }
 
-public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddlewareConfiguration>
+public sealed class QueryLoggingMiddleware : IQueryMiddleware
 {
     private readonly JsonSerializerOptions jsonSerializerOptions;
     private readonly ILoggerFactory loggerFactory;
@@ -23,14 +24,16 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddle
         this.jsonSerializerOptions = jsonSerializerOptions;
     }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, QueryLoggingMiddlewareConfiguration> ctx)
+    public required QueryLoggingMiddlewareConfiguration Configuration { get; init; }
+
+    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
         var logger = loggerFactory.CreateLogger($"QueryHandler[{typeof(TQuery).Name},{typeof(TResponse).Name}]");
 
         try
         {
-            if (ctx.Configuration.LogQueryPayload)
+            if (Configuration.LogQueryPayload)
             {
                 logger.LogInformation("Handling query of type {QueryType} with payload {QueryPayload}", typeof(TQuery).Name, Serialize(ctx.Query));
             }
@@ -41,7 +44,7 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddle
 
             var response = await ctx.Next(ctx.Query, ctx.CancellationToken);
 
-            if (ctx.Configuration.LogResponsePayload)
+            if (Configuration.LogResponsePayload)
             {
                 logger.LogInformation("Handled query of type {QueryType} and got response {ResponsePayload}", typeof(TQuery).Name, Serialize(response));
             }
@@ -54,7 +57,7 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddle
         }
         catch (Exception e)
         {
-            if (ctx.Configuration.LogException)
+            if (Configuration.LogException)
             {
                 logger.LogError(e, "An exception occurred while handling query of type {QueryType}!", typeof(TQuery).Name);
             }
@@ -73,17 +76,21 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware<QueryLoggingMiddle
 public static class LoggingQueryPipelineExtensions
 {
     public static IQueryPipeline<TQuery, TResponse> UseLogging<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
-                                                                                  Func<QueryLoggingMiddlewareConfiguration, QueryLoggingMiddlewareConfiguration>? configure = null)
+                                                                                  Action<QueryLoggingMiddlewareConfiguration>? configure = null)
         where TQuery : class
     {
-        return pipeline.Use<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>(new())
-                       .ConfigureLogging(configure ?? (c => c));
+        var configuration = new QueryLoggingMiddlewareConfiguration();
+        configure?.Invoke(configuration);
+
+        var loggerFactory = pipeline.ServiceProvider.GetRequiredService<ILoggerFactory>();
+        var jsonSerializerOptions = pipeline.ServiceProvider.GetRequiredService<JsonSerializerOptions>();
+        return pipeline.Use(new QueryLoggingMiddleware(loggerFactory, jsonSerializerOptions) { Configuration = configuration });
     }
 
     public static IQueryPipeline<TQuery, TResponse> ConfigureLogging<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
-                                                                                        Func<QueryLoggingMiddlewareConfiguration, QueryLoggingMiddlewareConfiguration> configure)
+                                                                                        Action<QueryLoggingMiddlewareConfiguration> configure)
         where TQuery : class
     {
-        return pipeline.Configure<QueryLoggingMiddleware, QueryLoggingMiddlewareConfiguration>(configure);
+        return pipeline.Configure<QueryLoggingMiddleware>(m => configure(m.Configuration));
     }
 }

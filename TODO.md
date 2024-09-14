@@ -18,7 +18,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] run benchmark to compare singleton from DI with using new instances on each invocation
 - [ ] refactor pipeline logic to take middleware instances instead of resolving them
 - [ ] add support for delegate middlewares
 - [ ] add `.Has()` method to pipelines

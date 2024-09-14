@@ -16,7 +16,7 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationQueryPipelineE
     public static IQueryPipeline<TQuery, TResponse> UseDataAnnotationValidation<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use<DataAnnotationValidationQueryMiddleware>();
+        return pipeline.Use(new DataAnnotationValidationQueryMiddleware());
     }
 
     /// <summary>

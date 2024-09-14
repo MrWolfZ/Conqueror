@@ -16,10 +16,8 @@ public static class ConquerorCqsMiddlewareAuthorizationServiceCollectionExtensio
     public static IServiceCollection AddConquerorCQSAuthorizationMiddlewares(this IServiceCollection services)
     {
         services.AddConquerorCommandMiddleware<OperationTypeAuthorizationCommandMiddleware>(ServiceLifetime.Singleton);
-        services.AddConquerorQueryMiddleware<OperationTypeAuthorizationQueryMiddleware>(ServiceLifetime.Singleton);
 
         services.AddConquerorCommandMiddleware<PayloadAuthorizationCommandMiddleware>(ServiceLifetime.Singleton);
-        services.AddConquerorQueryMiddleware<PayloadAuthorizationQueryMiddleware>(ServiceLifetime.Singleton);
 
         return services;
     }

@@ -55,8 +55,8 @@ public abstract class QueryClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddTransient<TestQueryTransport>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+        _ = services.AddConquerorCQS()
+                    .AddTransient<TestQueryTransport>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -68,7 +68,7 @@ public abstract class QueryClientFactoryTests
 
         var query = new TestQuery();
 
-        _ = await client.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+        _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
@@ -80,8 +80,8 @@ public abstract class QueryClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddTransient<TestQueryTransport>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
+        _ = services.AddConquerorCQS()
+                    .AddTransient<TestQueryTransport>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -93,7 +93,7 @@ public abstract class QueryClientFactoryTests
 
         var query = new TestQuery();
 
-        _ = await client.WithPipeline(p => p.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new()))
+        _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
                         .ExecuteQuery(query, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
@@ -225,9 +225,7 @@ public abstract class QueryClientFactoryTests
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed record TestQueryMiddlewareConfiguration;
-
-    private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
+    private sealed class TestQueryMiddleware : IQueryMiddleware
     {
         private readonly TestObservations observations;
 
@@ -236,7 +234,7 @@ public abstract class QueryClientFactoryTests
             this.observations = observations;
         }
 
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
+        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
             where TQuery : class
         {
             await Task.Yield();

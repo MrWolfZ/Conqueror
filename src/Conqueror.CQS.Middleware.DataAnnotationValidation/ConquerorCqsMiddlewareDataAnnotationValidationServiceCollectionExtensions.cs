@@ -16,7 +16,6 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationServiceCollect
     public static IServiceCollection AddConquerorCQSDataAnnotationValidationMiddlewares(this IServiceCollection services)
     {
         services.AddConquerorCommandMiddleware<DataAnnotationValidationCommandMiddleware>(ServiceLifetime.Singleton);
-        services.AddConquerorQueryMiddleware<DataAnnotationValidationQueryMiddleware>(ServiceLifetime.Singleton);
 
         return services;
     }

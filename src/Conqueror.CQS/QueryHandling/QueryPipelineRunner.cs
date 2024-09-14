@@ -9,10 +9,10 @@ namespace Conqueror.CQS.QueryHandling;
 internal sealed class QueryPipelineRunner
 {
     private readonly IConquerorContext conquerorContext;
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IQueryMiddlewareInvoker Invoker)> middlewares;
+    private readonly List<IQueryMiddleware> middlewares;
 
     public QueryPipelineRunner(IConquerorContext conquerorContext,
-                               List<(Type MiddlewareType, object? MiddlewareConfiguration, IQueryMiddlewareInvoker Invoker)> middlewares)
+                               List<IQueryMiddleware> middlewares)
     {
         this.conquerorContext = conquerorContext;
         this.middlewares = middlewares.AsEnumerable().Reverse().ToList();
@@ -26,20 +26,25 @@ internal sealed class QueryPipelineRunner
         where TQuery : class
     {
         var transportClient = await transportClientFactory.Create(typeof(TQuery), typeof(TResponse), serviceProvider).ConfigureAwait(false);
-        var transportType = transportClient.TransportType with { Name = transportTypeName ?? transportClient.TransportType.Name };
+        var transportRole = transportTypeName is null ? transportClient.TransportType.Role : QueryTransportRole.Server;
+        var transportType = new QueryTransportType(transportTypeName ?? transportClient.TransportType.Name, transportRole);
 
         var next = (TQuery query, CancellationToken token) => transportClient.ExecuteQuery<TQuery, TResponse>(query, serviceProvider, token);
 
-        foreach (var (_, middlewareConfiguration, invoker) in middlewares)
+        foreach (var middleware in middlewares)
         {
             var nextToCall = next;
-            next = (query, token) => invoker.Invoke(query,
-                                                    (q, t) => nextToCall(q, t),
-                                                    middlewareConfiguration,
-                                                    serviceProvider,
-                                                    conquerorContext,
-                                                    transportType,
-                                                    token);
+            next = (query, token) =>
+            {
+                var ctx = new DefaultQueryMiddlewareContext<TQuery, TResponse>(query,
+                                                                               (q, t) => nextToCall(q, t),
+                                                                               serviceProvider,
+                                                                               conquerorContext,
+                                                                               transportType,
+                                                                               token);
+
+                return middleware.Execute(ctx);
+            };
         }
 
         return await next(initialQuery, cancellationToken).ConfigureAwait(false);

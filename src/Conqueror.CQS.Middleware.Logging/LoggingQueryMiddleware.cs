@@ -10,17 +10,19 @@ using Microsoft.Extensions.Logging;
 namespace Conqueror.CQS.Middleware.Logging;
 
 /// <summary>
-///     A query middleware which adds logging functionality to a query pipeline. By default the following messages are logged:
+///     A query middleware which adds logging functionality to a query pipeline. By default, the following messages are logged:
 ///     <list type="bullet">
 ///         <item>Before the query is executed (including the JSON-serialized query payload, if any)</item>
 ///         <item>After the query was executed successfully (including the JSON-serialized response payload)</item>
 ///         <item>If an exception gets thrown during query execution</item>
 ///     </list>
 /// </summary>
-public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddlewareConfiguration>
+public sealed class LoggingQueryMiddleware : IQueryMiddleware
 {
+    public required LoggingQueryMiddlewareConfiguration Configuration { get; init; }
+
     /// <inheritdoc />
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
+    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
         var logger = GetLogger(ctx);
@@ -50,15 +52,15 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
         }
     }
 
-    private static void PreExecution<TQuery, TResponse>(ILogger logger,
-                                                        string queryId,
-                                                        string traceId,
-                                                        QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
+    private void PreExecution<TQuery, TResponse>(ILogger logger,
+                                                 string queryId,
+                                                 string traceId,
+                                                 QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
-        if (ctx.Configuration.PreExecutionHook is { } preExecutionHook)
+        if (Configuration.PreExecutionHook is { } preExecutionHook)
         {
-            var preExecutionContext = new LoggingQueryPreExecutionContext(logger, ctx.Configuration.PreExecutionLogLevel, queryId, traceId, ctx.Query, ctx.ServiceProvider);
+            var preExecutionContext = new LoggingQueryPreExecutionContext(logger, Configuration.PreExecutionLogLevel, queryId, traceId, ctx.Query, ctx.ServiceProvider);
 
             if (!preExecutionHook(preExecutionContext))
             {
@@ -67,39 +69,39 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
         }
 
         // check if the log level is enabled so that we can skip the JSON serialization for performance
-        if (!logger.IsEnabled(ctx.Configuration.PreExecutionLogLevel))
+        if (!logger.IsEnabled(Configuration.PreExecutionLogLevel))
         {
             return;
         }
 
         var hasPayload = ctx.Query.GetType().GetProperties().Any();
-        var shouldOmitPayload = ctx.Configuration.OmitJsonSerializedQueryPayload;
+        var shouldOmitPayload = Configuration.OmitJsonSerializedQueryPayload;
 
         if (shouldOmitPayload || !hasPayload)
         {
-            logger.Log(ctx.Configuration.PreExecutionLogLevel, "Executing query (Query ID: {QueryId}, Trace ID: {TraceId})", queryId, traceId);
+            logger.Log(Configuration.PreExecutionLogLevel, "Executing query (Query ID: {QueryId}, Trace ID: {TraceId})", queryId, traceId);
             return;
         }
 
-        logger.Log(ctx.Configuration.PreExecutionLogLevel,
+        logger.Log(Configuration.PreExecutionLogLevel,
                    "Executing query with payload {QueryPayload} (Query ID: {QueryId}, Trace ID: {TraceId})",
-                   Serialize(ctx.Query, ctx.Configuration.JsonSerializerOptions),
+                   Serialize(ctx.Query, Configuration.JsonSerializerOptions),
                    queryId,
                    traceId);
     }
 
-    private static void PostExecution<TQuery, TResponse>(ILogger logger,
-                                                         string queryId,
-                                                         string traceId,
-                                                         object? response,
-                                                         TimeSpan elapsedTime,
-                                                         QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
+    private void PostExecution<TQuery, TResponse>(ILogger logger,
+                                                  string queryId,
+                                                  string traceId,
+                                                  object? response,
+                                                  TimeSpan elapsedTime,
+                                                  QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
-        if (ctx.Configuration.PostExecutionHook is { } postExecutionHook)
+        if (Configuration.PostExecutionHook is { } postExecutionHook)
         {
             var postExecutionContext = new LoggingQueryPostExecutionContext(logger,
-                                                                            ctx.Configuration.PostExecutionLogLevel,
+                                                                            Configuration.PostExecutionLogLevel,
                                                                             queryId,
                                                                             traceId,
                                                                             ctx.Query,
@@ -114,16 +116,16 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
         }
 
         // check if the log level is enabled so that we can skip the JSON serialization for performance
-        if (!logger.IsEnabled(ctx.Configuration.PostExecutionLogLevel))
+        if (!logger.IsEnabled(Configuration.PostExecutionLogLevel))
         {
             return;
         }
 
-        var shouldOmitPayload = ctx.Configuration.OmitJsonSerializedResponsePayload;
+        var shouldOmitPayload = Configuration.OmitJsonSerializedResponsePayload;
 
         if (shouldOmitPayload)
         {
-            logger.Log(ctx.Configuration.PostExecutionLogLevel,
+            logger.Log(Configuration.PostExecutionLogLevel,
                        "Executed query in {ResponseLatency:0.0000}ms (Query ID: {QueryId}, Trace ID: {TraceId})",
                        elapsedTime.TotalMilliseconds,
                        queryId,
@@ -132,28 +134,28 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
             return;
         }
 
-        logger.Log(ctx.Configuration.PostExecutionLogLevel,
+        logger.Log(Configuration.PostExecutionLogLevel,
                    "Executed query and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Query ID: {QueryId}, Trace ID: {TraceId})",
-                   Serialize(response, ctx.Configuration.JsonSerializerOptions),
+                   Serialize(response, Configuration.JsonSerializerOptions),
                    elapsedTime.TotalMilliseconds,
                    queryId,
                    traceId);
     }
 
     [SuppressMessage("Major Code Smell", "S2629:Logging templates should be constant", Justification = "The exception is already included as metadata, so we just want the message to include the full exception without adding it again as metadata.")]
-    private static void OnException<TQuery, TResponse>(ILogger logger,
-                                                       string queryId,
-                                                       string traceId,
-                                                       Exception exception,
-                                                       StackTrace executionStackTrace,
-                                                       TimeSpan elapsedTime,
-                                                       QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
+    private void OnException<TQuery, TResponse>(ILogger logger,
+                                                string queryId,
+                                                string traceId,
+                                                Exception exception,
+                                                StackTrace executionStackTrace,
+                                                TimeSpan elapsedTime,
+                                                QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
-        if (ctx.Configuration.ExceptionHook is { } exceptionHook)
+        if (Configuration.ExceptionHook is { } exceptionHook)
         {
             var loggingExceptionContext = new LoggingQueryExceptionContext(logger,
-                                                                           ctx.Configuration.ExceptionLogLevel,
+                                                                           Configuration.ExceptionLogLevel,
                                                                            queryId,
                                                                            traceId,
                                                                            ctx.Query,
@@ -168,14 +170,14 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
             }
         }
 
-        if (!logger.IsEnabled(ctx.Configuration.ExceptionLogLevel))
+        if (!logger.IsEnabled(Configuration.ExceptionLogLevel))
         {
             return;
         }
 
         // ReSharper disable once TemplateIsNotCompileTimeConstantProblem (the exception is already included as metadata, so we just want the message
         // to include the full exception without adding it again as metadata)
-        logger.Log(ctx.Configuration.ExceptionLogLevel,
+        logger.Log(Configuration.ExceptionLogLevel,
                    exception,
                    $"An exception occurred while executing query after {{ResponseLatency:0.0000}}ms (Query ID: {{QueryId}}, Trace ID: {{TraceId}})\n{exception}\n{executionStackTrace}",
                    elapsedTime.TotalMilliseconds,
@@ -183,12 +185,12 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
                    traceId);
     }
 
-    private static ILogger GetLogger<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
+    private ILogger GetLogger<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
         var loggerFactory = ctx.ServiceProvider.GetRequiredService<ILoggerFactory>();
 
-        if (ctx.Configuration.LoggerNameFactory?.Invoke(ctx.Query) is { } loggerName)
+        if (Configuration.LoggerNameFactory?.Invoke(ctx.Query) is { } loggerName)
         {
             return loggerFactory.CreateLogger(loggerName);
         }

@@ -37,14 +37,8 @@ public static class ConquerorCqsServiceCollectionExtensions
             services.AddConquerorQueryHandler(queryHandlerType, ServiceDescriptor.Transient(queryHandlerType, queryHandlerType));
         }
 
-        foreach (var queryMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsQueryMiddlewareInterface)))
-        {
-            services.AddConquerorQueryMiddleware(queryMiddlewareType, ServiceDescriptor.Transient(queryMiddlewareType, queryMiddlewareType));
-        }
-
         return services;
 
-        static bool IsQueryMiddlewareInterface(Type i) => i == typeof(IQueryMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryMiddleware<>));
         static bool IsCommandMiddlewareInterface(Type i) => i == typeof(ICommandMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>));
     }
 

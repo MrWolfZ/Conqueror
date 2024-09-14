@@ -7,24 +7,12 @@ public interface IQueryPipeline<TQuery, TResponse>
 {
     IServiceProvider ServiceProvider { get; }
 
-    IQueryPipeline<TQuery, TResponse> Use<TMiddleware>()
+    IQueryPipeline<TQuery, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : IQueryMiddleware;
-
-    IQueryPipeline<TQuery, TResponse> Use<TMiddleware, TConfiguration>(TConfiguration configuration)
-        where TMiddleware : IQueryMiddleware<TConfiguration>;
 
     IQueryPipeline<TQuery, TResponse> Without<TMiddleware>()
         where TMiddleware : IQueryMiddleware;
 
-    IQueryPipeline<TQuery, TResponse> Without<TMiddleware, TConfiguration>()
-        where TMiddleware : IQueryMiddleware<TConfiguration>;
-
-    IQueryPipeline<TQuery, TResponse> Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
-        where TMiddleware : IQueryMiddleware<TConfiguration>;
-
-    IQueryPipeline<TQuery, TResponse> Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configure)
-        where TMiddleware : IQueryMiddleware<TConfiguration>;
-
-    IQueryPipeline<TQuery, TResponse> Configure<TMiddleware, TConfiguration>(Func<TConfiguration, TConfiguration> configure)
-        where TMiddleware : IQueryMiddleware<TConfiguration>;
+    IQueryPipeline<TQuery, TResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
+        where TMiddleware : IQueryMiddleware;
 }

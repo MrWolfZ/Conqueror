@@ -684,16 +684,16 @@ public sealed class QueryHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(testClient))
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
                     .AddConquerorQueryClient<ITestQueryHandler>(b => b.UseHttp(new("http://expected.localhost")));
 
         await using var provider = services.BuildServiceProvider();
 
         var client = provider.GetRequiredService<ITestQueryHandler>();
 
-        _ = await client.WithPipeline(pipeline => pipeline.Use<TestQueryMiddleware>()).ExecuteQuery(new(), CancellationToken.None);
+        var middleware = new TestQueryMiddleware();
+        _ = await client.WithPipeline(pipeline => pipeline.Use(middleware)).ExecuteQuery(new(), CancellationToken.None);
 
-        var seenTransportType = provider.GetRequiredService<TestQueryMiddleware>().SeenTransportType;
+        var seenTransportType = middleware.SeenTransportType;
         Assert.That(seenTransportType?.IsHttp(), Is.True);
         Assert.That(seenTransportType?.Role, Is.EqualTo(QueryTransportRole.Client));
     }

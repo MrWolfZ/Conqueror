@@ -78,16 +78,13 @@ public sealed class QueryIdTests
 
         _ = services.AddConquerorQueryHandler<NestedTestQueryHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()));
 
-        _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(_ => new(middlewareFn));
-
-        _ = services.AddConquerorQueryMiddleware<OuterTestQueryMiddleware>(_ => new(outerMiddlewareFn));
+        _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(TestQueryMiddleware), middlewareFn);
+        _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(OuterTestQueryMiddleware), outerMiddlewareFn);
 
         var provider = services.BuildServiceProvider();
 
         _ = provider.GetRequiredService<NestedClass>();
         _ = provider.GetRequiredService<TestQueryHandler>();
-        _ = provider.GetRequiredService<TestQueryMiddleware>();
-        _ = provider.GetRequiredService<OuterTestQueryMiddleware>();
 
         return provider.CreateScope().ServiceProvider;
     }
@@ -130,8 +127,8 @@ public sealed class QueryIdTests
             return response;
         }
 
-        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => pipeline.Use<OuterTestQueryMiddleware>()
-                                                                                                                      .Use<TestQueryMiddleware>();
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => pipeline.Use(new OuterTestQueryMiddleware(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(OuterTestQueryMiddleware))))
+                                                                                                               .Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(TestQueryMiddleware))));
     }
 
     private sealed class NestedTestQueryHandler : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>

@@ -18,7 +18,6 @@ public static class ConquerorCqsMiddlewareLoggingServiceCollectionExtensions
     public static IServiceCollection AddConquerorCQSLoggingMiddlewares(this IServiceCollection services)
     {
         services.AddConquerorCommandMiddleware<LoggingCommandMiddleware>(ServiceLifetime.Singleton);
-        services.AddConquerorQueryMiddleware<LoggingQueryMiddleware>(ServiceLifetime.Singleton);
 
         return services;
     }

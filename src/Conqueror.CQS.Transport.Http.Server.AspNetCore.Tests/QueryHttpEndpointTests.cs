@@ -299,7 +299,7 @@ public sealed class QueryHttpEndpointTests : TestBase
         _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
         _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-        _ = services.AddConquerorQueryMiddleware<TestQueryMiddleware>(ServiceLifetime.Singleton)
+        _ = services.AddSingleton<TestQueryMiddleware>()
                     .AddConquerorQueryHandler<TestQueryHandler>()
                     .AddConquerorQueryHandler<TestQueryHandler2>()
                     .AddConquerorQueryHandler<TestQueryHandler3>()
@@ -525,7 +525,7 @@ public sealed class QueryHttpEndpointTests : TestBase
         }
 
         public static void ConfigurePipeline(IQueryPipeline<TestWithMiddlewareQuery, TestQueryResponse> pipeline) =>
-            pipeline.Use<TestQueryMiddleware>();
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestQueryMiddleware>());
     }
 
     public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
@@ -598,7 +598,7 @@ public sealed class QueryHttpEndpointTests : TestBase
         }
 
         public static void ConfigurePipeline(IQueryPipeline<TestPostWithMiddlewareQuery, TestQueryResponse> pipeline) =>
-            pipeline.Use<TestQueryMiddleware>();
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestQueryMiddleware>());
     }
 
     public sealed class TestPostQueryWithCustomSerializedPayloadTypeHandler : ITestPostQueryWithCustomSerializedPayloadTypeHandler

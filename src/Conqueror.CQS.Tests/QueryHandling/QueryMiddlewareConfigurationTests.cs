@@ -3,132 +3,94 @@ namespace Conqueror.CQS.Tests.QueryHandling;
 public sealed class QueryMiddlewareConfigurationTests
 {
     [Test]
-    public async Task GivenMiddlewareWithConfiguration_InitialConfigurationIsPassedToMiddleware()
+    public async Task GivenMiddlewareWithParameter_WhenPipelineConfigurationUpdatesParameter_TheMiddlewareExecutesWithUpdatedParameter()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorQueryHandler<TestQueryHandler>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddSingleton(observations);
-
-        var initialConfiguration = new TestQueryMiddlewareConfiguration(10);
-
-        _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline => { _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration); });
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
-
-        Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
-    }
-
-    [Test]
-    public async Task GivenMiddlewareWithConfiguration_ConfigurationCanBeOverwrittenFully()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorQueryHandler<TestQueryHandler>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                    .AddSingleton(observations);
-
-        var initialConfiguration = new TestQueryMiddlewareConfiguration(10);
-        var overwrittenConfiguration = new TestQueryMiddlewareConfiguration(20);
 
         _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
-            _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
 
-            _ = pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(overwrittenConfiguration);
+            _ = pipeline.Configure<TestQueryMiddleware>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.ExecuteQuery(new());
 
-        Assert.That(observations.Configurations, Is.EquivalentTo(new[] { overwrittenConfiguration }));
+        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
     }
 
     [Test]
-    public async Task GivenMiddlewareWithConfiguration_ConfigurationCanBeUpdatedInPlace()
+    public async Task GivenMultipleMiddlewareOfSameType_WhenPipelineConfigurationRuns_AllMiddlewaresAreUpdated()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorQueryHandler<TestQueryHandler>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddSingleton(observations);
-
-        var initialConfiguration = new TestQueryMiddlewareConfiguration(10);
 
         _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
-            _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 30 });
+            _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 50 });
 
-            _ = pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestQueryMiddleware>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.ExecuteQuery(new());
 
-        Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
-
-        Assert.That(initialConfiguration.Parameter, Is.EqualTo(20));
+        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20, 40, 60 }));
     }
 
     [Test]
-    public async Task GivenMiddlewareWithConfiguration_ConfigurationCanBeUpdatedAndReplaced()
+    public async Task GivenMiddlewareWithBaseClass_WhenPipelineConfiguresBaseClass_TheMiddlewareIsConfigured()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorQueryHandler<TestQueryHandler>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddSingleton(observations);
-
-        var initialConfiguration = new TestQueryMiddlewareConfiguration(10);
 
         _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
-            _ = pipeline.Use<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use(new TestQueryMiddlewareSub(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
 
-            _ = pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(c => new(c.Parameter + 10));
+            _ = pipeline.Configure<TestQueryMiddlewareBase>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.ExecuteQuery(new());
 
-        Assert.That(observations.Configurations, Has.Count.EqualTo(1));
-
-        Assert.That(observations.Configurations[0].Parameter, Is.EqualTo(20));
+        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
     }
 
     [Test]
-    public async Task GivenUnusedMiddlewareWithConfiguration_ConfiguringMiddlewareThrowsInvalidOperationException()
+    public async Task GivenUnusedMiddleware_ConfiguringMiddlewareThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorQueryHandler<TestQueryHandler>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(new TestQueryMiddlewareConfiguration(20)));
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(c => c.Parameter += 10));
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware, TestQueryMiddlewareConfiguration>(c => new(c.Parameter + 10)));
+            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware>(c => c.Parameter += 10));
         });
 
         var provider = services.BuildServiceProvider();
@@ -156,30 +118,31 @@ public sealed class QueryMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestQueryMiddlewareConfiguration
+    private sealed class TestQueryMiddleware(TestObservations observations) : IQueryMiddleware
     {
-        public TestQueryMiddlewareConfiguration(int parameter)
-        {
-            Parameter = parameter;
-        }
-
         public int Parameter { get; set; }
-    }
 
-    private sealed class TestQueryMiddleware : IQueryMiddleware<TestQueryMiddlewareConfiguration>
-    {
-        private readonly TestObservations observations;
-
-        public TestQueryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, TestQueryMiddlewareConfiguration> ctx)
+        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
             where TQuery : class
         {
             await Task.Yield();
-            observations.Configurations.Add(ctx.Configuration);
+            observations.Parameters.Add(Parameter);
+
+            return await ctx.Next(ctx.Query, ctx.CancellationToken);
+        }
+    }
+
+    private sealed class TestQueryMiddlewareSub(TestObservations observations) : TestQueryMiddlewareBase(observations);
+
+    private abstract class TestQueryMiddlewareBase(TestObservations observations) : IQueryMiddleware
+    {
+        public int Parameter { get; set; }
+
+        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
+            where TQuery : class
+        {
+            await Task.Yield();
+            observations.Parameters.Add(Parameter);
 
             return await ctx.Next(ctx.Query, ctx.CancellationToken);
         }
@@ -187,6 +150,6 @@ public sealed class QueryMiddlewareConfigurationTests
 
     private sealed class TestObservations
     {
-        public List<TestQueryMiddlewareConfiguration> Configurations { get; } = new();
+        public List<int> Parameters { get; } = [];
     }
 }

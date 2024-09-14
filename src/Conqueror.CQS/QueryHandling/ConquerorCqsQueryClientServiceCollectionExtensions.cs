@@ -27,34 +27,30 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
         return services.AddConquerorQueryClient(typeof(THandler), transportClientFactory);
     }
 
-    internal static IServiceCollection AddConquerorQueryClient<THandler, TQuery, TResponse>(this IServiceCollection services,
-                                                                                            IQueryTransportClient transportClient,
-                                                                                            Action<IQueryPipeline<TQuery, TResponse>> configurePipeline)
+    internal static IServiceCollection AddConquerorQueryClient<THandler>(this IServiceCollection services,
+                                                                         IQueryTransportClient transportClient)
         where THandler : class, IQueryHandler
-        where TQuery : class
     {
-        services.AddClient<THandler, TQuery, TResponse>(new(transportClient), configurePipeline);
-        return services;
+        return services.AddConquerorQueryClient(typeof(THandler), new QueryTransportClientFactory(transportClient));
     }
 
     private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                               Type handlerType,
                                                               Func<IQueryTransportClientBuilder, IQueryTransportClient> transportClientFactory)
     {
-        return services.AddConquerorQueryClient(handlerType, new(transportClientFactory), null);
+        return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClientFactory));
     }
 
     private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                               Type handlerType,
                                                               Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
     {
-        return services.AddConquerorQueryClient(handlerType, new(transportClientFactory), null);
+        return services.AddConquerorQueryClient(handlerType, new QueryTransportClientFactory(transportClientFactory));
     }
 
     private static IServiceCollection AddConquerorQueryClient(this IServiceCollection services,
                                                               Type handlerType,
-                                                              QueryTransportClientFactory transportClientFactory,
-                                                              Delegate? configurePipeline)
+                                                              QueryTransportClientFactory transportClientFactory)
     {
         handlerType.ValidateNoInvalidQueryHandlerInterface();
 
@@ -71,7 +67,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
             try
             {
-                _ = genericAddClientMethod.Invoke(null, new object?[] { services, transportClientFactory, configurePipeline });
+                _ = genericAddClientMethod.Invoke(null, new object?[] { services, transportClientFactory });
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
@@ -83,8 +79,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
     }
 
     private static void AddClient<THandler, TQuery, TResponse>(this IServiceCollection services,
-                                                               QueryTransportClientFactory transportClientFactory,
-                                                               Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline)
+                                                               QueryTransportClientFactory transportClientFactory)
         where THandler : class, IQueryHandler
         where TQuery : class
     {
@@ -112,8 +107,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
         QueryHandlerProxy<TQuery, TResponse> CreateProxy(IServiceProvider serviceProvider)
         {
-            var queryMiddlewareRegistry = serviceProvider.GetRequiredService<QueryMiddlewareRegistry>();
-            return new(serviceProvider, transportClientFactory, configurePipeline, queryMiddlewareRegistry);
+            return new(serviceProvider, transportClientFactory, null);
         }
 
         void RegisterCustomInterface()

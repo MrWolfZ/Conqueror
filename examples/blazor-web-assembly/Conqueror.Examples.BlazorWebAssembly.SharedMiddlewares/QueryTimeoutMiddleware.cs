@@ -1,10 +1,15 @@
 namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
-public sealed record QueryTimeoutMiddlewareConfiguration(TimeSpan TimeoutAfter);
-
-public sealed class QueryTimeoutMiddleware : IQueryMiddleware<QueryTimeoutMiddlewareConfiguration>
+public sealed record QueryTimeoutMiddlewareConfiguration
 {
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, QueryTimeoutMiddlewareConfiguration> ctx)
+    public required TimeSpan TimeoutAfter { get; set; }
+}
+
+public sealed class QueryTimeoutMiddleware : IQueryMiddleware
+{
+    public required QueryTimeoutMiddlewareConfiguration Configuration { get; init; }
+
+    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
         // .. in a real application you would place the logic here
@@ -18,13 +23,13 @@ public static class TimeoutQueryPipelineExtensions
                                                                                   TimeSpan timeoutAfter)
         where TQuery : class
     {
-        return pipeline.Use<QueryTimeoutMiddleware, QueryTimeoutMiddlewareConfiguration>(new(timeoutAfter));
+        return pipeline.Use(new QueryTimeoutMiddleware { Configuration = new() { TimeoutAfter = timeoutAfter } });
     }
 
     public static IQueryPipeline<TQuery, TResponse> ConfigureTimeout<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
                                                                                         TimeSpan timeoutAfter)
         where TQuery : class
     {
-        return pipeline.Configure<QueryTimeoutMiddleware, QueryTimeoutMiddlewareConfiguration>(new QueryTimeoutMiddlewareConfiguration(timeoutAfter));
+        return pipeline.Configure<QueryTimeoutMiddleware>(m => m.Configuration.TimeoutAfter = timeoutAfter);
     }
 }

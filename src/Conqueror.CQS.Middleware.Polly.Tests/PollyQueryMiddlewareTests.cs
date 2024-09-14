@@ -20,7 +20,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.Use<PollyQueryMiddleware, PollyQueryMiddlewareConfiguration>(new());
+        configurePipeline = pipeline => pipeline.Use(new PollyQueryMiddleware { Configuration = new() });
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -39,7 +39,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
             throw expectedException;
         };
 
-        configurePipeline = pipeline => pipeline.Use<PollyQueryMiddleware, PollyQueryMiddlewareConfiguration>(new());
+        configurePipeline = pipeline => pipeline.Use(new PollyQueryMiddleware { Configuration = new() });
 
         var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
 
@@ -203,8 +203,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        _ = services.AddConquerorCQSPollyMiddlewares()
-                    .AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
+        _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
                         async (query, _, _) =>
                         {
                             await Task.Yield();

@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Conqueror.CQS.Middleware.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
 namespace Conqueror;
@@ -23,10 +24,14 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
     /// <param name="pipeline">The query pipeline to add the query type authorization middleware to</param>
     /// <param name="authorizationCheck">The delegate to use for checking query type authorization</param>
     /// <returns>The query pipeline</returns>
-    public static IQueryPipeline<TQuery, TResponse> UseQueryTypeAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline, ConquerorOperationTypeAuthorizationCheckAsync authorizationCheck)
+    public static IQueryPipeline<TQuery, TResponse> UseQueryTypeAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
+                                                                                                 ConquerorOperationTypeAuthorizationCheckAsync authorizationCheck)
         where TQuery : class
     {
-        return pipeline.Use<OperationTypeAuthorizationQueryMiddleware, OperationTypeAuthorizationQueryMiddlewareConfiguration>(new(authorizationCheck));
+        return pipeline.Use(new OperationTypeAuthorizationQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<IConquerorAuthenticationContext>())
+        {
+            Configuration = new(authorizationCheck),
+        });
     }
 
     /// <summary>
@@ -58,12 +63,15 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> WithoutQueryTypeAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Without<OperationTypeAuthorizationQueryMiddleware, OperationTypeAuthorizationQueryMiddlewareConfiguration>();
+        return pipeline.Without<OperationTypeAuthorizationQueryMiddleware>();
     }
 
     /// <summary>
     ///     Enable payload authorization functionality for a query pipeline. By default, this middleware will not perform
-    ///     any authorization checks. Use <see cref="AddPayloadAuthorizationCheck{TQuery, TResponse}(IQueryPipeline,Conqueror.ConquerorOperationPayloadAuthorizationCheckAsync{TQuery})" /> to add
+    ///     any authorization checks. Use
+    ///     <see
+    ///         cref="AddPayloadAuthorizationCheck{TQuery, TResponse}(IQueryPipeline{TQuery, TResponse},Conqueror.ConquerorOperationPayloadAuthorizationCheckAsync{TQuery})" />
+    ///     to add
     ///     checks.
     /// </summary>
     /// <param name="pipeline">The query pipeline to add the payload authorization middleware to</param>
@@ -71,7 +79,7 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> UsePayloadAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use<PayloadAuthorizationQueryMiddleware, PayloadAuthorizationQueryMiddlewareConfiguration>(new());
+        return pipeline.Use(new PayloadAuthorizationQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<IConquerorAuthenticationContext>()));
     }
 
     /// <summary>
@@ -92,10 +100,10 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
                                                                                                     ConquerorOperationPayloadAuthorizationCheckAsync<TQuery> authorizationCheck)
         where TQuery : class
     {
-        return pipeline.Configure<PayloadAuthorizationQueryMiddleware, PayloadAuthorizationQueryMiddlewareConfiguration>(o =>
+        return pipeline.Configure<PayloadAuthorizationQueryMiddleware>(m =>
         {
             // we assume that the user passed in a compatible query type, so we perform a simple cast
-            o.AuthorizationChecks.Add((principal, query) => authorizationCheck(principal, (TQuery)query));
+            m.Configuration.AuthorizationChecks.Add((principal, query) => authorizationCheck(principal, (TQuery)query));
         });
     }
 
@@ -128,6 +136,6 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> WithoutPayloadAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Without<PayloadAuthorizationQueryMiddleware, PayloadAuthorizationQueryMiddlewareConfiguration>();
+        return pipeline.Without<PayloadAuthorizationQueryMiddleware>();
     }
 }

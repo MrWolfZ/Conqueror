@@ -1102,14 +1102,34 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
     }
 
+    [Test]
+    public void GivenHandlerWithRemovedValidationMiddleware_WhenCalledWithInvalidQuery_DoesNotThrowValidationException()
+    {
+        using var host = CreateHostWithAddedAndRemovedMiddleware<TestQueryClassWithSinglePropertyValidationAnnotation>();
+        var handler = CreateHandler<TestQueryClassWithSinglePropertyValidationAnnotation>(host);
+
+        var testQuery = new TestQueryClassWithSinglePropertyValidationAnnotation();
+
+        Assert.DoesNotThrowAsync(() => handler.ExecuteQuery(testQuery));
+    }
+
     private static IHost CreateHost<TQuery>()
         where TQuery : class
     {
         return new HostBuilder().ConfigureServices(
-                                    services => services.AddConquerorCQSDataAnnotationValidationMiddlewares()
-                                                        .AddConquerorQueryHandlerDelegate<TQuery, TestQueryResponse>(
-                                                            (_, _, _) => Task.FromResult(new TestQueryResponse()),
-                                                            pipeline => pipeline.UseDataAnnotationValidation()))
+                                    services => services.AddConquerorQueryHandlerDelegate<TQuery, TestQueryResponse>(
+                                        (_, _, _) => Task.FromResult(new TestQueryResponse()),
+                                        pipeline => pipeline.UseDataAnnotationValidation()))
+                                .Build();
+    }
+
+    private static IHost CreateHostWithAddedAndRemovedMiddleware<TQuery>()
+        where TQuery : class
+    {
+        return new HostBuilder().ConfigureServices(
+                                    services => services.AddConquerorQueryHandlerDelegate<TQuery, TestQueryResponse>(
+                                        (_, _, _) => Task.FromResult(new TestQueryResponse()),
+                                        pipeline => pipeline.UseDataAnnotationValidation().WithoutDataAnnotationValidation()))
                                 .Build();
     }
 

@@ -5,23 +5,30 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class InMemoryQueryTransport : IQueryTransportClient
+internal sealed class InMemoryQueryTransport(Type handlerType, Delegate? configurePipeline) : IQueryTransportClient
 {
-    private readonly Type handlerType;
-
-    public InMemoryQueryTransport(Type handlerType)
-    {
-        this.handlerType = handlerType;
-    }
-
-    public QueryTransportType TransportType => new(InMemoryQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server);
+    public QueryTransportType TransportType => new(InMemoryQueryTransportTypeExtensions.TransportName, QueryTransportRole.Client);
 
     public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                            IServiceProvider serviceProvider,
                                                            CancellationToken cancellationToken)
         where TQuery : class
     {
-        var handler = (IQueryHandler<TQuery, TResponse>)serviceProvider.GetRequiredService(handlerType);
-        return handler.ExecuteQuery(query, cancellationToken);
+        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider, new(new HandlerInvoker(handlerType)),
+                                                             configurePipeline as Action<IQueryPipeline<TQuery, TResponse>>);
+
+        return proxy.ExecuteQuery(query, cancellationToken);
+    }
+
+    private sealed class HandlerInvoker(Type handlerType) : IQueryTransportClient
+    {
+        public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+            where TQuery : class
+        {
+            var handler = (IQueryHandler<TQuery, TResponse>)serviceProvider.GetRequiredService(handlerType);
+            return handler.ExecuteQuery(query, cancellationToken);
+        }
+
+        public QueryTransportType TransportType => new(InMemoryQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server);
     }
 }

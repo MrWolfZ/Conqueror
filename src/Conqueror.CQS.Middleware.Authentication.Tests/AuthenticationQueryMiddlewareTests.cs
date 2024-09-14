@@ -378,7 +378,7 @@ public sealed class AuthenticationQueryMiddlewareTests : TestBase
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        _ = services.AddConquerorCQSAuthenticationMiddlewares()
+        _ = services.AddConquerorCommonMiddlewareAuthentication()
                     .AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
                         async (query, _, _) =>
                         {

@@ -49,8 +49,6 @@ public sealed class ConquerorContextDataTests
                     .AddSingleton<NestedTestClass>()
                     .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddConquerorCommandMiddleware<TestClientCommandMiddleware>()
-                    .AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                    .AddConquerorQueryMiddleware<TestClientQueryMiddleware>()
                     .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (_, p, _) =>
                     {
                         SetAndObserveContextData(p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.HandlerPreNestedExecution);
@@ -79,7 +77,8 @@ public sealed class ConquerorContextDataTests
                     {
                         SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.PipelineBuilder);
 
-                        _ = pipeline.Use<TestQueryMiddleware>();
+                        _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
+                                                                 pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
                     })
                     .AddConquerorCommandHandlerDelegate<NestedTestCommand, TestCommandResponse>((_, p, _) =>
                     {
@@ -126,7 +125,8 @@ public sealed class ConquerorContextDataTests
             _ = await handlerClient.WithPipeline(pipeline =>
             {
                 SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.ClientPipelineBuilder);
-                _ = pipeline.Use<TestClientQueryMiddleware>();
+                _ = pipeline.Use(new TestClientQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
+                                                               pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
             }).ExecuteQuery(new());
         }
 

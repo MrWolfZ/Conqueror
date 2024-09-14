@@ -11,32 +11,29 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
     where TQuery : class
 {
     private readonly Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline;
-    private readonly QueryMiddlewareRegistry queryMiddlewareRegistry;
     private readonly IServiceProvider serviceProvider;
     private readonly QueryTransportClientFactory transportClientFactory;
 
     public QueryHandlerProxy(IServiceProvider serviceProvider,
                              QueryTransportClientFactory transportClientFactory,
-                             Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline,
-                             QueryMiddlewareRegistry queryMiddlewareRegistry)
+                             Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline)
     {
         this.serviceProvider = serviceProvider;
         this.transportClientFactory = transportClientFactory;
         this.configurePipeline = configurePipeline;
-        this.queryMiddlewareRegistry = queryMiddlewareRegistry;
     }
 
     public async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
-        var transportTypeName = conquerorContext.DrainExecutionTransportTypeName();
+        var transportTypeName = conquerorContext.GetExecutionTransportTypeName();
         if (transportTypeName is null || conquerorContext.GetQueryId() is null)
         {
             conquerorContext.SetQueryId(ActivitySpanId.CreateRandom().ToString());
         }
 
-        var pipelineBuilder = new QueryPipeline<TQuery, TResponse>(serviceProvider, queryMiddlewareRegistry);
+        var pipelineBuilder = new QueryPipeline<TQuery, TResponse>(serviceProvider);
 
         configurePipeline?.Invoke(pipelineBuilder);
 
@@ -64,7 +61,6 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
 
         return new QueryHandlerProxy<TQuery, TResponse>(serviceProvider,
                                                         transportClientFactory,
-                                                        configure,
-                                                        queryMiddlewareRegistry);
+                                                        configure);
     }
 }

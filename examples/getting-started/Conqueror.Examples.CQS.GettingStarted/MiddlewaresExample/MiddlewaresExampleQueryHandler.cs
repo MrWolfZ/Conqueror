@@ -12,7 +12,7 @@ public sealed class MiddlewaresExampleQueryHandler : IMiddlewaresExampleQueryHan
 {
     // ReSharper disable once UnusedMember.Global
     public static void ConfigurePipeline(IQueryPipeline<MiddlewaresExampleQuery, MiddlewaresExampleQueryResponse> pipeline) =>
-        pipeline.UseLogging(o => o with { LogQueryPayload = false });
+        pipeline.UseLogging(o => o.LogQueryPayload = false);
 
     public async Task<MiddlewaresExampleQueryResponse> ExecuteQuery(MiddlewaresExampleQuery command, CancellationToken cancellationToken = default)
     {

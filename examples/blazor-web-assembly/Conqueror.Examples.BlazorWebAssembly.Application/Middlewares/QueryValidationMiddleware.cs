@@ -17,6 +17,6 @@ public static class ValidationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> UseValidation<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use<QueryValidationMiddleware>();
+        return pipeline.Use(new QueryValidationMiddleware());
     }
 }

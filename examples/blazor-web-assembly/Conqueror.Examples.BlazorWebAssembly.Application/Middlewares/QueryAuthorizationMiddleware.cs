@@ -1,10 +1,15 @@
 namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed record QueryAuthorizationMiddlewareConfiguration(string? Permission);
-
-public sealed class QueryAuthorizationMiddleware : IQueryMiddleware<QueryAuthorizationMiddlewareConfiguration>
+public sealed record QueryAuthorizationMiddlewareConfiguration
 {
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse, QueryAuthorizationMiddlewareConfiguration> ctx)
+    public string? Permission { get; set; }
+}
+
+public sealed class QueryAuthorizationMiddleware : IQueryMiddleware
+{
+    public QueryAuthorizationMiddlewareConfiguration Configuration { get; } = new();
+
+    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
         where TQuery : class
     {
         // .. in a real application you would place the logic here
@@ -17,18 +22,12 @@ public static class AuthorizationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> UseAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(new(null));
-    }
-
-    public static IQueryPipeline<TQuery, TResponse> UsePermission<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline, string permission)
-        where TQuery : class
-    {
-        return pipeline.Use<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(new(permission));
+        return pipeline.Use(new QueryAuthorizationMiddleware());
     }
 
     public static IQueryPipeline<TQuery, TResponse> RequirePermission<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline, string permission)
         where TQuery : class
     {
-        return pipeline.Configure<QueryAuthorizationMiddleware, QueryAuthorizationMiddlewareConfiguration>(c => c with { Permission = permission });
+        return pipeline.Configure<QueryAuthorizationMiddleware>(m => m.Configuration.Permission = permission);
     }
 }

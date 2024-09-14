@@ -6,14 +6,13 @@ namespace Conqueror.CQS.QueryHandling;
 
 internal delegate Task<TResponse> QueryMiddlewareNext<in TQuery, TResponse>(TQuery query, CancellationToken cancellationToken);
 
-internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse, TConfiguration> : QueryMiddlewareContext<TQuery, TResponse, TConfiguration>
+internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse> : QueryMiddlewareContext<TQuery, TResponse>
     where TQuery : class
 {
     private readonly QueryMiddlewareNext<TQuery, TResponse> next;
 
     public DefaultQueryMiddlewareContext(TQuery query,
                                          QueryMiddlewareNext<TQuery, TResponse> next,
-                                         TConfiguration configuration,
                                          IServiceProvider serviceProvider,
                                          IConquerorContext conquerorContext,
                                          QueryTransportType transportType,
@@ -25,7 +24,6 @@ internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse, TConfigur
         ServiceProvider = serviceProvider;
         ConquerorContext = conquerorContext;
         TransportType = transportType;
-        Configuration = configuration;
     }
 
     public override TQuery Query { get; }
@@ -37,8 +35,6 @@ internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse, TConfigur
     public override IConquerorContext ConquerorContext { get; }
 
     public override QueryTransportType TransportType { get; }
-
-    public override TConfiguration Configuration { get; }
 
     public override Task<TResponse> Next(TQuery query, CancellationToken cancellationToken) => next(query, cancellationToken);
 }

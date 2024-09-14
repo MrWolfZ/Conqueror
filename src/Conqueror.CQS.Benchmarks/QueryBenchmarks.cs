@@ -11,20 +11,16 @@ public class QueryBenchmarks
     [Params(100, 1000, 10000)]
     public static int NumOfMiddlewares { get; set; }
 
-    private readonly IQueryHandler<TestQuery, TestResponse> handler;
-
-    public QueryBenchmarks()
-    {
-        handler = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>()
-                                         .AddConquerorQueryMiddleware<TestQueryMiddleware>()
-                                         .BuildServiceProvider()
-                                         .GetRequiredService<IQueryHandler<TestQuery, TestResponse>>();
-    }
+    private readonly IServiceProvider provider = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandler>()
+                                                                        .BuildServiceProvider();
 
     [Benchmark]
-    public void ExecuteQuery()
+    public void ExecuteQueryWithMiddleware()
     {
-        var result = handler.ExecuteQuery(new(0)).GetAwaiter().GetResult();
+        var result = provider.GetRequiredService<IQueryHandler<TestQuery, TestResponse>>()
+                             .ExecuteQuery(new(0))
+                             .GetAwaiter()
+                             .GetResult();
 
         if (result.Value != NumOfMiddlewares)
         {
@@ -61,7 +57,7 @@ public class QueryBenchmarks
         {
             for (var i = 0; i < NumOfMiddlewares; i++)
             {
-                pipeline.Use<TestQueryMiddleware>();
+                pipeline.Use(new TestQueryMiddleware());
             }
         }
     }
@@ -73,8 +69,12 @@ public class QueryBenchmarks
         {
             await Task.Yield();
 
-            var q = (TestQuery)(object)ctx.Query;
-            var newQuery = (TQuery)(object)new TestQuery(q.Value + 1);
+            var newQuery = ctx.Query;
+
+            if (ctx.Query is TestQuery q)
+            {
+                newQuery = (TQuery)(object)new TestQuery(q.Value + 1);
+            }
 
             return await ctx.Next(newQuery, ctx.CancellationToken);
         }
