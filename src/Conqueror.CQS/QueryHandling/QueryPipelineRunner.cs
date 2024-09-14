@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ internal sealed class QueryPipelineRunner
                                List<(Type MiddlewareType, object? MiddlewareConfiguration, IQueryMiddlewareInvoker Invoker)> middlewares)
     {
         this.conquerorContext = conquerorContext;
-        this.middlewares = middlewares;
+        this.middlewares = middlewares.AsEnumerable().Reverse().ToList();
     }
 
     public async Task<TResponse> Execute<TQuery, TResponse>(IServiceProvider serviceProvider,
@@ -25,25 +26,22 @@ internal sealed class QueryPipelineRunner
         where TQuery : class
     {
         var transportClient = await transportClientFactory.Create(typeof(TQuery), typeof(TResponse), serviceProvider).ConfigureAwait(false);
-        return await ExecuteNextMiddleware(0, initialQuery, conquerorContext, cancellationToken).ConfigureAwait(false);
+        var transportType = transportClient.TransportType with { Name = transportTypeName ?? transportClient.TransportType.Name };
 
-        async Task<TResponse> ExecuteNextMiddleware(int index, TQuery query, IConquerorContext ctx, CancellationToken token)
+        var next = (TQuery query, CancellationToken token) => transportClient.ExecuteQuery<TQuery, TResponse>(query, serviceProvider, token);
+
+        foreach (var (_, middlewareConfiguration, invoker) in middlewares)
         {
-            if (index >= middlewares.Count)
-            {
-                return await transportClient.ExecuteQuery<TQuery, TResponse>(query, serviceProvider, token).ConfigureAwait(false);
-            }
-
-            var (_, middlewareConfiguration, invoker) = middlewares[index];
-            var transportType = transportClient.TransportType with { Name = transportTypeName ?? transportClient.TransportType.Name };
-            return await invoker.Invoke(query,
-                                        (q, t) => ExecuteNextMiddleware(index + 1, q, ctx, t),
-                                        middlewareConfiguration,
-                                        serviceProvider,
-                                        ctx,
-                                        transportType,
-                                        token)
-                                .ConfigureAwait(false);
+            var nextToCall = next;
+            next = (query, token) => invoker.Invoke(query,
+                                                    (q, t) => nextToCall(q, t),
+                                                    middlewareConfiguration,
+                                                    serviceProvider,
+                                                    conquerorContext,
+                                                    transportType,
+                                                    token);
         }
+
+        return await next(initialQuery, cancellationToken).ConfigureAwait(false);
     }
 }
