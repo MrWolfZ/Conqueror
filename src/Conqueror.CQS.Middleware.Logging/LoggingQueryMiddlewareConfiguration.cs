@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
@@ -180,7 +181,7 @@ public sealed record LoggingQueryPostExecutionContext(ILogger Logger, LogLevel L
 /// <summary>
 ///     The context passed to a <see cref="LoggingQueryMiddleware" />'s <see cref="LoggingQueryMiddlewareConfiguration.ExceptionHook" />.
 /// </summary>
-public sealed record LoggingQueryExceptionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, Exception Exception, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
+public sealed record LoggingQueryExceptionContext(ILogger Logger, LogLevel LogLevel, string QueryId, string TraceId, object Query, Exception Exception, StackTrace ExecutionStackTrace, TimeSpan ElapsedTime, IServiceProvider ServiceProvider)
 {
     /// <summary>
     ///     The logger used in the middleware. Can be used to log the message
@@ -212,6 +213,15 @@ public sealed record LoggingQueryExceptionContext(ILogger Logger, LogLevel LogLe
     ///     The exception which occurred.
     /// </summary>
     public Exception Exception { get; init; } = Exception;
+
+    /// <summary>
+    ///     The stack trace of the current middleware execution. This property
+    ///     can be combined with <see cref="Exception.StackTrace" /> to get the
+    ///     full stack trace of the exception, since the exception's stack trace
+    ///     only contains the stack frames from the middleware execution to the
+    ///     handler.
+    /// </summary>
+    public StackTrace ExecutionStackTrace { get; init; } = ExecutionStackTrace;
 
     /// <summary>
     ///     The time which has elapsed while executing the query.

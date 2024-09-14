@@ -64,7 +64,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         AssertLogEntryContains(LogLevel.Error, "An exception occurred while executing command");
         AssertLogEntryContains(LogLevel.Error, exception.Message);
-        AssertLogEntryContains(LogLevel.Error, exception.StackTrace![..exception.StackTrace!.IndexOf("---", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Error, exception.StackTrace![..exception.StackTrace!.IndexOf($"{nameof(LoggingCommandMiddleware)}.{nameof(LoggingCommandMiddleware.Execute)}[TCommand,TResponse]", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Error, $"{nameof(GivenDefaultLoggingMiddlewareConfiguration_WhenHandlerThrowsException_LogsExceptionWithMessageAndStackTrace)}()");
         AssertLogEntryContains(LogLevel.Error, "Command ID: ");
         AssertLogEntryContains(LogLevel.Error, "Trace ID: ");
     }
@@ -131,7 +132,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         AssertLogEntryContains(LogLevel.Critical, "An exception occurred while executing command");
         AssertLogEntryContains(LogLevel.Critical, exception.Message);
-        AssertLogEntryContains(LogLevel.Critical, exception.StackTrace![..exception.StackTrace!.IndexOf("---", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Critical, exception.StackTrace![..exception.StackTrace!.IndexOf($"{nameof(LoggingCommandMiddleware)}.{nameof(LoggingCommandMiddleware.Execute)}[TCommand,TResponse]", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Critical, $"{nameof(GivenConfiguredExceptionLogLevel_WhenHandlerThrowsException_LogsExceptionWithMessageAndStackTraceAtSpecifiedLevel)}()");
         AssertLogEntryContains(LogLevel.Critical, "Command ID: ");
         AssertLogEntryContains(LogLevel.Critical, "Trace ID: ");
     }

@@ -29,11 +29,13 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
         var traceId = ctx.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.TraceId;
 
         var sw = Stopwatch.StartNew();
+        StackTrace? executionStackTrace = null;
 
         try
         {
             PreExecution(logger, queryId, traceId, ctx);
 
+            executionStackTrace = new(3, true);
             var response = await ctx.Next(ctx.Query, ctx.CancellationToken).ConfigureAwait(false);
 
             PostExecution(logger, queryId, traceId, response, sw.Elapsed, ctx);
@@ -42,7 +44,7 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
         }
         catch (Exception e)
         {
-            OnException(logger, queryId, traceId, e, sw.Elapsed, ctx);
+            OnException(logger, queryId, traceId, e, executionStackTrace ?? new(true), sw.Elapsed, ctx);
 
             throw;
         }
@@ -143,6 +145,7 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
                                                        string queryId,
                                                        string traceId,
                                                        Exception exception,
+                                                       StackTrace executionStackTrace,
                                                        TimeSpan elapsedTime,
                                                        QueryMiddlewareContext<TQuery, TResponse, LoggingQueryMiddlewareConfiguration> ctx)
         where TQuery : class
@@ -155,6 +158,7 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
                                                                            traceId,
                                                                            ctx.Query,
                                                                            exception,
+                                                                           executionStackTrace,
                                                                            elapsedTime,
                                                                            ctx.ServiceProvider);
 
@@ -173,7 +177,7 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware<LoggingQueryMiddle
         // to include the full exception without adding it again as metadata)
         logger.Log(ctx.Configuration.ExceptionLogLevel,
                    exception,
-                   $"An exception occurred while executing query after {{ResponseLatency:0.0000}}ms (Query ID: {{QueryId}}, Trace ID: {{TraceId}})\n{exception}",
+                   $"An exception occurred while executing query after {{ResponseLatency:0.0000}}ms (Query ID: {{QueryId}}, Trace ID: {{TraceId}})\n{exception}\n{executionStackTrace}",
                    elapsedTime.TotalMilliseconds,
                    queryId,
                    traceId);

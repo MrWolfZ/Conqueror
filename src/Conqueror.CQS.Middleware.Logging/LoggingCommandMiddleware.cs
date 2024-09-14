@@ -29,11 +29,13 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
         var traceId = ctx.ConquerorContext.TraceId;
 
         var sw = Stopwatch.StartNew();
+        StackTrace? executionStackTrace = null;
 
         try
         {
             PreExecution(logger, commandId, traceId, ctx);
 
+            executionStackTrace = new(true);
             var response = await ctx.Next(ctx.Command, ctx.CancellationToken).ConfigureAwait(false);
 
             PostExecution(logger, commandId, traceId, response, sw.Elapsed, ctx);
@@ -42,7 +44,7 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
         }
         catch (Exception e)
         {
-            OnException(logger, commandId, traceId, e, sw.Elapsed, ctx);
+            OnException(logger, commandId, traceId, e, executionStackTrace ?? new(true), sw.Elapsed, ctx);
 
             throw;
         }
@@ -143,6 +145,7 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
                                                          string commandId,
                                                          string traceId,
                                                          Exception exception,
+                                                         StackTrace executionStackTrace,
                                                          TimeSpan elapsedTime,
                                                          CommandMiddlewareContext<TCommand, TResponse, LoggingCommandMiddlewareConfiguration> ctx)
         where TCommand : class
@@ -155,6 +158,7 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
                                                                              traceId,
                                                                              ctx.Command,
                                                                              exception,
+                                                                             executionStackTrace,
                                                                              elapsedTime,
                                                                              ctx.ServiceProvider);
 
@@ -173,7 +177,7 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
         // to include the full exception without adding it again as metadata)
         logger.Log(ctx.Configuration.ExceptionLogLevel,
                    exception,
-                   $"An exception occurred while executing command after {{ResponseLatency:0.0000}}ms (Command ID: {{CommandId}}, Trace ID: {{TraceId}})\n{exception}",
+                   $"An exception occurred while executing command after {{ResponseLatency:0.0000}}ms (Command ID: {{CommandId}}, Trace ID: {{TraceId}})\n{exception}\n{executionStackTrace}",
                    elapsedTime.TotalMilliseconds,
                    commandId,
                    traceId);

@@ -16,6 +16,7 @@ internal sealed class TestLogger : ILogger
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         logSink.LogEntries.Add((categoryName, logLevel, formatter(state, exception)));
+        Console.WriteLine($"{logLevel} [{categoryName}]: {formatter(state, exception)}");
     }
 
     public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;

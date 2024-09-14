@@ -53,7 +53,8 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         AssertLogEntryContains(LogLevel.Error, "An exception occurred while executing query");
         AssertLogEntryContains(LogLevel.Error, exception.Message);
-        AssertLogEntryContains(LogLevel.Error, exception.StackTrace![..exception.StackTrace!.IndexOf("---", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Error, exception.StackTrace![..exception.StackTrace!.IndexOf($"{nameof(LoggingQueryMiddleware)}.{nameof(LoggingQueryMiddleware.Execute)}[TQuery,TResponse]", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Error, $"{nameof(GivenDefaultLoggingMiddlewareConfiguration_WhenHandlerThrowsException_LogsExceptionWithMessageAndStackTrace)}()");
         AssertLogEntryContains(LogLevel.Error, "Query ID: ");
         AssertLogEntryContains(LogLevel.Error, "Trace ID: ");
     }
@@ -108,7 +109,8 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         AssertLogEntryContains(LogLevel.Critical, "An exception occurred while executing query");
         AssertLogEntryContains(LogLevel.Critical, exception.Message);
-        AssertLogEntryContains(LogLevel.Critical, exception.StackTrace![..exception.StackTrace!.IndexOf("---", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Critical, exception.StackTrace![..exception.StackTrace!.IndexOf($"{nameof(LoggingQueryMiddleware)}.{nameof(LoggingQueryMiddleware.Execute)}[TQuery,TResponse]", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Critical, $"{nameof(GivenConfiguredExceptionLogLevel_WhenHandlerThrowsException_LogsExceptionWithMessageAndStackTraceAtSpecifiedLevel)}()");
         AssertLogEntryContains(LogLevel.Critical, "Query ID: ");
         AssertLogEntryContains(LogLevel.Critical, "Trace ID: ");
     }
@@ -324,6 +326,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
         Assert.That(seenContext?.TraceId, Is.SameAs(traceId));
         Assert.That(seenContext?.Query, Is.SameAs(testQuery));
         Assert.That(seenContext?.Exception, Is.SameAs(exception));
+        Assert.That(seenContext!.ExecutionStackTrace.ToString(), Contains.Substring(nameof(GivenConfiguredExceptionHook_HookIsCalledWithCorrectParameters)));
         Assert.That(seenContext?.ElapsedTime.Ticks, Is.GreaterThan(0));
         Assert.That(seenContext?.ServiceProvider, Is.SameAs(scope.ServiceProvider));
 
