@@ -18,7 +18,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] refactor pipeline logic to take middleware instances instead of resolving them
 - [ ] add support for delegate middlewares
 - [ ] add `.Has()` method to pipelines
 - [ ] make pipeline enumerable
@@ -30,6 +29,11 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] write tests to ensure that client pipeline sees transport type as client and handler sees it as server
 - [ ] when registering client, validate it is not a concrete class
 - [ ] rename `ExecuteQuery` and `ExecuteCommand` to `Handle`
+- [ ] allow custom method name for custom handler interfaces
+  - [ ] redirect `IncrementCounter` to `Handle` in interface
+  - [ ] caller and handler use custom method name
+  - [ ] dynamic proxy delegates the custom method back to handle on the proxy
+  - [ ] handler registration asserts that the method has a compatible signature
 - [ ] update all recipes and examples to drop `Command` and `Query` suffixes + also use more speaking response names, e.g. `IncrementCounter` and `CounterIncremented`
 - [ ] align all tests names to `Given_When_Then` style
 - [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
