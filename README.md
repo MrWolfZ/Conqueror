@@ -85,16 +85,13 @@ This quickstart guide will let you jump right into the code without lengthy expl
 ```sh
 # add relevant CQS packages
 dotnet add package Conqueror.CQS
-dotnet add package Conqueror.CQS.Analyzers
 dotnet add package Conqueror.CQS.Middleware.Logging
 dotnet add package Conqueror.CQS.Transport.Http.Server.AspNetCore
 ```
 
 ```cs
 // add Conqueror CQS to your services
-builder.Services
-       .AddConquerorCQSTypesFromExecutingAssembly()
-       .AddConquerorCQSLoggingMiddlewares();
+builder.Services.AddConquerorCQSTypesFromExecutingAssembly();
 
 builder.Services
        .AddControllers()

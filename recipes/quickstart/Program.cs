@@ -2,8 +2,7 @@ using Conqueror;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services
-       .AddConquerorCQSTypesFromExecutingAssembly();
+builder.Services.AddConquerorCQSTypesFromExecutingAssembly();
 
 builder.Services
        .AddControllers()
