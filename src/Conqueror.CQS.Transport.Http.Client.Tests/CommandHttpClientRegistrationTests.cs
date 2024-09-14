@@ -690,7 +690,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        var middleware = new TestCommandMiddleware();
+        var middleware = new TestCommandMiddleware<TestCommand, TestCommandResponse>();
         _ = await client.WithPipeline(pipeline => pipeline.Use(middleware)).ExecuteCommand(new(), CancellationToken.None);
 
         var seenTransportType = middleware.SeenTransportType;
@@ -719,12 +719,12 @@ public sealed class CommandHttpClientRegistrationTests
     {
     }
 
-    private sealed class TestCommandMiddleware : ICommandMiddleware
+    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
         public CommandTransportType? SeenTransportType { get; private set; }
 
-        public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             SeenTransportType = ctx.TransportType;
             return ctx.Next(ctx.Command, ctx.CancellationToken);

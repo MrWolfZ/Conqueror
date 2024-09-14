@@ -114,10 +114,10 @@ public abstract class CommandClientFactoryTests
 
         var command = new TestCommand();
 
-        _ = await client.WithPipeline(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = await client.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                         .ExecuteCommand(command, CancellationToken.None);
 
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
 
     [Test]
@@ -138,10 +138,10 @@ public abstract class CommandClientFactoryTests
 
         var command = new TestCommand();
 
-        _ = await client.WithPipeline(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = await client.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                         .ExecuteCommand(command, CancellationToken.None);
 
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
 
     [Test]
@@ -270,7 +270,8 @@ public abstract class CommandClientFactoryTests
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestCommandMiddleware : ICommandMiddleware
+    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
         private readonly TestObservations observations;
 
@@ -279,8 +280,7 @@ public abstract class CommandClientFactoryTests
             this.observations = observations;
         }
 
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());

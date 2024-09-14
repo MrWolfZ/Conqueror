@@ -29,7 +29,7 @@ public static class ConquerorCqsMiddlewareLoggingCommandPipelineExtensions
     {
         var configuration = new LoggingCommandMiddlewareConfiguration();
         configure?.Invoke(configuration);
-        return pipeline.Use(new LoggingCommandMiddleware { Configuration = configuration });
+        return pipeline.Use(new LoggingCommandMiddleware<TCommand, TResponse> { Configuration = configuration });
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public static class ConquerorCqsMiddlewareLoggingCommandPipelineExtensions
                                                                                               Action<LoggingCommandMiddlewareConfiguration> configure)
         where TCommand : class
     {
-        return pipeline.Configure<LoggingCommandMiddleware>(m => configure(m.Configuration));
+        return pipeline.Configure<LoggingCommandMiddleware<TCommand, TResponse>>(m => configure(m.Configuration));
     }
 
     /// <summary>
@@ -56,6 +56,6 @@ public static class ConquerorCqsMiddlewareLoggingCommandPipelineExtensions
     public static ICommandPipeline<TCommand, TResponse> WithoutLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Without<LoggingCommandMiddleware>();
+        return pipeline.Without<LoggingCommandMiddleware<TCommand, TResponse>>();
     }
 }

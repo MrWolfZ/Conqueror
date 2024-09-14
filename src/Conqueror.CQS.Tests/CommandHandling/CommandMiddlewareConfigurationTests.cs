@@ -13,9 +13,9 @@ public sealed class CommandMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
 
-            _ = pipeline.Configure<TestCommandMiddleware>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestCommandMiddleware<TestCommand, TestCommandResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
@@ -38,11 +38,11 @@ public sealed class CommandMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
-            _ = pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 30 });
-            _ = pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 50 });
+            _ = pipeline.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 30 });
+            _ = pipeline.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 50 });
 
-            _ = pipeline.Configure<TestCommandMiddleware>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestCommandMiddleware<TestCommand, TestCommandResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
@@ -65,9 +65,9 @@ public sealed class CommandMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestCommandMiddlewareSub(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(new TestCommandMiddlewareSub<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
 
-            _ = pipeline.Configure<TestCommandMiddlewareBase>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestCommandMiddlewareBase<TestCommand, TestCommandResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
@@ -90,7 +90,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware>(c => c.Parameter += 10));
+            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware<TestCommand, TestCommandResponse>>(c => c.Parameter += 10));
         });
 
         var provider = services.BuildServiceProvider();
@@ -118,12 +118,12 @@ public sealed class CommandMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestCommandMiddleware(TestObservations observations) : ICommandMiddleware
+    private sealed class TestCommandMiddleware<TCommand, TResponse>(TestObservations observations) : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
         public int Parameter { get; set; }
 
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             observations.Parameters.Add(Parameter);
@@ -132,14 +132,15 @@ public sealed class CommandMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestCommandMiddlewareSub(TestObservations observations) : TestCommandMiddlewareBase(observations);
+    private sealed class TestCommandMiddlewareSub<TCommand, TResponse>(TestObservations observations) : TestCommandMiddlewareBase<TCommand, TResponse>(observations)
+        where TCommand : class;
 
-    private abstract class TestCommandMiddlewareBase(TestObservations observations) : ICommandMiddleware
+    private abstract class TestCommandMiddlewareBase<TCommand, TResponse>(TestObservations observations) : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
         public int Parameter { get; set; }
 
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             observations.Parameters.Add(Parameter);

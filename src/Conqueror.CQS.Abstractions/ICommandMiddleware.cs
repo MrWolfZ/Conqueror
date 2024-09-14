@@ -2,8 +2,8 @@ using System.Threading.Tasks;
 
 namespace Conqueror;
 
-public interface ICommandMiddleware
+public interface ICommandMiddleware<TCommand, TResponse>
+    where TCommand : class
 {
-    Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class;
+    Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx);
 }

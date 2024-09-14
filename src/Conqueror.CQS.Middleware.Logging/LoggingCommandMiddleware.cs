@@ -17,13 +17,13 @@ namespace Conqueror.CQS.Middleware.Logging;
 ///         <item>If an exception gets thrown during command execution</item>
 ///     </list>
 /// </summary>
-public sealed class LoggingCommandMiddleware : ICommandMiddleware
+public sealed class LoggingCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    where TCommand : class
 {
     public required LoggingCommandMiddlewareConfiguration Configuration { get; init; }
 
     /// <inheritdoc />
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         var logger = GetLogger(ctx);
 
@@ -52,11 +52,10 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware
         }
     }
 
-    private void PreExecution<TCommand, TResponse>(ILogger logger,
-                                                          string commandId,
-                                                          string traceId,
-                                                          CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    private void PreExecution(ILogger logger,
+                              string commandId,
+                              string traceId,
+                              CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         if (Configuration.PreExecutionHook is { } preExecutionHook)
         {
@@ -90,13 +89,12 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware
                    traceId);
     }
 
-    private void PostExecution<TCommand, TResponse>(ILogger logger,
-                                                           string commandId,
-                                                           string traceId,
-                                                           object? response,
-                                                           TimeSpan elapsedTime,
-                                                           CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    private void PostExecution(ILogger logger,
+                               string commandId,
+                               string traceId,
+                               object? response,
+                               TimeSpan elapsedTime,
+                               CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         if (Configuration.PostExecutionHook is { } postExecutionHook)
         {
@@ -143,14 +141,13 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware
     }
 
     [SuppressMessage("Major Code Smell", "S2629:Logging templates should be constant", Justification = "The exception is already included as metadata, so we just want the message to include the full exception without adding it again as metadata.")]
-    private void OnException<TCommand, TResponse>(ILogger logger,
-                                                         string commandId,
-                                                         string traceId,
-                                                         Exception exception,
-                                                         StackTrace executionStackTrace,
-                                                         TimeSpan elapsedTime,
-                                                         CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    private void OnException(ILogger logger,
+                             string commandId,
+                             string traceId,
+                             Exception exception,
+                             StackTrace executionStackTrace,
+                             TimeSpan elapsedTime,
+                             CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         if (Configuration.ExceptionHook is { } exceptionHook)
         {
@@ -185,8 +182,7 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware
                    traceId);
     }
 
-    private ILogger GetLogger<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    private ILogger GetLogger(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         var loggerFactory = ctx.ServiceProvider.GetRequiredService<ILoggerFactory>();
 

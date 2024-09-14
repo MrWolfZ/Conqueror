@@ -7,12 +7,12 @@ public sealed record CommandRetryMiddlewareConfiguration
     public required  TimeSpan RetryInterval { get; set; }
 }
 
-public sealed class CommandRetryMiddleware : ICommandMiddleware
+public sealed class CommandRetryMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
 {
     public required CommandRetryMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         // .. in a real application you would place the logic here
         return await ctx.Next(ctx.Command, ctx.CancellationToken);
@@ -32,7 +32,7 @@ public static class RetryCommandPipelineExtensions
             RetryInterval = retryInterval ?? TimeSpan.FromSeconds(1),
         };
 
-        return pipeline.Use(new CommandRetryMiddleware { Configuration = configuration });
+        return pipeline.Use(new CommandRetryMiddleware<TCommand, TResponse> { Configuration = configuration });
     }
 
     public static ICommandPipeline<TCommand, TResponse> ConfigureRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
@@ -40,7 +40,7 @@ public static class RetryCommandPipelineExtensions
                                                                                             TimeSpan? retryInterval = null)
         where TCommand : class
     {
-        return pipeline.Configure<CommandRetryMiddleware>(m =>
+        return pipeline.Configure<CommandRetryMiddleware<TCommand, TResponse>>(m =>
         {
             if (maxNumberOfAttempts is not null)
             {

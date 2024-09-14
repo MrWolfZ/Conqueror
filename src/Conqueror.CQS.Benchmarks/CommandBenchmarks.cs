@@ -60,15 +60,15 @@ public class CommandBenchmarks
         {
             for (var i = 0; i < NumOfMiddlewares; i++)
             {
-                pipeline.Use(new TestCommandMiddleware());
+                pipeline.Use(new TestCommandMiddleware<TestCommand, TestResponse>());
             }
         }
     }
 
-    private sealed class TestCommandMiddleware : ICommandMiddleware
+    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
 

@@ -66,178 +66,178 @@ public sealed class CommandMiddlewareFunctionalityTests
                          []);
 
         // single middleware
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                          ]);
 
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         // multiple different middlewares
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                          ]);
 
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         // same middleware multiple times
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                          ]);
 
         // added, then removed
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestCommandMiddleware2>(),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestCommandMiddleware2<TestCommand, TestCommandResponse>>(),
                          null,
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestCommandMiddleware2>(),
+                         p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestCommandMiddleware2<TestCommand, TestCommandResponse>>(),
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                          ]);
 
         // multiple times added, then removed
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestCommandMiddleware2>(),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestCommandMiddleware2<TestCommand, TestCommandResponse>>(),
                          null,
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestCommandMiddleware2>(),
+                         p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestCommandMiddleware2<TestCommand, TestCommandResponse>>(),
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                          ]);
 
         // added on client, added and removed in handler
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestCommandMiddleware>(),
-                         p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestCommandMiddleware<TestCommand, TestCommandResponse>>(),
+                         p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                          ]);
 
         // added, then removed, then added again
-        yield return new(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestCommandMiddleware>()
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestCommandMiddleware<TestCommand, TestCommandResponse>>()
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestCommandMiddleware>()
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestCommandMiddleware<TestCommand, TestCommandResponse>>()
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                          ]);
 
         // retry middlewares
-        yield return new(p => p.Use(new TestCommandRetryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandRetryMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestCommandRetryMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Server),
+                             (typeof(TestCommandRetryMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestCommandRetryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestCommandRetryMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandRetryMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Client),
+                             (typeof(TestCommandRetryMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                          ]);
 
-        yield return new(p => p.Use(new TestCommandRetryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestCommandRetryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestCommandRetryMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestCommandRetryMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestCommandRetryMiddleware), CommandTransportRole.Client),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Client),
-                             (typeof(TestCommandRetryMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware2), CommandTransportRole.Client),
-                             (typeof(TestCommandRetryMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
-                             (typeof(TestCommandMiddleware), CommandTransportRole.Server),
+                             (typeof(TestCommandRetryMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandRetryMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(TestCommandRetryMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
     }
 
@@ -265,8 +265,8 @@ public sealed class CommandMiddlewareFunctionalityTests
                     {
                         var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                         var cancellationTokensToUse = pipeline.ServiceProvider.GetRequiredService<CancellationTokensToUse>();
-                        _ = pipeline.Use(new MutatingTestCommandMiddleware(obs, cancellationTokensToUse))
-                                    .Use(new MutatingTestCommandMiddleware2(obs, cancellationTokensToUse));
+                        _ = pipeline.Use(new MutatingTestCommandMiddleware<TestCommand, TestCommandResponse>(obs, cancellationTokensToUse))
+                                    .Use(new MutatingTestCommandMiddleware2<TestCommand, TestCommandResponse>(obs, cancellationTokensToUse));
                     });
 
         var provider = services.BuildServiceProvider();
@@ -301,7 +301,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         _ = services.AddConquerorCommandHandler<TestCommandHandler>()
                     .AddSingleton(exception)
-                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline => pipeline.Use(new ThrowingTestCommandMiddleware(exception)));
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline => pipeline.Use(new ThrowingTestCommandMiddleware<TestCommand, TestCommandResponse>(exception)));
 
         var provider = services.BuildServiceProvider();
 
@@ -325,7 +325,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestCommandMiddleware(exception))).ExecuteCommand(new(10)));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestCommandMiddleware<TestCommand, TestCommandResponse>(exception))).ExecuteCommand(new(10)));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -343,11 +343,11 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.WithPipeline(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                         .WithPipeline(p => p.Use(new TestCommandMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = await handler.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                         .WithPipeline(p => p.Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                          .ExecuteCommand(new(10));
 
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2), typeof(TestCommandMiddleware) }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
 
     [Test]
@@ -363,7 +363,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                         obs.CommandsFromHandlers.Add(command);
                         obs.CancellationTokensFromHandlers.Add(cancellationToken);
                         return new(command.Payload + 1);
-                    }, pipeline => pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
+                    }, pipeline => pipeline.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -375,7 +375,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         _ = await handler.ExecuteCommand(command);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
 
     public sealed record ConquerorMiddlewareFunctionalityTestCase(
@@ -423,10 +423,10 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandMiddleware(TestObservations observations) : ICommandMiddleware
+    private sealed class TestCommandMiddleware<TCommand, TResponse>(TestObservations observations) : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -438,10 +438,10 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandMiddleware2(TestObservations observations) : ICommandMiddleware
+    private sealed class TestCommandMiddleware2<TCommand, TResponse>(TestObservations observations) : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -453,10 +453,10 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestCommandRetryMiddleware(TestObservations observations) : ICommandMiddleware
+    private sealed class TestCommandRetryMiddleware<TCommand, TResponse>(TestObservations observations) : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -469,10 +469,10 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestCommandMiddleware(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : ICommandMiddleware
+    private sealed class MutatingTestCommandMiddleware<TCommand, TResponse>(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -500,10 +500,10 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestCommandMiddleware2(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : ICommandMiddleware
+    private sealed class MutatingTestCommandMiddleware2<TCommand, TResponse>(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -531,10 +531,10 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestCommandMiddleware(Exception exception) : ICommandMiddleware
+    private sealed class ThrowingTestCommandMiddleware<TCommand, TResponse>(Exception exception) : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             throw exception;
@@ -547,24 +547,47 @@ public sealed class CommandMiddlewareFunctionalityTests
         public IServiceProvider ServiceProvider => commandPipelineImplementation.ServiceProvider;
 
         public ICommandPipeline<TestCommand, TestCommandResponse> Use<TMiddleware>(TMiddleware middleware)
-            where TMiddleware : ICommandMiddleware
+            where TMiddleware : ICommandMiddleware<TestCommand, TestCommandResponse>
         {
-            _ = commandPipelineImplementation.Use(middleware);
+            _ = commandPipelineImplementation.Use(new MiddlewareAdapter<TMiddleware>(middleware));
             return this;
         }
 
         public ICommandPipeline<TestCommand, TestCommandResponse> Without<TMiddleware>()
-            where TMiddleware : ICommandMiddleware
+            where TMiddleware : ICommandMiddleware<TestCommand, TestCommandResponse>
         {
-            _ = commandPipelineImplementation.Without<TMiddleware>();
+            _ = commandPipelineImplementation.Without<MiddlewareAdapter<TMiddleware>>();
             return this;
         }
 
         public ICommandPipeline<TestCommand, TestCommandResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
-            where TMiddleware : ICommandMiddleware
+            where TMiddleware : ICommandMiddleware<TestCommand, TestCommandResponse>
         {
-            _ = commandPipelineImplementation.Configure(configure);
+            _ = commandPipelineImplementation.Configure<MiddlewareAdapter<TMiddleware>>(m => configure(m.Wrapped));
             return this;
+        }
+
+        private sealed class MiddlewareAdapter<TMiddleware>(TMiddleware wrapped) : ICommandMiddleware<TestCommand, UnitCommandResponse>
+            where TMiddleware : ICommandMiddleware<TestCommand, TestCommandResponse>
+        {
+            public TMiddleware Wrapped { get; } = wrapped;
+
+            public async Task<UnitCommandResponse> Execute(CommandMiddlewareContext<TestCommand, UnitCommandResponse> ctx)
+            {
+                var wrappedCtx = new DefaultCommandMiddlewareContext<TestCommand, TestCommandResponse>(ctx.Command,
+                                                                                                       async (c, t) =>
+                                                                                                       {
+                                                                                                           _ = await ctx.Next(c, t);
+                                                                                                           return new(0);
+                                                                                                       },
+                                                                                                       ctx.ServiceProvider,
+                                                                                                       ctx.ConquerorContext,
+                                                                                                       ctx.TransportType,
+                                                                                                       ctx.CancellationToken);
+
+                _ = await Wrapped.Execute(wrappedCtx);
+                return UnitCommandResponse.Instance;
+            }
         }
     }
 

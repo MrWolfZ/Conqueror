@@ -9,19 +9,19 @@ internal sealed class CommandPipelineWithoutResponseAdapter<TCommand>(
     public IServiceProvider ServiceProvider => commandPipelineImplementation.ServiceProvider;
 
     public ICommandPipeline<TCommand, UnitCommandResponse> Use<TMiddleware>(TMiddleware middleware)
-        where TMiddleware : ICommandMiddleware
+        where TMiddleware : ICommandMiddleware<TCommand, UnitCommandResponse>
     {
         return commandPipelineImplementation.Use(middleware);
     }
 
     public ICommandPipeline<TCommand, UnitCommandResponse> Without<TMiddleware>()
-        where TMiddleware : ICommandMiddleware
+        where TMiddleware : ICommandMiddleware<TCommand, UnitCommandResponse>
     {
         return commandPipelineImplementation.Without<TMiddleware>();
     }
 
     public ICommandPipeline<TCommand, UnitCommandResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
-        where TMiddleware : ICommandMiddleware
+        where TMiddleware : ICommandMiddleware<TCommand, UnitCommandResponse>
     {
         return commandPipelineImplementation.Configure(configure);
     }

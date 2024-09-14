@@ -3,10 +3,10 @@ using System.Reflection;
 namespace Conqueror.Recipes.CQS.Advanced.CallingHttp.Server;
 
 // in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.DataAnnotationValidation
-public sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddleware
-{
-    public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+public sealed class DataAnnotationValidationCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
+{
+    public Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         Validator.ValidateObject(ctx.Command, new(ctx.Command), true);
 

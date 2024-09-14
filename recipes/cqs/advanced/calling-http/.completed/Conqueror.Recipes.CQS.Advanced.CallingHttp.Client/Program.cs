@@ -8,10 +8,7 @@ var serverAddress = new Uri("http://localhost:5000");
 var services = new ServiceCollection();
 
 services.AddConquerorCQSHttpClientServices()
-        .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")))
-
-        // add all middlewares from the shared project
-        .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly);
+        .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")));
 
 await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
 

@@ -5,12 +5,12 @@ namespace Conqueror.CQS.Middleware.Authorization;
 /// <summary>
 ///     A command middleware which adds operation type authorization functionality to a command pipeline.
 /// </summary>
-public sealed class OperationTypeAuthorizationCommandMiddleware : ICommandMiddleware
+public sealed class OperationTypeAuthorizationCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
 {
     public required OperationTypeAuthorizationCommandMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         var authenticationContext = new ConquerorAuthenticationContext();
         if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)

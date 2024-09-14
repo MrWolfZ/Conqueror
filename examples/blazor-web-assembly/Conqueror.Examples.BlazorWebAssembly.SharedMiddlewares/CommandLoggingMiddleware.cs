@@ -13,7 +13,8 @@ public sealed record CommandLoggingMiddlewareConfiguration
     public bool LogResponsePayload { get; init; } = true;
 }
 
-public sealed class CommandLoggingMiddleware : ICommandMiddleware
+public sealed class CommandLoggingMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
 {
     private readonly JsonSerializerOptions jsonSerializerOptions;
     private readonly ILoggerFactory loggerFactory;
@@ -26,8 +27,7 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware
 
     public required CommandLoggingMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         var logger = loggerFactory.CreateLogger($"CommandHandler[{typeof(TCommand).Name},{typeof(TResponse).Name}]");
 
@@ -84,13 +84,13 @@ public static class LoggingCommandPipelineExtensions
 
         var loggerFactory = pipeline.ServiceProvider.GetRequiredService<ILoggerFactory>();
         var jsonSerializerOptions = pipeline.ServiceProvider.GetRequiredService<JsonSerializerOptions>();
-        return pipeline.Use(new CommandLoggingMiddleware(loggerFactory, jsonSerializerOptions) { Configuration = configuration });
+        return pipeline.Use(new CommandLoggingMiddleware<TCommand, TResponse>(loggerFactory, jsonSerializerOptions) { Configuration = configuration });
     }
 
     public static ICommandPipeline<TCommand, TResponse> ConfigureLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
                                                                                               Action<CommandLoggingMiddlewareConfiguration> configure)
         where TCommand : class
     {
-        return pipeline.Configure<CommandLoggingMiddleware>(m => configure(m.Configuration));
+        return pipeline.Configure<CommandLoggingMiddleware<TCommand, TResponse>>(m => configure(m.Configuration));
     }
 }

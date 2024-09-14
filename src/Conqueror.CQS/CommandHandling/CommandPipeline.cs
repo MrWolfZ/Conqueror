@@ -7,7 +7,7 @@ namespace Conqueror.CQS.CommandHandling;
 internal sealed class CommandPipeline<TCommand, TResponse> : ICommandPipeline<TCommand, TResponse>
     where TCommand : class
 {
-    private readonly List<ICommandMiddleware> middlewares = [];
+    private readonly List<ICommandMiddleware<TCommand, TResponse>> middlewares = [];
 
     public CommandPipeline(IServiceProvider serviceProvider)
     {
@@ -17,14 +17,14 @@ internal sealed class CommandPipeline<TCommand, TResponse> : ICommandPipeline<TC
     public IServiceProvider ServiceProvider { get; }
 
     public ICommandPipeline<TCommand, TResponse> Use<TMiddleware>(TMiddleware middleware)
-        where TMiddleware : ICommandMiddleware
+        where TMiddleware : ICommandMiddleware<TCommand, TResponse>
     {
         middlewares.Add(middleware);
         return this;
     }
 
     public ICommandPipeline<TCommand, TResponse> Without<TMiddleware>()
-        where TMiddleware : ICommandMiddleware
+        where TMiddleware : ICommandMiddleware<TCommand, TResponse>
     {
         while (true)
         {
@@ -40,7 +40,7 @@ internal sealed class CommandPipeline<TCommand, TResponse> : ICommandPipeline<TC
     }
 
     public ICommandPipeline<TCommand, TResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
-        where TMiddleware : ICommandMiddleware
+        where TMiddleware : ICommandMiddleware<TCommand, TResponse>
     {
         var index = middlewares.FindIndex(m => m is TMiddleware);
 
@@ -57,7 +57,7 @@ internal sealed class CommandPipeline<TCommand, TResponse> : ICommandPipeline<TC
         return this;
     }
 
-    public CommandPipelineRunner Build(IConquerorContext conquerorContext)
+    public CommandPipelineRunner<TCommand, TResponse> Build(IConquerorContext conquerorContext)
     {
         return new(conquerorContext, middlewares);
     }

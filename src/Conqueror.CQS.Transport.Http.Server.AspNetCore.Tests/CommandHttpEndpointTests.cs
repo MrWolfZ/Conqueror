@@ -210,7 +210,7 @@ public sealed class CommandHttpEndpointTests : TestBase
         var response = await HttpClient.PostAsync("/api/commands/testWithMiddleware", content);
         await response.AssertStatusCode(HttpStatusCode.OK);
 
-        var seenTransportType = Resolve<TestCommandMiddleware>().SeenTransportType;
+        var seenTransportType = Resolve<TestCommandMiddleware<TestWithMiddlewareCommand, TestCommandResponse>>().SeenTransportType;
         Assert.That(seenTransportType?.IsHttp(), Is.True);
         Assert.That(seenTransportType?.Role, Is.EqualTo(CommandTransportRole.Server));
     }
@@ -222,7 +222,7 @@ public sealed class CommandHttpEndpointTests : TestBase
         var response = await HttpClient.PostAsync("/api/commands/testWithMiddlewareWithoutResponse", content);
         await response.AssertStatusCode(HttpStatusCode.OK);
 
-        var seenTransportType = Resolve<TestCommandMiddleware>().SeenTransportType;
+        var seenTransportType = Resolve<TestCommandMiddleware<TestWithMiddlewareWithoutResponseCommand, UnitCommandResponse>>().SeenTransportType;
         Assert.That(seenTransportType?.IsHttp(), Is.True);
         Assert.That(seenTransportType?.Role, Is.EqualTo(CommandTransportRole.Server));
     }
@@ -240,7 +240,8 @@ public sealed class CommandHttpEndpointTests : TestBase
         _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
         _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-        _ = services.AddSingleton<TestCommandMiddleware>()
+        _ = services.AddSingleton<TestCommandMiddleware<TestWithMiddlewareCommand, TestCommandResponse>>()
+                    .AddSingleton<TestCommandMiddleware<TestWithMiddlewareWithoutResponseCommand, UnitCommandResponse>>()
                     .AddConquerorCommandHandler<TestCommandHandler>()
                     .AddConquerorCommandHandler<TestCommandHandler2>()
                     .AddConquerorCommandHandler<TestCommandHandler3>()
@@ -422,16 +423,17 @@ public sealed class CommandHttpEndpointTests : TestBase
         }
     }
 
-    public sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestWithMiddlewareCommand>
+    public sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestWithMiddlewareCommand, TestCommandResponse>
     {
-        public async Task ExecuteCommand(TestWithMiddlewareCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> ExecuteCommand(TestWithMiddlewareCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
+            return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipeline<TestWithMiddlewareCommand> pipeline) =>
-            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestCommandMiddleware>());
+        public static void ConfigurePipeline(ICommandPipeline<TestWithMiddlewareCommand, TestCommandResponse> pipeline) =>
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestCommandMiddleware<TestWithMiddlewareCommand, TestCommandResponse>>());
     }
 
     public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
@@ -461,7 +463,7 @@ public sealed class CommandHttpEndpointTests : TestBase
         }
 
         public static void ConfigurePipeline(ICommandPipeline<TestWithMiddlewareWithoutResponseCommand> pipeline) =>
-            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestCommandMiddleware>());
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestCommandMiddleware<TestWithMiddlewareWithoutResponseCommand, UnitCommandResponse>>());
     }
 
     public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler
@@ -517,12 +519,12 @@ public sealed class CommandHttpEndpointTests : TestBase
         }
     }
 
-    private sealed class TestCommandMiddleware : ICommandMiddleware
+    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
         public CommandTransportType? SeenTransportType { get; private set; }
 
-        public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             SeenTransportType = ctx.TransportType;
             return ctx.Next(ctx.Command, ctx.CancellationToken);

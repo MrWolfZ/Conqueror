@@ -55,11 +55,11 @@ public sealed class CommandMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse>>();
 
-        _ = await handler1.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
-        _ = await handler2.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
-        _ = await handler3.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
-        _ = await handler4.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
-        _ = await handler5.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
+        _ = await handler1.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler2.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler3.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler4.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler5.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).ExecuteCommand(new());
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -86,11 +86,11 @@ public sealed class CommandMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse>>();
 
-        _ = await handler1.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
-        _ = await handler2.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
-        _ = await handler3.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
-        _ = await handler4.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
-        _ = await handler5.WithPipeline(p => p.Use(new TestCommandMiddleware())).ExecuteCommand(new());
+        _ = await handler1.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler2.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler3.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler4.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler5.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).ExecuteCommand(new());
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 1, 2, 3, 4 }));
     }
@@ -109,7 +109,7 @@ public sealed class CommandMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use(new TestCommandMiddleware());
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>());
     }
 
     private sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse>
@@ -120,7 +120,7 @@ public sealed class CommandMiddlewareLifetimeTests
             return new();
         }
 
-        public static void ConfigurePipeline(ICommandPipeline<TestCommand2, TestCommandResponse> pipeline) => pipeline.Use(new TestCommandMiddleware());
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand2, TestCommandResponse> pipeline) => pipeline.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>());
     }
 
     private sealed class TestCommandHandlerWithoutMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
@@ -141,10 +141,10 @@ public sealed class CommandMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestCommandMiddleware : ICommandMiddleware
+    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
 

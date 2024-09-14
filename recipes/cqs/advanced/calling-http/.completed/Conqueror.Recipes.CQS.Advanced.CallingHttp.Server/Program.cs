@@ -10,10 +10,7 @@ builder.Services
 
 builder.Services
        .AddSingleton<CountersRepository>()
-       .AddConquerorCQSTypesFromExecutingAssembly()
-
-       // add all middlewares from the shared project
-       .AddConquerorCQSTypesFromAssembly(typeof(DataAnnotationValidationCommandMiddleware).Assembly);
+       .AddConquerorCQSTypesFromExecutingAssembly();
 
 var app = builder.Build();
 

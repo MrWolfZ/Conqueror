@@ -5,12 +5,12 @@ public sealed record CommandTransactionMiddlewareConfiguration
     public required bool EnlistInAmbientTransaction { get; set; }
 }
 
-public sealed class CommandTransactionMiddleware : ICommandMiddleware
+public sealed class CommandTransactionMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
 {
     public required CommandTransactionMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         // .. in a real application you would place the logic here
         return await ctx.Next(ctx.Command, ctx.CancellationToken);
@@ -23,12 +23,12 @@ public static class TransactionCommandPipelineExtensions
                                                                                             bool enlistInAmbientTransaction = true)
         where TCommand : class
     {
-        return pipeline.Use(new CommandTransactionMiddleware { Configuration = new() { EnlistInAmbientTransaction = enlistInAmbientTransaction } });
+        return pipeline.Use(new CommandTransactionMiddleware<TCommand, TResponse> { Configuration = new() { EnlistInAmbientTransaction = enlistInAmbientTransaction } });
     }
 
     public static ICommandPipeline<TCommand, TResponse> OutsideOfAmbientTransaction<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Configure<CommandTransactionMiddleware>(m => m.Configuration.EnlistInAmbientTransaction = false);
+        return pipeline.Configure<CommandTransactionMiddleware<TCommand, TResponse>>(m => m.Configuration.EnlistInAmbientTransaction = false);
     }
 }

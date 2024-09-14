@@ -94,8 +94,8 @@ public sealed class CommandIdTests
 
         _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()));
 
-        _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(TestCommandMiddleware), middlewareFn);
-        _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(OuterTestCommandMiddleware), outerMiddlewareFn);
+        _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), middlewareFn);
+        _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(OuterTestCommandMiddleware<TestCommand, TestCommandResponse>), outerMiddlewareFn);
 
         var provider = services.BuildServiceProvider();
 
@@ -166,8 +166,8 @@ public sealed class CommandIdTests
             return response;
         }
 
-        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use(new OuterTestCommandMiddleware(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(OuterTestCommandMiddleware))))
-                                                                                                                     .Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(TestCommandMiddleware))));
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use(new OuterTestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(OuterTestCommandMiddleware<TestCommand, TestCommandResponse>))))
+                                                                                                                     .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>))));
     }
 
     private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
@@ -209,7 +209,8 @@ public sealed class CommandIdTests
         }
     }
 
-    private sealed class OuterTestCommandMiddleware : ICommandMiddleware
+    private sealed class OuterTestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
         private readonly MiddlewareFn middlewareFn;
 
@@ -218,8 +219,7 @@ public sealed class CommandIdTests
             this.middlewareFn = middlewareFn;
         }
 
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, async cmd =>
@@ -230,7 +230,8 @@ public sealed class CommandIdTests
         }
     }
 
-    private sealed class TestCommandMiddleware : ICommandMiddleware
+    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
     {
         private readonly MiddlewareFn middlewareFn;
 
@@ -239,8 +240,7 @@ public sealed class CommandIdTests
             this.middlewareFn = middlewareFn;
         }
 
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
+        public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
             return (TResponse)(object)await middlewareFn((ctx as CommandMiddlewareContext<TestCommand, TestCommandResponse>)!, async cmd =>

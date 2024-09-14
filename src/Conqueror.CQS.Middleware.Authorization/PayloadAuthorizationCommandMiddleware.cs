@@ -6,12 +6,12 @@ namespace Conqueror.CQS.Middleware.Authorization;
 /// <summary>
 ///     A command middleware which adds payload authorization functionality to a command pipeline.
 /// </summary>
-public sealed class PayloadAuthorizationCommandMiddleware : ICommandMiddleware
+public sealed class PayloadAuthorizationCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
 {
     public PayloadAuthorizationCommandMiddlewareConfiguration Configuration { get; } = new();
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         var authenticationContext = new ConquerorAuthenticationContext();
         if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)

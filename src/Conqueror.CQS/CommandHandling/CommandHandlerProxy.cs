@@ -39,11 +39,11 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
 
         var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        return await pipeline.Execute<TCommand, TResponse>(serviceProvider,
-                                                           command,
-                                                           transportClientFactory,
-                                                           transportTypeName,
-                                                           cancellationToken)
+        return await pipeline.Execute(serviceProvider,
+                                      command,
+                                      transportClientFactory,
+                                      transportTypeName,
+                                      cancellationToken)
                              .ConfigureAwait(false);
     }
 

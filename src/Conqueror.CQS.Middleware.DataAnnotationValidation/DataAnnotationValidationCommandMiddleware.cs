@@ -5,10 +5,10 @@ namespace Conqueror.CQS.Middleware.DataAnnotationValidation;
 /// <summary>
 ///     A command middleware which adds data annotation validation functionality to a command pipeline.
 /// </summary>
-public sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddleware
-{
-    public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+public sealed class DataAnnotationValidationCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
+{
+    public Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         DataAnnotationValidator.ValidateObject(ctx.Command);
 

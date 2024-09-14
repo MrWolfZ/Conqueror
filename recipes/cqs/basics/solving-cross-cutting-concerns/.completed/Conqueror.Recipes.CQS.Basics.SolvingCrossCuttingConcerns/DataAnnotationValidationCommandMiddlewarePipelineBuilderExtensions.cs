@@ -5,6 +5,6 @@ internal static class DataAnnotationValidationCommandMiddlewarePipelineExtension
     public static ICommandPipeline<TCommand, TResponse> UseDataAnnotationValidation<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Use(new DataAnnotationValidationCommandMiddleware());
+        return pipeline.Use(new DataAnnotationValidationCommandMiddleware<TCommand, TResponse>());
     }
 }

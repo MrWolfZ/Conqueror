@@ -6,24 +6,24 @@ using System.Threading.Tasks;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class CommandPipelineRunner
+internal sealed class CommandPipelineRunner<TCommand, TResponse>
+    where TCommand : class
 {
     private readonly IConquerorContext conquerorContext;
-    private readonly List<ICommandMiddleware> middlewares;
+    private readonly List<ICommandMiddleware<TCommand, TResponse>> middlewares;
 
     public CommandPipelineRunner(IConquerorContext conquerorContext,
-                                 List<ICommandMiddleware> middlewares)
+                                 List<ICommandMiddleware<TCommand, TResponse>> middlewares)
     {
         this.conquerorContext = conquerorContext;
         this.middlewares = middlewares.AsEnumerable().Reverse().ToList();
     }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(IServiceProvider serviceProvider,
-                                                              TCommand initialCommand,
-                                                              CommandTransportClientFactory transportClientFactory,
-                                                              string? transportTypeName,
-                                                              CancellationToken cancellationToken)
-        where TCommand : class
+    public async Task<TResponse> Execute(IServiceProvider serviceProvider,
+                                         TCommand initialCommand,
+                                         CommandTransportClientFactory transportClientFactory,
+                                         string? transportTypeName,
+                                         CancellationToken cancellationToken)
     {
         var transportClient = await transportClientFactory.Create(typeof(TCommand), typeof(TResponse), serviceProvider).ConfigureAwait(false);
         var transportType = transportClient.TransportType with { Name = transportTypeName ?? transportClient.TransportType.Name };
