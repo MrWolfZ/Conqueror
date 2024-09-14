@@ -1,5 +1,4 @@
 using Conqueror.CQS.Middleware.Authentication;
-using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
 namespace Conqueror;
@@ -17,7 +16,7 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> UseAuthentication<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use(new AuthenticationQueryMiddleware<TQuery, TResponse>(pipeline.ServiceProvider.GetRequiredService<IConquerorAuthenticationContext>()));
+        return pipeline.Use(new AuthenticationQueryMiddleware<TQuery, TResponse>());
     }
 
     /// <summary>

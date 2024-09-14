@@ -11,7 +11,7 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineExtensions
 {
     /// <summary>
     ///     Perform a command type authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     <see cref="ConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
     ///     is not authorized for the command type, then a <see cref="ConquerorOperationTypeAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
@@ -32,7 +32,7 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineExtensions
 
     /// <summary>
     ///     Perform a command type authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     <see cref="ConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
     ///     is not authorized for the command type, then a <see cref="ConquerorOperationTypeAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
@@ -76,7 +76,7 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineExtensions
 
     /// <summary>
     ///     Perform a payload authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     <see cref="ConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
     ///     is not authorized for the command, then a <see cref="ConquerorOperationPayloadAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
@@ -101,7 +101,7 @@ public static class ConquerorCqsMiddlewareAuthorizationCommandPipelineExtensions
 
     /// <summary>
     ///     Perform a payload authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     <see cref="ConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
     ///     is not authorized for the command, then a <see cref="ConquerorOperationPayloadAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />

@@ -123,8 +123,6 @@ public sealed class HttpAuthenticationTests : TestBase
 
         _ = services.AddSingleton(testData);
         _ = services.AddConquerorContext();
-
-        _ = services.AddConquerorCommonMiddlewareAuthentication();
     }
 
     protected override void Configure(IApplicationBuilder app)
@@ -163,12 +161,10 @@ public sealed class HttpAuthenticationTests : TestBase
     [ApiController]
     private sealed class TestController : ControllerBase
     {
-        private readonly IConquerorAuthenticationContext conquerorAuthenticationContext;
         private readonly TestData testData;
 
-        public TestController(IConquerorAuthenticationContext conquerorAuthenticationContext, TestData data)
+        public TestController(TestData data)
         {
-            this.conquerorAuthenticationContext = conquerorAuthenticationContext;
             testData = data;
         }
 
@@ -177,7 +173,7 @@ public sealed class HttpAuthenticationTests : TestBase
         {
             await Task.Yield();
 
-            testData.ObservedPrincipal = conquerorAuthenticationContext.CurrentPrincipal;
+            testData.ObservedPrincipal = new ConquerorAuthenticationContext().CurrentPrincipal;
 
             if (testData.ExceptionToThrow is not null)
             {
@@ -194,7 +190,7 @@ public sealed class HttpAuthenticationTests : TestBase
         {
             await Task.Yield();
 
-            testData.ObservedPrincipal = conquerorAuthenticationContext.CurrentPrincipal;
+            testData.ObservedPrincipal = new ConquerorAuthenticationContext().CurrentPrincipal;
 
             if (testData.ExceptionToThrow is not null)
             {

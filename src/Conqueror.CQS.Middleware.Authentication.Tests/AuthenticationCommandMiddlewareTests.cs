@@ -8,7 +8,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
     private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
     private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = _ => { };
 
-    private IConquerorAuthenticationContext AuthenticationContext => Resolve<IConquerorAuthenticationContext>();
+    private static ConquerorAuthenticationContext AuthenticationContext => new();
 
     [Test]
     public async Task GivenDefaultConfiguration_WhenExecutedWithoutPrincipal_AllowsExecution()

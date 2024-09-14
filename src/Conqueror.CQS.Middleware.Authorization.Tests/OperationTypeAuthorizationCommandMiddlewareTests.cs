@@ -8,7 +8,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
     private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
     private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = _ => { };
 
-    private IConquerorAuthenticationContext AuthenticationContext => Resolve<IConquerorAuthenticationContext>();
+    private static ConquerorAuthenticationContext AuthenticationContext => new();
 
     [Test]
     public async Task GivenSuccessfulAuthorizationCheck_WhenExecutedWithoutPrincipal_AllowsExecution()
@@ -232,8 +232,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        _ = services.AddConquerorCommonMiddlewareAuthentication()
-                    .AddConquerorCQSAuthorizationMiddlewares()
+        _ = services.AddConquerorCQSAuthorizationMiddlewares()
                     .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
                         async (command, _, _) =>
                         {

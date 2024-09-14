@@ -8,17 +8,11 @@ namespace Conqueror.CQS.Middleware.Authorization;
 public sealed class OperationTypeAuthorizationQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
     where TQuery : class
 {
-    private readonly IConquerorAuthenticationContext authenticationContext;
-
-    public OperationTypeAuthorizationQueryMiddleware(IConquerorAuthenticationContext authenticationContext)
-    {
-        this.authenticationContext = authenticationContext;
-    }
-
     public required OperationTypeAuthorizationQueryMiddlewareConfiguration Configuration { get; init; }
 
     public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
+        var authenticationContext = new ConquerorAuthenticationContext();
         if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var result = await Configuration.AuthorizationCheck(principal, typeof(TQuery)).ConfigureAwait(false);

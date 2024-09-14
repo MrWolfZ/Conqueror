@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Conqueror.CQS.Middleware.Authorization;
-using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
 namespace Conqueror;
@@ -12,7 +11,7 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
 {
     /// <summary>
     ///     Perform a query type authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     <see cref="ConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
     ///     is not authorized for the query type, then a <see cref="ConquerorOperationTypeAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
@@ -28,7 +27,7 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
                                                                                                  ConquerorOperationTypeAuthorizationCheckAsync authorizationCheck)
         where TQuery : class
     {
-        return pipeline.Use(new OperationTypeAuthorizationQueryMiddleware<TQuery, TResponse>(pipeline.ServiceProvider.GetRequiredService<IConquerorAuthenticationContext>())
+        return pipeline.Use(new OperationTypeAuthorizationQueryMiddleware<TQuery, TResponse>()
         {
             Configuration = new(authorizationCheck),
         });
@@ -36,7 +35,7 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
 
     /// <summary>
     ///     Perform a query type authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     <see cref="ConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
     ///     is not authorized for the query type, then a <see cref="ConquerorOperationTypeAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
@@ -79,12 +78,12 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> UsePayloadAuthorization<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use(new PayloadAuthorizationQueryMiddleware<TQuery, TResponse>(pipeline.ServiceProvider.GetRequiredService<IConquerorAuthenticationContext>()));
+        return pipeline.Use(new PayloadAuthorizationQueryMiddleware<TQuery, TResponse>());
     }
 
     /// <summary>
     ///     Perform a payload authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     <see cref="ConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
     ///     is not authorized for the query, then a <see cref="ConquerorOperationPayloadAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />
@@ -105,7 +104,7 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
 
     /// <summary>
     ///     Perform a payload authorization check for the current principal (see
-    ///     <see cref="IConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
+    ///     <see cref="ConquerorAuthenticationContext.CurrentPrincipal" />) when executing the pipeline. If the principal
     ///     is not authorized for the query, then a <see cref="ConquerorOperationPayloadAuthorizationFailedException" />
     ///     will be thrown during pipeline execution.<br />
     ///     <br />

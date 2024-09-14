@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace (we want these extensions to be accessible from client code without an extra import)
 namespace Conqueror;
@@ -21,15 +20,7 @@ internal static class ConquerorCommonMiddlewareAuthorizationAspNetApplicationBui
         {
             try
             {
-                var authenticationContext = ctx.RequestServices.GetService<IConquerorAuthenticationContext>();
-
-                // the support for authentication is optional, so we simply skip this middleware if the
-                // authentication context is not available
-                if (authenticationContext is null)
-                {
-                    await next().ConfigureAwait(false);
-                    return;
-                }
+                var authenticationContext = new ConquerorAuthenticationContext();
 
                 using var d = authenticationContext.SetCurrentPrincipal(ctx.User);
 

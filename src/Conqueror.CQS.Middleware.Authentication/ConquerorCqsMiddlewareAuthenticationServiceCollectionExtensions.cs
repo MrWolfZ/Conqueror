@@ -15,8 +15,6 @@ public static class ConquerorCqsMiddlewareAuthenticationServiceCollectionExtensi
     /// <returns>The service collection</returns>
     public static IServiceCollection AddConquerorCQSAuthenticationMiddlewares(this IServiceCollection services)
     {
-        services.AddConquerorCommonMiddlewareAuthentication();
-
         services.AddConquerorCommandMiddleware<AuthenticationCommandMiddleware>(ServiceLifetime.Singleton);
 
         return services;

@@ -8,16 +8,10 @@ namespace Conqueror.CQS.Middleware.Authorization;
 /// </summary>
 public sealed class PayloadAuthorizationCommandMiddleware : ICommandMiddleware<PayloadAuthorizationCommandMiddlewareConfiguration>
 {
-    private readonly IConquerorAuthenticationContext authenticationContext;
-
-    public PayloadAuthorizationCommandMiddleware(IConquerorAuthenticationContext authenticationContext)
-    {
-        this.authenticationContext = authenticationContext;
-    }
-
     public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, PayloadAuthorizationCommandMiddlewareConfiguration> ctx)
         where TCommand : class
     {
+        var authenticationContext = new ConquerorAuthenticationContext();
         if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var results = await Task.WhenAll(ctx.Configuration.AuthorizationChecks.Select(c => c(principal, ctx.Command))).ConfigureAwait(false);

@@ -8,19 +8,13 @@ namespace Conqueror.CQS.Middleware.Authentication;
 public sealed class AuthenticationQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
     where TQuery : class
 {
-    private readonly IConquerorAuthenticationContext authenticationContext;
-
-    public AuthenticationQueryMiddleware(IConquerorAuthenticationContext authenticationContext)
-    {
-        this.authenticationContext = authenticationContext;
-    }
-
     public AuthenticationQueryMiddlewareConfiguration Configuration { get; } = new();
 
     public Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         if (Configuration.RequireAuthenticatedPrincipal)
         {
+            var authenticationContext = new ConquerorAuthenticationContext();
             var currentPrincipal = authenticationContext.CurrentPrincipal;
 
             if (currentPrincipal is null)

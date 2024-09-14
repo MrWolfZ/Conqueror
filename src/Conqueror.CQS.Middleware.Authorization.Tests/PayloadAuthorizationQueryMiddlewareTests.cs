@@ -8,7 +8,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
     private Func<TestQuery, TestQueryResponse> handlerFn = _ => new();
     private Action<IQueryPipeline<TestQuery, TestQueryResponse>> configurePipeline = _ => { };
 
-    private IConquerorAuthenticationContext AuthenticationContext => Resolve<IConquerorAuthenticationContext>();
+    private static ConquerorAuthenticationContext AuthenticationContext => new();
 
     [Test]
     public async Task GivenSuccessfulAuthorizationCheck_WhenExecutedWithoutPrincipal_AllowsExecution()
@@ -452,8 +452,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        _ = services.AddConquerorCommonMiddlewareAuthentication()
-                    .AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
+        _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(
                         async (query, _, _) =>
                         {
                             await Task.Yield();

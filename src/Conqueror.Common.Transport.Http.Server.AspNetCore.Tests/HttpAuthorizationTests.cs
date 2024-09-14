@@ -16,7 +16,7 @@ public sealed class HttpAuthorizationTests : TestBase
     private const string TestUserId = "AuthorizationTestUser";
 
     private readonly TestData testData = new();
-    
+
     [Test]
     public async Task GivenGetEndpointThatThrowsOperationTypeAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
     {
@@ -33,7 +33,7 @@ public sealed class HttpAuthorizationTests : TestBase
         var response = await HttpClient.SendAsync(requestMessage);
         await response.AssertStatusCode(HttpStatusCode.Forbidden);
     }
-    
+
     [Test]
     public async Task GivenPostEndpointThatThrowsOperationTypeAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
     {
@@ -52,7 +52,7 @@ public sealed class HttpAuthorizationTests : TestBase
         var response = await HttpClient.SendAsync(requestMessage);
         await response.AssertStatusCode(HttpStatusCode.Forbidden);
     }
-    
+
     [Test]
     public async Task GivenGetEndpointThatThrowsOperationPayloadAuthorizationFailedException_WhenExecutingCommand_RequestFailsWithForbidden()
     {
@@ -102,7 +102,7 @@ public sealed class HttpAuthorizationTests : TestBase
 
         var response = await HttpClient.SendAsync(requestMessage);
         await response.AssertSuccessStatusCode();
-        
+
         Assert.That(testData.EndpointWasCalled, Is.True);
     }
 
@@ -121,7 +121,7 @@ public sealed class HttpAuthorizationTests : TestBase
 
         var response = await HttpClient.SendAsync(requestMessage);
         await response.AssertSuccessStatusCode();
-        
+
         Assert.That(testData.EndpointWasCalled, Is.True);
     }
 
