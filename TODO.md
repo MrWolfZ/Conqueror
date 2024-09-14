@@ -18,12 +18,23 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] make pipeline builder interface generic
-- [ ] improve performance by using loop instead of recursion in pipeline
+- [ ] run benchmark to compare singleton from DI with using new instances on each invocation
+- [ ] refactor pipeline logic to take middleware instances instead of resolving them
 - [ ] add support for delegate middlewares
+- [ ] add `.Has()` method to pipelines
+- [ ] make pipeline enumerable
 - [ ] refactor all code to .NET 8
-- [ ] add tests for middleware service collection extensions (i.e. registration tests)
+- [ ] improve performance by using loop instead of recursion in pipeline
+- [ ] rename inmemory to inprocess transport
+- [ ] remove lifetime support from handlers (explain in recipe that this was an explicit design decision and that lifetimes encourage bad practices by making handlers stateful when they should be stateless; also show how you can use injected classes to compensate, e.g. `IMemoryCache`)
+- [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines
+- [ ] add trace logging to transports
+- [ ] write tests to ensure that client pipeline sees transport type as client and handler sees it as server
+- [ ] when registering client, validate it is not a concrete class
+- [ ] rename `ExecuteQuery` and `ExecuteCommand` to `Handle`
+- [ ] update all recipes and examples to drop `Command` and `Query` suffixes + also use more speaking response names, e.g. `IncrementCounter` and `CounterIncremented`
 - [ ] align all tests names to `Given_When_Then` style
+- [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
 - [ ] create benchmark app
   - [ ] add benchmarks for running with and without context items
 - [ ] add tests for middleware lifetimes when applied to different handler types
@@ -85,14 +96,23 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] add helper methods to check transport type
   - [ ] expose `UseInMemory` transport builder extension method
 - [ ] move publisher and observer code into dedicated directories
-- [ ] move delegate handler logic into dedicated factory instead of service collection
 - [ ] integrate pipeline configuration interface into observer interface
 - [ ] make pipeline builder interface generic
-- [ ] improve performance by using loop instead of recursion in pipeline
+- [ ] refactor pipeline logic to take middleware instances instead of resolving them
 - [ ] add support for delegate middlewares
+- [ ] add `.Has()` method to pipelines
+- [ ] make pipeline enumerable
 - [ ] refactor all code to .NET 8
-- [ ] add tests for middleware service collection extensions (i.e. registration tests)
+- [ ] improve performance by using loop instead of recursion in pipeline
+- [ ] rename inmemory to inprocess transport
+- [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines
+- [ ] add trace logging to transports
+- [ ] write tests to ensure that client pipeline sees transport type as observer and handler sees it as publisher
+- [ ] when registering client, validate it is not a concrete class
+- [ ] rename `HandleEvent` to `Handle`
+- [ ] update all recipes and examples to drop `Event` suffix
 - [ ] align all tests names to `Given_When_Then` style
+- [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
 - [ ] create benchmark app
   - [ ] add benchmarks for running with and without context items
 - [ ] add tests for middleware lifetimes when applied to different handler types
@@ -133,14 +153,25 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] including http and client/server
   - [ ] add helper methods to check transport type
   - [ ] expose `UseInMemory` transport builder extension method
-- [ ] integrate pipeline configuration interface into observer interface
+- [ ] integrate pipeline configuration interface into producer interface
 - [ ] make pipeline builder interface generic
-- [ ] improve performance by using loop instead of recursion in pipeline
 - [ ] move producer and consumer code into dedicated directories
+- [ ] refactor pipeline logic to take middleware instances instead of resolving them
 - [ ] add support for delegate middlewares
+- [ ] add `.Has()` method to pipelines
+- [ ] make pipeline enumerable
 - [ ] refactor all code to .NET 8
-- [ ] add tests for middleware service collection extensions (i.e. registration tests)
+- [ ] improve performance by using loop instead of recursion in pipeline
+- [ ] rename inmemory to inprocess transport
+- [ ] remove lifetime support from handlers (explain in recipe that this was an explicit design decision and that lifetimes encourage bad practices by making handlers stateful when they should be stateless; also show how you can use injected classes to compensate, e.g. `IMemoryCache`)
+- [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines
+- [ ] add trace logging to transports
+- [ ] write tests to ensure that client pipeline sees transport type as consumer and handler sees it as producer
+- [ ] when registering client, validate it is not a concrete class
+- [ ] rename `ExecuteRequest` and `HandleItem` to `Handle`
+- [ ] update all recipes and examples to drop `Request` suffixes + also use more speaking names, e.g. `GetCounterIncrements` and `CounterIncremented`
 - [ ] align all tests names to `Given_When_Then` style
+- [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
 - [ ] create benchmark app
   - [ ] add benchmarks for running with and without context items
 - [ ] add test to assert that disposing async enumerator calls finally blocks in handler/server
