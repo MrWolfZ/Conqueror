@@ -58,8 +58,7 @@ Now we need to create a service provider that has both the handler and the middl
 ```cs
 private static ServiceProvider BuildServiceProvider()
 {
-    return new ServiceCollection().AddConquerorCommandMiddleware<DataAnnotationValidationCommandMiddleware>()
-                                  .AddConquerorCommandHandler<TestCommandHandler>()
+    return new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
                                   .BuildServiceProvider();
 }
 ```
@@ -110,15 +109,14 @@ private sealed record TestCommandResponse(int Value);
 
 private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn)
 {
-    return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
+    return new ServiceCollection()
+        // create a handler from a delegate
+        .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecuteFn(command),
+                                                                              pipeline => pipeline.UseRetry())
 
-                                  // create a handler from a delegate
-                                  .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecuteFn(command),
-                                                                                                        pipeline => pipeline.UseRetry())
-
-                                  // add the retry middleware's default configuration
-                                  .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
-                                  .BuildServiceProvider();
+        // add the retry middleware's default configuration
+        .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
+        .BuildServiceProvider();
 }
 ```
 
@@ -171,15 +169,14 @@ You may have noticed that we referred to the default configuration, but currentl
 + private static ServiceProvider BuildServiceProvider(Func<TestCommand, Task<TestCommandResponse>> handlerExecuteFn,
 +                                                     Action<ICommandPipeline<TestCommand, TestCommandResponse>>? configurePipeline = null)
   {
-      return new ServiceCollection().AddConquerorCommandMiddleware<RetryCommandMiddleware>()
+      return new ServiceCollection()
+          // create a handler from a delegate
+          .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecuteFn(command),
+-                                                                               pipeline => pipeline.UseRetry())
++                                                                               configurePipeline ?? (pipeline => pipeline.UseRetry()))
 
-                                   // create a handler from a delegate
-                                   .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => handlerExecuteFn(command),
--                                                                                                        pipeline => pipeline.UseRetry())
-+                                                                                                        configurePipeline ?? (pipeline => pipeline.UseRetry()))
-
-                                    // add the retry middleware's default configuration
-                                    .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
+          // add the retry middleware's default configuration
+          .AddSingleton(new RetryMiddlewareConfiguration { RetryAttemptLimit = 1 })
 ```
 
 With this change we can dynamically configure the pipeline in our tests. Let's add a test which verifies that a custom retry attempt limit works as expected:

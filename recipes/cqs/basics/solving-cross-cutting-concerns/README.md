@@ -32,10 +32,10 @@ All of this is quite theoretical, so let's explore it interactively by implement
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
 // in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.DataAnnotationValidation
-internal sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddleware
+internal sealed class DataAnnotationValidationCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    where TCommand : class
 {
-    public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         // this will validate the object according to data annotation attributes and
         // will throw a ValidationException if validation fails
@@ -47,11 +47,7 @@ internal sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddle
 }
 ```
 
-> The middleware is automatically added to the application services since we are using `services.AddConquerorCQSTypesFromExecutingAssembly()` in [Program.cs](Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/Program.cs). If you are not using this assembly scanning mechanism, or want your middleware to have a different lifetime (e.g. a singleton), you have to add the middleware explicitly, e.g. `services.AddConquerorCommandMiddleware<DataAnnotationValidationCommandMiddleware>(ServiceLifetime.Singleton);`.
-
-Now we can start using the middleware in our command handler. Each handler configures its own pipeline by implementing an interface (for command handlers it is `IConfigureCommandPipeline` and for query handlers it is `IConfigureQueryPipeline`). These interfaces contain a static method `ConfigurePipeline`, which takes a pipeline builder and adds middlewares to it.
-
-> The static interface method for the pipeline configuration interfaces only works out-of-the-box if you are using .NET 7 or higher since [static virtual interface methods](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/static-virtual-interface-members) are a new feature introduced in .NET 7 / C# 11. If you are on .NET 6 you can use the **Conqueror.CQS** [analyzers](https://www.nuget.org/packages/Conqueror.CQS.Analyzers/), which contain an analyzer that enforces the static method to be present if a handler implements one of the pipeline configuration interfaces (there is also a code fix to automatically add the method). In the project for this recipe the analyzers are already added.
+Now we can start using the middleware in our command handler. Each handler configures its own pipeline by implementing a static method `ConfigurePipeline`, which takes a pipeline and adds middlewares to it.
 
 Let's add a pipeline configuration for our command handler in `IncrementCounterByCommandHandler.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/IncrementCounterByCommand.cs)):
 
@@ -60,8 +56,7 @@ Let's add a pipeline configuration for our command handler in `IncrementCounterB
   {
   }
 
-- internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
-+ internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
+  internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
   {
       private readonly CountersRepository repository;
 
@@ -71,7 +66,7 @@ Let's add a pipeline configuration for our command handler in `IncrementCounterB
       }
 +
 +     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) => 
-+         pipeline.Use<DataAnnotationValidationCommandMiddleware>();
++         pipeline.Use(new DataAnnotationValidationCommandMiddleware());
 
       public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
       {
@@ -129,10 +124,10 @@ Create a new class called `RetryCommandMiddleware.cs` ([view completed file](.co
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
 // in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.Polly
-internal sealed class RetryCommandMiddleware : ICommandMiddleware
+internal sealed class RetryCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    where TCommand : class
 {
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         // retry up to 2 times if command execution fails
         var retryAttemptLimit = 2;
@@ -165,8 +160,8 @@ As the next step, add the new middleware to the command handler's pipeline. We n
 
 ```cs
 public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) =>
-    pipeline.Use<DataAnnotationValidationCommandMiddleware>()
-            .Use<RetryCommandMiddleware>();
+    pipeline.Use(new DataAnnotationValidationCommandMiddleware())
+            .Use(new RetryCommandMiddleware());
 ```
 
 Note that chaining calls like this is a recommended practice for the builder pattern, but is not required. The configuration could also be done like this:
@@ -174,8 +169,8 @@ Note that chaining calls like this is a recommended practice for the builder pat
 ```cs
 public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline)
 {
-    pipeline.Use<DataAnnotationValidationCommandMiddleware>();
-    pipeline.Use<RetryCommandMiddleware>();
+    pipeline.Use(new DataAnnotationValidationCommandMiddleware());
+    pipeline.Use(new RetryCommandMiddleware());
 }
 ```
 
@@ -198,7 +193,7 @@ shutting down...
 
 It works! But there are a few improvements we can still make to our new middleware. As you saw when you implemented the middleware, the maximum number of retry attempts was hardcoded in the middleware's body. To make the middleware more re-usable, it would be better if the number of attempts could be configured from the outside.
 
-It is quite common for middlewares to be configurable, so let's take a look at a few options for achieving that. The simplest option is to create a class which contains the configuration parameters and then inject this class into the middleware. Create a new class `RetryMiddlewareConfiguration.cs`:
+It is quite common for middlewares to be configurable, so let's take a look at a few options for achieving that. The simplest option is to create a class which contains the configuration parameters and then pass an instance of this into the middleware. Create a new class `RetryMiddlewareConfiguration.cs`:
 
 ```cs
 namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
@@ -221,7 +216,7 @@ In a real application this class may be populated from a configuration file (for
   services.AddConquerorCQSTypesFromExecutingAssembly();
 ```
 
-There are two ways to access the configuration instance in our middleware. Firstly, you could just add the configuration class as a parameter to the middleware's constructor. This works, but carries a very subtle risk: if the lifetime of the middleware would be longer than that of the injected class (e.g. the middleware was a singleton and the injected class was transient), then you would run into what is known as a [captive dependency](https://blog.ploeh.dk/2014/06/02/captive-dependency/). To prevent this from happening, **Conqueror.CQS** exposes the `IServiceProvider`, from the scope in which the handler is resolved, as a property on the middleware context. This allows resolving dependencies safely regardless of the lifetime of the middleware or the handler. Let's do that in our `RetryCommandMiddleware.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddleware.cs)):
+To access this configuration in the middleware, we can use the fact that **Conqueror.CQS** exposes the `IServiceProvider`, from the scope in which the handler is resolved, as a property on the middleware context. Let's do that in our `RetryCommandMiddleware.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddleware.cs)):
 
 ```diff
   public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
@@ -239,15 +234,15 @@ The ability to resolve dependencies from the service provider can be very useful
 ```diff
   namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
-- internal sealed class RetryCommandMiddleware : ICommandMiddleware
-+ internal sealed class RetryCommandMiddleware : ICommandMiddleware<RetryMiddlewareConfiguration>
+  internal sealed class RetryCommandMiddleware : ICommandMiddleware
   {
--     public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-+     public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, RetryMiddlewareConfiguration> ctx)
++      public required RetryMiddlewareConfiguration Configuration { get; init; }
++
+       public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
           where TCommand : class
       {
 -         var retryAttemptLimit = ctx.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>().RetryAttemptLimit;
-+         var retryAttemptLimit = ctx.Configuration.RetryAttemptLimit;
++         var retryAttemptLimit = Configuration.RetryAttemptLimit;
 
           var usedRetryAttempts = 0;
 ```
@@ -259,9 +254,10 @@ Finally, we adjust how we use the middleware in our command handler's pipeline i
 // scope in which the handler is resolved in order to allow you
 // to get any services you need for configuring the pipeline
 public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) =>
-    pipeline.Use<DataAnnotationValidationCommandMiddleware>()
-            .Use<RetryCommandMiddleware, RetryMiddlewareConfiguration>(
-              pipeline.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>());
+    pipeline.Use(new DataAnnotationValidationCommandMiddleware())
+            .Use(new RetryCommandMiddleware {
+                Configuration = pipeline.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>(),
+            });
 ```
 
 That's a lot of extra code for configuring the pipeline. Fortunately, the pipeline configuration uses the [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), which, together with C#'s excellent [extension methods](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods), allows us to simplify this quite a bit. The recommended approach for providing middlewares is to accompany them with a set of extension methods for configuring pipelines. Let's add such an extension method for our retry middleware in a new class `RetryCommandMiddlewarePipelineExtensions.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/RetryCommandMiddlewarePipelineExtensions.cs)):
@@ -275,7 +271,7 @@ internal static class RetryCommandMiddlewarePipelineExtensions
         where TCommand : class
     {
         var configuration = pipeline.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>();
-        return pipeline.Use<RetryCommandMiddleware, RetryMiddlewareConfiguration>(configuration);
+        return pipeline.Use(new RetryCommandMiddleware { Configuration = configuration });
     }
 }
 ```
@@ -287,10 +283,10 @@ namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
 internal static class DataAnnotationValidationCommandMiddlewarePipelineExtensions
 {
-    public static ICommandPipeline<TCommand, TResponse> UseDataAnnotationValidation(this ICommandPipeline<TCommand, TResponse> pipeline)
+    public static ICommandPipeline<TCommand, TResponse> UseDataAnnotationValidation<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Use<DataAnnotationValidationCommandMiddleware>();
+        return pipeline.Use(new DataAnnotationValidationCommandMiddleware());
     }
 }
 ```
@@ -310,14 +306,14 @@ Much better. There's still room for improvement though. As it stands, all handle
 
   internal static class RetryCommandMiddlewarePipelineExtensions
   {
--     public static ICommandPipeline<TCommand, TResponse>  UseRetry<TCommand, TResponse> (this ICommandPipeline<TCommand, TResponse>  pipeline)
-+     public static ICommandPipeline<TCommand, TResponse>  UseRetry<TCommand, TResponse> (this ICommandPipeline<TCommand, TResponse>  pipeline, int? retryAttemptLimit = null)
+-     public static ICommandPipeline<TCommand, TResponse> UseRetry<TCommand, TResponse> (this ICommandPipeline<TCommand, TResponse>  pipeline)
++     public static ICommandPipeline<TCommand, TResponse> UseRetry<TCommand, TResponse> (this ICommandPipeline<TCommand, TResponse>  pipeline, int? retryAttemptLimit = null)
           where TCommand : class
       {
 -         var configuration = pipeline.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>();
 +         var defaultRetryAttemptLimit = pipeline.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>().RetryAttemptLimit;
 +         var configuration = new RetryMiddlewareConfiguration { RetryAttemptLimit = retryAttemptLimit ?? defaultRetryAttemptLimit };
-          return pipeline.Use<RetryCommandMiddleware, RetryMiddlewareConfiguration>(configuration);
+          return pipeline.Use(new RetryCommandMiddleware { Configuration = configuration });
       }
   }
 ```
@@ -368,13 +364,13 @@ public static ICommandPipeline<TCommand, TResponse> ConfigureRetry<TCommand, TRe
                                                                                         Action<RetryMiddlewareConfiguration> configure)
         where TCommand : class
 {
-    return pipeline.Configure<RetryCommandMiddleware, RetryMiddlewareConfiguration>(configure);
+    return pipeline.Configure<RetryCommandMiddleware>(m => configure(m.Configuration));
 }
 
 public static ICommandPipeline<TCommand, TResponse> WithoutRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
 {
-    return pipeline.Without<RetryCommandMiddleware, RetryMiddlewareConfiguration>();
+    return pipeline.Without<RetryCommandMiddleware>();
 }
 ```
 
