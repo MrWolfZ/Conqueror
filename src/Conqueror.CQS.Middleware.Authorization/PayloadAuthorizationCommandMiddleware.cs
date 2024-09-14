@@ -6,15 +6,17 @@ namespace Conqueror.CQS.Middleware.Authorization;
 /// <summary>
 ///     A command middleware which adds payload authorization functionality to a command pipeline.
 /// </summary>
-public sealed class PayloadAuthorizationCommandMiddleware : ICommandMiddleware<PayloadAuthorizationCommandMiddlewareConfiguration>
+public sealed class PayloadAuthorizationCommandMiddleware : ICommandMiddleware
 {
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, PayloadAuthorizationCommandMiddlewareConfiguration> ctx)
+    public PayloadAuthorizationCommandMiddlewareConfiguration Configuration { get; } = new();
+
+    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
         var authenticationContext = new ConquerorAuthenticationContext();
         if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {
-            var results = await Task.WhenAll(ctx.Configuration.AuthorizationChecks.Select(c => c(principal, ctx.Command))).ConfigureAwait(false);
+            var results = await Task.WhenAll(Configuration.AuthorizationChecks.Select(c => c(principal, ctx.Command))).ConfigureAwait(false);
             var failures = results.Where(r => !r.IsSuccess).ToList();
 
             if (failures.Any())

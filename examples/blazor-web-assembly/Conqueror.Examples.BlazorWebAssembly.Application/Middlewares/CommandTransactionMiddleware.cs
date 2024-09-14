@@ -1,10 +1,15 @@
 namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed record CommandTransactionMiddlewareConfiguration(bool EnlistInAmbientTransaction);
-
-public sealed class CommandTransactionMiddleware : ICommandMiddleware<CommandTransactionMiddlewareConfiguration>
+public sealed record CommandTransactionMiddlewareConfiguration
 {
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, CommandTransactionMiddlewareConfiguration> ctx)
+    public required bool EnlistInAmbientTransaction { get; set; }
+}
+
+public sealed class CommandTransactionMiddleware : ICommandMiddleware
+{
+    public required CommandTransactionMiddlewareConfiguration Configuration { get; init; }
+
+    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
         // .. in a real application you would place the logic here
@@ -14,15 +19,16 @@ public sealed class CommandTransactionMiddleware : ICommandMiddleware<CommandTra
 
 public static class TransactionCommandPipelineExtensions
 {
-    public static ICommandPipeline<TCommand, TResponse> UseTransaction<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline, bool enlistInAmbientTransaction = true)
+    public static ICommandPipeline<TCommand, TResponse> UseTransaction<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
+                                                                                            bool enlistInAmbientTransaction = true)
         where TCommand : class
     {
-        return pipeline.Use<CommandTransactionMiddleware, CommandTransactionMiddlewareConfiguration>(new(enlistInAmbientTransaction));
+        return pipeline.Use(new CommandTransactionMiddleware { Configuration = new() { EnlistInAmbientTransaction = enlistInAmbientTransaction } });
     }
 
     public static ICommandPipeline<TCommand, TResponse> OutsideOfAmbientTransaction<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Configure<CommandTransactionMiddleware, CommandTransactionMiddlewareConfiguration>(c => c with { EnlistInAmbientTransaction = false });
+        return pipeline.Configure<CommandTransactionMiddleware>(m => m.Configuration.EnlistInAmbientTransaction = false);
     }
 }

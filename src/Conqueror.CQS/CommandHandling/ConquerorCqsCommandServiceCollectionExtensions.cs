@@ -13,7 +13,6 @@ public static class ConquerorCqsCommandServiceCollectionExtensions
         services.TryAddSingleton<CommandClientFactory>();
         services.TryAddSingleton<CommandHandlerRegistry>();
         services.TryAddSingleton<ICommandHandlerRegistry>(p => p.GetRequiredService<CommandHandlerRegistry>());
-        services.TryAddSingleton<CommandMiddlewareRegistry>();
 
         services.AddConquerorContext();
     }

@@ -27,14 +27,11 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
         return services.AddConquerorCommandClient(typeof(THandler), transportClientFactory);
     }
 
-    internal static IServiceCollection AddConquerorCommandClient<THandler, TCommand, TResponse>(this IServiceCollection services,
-                                                                                                ICommandTransportClient transportClient,
-                                                                                                Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline)
+    internal static IServiceCollection AddConquerorCommandClient<THandler>(this IServiceCollection services,
+                                                                           ICommandTransportClient transportClient)
         where THandler : class, ICommandHandler
-        where TCommand : class
     {
-        services.AddClient<THandler, TCommand, TResponse>(new(transportClient), configurePipeline);
-        return services;
+        return services.AddConquerorCommandClient(typeof(THandler), new(transportClient), null);
     }
 
     private static IServiceCollection AddConquerorCommandClient(this IServiceCollection services,
@@ -121,8 +118,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
 
         CommandHandlerProxy<TCommand, TResponse> CreateProxy(IServiceProvider serviceProvider)
         {
-            var commandMiddlewareRegistry = serviceProvider.GetRequiredService<CommandMiddlewareRegistry>();
-            return new(serviceProvider, transportClientFactory, configurePipeline, commandMiddlewareRegistry);
+            return new(serviceProvider, transportClientFactory, configurePipeline);
         }
 
         void RegisterCustomInterface()

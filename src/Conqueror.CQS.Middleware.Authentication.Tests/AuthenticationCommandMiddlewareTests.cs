@@ -378,8 +378,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        _ = services.AddConquerorCQSAuthenticationMiddlewares()
-                    .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
+        _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
                         async (query, _, _) =>
                         {
                             await Task.Yield();

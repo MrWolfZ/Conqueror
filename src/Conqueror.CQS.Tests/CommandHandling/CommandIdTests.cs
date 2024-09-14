@@ -94,16 +94,13 @@ public sealed class CommandIdTests
 
         _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()));
 
-        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(_ => new(middlewareFn));
-
-        _ = services.AddConquerorCommandMiddleware<OuterTestCommandMiddleware>(_ => new(outerMiddlewareFn));
+        _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(TestCommandMiddleware), middlewareFn);
+        _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(OuterTestCommandMiddleware), outerMiddlewareFn);
 
         var provider = services.BuildServiceProvider();
 
         _ = provider.GetRequiredService<NestedClass>();
         _ = provider.GetRequiredService<TestCommandHandler>();
-        _ = provider.GetRequiredService<TestCommandMiddleware>();
-        _ = provider.GetRequiredService<OuterTestCommandMiddleware>();
 
         return provider.CreateScope().ServiceProvider;
     }
@@ -169,8 +166,8 @@ public sealed class CommandIdTests
             return response;
         }
 
-        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use<OuterTestCommandMiddleware>()
-                                                                                                                     .Use<TestCommandMiddleware>();
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use(new OuterTestCommandMiddleware(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(OuterTestCommandMiddleware))))
+                                                                                                                     .Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(TestCommandMiddleware))));
     }
 
     private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>

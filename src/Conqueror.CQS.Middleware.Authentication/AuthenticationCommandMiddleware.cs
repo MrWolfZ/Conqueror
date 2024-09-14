@@ -5,12 +5,14 @@ namespace Conqueror.CQS.Middleware.Authentication;
 /// <summary>
 ///     A command middleware which adds authentication functionality to a command pipeline.
 /// </summary>
-public sealed class AuthenticationCommandMiddleware : ICommandMiddleware<AuthenticationCommandMiddlewareConfiguration>
+public sealed class AuthenticationCommandMiddleware : ICommandMiddleware
 {
-    public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, AuthenticationCommandMiddlewareConfiguration> ctx)
+    public AuthenticationCommandMiddlewareConfiguration Configuration { get; } = new();
+
+    public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
-        if (ctx.Configuration.RequireAuthenticatedPrincipal)
+        if (Configuration.RequireAuthenticatedPrincipal)
         {
             var authenticationContext = new ConquerorAuthenticationContext();
             var currentPrincipal = authenticationContext.CurrentPrincipal;

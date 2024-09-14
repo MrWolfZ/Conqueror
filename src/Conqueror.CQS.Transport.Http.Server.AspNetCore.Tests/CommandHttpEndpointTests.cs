@@ -240,7 +240,7 @@ public sealed class CommandHttpEndpointTests : TestBase
         _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.CommandPathConvention = new TestHttpCommandPathConvention());
         _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestCommandWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-        _ = services.AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
+        _ = services.AddSingleton<TestCommandMiddleware>()
                     .AddConquerorCommandHandler<TestCommandHandler>()
                     .AddConquerorCommandHandler<TestCommandHandler2>()
                     .AddConquerorCommandHandler<TestCommandHandler3>()
@@ -431,7 +431,7 @@ public sealed class CommandHttpEndpointTests : TestBase
         }
 
         public static void ConfigurePipeline(ICommandPipeline<TestWithMiddlewareCommand> pipeline) =>
-            pipeline.Use<TestCommandMiddleware>();
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestCommandMiddleware>());
     }
 
     public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
@@ -461,7 +461,7 @@ public sealed class CommandHttpEndpointTests : TestBase
         }
 
         public static void ConfigurePipeline(ICommandPipeline<TestWithMiddlewareWithoutResponseCommand> pipeline) =>
-            pipeline.Use<TestCommandMiddleware>();
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestCommandMiddleware>());
     }
 
     public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler

@@ -101,8 +101,8 @@ public abstract class CommandClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddTransient<TestCommandTransport>()
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+        _ = services.AddConquerorCQS()
+                    .AddTransient<TestCommandTransport>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -114,7 +114,7 @@ public abstract class CommandClientFactoryTests
 
         var command = new TestCommand();
 
-        _ = await client.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+        _ = await client.WithPipeline(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
@@ -126,8 +126,8 @@ public abstract class CommandClientFactoryTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddTransient<TestCommandTransport>()
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
+        _ = services.AddConquerorCQS()
+                    .AddTransient<TestCommandTransport>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -138,7 +138,7 @@ public abstract class CommandClientFactoryTests
 
         var command = new TestCommand();
 
-        _ = await client.WithPipeline(p => p.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new()))
+        _ = await client.WithPipeline(p => p.Use(new TestCommandMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
                         .ExecuteCommand(command, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware) }));
@@ -270,9 +270,7 @@ public abstract class CommandClientFactoryTests
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed record TestCommandMiddlewareConfiguration;
-
-    private sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
+    private sealed class TestCommandMiddleware : ICommandMiddleware
     {
         private readonly TestObservations observations;
 
@@ -281,7 +279,7 @@ public abstract class CommandClientFactoryTests
             this.observations = observations;
         }
 
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareConfiguration> ctx)
+        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
             where TCommand : class
         {
             await Task.Yield();

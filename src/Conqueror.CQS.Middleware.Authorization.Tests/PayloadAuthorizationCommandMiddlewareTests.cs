@@ -452,8 +452,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        _ = services.AddConquerorCQSAuthorizationMiddlewares()
-                    .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
+        _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
                         async (command, _, _) =>
                         {
                             await Task.Yield();

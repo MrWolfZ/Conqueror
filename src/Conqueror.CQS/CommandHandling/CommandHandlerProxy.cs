@@ -10,20 +10,17 @@ namespace Conqueror.CQS.CommandHandling;
 internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler<TCommand, TResponse>
     where TCommand : class
 {
-    private readonly CommandMiddlewareRegistry commandMiddlewareRegistry;
     private readonly Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline;
     private readonly IServiceProvider serviceProvider;
     private readonly CommandTransportClientFactory transportClientFactory;
 
     public CommandHandlerProxy(IServiceProvider serviceProvider,
                                CommandTransportClientFactory transportClientFactory,
-                               Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline,
-                               CommandMiddlewareRegistry commandMiddlewareRegistry)
+                               Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline)
     {
         this.serviceProvider = serviceProvider;
         this.transportClientFactory = transportClientFactory;
         this.configurePipeline = configurePipeline;
-        this.commandMiddlewareRegistry = commandMiddlewareRegistry;
     }
 
     public async Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
@@ -36,7 +33,7 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
             conquerorContext.SetCommandId(ActivitySpanId.CreateRandom().ToString());
         }
 
-        var pipelineBuilder = new CommandPipeline<TCommand, TResponse>(serviceProvider, commandMiddlewareRegistry);
+        var pipelineBuilder = new CommandPipeline<TCommand, TResponse>(serviceProvider);
 
         configurePipeline?.Invoke(pipelineBuilder);
 
@@ -64,7 +61,6 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler
 
         return new CommandHandlerProxy<TCommand, TResponse>(serviceProvider,
                                                             transportClientFactory,
-                                                            configure,
-                                                            commandMiddlewareRegistry);
+                                                            configure);
     }
 }

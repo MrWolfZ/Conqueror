@@ -1,10 +1,17 @@
 namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
-public sealed record CommandRetryMiddlewareConfiguration(int MaxNumberOfAttempts, TimeSpan RetryInterval);
-
-public sealed class CommandRetryMiddleware : ICommandMiddleware<CommandRetryMiddlewareConfiguration>
+public sealed record CommandRetryMiddlewareConfiguration
 {
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, CommandRetryMiddlewareConfiguration> ctx)
+    public required int MaxNumberOfAttempts { get; set; }
+
+    public required  TimeSpan RetryInterval { get; set; }
+}
+
+public sealed class CommandRetryMiddleware : ICommandMiddleware
+{
+    public required CommandRetryMiddlewareConfiguration Configuration { get; init; }
+
+    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
         // .. in a real application you would place the logic here
@@ -19,9 +26,13 @@ public static class RetryCommandPipelineExtensions
                                                                                       TimeSpan? retryInterval = null)
         where TCommand : class
     {
-        var configuration = new CommandRetryMiddlewareConfiguration(maxNumberOfAttempts, retryInterval ?? TimeSpan.FromSeconds(1));
+        var configuration = new CommandRetryMiddlewareConfiguration
+        {
+            MaxNumberOfAttempts = maxNumberOfAttempts,
+            RetryInterval = retryInterval ?? TimeSpan.FromSeconds(1),
+        };
 
-        return pipeline.Use<CommandRetryMiddleware, CommandRetryMiddlewareConfiguration>(configuration);
+        return pipeline.Use(new CommandRetryMiddleware { Configuration = configuration });
     }
 
     public static ICommandPipeline<TCommand, TResponse> ConfigureRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
@@ -29,19 +40,17 @@ public static class RetryCommandPipelineExtensions
                                                                                             TimeSpan? retryInterval = null)
         where TCommand : class
     {
-        return pipeline.Configure<CommandRetryMiddleware, CommandRetryMiddlewareConfiguration>(c =>
+        return pipeline.Configure<CommandRetryMiddleware>(m =>
         {
             if (maxNumberOfAttempts is not null)
             {
-                c = c with { MaxNumberOfAttempts = maxNumberOfAttempts.Value };
+                m.Configuration.MaxNumberOfAttempts = maxNumberOfAttempts.Value;
             }
 
             if (retryInterval is not null)
             {
-                c = c with { RetryInterval = retryInterval.Value };
+                m.Configuration.RetryInterval = retryInterval.Value;
             }
-
-            return c;
         });
     }
 }

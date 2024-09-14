@@ -684,16 +684,16 @@ public sealed class CommandHttpClientRegistrationTests
 
         var services = new ServiceCollection();
         _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(testClient))
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>(ServiceLifetime.Singleton)
                     .AddConquerorCommandClient<ITestCommandHandler>(b => b.UseHttp(new("http://expected.localhost")));
 
         await using var provider = services.BuildServiceProvider();
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.WithPipeline(pipeline => pipeline.Use<TestCommandMiddleware>()).ExecuteCommand(new(), CancellationToken.None);
+        var middleware = new TestCommandMiddleware();
+        _ = await client.WithPipeline(pipeline => pipeline.Use(middleware)).ExecuteCommand(new(), CancellationToken.None);
 
-        var seenTransportType = provider.GetRequiredService<TestCommandMiddleware>().SeenTransportType;
+        var seenTransportType = middleware.SeenTransportType;
         Assert.That(seenTransportType?.IsHttp(), Is.True);
         Assert.That(seenTransportType?.Role, Is.EqualTo(CommandTransportRole.Client));
     }

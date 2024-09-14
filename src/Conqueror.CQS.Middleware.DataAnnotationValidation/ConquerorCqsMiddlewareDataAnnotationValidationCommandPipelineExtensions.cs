@@ -16,7 +16,7 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationCommandPipelin
     public static ICommandPipeline<TCommand, TResponse> UseDataAnnotationValidation<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Use<DataAnnotationValidationCommandMiddleware>();
+        return pipeline.Use(new DataAnnotationValidationCommandMiddleware());
     }
 
     /// <summary>

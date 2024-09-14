@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Reflection;
 using Conqueror;
@@ -27,19 +26,12 @@ public static class ConquerorCqsServiceCollectionExtensions
             services.AddConquerorCommandHandler(commandHandlerType, ServiceDescriptor.Transient(commandHandlerType, commandHandlerType));
         }
 
-        foreach (var commandMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsCommandMiddlewareInterface)))
-        {
-            services.AddConquerorCommandMiddleware(commandMiddlewareType, ServiceDescriptor.Transient(commandMiddlewareType, commandMiddlewareType));
-        }
-
         foreach (var queryHandlerType in validTypes.Where(t => t.IsAssignableTo(typeof(IQueryHandler))))
         {
             services.AddConquerorQueryHandler(queryHandlerType, ServiceDescriptor.Transient(queryHandlerType, queryHandlerType));
         }
 
         return services;
-
-        static bool IsCommandMiddlewareInterface(Type i) => i == typeof(ICommandMiddleware) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandMiddleware<>));
     }
 
     public static IServiceCollection AddConquerorCQSTypesFromExecutingAssembly(this IServiceCollection services)

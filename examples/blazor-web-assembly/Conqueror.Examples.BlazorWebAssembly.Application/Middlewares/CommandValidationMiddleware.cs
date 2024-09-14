@@ -17,6 +17,6 @@ public static class ValidationCommandPipelineExtensions
     public static ICommandPipeline<TCommand, TResponse> UseValidation<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Use<CommandValidationMiddleware>();
+        return pipeline.Use(new CommandValidationMiddleware());
     }
 }

@@ -9,8 +9,7 @@ var host = await new HostBuilder().ConfigureServices(services =>
 {
     services.AddConquerorCQSHttpClientServices()
             .AddConquerorCommandClient<IIncrementCounterCommandHandler>(b => b.UseHttp(serverAddress, o => o.Headers.Add("my-header", "my-value")))
-            .AddConquerorQueryClient<IGetCounterValueQueryHandler>(b => b.UseHttp(serverAddress))
-            .AddConquerorCQSDataAnnotationValidationMiddlewares();
+            .AddConquerorQueryClient<IGetCounterValueQueryHandler>(b => b.UseHttp(serverAddress));
 }).StartAsync();
 
 if (args.Length is < 1 or > 2)

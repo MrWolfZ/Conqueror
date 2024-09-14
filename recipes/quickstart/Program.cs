@@ -3,8 +3,7 @@ using Conqueror;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-       .AddConquerorCQSTypesFromExecutingAssembly()
-       .AddConquerorCQSLoggingMiddlewares();
+       .AddConquerorCQSTypesFromExecutingAssembly();
 
 builder.Services
        .AddControllers()

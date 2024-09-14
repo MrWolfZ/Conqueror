@@ -1,12 +1,14 @@
 namespace Conqueror.Recipes.CQS.Basics.TestingMiddlewares;
 
 // in a real application, instead use https://www.nuget.org/packages/Conqueror.CQS.Middleware.Polly
-internal sealed class RetryCommandMiddleware : ICommandMiddleware<RetryMiddlewareConfiguration>
+internal sealed class RetryCommandMiddleware : ICommandMiddleware
 {
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, RetryMiddlewareConfiguration> ctx)
+    public required RetryMiddlewareConfiguration Configuration { get; init; }
+
+    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
-        var retryAttemptLimit = ctx.Configuration.RetryAttemptLimit;
+        var retryAttemptLimit = Configuration.RetryAttemptLimit;
 
         var usedRetryAttempts = 0;
 

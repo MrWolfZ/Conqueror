@@ -21,9 +21,3 @@ public abstract class CommandMiddlewareContext<TCommand, TResponse>
 
     public abstract Task<TResponse> Next(TCommand command, CancellationToken cancellationToken);
 }
-
-public abstract class CommandMiddlewareContext<TCommand, TResponse, TConfiguration> : CommandMiddlewareContext<TCommand, TResponse>
-    where TCommand : class
-{
-    public abstract TConfiguration Configuration { get; }
-}

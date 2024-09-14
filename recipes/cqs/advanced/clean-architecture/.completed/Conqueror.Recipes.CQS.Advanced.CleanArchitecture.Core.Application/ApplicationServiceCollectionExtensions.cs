@@ -6,9 +6,6 @@ public static class CoreApplicationServiceCollectionExtensions
 {
     public static IServiceCollection AddCoreApplication(this IServiceCollection services)
     {
-        services.AddConquerorCQSDataAnnotationValidationMiddlewares()
-                .AddConquerorCQSLoggingMiddlewares();
-
         return services;
     }
 }

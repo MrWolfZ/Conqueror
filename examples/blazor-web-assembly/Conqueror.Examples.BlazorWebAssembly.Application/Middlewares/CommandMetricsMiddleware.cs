@@ -15,6 +15,6 @@ public static class MetricsCommandPipelineExtensions
     public static ICommandPipeline<TCommand, TResponse> UseMetrics<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Use<CommandMetricsMiddleware>();
+        return pipeline.Use(new CommandMetricsMiddleware());
     }
 }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
@@ -12,7 +13,7 @@ public sealed record CommandLoggingMiddlewareConfiguration
     public bool LogResponsePayload { get; init; } = true;
 }
 
-public sealed class CommandLoggingMiddleware : ICommandMiddleware<CommandLoggingMiddlewareConfiguration>
+public sealed class CommandLoggingMiddleware : ICommandMiddleware
 {
     private readonly JsonSerializerOptions jsonSerializerOptions;
     private readonly ILoggerFactory loggerFactory;
@@ -23,14 +24,16 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware<CommandLogging
         this.jsonSerializerOptions = jsonSerializerOptions;
     }
 
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, CommandLoggingMiddlewareConfiguration> ctx)
+    public required CommandLoggingMiddlewareConfiguration Configuration { get; init; }
+
+    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
         var logger = loggerFactory.CreateLogger($"CommandHandler[{typeof(TCommand).Name},{typeof(TResponse).Name}]");
 
         try
         {
-            if (ctx.Configuration.LogCommandPayload)
+            if (Configuration.LogCommandPayload)
             {
                 logger.LogInformation("Handling command of type {CommandType} with payload {CommandPayload}", typeof(TCommand).Name, Serialize(ctx.Command));
             }
@@ -41,7 +44,7 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware<CommandLogging
 
             var response = await ctx.Next(ctx.Command, ctx.CancellationToken);
 
-            if (ctx.Configuration.LogResponsePayload && !ctx.HasUnitResponse)
+            if (Configuration.LogResponsePayload && !ctx.HasUnitResponse)
             {
                 logger.LogInformation("Handled command of type {CommandType} and got response {ResponsePayload}", typeof(TCommand).Name, Serialize(response));
             }
@@ -54,7 +57,7 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware<CommandLogging
         }
         catch (Exception e)
         {
-            if (ctx.Configuration.LogException)
+            if (Configuration.LogException)
             {
                 logger.LogError(e, "An exception occurred while handling command of type {CommandType}!", typeof(TCommand).Name);
             }
@@ -73,17 +76,21 @@ public sealed class CommandLoggingMiddleware : ICommandMiddleware<CommandLogging
 public static class LoggingCommandPipelineExtensions
 {
     public static ICommandPipeline<TCommand, TResponse> UseLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
-                                                                                        Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration>? configure = null)
+                                                                                        Action<CommandLoggingMiddlewareConfiguration>? configure = null)
         where TCommand : class
     {
-        return pipeline.Use<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>(new())
-                       .ConfigureLogging(configure ?? (c => c));
+        var configuration = new CommandLoggingMiddlewareConfiguration();
+        configure?.Invoke(configuration);
+
+        var loggerFactory = pipeline.ServiceProvider.GetRequiredService<ILoggerFactory>();
+        var jsonSerializerOptions = pipeline.ServiceProvider.GetRequiredService<JsonSerializerOptions>();
+        return pipeline.Use(new CommandLoggingMiddleware(loggerFactory, jsonSerializerOptions) { Configuration = configuration });
     }
 
     public static ICommandPipeline<TCommand, TResponse> ConfigureLogging<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
-                                                                                              Func<CommandLoggingMiddlewareConfiguration, CommandLoggingMiddlewareConfiguration> configure)
+                                                                                              Action<CommandLoggingMiddlewareConfiguration> configure)
         where TCommand : class
     {
-        return pipeline.Configure<CommandLoggingMiddleware, CommandLoggingMiddlewareConfiguration>(configure);
+        return pipeline.Configure<CommandLoggingMiddleware>(m => configure(m.Configuration));
     }
 }

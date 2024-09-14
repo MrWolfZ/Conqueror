@@ -10,17 +10,19 @@ using Microsoft.Extensions.Logging;
 namespace Conqueror.CQS.Middleware.Logging;
 
 /// <summary>
-///     A command middleware which adds logging functionality to a command pipeline. By default the following messages are logged:
+///     A command middleware which adds logging functionality to a command pipeline. By default, the following messages are logged:
 ///     <list type="bullet">
 ///         <item>Before the command is executed (including the JSON-serialized command payload, if any)</item>
 ///         <item>After the command was executed successfully (including the JSON-serialized response payload, if any)</item>
 ///         <item>If an exception gets thrown during command execution</item>
 ///     </list>
 /// </summary>
-public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommandMiddlewareConfiguration>
+public sealed class LoggingCommandMiddleware : ICommandMiddleware
 {
+    public required LoggingCommandMiddlewareConfiguration Configuration { get; init; }
+
     /// <inheritdoc />
-    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, LoggingCommandMiddlewareConfiguration> ctx)
+    public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
         var logger = GetLogger(ctx);
@@ -50,15 +52,15 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
         }
     }
 
-    private static void PreExecution<TCommand, TResponse>(ILogger logger,
+    private void PreExecution<TCommand, TResponse>(ILogger logger,
                                                           string commandId,
                                                           string traceId,
-                                                          CommandMiddlewareContext<TCommand, TResponse, LoggingCommandMiddlewareConfiguration> ctx)
+                                                          CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
-        if (ctx.Configuration.PreExecutionHook is { } preExecutionHook)
+        if (Configuration.PreExecutionHook is { } preExecutionHook)
         {
-            var preExecutionContext = new LoggingCommandPreExecutionContext(logger, ctx.Configuration.PreExecutionLogLevel, commandId, traceId, ctx.Command, ctx.ServiceProvider);
+            var preExecutionContext = new LoggingCommandPreExecutionContext(logger, Configuration.PreExecutionLogLevel, commandId, traceId, ctx.Command, ctx.ServiceProvider);
 
             if (!preExecutionHook(preExecutionContext))
             {
@@ -67,39 +69,39 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
         }
 
         // check if the log level is enabled so that we can skip the JSON serialization for performance
-        if (!logger.IsEnabled(ctx.Configuration.PreExecutionLogLevel))
+        if (!logger.IsEnabled(Configuration.PreExecutionLogLevel))
         {
             return;
         }
 
         var hasPayload = ctx.Command.GetType().GetProperties().Any();
-        var shouldOmitPayload = ctx.Configuration.OmitJsonSerializedCommandPayload;
+        var shouldOmitPayload = Configuration.OmitJsonSerializedCommandPayload;
 
         if (shouldOmitPayload || !hasPayload)
         {
-            logger.Log(ctx.Configuration.PreExecutionLogLevel, "Executing command (Command ID: {CommandId}, Trace ID: {TraceId})", commandId, traceId);
+            logger.Log(Configuration.PreExecutionLogLevel, "Executing command (Command ID: {CommandId}, Trace ID: {TraceId})", commandId, traceId);
             return;
         }
 
-        logger.Log(ctx.Configuration.PreExecutionLogLevel,
+        logger.Log(Configuration.PreExecutionLogLevel,
                    "Executing command with payload {CommandPayload} (Command ID: {CommandId}, Trace ID: {TraceId})",
-                   Serialize(ctx.Command, ctx.Configuration.JsonSerializerOptions),
+                   Serialize(ctx.Command, Configuration.JsonSerializerOptions),
                    commandId,
                    traceId);
     }
 
-    private static void PostExecution<TCommand, TResponse>(ILogger logger,
+    private void PostExecution<TCommand, TResponse>(ILogger logger,
                                                            string commandId,
                                                            string traceId,
                                                            object? response,
                                                            TimeSpan elapsedTime,
-                                                           CommandMiddlewareContext<TCommand, TResponse, LoggingCommandMiddlewareConfiguration> ctx)
+                                                           CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
-        if (ctx.Configuration.PostExecutionHook is { } postExecutionHook)
+        if (Configuration.PostExecutionHook is { } postExecutionHook)
         {
             var postExecutionContext = new LoggingCommandPostExecutionContext(logger,
-                                                                              ctx.Configuration.PostExecutionLogLevel,
+                                                                              Configuration.PostExecutionLogLevel,
                                                                               commandId,
                                                                               traceId,
                                                                               ctx.Command,
@@ -114,16 +116,16 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
         }
 
         // check if the log level is enabled so that we can skip the JSON serialization for performance
-        if (!logger.IsEnabled(ctx.Configuration.PostExecutionLogLevel))
+        if (!logger.IsEnabled(Configuration.PostExecutionLogLevel))
         {
             return;
         }
 
-        var shouldOmitPayload = ctx.Configuration.OmitJsonSerializedResponsePayload;
+        var shouldOmitPayload = Configuration.OmitJsonSerializedResponsePayload;
 
         if (shouldOmitPayload || ctx.HasUnitResponse)
         {
-            logger.Log(ctx.Configuration.PostExecutionLogLevel,
+            logger.Log(Configuration.PostExecutionLogLevel,
                        "Executed command in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
                        elapsedTime.TotalMilliseconds,
                        commandId,
@@ -132,28 +134,28 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
             return;
         }
 
-        logger.Log(ctx.Configuration.PostExecutionLogLevel,
+        logger.Log(Configuration.PostExecutionLogLevel,
                    "Executed command and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
-                   Serialize(response, ctx.Configuration.JsonSerializerOptions),
+                   Serialize(response, Configuration.JsonSerializerOptions),
                    elapsedTime.TotalMilliseconds,
                    commandId,
                    traceId);
     }
 
     [SuppressMessage("Major Code Smell", "S2629:Logging templates should be constant", Justification = "The exception is already included as metadata, so we just want the message to include the full exception without adding it again as metadata.")]
-    private static void OnException<TCommand, TResponse>(ILogger logger,
+    private void OnException<TCommand, TResponse>(ILogger logger,
                                                          string commandId,
                                                          string traceId,
                                                          Exception exception,
                                                          StackTrace executionStackTrace,
                                                          TimeSpan elapsedTime,
-                                                         CommandMiddlewareContext<TCommand, TResponse, LoggingCommandMiddlewareConfiguration> ctx)
+                                                         CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
-        if (ctx.Configuration.ExceptionHook is { } exceptionHook)
+        if (Configuration.ExceptionHook is { } exceptionHook)
         {
             var loggingExceptionContext = new LoggingCommandExceptionContext(logger,
-                                                                             ctx.Configuration.ExceptionLogLevel,
+                                                                             Configuration.ExceptionLogLevel,
                                                                              commandId,
                                                                              traceId,
                                                                              ctx.Command,
@@ -168,14 +170,14 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
             }
         }
 
-        if (!logger.IsEnabled(ctx.Configuration.ExceptionLogLevel))
+        if (!logger.IsEnabled(Configuration.ExceptionLogLevel))
         {
             return;
         }
 
         // ReSharper disable once TemplateIsNotCompileTimeConstantProblem (the exception is already included as metadata, so we just want the message
         // to include the full exception without adding it again as metadata)
-        logger.Log(ctx.Configuration.ExceptionLogLevel,
+        logger.Log(Configuration.ExceptionLogLevel,
                    exception,
                    $"An exception occurred while executing command after {{ResponseLatency:0.0000}}ms (Command ID: {{CommandId}}, Trace ID: {{TraceId}})\n{exception}\n{executionStackTrace}",
                    elapsedTime.TotalMilliseconds,
@@ -183,12 +185,12 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
                    traceId);
     }
 
-    private static ILogger GetLogger<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, LoggingCommandMiddlewareConfiguration> ctx)
+    private ILogger GetLogger<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
         where TCommand : class
     {
         var loggerFactory = ctx.ServiceProvider.GetRequiredService<ILoggerFactory>();
 
-        if (ctx.Configuration.LoggerNameFactory?.Invoke(ctx.Command) is { } loggerName)
+        if (Configuration.LoggerNameFactory?.Invoke(ctx.Command) is { } loggerName)
         {
             return loggerFactory.CreateLogger(loggerName);
         }
@@ -196,5 +198,5 @@ public sealed class LoggingCommandMiddleware : ICommandMiddleware<LoggingCommand
         return loggerFactory.CreateLogger<TCommand>();
     }
 
-    private static string Serialize<T>(T value, JsonSerializerOptions? jsonSerializerOptions) => JsonSerializer.Serialize(value, jsonSerializerOptions);
+    private string Serialize<T>(T value, JsonSerializerOptions? jsonSerializerOptions) => JsonSerializer.Serialize(value, jsonSerializerOptions);
 }

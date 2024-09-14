@@ -9,10 +9,10 @@ namespace Conqueror.CQS.CommandHandling;
 internal sealed class CommandPipelineRunner
 {
     private readonly IConquerorContext conquerorContext;
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares;
+    private readonly List<ICommandMiddleware> middlewares;
 
     public CommandPipelineRunner(IConquerorContext conquerorContext,
-                           List<(Type MiddlewareType, object? MiddlewareConfiguration, ICommandMiddlewareInvoker Invoker)> middlewares)
+                                 List<ICommandMiddleware> middlewares)
     {
         this.conquerorContext = conquerorContext;
         this.middlewares = middlewares.AsEnumerable().Reverse().ToList();
@@ -30,16 +30,20 @@ internal sealed class CommandPipelineRunner
 
         var next = (TCommand command, CancellationToken token) => transportClient.ExecuteCommand<TCommand, TResponse>(command, serviceProvider, token);
 
-        foreach (var (_, middlewareConfiguration, invoker) in middlewares)
+        foreach (var middleware in middlewares)
         {
             var nextToCall = next;
-            next = (command, token) => invoker.Invoke(command,
-                                                    (q, t) => nextToCall(q, t),
-                                                    middlewareConfiguration,
-                                                    serviceProvider,
-                                                    conquerorContext,
-                                                    transportType,
-                                                    token);
+            next = (command, token) =>
+            {
+                var ctx = new DefaultCommandMiddlewareContext<TCommand, TResponse>(command,
+                                                                                   (c, t) => nextToCall(c, t),
+                                                                                   serviceProvider,
+                                                                                   conquerorContext,
+                                                                                   transportType,
+                                                                                   token);
+
+                return middleware.Execute(ctx);
+            };
         }
 
         return await next(initialCommand, cancellationToken).ConfigureAwait(false);

@@ -9,19 +9,19 @@ internal static class RetryCommandMiddlewarePipelineExtensions
         var defaultRetryAttemptLimit = pipeline.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>().RetryAttemptLimit;
         var configuration = new RetryMiddlewareConfiguration { RetryAttemptLimit = defaultRetryAttemptLimit };
         configure?.Invoke(configuration);
-        return pipeline.Use<RetryCommandMiddleware, RetryMiddlewareConfiguration>(configuration);
+        return pipeline.Use(new RetryCommandMiddleware { Configuration = configuration });
     }
 
     public static ICommandPipeline<TCommand, TResponse> ConfigureRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline,
                                                                                             Action<RetryMiddlewareConfiguration> configure)
         where TCommand : class
     {
-        return pipeline.Configure<RetryCommandMiddleware, RetryMiddlewareConfiguration>(configure);
+        return pipeline.Configure<RetryCommandMiddleware>(m => configure(m.Configuration));
     }
 
     public static ICommandPipeline<TCommand, TResponse> WithoutRetry<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Without<RetryCommandMiddleware, RetryMiddlewareConfiguration>();
+        return pipeline.Without<RetryCommandMiddleware>();
     }
 }

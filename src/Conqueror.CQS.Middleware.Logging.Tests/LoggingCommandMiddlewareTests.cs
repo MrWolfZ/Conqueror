@@ -531,8 +531,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        _ = services.AddConquerorCQSLoggingMiddlewares()
-                    .AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
+        _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(
                         async (command, _, _) =>
                         {
                             await Task.Yield();

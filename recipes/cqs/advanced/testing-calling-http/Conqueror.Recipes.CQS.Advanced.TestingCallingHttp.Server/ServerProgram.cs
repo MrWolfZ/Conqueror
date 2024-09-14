@@ -16,8 +16,7 @@ public sealed class ServerProgram
 
         builder.Services
                .AddSingleton<CountersRepository>()
-               .AddConquerorCQSTypesFromExecutingAssembly()
-               .AddConquerorCQSDataAnnotationValidationMiddlewares();
+               .AddConquerorCQSTypesFromExecutingAssembly();
 
         var app = builder.Build();
 

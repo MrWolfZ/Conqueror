@@ -6,14 +6,13 @@ namespace Conqueror.CQS.CommandHandling;
 
 internal delegate Task<TResponse> CommandMiddlewareNext<in TCommand, TResponse>(TCommand command, CancellationToken cancellationToken);
 
-internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConfiguration> : CommandMiddlewareContext<TCommand, TResponse, TConfiguration>
+internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse> : CommandMiddlewareContext<TCommand, TResponse>
     where TCommand : class
 {
     private readonly CommandMiddlewareNext<TCommand, TResponse> next;
 
     public DefaultCommandMiddlewareContext(TCommand command,
                                            CommandMiddlewareNext<TCommand, TResponse> next,
-                                           TConfiguration configuration,
                                            IServiceProvider serviceProvider,
                                            IConquerorContext conquerorContext,
                                            CommandTransportType transportType,
@@ -25,7 +24,6 @@ internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConf
         ServiceProvider = serviceProvider;
         ConquerorContext = conquerorContext;
         TransportType = transportType;
-        Configuration = configuration;
     }
 
     public override TCommand Command { get; }
@@ -39,8 +37,6 @@ internal sealed class DefaultCommandMiddlewareContext<TCommand, TResponse, TConf
     public override IConquerorContext ConquerorContext { get; }
 
     public override CommandTransportType TransportType { get; }
-
-    public override TConfiguration Configuration { get; }
 
     public override Task<TResponse> Next(TCommand command, CancellationToken cancellationToken) => next(command, cancellationToken);
 }

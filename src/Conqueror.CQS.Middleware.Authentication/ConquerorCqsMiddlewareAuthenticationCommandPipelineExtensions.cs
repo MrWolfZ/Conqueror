@@ -16,7 +16,7 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineExtension
     public static ICommandPipeline<TCommand, TResponse> UseAuthentication<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Use<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>(new());
+        return pipeline.Use(new AuthenticationCommandMiddleware());
     }
 
     /// <summary>
@@ -31,7 +31,7 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineExtension
     public static ICommandPipeline<TCommand, TResponse> RequireAuthenticatedPrincipal<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Configure<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = true);
+        return pipeline.Configure<AuthenticationCommandMiddleware>(m => m.Configuration.RequireAuthenticatedPrincipal = true);
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineExtension
     public static ICommandPipeline<TCommand, TResponse> AllowAnonymousAccess<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Configure<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>(o => o.RequireAuthenticatedPrincipal = false);
+        return pipeline.Configure<AuthenticationCommandMiddleware>(m => m.Configuration.RequireAuthenticatedPrincipal = false);
     }
 
     /// <summary>
@@ -53,6 +53,6 @@ public static class ConquerorCqsMiddlewareAuthenticationCommandPipelineExtension
     public static ICommandPipeline<TCommand, TResponse> WithoutAuthentication<TCommand, TResponse>(this ICommandPipeline<TCommand, TResponse> pipeline)
         where TCommand : class
     {
-        return pipeline.Without<AuthenticationCommandMiddleware, AuthenticationCommandMiddlewareConfiguration>();
+        return pipeline.Without<AuthenticationCommandMiddleware>();
     }
 }

@@ -155,7 +155,7 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
                                           ?? CreatePipelineConfigurationFunction(typeof(THandler));
         }
 
-        services.AddConquerorCommandClient<THandler, TCommand, TResponse>(new InMemoryCommandTransport(typeof(THandler)), pipelineConfigurationAction);
+        services.AddConquerorCommandClient<THandler>(new InMemoryCommandTransport(typeof(THandler), pipelineConfigurationAction));
 
         return services;
 

@@ -78,16 +78,6 @@ public sealed class CommandServiceCollectionConfigurationTests
         Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
     }
 
-    [Test]
-    public void GivenMiddlewareTypeWithInstanceFactory_AddedMiddlewareCanBeUsedInPipeline()
-    {
-        var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithMiddleware>()
-                                              .AddConquerorCommandMiddleware(_ => new TestCommandMiddleware())
-                                              .BuildServiceProvider();
-
-        Assert.DoesNotThrowAsync(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new(), CancellationToken.None));
-    }
-
     private sealed record TestCommand;
 
     private sealed record TestCommandWithoutResponse;
@@ -119,21 +109,5 @@ public sealed class CommandServiceCollectionConfigurationTests
     private sealed class DuplicateTestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
     {
         public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
-    }
-
-    private sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
-
-        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => pipeline.Use<TestCommandMiddleware>();
-    }
-
-    private sealed class TestCommandMiddleware : ICommandMiddleware
-    {
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-            where TCommand : class
-        {
-            return await ctx.Next(ctx.Command, ctx.CancellationToken);
-        }
     }
 }

@@ -5,30 +5,39 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class InMemoryCommandTransport : ICommandTransportClient
+internal sealed class InMemoryCommandTransport(Type handlerType, Delegate? configurePipeline) : ICommandTransportClient
 {
-    private readonly Type handlerType;
+    public CommandTransportType TransportType => new(InMemoryCommandTransportTypeExtensions.TransportName, CommandTransportRole.Client);
 
-    public InMemoryCommandTransport(Type handlerType)
-    {
-        this.handlerType = handlerType;
-    }
-
-    public CommandTransportType TransportType => new(InMemoryCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server);
-
-    public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
-                                                                     IServiceProvider serviceProvider,
-                                                                     CancellationToken cancellationToken)
+    public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+                                                               IServiceProvider serviceProvider,
+                                                               CancellationToken cancellationToken)
         where TCommand : class
     {
-        var handler = serviceProvider.GetRequiredService(handlerType);
+        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, new(new HandlerInvoker(handlerType)),
+                                                                 configurePipeline as Action<ICommandPipeline<TCommand, TResponse>>);
 
-        if (handler is ICommandHandler<TCommand, TResponse> h)
+        return proxy.ExecuteCommand(command, cancellationToken);
+    }
+
+    private sealed class HandlerInvoker(Type handlerType) : ICommandTransportClient
+    {
+        public CommandTransportType TransportType => new(InMemoryCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server);
+
+        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+                                                                         IServiceProvider serviceProvider,
+                                                                         CancellationToken cancellationToken)
+            where TCommand : class
         {
-            return await h.ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
-        }
+            var handler = serviceProvider.GetRequiredService(handlerType);
 
-        await ((ICommandHandler<TCommand>)handler).ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
-        return (TResponse)(object)UnitCommandResponse.Instance;
+            if (handler is ICommandHandler<TCommand, TResponse> h)
+            {
+                return await h.ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
+            }
+
+            await ((ICommandHandler<TCommand>)handler).ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
+            return (TResponse)(object)UnitCommandResponse.Instance;
+        }
     }
 }

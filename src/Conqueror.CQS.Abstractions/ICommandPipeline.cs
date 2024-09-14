@@ -10,24 +10,12 @@ public interface ICommandPipeline<TCommand, TResponse>
 {
     IServiceProvider ServiceProvider { get; }
 
-    ICommandPipeline<TCommand, TResponse> Use<TMiddleware>()
+    ICommandPipeline<TCommand, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : ICommandMiddleware;
-
-    ICommandPipeline<TCommand, TResponse> Use<TMiddleware, TConfiguration>(TConfiguration configuration)
-        where TMiddleware : ICommandMiddleware<TConfiguration>;
 
     ICommandPipeline<TCommand, TResponse> Without<TMiddleware>()
         where TMiddleware : ICommandMiddleware;
 
-    ICommandPipeline<TCommand, TResponse> Without<TMiddleware, TConfiguration>()
-        where TMiddleware : ICommandMiddleware<TConfiguration>;
-
-    ICommandPipeline<TCommand, TResponse> Configure<TMiddleware, TConfiguration>(TConfiguration configuration)
-        where TMiddleware : ICommandMiddleware<TConfiguration>;
-
-    ICommandPipeline<TCommand, TResponse> Configure<TMiddleware, TConfiguration>(Action<TConfiguration> configure)
-        where TMiddleware : ICommandMiddleware<TConfiguration>;
-
-    ICommandPipeline<TCommand, TResponse> Configure<TMiddleware, TConfiguration>(Func<TConfiguration, TConfiguration> configure)
-        where TMiddleware : ICommandMiddleware<TConfiguration>;
+    ICommandPipeline<TCommand, TResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
+        where TMiddleware : ICommandMiddleware;
 }

@@ -3,132 +3,94 @@ namespace Conqueror.CQS.Tests.CommandHandling;
 public sealed class CommandMiddlewareConfigurationTests
 {
     [Test]
-    public async Task GivenMiddlewareWithConfiguration_InitialConfigurationIsPassedToMiddleware()
+    public async Task GivenMiddlewareWithParameter_WhenPipelineConfigurationUpdatesParameter_TheMiddlewareExecutesWithUpdatedParameter()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorCommandHandler<TestCommandHandler>()
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddSingleton(observations);
-
-        var initialConfiguration = new TestCommandMiddlewareConfiguration(10);
-
-        _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline => { _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration); });
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-
-        _ = await handler.ExecuteCommand(new(), CancellationToken.None);
-
-        Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
-    }
-
-    [Test]
-    public async Task GivenMiddlewareWithConfiguration_ConfigurationCanBeOverwrittenFully()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCommandHandler<TestCommandHandler>()
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
-                    .AddSingleton(observations);
-
-        var initialConfiguration = new TestCommandMiddlewareConfiguration(10);
-        var overwrittenConfiguration = new TestCommandMiddlewareConfiguration(20);
 
         _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
-            _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
 
-            _ = pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(overwrittenConfiguration);
+            _ = pipeline.Configure<TestCommandMiddleware>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler.ExecuteCommand(new());
 
-        Assert.That(observations.Configurations, Is.EquivalentTo(new[] { overwrittenConfiguration }));
+        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
     }
 
     [Test]
-    public async Task GivenMiddlewareWithConfiguration_ConfigurationCanBeUpdatedInPlace()
+    public async Task GivenMultipleMiddlewareOfSameType_WhenPipelineConfigurationRuns_AllMiddlewaresAreUpdated()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorCommandHandler<TestCommandHandler>()
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddSingleton(observations);
-
-        var initialConfiguration = new TestCommandMiddlewareConfiguration(10);
 
         _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
-            _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 30 });
+            _ = pipeline.Use(new TestCommandMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 50 });
 
-            _ = pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestCommandMiddleware>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler.ExecuteCommand(new());
 
-        Assert.That(observations.Configurations, Is.EquivalentTo(new[] { initialConfiguration }));
-
-        Assert.That(initialConfiguration.Parameter, Is.EqualTo(20));
+        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20, 40, 60 }));
     }
 
     [Test]
-    public async Task GivenMiddlewareWithConfiguration_ConfigurationCanBeUpdatedAndReplaced()
+    public async Task GivenMiddlewareWithBaseClass_WhenPipelineConfiguresBaseClass_TheMiddlewareIsConfigured()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorCommandHandler<TestCommandHandler>()
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddSingleton(observations);
-
-        var initialConfiguration = new TestCommandMiddlewareConfiguration(10);
 
         _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
-            _ = pipeline.Use<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(initialConfiguration);
+            _ = pipeline.Use(new TestCommandMiddlewareSub(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
 
-            _ = pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(c => new(c.Parameter + 10));
+            _ = pipeline.Configure<TestCommandMiddlewareBase>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler.ExecuteCommand(new());
 
-        Assert.That(observations.Configurations, Has.Count.EqualTo(1));
-
-        Assert.That(observations.Configurations[0].Parameter, Is.EqualTo(20));
+        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
     }
 
     [Test]
-    public async Task GivenUnusedMiddlewareWithConfiguration_ConfiguringMiddlewareThrowsInvalidOperationException()
+    public async Task GivenUnusedMiddleware_ConfiguringMiddlewareThrowsInvalidOperationException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorCommandHandler<TestCommandHandler>()
-                    .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
         {
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(new TestCommandMiddlewareConfiguration(20)));
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(c => c.Parameter += 10));
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware, TestCommandMiddlewareConfiguration>(c => new(c.Parameter + 10)));
+            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestCommandMiddleware>(c => c.Parameter += 10));
         });
 
         var provider = services.BuildServiceProvider();
@@ -144,7 +106,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
     private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();
@@ -156,30 +118,31 @@ public sealed class CommandMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestCommandMiddlewareConfiguration
+    private sealed class TestCommandMiddleware(TestObservations observations) : ICommandMiddleware
     {
-        public TestCommandMiddlewareConfiguration(int parameter)
-        {
-            Parameter = parameter;
-        }
-
         public int Parameter { get; set; }
-    }
 
-    private sealed class TestCommandMiddleware : ICommandMiddleware<TestCommandMiddlewareConfiguration>
-    {
-        private readonly TestObservations observations;
-
-        public TestCommandMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
-        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse, TestCommandMiddlewareConfiguration> ctx)
+        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
             where TCommand : class
         {
             await Task.Yield();
-            observations.Configurations.Add(ctx.Configuration);
+            observations.Parameters.Add(Parameter);
+
+            return await ctx.Next(ctx.Command, ctx.CancellationToken);
+        }
+    }
+
+    private sealed class TestCommandMiddlewareSub(TestObservations observations) : TestCommandMiddlewareBase(observations);
+
+    private abstract class TestCommandMiddlewareBase(TestObservations observations) : ICommandMiddleware
+    {
+        public int Parameter { get; set; }
+
+        public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
+            where TCommand : class
+        {
+            await Task.Yield();
+            observations.Parameters.Add(Parameter);
 
             return await ctx.Next(ctx.Command, ctx.CancellationToken);
         }
@@ -187,6 +150,6 @@ public sealed class CommandMiddlewareConfigurationTests
 
     private sealed class TestObservations
     {
-        public List<TestCommandMiddlewareConfiguration> Configurations { get; } = new();
+        public List<int> Parameters { get; } = [];
     }
 }

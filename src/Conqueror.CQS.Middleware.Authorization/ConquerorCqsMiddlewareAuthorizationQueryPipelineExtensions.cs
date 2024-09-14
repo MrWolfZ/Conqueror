@@ -27,7 +27,7 @@ public static class ConquerorCqsMiddlewareAuthorizationQueryPipelineExtensions
                                                                                                  ConquerorOperationTypeAuthorizationCheckAsync authorizationCheck)
         where TQuery : class
     {
-        return pipeline.Use(new OperationTypeAuthorizationQueryMiddleware<TQuery, TResponse>()
+        return pipeline.Use(new OperationTypeAuthorizationQueryMiddleware<TQuery, TResponse>
         {
             Configuration = new(authorizationCheck),
         });

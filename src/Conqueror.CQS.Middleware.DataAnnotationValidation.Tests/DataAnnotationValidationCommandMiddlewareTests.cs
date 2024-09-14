@@ -1102,14 +1102,34 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
     }
 
+    [Test]
+    public void GivenHandlerWithRemovedValidationMiddleware_WhenCalledWithInvalidCommand_DoesNotThrowValidationException()
+    {
+        using var host = CreateHostWithAddedAndRemovedMiddleware<TestCommandClassWithSinglePropertyValidationAnnotation>();
+        var handler = CreateHandler<TestCommandClassWithSinglePropertyValidationAnnotation>(host);
+
+        var testCommand = new TestCommandClassWithSinglePropertyValidationAnnotation();
+
+        Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(testCommand));
+    }
+
     private static IHost CreateHost<TCommand>()
         where TCommand : class
     {
         return new HostBuilder().ConfigureServices(
-                                    services => services.AddConquerorCQSDataAnnotationValidationMiddlewares()
-                                                        .AddConquerorCommandHandlerDelegate<TCommand, TestCommandResponse>(
+                                    services => services.AddConquerorCommandHandlerDelegate<TCommand, TestCommandResponse>(
                                                             (_, _, _) => Task.FromResult(new TestCommandResponse()),
                                                             pipeline => pipeline.UseDataAnnotationValidation()))
+                                .Build();
+    }
+
+    private static IHost CreateHostWithAddedAndRemovedMiddleware<TCommand>()
+        where TCommand : class
+    {
+        return new HostBuilder().ConfigureServices(
+                                    services => services.AddConquerorCommandHandlerDelegate<TCommand, TestCommandResponse>(
+                                        (_, _, _) => Task.FromResult(new TestCommandResponse()),
+                                        pipeline => pipeline.UseDataAnnotationValidation().WithoutDataAnnotationValidation()))
                                 .Build();
     }
 

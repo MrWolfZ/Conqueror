@@ -16,7 +16,6 @@ public class CommandBenchmarks
     public CommandBenchmarks()
     {
         handler = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
-                                         .AddConquerorCommandMiddleware<TestCommandMiddleware>()
                                          .BuildServiceProvider()
                                          .GetRequiredService<ICommandHandler<TestCommand, TestResponse>>();
     }
@@ -61,7 +60,7 @@ public class CommandBenchmarks
         {
             for (var i = 0; i < NumOfMiddlewares; i++)
             {
-                pipeline.Use<TestCommandMiddleware>();
+                pipeline.Use(new TestCommandMiddleware());
             }
         }
     }
