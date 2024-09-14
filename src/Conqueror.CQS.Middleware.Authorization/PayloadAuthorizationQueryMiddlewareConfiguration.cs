@@ -3,12 +3,13 @@ using System.Collections.Generic;
 namespace Conqueror.CQS.Middleware.Authorization;
 
 /// <summary>
-///     The configuration options for <see cref="PayloadAuthorizationQueryMiddleware" />.
+///     The configuration options for <see cref="PayloadAuthorizationQueryMiddleware{TQuery, TResponse}" />.
 /// </summary>
-public sealed class PayloadAuthorizationQueryMiddlewareConfiguration
+public sealed class PayloadAuthorizationQueryMiddlewareConfiguration<TQuery>
+    where TQuery : class
 {
     /// <summary>
     ///     The delegate to use for checking payload authorization.
     /// </summary>
-    public List<ConquerorOperationPayloadAuthorizationCheckAsync<object>> AuthorizationChecks { get; } = new();
+    public List<ConquerorOperationPayloadAuthorizationCheckAsync<TQuery>> AuthorizationChecks { get; } = new();
 }

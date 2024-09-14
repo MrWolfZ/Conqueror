@@ -40,178 +40,178 @@ public sealed class QueryMiddlewareFunctionalityTests
                          []);
 
         // single middleware
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                          ]);
 
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         // multiple different middlewares
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                          ]);
 
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         // same middleware multiple times
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                          ]);
 
         // added, then removed
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestQueryMiddleware2>(),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestQueryMiddleware2<TestQuery, TestQueryResponse>>(),
                          null,
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestQueryMiddleware2>(),
+                         p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestQueryMiddleware2<TestQuery, TestQueryResponse>>(),
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                          ]);
 
         // multiple times added, then removed
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestQueryMiddleware2>(),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestQueryMiddleware2<TestQuery, TestQueryResponse>>(),
                          null,
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestQueryMiddleware2>(),
+                         p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestQueryMiddleware2<TestQuery, TestQueryResponse>>(),
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                          ]);
 
         // added on client, added and removed in handler
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestQueryMiddleware>(),
-                         p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestQueryMiddleware<TestQuery, TestQueryResponse>>(),
+                         p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                          ]);
 
         // added, then removed, then added again
-        yield return new(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestQueryMiddleware>()
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestQueryMiddleware<TestQuery, TestQueryResponse>>()
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Without<TestQueryMiddleware>()
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Without<TestQueryMiddleware<TestQuery, TestQueryResponse>>()
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                          ]);
 
         // retry middlewares
-        yield return new(p => p.Use(new TestQueryRetryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryRetryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestQueryRetryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Server),
+                             (typeof(TestQueryRetryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
 
         yield return new(null,
-                         p => p.Use(new TestQueryRetryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestQueryRetryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryRetryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Client),
+                             (typeof(TestQueryRetryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                          ]);
 
-        yield return new(p => p.Use(new TestQueryRetryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())),
-                         p => p.Use(new TestQueryRetryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>()))
-                               .Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())),
+        yield return new(p => p.Use(new TestQueryRetryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         p => p.Use(new TestQueryRetryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
+                               .Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestQueryRetryMiddleware), QueryTransportRole.Client),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Client),
-                             (typeof(TestQueryRetryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware2), QueryTransportRole.Client),
-                             (typeof(TestQueryRetryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
-                             (typeof(TestQueryMiddleware), QueryTransportRole.Server),
+                             (typeof(TestQueryRetryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryRetryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                             (typeof(TestQueryRetryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                             (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                          ]);
     }
 
@@ -229,8 +229,8 @@ public sealed class QueryMiddlewareFunctionalityTests
                     {
                         var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                         var cancellationTokensToUse = pipeline.ServiceProvider.GetRequiredService<CancellationTokensToUse>();
-                        _ = pipeline.Use(new MutatingTestQueryMiddleware(obs, cancellationTokensToUse))
-                                    .Use(new MutatingTestQueryMiddleware2(obs, cancellationTokensToUse));
+                        _ = pipeline.Use(new MutatingTestQueryMiddleware<TestQuery, TestQueryResponse>(obs, cancellationTokensToUse))
+                                    .Use(new MutatingTestQueryMiddleware2<TestQuery, TestQueryResponse>(obs, cancellationTokensToUse));
                     });
 
         var provider = services.BuildServiceProvider();
@@ -265,7 +265,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         _ = services.AddConquerorQueryHandler<TestQueryHandler>()
                     .AddSingleton(exception)
-                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline => pipeline.Use(new ThrowingTestQueryMiddleware(exception)));
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline => pipeline.Use(new ThrowingTestQueryMiddleware<TestQuery, TestQueryResponse>(exception)));
 
         var provider = services.BuildServiceProvider();
 
@@ -289,7 +289,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestQueryMiddleware(exception))).ExecuteQuery(new(10)));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestQueryMiddleware<TestQuery, TestQueryResponse>(exception))).ExecuteQuery(new(10)));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -307,11 +307,11 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.WithPipeline(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                         .WithPipeline(p => p.Use(new TestQueryMiddleware2(p.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = await handler.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                         .WithPipeline(p => p.Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                          .ExecuteQuery(new(10));
 
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2), typeof(TestQueryMiddleware) }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
 
     [Test]
@@ -327,7 +327,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                         obs.QueriesFromHandlers.Add(command);
                         obs.CancellationTokensFromHandlers.Add(cancellationToken);
                         return new(command.Payload + 1);
-                    }, pipeline => pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
+                    }, pipeline => pipeline.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -339,7 +339,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         _ = await handler.ExecuteQuery(command);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { command }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
 
     public sealed record ConquerorMiddlewareFunctionalityTestCase(
@@ -367,10 +367,10 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryMiddleware(TestObservations observations) : IQueryMiddleware
+    private sealed class TestQueryMiddleware<TQuery, TResponse>(TestObservations observations) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -382,10 +382,10 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryMiddleware2(TestObservations observations) : IQueryMiddleware
+    private sealed class TestQueryMiddleware2<TQuery, TResponse>(TestObservations observations) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -397,10 +397,10 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestQueryRetryMiddleware(TestObservations observations) : IQueryMiddleware
+    private sealed class TestQueryRetryMiddleware<TQuery, TResponse>(TestObservations observations) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -413,10 +413,10 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestQueryMiddleware(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IQueryMiddleware
+    private sealed class MutatingTestQueryMiddleware<TQuery, TResponse>(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -444,10 +444,10 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestQueryMiddleware2(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IQueryMiddleware
+    private sealed class MutatingTestQueryMiddleware2<TQuery, TResponse>(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());
@@ -475,10 +475,10 @@ public sealed class QueryMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestQueryMiddleware(Exception exception) : IQueryMiddleware
+    private sealed class ThrowingTestQueryMiddleware<TQuery, TResponse>(Exception exception) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             throw exception;

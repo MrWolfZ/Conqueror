@@ -11,7 +11,8 @@ public sealed record QueryLoggingMiddlewareConfiguration
     public bool LogResponsePayload { get; set; } = true;
 }
 
-public sealed class QueryLoggingMiddleware : IQueryMiddleware
+public sealed class QueryLoggingMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     private readonly JsonSerializerOptions jsonSerializerOptions;
     private readonly ILoggerFactory loggerFactory;
@@ -24,8 +25,7 @@ public sealed class QueryLoggingMiddleware : IQueryMiddleware
 
     public required QueryLoggingMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         var logger = loggerFactory.CreateLogger($"QueryHandler[{typeof(TQuery).Name},{typeof(TResponse).Name}]");
 
@@ -82,13 +82,13 @@ public static class LoggingQueryPipelineExtensions
 
         var loggerFactory = pipeline.ServiceProvider.GetRequiredService<ILoggerFactory>();
         var jsonSerializerOptions = pipeline.ServiceProvider.GetRequiredService<JsonSerializerOptions>();
-        return pipeline.Use(new QueryLoggingMiddleware(loggerFactory, jsonSerializerOptions) { Configuration = configuration });
+        return pipeline.Use(new QueryLoggingMiddleware<TQuery, TResponse>(loggerFactory, jsonSerializerOptions) { Configuration = configuration });
     }
 
     public static IQueryPipeline<TQuery, TResponse> ConfigureLogging<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
                                                                                         Action<QueryLoggingMiddlewareConfiguration> configure)
         where TQuery : class
     {
-        return pipeline.Configure<QueryLoggingMiddleware>(m => configure(m.Configuration));
+        return pipeline.Configure<QueryLoggingMiddleware<TQuery, TResponse>>(m => configure(m.Configuration));
     }
 }

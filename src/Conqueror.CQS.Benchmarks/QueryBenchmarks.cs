@@ -57,15 +57,15 @@ public class QueryBenchmarks
         {
             for (var i = 0; i < NumOfMiddlewares; i++)
             {
-                pipeline.Use(new TestQueryMiddleware());
+                pipeline.Use(new TestQueryMiddleware<TestQuery, TestResponse>());
             }
         }
     }
 
-    private sealed class TestQueryMiddleware : IQueryMiddleware
+    private sealed class TestQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
 

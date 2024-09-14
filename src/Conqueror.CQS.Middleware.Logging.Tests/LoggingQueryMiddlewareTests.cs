@@ -53,7 +53,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         AssertLogEntryContains(LogLevel.Error, "An exception occurred while executing query");
         AssertLogEntryContains(LogLevel.Error, exception.Message);
-        AssertLogEntryContains(LogLevel.Error, exception.StackTrace![..exception.StackTrace!.IndexOf($"{nameof(LoggingQueryMiddleware)}.{nameof(LoggingQueryMiddleware.Execute)}[TQuery,TResponse]", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Error, exception.StackTrace![..exception.StackTrace!.IndexOf($"{nameof(LoggingQueryMiddleware<TestQuery, TestQueryResponse>)}`2.{nameof(LoggingQueryMiddleware<TestQuery, TestQueryResponse>.Execute)}(", StringComparison.Ordinal)]);
         AssertLogEntryContains(LogLevel.Error, $"{nameof(GivenDefaultLoggingMiddlewareConfiguration_WhenHandlerThrowsException_LogsExceptionWithMessageAndStackTrace)}()");
         AssertLogEntryContains(LogLevel.Error, "Query ID: ");
         AssertLogEntryContains(LogLevel.Error, "Trace ID: ");
@@ -109,7 +109,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         AssertLogEntryContains(LogLevel.Critical, "An exception occurred while executing query");
         AssertLogEntryContains(LogLevel.Critical, exception.Message);
-        AssertLogEntryContains(LogLevel.Critical, exception.StackTrace![..exception.StackTrace!.IndexOf($"{nameof(LoggingQueryMiddleware)}.{nameof(LoggingQueryMiddleware.Execute)}[TQuery,TResponse]", StringComparison.Ordinal)]);
+        AssertLogEntryContains(LogLevel.Critical, exception.StackTrace![..exception.StackTrace!.IndexOf($"{nameof(LoggingQueryMiddleware<TestQuery, TestQueryResponse>)}`2.{nameof(LoggingQueryMiddleware<TestQuery, TestQueryResponse>.Execute)}(", StringComparison.Ordinal)]);
         AssertLogEntryContains(LogLevel.Critical, $"{nameof(GivenConfiguredExceptionLogLevel_WhenHandlerThrowsException_LogsExceptionWithMessageAndStackTraceAtSpecifiedLevel)}()");
         AssertLogEntryContains(LogLevel.Critical, "Query ID: ");
         AssertLogEntryContains(LogLevel.Critical, "Trace ID: ");

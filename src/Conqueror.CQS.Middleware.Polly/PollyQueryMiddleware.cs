@@ -5,13 +5,13 @@ namespace Conqueror.CQS.Middleware.Polly;
 /// <summary>
 ///     A query middleware which adds data annotation validation functionality to a query pipeline.
 /// </summary>
-public sealed class PollyQueryMiddleware : IQueryMiddleware
+public sealed class PollyQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     public required PollyQueryMiddlewareConfiguration Configuration { get; init; }
 
     /// <inheritdoc />
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         TResponse response = default!;
 

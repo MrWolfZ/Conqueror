@@ -16,7 +16,7 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationQueryPipelineE
     public static IQueryPipeline<TQuery, TResponse> UseDataAnnotationValidation<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use(new DataAnnotationValidationQueryMiddleware());
+        return pipeline.Use(new DataAnnotationValidationQueryMiddleware<TQuery, TResponse>());
     }
 
     /// <summary>
@@ -27,6 +27,6 @@ public static class ConquerorCqsMiddlewareDataAnnotationValidationQueryPipelineE
     public static IQueryPipeline<TQuery, TResponse> WithoutDataAnnotationValidation<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Without<DataAnnotationValidationQueryMiddleware>();
+        return pipeline.Without<DataAnnotationValidationQueryMiddleware<TQuery, TResponse>>();
     }
 }

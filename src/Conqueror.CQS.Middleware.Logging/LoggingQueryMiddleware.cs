@@ -17,13 +17,13 @@ namespace Conqueror.CQS.Middleware.Logging;
 ///         <item>If an exception gets thrown during query execution</item>
 ///     </list>
 /// </summary>
-public sealed class LoggingQueryMiddleware : IQueryMiddleware
+public sealed class LoggingQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     public required LoggingQueryMiddlewareConfiguration Configuration { get; init; }
 
     /// <inheritdoc />
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         var logger = GetLogger(ctx);
 
@@ -52,11 +52,10 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware
         }
     }
 
-    private void PreExecution<TQuery, TResponse>(ILogger logger,
-                                                 string queryId,
-                                                 string traceId,
-                                                 QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    private void PreExecution(ILogger logger,
+                              string queryId,
+                              string traceId,
+                              QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         if (Configuration.PreExecutionHook is { } preExecutionHook)
         {
@@ -90,13 +89,12 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware
                    traceId);
     }
 
-    private void PostExecution<TQuery, TResponse>(ILogger logger,
-                                                  string queryId,
-                                                  string traceId,
-                                                  object? response,
-                                                  TimeSpan elapsedTime,
-                                                  QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    private void PostExecution(ILogger logger,
+                               string queryId,
+                               string traceId,
+                               object? response,
+                               TimeSpan elapsedTime,
+                               QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         if (Configuration.PostExecutionHook is { } postExecutionHook)
         {
@@ -143,14 +141,13 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware
     }
 
     [SuppressMessage("Major Code Smell", "S2629:Logging templates should be constant", Justification = "The exception is already included as metadata, so we just want the message to include the full exception without adding it again as metadata.")]
-    private void OnException<TQuery, TResponse>(ILogger logger,
-                                                string queryId,
-                                                string traceId,
-                                                Exception exception,
-                                                StackTrace executionStackTrace,
-                                                TimeSpan elapsedTime,
-                                                QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    private void OnException(ILogger logger,
+                             string queryId,
+                             string traceId,
+                             Exception exception,
+                             StackTrace executionStackTrace,
+                             TimeSpan elapsedTime,
+                             QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         if (Configuration.ExceptionHook is { } exceptionHook)
         {
@@ -185,8 +182,7 @@ public sealed class LoggingQueryMiddleware : IQueryMiddleware
                    traceId);
     }
 
-    private ILogger GetLogger<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    private ILogger GetLogger(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         var loggerFactory = ctx.ServiceProvider.GetRequiredService<ILoggerFactory>();
 

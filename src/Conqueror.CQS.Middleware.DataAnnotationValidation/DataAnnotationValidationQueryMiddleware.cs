@@ -5,11 +5,11 @@ namespace Conqueror.CQS.Middleware.DataAnnotationValidation;
 /// <summary>
 ///     A query middleware which adds data annotation validation functionality to a query pipeline.
 /// </summary>
-public sealed class DataAnnotationValidationQueryMiddleware : IQueryMiddleware
+public sealed class DataAnnotationValidationQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     /// <inheritdoc />
-    public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         DataAnnotationValidator.ValidateObject(ctx.Query);
 

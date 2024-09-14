@@ -271,7 +271,7 @@ public sealed class QueryHttpEndpointTests : TestBase
         var response = await HttpClient.GetAsync("/api/queries/testWithMiddleware?payload=10");
         await response.AssertStatusCode(HttpStatusCode.OK);
 
-        var seenTransportType = Resolve<TestQueryMiddleware>().SeenTransportType;
+        var seenTransportType = Resolve<TestQueryMiddleware<TestWithMiddlewareQuery, TestQueryResponse>>().SeenTransportType;
         Assert.That(seenTransportType?.IsHttp(), Is.True);
         Assert.That(seenTransportType?.Role, Is.EqualTo(QueryTransportRole.Server));
     }
@@ -283,7 +283,7 @@ public sealed class QueryHttpEndpointTests : TestBase
         var response = await HttpClient.PostAsync("/api/queries/testPostWithMiddleware", content);
         await response.AssertStatusCode(HttpStatusCode.OK);
 
-        var seenTransportType = Resolve<TestQueryMiddleware>().SeenTransportType;
+        var seenTransportType = Resolve<TestQueryMiddleware<TestPostWithMiddlewareQuery, TestQueryResponse>>().SeenTransportType;
         Assert.That(seenTransportType?.IsHttp(), Is.True);
         Assert.That(seenTransportType?.Role, Is.EqualTo(QueryTransportRole.Server));
     }
@@ -299,7 +299,8 @@ public sealed class QueryHttpEndpointTests : TestBase
         _ = services.AddMvc().AddConquerorCQSHttpControllers(o => o.QueryPathConvention = new TestHttpQueryPathConvention());
         _ = services.PostConfigure<JsonOptions>(options => { options.JsonSerializerOptions.Converters.Add(new TestPostQueryWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory()); });
 
-        _ = services.AddSingleton<TestQueryMiddleware>()
+        _ = services.AddSingleton<TestQueryMiddleware<TestWithMiddlewareQuery, TestQueryResponse>>()
+                    .AddSingleton<TestQueryMiddleware<TestPostWithMiddlewareQuery, TestQueryResponse>>()
                     .AddConquerorQueryHandler<TestQueryHandler>()
                     .AddConquerorQueryHandler<TestQueryHandler2>()
                     .AddConquerorQueryHandler<TestQueryHandler3>()
@@ -525,7 +526,7 @@ public sealed class QueryHttpEndpointTests : TestBase
         }
 
         public static void ConfigurePipeline(IQueryPipeline<TestWithMiddlewareQuery, TestQueryResponse> pipeline) =>
-            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestQueryMiddleware>());
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestQueryMiddleware<TestWithMiddlewareQuery, TestQueryResponse>>());
     }
 
     public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
@@ -598,7 +599,7 @@ public sealed class QueryHttpEndpointTests : TestBase
         }
 
         public static void ConfigurePipeline(IQueryPipeline<TestPostWithMiddlewareQuery, TestQueryResponse> pipeline) =>
-            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestQueryMiddleware>());
+            pipeline.Use(pipeline.ServiceProvider.GetRequiredService<TestQueryMiddleware<TestPostWithMiddlewareQuery, TestQueryResponse>>());
     }
 
     public sealed class TestPostQueryWithCustomSerializedPayloadTypeHandler : ITestPostQueryWithCustomSerializedPayloadTypeHandler
@@ -654,12 +655,12 @@ public sealed class QueryHttpEndpointTests : TestBase
         }
     }
 
-    private sealed class TestQueryMiddleware : IQueryMiddleware
+    private sealed class TestQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
     {
         public QueryTransportType? SeenTransportType { get; private set; }
 
-        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             SeenTransportType = ctx.TransportType;
             return ctx.Next(ctx.Query, ctx.CancellationToken);

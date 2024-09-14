@@ -6,7 +6,8 @@ namespace Conqueror.CQS.Middleware.Authorization;
 /// <summary>
 ///     A query middleware which adds payload authorization functionality to a query pipeline.
 /// </summary>
-public sealed class PayloadAuthorizationQueryMiddleware : IQueryMiddleware
+public sealed class PayloadAuthorizationQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     private readonly IConquerorAuthenticationContext authenticationContext;
 
@@ -15,10 +16,9 @@ public sealed class PayloadAuthorizationQueryMiddleware : IQueryMiddleware
         this.authenticationContext = authenticationContext;
     }
 
-    public PayloadAuthorizationQueryMiddlewareConfiguration Configuration { get; } = new();
+    public PayloadAuthorizationQueryMiddlewareConfiguration<TQuery> Configuration { get; } = new();
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {

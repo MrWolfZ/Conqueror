@@ -20,7 +20,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
             return expectedResponse;
         };
 
-        configurePipeline = pipeline => pipeline.Use(new PollyQueryMiddleware { Configuration = new() });
+        configurePipeline = pipeline => pipeline.Use(new PollyQueryMiddleware<TestQuery, TestQueryResponse> { Configuration = new() });
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -39,7 +39,7 @@ public sealed class PollyQueryMiddlewareTests : TestBase
             throw expectedException;
         };
 
-        configurePipeline = pipeline => pipeline.Use(new PollyQueryMiddleware { Configuration = new() });
+        configurePipeline = pipeline => pipeline.Use(new PollyQueryMiddleware<TestQuery, TestQueryResponse> { Configuration = new() });
 
         var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
 

@@ -39,11 +39,11 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuer
 
         var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        return await pipeline.Execute<TQuery, TResponse>(serviceProvider,
-                                                         query,
-                                                         transportClientFactory,
-                                                         transportTypeName,
-                                                         cancellationToken)
+        return await pipeline.Execute(serviceProvider,
+                                      query,
+                                      transportClientFactory,
+                                      transportTypeName,
+                                      cancellationToken)
                              .ConfigureAwait(false);
     }
 

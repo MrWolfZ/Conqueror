@@ -5,7 +5,8 @@ namespace Conqueror.CQS.Middleware.Authentication;
 /// <summary>
 ///     A query middleware which adds authentication functionality to a query pipeline.
 /// </summary>
-public sealed class AuthenticationQueryMiddleware : IQueryMiddleware
+public sealed class AuthenticationQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     private readonly IConquerorAuthenticationContext authenticationContext;
 
@@ -16,8 +17,7 @@ public sealed class AuthenticationQueryMiddleware : IQueryMiddleware
 
     public AuthenticationQueryMiddlewareConfiguration Configuration { get; } = new();
 
-    public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         if (Configuration.RequireAuthenticatedPrincipal)
         {

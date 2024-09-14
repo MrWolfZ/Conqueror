@@ -5,7 +5,8 @@ namespace Conqueror.CQS.Middleware.Authorization;
 /// <summary>
 ///     A query middleware which adds operation type authorization functionality to a query pipeline.
 /// </summary>
-public sealed class OperationTypeAuthorizationQueryMiddleware : IQueryMiddleware
+public sealed class OperationTypeAuthorizationQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     private readonly IConquerorAuthenticationContext authenticationContext;
 
@@ -16,8 +17,7 @@ public sealed class OperationTypeAuthorizationQueryMiddleware : IQueryMiddleware
 
     public required OperationTypeAuthorizationQueryMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
         {

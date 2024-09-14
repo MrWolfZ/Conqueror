@@ -171,7 +171,7 @@
         <Rule Id="SA1641" Action="None" />
         <Rule Id="SA1642" Action="None" />
         <Rule Id="SA1643" Action="Error" />
-        <Rule Id="SA1648" Action="Error" />
+        <Rule Id="SA1648" Action="None" /> <!-- disable warning about inheritdoc only for classes, since it causes a false positive for interfaces -->
         <Rule Id="SA1649" Action="Error" />
         <Rule Id="SA1651" Action="Error" />
         <Rule Id="SA1652" Action="None" />

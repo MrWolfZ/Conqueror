@@ -9,12 +9,12 @@ public sealed record QueryCachingMiddlewareConfiguration
     public Type[] InvalidateResultsOnEventTypes { get; set; } = Array.Empty<Type>();
 }
 
-public sealed class QueryCachingMiddleware : IQueryMiddleware
+public sealed class QueryCachingMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     public required QueryCachingMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         // .. in a real application you would place the logic here
         return await ctx.Next(ctx.Query, ctx.CancellationToken);
@@ -30,7 +30,7 @@ public static class CachingQueryPipelineExtensions
         where TQuery : class
     {
         var configuration = new QueryCachingMiddlewareConfiguration { InvalidateResultsAfter = invalidateResultsAfter };
-        return pipeline.Use(new QueryCachingMiddleware { Configuration = configuration })
+        return pipeline.Use(new QueryCachingMiddleware<TQuery, TResponse> { Configuration = configuration })
                        .ConfigureCaching(invalidateResultsAfter, maxCacheSizeInMegabytes, invalidateResultsOnEventTypes);
     }
 
@@ -40,7 +40,7 @@ public static class CachingQueryPipelineExtensions
                                                                                         Type[]? invalidateResultsOnEventTypes = null)
         where TQuery : class
     {
-        return pipeline.Configure<QueryCachingMiddleware>(m =>
+        return pipeline.Configure<QueryCachingMiddleware<TQuery, TResponse>>(m =>
         {
             m.Configuration.InvalidateResultsAfter = invalidateResultsAfter;
 

@@ -68,10 +68,10 @@ public abstract class QueryClientFactoryTests
 
         var query = new TestQuery();
 
-        _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                         .ExecuteQuery(query, CancellationToken.None);
 
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
 
     [Test]
@@ -93,10 +93,10 @@ public abstract class QueryClientFactoryTests
 
         var query = new TestQuery();
 
-        _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware(p.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                         .ExecuteQuery(query, CancellationToken.None);
 
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware) }));
+        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
 
     [Test]
@@ -225,7 +225,8 @@ public abstract class QueryClientFactoryTests
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestQueryMiddleware : IQueryMiddleware
+    private sealed class TestQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
     {
         private readonly TestObservations observations;
 
@@ -234,8 +235,7 @@ public abstract class QueryClientFactoryTests
             this.observations = observations;
         }
 
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             observations.MiddlewareTypes.Add(GetType());

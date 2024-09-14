@@ -7,12 +7,12 @@ public sealed record QueryRetryMiddlewareConfiguration
     public required  TimeSpan RetryInterval { get; set; }
 }
 
-public sealed class QueryRetryMiddleware : IQueryMiddleware
+public sealed class QueryRetryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     public required QueryRetryMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         // .. in a real application you would place the logic here
         return await ctx.Next(ctx.Query, ctx.CancellationToken);
@@ -32,7 +32,7 @@ public static class RetryQueryPipelineExtensions
             RetryInterval = retryInterval ?? TimeSpan.FromSeconds(1),
         };
 
-        return pipeline.Use(new QueryRetryMiddleware { Configuration = configuration });
+        return pipeline.Use(new QueryRetryMiddleware<TQuery, TResponse> { Configuration = configuration });
     }
 
     public static IQueryPipeline<TQuery, TResponse> ConfigureRetry<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
@@ -40,7 +40,7 @@ public static class RetryQueryPipelineExtensions
                                                                                       TimeSpan? retryInterval = null)
         where TQuery : class
     {
-        return pipeline.Configure<QueryRetryMiddleware>(m =>
+        return pipeline.Configure<QueryRetryMiddleware<TQuery, TResponse>>(m =>
         {
             if (maxNumberOfAttempts is not null)
             {

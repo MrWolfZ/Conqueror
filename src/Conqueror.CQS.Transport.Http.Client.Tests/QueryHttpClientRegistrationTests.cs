@@ -690,7 +690,7 @@ public sealed class QueryHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestQueryHandler>();
 
-        var middleware = new TestQueryMiddleware();
+        var middleware = new TestQueryMiddleware<TestQuery, TestQueryResponse>();
         _ = await client.WithPipeline(pipeline => pipeline.Use(middleware)).ExecuteQuery(new(), CancellationToken.None);
 
         var seenTransportType = middleware.SeenTransportType;
@@ -719,12 +719,12 @@ public sealed class QueryHttpClientRegistrationTests
     {
     }
 
-    private sealed class TestQueryMiddleware : IQueryMiddleware
+    private sealed class TestQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
     {
         public QueryTransportType? SeenTransportType { get; private set; }
 
-        public Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             SeenTransportType = ctx.TransportType;
             return ctx.Next(ctx.Query, ctx.CancellationToken);

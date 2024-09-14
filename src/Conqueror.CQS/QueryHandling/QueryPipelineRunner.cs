@@ -6,24 +6,24 @@ using System.Threading.Tasks;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class QueryPipelineRunner
+internal sealed class QueryPipelineRunner<TQuery, TResponse>
+    where TQuery : class
 {
     private readonly IConquerorContext conquerorContext;
-    private readonly List<IQueryMiddleware> middlewares;
+    private readonly List<IQueryMiddleware<TQuery, TResponse>> middlewares;
 
     public QueryPipelineRunner(IConquerorContext conquerorContext,
-                               List<IQueryMiddleware> middlewares)
+                               List<IQueryMiddleware<TQuery, TResponse>> middlewares)
     {
         this.conquerorContext = conquerorContext;
         this.middlewares = middlewares.AsEnumerable().Reverse().ToList();
     }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(IServiceProvider serviceProvider,
-                                                            TQuery initialQuery,
-                                                            QueryTransportClientFactory transportClientFactory,
-                                                            string? transportTypeName,
-                                                            CancellationToken cancellationToken)
-        where TQuery : class
+    public async Task<TResponse> Execute(IServiceProvider serviceProvider,
+                                         TQuery initialQuery,
+                                         QueryTransportClientFactory transportClientFactory,
+                                         string? transportTypeName,
+                                         CancellationToken cancellationToken)
     {
         var transportClient = await transportClientFactory.Create(typeof(TQuery), typeof(TResponse), serviceProvider).ConfigureAwait(false);
         var transportRole = transportTypeName is null ? transportClient.TransportType.Role : QueryTransportRole.Server;

@@ -77,8 +77,8 @@ public sealed class ConquerorContextDataTests
                     {
                         SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.PipelineBuilder);
 
-                        _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
-                                                                 pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
+                        _ = pipeline.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
+                                                                                               pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
                     })
                     .AddConquerorCommandHandlerDelegate<NestedTestCommand, TestCommandResponse>((_, p, _) =>
                     {
@@ -125,8 +125,8 @@ public sealed class ConquerorContextDataTests
             _ = await handlerClient.WithPipeline(pipeline =>
             {
                 SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.ClientPipelineBuilder);
-                _ = pipeline.Use(new TestClientQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
-                                                               pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
+                _ = pipeline.Use(new TestClientQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
+                                                                                             pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
             }).ExecuteQuery(new());
         }
 
@@ -682,7 +682,8 @@ public sealed class ConquerorContextDataTests
         }
     }
 
-    private sealed class TestQueryMiddleware : IQueryMiddleware
+    private sealed class TestQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
     {
         private readonly TestDataInstructions testDataInstructions;
         private readonly TestObservations testObservations;
@@ -693,8 +694,7 @@ public sealed class ConquerorContextDataTests
             testObservations = observations;
         }
 
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
 
@@ -708,7 +708,8 @@ public sealed class ConquerorContextDataTests
         }
     }
 
-    private sealed class TestClientQueryMiddleware : IQueryMiddleware
+    private sealed class TestClientQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
     {
         private readonly TestDataInstructions testDataInstructions;
         private readonly TestObservations testObservations;
@@ -719,8 +720,7 @@ public sealed class ConquerorContextDataTests
             testObservations = observations;
         }
 
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
 

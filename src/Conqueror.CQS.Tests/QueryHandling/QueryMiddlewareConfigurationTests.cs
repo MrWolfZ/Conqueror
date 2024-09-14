@@ -13,9 +13,9 @@ public sealed class QueryMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
 
-            _ = pipeline.Configure<TestQueryMiddleware>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestQueryMiddleware<TestQuery, TestQueryResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
@@ -38,11 +38,11 @@ public sealed class QueryMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
-            _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 30 });
-            _ = pipeline.Use(new TestQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 50 });
+            _ = pipeline.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 30 });
+            _ = pipeline.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 50 });
 
-            _ = pipeline.Configure<TestQueryMiddleware>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestQueryMiddleware<TestQuery, TestQueryResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
@@ -65,9 +65,9 @@ public sealed class QueryMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
-            _ = pipeline.Use(new TestQueryMiddlewareSub(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
+            _ = pipeline.Use(new TestQueryMiddlewareSub<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()) { Parameter = 10 });
 
-            _ = pipeline.Configure<TestQueryMiddlewareBase>(c => c.Parameter += 10);
+            _ = pipeline.Configure<TestQueryMiddlewareBase<TestQuery, TestQueryResponse>>(c => c.Parameter += 10);
         });
 
         var provider = services.BuildServiceProvider();
@@ -90,7 +90,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         _ = services.AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
         {
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware>(c => c.Parameter += 10));
+            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestQueryMiddleware<TestQuery, TestQueryResponse>>(c => c.Parameter += 10));
         });
 
         var provider = services.BuildServiceProvider();
@@ -118,12 +118,12 @@ public sealed class QueryMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestQueryMiddleware(TestObservations observations) : IQueryMiddleware
+    private sealed class TestQueryMiddleware<TQuery, TResponse>(TestObservations observations) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
         public int Parameter { get; set; }
 
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             observations.Parameters.Add(Parameter);
@@ -132,14 +132,15 @@ public sealed class QueryMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestQueryMiddlewareSub(TestObservations observations) : TestQueryMiddlewareBase(observations);
+    private sealed class TestQueryMiddlewareSub<TQuery, TResponse>(TestObservations observations) : TestQueryMiddlewareBase<TQuery, TResponse>(observations)
+        where TQuery : class;
 
-    private abstract class TestQueryMiddlewareBase(TestObservations observations) : IQueryMiddleware
+    private abstract class TestQueryMiddlewareBase<TQuery, TResponse>(TestObservations observations) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
         public int Parameter { get; set; }
 
-        public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-            where TQuery : class
+        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
             observations.Parameters.Add(Parameter);

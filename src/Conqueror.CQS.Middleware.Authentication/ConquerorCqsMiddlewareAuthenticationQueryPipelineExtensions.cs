@@ -17,7 +17,7 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> UseAuthentication<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Use(new AuthenticationQueryMiddleware(pipeline.ServiceProvider.GetRequiredService<IConquerorAuthenticationContext>()));
+        return pipeline.Use(new AuthenticationQueryMiddleware<TQuery, TResponse>(pipeline.ServiceProvider.GetRequiredService<IConquerorAuthenticationContext>()));
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> RequireAuthenticatedPrincipal<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Configure<AuthenticationQueryMiddleware>(m => m.Configuration.RequireAuthenticatedPrincipal = true);
+        return pipeline.Configure<AuthenticationQueryMiddleware<TQuery, TResponse>>(m => m.Configuration.RequireAuthenticatedPrincipal = true);
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> AllowAnonymousAccess<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Configure<AuthenticationQueryMiddleware>(m => m.Configuration.RequireAuthenticatedPrincipal = false);
+        return pipeline.Configure<AuthenticationQueryMiddleware<TQuery, TResponse>>(m => m.Configuration.RequireAuthenticatedPrincipal = false);
     }
 
     /// <summary>
@@ -54,6 +54,6 @@ public static class ConquerorCqsMiddlewareAuthenticationQueryPipelineExtensions
     public static IQueryPipeline<TQuery, TResponse> WithoutAuthentication<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline)
         where TQuery : class
     {
-        return pipeline.Without<AuthenticationQueryMiddleware>();
+        return pipeline.Without<AuthenticationQueryMiddleware<TQuery, TResponse>>();
     }
 }

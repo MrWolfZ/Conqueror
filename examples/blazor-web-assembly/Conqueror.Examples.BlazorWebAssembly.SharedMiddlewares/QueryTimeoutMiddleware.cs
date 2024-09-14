@@ -5,12 +5,12 @@ public sealed record QueryTimeoutMiddlewareConfiguration
     public required TimeSpan TimeoutAfter { get; set; }
 }
 
-public sealed class QueryTimeoutMiddleware : IQueryMiddleware
+public sealed class QueryTimeoutMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+    where TQuery : class
 {
     public required QueryTimeoutMiddlewareConfiguration Configuration { get; init; }
 
-    public async Task<TResponse> Execute<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        where TQuery : class
+    public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
         // .. in a real application you would place the logic here
         return await ctx.Next(ctx.Query, ctx.CancellationToken);
@@ -23,13 +23,13 @@ public static class TimeoutQueryPipelineExtensions
                                                                                   TimeSpan timeoutAfter)
         where TQuery : class
     {
-        return pipeline.Use(new QueryTimeoutMiddleware { Configuration = new() { TimeoutAfter = timeoutAfter } });
+        return pipeline.Use(new QueryTimeoutMiddleware<TQuery, TResponse> { Configuration = new() { TimeoutAfter = timeoutAfter } });
     }
 
     public static IQueryPipeline<TQuery, TResponse> ConfigureTimeout<TQuery, TResponse>(this IQueryPipeline<TQuery, TResponse> pipeline,
                                                                                         TimeSpan timeoutAfter)
         where TQuery : class
     {
-        return pipeline.Configure<QueryTimeoutMiddleware>(m => m.Configuration.TimeoutAfter = timeoutAfter);
+        return pipeline.Configure<QueryTimeoutMiddleware<TQuery, TResponse>>(m => m.Configuration.TimeoutAfter = timeoutAfter);
     }
 }
