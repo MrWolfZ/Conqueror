@@ -4,7 +4,7 @@ namespace Conqueror.Common;
 
 public static class ConquerorServerTransportHelper
 {
-    public static void HandleTraceParent(IConquerorContext conquerorContext, string? traceParent)
+    public static void HandleTraceParent(ConquerorContext conquerorContext, string? traceParent)
     {
         if (Activity.Current is null && traceParent is not null)
         {
@@ -14,7 +14,7 @@ public static class ConquerorServerTransportHelper
         }
     }
 
-    public static void SignalExecution(IConquerorContext conquerorContext, string transportTypeName)
+    public static void SignalExecution(ConquerorContext conquerorContext, string transportTypeName)
     {
         conquerorContext.SignalExecutionFromTransport(transportTypeName);
     }

@@ -12,7 +12,7 @@ internal interface IStreamProducerMiddlewareInvoker
                                                     StreamProducerMiddlewareNext<TRequest, TItem> next,
                                                     object? middlewareConfiguration,
                                                     IServiceProvider serviceProvider,
-                                                    IConquerorContext conquerorContext,
+                                                    ConquerorContext conquerorContext,
                                                     CancellationToken cancellationToken)
         where TRequest : class;
 }

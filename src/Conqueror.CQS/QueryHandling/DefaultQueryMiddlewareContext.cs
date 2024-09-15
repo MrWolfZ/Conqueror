@@ -10,7 +10,7 @@ internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse>(
     TQuery query,
     QueryMiddlewareNext<TQuery, TResponse> next,
     IServiceProvider serviceProvider,
-    IConquerorContext conquerorContext,
+    ConquerorContext conquerorContext,
     QueryTransportType transportType,
     CancellationToken cancellationToken)
     : QueryMiddlewareContext<TQuery, TResponse>
@@ -22,7 +22,7 @@ internal sealed class DefaultQueryMiddlewareContext<TQuery, TResponse>(
 
     public override IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    public override IConquerorContext ConquerorContext { get; } = conquerorContext;
+    public override ConquerorContext ConquerorContext { get; } = conquerorContext;
 
     public override QueryTransportType TransportType { get; } = transportType;
 

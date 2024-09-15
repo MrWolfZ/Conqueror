@@ -3,9 +3,9 @@ using System;
 namespace Conqueror;
 
 /// <summary>
-///     Encapsulates contextual information for conqueror executions (i.e. commands, queries, and events).
+///     Encapsulates contextual information for conqueror operations (i.e. commands, queries, and events).
 /// </summary>
-public interface IConquerorContext
+public abstract class ConquerorContext : IDisposable
 {
     /// <summary>
     ///     The context data which flows only to downstream Conqueror operations.<br />
@@ -20,7 +20,7 @@ public interface IConquerorContext
     ///     code is logically upstream. For example, downstream data set in a command handler is available to a
     ///     command middleware that is part of the handler's pipeline.
     /// </summary>
-    IConquerorContextData DownstreamContextData { get; }
+    public abstract IConquerorContextData DownstreamContextData { get; }
 
     /// <summary>
     ///     The context data which flows only to upstream Conqueror operations.<br />
@@ -35,7 +35,7 @@ public interface IConquerorContext
     ///     code is logically downstream. For example, upstream data set in a command middleware is available to the
     ///     command handler.
     /// </summary>
-    IConquerorContextData UpstreamContextData { get; }
+    public abstract IConquerorContextData UpstreamContextData { get; }
 
     /// <summary>
     ///     The context data which flows to up- and downstream Conqueror operations.<br />
@@ -45,10 +45,19 @@ public interface IConquerorContext
     ///     flows to siblings. For example, if command handler D first calls query handler E and then calls query
     ///     handler F, then data set in query handler E will be available in query handler F and command handler D.
     ///     Note that the validity of the data is also affected by its scope (see
-    ///     <see cref="ConquerorContextDataScope" />).<br />
+    ///     <see cref="ConquerorContextDataScope" />).
     /// </summary>
-    IConquerorContextData ContextData { get; }
-}
+    public abstract IConquerorContextData ContextData { get; }
 
-/// <inheritdoc cref="IConquerorContext" />
-public interface IDisposableConquerorContext : IConquerorContext, IDisposable;
+    /// <summary>
+    ///     Dispose the context. This will copy all upstream and bi-directional data to the context this context
+    ///     was cloned from (if any).
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected abstract void Dispose(bool isDisposing);
+}

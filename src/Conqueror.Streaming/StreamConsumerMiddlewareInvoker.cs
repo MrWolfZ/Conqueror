@@ -13,7 +13,7 @@ internal sealed class StreamConsumerMiddlewareInvoker<TMiddleware, TConfiguratio
                               StreamConsumerMiddlewareNext<TItem> next,
                               object? middlewareConfiguration,
                               IServiceProvider serviceProvider,
-                              IConquerorContext conquerorContext,
+                              ConquerorContext conquerorContext,
                               CancellationToken cancellationToken)
     {
         if (typeof(TConfiguration) == typeof(NullStreamConsumerMiddlewareConfiguration))

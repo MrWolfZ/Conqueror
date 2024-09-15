@@ -17,7 +17,7 @@ public static class ConquerorCommonMiddlewareAuthenticationContextExtensions
     /// <param name="conquerorContext">The Conqueror context to set the principal in</param>
     /// <param name="principal">The principal to set</param>
     /// <returns>A disposable which can be disposed to clear the principal</returns>
-    public static IDisposable SetCurrentPrincipal(this IConquerorContext conquerorContext, ClaimsPrincipal? principal)
+    public static IDisposable SetCurrentPrincipal(this ConquerorContext conquerorContext, ClaimsPrincipal? principal)
     {
         if (principal is null)
         {
@@ -34,7 +34,7 @@ public static class ConquerorCommonMiddlewareAuthenticationContextExtensions
     /// </summary>
     /// <param name="conquerorContext">The Conqueror context to get the principal from</param>
     /// <returns>The currently authenticated principal, or <c>null</c> if no principal is set</returns>
-    public static ClaimsPrincipal? GetCurrentPrincipal(this IConquerorContext conquerorContext)
+    public static ClaimsPrincipal? GetCurrentPrincipal(this ConquerorContext conquerorContext)
     {
         return conquerorContext.DownstreamContextData.Get<ClaimsPrincipal>(CurrentPrincipalKey);
     }

@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Conqueror.Streaming;
 
 internal sealed class StreamConsumerPipeline(
-    IConquerorContext conquerorContext,
+    ConquerorContext conquerorContext,
     List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamConsumerMiddlewareInvoker Invoker)> middlewares)
 {
     public Task Execute<TItem>(IServiceProvider serviceProvider,
@@ -19,7 +19,7 @@ internal sealed class StreamConsumerPipeline(
     {
         return ExecuteNextMiddleware(0, initialItem, conquerorContext, cancellationToken);
 
-        async Task ExecuteNextMiddleware(int index, TItem item, IConquerorContext ctx, CancellationToken token)
+        async Task ExecuteNextMiddleware(int index, TItem item, ConquerorContext ctx, CancellationToken token)
         {
             if (index >= middlewares.Count)
             {

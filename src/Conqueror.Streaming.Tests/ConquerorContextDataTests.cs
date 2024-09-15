@@ -1141,7 +1141,7 @@ public sealed class ConquerorContextDataTests
         ];
     }
 
-    private static void SetAndObserveContextData(IConquerorContext ctx, TestDataInstructions testDataInstructions, TestObservations testObservations, string location)
+    private static void SetAndObserveContextData(ConquerorContext ctx, TestDataInstructions testDataInstructions, TestObservations testObservations, string location)
     {
         foreach (var (key, value, _) in testDataInstructions.DownstreamDataToSet.Where(t => t.Location == location))
         {

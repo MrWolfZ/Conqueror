@@ -87,7 +87,7 @@ internal sealed class StreamConsumerPipelineBuilder(
         return this;
     }
 
-    public StreamConsumerPipeline Build(IConquerorContext conquerorContext)
+    public StreamConsumerPipeline Build(ConquerorContext conquerorContext)
     {
         return new(conquerorContext, middlewares);
     }

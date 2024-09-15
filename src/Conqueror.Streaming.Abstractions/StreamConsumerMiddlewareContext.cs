@@ -12,7 +12,7 @@ public abstract class StreamConsumerMiddlewareContext<TItem>
 
     public abstract IServiceProvider ServiceProvider { get; }
 
-    public abstract IConquerorContext ConquerorContext { get; }
+    public abstract ConquerorContext ConquerorContext { get; }
 
     public abstract Task Next(TItem item, CancellationToken cancellationToken);
 }

@@ -13,7 +13,7 @@ public abstract class StreamProducerMiddlewareContext<TRequest, TItem>
 
     public abstract IServiceProvider ServiceProvider { get; }
 
-    public abstract IConquerorContext ConquerorContext { get; }
+    public abstract ConquerorContext ConquerorContext { get; }
 
     public abstract IAsyncEnumerable<TItem> Next(TRequest request, CancellationToken cancellationToken);
 }

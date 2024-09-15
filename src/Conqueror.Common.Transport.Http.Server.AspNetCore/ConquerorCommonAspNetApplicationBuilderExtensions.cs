@@ -61,7 +61,7 @@ public static class ConquerorCommonAspNetApplicationBuilderExtensions
             }
         });
 
-        static void ReadContextDataFromRequest(IConquerorContext ctx, HttpContext httpContext)
+        static void ReadContextDataFromRequest(ConquerorContext ctx, HttpContext httpContext)
         {
             if (httpContext.Request.Headers.TryGetValue(HttpConstants.ConquerorContextHeaderName, out var values))
             {
@@ -79,7 +79,7 @@ public static class ConquerorCommonAspNetApplicationBuilderExtensions
             return null;
         }
 
-        static Task SetResponseHeaders(HttpContext httpContext, IConquerorContext conquerorContext)
+        static Task SetResponseHeaders(HttpContext httpContext, ConquerorContext conquerorContext)
         {
             if (conquerorContext.EncodeUpstreamContextData() is { } data)
             {

@@ -52,7 +52,7 @@ internal sealed class CommandPipeline<TCommand, TResponse>(IServiceProvider serv
         return this;
     }
 
-    public CommandPipelineRunner<TCommand, TResponse> Build(IConquerorContext conquerorContext)
+    public CommandPipelineRunner<TCommand, TResponse> Build(ConquerorContext conquerorContext)
     {
         return new(conquerorContext, middlewares);
     }

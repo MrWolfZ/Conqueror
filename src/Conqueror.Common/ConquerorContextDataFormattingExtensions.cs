@@ -15,7 +15,7 @@ public static class ConquerorContextDataFormattingExtensions
     /// </summary>
     /// <param name="ctx">The context to encode data from</param>
     /// <returns>The encoded data if any, otherwise <c>null</c></returns>
-    public static string? EncodeDownstreamContextData(this IConquerorContext ctx)
+    public static string? EncodeDownstreamContextData(this ConquerorContext ctx)
     {
         var sb = new StringBuilder();
         ctx.DownstreamContextData.Encode("d", sb);
@@ -28,7 +28,7 @@ public static class ConquerorContextDataFormattingExtensions
     /// </summary>
     /// <param name="ctx">The context to encode data from</param>
     /// <returns>The encoded data if any, otherwise <c>null</c></returns>
-    public static string? EncodeUpstreamContextData(this IConquerorContext ctx)
+    public static string? EncodeUpstreamContextData(this ConquerorContext ctx)
     {
         var sb = new StringBuilder();
         ctx.UpstreamContextData.Encode("u", sb);
@@ -41,7 +41,7 @@ public static class ConquerorContextDataFormattingExtensions
     /// </summary>
     /// <param name="ctx">The context to decode data into</param>
     /// <param name="values">The encoded values to decode</param>
-    public static void DecodeContextData(this IConquerorContext ctx, string values)
+    public static void DecodeContextData(this ConquerorContext ctx, string values)
     {
         ctx.DecodeContextData([values]);
     }
@@ -51,7 +51,7 @@ public static class ConquerorContextDataFormattingExtensions
     /// </summary>
     /// <param name="ctx">The context to decode data into</param>
     /// <param name="values">The encoded values to decode</param>
-    public static void DecodeContextData(this IConquerorContext ctx, IEnumerable<string> values)
+    public static void DecodeContextData(this ConquerorContext ctx, IEnumerable<string> values)
     {
         try
         {
@@ -100,7 +100,7 @@ public static class ConquerorContextDataFormattingExtensions
         }
     }
 
-    private static void Decode(this IConquerorContext ctx, IEnumerable<string> values)
+    private static void Decode(this ConquerorContext ctx, IEnumerable<string> values)
     {
         try
         {
@@ -118,7 +118,7 @@ public static class ConquerorContextDataFormattingExtensions
             throw new FormattedConquerorContextDataInvalidException("an error occurred while decoding context data", e);
         }
 
-        static int DecodeFromTypeTag(IConquerorContext ctx, string encodedData, int index)
+        static int DecodeFromTypeTag(ConquerorContext ctx, string encodedData, int index)
         {
             var typeTag = encodedData[index];
             var ctxData = typeTag switch

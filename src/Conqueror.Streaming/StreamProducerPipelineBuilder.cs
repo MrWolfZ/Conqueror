@@ -88,7 +88,7 @@ internal sealed class StreamProducerPipelineBuilder(
         return this;
     }
 
-    public StreamProducerPipeline Build(IConquerorContext conquerorContext)
+    public StreamProducerPipeline Build(ConquerorContext conquerorContext)
     {
         return new(conquerorContext, middlewares);
     }

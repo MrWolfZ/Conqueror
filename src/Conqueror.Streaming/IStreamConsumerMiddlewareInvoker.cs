@@ -12,6 +12,6 @@ internal interface IStreamConsumerMiddlewareInvoker
                        StreamConsumerMiddlewareNext<TItem> next,
                        object? middlewareConfiguration,
                        IServiceProvider serviceProvider,
-                       IConquerorContext conquerorContext,
+                       ConquerorContext conquerorContext,
                        CancellationToken cancellationToken);
 }

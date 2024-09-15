@@ -55,11 +55,11 @@ public sealed class QueryIdTests
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider Setup(Func<TestQuery, IConquerorContext?, TestQueryResponse>? handlerFn = null,
-                                   Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse>? nestedHandlerFn = null,
+    private IServiceProvider Setup(Func<TestQuery, ConquerorContext?, TestQueryResponse>? handlerFn = null,
+                                   Func<NestedTestQuery, ConquerorContext?, NestedTestQueryResponse>? nestedHandlerFn = null,
                                    MiddlewareFn? middlewareFn = null,
                                    MiddlewareFn? outerMiddlewareFn = null,
-                                   Action<IConquerorContext?>? nestedClassFn = null)
+                                   Action<ConquerorContext?>? nestedClassFn = null)
     {
         handlerFn ??= (cmd, _) => new(cmd.Payload);
         nestedHandlerFn ??= (cmd, _) => new(cmd.Payload);
@@ -101,7 +101,7 @@ public sealed class QueryIdTests
     private sealed record NestedTestQueryResponse(int Payload);
 
     private sealed class TestQueryHandler(
-        Func<TestQuery, IConquerorContext?, TestQueryResponse> handlerFn,
+        Func<TestQuery, ConquerorContext?, TestQueryResponse> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor,
         NestedClass nestedClass,
         IQueryHandler<NestedTestQuery, NestedTestQueryResponse> nestedQueryHandler)
@@ -121,7 +121,7 @@ public sealed class QueryIdTests
     }
 
     private sealed class NestedTestQueryHandler(
-        Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse> handlerFn,
+        Func<NestedTestQuery, ConquerorContext?, NestedTestQueryResponse> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor)
         : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>
     {
@@ -160,7 +160,7 @@ public sealed class QueryIdTests
         }
     }
 
-    private sealed class NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
+    private sealed class NestedClass(Action<ConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
     {
         public void Execute()
         {

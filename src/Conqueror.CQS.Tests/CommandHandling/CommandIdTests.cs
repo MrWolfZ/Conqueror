@@ -71,11 +71,11 @@ public sealed class CommandIdTests
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider Setup(Func<TestCommand, IConquerorContext?, TestCommandResponse>? handlerFn = null,
-                                   Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse>? nestedHandlerFn = null,
+    private IServiceProvider Setup(Func<TestCommand, ConquerorContext?, TestCommandResponse>? handlerFn = null,
+                                   Func<NestedTestCommand, ConquerorContext?, NestedTestCommandResponse>? nestedHandlerFn = null,
                                    MiddlewareFn? middlewareFn = null,
                                    MiddlewareFn? outerMiddlewareFn = null,
-                                   Action<IConquerorContext?>? nestedClassFn = null)
+                                   Action<ConquerorContext?>? nestedClassFn = null)
     {
         handlerFn ??= (cmd, _) => new(cmd.Payload);
         nestedHandlerFn ??= (cmd, _) => new(cmd.Payload);
@@ -106,8 +106,8 @@ public sealed class CommandIdTests
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider SetupWithoutResponse(Action<TestCommandWithoutResponse, IConquerorContext?>? handlerFn = null,
-                                                  Action<IConquerorContext?>? nestedClassFn = null)
+    private IServiceProvider SetupWithoutResponse(Action<TestCommandWithoutResponse, ConquerorContext?>? handlerFn = null,
+                                                  Action<ConquerorContext?>? nestedClassFn = null)
     {
         handlerFn ??= (_, _) => { };
         nestedClassFn ??= _ => { };
@@ -140,7 +140,7 @@ public sealed class CommandIdTests
     private sealed record NestedTestCommandResponse(int Payload);
 
     private sealed class TestCommandHandler(
-        Func<TestCommand, IConquerorContext?, TestCommandResponse> handlerFn,
+        Func<TestCommand, ConquerorContext?, TestCommandResponse> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor,
         NestedClass nestedClass,
         ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
@@ -160,7 +160,7 @@ public sealed class CommandIdTests
     }
 
     private sealed class TestCommandHandlerWithoutResponse(
-        Action<TestCommandWithoutResponse, IConquerorContext?> handlerFn,
+        Action<TestCommandWithoutResponse, ConquerorContext?> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor,
         NestedClass nestedClass)
         : ICommandHandler<TestCommandWithoutResponse>
@@ -174,7 +174,7 @@ public sealed class CommandIdTests
     }
 
     private sealed class NestedTestCommandHandler(
-        Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn,
+        Func<NestedTestCommand, ConquerorContext?, NestedTestCommandResponse> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor)
         : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
     {
@@ -213,7 +213,7 @@ public sealed class CommandIdTests
         }
     }
 
-    private sealed class NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
+    private sealed class NestedClass(Action<ConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
     {
         public void Execute()
         {

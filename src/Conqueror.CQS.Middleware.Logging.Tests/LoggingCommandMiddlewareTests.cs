@@ -219,7 +219,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         var commandId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+        conquerorContext.SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
 
@@ -273,7 +274,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         var commandId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+        conquerorContext.SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
 
@@ -330,7 +332,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         var commandId = string.Empty;
         var traceId = "test-trace-id";
 
-        Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+        conquerorContext.SetTraceId(traceId);
 
         using var scope = Host.Services.CreateScope();
 
@@ -447,7 +450,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         var traceId = "test-trace-id";
 
-        Resolve<IConquerorContextAccessor>().GetOrCreate().SetTraceId(traceId);
+        using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
+        conquerorContext.SetTraceId(traceId);
 
         _ = await Handler.ExecuteCommand(testCommand);
 

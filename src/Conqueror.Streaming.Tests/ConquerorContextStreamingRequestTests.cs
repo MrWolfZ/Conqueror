@@ -93,7 +93,7 @@ public sealed class ConquerorContextStreamingRequestTests
                                                                                                                             ServiceLifetime nestedClassLifetime)
     {
         var request = new TestStreamingRequest(10);
-        var observedContexts = new List<IConquerorContext>();
+        var observedContexts = new List<ConquerorContext>();
 
         var provider = Setup((q, ctx) =>
                              {
@@ -127,7 +127,7 @@ public sealed class ConquerorContextStreamingRequestTests
     public async Task GivenRequestExecution_ConquerorContextIsTheSameInMiddlewareProducerAndNestedClassWithConfigureAwait()
     {
         var request = new TestStreamingRequest(10);
-        var observedContexts = new List<IConquerorContext>();
+        var observedContexts = new List<ConquerorContext>();
 
         var provider = Setup((q, ctx) =>
                              {
@@ -374,12 +374,12 @@ public sealed class ConquerorContextStreamingRequestTests
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider Setup(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>>? producerFn = null,
-                                   Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>>? nestedProducerFn = null,
+    private IServiceProvider Setup(Func<TestStreamingRequest, ConquerorContext?, IAsyncEnumerable<TestItem>>? producerFn = null,
+                                   Func<NestedTestStreamingRequest, ConquerorContext?, IAsyncEnumerable<NestedTestItem>>? nestedProducerFn = null,
                                    MiddlewareFn? middlewareFn = null,
                                    MiddlewareFn? outerMiddlewareFn = null,
-                                   Action<IConquerorContext?>? nestedClassFn = null,
-                                   Action<IConquerorContext?>? producerPreReturnFn = null,
+                                   Action<ConquerorContext?>? nestedClassFn = null,
+                                   Action<ConquerorContext?>? producerPreReturnFn = null,
                                    ServiceLifetime producerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime nestedProducerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime middlewareLifetime = ServiceLifetime.Transient,
@@ -464,8 +464,8 @@ public sealed class ConquerorContextStreamingRequestTests
     private sealed record NestedTestItem(int Payload);
 
     private sealed class TestStreamProducer(
-        Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn,
-        Action<IConquerorContext?> preReturnFn,
+        Func<TestStreamingRequest, ConquerorContext?, IAsyncEnumerable<TestItem>> producerFn,
+        Action<ConquerorContext?> preReturnFn,
         IConquerorContextAccessor conquerorContextAccessor,
         NestedClass nestedClass,
         IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer)
@@ -489,7 +489,7 @@ public sealed class ConquerorContextStreamingRequestTests
     }
 
     private sealed class NestedTestStreamProducer(
-        Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn,
+        Func<NestedTestStreamingRequest, ConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn,
         IConquerorContextAccessor conquerorContextAccessor)
         : IStreamProducer<NestedTestStreamingRequest, NestedTestItem>
     {
@@ -554,7 +554,7 @@ public sealed class ConquerorContextStreamingRequestTests
         }
     }
 
-    private sealed class NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
+    private sealed class NestedClass(Action<ConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
     {
         public void Execute()
         {

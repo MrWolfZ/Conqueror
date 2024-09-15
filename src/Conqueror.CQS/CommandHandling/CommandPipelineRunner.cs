@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Conqueror.CQS.CommandHandling;
 
 internal sealed class CommandPipelineRunner<TCommand, TResponse>(
-    IConquerorContext conquerorContext,
+    ConquerorContext conquerorContext,
     List<ICommandMiddleware<TCommand, TResponse>> middlewares)
     where TCommand : class
 {

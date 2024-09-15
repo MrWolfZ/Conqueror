@@ -85,7 +85,7 @@ public sealed class ConquerorContextQueryTests
         ServiceLifetime nestedClassLifetime)
     {
         var query = new TestQuery(10);
-        var observedContexts = new List<IConquerorContext>();
+        var observedContexts = new List<ConquerorContext>();
 
         var provider = Setup(
             (q, ctx) =>
@@ -118,7 +118,7 @@ public sealed class ConquerorContextQueryTests
     public async Task GivenQueryExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
     {
         var query = new TestQuery(10);
-        var observedContexts = new List<IConquerorContext>();
+        var observedContexts = new List<ConquerorContext>();
 
         var provider = Setup(
             (q, ctx) =>
@@ -345,12 +345,12 @@ public sealed class ConquerorContextQueryTests
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider Setup(Func<TestQuery, IConquerorContext?, TestQueryResponse>? handlerFn = null,
-                                   Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse>? nestedHandlerFn = null,
+    private IServiceProvider Setup(Func<TestQuery, ConquerorContext?, TestQueryResponse>? handlerFn = null,
+                                   Func<NestedTestQuery, ConquerorContext?, NestedTestQueryResponse>? nestedHandlerFn = null,
                                    MiddlewareFn? middlewareFn = null,
                                    MiddlewareFn? outerMiddlewareFn = null,
-                                   Action<IConquerorContext?>? nestedClassFn = null,
-                                   Action<IConquerorContext?>? handlerPreReturnFn = null,
+                                   Action<ConquerorContext?>? nestedClassFn = null,
+                                   Action<ConquerorContext?>? handlerPreReturnFn = null,
                                    ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
@@ -431,8 +431,8 @@ public sealed class ConquerorContextQueryTests
     private sealed record NestedTestQueryResponse(int Payload);
 
     private sealed class TestQueryHandler(
-        Func<TestQuery, IConquerorContext?, TestQueryResponse> handlerFn,
-        Action<IConquerorContext?> preReturnFn,
+        Func<TestQuery, ConquerorContext?, TestQueryResponse> handlerFn,
+        Action<ConquerorContext?> preReturnFn,
         IConquerorContextAccessor conquerorContextAccessor,
         NestedClass nestedClass,
         IQueryHandler<NestedTestQuery, NestedTestQueryResponse> nestedQueryHandler)
@@ -453,7 +453,7 @@ public sealed class ConquerorContextQueryTests
     }
 
     private sealed class NestedTestQueryHandler(
-        Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse> handlerFn,
+        Func<NestedTestQuery, ConquerorContext?, NestedTestQueryResponse> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor)
         : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>
     {
@@ -492,7 +492,7 @@ public sealed class ConquerorContextQueryTests
         }
     }
 
-    private sealed class NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
+    private sealed class NestedClass(Action<ConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
     {
         public void Execute()
         {

@@ -13,7 +13,7 @@ internal sealed class StreamProducerMiddlewareInvoker<TMiddleware, TConfiguratio
                                                            StreamProducerMiddlewareNext<TRequest, TItem> next,
                                                            object? middlewareConfiguration,
                                                            IServiceProvider serviceProvider,
-                                                           IConquerorContext conquerorContext,
+                                                           ConquerorContext conquerorContext,
                                                            CancellationToken cancellationToken)
         where TRequest : class
     {

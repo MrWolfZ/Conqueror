@@ -9,7 +9,7 @@ public static class QueryConquerorContextExtensions
     /// </summary>
     /// <param name="conquerorContext">the conqueror context to get the query ID from</param>
     /// <returns>the ID of the executing query if there is one, otherwise <c>null</c></returns>
-    public static string? GetQueryId(this IConquerorContext conquerorContext)
+    public static string? GetQueryId(this ConquerorContext conquerorContext)
     {
         return conquerorContext.DownstreamContextData.Get<string>(QueryIdKey);
     }
@@ -19,7 +19,7 @@ public static class QueryConquerorContextExtensions
     /// </summary>
     /// <param name="conquerorContext">the conqueror context to set the query ID in</param>
     /// <param name="queryId">the query ID to set</param>
-    public static void SetQueryId(this IConquerorContext conquerorContext, string queryId)
+    public static void SetQueryId(this ConquerorContext conquerorContext, string queryId)
     {
         conquerorContext.DownstreamContextData.Set(QueryIdKey, queryId, ConquerorContextDataScope.AcrossTransports);
     }

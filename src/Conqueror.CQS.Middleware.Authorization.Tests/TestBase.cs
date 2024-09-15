@@ -6,7 +6,7 @@ namespace Conqueror.CQS.Middleware.Authorization.Tests;
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
 public abstract class TestBase
 {
-    private IDisposableConquerorContext? conquerorContext;
+    private ConquerorContext? conquerorContext;
     private IHost? host;
     private CancellationTokenSource? timeoutCancellationTokenSource;
 
@@ -27,7 +27,7 @@ public abstract class TestBase
 
     protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
 
-    protected IConquerorContext ConquerorContext => Resolve<IConquerorContextAccessor>().ConquerorContext
+    protected ConquerorContext ConquerorContext => Resolve<IConquerorContextAccessor>().ConquerorContext
                                                     ?? throw new InvalidOperationException("conqueror context is not available");
 
     private CancellationTokenSource TimeoutCancellationTokenSource

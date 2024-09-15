@@ -59,11 +59,11 @@ public sealed class StreamingRequestIdTests
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider Setup(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>>? producerFn = null,
-                                   Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>>? nestedProducerFn = null,
+    private IServiceProvider Setup(Func<TestStreamingRequest, ConquerorContext?, IAsyncEnumerable<TestItem>>? producerFn = null,
+                                   Func<NestedTestStreamingRequest, ConquerorContext?, IAsyncEnumerable<NestedTestItem>>? nestedProducerFn = null,
                                    MiddlewareFn? middlewareFn = null,
                                    MiddlewareFn? outerMiddlewareFn = null,
-                                   Action<IConquerorContext?>? nestedClassFn = null)
+                                   Action<ConquerorContext?>? nestedClassFn = null)
     {
         producerFn ??= (request, _) => AsyncEnumerableHelper.Of(new TestItem(request.Payload));
         nestedProducerFn ??= (request, _) => AsyncEnumerableHelper.Of(new NestedTestItem(request.Payload));
@@ -108,7 +108,7 @@ public sealed class StreamingRequestIdTests
     private sealed record NestedTestItem(int Payload);
 
     private sealed class TestStreamProducer(
-        Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn,
+        Func<TestStreamingRequest, ConquerorContext?, IAsyncEnumerable<TestItem>> producerFn,
         IConquerorContextAccessor conquerorContextAccessor,
         NestedClass nestedClass,
         IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer)
@@ -131,7 +131,7 @@ public sealed class StreamingRequestIdTests
                                                                                                  .Use<TestStreamProducerMiddleware>();
     }
 
-    private sealed class NestedTestStreamProducer(Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn, IConquerorContextAccessor conquerorContextAccessor)
+    private sealed class NestedTestStreamProducer(Func<NestedTestStreamingRequest, ConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn, IConquerorContextAccessor conquerorContextAccessor)
         : IStreamProducer<NestedTestStreamingRequest, NestedTestItem>
     {
         public async IAsyncEnumerable<NestedTestItem> ExecuteRequest(NestedTestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -194,7 +194,7 @@ public sealed class StreamingRequestIdTests
         }
     }
 
-    private sealed class NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
+    private sealed class NestedClass(Action<ConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
     {
         public void Execute()
         {

@@ -215,10 +215,10 @@ public sealed class ConquerorContextComplexTests
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
-    private IServiceProvider Setup(Func<TestCommand, IConquerorContext?, Func<Task<TestCommandResponse>>, Task<TestCommandResponse>>? commandHandlerFn = null,
-                                   Func<TestQuery, IConquerorContext?, Func<Task<TestQueryResponse>>, Task<TestQueryResponse>>? queryHandlerFn = null,
-                                   Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse>? nestedCommandHandlerFn = null,
-                                   Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse>? nestedQueryHandlerFn = null,
+    private IServiceProvider Setup(Func<TestCommand, ConquerorContext?, Func<Task<TestCommandResponse>>, Task<TestCommandResponse>>? commandHandlerFn = null,
+                                   Func<TestQuery, ConquerorContext?, Func<Task<TestQueryResponse>>, Task<TestQueryResponse>>? queryHandlerFn = null,
+                                   Func<NestedTestCommand, ConquerorContext?, NestedTestCommandResponse>? nestedCommandHandlerFn = null,
+                                   Func<NestedTestQuery, ConquerorContext?, NestedTestQueryResponse>? nestedQueryHandlerFn = null,
                                    ServiceLifetime commandHandlerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime queryHandlerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime nestedCommandHandlerLifetime = ServiceLifetime.Transient,
@@ -300,7 +300,7 @@ public sealed class ConquerorContextComplexTests
     private sealed record NestedTestCommandResponse(int Payload);
 
     private sealed class TestCommandHandler(
-        Func<TestCommand, IConquerorContext?, Func<Task<TestCommandResponse>>, Task<TestCommandResponse>> handlerFn,
+        Func<TestCommand, ConquerorContext?, Func<Task<TestCommandResponse>>, Task<TestCommandResponse>> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor,
         IQueryHandler<NestedTestQuery, NestedTestQueryResponse> nestedQueryHandler)
         : ICommandHandler<TestCommand, TestCommandResponse>
@@ -317,7 +317,7 @@ public sealed class ConquerorContextComplexTests
     }
 
     private sealed class NestedTestCommandHandler(
-        Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn,
+        Func<NestedTestCommand, ConquerorContext?, NestedTestCommandResponse> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor)
         : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
     {
@@ -337,7 +337,7 @@ public sealed class ConquerorContextComplexTests
     private sealed record NestedTestQueryResponse(int Payload);
 
     private sealed class TestQueryHandler(
-        Func<TestQuery, IConquerorContext?, Func<Task<TestQueryResponse>>, Task<TestQueryResponse>> handlerFn,
+        Func<TestQuery, ConquerorContext?, Func<Task<TestQueryResponse>>, Task<TestQueryResponse>> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor,
         ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
         : IQueryHandler<TestQuery, TestQueryResponse>
@@ -354,7 +354,7 @@ public sealed class ConquerorContextComplexTests
     }
 
     private sealed class NestedTestQueryHandler(
-        Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse> handlerFn,
+        Func<NestedTestQuery, ConquerorContext?, NestedTestQueryResponse> handlerFn,
         IConquerorContextAccessor conquerorContextAccessor)
         : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>
     {

@@ -27,7 +27,7 @@ internal sealed class DefaultEventPublisherMiddlewareContext<TEvent, TConfigurat
 
     public override IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    public override IConquerorContext ConquerorContext => throw new NotImplementedException();
+    public override ConquerorContext ConquerorContext => throw new NotImplementedException();
 
     public override Task Next(TEvent evt, CancellationToken cancellationToken) => next(evt, cancellationToken);
 }

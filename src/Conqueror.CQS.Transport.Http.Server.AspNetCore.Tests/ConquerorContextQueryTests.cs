@@ -473,7 +473,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         _ = app.UseEndpoints(b => b.MapControllers());
     }
 
-    private IDisposableConquerorContext CreateConquerorContext()
+    private ConquerorContext CreateConquerorContext()
     {
         return Resolve<IConquerorContextAccessor>().GetOrCreate();
     }

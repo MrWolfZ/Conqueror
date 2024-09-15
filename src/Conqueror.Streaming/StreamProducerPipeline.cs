@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Conqueror.Streaming;
 
 internal sealed class StreamProducerPipeline(
-    IConquerorContext conquerorContext,
+    ConquerorContext conquerorContext,
     List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamProducerMiddlewareInvoker Invoker)> middlewares)
 {
     public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(IServiceProvider serviceProvider,
@@ -18,7 +18,7 @@ internal sealed class StreamProducerPipeline(
     {
         return ExecuteNextMiddleware(0, initialRequest, conquerorContext, cancellationToken);
 
-        async IAsyncEnumerable<TItem> ExecuteNextMiddleware(int index, TRequest request, IConquerorContext ctx, [EnumeratorCancellation] CancellationToken token)
+        async IAsyncEnumerable<TItem> ExecuteNextMiddleware(int index, TRequest request, ConquerorContext ctx, [EnumeratorCancellation] CancellationToken token)
         {
             if (index >= middlewares.Count)
             {

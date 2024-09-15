@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 
 namespace Conqueror.Common;
@@ -10,113 +9,44 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 {
     private static readonly AsyncLocal<ConquerorContextHolder> ConquerorContextCurrent = new();
 
-    public IConquerorContext? ConquerorContext
-    {
-        get => ConquerorContextCurrent.Value?.Context;
-        private set
-        {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value), "conqueror context must not be null");
-            }
+    public ConquerorContext? ConquerorContext => DefaultConquerorContext;
 
-            // Use an object indirection to hold the ConquerorContext in the AsyncLocal,
-            // so it can be cleared in all ExecutionContexts when it's cleared.
-            ConquerorContextCurrent.Value = new() { Context = value };
-        }
-    }
+    private static DefaultConquerorContext? DefaultConquerorContext => ConquerorContextCurrent.Value?.Context;
 
-    public IDisposableConquerorContext GetOrCreate()
+    public ConquerorContext GetOrCreate()
     {
         // if there already is a context, we just wrap it without any disposal action
-        return ConquerorContext != null ? new(ConquerorContext) : CreateContext();
+        return ConquerorContext != null ? new NoOpDisposeConquerorContext(ConquerorContext) : CreateContext();
     }
 
-    public IDisposableConquerorContext CloneOrCreate()
+    public ConquerorContext CloneOrCreate()
     {
-        return ConquerorContext != null ? CloneContext() : CreateContext();
+        return DefaultConquerorContext != null ? CloneContext(DefaultConquerorContext) : CreateContext();
     }
 
-    private DisposableConquerorContext CreateContext()
+    private static DefaultConquerorContext CreateContext()
     {
-        var context = new DefaultConquerorContext();
+        var context = new DefaultConquerorContext(_ => ClearContextFromAsyncLocal());
         context.InitializeTraceId();
-        var disposableContext = new DisposableConquerorContext(context, ClearContext);
-        ConquerorContext = disposableContext;
-        return disposableContext;
+        SetContextInAsyncLocal(context);
+        return context;
     }
 
-    private DisposableConquerorContext CloneContext()
+    private static DefaultConquerorContext CloneContext(DefaultConquerorContext parentContext)
     {
-        var parentContext = ConquerorContext!;
-
-        var context = new DefaultConquerorContext();
-
-        // copy over all downstream data
-        foreach (var (key, value, scope) in parentContext.DownstreamContextData)
-        {
-            if (value is string s)
-            {
-                context.DownstreamContextData.Set(key, s, scope);
-            }
-            else
-            {
-                context.DownstreamContextData.Set(key, value);
-            }
-        }
-
-        // copy over all bidirectional data
-        foreach (var (key, value, scope) in parentContext.ContextData)
-        {
-            if (value is string s)
-            {
-                context.ContextData.Set(key, s, scope);
-            }
-            else
-            {
-                context.ContextData.Set(key, value);
-            }
-        }
-
-        // copy all upstream and bidirectional data to the parent context when this context is disposed
-        var disposableContext = new DisposableConquerorContext(context, () =>
-        {
-            foreach (var (key, value, scope) in context.UpstreamContextData)
-            {
-                if (value is string s)
-                {
-                    parentContext.UpstreamContextData.Set(key, s, scope);
-                }
-                else
-                {
-                    parentContext.UpstreamContextData.Set(key, value);
-                }
-            }
-
-            // clear parent context data before copying over data from child context, so that
-            // removals are propagated from the child context
-            parentContext.ContextData.Clear();
-
-            foreach (var (key, value, scope) in context.ContextData)
-            {
-                if (value is string s)
-                {
-                    parentContext.ContextData.Set(key, s, scope);
-                }
-                else
-                {
-                    parentContext.ContextData.Set(key, value);
-                }
-            }
-
-            ClearContext();
-        });
-
-        ConquerorContext = disposableContext;
-        return disposableContext;
+        var clonedContext = parentContext.Clone(ClearContextFromAsyncLocal);
+        SetContextInAsyncLocal(clonedContext);
+        return clonedContext;
     }
 
-    private static void ClearContext()
+    private static void SetContextInAsyncLocal(DefaultConquerorContext context)
+    {
+        // Use an object indirection to hold the ConquerorContext in the AsyncLocal,
+        // so it can be cleared in all ExecutionContexts when it's cleared.
+        ConquerorContextCurrent.Value = new() { Context = context };
+    }
+
+    private static void ClearContextFromAsyncLocal()
     {
         var holder = ConquerorContextCurrent.Value;
 
@@ -129,6 +59,6 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
 
     private sealed class ConquerorContextHolder
     {
-        public IConquerorContext? Context { get; set; }
+        public DefaultConquerorContext? Context { get; set; }
     }
 }

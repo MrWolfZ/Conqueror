@@ -11,7 +11,7 @@ internal sealed class DefaultStreamProducerMiddlewareContext<TRequest, TItem, TC
     StreamProducerMiddlewareNext<TRequest, TItem> next,
     TConfiguration configuration,
     IServiceProvider serviceProvider,
-    IConquerorContext conquerorContext,
+    ConquerorContext conquerorContext,
     CancellationToken cancellationToken)
     : StreamProducerMiddlewareContext<TRequest, TItem, TConfiguration>
     where TRequest : class
@@ -22,7 +22,7 @@ internal sealed class DefaultStreamProducerMiddlewareContext<TRequest, TItem, TC
 
     public override IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    public override IConquerorContext ConquerorContext { get; } = conquerorContext;
+    public override ConquerorContext ConquerorContext { get; } = conquerorContext;
 
     public override TConfiguration Configuration { get; } = configuration;
 

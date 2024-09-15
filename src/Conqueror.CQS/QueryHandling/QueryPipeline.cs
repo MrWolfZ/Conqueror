@@ -52,7 +52,7 @@ internal sealed class QueryPipeline<TQuery, TResponse>(IServiceProvider serviceP
         return this;
     }
 
-    public QueryPipelineRunner<TQuery, TResponse> Build(IConquerorContext conquerorContext)
+    public QueryPipelineRunner<TQuery, TResponse> Build(ConquerorContext conquerorContext)
     {
         return new(conquerorContext, middlewares);
     }

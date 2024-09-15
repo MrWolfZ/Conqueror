@@ -18,7 +18,7 @@ public static class CommonConquerorContextExtensions
     ///     implementation and does not need to be called by user-code.
     /// </summary>
     /// <param name="conquerorContext">The Conqueror context to set the trace ID in</param>
-    public static void InitializeTraceId(this IConquerorContext conquerorContext)
+    public static void InitializeTraceId(this ConquerorContext conquerorContext)
     {
         if (conquerorContext.DownstreamContextData.Get<string>(TraceIdKey) is null)
         {
@@ -32,7 +32,7 @@ public static class CommonConquerorContextExtensions
     /// </summary>
     /// <param name="conquerorContext">The Conqueror context to set the trace ID in</param>
     /// <param name="traceId">The trace ID to set</param>
-    public static void SetTraceId(this IConquerorContext conquerorContext, string traceId)
+    public static void SetTraceId(this ConquerorContext conquerorContext, string traceId)
     {
         conquerorContext.DownstreamContextData.Set(TraceIdKey, traceId);
     }
@@ -45,7 +45,7 @@ public static class CommonConquerorContextExtensions
     /// </summary>
     /// <param name="conquerorContext">The Conqueror context to get the trace ID from</param>
     /// <returns>The trace ID of the current Conqueror operation</returns>
-    public static string GetTraceId(this IConquerorContext conquerorContext)
+    public static string GetTraceId(this ConquerorContext conquerorContext)
     {
         return conquerorContext.DownstreamContextData.Get<string>(TraceIdKey) ?? throw new InvalidOperationException("trace ID was not set");
     }

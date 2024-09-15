@@ -13,7 +13,7 @@ public abstract class ConquerorEventMiddlewareContext<TEvent>
 
     public abstract IServiceProvider ServiceProvider { get; }
 
-    public abstract IConquerorContext ConquerorContext { get; }
+    public abstract ConquerorContext ConquerorContext { get; }
 
     public abstract Task Next(TEvent evt, CancellationToken cancellationToken);
 }

@@ -11,12 +11,12 @@ internal static class ConquerorContextCommonExtensions
     /// </summary>
     /// <param name="conquerorContext">The conqueror context to mark</param>
     /// <param name="transportTypeName">The name of the transport type that was executed</param>
-    public static void SignalExecutionFromTransport(this IConquerorContext conquerorContext, string transportTypeName)
+    public static void SignalExecutionFromTransport(this ConquerorContext conquerorContext, string transportTypeName)
     {
         conquerorContext.DownstreamContextData.Set(SignalExecutionFromTransportKey, transportTypeName, ConquerorContextDataScope.InProcess);
     }
 
-    public static string? GetExecutionTransportTypeName(this IConquerorContext conquerorContext)
+    public static string? GetExecutionTransportTypeName(this ConquerorContext conquerorContext)
     {
         return conquerorContext.DownstreamContextData.Get<string>(SignalExecutionFromTransportKey);
     }

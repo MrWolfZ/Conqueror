@@ -13,7 +13,7 @@ public abstract class QueryMiddlewareContext<TQuery, TResponse>
 
     public abstract IServiceProvider ServiceProvider { get; }
 
-    public abstract IConquerorContext ConquerorContext { get; }
+    public abstract ConquerorContext ConquerorContext { get; }
 
     public abstract QueryTransportType TransportType { get; }
 

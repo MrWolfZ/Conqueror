@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Conqueror.CQS.QueryHandling;
 
 internal sealed class QueryPipelineRunner<TQuery, TResponse>(
-    IConquerorContext conquerorContext,
+    ConquerorContext conquerorContext,
     List<IQueryMiddleware<TQuery, TResponse>> middlewares)
     where TQuery : class
 {
