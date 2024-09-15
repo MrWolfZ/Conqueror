@@ -318,13 +318,13 @@ public sealed class QueryMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (command, p, cancellationToken) =>
+        _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (query, p, cancellationToken) =>
                     {
                         await Task.Yield();
                         var obs = p.GetRequiredService<TestObservations>();
-                        obs.QueriesFromHandlers.Add(command);
+                        obs.QueriesFromHandlers.Add(query);
                         obs.CancellationTokensFromHandlers.Add(cancellationToken);
-                        return new(command.Payload + 1);
+                        return new(query.Payload + 1);
                     }, pipeline => pipeline.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
                     .AddSingleton(observations);
 
@@ -332,12 +332,37 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var command = new TestQuery(10);
+        var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(command);
+        _ = await handler.ExecuteQuery(query);
 
-        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { command }));
+        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
+    }
+
+    [Test]
+    public async Task GivenHandlerAndClientPipeline_WhenHandlerIsCalled_TransportTypesInPipelinesAreCorrect()
+    {
+        var services = new ServiceCollection();
+        QueryTransportType? transportTypeFromClient = null;
+        QueryTransportType? transportTypeFromHandler = null;
+
+        _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>(async (query, _, _) =>
+                    {
+                        await Task.Yield();
+                        return new(query.Payload + 1);
+                    }, pipeline => transportTypeFromHandler = pipeline.TransportType);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        var query = new TestQuery(10);
+
+        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).ExecuteQuery(query);
+
+        Assert.That(transportTypeFromClient, Is.EqualTo(new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Client)));
+        Assert.That(transportTypeFromHandler, Is.EqualTo(new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server)));
     }
 
     public sealed record ConquerorMiddlewareFunctionalityTestCase(

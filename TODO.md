@@ -22,7 +22,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add `.Has()` method to pipelines
 - [ ] make pipeline enumerable
 - [ ] remove lifetime support from handlers (explain in recipe that this was an explicit design decision and that lifetimes encourage bad practices by making handlers stateful when they should be stateless; also show how you can use injected classes to compensate, e.g. `IMemoryCache`)
-- [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines
 - [ ] add trace logging to transports
 - [ ] write tests to ensure that client pipeline sees transport type as client and handler sees it as server
 - [ ] when registering client, validate it is not a concrete class

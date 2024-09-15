@@ -16,7 +16,7 @@ internal sealed class HttpCommandTransportClient(
     IConquerorContextAccessor conquerorContextAccessor)
     : ICommandTransportClient
 {
-    public CommandTransportType TransportType => new(HttpConstants.TransportName, CommandTransportRole.Client);
+    public string TransportTypeName => HttpConstants.TransportName;
 
     public ResolvedHttpClientOptions Options { get; } = options;
 

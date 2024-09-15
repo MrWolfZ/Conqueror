@@ -66,7 +66,7 @@ internal sealed class CommandClientFactory
         where THandler : class, ICommandHandler
         where TCommand : class
     {
-        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, new(transportClientFactory), null);
+        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, new(transportClientFactory), null, CommandTransportRole.Client);
 
         if (typeof(THandler) == typeof(ICommandHandler<TCommand>))
         {

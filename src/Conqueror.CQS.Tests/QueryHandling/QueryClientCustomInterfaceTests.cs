@@ -36,7 +36,7 @@ public abstract class QueryClientCustomInterfaceTests
 
     private sealed class TestQueryTransport(TestObservations responses) : IQueryTransportClient
     {
-        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
+        public string TransportTypeName => "test";
 
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,

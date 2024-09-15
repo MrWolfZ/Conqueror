@@ -66,7 +66,7 @@ internal sealed class QueryClientFactory
         where THandler : class, IQueryHandler
         where TQuery : class
     {
-        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider, new(transportClientFactory), null);
+        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider, new(transportClientFactory), null, QueryTransportRole.Client);
 
         if (typeof(THandler) == typeof(IQueryHandler<TQuery, TResponse>))
         {

@@ -1055,7 +1055,7 @@ public class ConquerorContextCommandTests : TestBase
         TestObservations observations)
         : ICommandTransportClient
     {
-        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+        public string TransportTypeName { get; } = "test";
 
         public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                    IServiceProvider serviceProvider,

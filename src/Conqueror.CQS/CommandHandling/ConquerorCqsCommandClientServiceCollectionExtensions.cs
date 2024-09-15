@@ -118,7 +118,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
 
         CommandHandlerProxy<TCommand, TResponse> CreateProxy(IServiceProvider serviceProvider)
         {
-            return new(serviceProvider, transportClientFactory, configurePipeline);
+            return new(serviceProvider, transportClientFactory, configurePipeline, CommandTransportRole.Client);
         }
 
         void RegisterCustomInterface()

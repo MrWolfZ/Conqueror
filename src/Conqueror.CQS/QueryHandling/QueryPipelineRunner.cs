@@ -15,14 +15,10 @@ internal sealed class QueryPipelineRunner<TQuery, TResponse>(
 
     public async Task<TResponse> Execute(IServiceProvider serviceProvider,
                                          TQuery initialQuery,
-                                         QueryTransportClientFactory transportClientFactory,
-                                         string? transportTypeName,
+                                         IQueryTransportClient transportClient,
+                                         QueryTransportType transportType,
                                          CancellationToken cancellationToken)
     {
-        var transportClient = await transportClientFactory.Create(typeof(TQuery), typeof(TResponse), serviceProvider).ConfigureAwait(false);
-        var transportRole = transportTypeName is null ? transportClient.TransportType.Role : QueryTransportRole.Server;
-        var transportType = new QueryTransportType(transportTypeName ?? transportClient.TransportType.Name, transportRole);
-
         var next = (TQuery query, CancellationToken token) => transportClient.ExecuteQuery<TQuery, TResponse>(query, serviceProvider, token);
 
         foreach (var middleware in middlewares)

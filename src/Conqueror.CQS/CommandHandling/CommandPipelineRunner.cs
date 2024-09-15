@@ -15,13 +15,10 @@ internal sealed class CommandPipelineRunner<TCommand, TResponse>(
 
     public async Task<TResponse> Execute(IServiceProvider serviceProvider,
                                          TCommand initialCommand,
-                                         CommandTransportClientFactory transportClientFactory,
-                                         string? transportTypeName,
+                                         ICommandTransportClient transportClient,
+                                         CommandTransportType transportType,
                                          CancellationToken cancellationToken)
     {
-        var transportClient = await transportClientFactory.Create(typeof(TCommand), typeof(TResponse), serviceProvider).ConfigureAwait(false);
-        var transportType = transportClient.TransportType with { Name = transportTypeName ?? transportClient.TransportType.Name };
-
         var next = (TCommand command, CancellationToken token) => transportClient.ExecuteCommand<TCommand, TResponse>(command, serviceProvider, token);
 
         foreach (var middleware in middlewares)

@@ -11,5 +11,5 @@ public interface IQueryTransportClient
                                                     CancellationToken cancellationToken)
         where TQuery : class;
 
-    QueryTransportType TransportType { get; }
+    string TransportTypeName { get; }
 }

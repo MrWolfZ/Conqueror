@@ -7,22 +7,24 @@ namespace Conqueror.CQS.CommandHandling;
 
 internal sealed class InProcessCommandTransport(Type handlerType, Delegate? configurePipeline) : ICommandTransportClient
 {
-    public CommandTransportType TransportType => new(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Client);
+    public string TransportTypeName => InProcessCommandTransportTypeExtensions.TransportName;
 
     public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                IServiceProvider serviceProvider,
                                                                CancellationToken cancellationToken)
         where TCommand : class
     {
-        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider, new(new HandlerInvoker(handlerType)),
-                                                                 configurePipeline as Action<ICommandPipeline<TCommand, TResponse>>);
+        var proxy = new CommandHandlerProxy<TCommand, TResponse>(serviceProvider,
+                                                                 new(new HandlerInvoker(handlerType)),
+                                                                 configurePipeline as Action<ICommandPipeline<TCommand, TResponse>>,
+                                                                 CommandTransportRole.Server);
 
         return proxy.ExecuteCommand(command, cancellationToken);
     }
 
     private sealed class HandlerInvoker(Type handlerType) : ICommandTransportClient
     {
-        public CommandTransportType TransportType => new(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server);
+        public string TransportTypeName => InProcessCommandTransportTypeExtensions.TransportName;
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,

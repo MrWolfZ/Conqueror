@@ -10,7 +10,8 @@ namespace Conqueror.CQS.CommandHandling;
 internal sealed class CommandHandlerProxy<TCommand, TResponse>(
     IServiceProvider serviceProvider,
     CommandTransportClientFactory transportClientFactory,
-    Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline)
+    Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline,
+    CommandTransportRole transportRole)
     : ICommandHandler<TCommand, TResponse>
     where TCommand : class
 {
@@ -24,7 +25,11 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse>(
             conquerorContext.SetCommandId(ActivitySpanId.CreateRandom().ToString());
         }
 
-        var pipelineBuilder = new CommandPipeline<TCommand, TResponse>(serviceProvider);
+        var transportClient = await transportClientFactory.Create(typeof(TCommand), typeof(TResponse), serviceProvider, conquerorContext).ConfigureAwait(false);
+
+        var transportType = new CommandTransportType(transportTypeName ?? transportClient.TransportTypeName, transportRole);
+
+        var pipelineBuilder = new CommandPipeline<TCommand, TResponse>(serviceProvider, conquerorContext, transportType);
 
         configurePipeline?.Invoke(pipelineBuilder);
 
@@ -32,8 +37,8 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse>(
 
         return await pipeline.Execute(serviceProvider,
                                       command,
-                                      transportClientFactory,
-                                      transportTypeName,
+                                      transportClient,
+                                      transportType,
                                       cancellationToken)
                              .ConfigureAwait(false);
     }
@@ -52,6 +57,7 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse>(
 
         return new CommandHandlerProxy<TCommand, TResponse>(serviceProvider,
                                                             transportClientFactory,
-                                                            configure);
+                                                            configure,
+                                                            transportRole);
     }
 }

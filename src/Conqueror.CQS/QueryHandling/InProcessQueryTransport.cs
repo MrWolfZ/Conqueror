@@ -7,22 +7,24 @@ namespace Conqueror.CQS.QueryHandling;
 
 internal sealed class InProcessQueryTransport(Type handlerType, Delegate? configurePipeline) : IQueryTransportClient
 {
-    public QueryTransportType TransportType => new(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Client);
+    public string TransportTypeName => InProcessQueryTransportTypeExtensions.TransportName;
 
     public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                            IServiceProvider serviceProvider,
                                                            CancellationToken cancellationToken)
         where TQuery : class
     {
-        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider, new(new HandlerInvoker(handlerType)),
-                                                             configurePipeline as Action<IQueryPipeline<TQuery, TResponse>>);
+        var proxy = new QueryHandlerProxy<TQuery, TResponse>(serviceProvider,
+                                                             new(new HandlerInvoker(handlerType)),
+                                                             configurePipeline as Action<IQueryPipeline<TQuery, TResponse>>,
+                                                             QueryTransportRole.Server);
 
         return proxy.ExecuteQuery(query, cancellationToken);
     }
 
     private sealed class HandlerInvoker(Type handlerType) : IQueryTransportClient
     {
-        public QueryTransportType TransportType => new(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server);
+        public string TransportTypeName => InProcessQueryTransportTypeExtensions.TransportName;
 
         public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, IServiceProvider serviceProvider, CancellationToken cancellationToken)
             where TQuery : class

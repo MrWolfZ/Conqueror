@@ -275,7 +275,7 @@ public abstract class CommandClientFactoryTests
 
     private sealed class TestCommandTransport(TestObservations responses) : ICommandTransportClient
     {
-        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+        public string TransportTypeName { get; } = "test";
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,

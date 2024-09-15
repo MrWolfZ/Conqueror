@@ -142,7 +142,7 @@ public abstract class QueryClientFunctionalityTests
 
     private sealed class TestQueryTransport(TestObservations observations) : IQueryTransportClient
     {
-        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
+        public string TransportTypeName => "test";
 
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
@@ -160,7 +160,7 @@ public abstract class QueryClientFunctionalityTests
 
     private sealed class ThrowingTestQueryTransport(Exception exception) : IQueryTransportClient
     {
-        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
+        public string TransportTypeName => "test";
 
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,

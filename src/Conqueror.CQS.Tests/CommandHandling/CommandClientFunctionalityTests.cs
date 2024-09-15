@@ -188,7 +188,7 @@ public abstract class CommandClientFunctionalityTests
 
     private sealed class TestCommandTransport(TestObservations observations) : ICommandTransportClient
     {
-        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+        public string TransportTypeName { get; } = "test";
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
@@ -211,7 +211,7 @@ public abstract class CommandClientFunctionalityTests
 
     private sealed class ThrowingTestCommandTransport(Exception exception) : ICommandTransportClient
     {
-        public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
+        public string TransportTypeName { get; } = "test";
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, IServiceProvider serviceProvider, CancellationToken cancellationToken)
             where TCommand : class

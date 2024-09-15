@@ -729,7 +729,7 @@ public sealed class QueryHttpClientRegistrationTests
 
     private sealed class TestQueryTransportClient : IQueryTransportClient
     {
-        public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
+        public string TransportTypeName => "test";
 
         public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                IServiceProvider serviceProvider,

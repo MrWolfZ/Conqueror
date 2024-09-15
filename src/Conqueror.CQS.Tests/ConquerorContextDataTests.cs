@@ -58,7 +58,7 @@ public sealed class ConquerorContextDataTests
                         return new();
                     }, pipeline =>
                     {
-                        SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.PipelineBuilder);
+                        SetAndObserveContextData(pipeline.ConquerorContext, testDataInstructions, testObservations, Location.PipelineBuilder);
 
                         _ = pipeline.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
                                                                                                      pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
@@ -74,7 +74,7 @@ public sealed class ConquerorContextDataTests
                         return new();
                     }, pipeline =>
                     {
-                        SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.PipelineBuilder);
+                        SetAndObserveContextData(pipeline.ConquerorContext, testDataInstructions, testObservations, Location.PipelineBuilder);
 
                         _ = pipeline.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
                                                                                                pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
@@ -101,13 +101,13 @@ public sealed class ConquerorContextDataTests
             var handlerClient = serviceProvider.GetRequiredService<ICommandClientFactory>()
                                                .CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b =>
                                                {
-                                                   SetAndObserveContextData(b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.TransportBuilder);
+                                                   SetAndObserveContextData(b.ConquerorContext, testDataInstructions, testObservations, Location.TransportBuilder);
                                                    return b.UseInProcess();
                                                });
 
             _ = await handlerClient.WithPipeline(pipeline =>
             {
-                SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.ClientPipelineBuilder);
+                SetAndObserveContextData(pipeline.ConquerorContext, testDataInstructions, testObservations, Location.ClientPipelineBuilder);
                 _ = pipeline.Use(new TestClientCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
                                                                                                    pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
             }).ExecuteCommand(new());
@@ -118,13 +118,13 @@ public sealed class ConquerorContextDataTests
             var handlerClient = serviceProvider.GetRequiredService<IQueryClientFactory>()
                                                .CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b =>
                                                {
-                                                   SetAndObserveContextData(b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.TransportBuilder);
+                                                   SetAndObserveContextData(b.ConquerorContext, testDataInstructions, testObservations, Location.TransportBuilder);
                                                    return b.UseInProcess();
                                                });
 
             _ = await handlerClient.WithPipeline(pipeline =>
             {
-                SetAndObserveContextData(pipeline.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.ClientPipelineBuilder);
+                SetAndObserveContextData(pipeline.ConquerorContext, testDataInstructions, testObservations, Location.ClientPipelineBuilder);
                 _ = pipeline.Use(new TestClientQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
                                                                                              pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
             }).ExecuteQuery(new());
@@ -591,8 +591,8 @@ public sealed class ConquerorContextDataTests
         public static (int ContextDepth, int DepthInstance, string Location)[] Order =>
         [
             (1, 1, Location.PreExecution),
-            (2, 1, Location.ClientPipelineBuilder),
             (2, 1, Location.TransportBuilder),
+            (2, 1, Location.ClientPipelineBuilder),
             (2, 1, Location.ClientMiddlewarePreExecution),
             (3, 1, Location.PipelineBuilder),
             (3, 1, Location.MiddlewarePreExecution),

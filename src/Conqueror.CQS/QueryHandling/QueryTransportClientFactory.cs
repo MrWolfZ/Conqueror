@@ -24,14 +24,14 @@ internal sealed class QueryTransportClientFactory
         this.asyncTransportClientFactory = asyncTransportClientFactory;
     }
 
-    public Task<IQueryTransportClient> Create(Type queryType, Type responseType, IServiceProvider serviceProvider)
+    public Task<IQueryTransportClient> Create(Type queryType, Type responseType, IServiceProvider serviceProvider, ConquerorContext conquerorContext)
     {
         if (transportClient is not null)
         {
             return Task.FromResult(transportClient);
         }
 
-        var transportBuilder = new QueryTransportClientBuilder(serviceProvider, queryType, responseType);
+        var transportBuilder = new QueryTransportClientBuilder(serviceProvider, conquerorContext, queryType, responseType);
 
         if (syncTransportClientFactory is not null)
         {

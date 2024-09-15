@@ -107,7 +107,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
         QueryHandlerProxy<TQuery, TResponse> CreateProxy(IServiceProvider serviceProvider)
         {
-            return new(serviceProvider, transportClientFactory, null);
+            return new(serviceProvider, transportClientFactory, null, QueryTransportRole.Client);
         }
 
         void RegisterCustomInterface()

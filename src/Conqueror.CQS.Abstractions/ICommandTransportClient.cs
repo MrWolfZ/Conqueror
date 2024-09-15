@@ -11,5 +11,5 @@ public interface ICommandTransportClient
                                                         CancellationToken cancellationToken)
         where TCommand : class;
 
-    CommandTransportType TransportType { get; }
+    string TransportTypeName { get; }
 }

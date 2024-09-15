@@ -20,7 +20,7 @@ internal sealed class HttpQueryTransportClient(
     IConquerorContextAccessor conquerorContextAccessor)
     : IQueryTransportClient
 {
-    public QueryTransportType TransportType => new(HttpConstants.TransportName, QueryTransportRole.Client);
+    public string TransportTypeName => HttpConstants.TransportName;
 
     public ResolvedHttpClientOptions Options { get; } = options;
 

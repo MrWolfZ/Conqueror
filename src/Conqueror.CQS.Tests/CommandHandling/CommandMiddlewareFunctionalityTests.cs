@@ -376,6 +376,31 @@ public sealed class CommandMiddlewareFunctionalityTests
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
 
+    [Test]
+    public async Task GivenHandlerAndClientPipeline_WhenHandlerIsCalled_TransportTypesInPipelinesAreCorrect()
+    {
+        var services = new ServiceCollection();
+        CommandTransportType? transportTypeFromClient = null;
+        CommandTransportType? transportTypeFromHandler = null;
+
+        _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (query, _, _) =>
+        {
+            await Task.Yield();
+            return new(query.Payload + 1);
+        }, pipeline => transportTypeFromHandler = pipeline.TransportType);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        var query = new TestCommand(10);
+
+        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).ExecuteCommand(query);
+
+        Assert.That(transportTypeFromClient, Is.EqualTo(new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Client)));
+        Assert.That(transportTypeFromHandler, Is.EqualTo(new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server)));
+    }
+
     public sealed record ConquerorMiddlewareFunctionalityTestCase(
         Action<ICommandPipeline<TestCommand, TestCommandResponse>>? ConfigureHandlerPipeline,
         Action<ICommandPipeline<TestCommand, TestCommandResponse>>? ConfigureClientPipeline,
@@ -540,9 +565,14 @@ public sealed class CommandMiddlewareFunctionalityTests
     }
 
     private sealed class CommandPipelineWithoutResponseAdapter(
-        ICommandPipeline<TestCommand> commandPipelineImplementation) : ICommandPipeline<TestCommand, TestCommandResponse>
+        ICommandPipeline<TestCommand> commandPipelineImplementation)
+        : ICommandPipeline<TestCommand, TestCommandResponse>
     {
         public IServiceProvider ServiceProvider => commandPipelineImplementation.ServiceProvider;
+
+        public ConquerorContext ConquerorContext => commandPipelineImplementation.ConquerorContext;
+
+        public CommandTransportType TransportType => commandPipelineImplementation.TransportType;
 
         public ICommandPipeline<TestCommand, TestCommandResponse> Use<TMiddleware>(TMiddleware middleware)
             where TMiddleware : ICommandMiddleware<TestCommand, TestCommandResponse>

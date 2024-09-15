@@ -10,7 +10,8 @@ namespace Conqueror.CQS.QueryHandling;
 internal sealed class QueryHandlerProxy<TQuery, TResponse>(
     IServiceProvider serviceProvider,
     QueryTransportClientFactory transportClientFactory,
-    Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline)
+    Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline,
+    QueryTransportRole transportRole)
     : IQueryHandler<TQuery, TResponse>
     where TQuery : class
 {
@@ -24,7 +25,11 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse>(
             conquerorContext.SetQueryId(ActivitySpanId.CreateRandom().ToString());
         }
 
-        var pipelineBuilder = new QueryPipeline<TQuery, TResponse>(serviceProvider);
+        var transportClient = await transportClientFactory.Create(typeof(TQuery), typeof(TResponse), serviceProvider, conquerorContext).ConfigureAwait(false);
+
+        var transportType = new QueryTransportType(transportTypeName ?? transportClient.TransportTypeName, transportRole);
+
+        var pipelineBuilder = new QueryPipeline<TQuery, TResponse>(serviceProvider, conquerorContext, transportType);
 
         configurePipeline?.Invoke(pipelineBuilder);
 
@@ -32,8 +37,8 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse>(
 
         return await pipeline.Execute(serviceProvider,
                                       query,
-                                      transportClientFactory,
-                                      transportTypeName,
+                                      transportClient,
+                                      transportType,
                                       cancellationToken)
                              .ConfigureAwait(false);
     }
@@ -52,6 +57,7 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse>(
 
         return new QueryHandlerProxy<TQuery, TResponse>(serviceProvider,
                                                         transportClientFactory,
-                                                        configure);
+                                                        configure,
+                                                        transportRole);
     }
 }
