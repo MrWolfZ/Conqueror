@@ -239,26 +239,18 @@ public abstract class CommandClientFactoryTests
 
     public sealed record TestCommandWithoutResponse;
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
-    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
-    {
-    }
+    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>;
 
     public interface ITestCommandHandlerWithExtraMethod : ICommandHandler<TestCommand, TestCommandResponse>
     {
         void ExtraMethod();
     }
 
-    public interface ICombinedCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, ICommandHandler<TestCommandWithoutResponse>
-    {
-    }
+    public interface ICombinedCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>, ICommandHandler<TestCommandWithoutResponse>;
 
-    public interface ICombinedCustomCommandHandler : ITestCommandHandler, ITestCommandWithoutResponseHandler
-    {
-    }
+    public interface ICombinedCustomCommandHandler : ITestCommandHandler, ITestCommandWithoutResponseHandler;
 
     public interface INonGenericCommandHandler : ICommandHandler
     {

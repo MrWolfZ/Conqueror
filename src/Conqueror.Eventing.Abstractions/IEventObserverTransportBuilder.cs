@@ -10,6 +10,4 @@ public interface IEventObserverTransportBuilder
         where TConfiguration : class, IEventObserverTransportConfiguration;
 }
 
-public interface IEventObserverTransportConfiguration
-{
-}
+public interface IEventObserverTransportConfiguration;

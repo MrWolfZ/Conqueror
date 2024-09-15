@@ -35,9 +35,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         Assert.DoesNotThrowAsync(() => handler.ExecuteQuery(testQuery));
     }
 
-    private sealed class TestQueryClassWithoutPayload
-    {
-    }
+    private sealed class TestQueryClassWithoutPayload;
 
     [Test]
     public void GivenQueryClassWithoutPayload_DoesNotThrowValidationException()

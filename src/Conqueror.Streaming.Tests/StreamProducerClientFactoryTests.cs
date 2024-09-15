@@ -197,26 +197,18 @@ public abstract class StreamProducerClientFactoryTests
 
     public sealed record TestStreamingRequest2;
 
-    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
-    {
-    }
+    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
-    public interface ITestStreamProducer2 : IStreamProducer<TestStreamingRequest2, TestItem>
-    {
-    }
+    public interface ITestStreamProducer2 : IStreamProducer<TestStreamingRequest2, TestItem>;
 
     public interface ITestStreamProducerWithExtraMethod : IStreamProducer<TestStreamingRequest, TestItem>
     {
         void ExtraMethod();
     }
 
-    public interface ICombinedStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>, IStreamProducer<TestStreamingRequest2, TestItem>
-    {
-    }
+    public interface ICombinedStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>, IStreamProducer<TestStreamingRequest2, TestItem>;
 
-    public interface ICombinedCustomStreamProducer : ITestStreamProducer, ITestStreamProducer2
-    {
-    }
+    public interface ICombinedCustomStreamProducer : ITestStreamProducer, ITestStreamProducer2;
 
     public interface INonGenericStreamProducer : IStreamProducer
     {

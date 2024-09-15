@@ -35,9 +35,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(testCommand));
     }
 
-    private sealed class TestCommandClassWithoutPayload
-    {
-    }
+    private sealed class TestCommandClassWithoutPayload;
 
     [Test]
     public void GivenCommandClassWithoutPayload_DoesNotThrowValidationException()

@@ -14,6 +14,4 @@ internal static class InMemoryEventObserverTransportBuilderExtensions
     }
 }
 
-internal sealed class InMemoryEventObserverTransportConfiguration : IEventObserverTransportConfiguration
-{
-}
+internal sealed class InMemoryEventObserverTransportConfiguration : IEventObserverTransportConfiguration;

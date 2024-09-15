@@ -210,21 +210,13 @@ public sealed class QueryHandlerCustomInterfaceTests
 
     public sealed record TestCommandResponse;
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
-    public interface ITestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
-    {
-    }
+    public interface ITestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>;
 
-    public interface IGenericTestQueryHandler<T> : IQueryHandler<GenericTestQuery<T>, GenericTestQueryResponse<T>>
-    {
-    }
+    public interface IGenericTestQueryHandler<T> : IQueryHandler<GenericTestQuery<T>, GenericTestQueryResponse<T>>;
 
-    public interface IThrowingQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface IThrowingQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
     public interface ITestQueryHandlerWithExtraMethod : IQueryHandler<TestQuery, TestQueryResponse>
     {

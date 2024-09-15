@@ -5,6 +5,4 @@ public sealed record GetSharedCounterValueQuery;
 
 public sealed record GetSharedCounterValueQueryResponse(long Value);
 
-public interface IGetSharedCounterValueQueryHandler : IQueryHandler<GetSharedCounterValueQuery, GetSharedCounterValueQueryResponse>
-{
-}
+public interface IGetSharedCounterValueQueryHandler : IQueryHandler<GetSharedCounterValueQuery, GetSharedCounterValueQueryResponse>;

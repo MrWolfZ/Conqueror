@@ -14,6 +14,4 @@ public interface IEventPublisherMiddleware<TConfiguration> : IEventPublisherMidd
         where TEvent : class;
 }
 
-public interface IEventPublisherMiddlewareMarker
-{
-}
+public interface IEventPublisherMiddlewareMarker;

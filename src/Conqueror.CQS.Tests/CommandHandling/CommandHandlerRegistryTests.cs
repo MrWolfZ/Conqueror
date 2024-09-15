@@ -502,13 +502,9 @@ public sealed class CommandHandlerRegistryTests
 
     public sealed record TestCommandWithoutResponse;
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
-    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
-    {
-    }
+    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>;
 
     public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {

@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 
 namespace Conqueror;
 
-public interface ICommandHandler
-{
-}
+public interface ICommandHandler;
 
 public interface ICommandHandler<TCommand> : ICommandHandler
     where TCommand : class

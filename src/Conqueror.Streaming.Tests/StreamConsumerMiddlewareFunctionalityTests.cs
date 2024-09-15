@@ -766,7 +766,5 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokens { get; } = [];
     }
 
-    private sealed class TestService
-    {
-    }
+    private sealed class TestService;
 }

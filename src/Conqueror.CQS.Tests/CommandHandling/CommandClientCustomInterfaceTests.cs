@@ -57,13 +57,9 @@ public abstract class CommandClientCustomInterfaceTests
 
     public sealed record TestCommandWithoutResponse;
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
-    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
-    {
-    }
+    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>;
 
     private sealed class TestCommandTransport(TestObservations responses) : ICommandTransportClient
     {

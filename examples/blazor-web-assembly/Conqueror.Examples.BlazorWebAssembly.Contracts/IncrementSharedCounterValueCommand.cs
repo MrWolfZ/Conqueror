@@ -12,6 +12,4 @@ public sealed record IncrementSharedCounterValueCommand
 
 public sealed record IncrementSharedCounterValueCommandResponse(long ValueAfterIncrement);
 
-public interface IIncrementSharedCounterValueCommandHandler : ICommandHandler<IncrementSharedCounterValueCommand, IncrementSharedCounterValueCommandResponse>
-{
-}
+public interface IIncrementSharedCounterValueCommandHandler : ICommandHandler<IncrementSharedCounterValueCommand, IncrementSharedCounterValueCommandResponse>;

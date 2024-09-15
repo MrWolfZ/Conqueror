@@ -5,9 +5,7 @@ public sealed record HttpExampleQuery(int Parameter);
 
 public sealed record HttpExampleQueryResponse(int Value);
 
-public interface IHttpExampleQueryHandler : IQueryHandler<HttpExampleQuery, HttpExampleQueryResponse>
-{
-}
+public interface IHttpExampleQueryHandler : IQueryHandler<HttpExampleQuery, HttpExampleQueryResponse>;
 
 public sealed class HttpExampleQueryHandler : IHttpExampleQueryHandler
 {

@@ -4,9 +4,7 @@ public sealed record MiddlewaresExampleQuery(int Parameter);
 
 public sealed record MiddlewaresExampleQueryResponse(int Value);
 
-public interface IMiddlewaresExampleQueryHandler : IQueryHandler<MiddlewaresExampleQuery, MiddlewaresExampleQueryResponse>
-{
-}
+public interface IMiddlewaresExampleQueryHandler : IQueryHandler<MiddlewaresExampleQuery, MiddlewaresExampleQueryResponse>;
 
 public sealed class MiddlewaresExampleQueryHandler : IMiddlewaresExampleQueryHandler
 {

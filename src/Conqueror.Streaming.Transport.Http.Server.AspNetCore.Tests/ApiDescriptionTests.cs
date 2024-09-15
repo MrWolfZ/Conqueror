@@ -199,9 +199,7 @@ public class ApiDescriptionTests : TestBase
         public int Payload { get; init; }
     }
 
-    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
-    {
-    }
+    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
     public sealed class TestStreamProducer : ITestStreamProducer
     {

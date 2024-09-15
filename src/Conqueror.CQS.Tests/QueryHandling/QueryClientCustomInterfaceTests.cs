@@ -33,9 +33,7 @@ public abstract class QueryClientCustomInterfaceTests
 
     public sealed record TestQueryResponse;
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
     private sealed class TestQueryTransport(TestObservations responses) : IQueryTransportClient
     {

@@ -14,6 +14,4 @@ public interface IEventObserverMiddleware<TConfiguration> : IEventObserverMiddle
         where TEvent : class;
 }
 
-public interface IEventObserverMiddlewareMarker
-{
-}
+public interface IEventObserverMiddlewareMarker;

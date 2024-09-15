@@ -304,29 +304,17 @@ public sealed class CommandHandlerCustomInterfaceTests
 
     private sealed record TestQueryResponse;
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
-    public interface ITestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
-    {
-    }
+    public interface ITestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>;
 
-    public interface ITestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
-    {
-    }
+    public interface ITestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>;
 
-    public interface IGenericTestCommandHandler<T> : ICommandHandler<GenericTestCommand<T>, GenericTestCommandResponse<T>>
-    {
-    }
+    public interface IGenericTestCommandHandler<T> : ICommandHandler<GenericTestCommand<T>, GenericTestCommandResponse<T>>;
 
-    public interface IGenericTestCommandHandlerWithoutResponse<T> : ICommandHandler<GenericTestCommand<T>>
-    {
-    }
+    public interface IGenericTestCommandHandlerWithoutResponse<T> : ICommandHandler<GenericTestCommand<T>>;
 
-    public interface IThrowingTestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface IThrowingTestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
     public interface ITestCommandHandlerWithExtraMethod : ICommandHandler<TestCommand, TestCommandResponse>
     {

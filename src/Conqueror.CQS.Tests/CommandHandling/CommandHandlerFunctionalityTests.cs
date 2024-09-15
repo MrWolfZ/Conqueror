@@ -432,9 +432,7 @@ public sealed class CommandHandlerFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutValidInterfaces : ICommandHandler
-    {
-    }
+    private sealed class TestCommandHandlerWithoutValidInterfaces : ICommandHandler;
 
     private sealed class TestObservations
     {

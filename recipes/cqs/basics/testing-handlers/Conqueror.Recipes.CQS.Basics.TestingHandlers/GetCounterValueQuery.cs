@@ -4,9 +4,7 @@ public sealed record GetCounterValueQuery(string CounterName);
 
 public sealed record GetCounterValueQueryResponse(int CounterValue);
 
-public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>
-{
-}
+public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>;
 
 internal sealed class GetCounterValueQueryHandler(CountersRepository repository) : IGetCounterValueQueryHandler
 {

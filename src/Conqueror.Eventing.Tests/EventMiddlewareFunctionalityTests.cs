@@ -1572,9 +1572,7 @@ public sealed class EventMiddlewareFunctionalityTests
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    private sealed class TestEventTransportAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-    }
+    private sealed class TestEventTransportAttribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
     private sealed class TestEventTransportPublisher(TestObservations observations, IConquerorEventTransportClientRegistrar registrar) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
     {
@@ -1594,9 +1592,7 @@ public sealed class EventMiddlewareFunctionalityTests
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    private sealed class TestEventTransport2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-    }
+    private sealed class TestEventTransport2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
     private sealed class TestEventTransportPublisher2(TestObservations observations, InMemoryEventPublisher inMemoryPublisher) : IConquerorEventTransportPublisher<TestEventTransport2Attribute>
     {
@@ -1635,7 +1631,5 @@ public sealed class EventMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokens { get; } = [];
     }
 
-    private sealed class TestService
-    {
-    }
+    private sealed class TestService;
 }

@@ -273,9 +273,7 @@ public sealed class StreamProducerRegistryTests
 
     public sealed record TestStreamingRequest2Response;
 
-    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
-    {
-    }
+    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
     public sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
     {

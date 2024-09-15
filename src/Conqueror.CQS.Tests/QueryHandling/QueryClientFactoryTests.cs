@@ -194,26 +194,18 @@ public abstract class QueryClientFactoryTests
 
     public sealed record TestQuery2;
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
-    public interface ITestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse>;
 
     public interface ITestQueryHandlerWithExtraMethod : IQueryHandler<TestQuery, TestQueryResponse>
     {
         void ExtraMethod();
     }
 
-    public interface ICombinedQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>, IQueryHandler<TestQuery2, TestQueryResponse>
-    {
-    }
+    public interface ICombinedQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>, IQueryHandler<TestQuery2, TestQueryResponse>;
 
-    public interface ICombinedCustomQueryHandler : ITestQueryHandler, ITestQueryHandler2
-    {
-    }
+    public interface ICombinedCustomQueryHandler : ITestQueryHandler, ITestQueryHandler2;
 
     public interface INonGenericQueryHandler : IQueryHandler
     {

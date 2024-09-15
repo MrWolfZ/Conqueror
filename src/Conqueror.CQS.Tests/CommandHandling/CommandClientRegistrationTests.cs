@@ -1017,34 +1017,22 @@ public sealed class CommandClientRegistrationTests
 
     public sealed record UnregisteredTestCommandWithoutResponse;
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
-    public interface ITestCommandHandler2 : ICommandHandler<TestCommand, TestCommandResponse2>
-    {
-    }
+    public interface ITestCommandHandler2 : ICommandHandler<TestCommand, TestCommandResponse2>;
 
-    public interface ITestCommandHandler3 : ICommandHandler<TestCommand>
-    {
-    }
+    public interface ITestCommandHandler3 : ICommandHandler<TestCommand>;
 
-    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
-    {
-    }
+    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>;
 
     public interface ITestCommandHandlerWithExtraMethod : ICommandHandler<TestCommand, TestCommandResponse>
     {
         void ExtraMethod();
     }
 
-    public interface IUnregisteredTestCommandHandler : ICommandHandler<UnregisteredTestCommand, TestCommandResponse>
-    {
-    }
+    public interface IUnregisteredTestCommandHandler : ICommandHandler<UnregisteredTestCommand, TestCommandResponse>;
 
-    public interface IUnregisteredTestCommandWithoutResponseHandler : ICommandHandler<UnregisteredTestCommandWithoutResponse>
-    {
-    }
+    public interface IUnregisteredTestCommandWithoutResponseHandler : ICommandHandler<UnregisteredTestCommandWithoutResponse>;
 
     private sealed class TestCommandTransport : ICommandTransportClient
     {
@@ -1073,7 +1061,5 @@ public sealed class CommandClientRegistrationTests
 
     [SuppressMessage("Design", "CA1064:Exceptions should be public", Justification = "test code")]
     [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "test code")]
-    private sealed class TestAssertionException : Exception
-    {
-    }
+    private sealed class TestAssertionException : Exception;
 }

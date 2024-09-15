@@ -3,9 +3,7 @@ using System.Threading.Tasks;
 
 namespace Conqueror;
 
-public interface IEventObserver
-{
-}
+public interface IEventObserver;
 
 public interface IEventObserver<in TEvent> : IEventObserver
     where TEvent : class

@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 
 namespace Conqueror;
 
-public interface IQueryHandler
-{
-}
+public interface IQueryHandler;
 
 public interface IQueryHandler<TQuery, TResponse> : IQueryHandler
     where TQuery : class

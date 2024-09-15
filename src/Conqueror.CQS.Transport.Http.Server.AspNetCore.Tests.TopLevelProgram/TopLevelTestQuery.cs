@@ -5,9 +5,7 @@ public sealed record TopLevelTestQuery(int Payload);
 
 public sealed record TopLevelTestQueryResponse(int Payload);
 
-public interface ITopLevelTestQueryHandler : IQueryHandler<TopLevelTestQuery, TopLevelTestQueryResponse>
-{
-}
+public interface ITopLevelTestQueryHandler : IQueryHandler<TopLevelTestQuery, TopLevelTestQueryResponse>;
 
 internal sealed class TopLevelTestQueryHandler : ITopLevelTestQueryHandler
 {

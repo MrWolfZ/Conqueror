@@ -7,6 +7,4 @@ public sealed record IncrementCounterCommand([Required] string CounterName);
 
 public sealed record IncrementCounterCommandResponse(int NewCounterValue);
 
-public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCounterCommand, IncrementCounterCommandResponse>
-{
-}
+public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCounterCommand, IncrementCounterCommandResponse>;

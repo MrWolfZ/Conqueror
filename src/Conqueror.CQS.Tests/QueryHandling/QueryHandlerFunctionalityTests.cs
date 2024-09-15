@@ -300,9 +300,7 @@ public sealed class QueryHandlerFunctionalityTests
         }
     }
 
-    private sealed class TestQueryHandlerWithoutValidInterfaces : IQueryHandler
-    {
-    }
+    private sealed class TestQueryHandlerWithoutValidInterfaces : IQueryHandler;
 
     private sealed class TestObservations
     {

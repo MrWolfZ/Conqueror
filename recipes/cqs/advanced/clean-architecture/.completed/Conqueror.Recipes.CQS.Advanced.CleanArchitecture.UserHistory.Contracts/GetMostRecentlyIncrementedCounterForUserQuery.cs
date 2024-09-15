@@ -5,6 +5,4 @@ public sealed record GetMostRecentlyIncrementedCounterForUserQuery([Required] st
 
 public sealed record GetMostRecentlyIncrementedCounterForUserQueryResponse(string? CounterName);
 
-public interface IGetMostRecentlyIncrementedCounterForUserQueryHandler : IQueryHandler<GetMostRecentlyIncrementedCounterForUserQuery, GetMostRecentlyIncrementedCounterForUserQueryResponse>
-{
-}
+public interface IGetMostRecentlyIncrementedCounterForUserQueryHandler : IQueryHandler<GetMostRecentlyIncrementedCounterForUserQuery, GetMostRecentlyIncrementedCounterForUserQueryResponse>;

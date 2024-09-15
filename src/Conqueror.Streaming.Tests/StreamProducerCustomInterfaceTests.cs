@@ -225,21 +225,13 @@ public sealed class StreamProducerCustomInterfaceTests
 
     public sealed record GenericTestItem<T>(T Payload);
 
-    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
-    {
-    }
+    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
-    public interface ITestStreamProducer2 : IStreamProducer<TestStreamingRequest2, TestItem2>
-    {
-    }
+    public interface ITestStreamProducer2 : IStreamProducer<TestStreamingRequest2, TestItem2>;
 
-    public interface IGenericTestStreamProducer<T> : IStreamProducer<GenericTestStreamingRequest<T>, GenericTestItem<T>>
-    {
-    }
+    public interface IGenericTestStreamProducer<T> : IStreamProducer<GenericTestStreamingRequest<T>, GenericTestItem<T>>;
 
-    public interface IThrowingStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
-    {
-    }
+    public interface IThrowingStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
     public interface ITestStreamProducerWithExtraMethod : IStreamProducer<TestStreamingRequest, TestItem>
     {

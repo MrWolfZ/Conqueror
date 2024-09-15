@@ -11,6 +11,4 @@ public interface IConquerorEventTransportPublisher<in TConfigurationAttribute> :
         where TEvent : class;
 }
 
-public interface IConquerorEventTransportPublisher
-{
-}
+public interface IConquerorEventTransportPublisher;

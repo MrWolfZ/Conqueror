@@ -367,13 +367,9 @@ public sealed class CommandHttpEndpointTests : TestBase
         public int Payload { get; init; }
     }
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
-    public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandWithCustomSerializedPayloadTypeResponse>
-    {
-    }
+    public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandWithCustomSerializedPayloadTypeResponse>;
 
     public sealed class TestCommandHandler : ITestCommandHandler
     {

@@ -146,9 +146,7 @@ public sealed class RegistrationTests
 
     public sealed record TestQueryWithCustomInterface;
 
-    public interface ITestQueryHandler : IQueryHandler<TestQueryWithCustomInterface, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQueryWithCustomInterface, TestQueryResponse>;
 
     public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
@@ -195,13 +193,9 @@ public sealed class RegistrationTests
 
     public sealed record TestCommandWithoutResponseWithCustomInterface;
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommandWithCustomInterface, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommandWithCustomInterface, TestCommandResponse>;
 
-    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponseWithCustomInterface>
-    {
-    }
+    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponseWithCustomInterface>;
 
     public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {

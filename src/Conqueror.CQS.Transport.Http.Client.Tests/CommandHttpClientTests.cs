@@ -372,49 +372,27 @@ public sealed class CommandHttpClientTests : TestBase
         public int Payload { get; init; }
     }
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
-    public interface ITestCommandWithoutPayloadHandler : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandWithoutPayloadHandler : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>;
 
-    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
-    {
-    }
+    public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>;
 
-    public interface ITestCommandWithoutResponseWithoutPayloadHandler : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
-    {
-    }
+    public interface ITestCommandWithoutResponseWithoutPayloadHandler : ICommandHandler<TestCommandWithoutResponseWithoutPayload>;
 
-    public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandWithCustomSerializedPayloadTypeResponse>
-    {
-    }
+    public interface ITestCommandWithCustomSerializedPayloadTypeHandler : ICommandHandler<TestCommandWithCustomSerializedPayloadType, TestCommandWithCustomSerializedPayloadTypeResponse>;
 
-    public interface ITestCommandWithCustomPathConventionHandler : ICommandHandler<TestCommandWithCustomPathConvention, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandWithCustomPathConventionHandler : ICommandHandler<TestCommandWithCustomPathConvention, TestCommandResponse>;
 
-    public interface ITestCommandWithCustomPathHandler : ICommandHandler<TestCommandWithCustomPath, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandWithCustomPathHandler : ICommandHandler<TestCommandWithCustomPath, TestCommandResponse>;
 
-    public interface ITestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>;
 
-    public interface ITestCommandWithCustomHeadersHandler : ICommandHandler<TestCommandWithCustomHeaders, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandWithCustomHeadersHandler : ICommandHandler<TestCommandWithCustomHeaders, TestCommandResponse>;
 
-    public interface INonHttpTestCommandHandler : ICommandHandler<NonHttpTestCommand, TestCommandResponse>
-    {
-    }
+    public interface INonHttpTestCommandHandler : ICommandHandler<NonHttpTestCommand, TestCommandResponse>;
 
-    public interface INonHttpTestCommandWithoutResponseHandler : ICommandHandler<NonHttpTestCommandWithoutResponse>
-    {
-    }
+    public interface INonHttpTestCommandWithoutResponseHandler : ICommandHandler<NonHttpTestCommandWithoutResponse>;
 
     public sealed class TestCommandHandler : ITestCommandHandler
     {

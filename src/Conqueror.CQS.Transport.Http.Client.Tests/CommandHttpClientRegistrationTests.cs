@@ -711,13 +711,9 @@ public sealed class CommandHttpClientRegistrationTests
 
     public sealed record NonHttpTestCommand;
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
-    public interface INonHttpTestCommandHandler : ICommandHandler<NonHttpTestCommand, TestCommandResponse>
-    {
-    }
+    public interface INonHttpTestCommandHandler : ICommandHandler<NonHttpTestCommand, TestCommandResponse>;
 
     private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
@@ -752,9 +748,7 @@ public sealed class CommandHttpClientRegistrationTests
         }
     }
 
-    private sealed class ScopingTest
-    {
-    }
+    private sealed class ScopingTest;
 
     private sealed class TestHttpClient : HttpClient
     {

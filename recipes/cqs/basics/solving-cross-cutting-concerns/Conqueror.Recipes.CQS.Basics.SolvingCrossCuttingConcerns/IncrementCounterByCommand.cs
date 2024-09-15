@@ -4,9 +4,7 @@ public sealed record IncrementCounterByCommand(string CounterName, int Increment
 
 public sealed record IncrementCounterByCommandResponse(int NewCounterValue);
 
-public interface IIncrementCounterByCommandHandler : ICommandHandler<IncrementCounterByCommand, IncrementCounterByCommandResponse>
-{
-}
+public interface IIncrementCounterByCommandHandler : ICommandHandler<IncrementCounterByCommand, IncrementCounterByCommandResponse>;
 
 internal sealed class IncrementCounterByCommandHandler(CountersRepository repository) : IIncrementCounterByCommandHandler
 {

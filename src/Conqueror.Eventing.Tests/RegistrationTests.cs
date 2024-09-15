@@ -169,13 +169,9 @@ public sealed class RegistrationTests
 
     public sealed record TestEvent2;
 
-    public interface ITestEventObserver : IEventObserver<TestEvent>
-    {
-    }
+    public interface ITestEventObserver : IEventObserver<TestEvent>;
 
-    public interface ITestEventObserver2 : IEventObserver<TestEvent2>
-    {
-    }
+    public interface ITestEventObserver2 : IEventObserver<TestEvent2>;
 
     public sealed class TestEventObserver : IEventObserver<TestEvent>
     {
@@ -228,9 +224,7 @@ public sealed class RegistrationTests
         public Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    public sealed class TestEventObserverMiddlewareConfiguration
-    {
-    }
+    public sealed class TestEventObserverMiddlewareConfiguration;
 
     public sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
     {
@@ -268,9 +262,7 @@ public sealed class RegistrationTests
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class TestEventTransportPublisherConfigurationAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-    }
+    public sealed class TestEventTransportPublisherConfigurationAttribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
     public sealed class TestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportPublisherConfigurationAttribute>
     {
@@ -309,9 +301,7 @@ public sealed class RegistrationTests
         }
     }
 
-    public sealed class TestEventPublisherMiddlewareConfiguration
-    {
-    }
+    public sealed class TestEventPublisherMiddlewareConfiguration;
 
     public sealed class TestEventPublisherMiddleware : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
     {

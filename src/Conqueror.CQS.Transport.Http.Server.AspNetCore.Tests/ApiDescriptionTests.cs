@@ -483,13 +483,9 @@ public class ApiDescriptionTests : TestBase
         public int Payload { get; init; }
     }
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
-    public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>;
 
     public sealed class TestQueryHandler : ITestQueryHandler
     {
@@ -681,9 +677,7 @@ public class ApiDescriptionTests : TestBase
     [HttpCommand]
     public sealed record TestCommandWithoutResponseWithoutPayload;
 
-    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
-    {
-    }
+    public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
 
     [HttpCommand(Path = "/api/testCommandWithCustomPath")]
     public sealed record TestCommandWithCustomPath

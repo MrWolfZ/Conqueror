@@ -471,9 +471,7 @@ public sealed class EventObserverRegistrationTests
         }
     }
 
-    private sealed class TestEventObserverWithoutValidInterfaces : IEventObserver
-    {
-    }
+    private sealed class TestEventObserverWithoutValidInterfaces : IEventObserver;
 
     public sealed class TestEventObserverForAssemblyScanning : IEventObserver<TestEventForAssemblyScanning>
     {

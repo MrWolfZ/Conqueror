@@ -346,9 +346,7 @@ public sealed class StreamConsumerFunctionalityTests
         }
     }
 
-    private sealed class TestStreamConsumerWithoutValidInterfaces : IStreamConsumer
-    {
-    }
+    private sealed class TestStreamConsumerWithoutValidInterfaces : IStreamConsumer;
 
     private sealed class TestObservations
     {

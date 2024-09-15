@@ -248,9 +248,7 @@ public sealed class StreamingHttpClientTests : TestBase
         }
     }
 
-    public interface ITestStreamProducer : IStreamProducer<TestRequest, TestItem>
-    {
-    }
+    public interface ITestStreamProducer : IStreamProducer<TestRequest, TestItem>;
 
     [HttpStream]
     public sealed record TestRequestWithoutPayload;
@@ -267,9 +265,7 @@ public sealed class StreamingHttpClientTests : TestBase
         }
     }
 
-    public interface ITestStreamProducerWithoutPayload : IStreamProducer<TestRequestWithoutPayload, TestItem>
-    {
-    }
+    public interface ITestStreamProducerWithoutPayload : IStreamProducer<TestRequestWithoutPayload, TestItem>;
 
     [HttpStream]
     public sealed record TestRequestWithCollectionPayload(List<int> Payload);
@@ -286,9 +282,7 @@ public sealed class StreamingHttpClientTests : TestBase
         }
     }
 
-    public interface ITestStreamProducerWithCollectionPayload : IStreamProducer<TestRequestWithCollectionPayload, TestItem>
-    {
-    }
+    public interface ITestStreamProducerWithCollectionPayload : IStreamProducer<TestRequestWithCollectionPayload, TestItem>;
 
     [HttpStream]
     public sealed record TestRequestWithCustomSerializedItemType(int Payload);
@@ -310,9 +304,7 @@ public sealed class StreamingHttpClientTests : TestBase
         }
     }
 
-    public interface ITestStreamProducerWithCustomSerializedItemType : IStreamProducer<TestRequestWithCustomSerializedItemType, TestItemWithCustomSerializedPayload>
-    {
-    }
+    public interface ITestStreamProducerWithCustomSerializedItemType : IStreamProducer<TestRequestWithCustomSerializedItemType, TestItemWithCustomSerializedPayload>;
 
     internal sealed class TestItemJsonConverterFactory : JsonConverterFactory
     {
@@ -351,9 +343,7 @@ public sealed class StreamingHttpClientTests : TestBase
         }
     }
 
-    public interface ITestStreamProducerWithError : IStreamProducer<TestRequestWithError, TestItem>
-    {
-    }
+    public interface ITestStreamProducerWithError : IStreamProducer<TestRequestWithError, TestItem>;
 
     public sealed record NonHttpTestRequest
     {
@@ -365,9 +355,7 @@ public sealed class StreamingHttpClientTests : TestBase
         public IAsyncEnumerable<TestItem> ExecuteRequest(NonHttpTestRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    public interface INonHttpTestStreamProducer : IStreamProducer<NonHttpTestRequest, TestItem>
-    {
-    }
+    public interface INonHttpTestStreamProducer : IStreamProducer<NonHttpTestRequest, TestItem>;
 
     private sealed class TestObservations
     {

@@ -724,9 +724,7 @@ public sealed class EventTransportPublisherLifetimeTests
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    private sealed class TestEventPublisher1Attribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-    }
+    private sealed class TestEventPublisher1Attribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
     private sealed class TestEventTransportPublisher1(TestObservations observations) : IConquerorEventTransportPublisher<TestEventPublisher1Attribute>
     {
@@ -744,9 +742,7 @@ public sealed class EventTransportPublisherLifetimeTests
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    private sealed class TestEventPublisher2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-    }
+    private sealed class TestEventPublisher2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
     private sealed class TestEventTransportPublisher2(TestObservations observations) : IConquerorEventTransportPublisher<TestEventPublisher2Attribute>
     {

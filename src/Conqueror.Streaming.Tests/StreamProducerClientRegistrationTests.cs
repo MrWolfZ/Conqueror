@@ -704,22 +704,16 @@ public sealed class StreamProducerClientRegistrationTests
 
     public sealed record UnregisteredTestStreamingRequestWithoutResponse;
 
-    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
-    {
-    }
+    public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
-    public interface ITestStreamProducer2 : IStreamProducer<TestStreamingRequest, TestItem2>
-    {
-    }
+    public interface ITestStreamProducer2 : IStreamProducer<TestStreamingRequest, TestItem2>;
 
     public interface ITestStreamProducerWithExtraMethod : IStreamProducer<TestStreamingRequest, TestItem>
     {
         void ExtraMethod();
     }
 
-    public interface IUnregisteredTestStreamProducer : IStreamProducer<UnregisteredTestStreamingRequest, TestItem>
-    {
-    }
+    public interface IUnregisteredTestStreamProducer : IStreamProducer<UnregisteredTestStreamingRequest, TestItem>;
 
     private sealed class TestStreamProducerTransport : IStreamProducerTransportClient
     {
@@ -756,7 +750,5 @@ public sealed class StreamProducerClientRegistrationTests
 
     [SuppressMessage("Design", "CA1064:Exceptions should be public", Justification = "test code")]
     [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "test code")]
-    private sealed class TestAssertionException : Exception
-    {
-    }
+    private sealed class TestAssertionException : Exception;
 }

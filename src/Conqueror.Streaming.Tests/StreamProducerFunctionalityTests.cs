@@ -351,9 +351,7 @@ public sealed class StreamProducerFunctionalityTests
         }
     }
 
-    private sealed class TestStreamProducerWithoutValidInterfaces : IStreamProducer
-    {
-    }
+    private sealed class TestStreamProducerWithoutValidInterfaces : IStreamProducer;
 
     private sealed class TestObservations
     {

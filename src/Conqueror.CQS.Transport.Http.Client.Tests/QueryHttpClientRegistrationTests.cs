@@ -711,13 +711,9 @@ public sealed class QueryHttpClientRegistrationTests
 
     public sealed record NonHttpTestQuery;
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
-    public interface INonHttpTestQueryHandler : IQueryHandler<NonHttpTestQuery, TestQueryResponse>
-    {
-    }
+    public interface INonHttpTestQueryHandler : IQueryHandler<NonHttpTestQuery, TestQueryResponse>;
 
     private sealed class TestQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
     where TQuery : class
@@ -752,9 +748,7 @@ public sealed class QueryHttpClientRegistrationTests
         }
     }
 
-    private sealed class ScopingTest
-    {
-    }
+    private sealed class ScopingTest;
 
     private sealed class TestHttpClient : HttpClient
     {

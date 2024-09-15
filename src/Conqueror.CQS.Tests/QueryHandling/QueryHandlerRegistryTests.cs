@@ -275,9 +275,7 @@ public sealed class QueryHandlerRegistryTests
 
     public sealed record TestQuery2Response;
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
     public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {

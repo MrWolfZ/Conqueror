@@ -702,22 +702,16 @@ public sealed class QueryClientRegistrationTests
 
     public sealed record UnregisteredTestQueryWithoutResponse;
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
-    public interface ITestQueryHandler2 : IQueryHandler<TestQuery, TestQueryResponse2>
-    {
-    }
+    public interface ITestQueryHandler2 : IQueryHandler<TestQuery, TestQueryResponse2>;
 
     public interface ITestQueryHandlerWithExtraMethod : IQueryHandler<TestQuery, TestQueryResponse>
     {
         void ExtraMethod();
     }
 
-    public interface IUnregisteredTestQueryHandler : IQueryHandler<UnregisteredTestQuery, TestQueryResponse>
-    {
-    }
+    public interface IUnregisteredTestQueryHandler : IQueryHandler<UnregisteredTestQuery, TestQueryResponse>;
 
     private sealed class TestQueryTransport : IQueryTransportClient
     {
@@ -746,7 +740,5 @@ public sealed class QueryClientRegistrationTests
 
     [SuppressMessage("Design", "CA1064:Exceptions should be public", Justification = "test code")]
     [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "test code")]
-    private sealed class TestAssertionException : Exception
-    {
-    }
+    private sealed class TestAssertionException : Exception;
 }

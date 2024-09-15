@@ -409,9 +409,7 @@ public sealed class EventTransportPublisherRegistrationTests
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    private sealed class TestEventTransport2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-    }
+    private sealed class TestEventTransport2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
     private sealed class TestEventTransportPublisher(TestObservations observations) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
     {
@@ -428,9 +426,7 @@ public sealed class EventTransportPublisherRegistrationTests
         }
     }
 
-    private sealed class TestEventTransportPublisherWithoutValidInterfaces : IConquerorEventTransportPublisher
-    {
-    }
+    private sealed class TestEventTransportPublisherWithoutValidInterfaces : IConquerorEventTransportPublisher;
 
     private sealed class TestEventTransportPublisherWithMultipleInterfaces : IConquerorEventTransportPublisher<TestEventTransportAttribute>, IConquerorEventTransportPublisher<TestEventTransport2Attribute>
     {
@@ -448,9 +444,7 @@ public sealed class EventTransportPublisherRegistrationTests
     }
 
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class TestEventTransportForAssemblyScanningAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-    }
+    public sealed class TestEventTransportForAssemblyScanningAttribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
     public sealed class TestEventTransportPublisherForAssemblyScanning : IConquerorEventTransportPublisher<TestEventTransportForAssemblyScanningAttribute>
     {

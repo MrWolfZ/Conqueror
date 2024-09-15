@@ -229,21 +229,13 @@ public sealed class EventObserverCustomInterfaceTests
 
     public sealed record GenericTestEvent<TPayload>(TPayload Payload);
 
-    public interface ITestEventObserver : IEventObserver<TestEvent>
-    {
-    }
+    public interface ITestEventObserver : IEventObserver<TestEvent>;
 
-    public interface ITestEventObserver2 : IEventObserver<TestEvent2>
-    {
-    }
+    public interface ITestEventObserver2 : IEventObserver<TestEvent2>;
 
-    public interface IGenericTestEventObserver<TPayload> : IEventObserver<GenericTestEvent<TPayload>>
-    {
-    }
+    public interface IGenericTestEventObserver<TPayload> : IEventObserver<GenericTestEvent<TPayload>>;
 
-    public interface IThrowingTestEventObserver : IEventObserver<TestEvent>
-    {
-    }
+    public interface IThrowingTestEventObserver : IEventObserver<TestEvent>;
 
     public interface ITestEventObserverWithExtraMethod : IEventObserver<TestEvent>
     {

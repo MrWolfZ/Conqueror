@@ -590,81 +590,43 @@ public sealed class QueryHttpClientTests : TestBase
         public int Payload { get; init; }
     }
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
-    public interface ITestQueryWithStringPayloadHandler : IQueryHandler<TestQueryWithStringPayload, TestQueryWithStringPayloadResponse>
-    {
-    }
+    public interface ITestQueryWithStringPayloadHandler : IQueryHandler<TestQueryWithStringPayload, TestQueryWithStringPayloadResponse>;
 
-    public interface ITestQueryWithoutPayloadHandler : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryWithoutPayloadHandler : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>;
 
-    public interface ITestQueryWithCollectionPayloadHandler : IQueryHandler<TestQueryWithCollectionPayload, TestQueryWithCollectionPayloadResponse>
-    {
-    }
+    public interface ITestQueryWithCollectionPayloadHandler : IQueryHandler<TestQueryWithCollectionPayload, TestQueryWithCollectionPayloadResponse>;
 
-    public interface ITestQueryWithComplexPayloadHandler : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryWithComplexPayloadHandler : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>;
 
-    public interface ITestQueryWithComplexPayloadWithCollectionPropertyHandler : IQueryHandler<TestQueryWithComplexPayloadWithCollectionProperty, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryWithComplexPayloadWithCollectionPropertyHandler : IQueryHandler<TestQueryWithComplexPayloadWithCollectionProperty, TestQueryResponse>;
 
-    public interface ITestQueryWithOptionalPropertyHandler : IQueryHandler<TestQueryWithOptionalProperty, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryWithOptionalPropertyHandler : IQueryHandler<TestQueryWithOptionalProperty, TestQueryResponse>;
 
-    public interface ITestQueryWithCustomPathConventionHandler : IQueryHandler<TestQueryWithCustomPathConvention, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryWithCustomPathConventionHandler : IQueryHandler<TestQueryWithCustomPathConvention, TestQueryResponse>;
 
-    public interface ITestQueryWithCustomPathHandler : IQueryHandler<TestQueryWithCustomPath, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryWithCustomPathHandler : IQueryHandler<TestQueryWithCustomPath, TestQueryResponse>;
 
-    public interface ITestQueryWithVersionHandler : IQueryHandler<TestQueryWithVersion, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryWithVersionHandler : IQueryHandler<TestQueryWithVersion, TestQueryResponse>;
 
-    public interface ITestQueryWithCustomHeadersHandler : IQueryHandler<TestQueryWithCustomHeaders, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryWithCustomHeadersHandler : IQueryHandler<TestQueryWithCustomHeaders, TestQueryResponse>;
 
-    public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>;
 
-    public interface ITestPostQueryWithoutPayloadHandler : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>
-    {
-    }
+    public interface ITestPostQueryWithoutPayloadHandler : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>;
 
-    public interface ITestPostQueryWithCustomSerializedPayloadTypeHandler : IQueryHandler<TestPostQueryWithCustomSerializedPayloadType, TestPostQueryWithCustomSerializedPayloadTypeResponse>
-    {
-    }
+    public interface ITestPostQueryWithCustomSerializedPayloadTypeHandler : IQueryHandler<TestPostQueryWithCustomSerializedPayloadType, TestPostQueryWithCustomSerializedPayloadTypeResponse>;
 
-    public interface ITestPostQueryWithCustomPathConventionHandler : IQueryHandler<TestPostQueryWithCustomPathConvention, TestQueryResponse>
-    {
-    }
+    public interface ITestPostQueryWithCustomPathConventionHandler : IQueryHandler<TestPostQueryWithCustomPathConvention, TestQueryResponse>;
 
-    public interface ITestPostQueryWithCustomPathHandler : IQueryHandler<TestPostQueryWithCustomPath, TestQueryResponse>
-    {
-    }
+    public interface ITestPostQueryWithCustomPathHandler : IQueryHandler<TestPostQueryWithCustomPath, TestQueryResponse>;
 
-    public interface ITestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>
-    {
-    }
+    public interface ITestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>;
 
-    public interface ITestPostQueryWithCustomHeadersHandler : IQueryHandler<TestPostQueryWithCustomHeaders, TestQueryResponse>
-    {
-    }
+    public interface ITestPostQueryWithCustomHeadersHandler : IQueryHandler<TestPostQueryWithCustomHeaders, TestQueryResponse>;
 
-    public interface INonHttpTestQueryHandler : IQueryHandler<NonHttpTestQuery, TestQueryResponse>
-    {
-    }
+    public interface INonHttpTestQueryHandler : IQueryHandler<NonHttpTestQuery, TestQueryResponse>;
 
     public sealed class TestQueryHandler : ITestQueryHandler
     {

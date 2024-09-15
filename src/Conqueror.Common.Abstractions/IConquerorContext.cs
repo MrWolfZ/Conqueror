@@ -64,6 +64,4 @@ public interface IConquerorContext
 }
 
 /// <inheritdoc cref="IConquerorContext" />
-public interface IDisposableConquerorContext : IConquerorContext, IDisposable
-{
-}
+public interface IDisposableConquerorContext : IConquerorContext, IDisposable;

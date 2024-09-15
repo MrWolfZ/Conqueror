@@ -456,17 +456,11 @@ public sealed class QueryHttpEndpointTests : TestBase
         public int Payload { get; init; }
     }
 
-    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
-    public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
-    {
-    }
+    public interface ITestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>;
 
-    public interface ITestPostQueryWithCustomSerializedPayloadTypeHandler : IQueryHandler<TestPostQueryWithCustomSerializedPayloadType, TestPostQueryWithCustomSerializedPayloadTypeResponse>
-    {
-    }
+    public interface ITestPostQueryWithCustomSerializedPayloadTypeHandler : IQueryHandler<TestPostQueryWithCustomSerializedPayloadType, TestPostQueryWithCustomSerializedPayloadTypeResponse>;
 
     public sealed class TestQueryHandler : ITestQueryHandler
     {

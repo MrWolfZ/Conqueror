@@ -5,9 +5,7 @@ public sealed record TopLevelTestCommand(int Payload);
 
 public sealed record TopLevelTestCommandResponse(int Payload);
 
-public interface ITopLevelTestCommandHandler : ICommandHandler<TopLevelTestCommand, TopLevelTestCommandResponse>
-{
-}
+public interface ITopLevelTestCommandHandler : ICommandHandler<TopLevelTestCommand, TopLevelTestCommandResponse>;
 
 internal sealed class TopLevelTestCommandHandler : ITopLevelTestCommandHandler
 {

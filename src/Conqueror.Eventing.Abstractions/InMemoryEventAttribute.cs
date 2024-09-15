@@ -3,6 +3,4 @@
 namespace Conqueror;
 
 [AttributeUsage(AttributeTargets.Class)]
-public sealed class InMemoryEventAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
-{
-}
+public sealed class InMemoryEventAttribute : Attribute, IConquerorEventTransportConfigurationAttribute;

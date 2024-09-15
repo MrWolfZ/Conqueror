@@ -767,9 +767,7 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokens { get; } = [];
     }
 
-    private sealed class TestService
-    {
-    }
+    private sealed class TestService;
 }
 
 [TestFixture]

@@ -6,9 +6,7 @@ public sealed record GetCounterValueQueryResponse(int CounterValue);
 
 // this interface can be resolved or injected to call a handler; note that the interface
 // must not have any extra methods, it just inherits from the generic handler interface
-public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>
-{
-}
+public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>;
 
 internal sealed class GetCounterValueQueryHandler(CountersRepository repository) : IGetCounterValueQueryHandler
 {
