@@ -10,15 +10,8 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Transport.Http.Common;
 
-internal sealed class TextWebSocket : IDisposable
+internal sealed class TextWebSocket(WebSocket socket) : IDisposable
 {
-    private readonly WebSocket socket;
-
-    public TextWebSocket(WebSocket socket)
-    {
-        this.socket = socket;
-    }
-
     public WebSocketState State => socket.State;
 
     public void Dispose()

@@ -668,83 +668,55 @@ public sealed class EventObserverTransportTests
     [CustomEventTransport1(Parameter = 10)]
     private abstract record TestEventWithCustomTransportBase;
 
-    private sealed class TestEventObserver : IEventObserver<TestEventWithCustomTransport>,
-                                             IEventObserver<TestEventWithMultipleTransports>
+    private sealed class TestEventObserver(TestObservations observations) : IEventObserver<TestEventWithCustomTransport>,
+                                                                            IEventObserver<TestEventWithMultipleTransports>
     {
-        private readonly TestObservations testObservations;
-
-        public TestEventObserver(TestObservations observations)
-        {
-            testObservations = observations;
-        }
-
         public async Task HandleEvent(TestEventWithCustomTransport evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.EventsFromObserver.Enqueue(evt);
-            testObservations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
+            observations.EventsFromObserver.Enqueue(evt);
+            observations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
         }
 
         public async Task HandleEvent(TestEventWithMultipleTransports evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.EventsFromObserver.Enqueue(evt);
-            testObservations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
+            observations.EventsFromObserver.Enqueue(evt);
+            observations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
         }
     }
 
-    private sealed class TestEventObserver2 : IEventObserver<TestEventWithCustomTransport>
+    private sealed class TestEventObserver2(TestObservations observations) : IEventObserver<TestEventWithCustomTransport>
     {
-        private readonly TestObservations testObservations;
-
-        public TestEventObserver2(TestObservations observations)
-        {
-            testObservations = observations;
-        }
-
         public async Task HandleEvent(TestEventWithCustomTransport evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.EventsFromObserver.Enqueue(evt);
-            testObservations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
+            observations.EventsFromObserver.Enqueue(evt);
+            observations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
         }
     }
 
-    private sealed class TestEventObserverForBaseClass : IEventObserver<TestEventWithCustomTransportBase>
+    private sealed class TestEventObserverForBaseClass(TestObservations observations) : IEventObserver<TestEventWithCustomTransportBase>
     {
-        private readonly TestObservations testObservations;
-
-        public TestEventObserverForBaseClass(TestObservations observations)
-        {
-            testObservations = observations;
-        }
-
         public async Task HandleEvent(TestEventWithCustomTransportBase evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.EventsFromObserver.Enqueue(evt);
-            testObservations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
+            observations.EventsFromObserver.Enqueue(evt);
+            observations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
         }
     }
 
-    private sealed class TestEventObserverWithMiddleware : IEventObserver<TestEventWithCustomTransport>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithMiddleware(TestObservations observations) : IEventObserver<TestEventWithCustomTransport>, IConfigureEventObserverPipeline
     {
-        private readonly TestObservations testObservations;
-
-        public TestEventObserverWithMiddleware(TestObservations observations)
-        {
-            testObservations = observations;
-        }
-
         public async Task HandleEvent(TestEventWithCustomTransport evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.EventsFromObserver.Enqueue(evt);
+            observations.EventsFromObserver.Enqueue(evt);
         }
 
         public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline)
@@ -753,21 +725,14 @@ public sealed class EventObserverTransportTests
         }
     }
 
-    private sealed class TestEventObserverMiddleware : IEventObserverMiddleware
+    private sealed class TestEventObserverMiddleware(TestObservations observations) : IEventObserverMiddleware
     {
-        private readonly TestObservations testObservations;
-
-        public TestEventObserverMiddleware(TestObservations observations)
-        {
-            testObservations = observations;
-        }
-
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
             await Task.Yield();
 
-            testObservations.EventsFromMiddleware.Enqueue(ctx.Event);
+            observations.EventsFromMiddleware.Enqueue(ctx.Event);
 
             await ctx.Next(ctx.Event, ctx.CancellationToken);
         }
@@ -819,38 +784,24 @@ public sealed class EventObserverTransportTests
         public int Parameter { get; set; }
     }
 
-    private sealed class CustomEventTransport1Client
+    private sealed class CustomEventTransport1Client(
+        TestObservations observations,
+        CustomEventTransport1Publisher publisher,
+        IConquerorEventTransportClientRegistrar transportClientRegistrar,
+        IServiceProvider serviceProvider,
+        Func<ConquerorEventTransportClientObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>? observerFilter = null)
     {
-        private readonly Func<ConquerorEventTransportClientObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>? observerFilter;
-        private readonly CustomEventTransport1Publisher publisher;
-        private readonly IServiceProvider serviceProvider;
-        private readonly TestObservations testObservations;
-        private readonly IConquerorEventTransportClientRegistrar transportClientRegistrar;
-
-        public CustomEventTransport1Client(TestObservations observations,
-                                           CustomEventTransport1Publisher publisher,
-                                           IConquerorEventTransportClientRegistrar transportClientRegistrar,
-                                           IServiceProvider serviceProvider,
-                                           Func<ConquerorEventTransportClientObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>? observerFilter = null)
-        {
-            testObservations = observations;
-            this.publisher = publisher;
-            this.transportClientRegistrar = transportClientRegistrar;
-            this.serviceProvider = serviceProvider;
-            this.observerFilter = observerFilter;
-        }
-
         public async Task Start()
         {
             var registration = await transportClientRegistrar.RegisterTransportClient<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>(builder =>
             {
                 // test publishing with custom strategy
-                _ = builder.UseDefault(new CustomInMemoryPublishingStrategy(testObservations));
+                _ = builder.UseDefault(new CustomInMemoryPublishingStrategy(observations));
             });
 
             foreach (var transportClientRegistration in registration.RelevantObservers)
             {
-                testObservations.ObservedTransportRegistrations.Enqueue((GetType(),
+                observations.ObservedTransportRegistrations.Enqueue((GetType(),
                                                                          transportClientRegistration.EventType,
                                                                          transportClientRegistration.ConfigurationAttribute,
                                                                          transportClientRegistration.Configuration));
@@ -860,26 +811,19 @@ public sealed class EventObserverTransportTests
 
             publisher.OnEvent += async (evt, resetEvent) =>
             {
-                testObservations.EventsFromClient.Enqueue((GetType(), evt));
+                observations.EventsFromClient.Enqueue((GetType(), evt));
                 await registration.Dispatcher.DispatchEvent(evt, observersToDispatchTo, serviceProvider);
                 resetEvent.Set();
             };
         }
     }
 
-    private sealed class CustomInMemoryPublishingStrategy : IConquerorInMemoryEventPublishingStrategy
+    private sealed class CustomInMemoryPublishingStrategy(TestObservations observations) : IConquerorInMemoryEventPublishingStrategy
     {
-        private readonly TestObservations testObservations;
-
-        public CustomInMemoryPublishingStrategy(TestObservations observations)
-        {
-            testObservations = observations;
-        }
-
         public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
             where TEvent : class
         {
-            testObservations.EventsFromStrategy.Enqueue(evt);
+            observations.EventsFromStrategy.Enqueue(evt);
 
             foreach (var observer in eventObservers)
             {
@@ -934,24 +878,12 @@ public sealed class EventObserverTransportTests
         public int Parameter { get; set; }
     }
 
-    private sealed class CustomEventTransport2Client
+    private sealed class CustomEventTransport2Client(
+        TestObservations observations,
+        CustomEventTransport2Publisher publisher,
+        IConquerorEventTransportClientRegistrar transportClientRegistrar,
+        IServiceProvider serviceProvider)
     {
-        private readonly CustomEventTransport2Publisher publisher;
-        private readonly IServiceProvider serviceProvider;
-        private readonly TestObservations testObservations;
-        private readonly IConquerorEventTransportClientRegistrar transportClientRegistrar;
-
-        public CustomEventTransport2Client(TestObservations observations,
-                                           CustomEventTransport2Publisher publisher,
-                                           IConquerorEventTransportClientRegistrar transportClientRegistrar,
-                                           IServiceProvider serviceProvider)
-        {
-            testObservations = observations;
-            this.publisher = publisher;
-            this.transportClientRegistrar = transportClientRegistrar;
-            this.serviceProvider = serviceProvider;
-        }
-
         public async Task Start()
         {
             var registration = await transportClientRegistrar.RegisterTransportClient<CustomEventObserverTransport2Configuration, CustomEventTransport2Attribute>(builder => builder.UseSequentialAsDefault())
@@ -959,7 +891,7 @@ public sealed class EventObserverTransportTests
 
             foreach (var transportClientRegistration in registration.RelevantObservers)
             {
-                testObservations.ObservedTransportRegistrations.Enqueue((GetType(),
+                observations.ObservedTransportRegistrations.Enqueue((GetType(),
                                                                          transportClientRegistration.EventType,
                                                                          transportClientRegistration.ConfigurationAttribute,
                                                                          transportClientRegistration.Configuration));
@@ -969,7 +901,7 @@ public sealed class EventObserverTransportTests
 
             publisher.OnEvent += async (evt, resetEvent) =>
             {
-                testObservations.EventsFromClient.Enqueue((GetType(), evt));
+                observations.EventsFromClient.Enqueue((GetType(), evt));
                 await registration.Dispatcher.DispatchEvent(evt, observersToDispatchTo, serviceProvider);
                 resetEvent.Set();
             };

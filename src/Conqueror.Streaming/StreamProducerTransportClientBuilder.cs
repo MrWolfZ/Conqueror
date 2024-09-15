@@ -2,15 +2,9 @@ using System;
 
 namespace Conqueror.Streaming;
 
-internal sealed class StreamProducerTransportClientBuilder : IStreamProducerTransportClientBuilder
+internal sealed class StreamProducerTransportClientBuilder(IServiceProvider serviceProvider, Type requestType) : IStreamProducerTransportClientBuilder
 {
-    public StreamProducerTransportClientBuilder(IServiceProvider serviceProvider, Type requestType)
-    {
-        ServiceProvider = serviceProvider;
-        RequestType = requestType;
-    }
+    public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    public IServiceProvider ServiceProvider { get; }
-
-    public Type RequestType { get; }
+    public Type RequestType { get; } = requestType;
 }

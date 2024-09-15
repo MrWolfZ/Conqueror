@@ -7,21 +7,12 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing;
 
-internal sealed class InMemoryEventPublishingConfiguredStrategy
+internal sealed class InMemoryEventPublishingConfiguredStrategy(
+    IConquerorInMemoryEventPublishingStrategy defaultStrategy,
+    Dictionary<Type, IConquerorInMemoryEventPublishingStrategy> strategyByEventType,
+    IReadOnlyCollection<EventObserverRegistration> observerRegistrations)
 {
-    private readonly IConquerorInMemoryEventPublishingStrategy defaultStrategy;
-    private readonly IReadOnlyCollection<EventObserverRegistration> observerRegistrations;
     private readonly ConcurrentDictionary<Type, IReadOnlyCollection<(Type EventType, EventObserverRegistration Registration)>> observerRegistrationsByEventType = new();
-    private readonly Dictionary<Type, IConquerorInMemoryEventPublishingStrategy> strategyByEventType;
-
-    public InMemoryEventPublishingConfiguredStrategy(IConquerorInMemoryEventPublishingStrategy defaultStrategy,
-                                                     Dictionary<Type, IConquerorInMemoryEventPublishingStrategy> strategyByEventType,
-                                                     IReadOnlyCollection<EventObserverRegistration> observerRegistrations)
-    {
-        this.defaultStrategy = defaultStrategy;
-        this.strategyByEventType = strategyByEventType;
-        this.observerRegistrations = observerRegistrations;
-    }
 
     public Task DispatchEvent<TEvent>(TEvent evt, ISet<ConquerorEventObserverId> observersToDispatchTo, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         where TEvent : class

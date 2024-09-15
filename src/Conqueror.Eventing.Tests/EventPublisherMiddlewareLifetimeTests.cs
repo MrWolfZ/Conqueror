@@ -834,15 +834,9 @@ public sealed class EventPublisherMiddlewareLifetimeTests
 
     private sealed record TestEvent;
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>
+    private sealed class TestEventObserver(TestObservations observations) : IEventObserver<TestEvent>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserver(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -852,15 +846,9 @@ public sealed class EventPublisherMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventPublisherMiddleware : IEventPublisherMiddleware
+    private sealed class TestEventPublisherMiddleware(TestObservations observations) : IEventPublisherMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventPublisherMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
@@ -875,15 +863,9 @@ public sealed class EventPublisherMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventPublisherMiddleware2 : IEventPublisherMiddleware
+    private sealed class TestEventPublisherMiddleware2(TestObservations observations) : IEventPublisherMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventPublisherMiddleware2(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
@@ -898,15 +880,9 @@ public sealed class EventPublisherMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventPublisherRetryMiddleware : IEventPublisherMiddleware
+    private sealed class TestEventPublisherRetryMiddleware(TestObservations observations) : IEventPublisherMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventPublisherRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
@@ -922,15 +898,9 @@ public sealed class EventPublisherMiddlewareLifetimeTests
         }
     }
 
-    private sealed class DependencyResolvedDuringMiddlewareExecution
+    private sealed class DependencyResolvedDuringMiddlewareExecution(TestObservations observations)
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public DependencyResolvedDuringMiddlewareExecution(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public void Execute()
         {

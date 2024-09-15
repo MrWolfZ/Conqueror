@@ -681,24 +681,13 @@ public sealed class QueryHttpEndpointTests : TestBase
     }
 
     [ApiController]
-    private sealed class TestHttpQueryController : ControllerBase
+    private sealed class TestHttpQueryController(
+        IQueryHandler<TestQuery, TestQueryResponse> queryHandler,
+        IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler,
+        IQueryHandler<TestPostQuery, TestQueryResponse> postQueryHandler,
+        IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse> postQueryWithoutPayloadHandler)
+        : ControllerBase
     {
-        private readonly IQueryHandler<TestPostQuery, TestQueryResponse> postQueryHandler;
-        private readonly IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse> postQueryWithoutPayloadHandler;
-        private readonly IQueryHandler<TestQuery, TestQueryResponse> queryHandler;
-        private readonly IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler;
-
-        public TestHttpQueryController(IQueryHandler<TestQuery, TestQueryResponse> queryHandler,
-                                       IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler,
-                                       IQueryHandler<TestPostQuery, TestQueryResponse> postQueryHandler,
-                                       IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse> postQueryWithoutPayloadHandler)
-        {
-            this.queryHandler = queryHandler;
-            this.queryWithoutPayloadHandler = queryWithoutPayloadHandler;
-            this.postQueryHandler = postQueryHandler;
-            this.postQueryWithoutPayloadHandler = postQueryWithoutPayloadHandler;
-        }
-
         [HttpGet("/api/custom/queries/test")]
         public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
         {

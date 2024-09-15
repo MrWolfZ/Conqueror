@@ -17,17 +17,12 @@ using Conqueror.Streaming.Transport.Http.Common;
 
 namespace Conqueror.Streaming.Transport.Http.Client;
 
-internal sealed class HttpStreamProducerTransportClient : IStreamProducerTransportClient
+internal sealed class HttpStreamProducerTransportClient(
+    ResolvedHttpClientOptions options,
+    IConquerorContextAccessor conquerorContextAccessor)
+    : IStreamProducerTransportClient
 {
-    private readonly IConquerorContextAccessor conquerorContextAccessor;
-
-    public HttpStreamProducerTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor)
-    {
-        this.conquerorContextAccessor = conquerorContextAccessor;
-        Options = options;
-    }
-
-    public ResolvedHttpClientOptions Options { get; }
+    public ResolvedHttpClientOptions Options { get; } = options;
 
     public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
                                                                          IServiceProvider serviceProvider,

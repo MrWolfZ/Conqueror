@@ -270,16 +270,9 @@ public abstract class CommandClientFactoryTests
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    private sealed class TestCommandMiddleware<TCommand, TResponse>(TestObservations observations) : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
     {
-        private readonly TestObservations observations;
-
-        public TestCommandMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
@@ -289,15 +282,8 @@ public abstract class CommandClientFactoryTests
         }
     }
 
-    private sealed class TestCommandTransport : ICommandTransportClient
+    private sealed class TestCommandTransport(TestObservations responses) : ICommandTransportClient
     {
-        private readonly TestObservations responses;
-
-        public TestCommandTransport(TestObservations responses)
-        {
-            this.responses = responses;
-        }
-
         public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,

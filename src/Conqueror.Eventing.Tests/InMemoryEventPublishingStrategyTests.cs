@@ -1378,146 +1378,122 @@ public sealed class InMemoryEventPublishingStrategyTests
         public int Payload { get; init; }
     }
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>,
-                                             IEventObserver<TestEvent2>
+    private sealed class TestEventObserver(
+        TestObservations observations,
+        Func<TestEventObserver, CancellationToken, Task>? onEvent = null)
+        : IEventObserver<TestEvent>,
+                                                                                                                                              IEventObserver<TestEvent2>
     {
-        private readonly Func<TestEventObserver, CancellationToken, Task>? onEvent;
-        private readonly TestObservations testObservations;
-
-        public TestEventObserver(TestObservations observations, Func<TestEventObserver, CancellationToken, Task>? onEvent = null)
-        {
-            testObservations = observations;
-            this.onEvent = onEvent;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
 
             if (onEvent is not null)
             {
                 await onEvent(this, cancellationToken);
             }
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
 
         public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
 
             if (onEvent is not null)
             {
                 await onEvent(this, cancellationToken);
             }
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
     }
 
-    private sealed class TestEventObserver2 : IEventObserver<TestEvent>,
-                                              IEventObserver<TestEvent2>
+    private sealed class TestEventObserver2(
+        TestObservations observations,
+        Func<TestEventObserver2, CancellationToken, Task>? onEvent = null)
+        : IEventObserver<TestEvent>,
+                                                                                                                                                IEventObserver<TestEvent2>
     {
-        private readonly Func<TestEventObserver2, CancellationToken, Task>? onEvent;
-        private readonly TestObservations testObservations;
-
-        public TestEventObserver2(TestObservations observations, Func<TestEventObserver2, CancellationToken, Task>? onEvent = null)
-        {
-            testObservations = observations;
-            this.onEvent = onEvent;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
 
             if (onEvent is not null)
             {
                 await onEvent(this, cancellationToken);
             }
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
 
         public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
 
             if (onEvent is not null)
             {
                 await onEvent(this, cancellationToken);
             }
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
     }
 
-    private sealed class TestEventObserver3 : IEventObserver<TestEvent>,
-                                              IEventObserver<TestEvent2>
+    private sealed class TestEventObserver3(
+        TestObservations observations,
+        Func<TestEventObserver3, CancellationToken, Task>? onEvent = null)
+        : IEventObserver<TestEvent>,
+                                                                                                                                                IEventObserver<TestEvent2>
     {
-        private readonly Func<TestEventObserver3, CancellationToken, Task>? onEvent;
-        private readonly TestObservations testObservations;
-
-        public TestEventObserver3(TestObservations observations, Func<TestEventObserver3, CancellationToken, Task>? onEvent = null)
-        {
-            testObservations = observations;
-            this.onEvent = onEvent;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
 
             if (onEvent is not null)
             {
                 await onEvent(this, cancellationToken);
             }
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
 
         public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.Start));
 
             if (onEvent is not null)
             {
                 await onEvent(this, cancellationToken);
             }
 
-            testObservations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
+            observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
     }
 
-    private sealed class TestPublishingStrategy1 : IConquerorInMemoryEventPublishingStrategy
+    private sealed class TestPublishingStrategy1(
+        TestObservations observations,
+        Exception? exceptionToThrow = null)
+        : IConquerorInMemoryEventPublishingStrategy
     {
-        private readonly Exception? exceptionToThrow;
-        private readonly TestObservations testObservations;
-
-        public TestPublishingStrategy1(TestObservations observations, Exception? exceptionToThrow = null)
-        {
-            testObservations = observations;
-            this.exceptionToThrow = exceptionToThrow;
-        }
-
         public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
             where TEvent : class
         {
-            testObservations.ObservedStrategyTypes.Enqueue(GetType());
-            testObservations.EventsFromCustomStrategy.Enqueue(evt);
-            testObservations.CancellationTokensFromCustomStrategy.Enqueue(cancellationToken);
+            observations.ObservedStrategyTypes.Enqueue(GetType());
+            observations.EventsFromCustomStrategy.Enqueue(evt);
+            observations.CancellationTokensFromCustomStrategy.Enqueue(cancellationToken);
 
             foreach (var observer in eventObservers)
             {
@@ -1531,21 +1507,14 @@ public sealed class InMemoryEventPublishingStrategyTests
         }
     }
 
-    private sealed class TestPublishingStrategy2 : IConquerorInMemoryEventPublishingStrategy
+    private sealed class TestPublishingStrategy2(TestObservations observations) : IConquerorInMemoryEventPublishingStrategy
     {
-        private readonly TestObservations testObservations;
-
-        public TestPublishingStrategy2(TestObservations observations)
-        {
-            testObservations = observations;
-        }
-
         public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
             where TEvent : class
         {
-            testObservations.ObservedStrategyTypes.Enqueue(GetType());
-            testObservations.EventsFromCustomStrategy.Enqueue(evt);
-            testObservations.CancellationTokensFromCustomStrategy.Enqueue(cancellationToken);
+            observations.ObservedStrategyTypes.Enqueue(GetType());
+            observations.EventsFromCustomStrategy.Enqueue(evt);
+            observations.CancellationTokensFromCustomStrategy.Enqueue(cancellationToken);
 
             foreach (var observer in eventObservers)
             {

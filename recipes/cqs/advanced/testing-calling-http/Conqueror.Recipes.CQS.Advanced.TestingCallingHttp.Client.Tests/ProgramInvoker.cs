@@ -35,15 +35,9 @@ public static class ProgramInvoker
         }
     }
 
-    private sealed class HostingListener : IObserver<DiagnosticListener>, IObserver<KeyValuePair<string, object?>>
+    private sealed class HostingListener(Action<IHostBuilder> configure) : IObserver<DiagnosticListener>, IObserver<KeyValuePair<string, object?>>
     {
-        private readonly Action<IHostBuilder> configure;
         private IDisposable? disposable;
-
-        public HostingListener(Action<IHostBuilder> configure)
-        {
-            this.configure = configure;
-        }
 
         public void OnError(Exception error) => throw error;
 

@@ -228,15 +228,9 @@ public sealed class StreamProducerLifetimeTests
 
     private sealed record TestItem2;
 
-    private sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
+    private sealed class TestStreamProducer(TestObservations observations) : IStreamProducer<TestStreamingRequest, TestItem>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestStreamProducer(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -247,16 +241,10 @@ public sealed class StreamProducerLifetimeTests
         }
     }
 
-    private sealed class TestStreamProducerWithMultipleInterfaces : IStreamProducer<TestStreamingRequest, TestItem>,
-                                                                    IStreamProducer<TestStreamingRequest2, TestItem2>
+    private sealed class TestStreamProducerWithMultipleInterfaces(TestObservations observations) : IStreamProducer<TestStreamingRequest, TestItem>,
+                                                                                                   IStreamProducer<TestStreamingRequest2, TestItem2>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestStreamProducerWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {

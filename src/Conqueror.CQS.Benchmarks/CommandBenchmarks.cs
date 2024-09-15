@@ -11,14 +11,9 @@ public class CommandBenchmarks
     [Params(100, 1000, 10000)]
     public static int NumOfMiddlewares { get; set; }
 
-    private readonly ICommandHandler<TestCommand, TestResponse> handler;
-
-    public CommandBenchmarks()
-    {
-        handler = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
-                                         .BuildServiceProvider()
-                                         .GetRequiredService<ICommandHandler<TestCommand, TestResponse>>();
-    }
+    private readonly ICommandHandler<TestCommand, TestResponse> handler = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
+                                                                                                 .BuildServiceProvider()
+                                                                                                 .GetRequiredService<ICommandHandler<TestCommand, TestResponse>>();
 
     [Benchmark]
     public void ExecuteCommand()

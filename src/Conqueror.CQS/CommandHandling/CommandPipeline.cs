@@ -4,17 +4,12 @@ using System.Linq;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class CommandPipeline<TCommand, TResponse> : ICommandPipeline<TCommand, TResponse>
+internal sealed class CommandPipeline<TCommand, TResponse>(IServiceProvider serviceProvider) : ICommandPipeline<TCommand, TResponse>
     where TCommand : class
 {
     private readonly List<ICommandMiddleware<TCommand, TResponse>> middlewares = [];
 
-    public CommandPipeline(IServiceProvider serviceProvider)
-    {
-        ServiceProvider = serviceProvider;
-    }
-
-    public IServiceProvider ServiceProvider { get; }
+    public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public ICommandPipeline<TCommand, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : ICommandMiddleware<TCommand, TResponse>

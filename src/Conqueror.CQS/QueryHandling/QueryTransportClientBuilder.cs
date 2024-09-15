@@ -2,18 +2,11 @@ using System;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class QueryTransportClientBuilder : IQueryTransportClientBuilder
+internal sealed class QueryTransportClientBuilder(IServiceProvider serviceProvider, Type queryType, Type responseType) : IQueryTransportClientBuilder
 {
-    public QueryTransportClientBuilder(IServiceProvider serviceProvider, Type queryType, Type responseType)
-    {
-        ServiceProvider = serviceProvider;
-        QueryType = queryType;
-        ResponseType = responseType;
-    }
+    public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    public IServiceProvider ServiceProvider { get; }
+    public Type QueryType { get; } = queryType;
 
-    public Type QueryType { get; }
-
-    public Type ResponseType { get; }
+    public Type ResponseType { get; } = responseType;
 }

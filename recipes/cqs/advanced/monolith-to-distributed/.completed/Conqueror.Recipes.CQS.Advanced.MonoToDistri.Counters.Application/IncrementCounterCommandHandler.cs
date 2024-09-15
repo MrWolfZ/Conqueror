@@ -2,21 +2,12 @@ using Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.Contracts;
 
 namespace Conqueror.Recipes.CQS.Advanced.MonoToDistri.Counters.Application;
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
+internal sealed class IncrementCounterCommandHandler(
+    ICountersReadRepository countersReadRepository,
+    ICountersWriteRepository countersWriteRepository,
+    ISetMostRecentlyIncrementedCounterForUserCommandHandler setMostRecentlyIncrementedCounterForUserCommandHandler)
+    : IIncrementCounterCommandHandler
 {
-    private readonly ICountersReadRepository countersReadRepository;
-    private readonly ICountersWriteRepository countersWriteRepository;
-    private readonly ISetMostRecentlyIncrementedCounterForUserCommandHandler setMostRecentlyIncrementedCounterForUserCommandHandler;
-
-    public IncrementCounterCommandHandler(ICountersReadRepository countersReadRepository,
-                                          ICountersWriteRepository countersWriteRepository,
-                                          ISetMostRecentlyIncrementedCounterForUserCommandHandler setMostRecentlyIncrementedCounterForUserCommandHandler)
-    {
-        this.countersReadRepository = countersReadRepository;
-        this.countersWriteRepository = countersWriteRepository;
-        this.setMostRecentlyIncrementedCounterForUserCommandHandler = setMostRecentlyIncrementedCounterForUserCommandHandler;
-    }
-
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterCommand, IncrementCounterCommandResponse> pipeline) => pipeline.UseDefault();
 
     public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)

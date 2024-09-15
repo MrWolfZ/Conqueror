@@ -157,15 +157,8 @@ public abstract class StreamProducerClientFunctionalityTests
 
     private sealed record TestItem(int Payload);
 
-    private sealed class TestStreamProducerTransport : IStreamProducerTransportClient
+    private sealed class TestStreamProducerTransport(TestObservations observations) : IStreamProducerTransportClient
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerTransport(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
                                                                              IServiceProvider serviceProvider,
                                                                              [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -182,15 +175,8 @@ public abstract class StreamProducerClientFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestStreamProducerTransport : IStreamProducerTransportClient
+    private sealed class ThrowingTestStreamProducerTransport(Exception exception) : IStreamProducerTransportClient
     {
-        private readonly Exception exception;
-
-        public ThrowingTestStreamProducerTransport(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
                                                                              IServiceProvider serviceProvider,
                                                                              [EnumeratorCancellation] CancellationToken cancellationToken)

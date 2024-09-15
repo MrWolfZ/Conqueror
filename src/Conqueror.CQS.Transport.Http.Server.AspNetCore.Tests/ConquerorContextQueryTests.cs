@@ -588,104 +588,67 @@ public sealed class ConquerorContextQueryTests : TestBase
 
     public sealed record NestedTestQuery;
 
-    public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    public sealed class TestQueryHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.FromResult(new TestQueryResponse());
         }
     }
 
-    public sealed class TestPostQueryHandler : IQueryHandler<TestPostQuery, TestQueryResponse>
+    public sealed class TestPostQueryHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : IQueryHandler<TestPostQuery, TestQueryResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestPostQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                    TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.FromResult(new TestQueryResponse());
         }
     }
 
-    public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
+    public sealed class TestQueryHandlerWithoutPayload(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestQueryHandlerWithoutPayload(IConquerorContextAccessor conquerorContextAccessor,
-                                              TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.FromResult(new TestQueryResponse());
         }
     }
 
-    public sealed class TestQueryWithNestedQueryHandler : IQueryHandler<TestQueryWithNestedQuery, TestQueryResponse>
+    public sealed class TestQueryWithNestedQueryHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        IQueryHandler<NestedTestQuery, TestQueryResponse> nestedHandler,
+        TestObservations observations)
+        : IQueryHandler<TestQueryWithNestedQuery, TestQueryResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IQueryHandler<NestedTestQuery, TestQueryResponse> nestedHandler;
-        private readonly TestObservations testObservations;
-
-        public TestQueryWithNestedQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                               IQueryHandler<NestedTestQuery, TestQueryResponse> nestedHandler,
-                                               TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-            this.nestedHandler = nestedHandler;
-        }
-
         public Task<TestQueryResponse> ExecuteQuery(TestQueryWithNestedQuery query, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return nestedHandler.ExecuteQuery(new(), cancellationToken);
         }
     }
 
-    public sealed class NestedTestQueryHandler : IQueryHandler<NestedTestQuery, TestQueryResponse>
+    public sealed class NestedTestQueryHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : IQueryHandler<NestedTestQuery, TestQueryResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public NestedTestQueryHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                      TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.FromResult(new TestQueryResponse());
         }
@@ -707,17 +670,11 @@ public sealed class ConquerorContextQueryTests : TestBase
     }
 
     [ApiController]
-    private sealed class TestHttpQueryController : ControllerBase
+    private sealed class TestHttpQueryController(
+        IQueryHandler<TestQuery, TestQueryResponse> queryHandler,
+        IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler)
+        : ControllerBase
     {
-        private readonly IQueryHandler<TestQuery, TestQueryResponse> queryHandler;
-        private readonly IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler;
-
-        public TestHttpQueryController(IQueryHandler<TestQuery, TestQueryResponse> queryHandler, IQueryHandler<TestQueryWithoutPayload, TestQueryResponse> queryWithoutPayloadHandler)
-        {
-            this.queryHandler = queryHandler;
-            this.queryWithoutPayloadHandler = queryWithoutPayloadHandler;
-        }
-
         [HttpGet("/api/custom/queries/test")]
         public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
         {
@@ -743,17 +700,11 @@ public sealed class ConquerorContextQueryTests : TestBase
         protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpQueryController);
     }
 
-    private sealed class DisposableActivity : IDisposable
+    private sealed class DisposableActivity(Activity activity, params IDisposable[] disposables) : IDisposable
     {
-        private readonly IReadOnlyCollection<IDisposable> disposables;
+        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
 
-        public DisposableActivity(Activity activity, params IDisposable[] disposables)
-        {
-            Activity = activity;
-            this.disposables = disposables;
-        }
-
-        public Activity Activity { get; }
+        public Activity Activity { get; } = activity;
 
         public string TraceId => Activity.TraceId.ToString();
 

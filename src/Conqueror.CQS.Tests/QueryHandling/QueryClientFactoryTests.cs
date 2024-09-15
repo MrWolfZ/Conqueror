@@ -225,16 +225,9 @@ public abstract class QueryClientFactoryTests
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
-    where TQuery : class
+    private sealed class TestQueryMiddleware<TQuery, TResponse>(TestObservations observations) : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        private readonly TestObservations observations;
-
-        public TestQueryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
@@ -244,15 +237,8 @@ public abstract class QueryClientFactoryTests
         }
     }
 
-    private sealed class TestQueryTransport : IQueryTransportClient
+    private sealed class TestQueryTransport(TestObservations responses) : IQueryTransportClient
     {
-        private readonly TestObservations responses;
-
-        public TestQueryTransport(TestObservations responses)
-        {
-            this.responses = responses;
-        }
-
         public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
 
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,

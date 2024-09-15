@@ -440,15 +440,9 @@ public sealed class EventObserverRegistrationTests
 
     public sealed record TestEventForAssemblyScanning;
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>
+    private sealed class TestEventObserver(TestObservations observations) : IEventObserver<TestEvent>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserver(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -458,15 +452,9 @@ public sealed class EventObserverRegistrationTests
         }
     }
 
-    private sealed class TestEventObserverWithMultipleInterfaces : IEventObserver<TestEvent>, IEventObserver<TestEvent2>
+    private sealed class TestEventObserverWithMultipleInterfaces(TestObservations observations) : IEventObserver<TestEvent>, IEventObserver<TestEvent2>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserverWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {

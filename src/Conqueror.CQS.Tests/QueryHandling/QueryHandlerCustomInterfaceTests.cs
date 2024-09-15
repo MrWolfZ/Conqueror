@@ -231,15 +231,8 @@ public sealed class QueryHandlerCustomInterfaceTests
         void ExtraMethod();
     }
 
-    private sealed class TestQueryHandler : ITestQueryHandler
+    private sealed class TestQueryHandler(TestObservations observations) : ITestQueryHandler
     {
-        private readonly TestObservations observations;
-
-        public TestQueryHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -250,17 +243,10 @@ public sealed class QueryHandlerCustomInterfaceTests
         }
     }
 
-    private sealed class TestQueryHandlerWithMultipleInterfaces : ITestQueryHandler,
-                                                                  ITestQueryHandler2,
-                                                                  ICommandHandler<TestCommand, TestCommandResponse>
+    private sealed class TestQueryHandlerWithMultipleInterfaces(TestObservations observations) : ITestQueryHandler,
+                                                                                                 ITestQueryHandler2,
+                                                                                                 ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly TestObservations observations;
-
-        public TestQueryHandlerWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -287,15 +273,8 @@ public sealed class QueryHandlerCustomInterfaceTests
         }
     }
 
-    private sealed class GenericTestQueryHandler<T> : IGenericTestQueryHandler<T>
+    private sealed class GenericTestQueryHandler<T>(TestObservations observations) : IGenericTestQueryHandler<T>
     {
-        private readonly TestObservations observations;
-
-        public GenericTestQueryHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<GenericTestQueryResponse<T>> ExecuteQuery(GenericTestQuery<T> query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -305,15 +284,8 @@ public sealed class QueryHandlerCustomInterfaceTests
         }
     }
 
-    private sealed class ThrowingQueryHandler : IThrowingQueryHandler
+    private sealed class ThrowingQueryHandler(Exception exception) : IThrowingQueryHandler
     {
-        private readonly Exception exception;
-
-        public ThrowingQueryHandler(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

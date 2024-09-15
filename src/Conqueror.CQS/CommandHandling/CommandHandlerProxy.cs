@@ -7,22 +7,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class CommandHandlerProxy<TCommand, TResponse> : ICommandHandler<TCommand, TResponse>
+internal sealed class CommandHandlerProxy<TCommand, TResponse>(
+    IServiceProvider serviceProvider,
+    CommandTransportClientFactory transportClientFactory,
+    Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline)
+    : ICommandHandler<TCommand, TResponse>
     where TCommand : class
 {
-    private readonly Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline;
-    private readonly IServiceProvider serviceProvider;
-    private readonly CommandTransportClientFactory transportClientFactory;
-
-    public CommandHandlerProxy(IServiceProvider serviceProvider,
-                               CommandTransportClientFactory transportClientFactory,
-                               Action<ICommandPipeline<TCommand, TResponse>>? configurePipeline)
-    {
-        this.serviceProvider = serviceProvider;
-        this.transportClientFactory = transportClientFactory;
-        this.configurePipeline = configurePipeline;
-    }
-
     public async Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();

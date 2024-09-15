@@ -939,15 +939,9 @@ public sealed class EventObserverMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithRetryMiddleware(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserverWithRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -976,15 +970,9 @@ public sealed class EventObserverMiddlewareLifetimeTests
                                                                                                 .Execute();
     }
 
-    private sealed class TestEventObserverMiddleware : IEventObserverMiddleware
+    private sealed class TestEventObserverMiddleware(TestObservations observations) : IEventObserverMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserverMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
@@ -999,15 +987,9 @@ public sealed class EventObserverMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventObserverMiddleware2 : IEventObserverMiddleware
+    private sealed class TestEventObserverMiddleware2(TestObservations observations) : IEventObserverMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserverMiddleware2(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
@@ -1022,15 +1004,9 @@ public sealed class EventObserverMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventObserverRetryMiddleware : IEventObserverMiddleware
+    private sealed class TestEventObserverRetryMiddleware(TestObservations observations) : IEventObserverMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserverRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
@@ -1046,15 +1022,9 @@ public sealed class EventObserverMiddlewareLifetimeTests
         }
     }
 
-    private sealed class DependencyResolvedDuringMiddlewareExecution
+    private sealed class DependencyResolvedDuringMiddlewareExecution(TestObservations observations)
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public DependencyResolvedDuringMiddlewareExecution(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public void Execute()
         {
@@ -1063,15 +1033,9 @@ public sealed class EventObserverMiddlewareLifetimeTests
         }
     }
 
-    private sealed class DependencyResolvedDuringPipelineBuild
+    private sealed class DependencyResolvedDuringPipelineBuild(TestObservations observations)
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public DependencyResolvedDuringPipelineBuild(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public void Execute()
         {

@@ -7,15 +7,8 @@ public interface IDeleteCounterCommandHandler : ICommandHandler<DeleteCounterCom
 {
 }
 
-internal sealed class DeleteCounterCommandHandler : IDeleteCounterCommandHandler
+internal sealed class DeleteCounterCommandHandler(CountersRepository repository) : IDeleteCounterCommandHandler
 {
-    private readonly CountersRepository repository;
-
-    public DeleteCounterCommandHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public async Task ExecuteCommand(DeleteCounterCommand command, CancellationToken cancellationToken = default)
     {
         await repository.DeleteCounter(command.CounterName);

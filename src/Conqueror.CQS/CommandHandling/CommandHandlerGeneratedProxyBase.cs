@@ -4,16 +4,11 @@ using System.Threading.Tasks;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal abstract class CommandHandlerGeneratedProxyBase<TCommand, TResponse> : ICommandHandler<TCommand, TResponse>
+internal abstract class CommandHandlerGeneratedProxyBase<TCommand, TResponse>(
+    ICommandHandler<TCommand, TResponse> target)
+    : ICommandHandler<TCommand, TResponse>
     where TCommand : class
 {
-    private readonly ICommandHandler<TCommand, TResponse> target;
-
-    protected CommandHandlerGeneratedProxyBase(ICommandHandler<TCommand, TResponse> target)
-    {
-        this.target = target;
-    }
-
     public Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
     {
         return target.ExecuteCommand(command, cancellationToken);
@@ -25,16 +20,9 @@ internal abstract class CommandHandlerGeneratedProxyBase<TCommand, TResponse> : 
     }
 }
 
-internal abstract class CommandHandlerGeneratedProxyBase<TCommand> : ICommandHandler<TCommand>
+internal abstract class CommandHandlerGeneratedProxyBase<TCommand>(ICommandHandler<TCommand> target) : ICommandHandler<TCommand>
     where TCommand : class
 {
-    private readonly ICommandHandler<TCommand> target;
-
-    protected CommandHandlerGeneratedProxyBase(ICommandHandler<TCommand> target)
-    {
-        this.target = target;
-    }
-
     public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
     {
         return target.ExecuteCommand(command, cancellationToken);

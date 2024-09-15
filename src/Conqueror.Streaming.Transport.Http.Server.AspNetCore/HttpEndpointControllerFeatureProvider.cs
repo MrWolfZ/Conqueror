@@ -5,15 +5,10 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
-internal sealed class HttpEndpointControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
+internal sealed class HttpEndpointControllerFeatureProvider(
+    IReadOnlyCollection<HttpEndpoint> endpoints)
+    : IApplicationFeatureProvider<ControllerFeature>
 {
-    private readonly IReadOnlyCollection<HttpEndpoint> endpoints;
-
-    public HttpEndpointControllerFeatureProvider(IReadOnlyCollection<HttpEndpoint> endpoints)
-    {
-        this.endpoints = endpoints;
-    }
-
     public void PopulateFeature(IEnumerable<ApplicationPart> parts,
                                 ControllerFeature feature)
     {

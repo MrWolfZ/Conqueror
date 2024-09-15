@@ -313,15 +313,9 @@ public sealed class CommandHandlerLifetimeTests
 
     private sealed record TestQueryResponse;
 
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    private sealed class TestCommandHandler(TestObservations observations) : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestCommandHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
@@ -332,15 +326,9 @@ public sealed class CommandHandlerLifetimeTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+    private sealed class TestCommandHandlerWithoutResponse(TestObservations observations) : ICommandHandler<TestCommandWithoutResponse>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestCommandHandlerWithoutResponse(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
@@ -350,18 +338,12 @@ public sealed class CommandHandlerLifetimeTests
         }
     }
 
-    private sealed class TestCommandHandlerWithMultipleInterfaces : ICommandHandler<TestCommand, TestCommandResponse>,
-                                                                    ICommandHandler<TestCommand2, TestCommandResponse2>,
-                                                                    ICommandHandler<TestCommandWithoutResponse>,
-                                                                    IQueryHandler<TestQuery, TestQueryResponse>
+    private sealed class TestCommandHandlerWithMultipleInterfaces(TestObservations observations) : ICommandHandler<TestCommand, TestCommandResponse>,
+                                                                                                   ICommandHandler<TestCommand2, TestCommandResponse2>,
+                                                                                                   ICommandHandler<TestCommandWithoutResponse>,
+                                                                                                   IQueryHandler<TestQuery, TestQueryResponse>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestCommandHandlerWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {

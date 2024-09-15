@@ -158,25 +158,13 @@ public sealed class StreamProducerMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestStreamProducerMiddlewareConfiguration
+    private sealed class TestStreamProducerMiddlewareConfiguration(int parameter)
     {
-        public TestStreamProducerMiddlewareConfiguration(int parameter)
-        {
-            Parameter = parameter;
-        }
-
-        public int Parameter { get; set; }
+        public int Parameter { get; set; } = parameter;
     }
 
-    private sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
+    private sealed class TestStreamProducerMiddleware(TestObservations observations) : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx)
             where TRequest : class
         {

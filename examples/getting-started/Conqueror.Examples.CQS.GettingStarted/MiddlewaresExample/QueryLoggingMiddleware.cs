@@ -11,18 +11,12 @@ public sealed record QueryLoggingMiddlewareConfiguration
     public bool LogResponsePayload { get; set; } = true;
 }
 
-public sealed class QueryLoggingMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
+public sealed class QueryLoggingMiddleware<TQuery, TResponse>(
+    ILoggerFactory loggerFactory,
+    JsonSerializerOptions jsonSerializerOptions)
+    : IQueryMiddleware<TQuery, TResponse>
     where TQuery : class
 {
-    private readonly JsonSerializerOptions jsonSerializerOptions;
-    private readonly ILoggerFactory loggerFactory;
-
-    public QueryLoggingMiddleware(ILoggerFactory loggerFactory, JsonSerializerOptions jsonSerializerOptions)
-    {
-        this.loggerFactory = loggerFactory;
-        this.jsonSerializerOptions = jsonSerializerOptions;
-    }
-
     public required QueryLoggingMiddlewareConfiguration Configuration { get; init; }
 
     public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)

@@ -8,19 +8,15 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventTransportClientRegistrar : IConquerorEventTransportClientRegistrar, IDisposable
+internal sealed class EventTransportClientRegistrar(
+    IServiceProvider serviceProvider,
+    IEnumerable<EventObserverRegistration> registrations)
+    : IConquerorEventTransportClientRegistrar, IDisposable
 {
-    private readonly IReadOnlyCollection<EventObserverRegistration> registrations;
+    private readonly IReadOnlyCollection<EventObserverRegistration> registrations = registrations.ToList();
     private readonly SemaphoreSlim semaphore = new(1);
-    private readonly IServiceProvider serviceProvider;
 
     private Dictionary<ConquerorEventObserverId, IReadOnlyCollection<IEventObserverTransportConfiguration>>? transportConfigurationsByObserverId;
-
-    public EventTransportClientRegistrar(IServiceProvider serviceProvider, IEnumerable<EventObserverRegistration> registrations)
-    {
-        this.serviceProvider = serviceProvider;
-        this.registrations = registrations.ToList();
-    }
 
     public async Task<ConquerorEventTransportClientRegistration<TObserverTransportConfiguration, TConfigurationAttribute>> RegisterTransportClient<TObserverTransportConfiguration, TConfigurationAttribute>(
         Action<IConquerorInMemoryEventPublishingStrategyBuilder> inMemoryPublishingStrategyConfiguration)
@@ -114,15 +110,9 @@ internal sealed class EventTransportClientRegistrar : IConquerorEventTransportCl
         return transportConfigurationsByObserverId;
     }
 
-    private sealed class InMemoryDispatcher : IConquerorEventTransportClientDispatcher
+    private sealed class InMemoryDispatcher(InMemoryEventPublishingConfiguredStrategy strategy) : IConquerorEventTransportClientDispatcher
     {
         private readonly ConcurrentDictionary<Type, IConquerorEventTransportClientDispatcher> genericDispatchers = new();
-        private readonly InMemoryEventPublishingConfiguredStrategy strategy;
-
-        public InMemoryDispatcher(InMemoryEventPublishingConfiguredStrategy strategy)
-        {
-            this.strategy = strategy;
-        }
 
         public Task DispatchEvent(object evt, ISet<ConquerorEventObserverId> observersToDispatchTo, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         {
@@ -136,16 +126,9 @@ internal sealed class EventTransportClientRegistrar : IConquerorEventTransportCl
             return (IConquerorEventTransportClientDispatcher)Activator.CreateInstance(dispatcherType, strategy)!;
         }
 
-        private sealed class GenericDispatcher<TEvent> : IConquerorEventTransportClientDispatcher
+        private sealed class GenericDispatcher<TEvent>(InMemoryEventPublishingConfiguredStrategy strategy) : IConquerorEventTransportClientDispatcher
             where TEvent : class
         {
-            private readonly InMemoryEventPublishingConfiguredStrategy strategy;
-
-            public GenericDispatcher(InMemoryEventPublishingConfiguredStrategy strategy)
-            {
-                this.strategy = strategy;
-            }
-
             public Task DispatchEvent(object evt, ISet<ConquerorEventObserverId> observersToDispatchTo, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             {
                 return strategy.DispatchEvent((TEvent)evt, observersToDispatchTo, serviceProvider, cancellationToken);

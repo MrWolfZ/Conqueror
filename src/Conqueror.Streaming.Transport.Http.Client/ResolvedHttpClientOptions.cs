@@ -4,28 +4,20 @@ using System.Text.Json;
 
 namespace Conqueror.Streaming.Transport.Http.Client;
 
-internal sealed class ResolvedHttpClientOptions
+internal sealed class ResolvedHttpClientOptions(
+    ConquerorStreamingWebSocketFactory socketFactory,
+    Uri baseAddress,
+    JsonSerializerOptions? jsonSerializerOptions,
+    IHttpStreamPathConvention? pathConvention,
+    HttpRequestHeaders? headers)
 {
-    public ResolvedHttpClientOptions(ConquerorStreamingWebSocketFactory socketFactory,
-                                     Uri baseAddress,
-                                     JsonSerializerOptions? jsonSerializerOptions,
-                                     IHttpStreamPathConvention? pathConvention,
-                                     HttpRequestHeaders? headers)
-    {
-        SocketFactory = socketFactory;
-        BaseAddress = baseAddress;
-        JsonSerializerOptions = jsonSerializerOptions;
-        PathConvention = pathConvention;
-        Headers = headers;
-    }
+    public ConquerorStreamingWebSocketFactory SocketFactory { get; } = socketFactory;
 
-    public ConquerorStreamingWebSocketFactory SocketFactory { get; }
+    public Uri BaseAddress { get; } = baseAddress;
 
-    public Uri BaseAddress { get; }
+    public JsonSerializerOptions? JsonSerializerOptions { get; } = jsonSerializerOptions;
 
-    public JsonSerializerOptions? JsonSerializerOptions { get; }
+    public IHttpStreamPathConvention? PathConvention { get; } = pathConvention;
 
-    public IHttpStreamPathConvention? PathConvention { get; }
-
-    public HttpRequestHeaders? Headers { get; }
+    public HttpRequestHeaders? Headers { get; } = headers;
 }

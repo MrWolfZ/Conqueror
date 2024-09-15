@@ -230,15 +230,8 @@ public abstract class StreamProducerClientFactoryTests
 
     private sealed record TestStreamProducerMiddlewareConfiguration;
 
-    private sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
+    private sealed class TestStreamProducerMiddleware(TestObservations observations) : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx)
             where TRequest : class
         {
@@ -252,15 +245,8 @@ public abstract class StreamProducerClientFactoryTests
         }
     }
 
-    private sealed class TestStreamProducerTransport : IStreamProducerTransportClient
+    private sealed class TestStreamProducerTransport(TestObservations observations) : IStreamProducerTransportClient
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerTransport(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
                                                                              IServiceProvider serviceProvider,
                                                                              [EnumeratorCancellation] CancellationToken cancellationToken)

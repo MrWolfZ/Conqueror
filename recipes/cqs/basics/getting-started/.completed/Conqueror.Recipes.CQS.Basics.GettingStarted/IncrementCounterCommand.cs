@@ -8,15 +8,8 @@ public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCoun
 {
 }
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
+internal sealed class IncrementCounterCommandHandler(CountersRepository repository) : IIncrementCounterCommandHandler
 {
-    private readonly CountersRepository repository;
-
-    public IncrementCounterCommandHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await GetCounterValue(command.CounterName);

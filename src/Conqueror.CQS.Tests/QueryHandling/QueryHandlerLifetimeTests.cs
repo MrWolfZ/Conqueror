@@ -234,15 +234,9 @@ public sealed class QueryHandlerLifetimeTests
 
     private sealed record TestCommandResponse;
 
-    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    private sealed class TestQueryHandler(TestObservations observations) : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestQueryHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
         {
@@ -253,17 +247,11 @@ public sealed class QueryHandlerLifetimeTests
         }
     }
 
-    private sealed class TestQueryHandlerWithMultipleInterfaces : IQueryHandler<TestQuery, TestQueryResponse>,
-                                                                  IQueryHandler<TestQuery2, TestQueryResponse2>,
-                                                                  ICommandHandler<TestCommand, TestCommandResponse>
+    private sealed class TestQueryHandlerWithMultipleInterfaces(TestObservations observations) : IQueryHandler<TestQuery, TestQueryResponse>,
+                                                                                                 IQueryHandler<TestQuery2, TestQueryResponse2>,
+                                                                                                 ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestQueryHandlerWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
         {

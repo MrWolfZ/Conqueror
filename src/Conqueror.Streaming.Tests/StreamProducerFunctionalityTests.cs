@@ -296,15 +296,8 @@ public sealed class StreamProducerFunctionalityTests
 
     private sealed record GenericTestItem<T>(T Payload);
 
-    private sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
+    private sealed class TestStreamProducer(TestObservations observations) : IStreamProducer<TestStreamingRequest, TestItem>
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducer(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -316,15 +309,8 @@ public sealed class StreamProducerFunctionalityTests
         }
     }
 
-    private sealed class GenericTestStreamProducer<T> : IStreamProducer<GenericTestStreamingRequest<T>, GenericTestItem<T>>
+    private sealed class GenericTestStreamProducer<T>(TestObservations observations) : IStreamProducer<GenericTestStreamingRequest<T>, GenericTestItem<T>>
     {
-        private readonly TestObservations observations;
-
-        public GenericTestStreamProducer(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<GenericTestItem<T>> ExecuteRequest(GenericTestStreamingRequest<T> request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -336,15 +322,8 @@ public sealed class StreamProducerFunctionalityTests
         }
     }
 
-    private sealed class ThrowingStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
+    private sealed class ThrowingStreamProducer(Exception exception) : IStreamProducer<TestStreamingRequest, TestItem>
     {
-        private readonly Exception exception;
-
-        public ThrowingStreamProducer(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();

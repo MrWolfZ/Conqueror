@@ -857,26 +857,19 @@ public class ConquerorContextCommandTests : TestBase
         public int Payload { get; init; }
     }
 
-    public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    public sealed class TestCommandHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                  TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
-            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
+            observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
-            if (testObservations.ShouldAddUpstreamData)
+            if (observations.ShouldAddUpstreamData)
             {
                 foreach (var item in ContextData)
                 {
@@ -889,7 +882,7 @@ public class ConquerorContextCommandTests : TestBase
                 }
             }
 
-            if (testObservations.ShouldAddBidirectionalData)
+            if (observations.ShouldAddBidirectionalData)
             {
                 foreach (var item in ContextData)
                 {
@@ -906,26 +899,19 @@ public class ConquerorContextCommandTests : TestBase
         }
     }
 
-    public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+    public sealed class TestCommandHandlerWithoutResponse(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandHandler<TestCommandWithoutResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor,
-                                                 TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
-            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
+            observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
-            if (testObservations.ShouldAddUpstreamData)
+            if (observations.ShouldAddUpstreamData)
             {
                 foreach (var item in ContextData)
                 {
@@ -938,7 +924,7 @@ public class ConquerorContextCommandTests : TestBase
                 }
             }
 
-            if (testObservations.ShouldAddBidirectionalData)
+            if (observations.ShouldAddBidirectionalData)
             {
                 foreach (var item in ContextData)
                 {
@@ -959,27 +945,18 @@ public class ConquerorContextCommandTests : TestBase
 
     public sealed record OuterTestCommandResponse;
 
-    public sealed class OuterTestCommandHandler : ICommandHandler<OuterTestCommand, OuterTestCommandResponse>
+    public sealed class OuterTestCommandHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations,
+        ICommandHandler<TestCommand, TestCommandResponse> nestedHandler)
+        : ICommandHandler<OuterTestCommand, OuterTestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly ICommandHandler<TestCommand, TestCommandResponse> nestedHandler;
-        private readonly TestObservations testObservations;
-
-        public OuterTestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                       TestObservations testObservations,
-                                       ICommandHandler<TestCommand, TestCommandResponse> nestedHandler)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-            this.nestedHandler = nestedHandler;
-        }
-
         public async Task<OuterTestCommandResponse> ExecuteCommand(OuterTestCommand command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
-            if (testObservations.ShouldAddOuterDownstreamData)
+            if (observations.ShouldAddOuterDownstreamData)
             {
                 foreach (var item in ContextData)
                 {
@@ -992,7 +969,7 @@ public class ConquerorContextCommandTests : TestBase
                 }
             }
 
-            if (testObservations.ShouldAddOuterBidirectionalData)
+            if (observations.ShouldAddOuterBidirectionalData)
             {
                 foreach (var item in ContextData)
                 {
@@ -1006,35 +983,26 @@ public class ConquerorContextCommandTests : TestBase
             }
 
             _ = await nestedHandler.ExecuteCommand(new(), cancellationToken);
-            testObservations.ReceivedOuterUpstreamContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
-            testObservations.ReceivedOuterBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
+            observations.ReceivedOuterUpstreamContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
+            observations.ReceivedOuterBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
             return new();
         }
     }
 
     public sealed record OuterTestCommandWithoutResponse;
 
-    public sealed class OuterTestCommandWithoutResponseHandler : ICommandHandler<OuterTestCommandWithoutResponse>
+    public sealed class OuterTestCommandWithoutResponseHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations,
+        ICommandHandler<TestCommandWithoutResponse> nestedHandler)
+        : ICommandHandler<OuterTestCommandWithoutResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly ICommandHandler<TestCommandWithoutResponse> nestedHandler;
-        private readonly TestObservations testObservations;
-
-        public OuterTestCommandWithoutResponseHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                                      TestObservations testObservations,
-                                                      ICommandHandler<TestCommandWithoutResponse> nestedHandler)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-            this.nestedHandler = nestedHandler;
-        }
-
         public async Task ExecuteCommand(OuterTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
-            if (testObservations.ShouldAddOuterDownstreamData)
+            if (observations.ShouldAddOuterDownstreamData)
             {
                 foreach (var item in ContextData)
                 {
@@ -1047,7 +1015,7 @@ public class ConquerorContextCommandTests : TestBase
                 }
             }
 
-            if (testObservations.ShouldAddOuterBidirectionalData)
+            if (observations.ShouldAddOuterBidirectionalData)
             {
                 foreach (var item in ContextData)
                 {
@@ -1061,8 +1029,8 @@ public class ConquerorContextCommandTests : TestBase
             }
 
             await nestedHandler.ExecuteCommand(new(), cancellationToken);
-            testObservations.ReceivedOuterUpstreamContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
-            testObservations.ReceivedOuterBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
+            observations.ReceivedOuterUpstreamContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
+            observations.ReceivedOuterBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
         }
     }
 
@@ -1089,21 +1057,12 @@ public class ConquerorContextCommandTests : TestBase
         public IConquerorContextData? ReceivedOuterBidirectionalContextData { get; set; }
     }
 
-    private sealed class WrapperCommandTransportClient : ICommandTransportClient
+    private sealed class WrapperCommandTransportClient(
+        ICommandTransportClient wrapped,
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandTransportClient
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-        private readonly ICommandTransportClient wrapped;
-
-        public WrapperCommandTransportClient(ICommandTransportClient wrapped,
-                                             IConquerorContextAccessor conquerorContextAccessor,
-                                             TestObservations testObservations)
-        {
-            this.wrapped = wrapped;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
 
         public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
@@ -1111,24 +1070,18 @@ public class ConquerorContextCommandTests : TestBase
                                                                    CancellationToken cancellationToken)
             where TCommand : class
         {
-            testObservations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
 
             return wrapped.ExecuteCommand<TCommand, TResponse>(command, serviceProvider, cancellationToken);
         }
     }
 
-    private sealed class DisposableActivity : IDisposable
+    private sealed class DisposableActivity(string traceId, params IDisposable[] disposables) : IDisposable
     {
-        private readonly IReadOnlyCollection<IDisposable> disposables;
+        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
 
-        public DisposableActivity(string traceId, params IDisposable[] disposables)
-        {
-            TraceId = traceId;
-            this.disposables = disposables;
-        }
-
-        public string TraceId { get; }
+        public string TraceId { get; } = traceId;
 
         public void Dispose()
         {

@@ -2,15 +2,8 @@ using Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Contracts;
 
 namespace Conqueror.Recipes.CQS.Advanced.TestingCallingHttp.Server;
 
-internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
+internal sealed class GetCounterValueQueryHandler(CountersRepository repository) : IGetCounterValueQueryHandler
 {
-    private readonly CountersRepository repository;
-
-    public GetCounterValueQueryHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query, CancellationToken cancellationToken = default)
     {
         var counterValue = await repository.GetCounterValue(query.CounterName);

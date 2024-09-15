@@ -1,16 +1,10 @@
 namespace Conqueror.Examples.BlazorWebAssembly.Application.Middlewares;
 
-public sealed class EventPublisherLoggingMiddleware : IEventPublisherMiddleware
+public sealed class EventPublisherLoggingMiddleware(
+    ILoggerFactory loggerFactory,
+    JsonSerializerOptions jsonSerializerOptions)
+    : IEventPublisherMiddleware
 {
-    private readonly JsonSerializerOptions jsonSerializerOptions;
-    private readonly ILoggerFactory loggerFactory;
-
-    public EventPublisherLoggingMiddleware(ILoggerFactory loggerFactory, JsonSerializerOptions jsonSerializerOptions)
-    {
-        this.loggerFactory = loggerFactory;
-        this.jsonSerializerOptions = jsonSerializerOptions;
-    }
-
     public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
         where TEvent : class
     {

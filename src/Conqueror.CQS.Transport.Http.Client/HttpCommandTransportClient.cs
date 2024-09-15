@@ -11,19 +11,14 @@ using Conqueror.Common;
 
 namespace Conqueror.CQS.Transport.Http.Client;
 
-internal sealed class HttpCommandTransportClient : ICommandTransportClient
+internal sealed class HttpCommandTransportClient(
+    ResolvedHttpClientOptions options,
+    IConquerorContextAccessor conquerorContextAccessor)
+    : ICommandTransportClient
 {
-    private readonly IConquerorContextAccessor conquerorContextAccessor;
-
-    public HttpCommandTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor)
-    {
-        this.conquerorContextAccessor = conquerorContextAccessor;
-        Options = options;
-    }
-
     public CommandTransportType TransportType => new(HttpConstants.TransportName, CommandTransportRole.Client);
 
-    public ResolvedHttpClientOptions Options { get; }
+    public ResolvedHttpClientOptions Options { get; } = options;
 
     public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                      IServiceProvider serviceProvider,

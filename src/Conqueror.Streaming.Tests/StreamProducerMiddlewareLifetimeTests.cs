@@ -666,15 +666,9 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         public static void ConfigurePipeline(IStreamProducerPipelineBuilder pipeline) => pipeline.Use<TestStreamProducerMiddleware>().Use<TestStreamProducerMiddleware>();
     }
 
-    private sealed class TestStreamProducerWithRetryMiddleware : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
+    private sealed class TestStreamProducerWithRetryMiddleware(TestObservations observations) : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestStreamProducerWithRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -694,15 +688,9 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware
+    private sealed class TestStreamProducerMiddleware(TestObservations observations) : IStreamProducerMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestStreamProducerMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
@@ -720,15 +708,9 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestStreamProducerMiddleware2 : IStreamProducerMiddleware
+    private sealed class TestStreamProducerMiddleware2(TestObservations observations) : IStreamProducerMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestStreamProducerMiddleware2(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
@@ -746,15 +728,9 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestStreamProducerRetryMiddleware : IStreamProducerMiddleware
+    private sealed class TestStreamProducerRetryMiddleware(TestObservations observations) : IStreamProducerMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestStreamProducerRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
@@ -778,15 +754,9 @@ public sealed class StreamProducerMiddlewareLifetimeTests
         }
     }
 
-    private sealed class DependencyResolvedDuringMiddlewareExecution
+    private sealed class DependencyResolvedDuringMiddlewareExecution(TestObservations observations)
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public DependencyResolvedDuringMiddlewareExecution(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public void Execute()
         {

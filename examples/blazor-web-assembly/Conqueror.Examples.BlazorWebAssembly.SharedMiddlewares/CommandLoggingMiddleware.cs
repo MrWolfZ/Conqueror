@@ -13,18 +13,12 @@ public sealed record CommandLoggingMiddlewareConfiguration
     public bool LogResponsePayload { get; init; } = true;
 }
 
-public sealed class CommandLoggingMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
-        where TCommand : class
+public sealed class CommandLoggingMiddleware<TCommand, TResponse>(
+    ILoggerFactory loggerFactory,
+    JsonSerializerOptions jsonSerializerOptions)
+    : ICommandMiddleware<TCommand, TResponse>
+    where TCommand : class
 {
-    private readonly JsonSerializerOptions jsonSerializerOptions;
-    private readonly ILoggerFactory loggerFactory;
-
-    public CommandLoggingMiddleware(ILoggerFactory loggerFactory, JsonSerializerOptions jsonSerializerOptions)
-    {
-        this.loggerFactory = loggerFactory;
-        this.jsonSerializerOptions = jsonSerializerOptions;
-    }
-
     public required CommandLoggingMiddlewareConfiguration Configuration { get; init; }
 
     public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)

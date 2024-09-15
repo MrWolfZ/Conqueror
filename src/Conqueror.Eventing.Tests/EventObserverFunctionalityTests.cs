@@ -424,15 +424,8 @@ public sealed class EventObserverFunctionalityTests
 
     private sealed record GenericTestEvent<TPayload>(TPayload Payload);
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>
+    private sealed class TestEventObserver(TestObservations responses) : IEventObserver<TestEvent>
     {
-        private readonly TestObservations responses;
-
-        public TestEventObserver(TestObservations responses)
-        {
-            this.responses = responses;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -442,15 +435,8 @@ public sealed class EventObserverFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserver2 : IEventObserver<TestEvent>
+    private sealed class TestEventObserver2(TestObservations responses) : IEventObserver<TestEvent>
     {
-        private readonly TestObservations responses;
-
-        public TestEventObserver2(TestObservations responses)
-        {
-            this.responses = responses;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -460,15 +446,8 @@ public sealed class EventObserverFunctionalityTests
         }
     }
 
-    private sealed class GenericTestEventObserver<TPayload> : IEventObserver<GenericTestEvent<TPayload>>
+    private sealed class GenericTestEventObserver<TPayload>(TestObservations responses) : IEventObserver<GenericTestEvent<TPayload>>
     {
-        private readonly TestObservations responses;
-
-        public GenericTestEventObserver(TestObservations responses)
-        {
-            this.responses = responses;
-        }
-
         public async Task HandleEvent(GenericTestEvent<TPayload> evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -478,15 +457,8 @@ public sealed class EventObserverFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestEventObserver : IEventObserver<TestEvent>
+    private sealed class ThrowingTestEventObserver(Exception exception) : IEventObserver<TestEvent>
     {
-        private readonly Exception exception;
-
-        public ThrowingTestEventObserver(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

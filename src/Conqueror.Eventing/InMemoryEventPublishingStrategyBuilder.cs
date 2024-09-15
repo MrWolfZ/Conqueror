@@ -3,18 +3,13 @@ using System.Collections.Generic;
 
 namespace Conqueror.Eventing;
 
-internal sealed class InMemoryEventPublishingStrategyBuilder : IConquerorInMemoryEventPublishingStrategyBuilder
+internal sealed class InMemoryEventPublishingStrategyBuilder(IServiceProvider serviceProvider) : IConquerorInMemoryEventPublishingStrategyBuilder
 {
     private readonly Dictionary<Type, IConquerorInMemoryEventPublishingStrategy> strategyByEventType = new();
 
     private IConquerorInMemoryEventPublishingStrategy defaultStrategy = new InMemorySequentialPublishingStrategy(new());
 
-    public InMemoryEventPublishingStrategyBuilder(IServiceProvider serviceProvider)
-    {
-        ServiceProvider = serviceProvider;
-    }
-
-    public IServiceProvider ServiceProvider { get; }
+    public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public IConquerorInMemoryEventPublishingStrategyBuilder UseDefault(IConquerorInMemoryEventPublishingStrategy strategy)
     {

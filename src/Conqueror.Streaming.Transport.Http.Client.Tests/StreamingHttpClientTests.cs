@@ -235,19 +235,12 @@ public sealed class StreamingHttpClientTests : TestBase
 
     public sealed record TestItem(int Payload);
 
-    private sealed class TestStreamProducer : ITestStreamProducer
+    private sealed class TestStreamProducer(TestObservations observations) : ITestStreamProducer
     {
-        private readonly TestObservations testObservations;
-
-        public TestStreamProducer(TestObservations testObservations)
-        {
-            this.testObservations = testObservations;
-        }
-
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             // ReSharper disable once MethodSupportsCancellation
-            await using var d = cancellationToken.Register(() => testObservations.CancelledRequests.Add(request));
+            await using var d = cancellationToken.Register(() => observations.CancelledRequests.Add(request));
 
             yield return new(request.Payload + 1);
             yield return new(request.Payload + 2);

@@ -350,15 +350,8 @@ public sealed class EventTypeFilteringEventObserverMiddlewareTests
 
     private abstract record PolymorphicTestEventBase3;
 
-    private sealed class PolymorphicTestEventBaseObserver : IEventObserver<PolymorphicTestEventBase>, IConfigureEventObserverPipeline
+    private sealed class PolymorphicTestEventBaseObserver(TestObservations observations) : IEventObserver<PolymorphicTestEventBase>, IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
-
-        public PolymorphicTestEventBaseObserver(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(PolymorphicTestEventBase evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -371,17 +364,10 @@ public sealed class EventTypeFilteringEventObserverMiddlewareTests
         }
     }
 
-    private sealed class MultiPolymorphicTestEventBaseObserver : IEventObserver<PolymorphicTestEventBase2>,
-                                                                 IEventObserver<PolymorphicTestEventBase3>,
-                                                                 IConfigureEventObserverPipeline
+    private sealed class MultiPolymorphicTestEventBaseObserver(TestObservations observations) : IEventObserver<PolymorphicTestEventBase2>,
+                                                                                                IEventObserver<PolymorphicTestEventBase3>,
+                                                                                                IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
-
-        public MultiPolymorphicTestEventBaseObserver(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(PolymorphicTestEventBase2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

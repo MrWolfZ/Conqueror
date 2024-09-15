@@ -175,25 +175,18 @@ public sealed class HttpAuthorizationTests : TestBase
     }
 
     [ApiController]
-    private sealed class TestController : ControllerBase
+    private sealed class TestController(TestData data) : ControllerBase
     {
-        private readonly TestData testData;
-
-        public TestController(TestData data)
-        {
-            testData = data;
-        }
-
         [HttpGet("/api/test")]
         public async Task<TestRequestResponse> TestGet([FromQuery] TestRequest request, CancellationToken cancellationToken)
         {
             await Task.Yield();
 
-            testData.EndpointWasCalled = true;
+            data.EndpointWasCalled = true;
 
-            if (testData.ExceptionToThrow is not null)
+            if (data.ExceptionToThrow is not null)
             {
-                throw testData.ExceptionToThrow;
+                throw data.ExceptionToThrow;
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -206,11 +199,11 @@ public sealed class HttpAuthorizationTests : TestBase
         {
             await Task.Yield();
 
-            testData.EndpointWasCalled = true;
+            data.EndpointWasCalled = true;
 
-            if (testData.ExceptionToThrow is not null)
+            if (data.ExceptionToThrow is not null)
             {
-                throw testData.ExceptionToThrow;
+                throw data.ExceptionToThrow;
             }
 
             cancellationToken.ThrowIfCancellationRequested();

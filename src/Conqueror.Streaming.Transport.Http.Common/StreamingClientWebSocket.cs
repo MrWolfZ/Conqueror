@@ -5,16 +5,9 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Transport.Http.Common;
 
-internal sealed class StreamingClientWebSocket<TRequest, TItem> : IDisposable
+internal sealed class StreamingClientWebSocket<TRequest, TItem>(JsonWebSocket socket) : IDisposable
     where TRequest : class
 {
-    private readonly JsonWebSocket socket;
-
-    public StreamingClientWebSocket(JsonWebSocket socket)
-    {
-        this.socket = socket;
-    }
-
     public IAsyncEnumerable<object> Read(CancellationToken cancellationToken)
     {
         return socket.Read("type", LookupMessageType, cancellationToken);

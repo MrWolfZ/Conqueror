@@ -630,139 +630,101 @@ public sealed class ConquerorContextDataTests
 
     private sealed record NestedTestQuery;
 
-    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    private sealed class TestCommandMiddleware<TCommand, TResponse>(
+        TestDataInstructions dataInstructions,
+        TestObservations observations)
+        : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
     {
-        private readonly TestDataInstructions testDataInstructions;
-        private readonly TestObservations testObservations;
-
-        public TestCommandMiddleware(TestDataInstructions dataInstructions, TestObservations observations)
-        {
-            testDataInstructions = dataInstructions;
-            testObservations = observations;
-        }
-
         public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePreExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.MiddlewarePreExecution);
 
             var response = await ctx.Next(ctx.Command, ctx.CancellationToken);
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePostExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.MiddlewarePostExecution);
 
             return response;
         }
     }
 
-    private sealed class TestClientCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    private sealed class TestClientCommandMiddleware<TCommand, TResponse>(
+        TestDataInstructions dataInstructions,
+        TestObservations observations)
+        : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
     {
-        private readonly TestDataInstructions testDataInstructions;
-        private readonly TestObservations testObservations;
-
-        public TestClientCommandMiddleware(TestDataInstructions dataInstructions, TestObservations observations)
-        {
-            testDataInstructions = dataInstructions;
-            testObservations = observations;
-        }
-
         public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.ClientMiddlewarePreExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.ClientMiddlewarePreExecution);
 
             var response = await ctx.Next(ctx.Command, ctx.CancellationToken);
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.ClientMiddlewarePostExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.ClientMiddlewarePostExecution);
 
             return response;
         }
     }
 
-    private sealed class TestQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
-    where TQuery : class
+    private sealed class TestQueryMiddleware<TQuery, TResponse>(
+        TestDataInstructions dataInstructions,
+        TestObservations observations)
+        : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        private readonly TestDataInstructions testDataInstructions;
-        private readonly TestObservations testObservations;
-
-        public TestQueryMiddleware(TestDataInstructions dataInstructions, TestObservations observations)
-        {
-            testDataInstructions = dataInstructions;
-            testObservations = observations;
-        }
-
         public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePreExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.MiddlewarePreExecution);
 
             var response = await ctx.Next(ctx.Query, ctx.CancellationToken);
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePostExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.MiddlewarePostExecution);
 
             return response;
         }
     }
 
-    private sealed class TestClientQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
-    where TQuery : class
+    private sealed class TestClientQueryMiddleware<TQuery, TResponse>(
+        TestDataInstructions dataInstructions,
+        TestObservations observations)
+        : IQueryMiddleware<TQuery, TResponse>
+        where TQuery : class
     {
-        private readonly TestDataInstructions testDataInstructions;
-        private readonly TestObservations testObservations;
-
-        public TestClientQueryMiddleware(TestDataInstructions dataInstructions, TestObservations observations)
-        {
-            testDataInstructions = dataInstructions;
-            testObservations = observations;
-        }
-
         public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
         {
             await Task.Yield();
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.ClientMiddlewarePreExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.ClientMiddlewarePreExecution);
 
             var response = await ctx.Next(ctx.Query, ctx.CancellationToken);
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.ClientMiddlewarePostExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.ClientMiddlewarePostExecution);
 
             return response;
         }
     }
 
-    private sealed class NestedTestClass
+    private sealed class NestedTestClass(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations,
+        TestDataInstructions dataInstructions,
+        ICommandHandler<NestedTestCommand, TestCommandResponse> nestedCommandHandler,
+        IQueryHandler<NestedTestQuery, TestQueryResponse> nestedQueryHandler)
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly ICommandHandler<NestedTestCommand, TestCommandResponse> nestedCommandHandler;
-        private readonly IQueryHandler<NestedTestQuery, TestQueryResponse> nestedQueryHandler;
-        private readonly TestDataInstructions testDataInstructions;
-        private readonly TestObservations testObservations;
-
-        public NestedTestClass(IConquerorContextAccessor conquerorContextAccessor,
-                               TestObservations observations,
-                               TestDataInstructions dataInstructions,
-                               ICommandHandler<NestedTestCommand, TestCommandResponse> nestedCommandHandler,
-                               IQueryHandler<NestedTestQuery, TestQueryResponse> nestedQueryHandler)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            testObservations = observations;
-            this.nestedCommandHandler = nestedCommandHandler;
-            this.nestedQueryHandler = nestedQueryHandler;
-            testDataInstructions = dataInstructions;
-        }
-
         public async Task Execute()
         {
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, testDataInstructions, testObservations, Location.NestedClassPreExecution);
+            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPreExecution);
 
             _ = await nestedCommandHandler.ExecuteCommand(new());
             _ = await nestedQueryHandler.ExecuteQuery(new());
 
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, testDataInstructions, testObservations, Location.NestedClassPostExecution);
+            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPostExecution);
         }
     }
 

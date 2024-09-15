@@ -9,21 +9,15 @@ namespace Conqueror.Eventing;
 /// <summary>
 ///     This class acts both as a publisher and transport client for in-memory events.
 /// </summary>
-internal sealed class InMemoryEventPublisher : IConquerorEventTransportPublisher<InMemoryEventAttribute>, IDisposable
+internal sealed class InMemoryEventPublisher(
+    IConquerorEventTransportClientRegistrar registrar,
+    Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy)
+    : IConquerorEventTransportPublisher<InMemoryEventAttribute>, IDisposable
 {
-    private readonly Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy;
-    private readonly IConquerorEventTransportClientRegistrar registrar;
     private readonly SemaphoreSlim semaphore = new(1);
 
     private IConquerorEventTransportClientDispatcher? dispatcher;
     private ISet<ConquerorEventObserverId> observersToDispatchTo = new HashSet<ConquerorEventObserverId>();
-
-    public InMemoryEventPublisher(IConquerorEventTransportClientRegistrar registrar,
-                                  Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy)
-    {
-        this.registrar = registrar;
-        this.configureStrategy = configureStrategy;
-    }
 
     public async Task PublishEvent<TEvent>(TEvent evt, InMemoryEventAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         where TEvent : class

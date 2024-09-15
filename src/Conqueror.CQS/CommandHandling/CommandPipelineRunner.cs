@@ -6,18 +6,12 @@ using System.Threading.Tasks;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class CommandPipelineRunner<TCommand, TResponse>
+internal sealed class CommandPipelineRunner<TCommand, TResponse>(
+    IConquerorContext conquerorContext,
+    List<ICommandMiddleware<TCommand, TResponse>> middlewares)
     where TCommand : class
 {
-    private readonly IConquerorContext conquerorContext;
-    private readonly List<ICommandMiddleware<TCommand, TResponse>> middlewares;
-
-    public CommandPipelineRunner(IConquerorContext conquerorContext,
-                                 List<ICommandMiddleware<TCommand, TResponse>> middlewares)
-    {
-        this.conquerorContext = conquerorContext;
-        this.middlewares = middlewares.AsEnumerable().Reverse().ToList();
-    }
+    private readonly List<ICommandMiddleware<TCommand, TResponse>> middlewares = middlewares.AsEnumerable().Reverse().ToList();
 
     public async Task<TResponse> Execute(IServiceProvider serviceProvider,
                                          TCommand initialCommand,

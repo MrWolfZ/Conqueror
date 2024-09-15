@@ -4,17 +4,12 @@ using System.Linq;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class QueryPipeline<TQuery, TResponse> : IQueryPipeline<TQuery, TResponse>
+internal sealed class QueryPipeline<TQuery, TResponse>(IServiceProvider serviceProvider) : IQueryPipeline<TQuery, TResponse>
     where TQuery : class
 {
     private readonly List<IQueryMiddleware<TQuery, TResponse>> middlewares = [];
 
-    public QueryPipeline(IServiceProvider serviceProvider)
-    {
-        ServiceProvider = serviceProvider;
-    }
-
-    public IServiceProvider ServiceProvider { get; }
+    public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public IQueryPipeline<TQuery, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : IQueryMiddleware<TQuery, TResponse>

@@ -1,13 +1,8 @@
 namespace Conqueror.Common;
 
-internal sealed class DefaultConquerorContext : IConquerorContext
+internal sealed class DefaultConquerorContext(string traceId) : IConquerorContext
 {
-    public DefaultConquerorContext(string traceId)
-    {
-        TraceId = traceId;
-    }
-
-    public string TraceId { get; private set; }
+    public string TraceId { get; private set; } = traceId;
 
     public IConquerorContextData DownstreamContextData { get; } = new DefaultConquerorContextData();
 

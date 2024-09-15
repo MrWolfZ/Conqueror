@@ -7,15 +7,8 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing;
 
-internal sealed class InMemorySequentialPublishingStrategy : IConquerorInMemoryEventPublishingStrategy
+internal sealed class InMemorySequentialPublishingStrategy(SequentialInMemoryEventPublishingStrategyConfiguration configuration) : IConquerorInMemoryEventPublishingStrategy
 {
-    private readonly SequentialInMemoryEventPublishingStrategyConfiguration configuration;
-
-    public InMemorySequentialPublishingStrategy(SequentialInMemoryEventPublishingStrategyConfiguration configuration)
-    {
-        this.configuration = configuration;
-    }
-
     public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
         where TEvent : class
     {

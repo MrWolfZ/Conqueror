@@ -5,17 +5,11 @@ using System.Reflection;
 
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
-internal sealed class HttpEndpointRegistry
+internal sealed class HttpEndpointRegistry(
+    IStreamProducerRegistry producerRegistry,
+    ConquerorStreamingHttpTransportServerAspNetCoreOptions options)
 {
     private const string DefaultControllerName = "Streams";
-    private readonly ConquerorStreamingHttpTransportServerAspNetCoreOptions options;
-    private readonly IStreamProducerRegistry producerRegistry;
-
-    public HttpEndpointRegistry(IStreamProducerRegistry producerRegistry, ConquerorStreamingHttpTransportServerAspNetCoreOptions options)
-    {
-        this.producerRegistry = producerRegistry;
-        this.options = options;
-    }
 
     public IReadOnlyCollection<HttpEndpoint> GetEndpoints()
     {

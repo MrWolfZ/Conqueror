@@ -346,17 +346,8 @@ public sealed class EventTransportPublisherSelectionTests
         public int Parameter { get; set; }
     }
 
-    private sealed class TestEventTransportPublisher1 : IConquerorEventTransportPublisher<TestEventPublisher1Attribute>
+    private sealed class TestEventTransportPublisher1(TestObservations observations, Exception? exception = null) : IConquerorEventTransportPublisher<TestEventPublisher1Attribute>
     {
-        private readonly Exception? exception;
-        private readonly TestObservations testObservations;
-
-        public TestEventTransportPublisher1(TestObservations observations, Exception? exception = null)
-        {
-            testObservations = observations;
-            this.exception = exception;
-        }
-
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher1Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class
         {
@@ -364,7 +355,7 @@ public sealed class EventTransportPublisherSelectionTests
 
             Assert.That(configurationAttribute.Parameter, Is.EqualTo(10));
 
-            testObservations.ObservedPublishes.Enqueue((GetType(), evt));
+            observations.ObservedPublishes.Enqueue((GetType(), evt));
 
             if (exception is not null)
             {
@@ -379,17 +370,8 @@ public sealed class EventTransportPublisherSelectionTests
         public int Parameter { get; set; }
     }
 
-    private sealed class TestEventTransportPublisher2 : IConquerorEventTransportPublisher<TestEventPublisher2Attribute>
+    private sealed class TestEventTransportPublisher2(TestObservations observations, Exception? exception = null) : IConquerorEventTransportPublisher<TestEventPublisher2Attribute>
     {
-        private readonly Exception? exception;
-        private readonly TestObservations testObservations;
-
-        public TestEventTransportPublisher2(TestObservations observations, Exception? exception = null)
-        {
-            testObservations = observations;
-            this.exception = exception;
-        }
-
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher2Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class
         {
@@ -397,7 +379,7 @@ public sealed class EventTransportPublisherSelectionTests
 
             Assert.That(configurationAttribute.Parameter, Is.EqualTo(20));
 
-            testObservations.ObservedPublishes.Enqueue((GetType(), evt));
+            observations.ObservedPublishes.Enqueue((GetType(), evt));
 
             if (exception is not null)
             {
@@ -406,21 +388,14 @@ public sealed class EventTransportPublisherSelectionTests
         }
     }
 
-    private sealed class InMemoryTestEventPublisherMiddleware : IEventPublisherMiddleware
+    private sealed class InMemoryTestEventPublisherMiddleware(TestObservations observations) : IEventPublisherMiddleware
     {
-        private readonly TestObservations testObservations;
-
-        public InMemoryTestEventPublisherMiddleware(TestObservations testObservations)
-        {
-            this.testObservations = testObservations;
-        }
-
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
             await Task.Yield();
 
-            testObservations.ObservedPublishes.Enqueue((typeof(InMemoryEventPublisher), ctx.Event));
+            observations.ObservedPublishes.Enqueue((typeof(InMemoryEventPublisher), ctx.Event));
 
             await ctx.Next(ctx.Event, ctx.CancellationToken);
         }

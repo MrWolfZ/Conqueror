@@ -37,12 +37,7 @@ internal sealed class CountersRepository
 
 // we use an exception to handle the case of a non-existing counter; there are other approaches to this
 // as well (e.g. returning `null` or a boolean) but an exception allows for unified error handling
-public sealed class CounterNotFoundException : Exception
+public sealed class CounterNotFoundException(string counterName) : Exception
 {
-    public CounterNotFoundException(string counterName)
-    {
-        CounterName = counterName;
-    }
-
-    public string CounterName { get; }
+    public string CounterName { get; } = counterName;
 }

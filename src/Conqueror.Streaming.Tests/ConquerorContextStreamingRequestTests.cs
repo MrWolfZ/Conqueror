@@ -437,17 +437,11 @@ public sealed class ConquerorContextStreamingRequestTests
         return new(activity.TraceId.ToString(), activitySource, activityListener, activity);
     }
 
-    private sealed class DisposableActivity : IDisposable
+    private sealed class DisposableActivity(string traceId, params IDisposable[] disposables) : IDisposable
     {
-        private readonly IReadOnlyCollection<IDisposable> disposables;
+        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
 
-        public DisposableActivity(string traceId, params IDisposable[] disposables)
-        {
-            TraceId = traceId;
-            this.disposables = disposables;
-        }
-
-        public string TraceId { get; }
+        public string TraceId { get; } = traceId;
 
         public void Dispose()
         {
@@ -469,27 +463,14 @@ public sealed class ConquerorContextStreamingRequestTests
 
     private sealed record NestedTestItem(int Payload);
 
-    private sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
+    private sealed class TestStreamProducer(
+        Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn,
+        Action<IConquerorContext?> preReturnFn,
+        IConquerorContextAccessor conquerorContextAccessor,
+        NestedClass nestedClass,
+        IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer)
+        : IStreamProducer<TestStreamingRequest, TestItem>, IConfigureStreamProducerPipeline
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly NestedClass nestedClass;
-        private readonly IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer;
-        private readonly Action<IConquerorContext?> preReturnFn;
-        private readonly Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn;
-
-        public TestStreamProducer(Func<TestStreamingRequest, IConquerorContext?, IAsyncEnumerable<TestItem>> producerFn,
-                                  Action<IConquerorContext?> preReturnFn,
-                                  IConquerorContextAccessor conquerorContextAccessor,
-                                  NestedClass nestedClass,
-                                  IStreamProducer<NestedTestStreamingRequest, NestedTestItem> nestedStreamProducer)
-        {
-            this.producerFn = producerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.nestedClass = nestedClass;
-            this.nestedStreamProducer = nestedStreamProducer;
-            this.preReturnFn = preReturnFn;
-        }
-
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -507,17 +488,11 @@ public sealed class ConquerorContextStreamingRequestTests
                                                                                                  .Use<TestStreamProducerMiddleware>();
     }
 
-    private sealed class NestedTestStreamProducer : IStreamProducer<NestedTestStreamingRequest, NestedTestItem>
+    private sealed class NestedTestStreamProducer(
+        Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn,
+        IConquerorContextAccessor conquerorContextAccessor)
+        : IStreamProducer<NestedTestStreamingRequest, NestedTestItem>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn;
-
-        public NestedTestStreamProducer(Func<NestedTestStreamingRequest, IConquerorContext?, IAsyncEnumerable<NestedTestItem>> producerFn, IConquerorContextAccessor conquerorContextAccessor)
-        {
-            this.producerFn = producerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-        }
-
         public async IAsyncEnumerable<NestedTestItem> ExecuteRequest(NestedTestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -529,15 +504,8 @@ public sealed class ConquerorContextStreamingRequestTests
         }
     }
 
-    private sealed class OuterTestStreamProducerMiddleware : IStreamProducerMiddleware
+    private sealed class OuterTestStreamProducerMiddleware(MiddlewareFn middlewareFn) : IStreamProducerMiddleware
     {
-        private readonly MiddlewareFn middlewareFn;
-
-        public OuterTestStreamProducerMiddleware(MiddlewareFn middlewareFn)
-        {
-            this.middlewareFn = middlewareFn;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
@@ -561,15 +529,8 @@ public sealed class ConquerorContextStreamingRequestTests
         }
     }
 
-    private sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware
+    private sealed class TestStreamProducerMiddleware(MiddlewareFn middlewareFn) : IStreamProducerMiddleware
     {
-        private readonly MiddlewareFn middlewareFn;
-
-        public TestStreamProducerMiddleware(MiddlewareFn middlewareFn)
-        {
-            this.middlewareFn = middlewareFn;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
@@ -593,17 +554,8 @@ public sealed class ConquerorContextStreamingRequestTests
         }
     }
 
-    private sealed class NestedClass
+    private sealed class NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Action<IConquerorContext?> nestedClassFn;
-
-        public NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
-        {
-            this.nestedClassFn = nestedClassFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-        }
-
         public void Execute()
         {
             nestedClassFn(conquerorContextAccessor.ConquerorContext);

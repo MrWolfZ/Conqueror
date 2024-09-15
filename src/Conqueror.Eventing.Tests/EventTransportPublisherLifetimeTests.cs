@@ -728,22 +728,16 @@ public sealed class EventTransportPublisherLifetimeTests
     {
     }
 
-    private sealed class TestEventTransportPublisher1 : IConquerorEventTransportPublisher<TestEventPublisher1Attribute>
+    private sealed class TestEventTransportPublisher1(TestObservations observations) : IConquerorEventTransportPublisher<TestEventPublisher1Attribute>
     {
-        private readonly TestObservations testObservations;
         private int invocationCount;
-
-        public TestEventTransportPublisher1(TestObservations observations)
-        {
-            testObservations = observations;
-        }
 
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher1Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             invocationCount += 1;
             await Task.Yield();
-            testObservations.InvocationCounts.Enqueue(invocationCount);
+            observations.InvocationCounts.Enqueue(invocationCount);
 
             serviceProvider.GetService<DependencyResolvedDuringPublisherExecution>()?.Execute();
         }
@@ -754,22 +748,16 @@ public sealed class EventTransportPublisherLifetimeTests
     {
     }
 
-    private sealed class TestEventTransportPublisher2 : IConquerorEventTransportPublisher<TestEventPublisher2Attribute>
+    private sealed class TestEventTransportPublisher2(TestObservations observations) : IConquerorEventTransportPublisher<TestEventPublisher2Attribute>
     {
-        private readonly TestObservations testObservations;
         private int invocationCount;
-
-        public TestEventTransportPublisher2(TestObservations observations)
-        {
-            testObservations = observations;
-        }
 
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher2Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             invocationCount += 1;
             await Task.Yield();
-            testObservations.InvocationCounts.Enqueue(invocationCount);
+            observations.InvocationCounts.Enqueue(invocationCount);
 
             serviceProvider.GetService<DependencyResolvedDuringPublisherExecution>()?.Execute();
         }
@@ -787,15 +775,9 @@ public sealed class EventTransportPublisherLifetimeTests
         }
     }
 
-    private sealed class DependencyResolvedDuringPublisherExecution
+    private sealed class DependencyResolvedDuringPublisherExecution(TestObservations observations)
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public DependencyResolvedDuringPublisherExecution(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public void Execute()
         {
@@ -804,15 +786,9 @@ public sealed class EventTransportPublisherLifetimeTests
         }
     }
 
-    private sealed class DependencyResolvedDuringPublisherPipelineBuild
+    private sealed class DependencyResolvedDuringPublisherPipelineBuild(TestObservations observations)
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public DependencyResolvedDuringPublisherPipelineBuild(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public void Execute()
         {

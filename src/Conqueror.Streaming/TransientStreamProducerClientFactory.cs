@@ -3,17 +3,11 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming;
 
-internal sealed class TransientStreamProducerClientFactory : IStreamProducerClientFactory
+internal sealed class TransientStreamProducerClientFactory(
+    StreamProducerClientFactory innerFactory,
+    IServiceProvider serviceProvider)
+    : IStreamProducerClientFactory
 {
-    private readonly StreamProducerClientFactory innerFactory;
-    private readonly IServiceProvider serviceProvider;
-
-    public TransientStreamProducerClientFactory(StreamProducerClientFactory innerFactory, IServiceProvider serviceProvider)
-    {
-        this.innerFactory = innerFactory;
-        this.serviceProvider = serviceProvider;
-    }
-
     public TProducer CreateStreamProducerClient<TProducer>(Func<IStreamProducerTransportClientBuilder, Task<IStreamProducerTransportClient>> transportClientFactory, Action<IStreamProducerPipelineBuilder>? configurePipeline = null)
         where TProducer : class, IStreamProducer
     {

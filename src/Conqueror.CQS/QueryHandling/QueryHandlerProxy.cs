@@ -7,22 +7,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class QueryHandlerProxy<TQuery, TResponse> : IQueryHandler<TQuery, TResponse>
+internal sealed class QueryHandlerProxy<TQuery, TResponse>(
+    IServiceProvider serviceProvider,
+    QueryTransportClientFactory transportClientFactory,
+    Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline)
+    : IQueryHandler<TQuery, TResponse>
     where TQuery : class
 {
-    private readonly Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline;
-    private readonly IServiceProvider serviceProvider;
-    private readonly QueryTransportClientFactory transportClientFactory;
-
-    public QueryHandlerProxy(IServiceProvider serviceProvider,
-                             QueryTransportClientFactory transportClientFactory,
-                             Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline)
-    {
-        this.serviceProvider = serviceProvider;
-        this.transportClientFactory = transportClientFactory;
-        this.configurePipeline = configurePipeline;
-    }
-
     public async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();

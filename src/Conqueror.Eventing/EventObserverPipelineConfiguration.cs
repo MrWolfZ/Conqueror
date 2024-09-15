@@ -2,15 +2,9 @@ using System;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventObserverPipelineConfiguration
+internal sealed class EventObserverPipelineConfiguration(Type observerType, Action<IEventObserverPipelineBuilder> configure)
 {
-    public EventObserverPipelineConfiguration(Type observerType, Action<IEventObserverPipelineBuilder> configure)
-    {
-        ObserverType = observerType;
-        Configure = configure;
-    }
+    public Type ObserverType { get; } = observerType;
 
-    public Type ObserverType { get; }
-
-    public Action<IEventObserverPipelineBuilder> Configure { get; }
+    public Action<IEventObserverPipelineBuilder> Configure { get; } = configure;
 }

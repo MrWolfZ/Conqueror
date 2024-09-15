@@ -333,15 +333,8 @@ public sealed class CommandHandlerCustomInterfaceTests
         void ExtraMethod();
     }
 
-    private sealed class TestCommandHandler : ITestCommandHandler
+    private sealed class TestCommandHandler(TestObservations observations) : ITestCommandHandler
     {
-        private readonly TestObservations observations;
-
-        public TestCommandHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -352,15 +345,8 @@ public sealed class CommandHandlerCustomInterfaceTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponse : ITestCommandHandlerWithoutResponse
+    private sealed class TestCommandHandlerWithoutResponse(TestObservations observations) : ITestCommandHandlerWithoutResponse
     {
-        private readonly TestObservations observations;
-
-        public TestCommandHandlerWithoutResponse(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -370,18 +356,11 @@ public sealed class CommandHandlerCustomInterfaceTests
         }
     }
 
-    private sealed class TestCommandHandlerWithMultipleInterfaces : ITestCommandHandler,
-                                                                    ITestCommandHandler2,
-                                                                    ITestCommandHandlerWithoutResponse,
-                                                                    IQueryHandler<TestQuery, TestQueryResponse>
+    private sealed class TestCommandHandlerWithMultipleInterfaces(TestObservations observations) : ITestCommandHandler,
+                                                                                                   ITestCommandHandler2,
+                                                                                                   ITestCommandHandlerWithoutResponse,
+                                                                                                   IQueryHandler<TestQuery, TestQueryResponse>
     {
-        private readonly TestObservations observations;
-
-        public TestCommandHandlerWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -414,15 +393,8 @@ public sealed class CommandHandlerCustomInterfaceTests
         }
     }
 
-    private sealed class GenericTestCommandHandler<T> : IGenericTestCommandHandler<T>
+    private sealed class GenericTestCommandHandler<T>(TestObservations responses) : IGenericTestCommandHandler<T>
     {
-        private readonly TestObservations responses;
-
-        public GenericTestCommandHandler(TestObservations responses)
-        {
-            this.responses = responses;
-        }
-
         public async Task<GenericTestCommandResponse<T>> ExecuteCommand(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -432,15 +404,8 @@ public sealed class CommandHandlerCustomInterfaceTests
         }
     }
 
-    private sealed class GenericTestCommandHandlerWithoutResponse<T> : IGenericTestCommandHandlerWithoutResponse<T>
+    private sealed class GenericTestCommandHandlerWithoutResponse<T>(TestObservations responses) : IGenericTestCommandHandlerWithoutResponse<T>
     {
-        private readonly TestObservations responses;
-
-        public GenericTestCommandHandlerWithoutResponse(TestObservations responses)
-        {
-            this.responses = responses;
-        }
-
         public async Task ExecuteCommand(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -449,15 +414,8 @@ public sealed class CommandHandlerCustomInterfaceTests
         }
     }
 
-    private sealed class ThrowingCommandHandler : IThrowingTestCommandHandler
+    private sealed class ThrowingCommandHandler(Exception exception) : IThrowingTestCommandHandler
     {
-        private readonly Exception exception;
-
-        public ThrowingCommandHandler(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

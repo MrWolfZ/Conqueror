@@ -367,15 +367,8 @@ public sealed class CommandHandlerFunctionalityTests
 
     private sealed record GenericTestCommandResponse<T>(T Payload);
 
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    private sealed class TestCommandHandler(TestObservations observations) : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly TestObservations observations;
-
-        public TestCommandHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -385,15 +378,8 @@ public sealed class CommandHandlerFunctionalityTests
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+    private sealed class TestCommandHandlerWithoutResponse(TestObservations observations) : ICommandHandler<TestCommandWithoutResponse>
     {
-        private readonly TestObservations observations;
-
-        public TestCommandHandlerWithoutResponse(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -402,15 +388,8 @@ public sealed class CommandHandlerFunctionalityTests
         }
     }
 
-    private sealed class GenericTestCommandHandler<T> : ICommandHandler<GenericTestCommand<T>, GenericTestCommandResponse<T>>
+    private sealed class GenericTestCommandHandler<T>(TestObservations observations) : ICommandHandler<GenericTestCommand<T>, GenericTestCommandResponse<T>>
     {
-        private readonly TestObservations observations;
-
-        public GenericTestCommandHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<GenericTestCommandResponse<T>> ExecuteCommand(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -420,15 +399,8 @@ public sealed class CommandHandlerFunctionalityTests
         }
     }
 
-    private sealed class GenericTestCommandHandlerWithoutResponse<T> : ICommandHandler<GenericTestCommand<T>>
+    private sealed class GenericTestCommandHandlerWithoutResponse<T>(TestObservations observations) : ICommandHandler<GenericTestCommand<T>>
     {
-        private readonly TestObservations observations;
-
-        public GenericTestCommandHandlerWithoutResponse(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task ExecuteCommand(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -437,15 +409,8 @@ public sealed class CommandHandlerFunctionalityTests
         }
     }
 
-    private sealed class ThrowingCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    private sealed class ThrowingCommandHandler(Exception exception) : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly Exception exception;
-
-        public ThrowingCommandHandler(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

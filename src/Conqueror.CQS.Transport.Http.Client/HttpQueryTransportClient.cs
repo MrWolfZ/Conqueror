@@ -15,19 +15,14 @@ using Conqueror.Common;
 
 namespace Conqueror.CQS.Transport.Http.Client;
 
-internal sealed class HttpQueryTransportClient : IQueryTransportClient
+internal sealed class HttpQueryTransportClient(
+    ResolvedHttpClientOptions options,
+    IConquerorContextAccessor conquerorContextAccessor)
+    : IQueryTransportClient
 {
-    private readonly IConquerorContextAccessor conquerorContextAccessor;
-
-    public HttpQueryTransportClient(ResolvedHttpClientOptions options, IConquerorContextAccessor conquerorContextAccessor)
-    {
-        this.conquerorContextAccessor = conquerorContextAccessor;
-        Options = options;
-    }
-
     public QueryTransportType TransportType => new(HttpConstants.TransportName, QueryTransportRole.Client);
 
-    public ResolvedHttpClientOptions Options { get; }
+    public ResolvedHttpClientOptions Options { get; } = options;
 
     public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                                  IServiceProvider serviceProvider,

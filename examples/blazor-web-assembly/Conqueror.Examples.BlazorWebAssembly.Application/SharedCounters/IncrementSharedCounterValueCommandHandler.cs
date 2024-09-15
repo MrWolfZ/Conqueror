@@ -3,17 +3,11 @@ using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounters;
 
-internal sealed class IncrementSharedCounterValueCommandHandler : IIncrementSharedCounterValueCommandHandler
+internal sealed class IncrementSharedCounterValueCommandHandler(
+    SharedCounter counter,
+    ISharedCounterIncrementedEventObserver eventObserver)
+    : IIncrementSharedCounterValueCommandHandler
 {
-    private readonly SharedCounter counter;
-    private readonly ISharedCounterIncrementedEventObserver eventObserver;
-
-    public IncrementSharedCounterValueCommandHandler(SharedCounter counter, ISharedCounterIncrementedEventObserver eventObserver)
-    {
-        this.counter = counter;
-        this.eventObserver = eventObserver;
-    }
-
     public async Task<IncrementSharedCounterValueCommandResponse> ExecuteCommand(IncrementSharedCounterValueCommand command, CancellationToken cancellationToken = default)
     {
         var valueAfterIncrement = counter.IncrementBy(command.IncrementBy);

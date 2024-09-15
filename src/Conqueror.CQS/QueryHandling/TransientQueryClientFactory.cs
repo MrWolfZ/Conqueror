@@ -3,17 +3,11 @@ using System.Threading.Tasks;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class TransientQueryClientFactory : IQueryClientFactory
+internal sealed class TransientQueryClientFactory(
+    QueryClientFactory innerFactory,
+    IServiceProvider serviceProvider)
+    : IQueryClientFactory
 {
-    private readonly QueryClientFactory innerFactory;
-    private readonly IServiceProvider serviceProvider;
-
-    public TransientQueryClientFactory(QueryClientFactory innerFactory, IServiceProvider serviceProvider)
-    {
-        this.innerFactory = innerFactory;
-        this.serviceProvider = serviceProvider;
-    }
-
     public THandler CreateQueryClient<THandler>(Func<IQueryTransportClientBuilder, Task<IQueryTransportClient>> transportClientFactory)
         where THandler : class, IQueryHandler
     {

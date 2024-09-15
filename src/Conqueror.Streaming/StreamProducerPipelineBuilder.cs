@@ -3,18 +3,14 @@ using System.Collections.Generic;
 
 namespace Conqueror.Streaming;
 
-internal sealed class StreamProducerPipelineBuilder : IStreamProducerPipelineBuilder
+internal sealed class StreamProducerPipelineBuilder(
+    IServiceProvider serviceProvider,
+    StreamProducerMiddlewareRegistry producerMiddlewareRegistry)
+    : IStreamProducerPipelineBuilder
 {
     private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamProducerMiddlewareInvoker Invoker)> middlewares = new();
-    private readonly StreamProducerMiddlewareRegistry producerMiddlewareRegistry;
 
-    public StreamProducerPipelineBuilder(IServiceProvider serviceProvider, StreamProducerMiddlewareRegistry producerMiddlewareRegistry)
-    {
-        this.producerMiddlewareRegistry = producerMiddlewareRegistry;
-        ServiceProvider = serviceProvider;
-    }
-
-    public IServiceProvider ServiceProvider { get; }
+    public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public IStreamProducerPipelineBuilder Use<TMiddleware>()
         where TMiddleware : IStreamProducerMiddleware

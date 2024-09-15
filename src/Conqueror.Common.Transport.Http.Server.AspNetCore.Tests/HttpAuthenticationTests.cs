@@ -159,27 +159,21 @@ public sealed class HttpAuthenticationTests : TestBase
     }
 
     [ApiController]
-    private sealed class TestController : ControllerBase
+    private sealed class TestController(
+        TestData data,
+        IConquerorContextAccessor conquerorContextAccessor)
+        : ControllerBase
     {
-        private readonly TestData testData;
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-
-        public TestController(TestData data, IConquerorContextAccessor conquerorContextAccessor)
-        {
-            testData = data;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-        }
-
         [HttpGet("/api/test")]
         public async Task<TestRequestResponse> TestGet([FromQuery] TestRequest request, CancellationToken cancellationToken)
         {
             await Task.Yield();
 
-            testData.ObservedPrincipal = conquerorContextAccessor.ConquerorContext?.GetCurrentPrincipal();
+            data.ObservedPrincipal = conquerorContextAccessor.ConquerorContext?.GetCurrentPrincipal();
 
-            if (testData.ExceptionToThrow is not null)
+            if (data.ExceptionToThrow is not null)
             {
-                throw testData.ExceptionToThrow;
+                throw data.ExceptionToThrow;
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -192,11 +186,11 @@ public sealed class HttpAuthenticationTests : TestBase
         {
             await Task.Yield();
 
-            testData.ObservedPrincipal = conquerorContextAccessor.ConquerorContext?.GetCurrentPrincipal();
+            data.ObservedPrincipal = conquerorContextAccessor.ConquerorContext?.GetCurrentPrincipal();
 
-            if (testData.ExceptionToThrow is not null)
+            if (data.ExceptionToThrow is not null)
             {
-                throw testData.ExceptionToThrow;
+                throw data.ExceptionToThrow;
             }
 
             cancellationToken.ThrowIfCancellationRequested();

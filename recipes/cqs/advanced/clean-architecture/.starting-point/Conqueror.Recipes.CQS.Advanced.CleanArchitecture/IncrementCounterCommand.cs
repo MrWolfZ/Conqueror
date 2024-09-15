@@ -9,17 +9,11 @@ public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCoun
 {
 }
 
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
+internal sealed class IncrementCounterCommandHandler(
+    CountersRepository countersRepository,
+    UserHistoryRepository userHistoryRepository)
+    : IIncrementCounterCommandHandler
 {
-    private readonly CountersRepository countersRepository;
-    private readonly UserHistoryRepository userHistoryRepository;
-
-    public IncrementCounterCommandHandler(CountersRepository countersRepository, UserHistoryRepository userHistoryRepository)
-    {
-        this.countersRepository = countersRepository;
-        this.userHistoryRepository = userHistoryRepository;
-    }
-
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterCommand, IncrementCounterCommandResponse> pipeline) => pipeline.UseDefault();
 
     public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)

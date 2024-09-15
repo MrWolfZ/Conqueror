@@ -217,14 +217,9 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestCommandRecordWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
     }
 
-    private sealed class TestCommandClassWithSingleConstructorValidationAnnotation
+    private sealed class TestCommandClassWithSingleConstructorValidationAnnotation([Required] string? payload)
     {
-        public TestCommandClassWithSingleConstructorValidationAnnotation([Required] string? payload)
-        {
-            Payload = payload;
-        }
-
-        public string? Payload { get; }
+        public string? Payload { get; } = payload;
     }
 
     [Test]
@@ -277,14 +272,9 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestCommandRecordWithSingleConstructorValidationAnnotation.Payload) }));
     }
 
-    private sealed class TestCommandClassWithSingleConstructorParameterWithMultipleValidationAnnotations
+    private sealed class TestCommandClassWithSingleConstructorParameterWithMultipleValidationAnnotations([MinLength(2)] [MaxLength(5)] string? payload)
     {
-        public TestCommandClassWithSingleConstructorParameterWithMultipleValidationAnnotations([MinLength(2)] [MaxLength(5)] string? payload)
-        {
-            Payload = payload;
-        }
-
-        public string? Payload { get; }
+        public string? Payload { get; } = payload;
     }
 
     [Test]
@@ -433,17 +423,11 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         }));
     }
 
-    private sealed class TestCommandClassWithMultipleConstructorValidationAnnotations
+    private sealed class TestCommandClassWithMultipleConstructorValidationAnnotations([Required] string? payload1, [Required] string? payload2)
     {
-        public TestCommandClassWithMultipleConstructorValidationAnnotations([Required] string? payload1, [Required] string? payload2)
-        {
-            Payload1 = payload1;
-            Payload2 = payload2;
-        }
+        public string? Payload1 { get; } = payload1;
 
-        public string? Payload1 { get; }
-
-        public string? Payload2 { get; }
+        public string? Payload2 { get; } = payload2;
     }
 
     [Test]
@@ -504,17 +488,11 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         }));
     }
 
-    private sealed class TestCommandClassWithMultiplePropertyAndConstructorValidationAnnotations
+    private sealed class TestCommandClassWithMultiplePropertyAndConstructorValidationAnnotations([Required] string? payload1, [Required] string? payload2)
     {
-        public TestCommandClassWithMultiplePropertyAndConstructorValidationAnnotations([Required] string? payload1, [Required] string? payload2)
-        {
-            Payload1 = payload1;
-            Payload2 = payload2;
-        }
+        public string? Payload1 { get; } = payload1;
 
-        public string? Payload1 { get; }
-
-        public string? Payload2 { get; }
+        public string? Payload2 { get; } = payload2;
 
         [Required]
         public string? Payload3 { get; set; }
@@ -695,17 +673,11 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         }));
     }
 
-    private sealed class TestCommandClassWithMultipleConstructorValidationAnnotationsWithoutMatchingProperty
+    private sealed class TestCommandClassWithMultipleConstructorValidationAnnotationsWithoutMatchingProperty([Required] string? param1, [Required] string? param2)
     {
-        public TestCommandClassWithMultipleConstructorValidationAnnotationsWithoutMatchingProperty([Required] string? param1, [Required] string? param2)
-        {
-            Payload1 = param1;
-            Payload2 = param2;
-        }
+        public string? Payload1 { get; } = param1;
 
-        public string? Payload1 { get; }
-
-        public string? Payload2 { get; }
+        public string? Payload2 { get; } = param2;
     }
 
     [Test]
@@ -856,24 +828,14 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexPropertyWithValidationAnnotationProperty.InnerPayload) }));
     }
 
-    private sealed class TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotation
+    private sealed class TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotation([Required] TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty? outerPayload)
     {
-        public TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotation([Required] TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty? outerPayload)
-        {
-            OuterPayload = outerPayload;
-        }
-
-        public TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty? OuterPayload { get; }
+        public TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty? OuterPayload { get; } = outerPayload;
     }
 
-    private sealed class TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty
+    private sealed class TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty([Required] string? innerPayload)
     {
-        public TestCommandClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty([Required] string? innerPayload)
-        {
-            InnerPayload = innerPayload;
-        }
-
-        public string? InnerPayload { get; }
+        public string? InnerPayload { get; } = innerPayload;
     }
 
     [Test]
@@ -1024,24 +986,14 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotationProperty.InnerPayload) }));
     }
 
-    private sealed class TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation
+    private sealed class TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation([Required] List<TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty>? outerPayload)
     {
-        public TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation([Required] List<TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty>? outerPayload)
-        {
-            OuterPayload = outerPayload;
-        }
-
-        public List<TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty>? OuterPayload { get; }
+        public List<TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty>? OuterPayload { get; } = outerPayload;
     }
 
-    private sealed class TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty
+    private sealed class TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty([Required] string? innerPayload)
     {
-        public TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty([Required] string? innerPayload)
-        {
-            InnerPayload = innerPayload;
-        }
-
-        public string? InnerPayload { get; }
+        public string? InnerPayload { get; } = innerPayload;
     }
 
     [Test]

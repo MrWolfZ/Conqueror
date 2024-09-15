@@ -650,15 +650,9 @@ public sealed class EventPublisherMiddlewareRegistrationTests
         }
     }
 
-    private sealed class TestEventPublisherMiddleware : IEventPublisherMiddleware
+    private sealed class TestEventPublisherMiddleware(TestObservations observations) : IEventPublisherMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventPublisherMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
@@ -671,15 +665,9 @@ public sealed class EventPublisherMiddlewareRegistrationTests
 
     private sealed record TestEventPublisherMiddlewareConfiguration;
 
-    private sealed class TestEventPublisherMiddlewareWithConfiguration : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
+    private sealed class TestEventPublisherMiddlewareWithConfiguration(TestObservations observations) : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventPublisherMiddlewareWithConfiguration(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent, TestEventPublisherMiddlewareConfiguration> ctx)
             where TEvent : class

@@ -6,35 +6,25 @@ namespace Conqueror.Streaming;
 
 internal delegate IAsyncEnumerable<TItem> StreamProducerMiddlewareNext<in TRequest, out TItem>(TRequest request, CancellationToken cancellationToken);
 
-internal sealed class DefaultStreamProducerMiddlewareContext<TRequest, TItem, TConfiguration> : StreamProducerMiddlewareContext<TRequest, TItem, TConfiguration>
+internal sealed class DefaultStreamProducerMiddlewareContext<TRequest, TItem, TConfiguration>(
+    TRequest request,
+    StreamProducerMiddlewareNext<TRequest, TItem> next,
+    TConfiguration configuration,
+    IServiceProvider serviceProvider,
+    IConquerorContext conquerorContext,
+    CancellationToken cancellationToken)
+    : StreamProducerMiddlewareContext<TRequest, TItem, TConfiguration>
     where TRequest : class
 {
-    private readonly StreamProducerMiddlewareNext<TRequest, TItem> next;
+    public override TRequest Request { get; } = request;
 
-    public DefaultStreamProducerMiddlewareContext(TRequest request,
-                                                  StreamProducerMiddlewareNext<TRequest, TItem> next,
-                                                  TConfiguration configuration,
-                                                  IServiceProvider serviceProvider,
-                                                  IConquerorContext conquerorContext,
-                                                  CancellationToken cancellationToken)
-    {
-        this.next = next;
-        Request = request;
-        CancellationToken = cancellationToken;
-        ServiceProvider = serviceProvider;
-        ConquerorContext = conquerorContext;
-        Configuration = configuration;
-    }
+    public override CancellationToken CancellationToken { get; } = cancellationToken;
 
-    public override TRequest Request { get; }
+    public override IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    public override CancellationToken CancellationToken { get; }
+    public override IConquerorContext ConquerorContext { get; } = conquerorContext;
 
-    public override IServiceProvider ServiceProvider { get; }
-
-    public override IConquerorContext ConquerorContext { get; }
-
-    public override TConfiguration Configuration { get; }
+    public override TConfiguration Configuration { get; } = configuration;
 
     public override IAsyncEnumerable<TItem> Next(TRequest request, CancellationToken cancellationToken) => next(request, cancellationToken);
 }

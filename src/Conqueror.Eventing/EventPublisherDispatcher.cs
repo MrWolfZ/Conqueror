@@ -7,15 +7,9 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventPublisherDispatcher
+internal sealed class EventPublisherDispatcher(EventPublisherRegistry publisherRegistry)
 {
     private readonly ConcurrentDictionary<Type, IGenericDispatcher> dispatchersByPublisherType = new();
-    private readonly EventPublisherRegistry publisherRegistry;
-
-    public EventPublisherDispatcher(EventPublisherRegistry publisherRegistry)
-    {
-        this.publisherRegistry = publisherRegistry;
-    }
 
     public async Task DispatchEvent<TEvent>(TEvent evt, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         where TEvent : class

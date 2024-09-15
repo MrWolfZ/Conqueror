@@ -186,15 +186,8 @@ public abstract class CommandClientFunctionalityTests
 
     private interface ITestCommandHandlerWithoutValidInterfaces : ICommandHandler;
 
-    private sealed class TestCommandTransport : ICommandTransportClient
+    private sealed class TestCommandTransport(TestObservations observations) : ICommandTransportClient
     {
-        private readonly TestObservations observations;
-
-        public TestCommandTransport(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
@@ -216,15 +209,8 @@ public abstract class CommandClientFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestCommandTransport : ICommandTransportClient
+    private sealed class ThrowingTestCommandTransport(Exception exception) : ICommandTransportClient
     {
-        private readonly Exception exception;
-
-        public ThrowingTestCommandTransport(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, IServiceProvider serviceProvider, CancellationToken cancellationToken)

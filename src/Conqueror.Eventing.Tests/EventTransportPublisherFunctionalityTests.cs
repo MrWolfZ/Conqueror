@@ -163,17 +163,8 @@ public sealed class EventTransportPublisherFunctionalityTests
         public int Parameter { get; set; }
     }
 
-    private sealed class TestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportAttribute>
+    private sealed class TestEventTransportPublisher(TestObservations observations, Exception? exceptionToThrow = null) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
     {
-        private readonly Exception? exceptionToThrow;
-        private readonly TestObservations observations;
-
-        public TestEventTransportPublisher(TestObservations observations, Exception? exceptionToThrow = null)
-        {
-            this.observations = observations;
-            this.exceptionToThrow = exceptionToThrow;
-        }
-
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class
         {

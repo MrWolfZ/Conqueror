@@ -255,15 +255,8 @@ public sealed class QueryHandlerFunctionalityTests
 
     private sealed record GenericTestQueryResponse<T>(T Payload);
 
-    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    private sealed class TestQueryHandler(TestObservations observations) : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        private readonly TestObservations observations;
-
-        public TestQueryHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -273,15 +266,8 @@ public sealed class QueryHandlerFunctionalityTests
         }
     }
 
-    private sealed class GenericTestQueryHandler<T> : IQueryHandler<GenericTestQuery<T>, GenericTestQueryResponse<T>>
+    private sealed class GenericTestQueryHandler<T>(TestObservations observations) : IQueryHandler<GenericTestQuery<T>, GenericTestQueryResponse<T>>
     {
-        private readonly TestObservations observations;
-
-        public GenericTestQueryHandler(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task<GenericTestQueryResponse<T>> ExecuteQuery(GenericTestQuery<T> query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -291,15 +277,8 @@ public sealed class QueryHandlerFunctionalityTests
         }
     }
 
-    private sealed class ThrowingQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    private sealed class ThrowingQueryHandler(Exception exception) : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        private readonly Exception exception;
-
-        public ThrowingQueryHandler(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

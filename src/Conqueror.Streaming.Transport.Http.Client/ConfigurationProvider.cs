@@ -10,15 +10,10 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Transport.Http.Client;
 
-internal sealed class ConfigurationProvider
+internal sealed class ConfigurationProvider(IEnumerable<Action<ConquerorStreamingHttpClientGlobalOptions>> configureGlobalOptions)
 {
-    private readonly IReadOnlyCollection<Action<ConquerorStreamingHttpClientGlobalOptions>> configureGlobalOptions;
+    private readonly IReadOnlyCollection<Action<ConquerorStreamingHttpClientGlobalOptions>> configureGlobalOptions = configureGlobalOptions.ToList();
     private readonly ConcurrentDictionary<Type, bool> httpValidityByRequestType = new();
-
-    public ConfigurationProvider(IEnumerable<Action<ConquerorStreamingHttpClientGlobalOptions>> configureGlobalOptions)
-    {
-        this.configureGlobalOptions = configureGlobalOptions.ToList();
-    }
 
     public ResolvedHttpClientOptions GetOptions(IServiceProvider provider, HttpClientRegistration registration)
     {

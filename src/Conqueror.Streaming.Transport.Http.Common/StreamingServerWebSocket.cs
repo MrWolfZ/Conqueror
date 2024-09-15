@@ -5,15 +5,8 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Transport.Http.Common;
 
-internal sealed class StreamingServerWebSocket<TRequest, TItem> : IDisposable
+internal sealed class StreamingServerWebSocket<TRequest, TItem>(JsonWebSocket socket) : IDisposable
 {
-    private readonly JsonWebSocket socket;
-
-    public StreamingServerWebSocket(JsonWebSocket socket)
-    {
-        this.socket = socket;
-    }
-
     public void Dispose()
     {
         socket.Dispose();

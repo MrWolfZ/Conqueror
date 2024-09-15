@@ -479,21 +479,15 @@ public sealed class HttpContextDataTests : TestBase
     }
 
     [ApiController]
-    private sealed class TestHttpCommandController : ControllerBase
+    private sealed class TestHttpCommandController(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ControllerBase
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestHttpCommandController(IConquerorContextAccessor conquerorContextAccessor, TestObservations observations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            testObservations = observations;
-        }
-
         [HttpGet("/api/test")]
         public Task<TestRequestResponse> TestGet(CancellationToken cancellationToken)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
             cancellationToken.ThrowIfCancellationRequested();
 
             return Task.FromResult(new TestRequestResponse());
@@ -504,7 +498,7 @@ public sealed class HttpContextDataTests : TestBase
         {
             _ = command;
 
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
             cancellationToken.ThrowIfCancellationRequested();
 
             return Task.FromResult(new TestRequestResponse());
@@ -514,7 +508,7 @@ public sealed class HttpContextDataTests : TestBase
         [SuppressMessage("Major Code Smell", "S4144:Methods should not have identical implementations", Justification = "one endpoint it GET, other is POST")]
         public Task<TestRequestResponse> TestPostWithoutPayload(CancellationToken cancellationToken)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
             cancellationToken.ThrowIfCancellationRequested();
 
             return Task.FromResult(new TestRequestResponse());
@@ -525,7 +519,7 @@ public sealed class HttpContextDataTests : TestBase
         {
             _ = command;
 
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
             cancellationToken.ThrowIfCancellationRequested();
 
             return Task.CompletedTask;
@@ -534,7 +528,7 @@ public sealed class HttpContextDataTests : TestBase
         [HttpPost("/api/testWithoutResponseWithoutPayload")]
         public Task TestPostWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
             cancellationToken.ThrowIfCancellationRequested();
 
             return Task.CompletedTask;
@@ -591,17 +585,11 @@ public sealed class HttpContextDataTests : TestBase
         protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpCommandController);
     }
 
-    private sealed class DisposableActivity : IDisposable
+    private sealed class DisposableActivity(Activity activity, params IDisposable[] disposables) : IDisposable
     {
-        private readonly IReadOnlyCollection<IDisposable> disposables;
+        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
 
-        public DisposableActivity(Activity activity, params IDisposable[] disposables)
-        {
-            Activity = activity;
-            this.disposables = disposables;
-        }
-
-        public Activity Activity { get; }
+        public Activity Activity { get; } = activity;
 
         public string TraceId => Activity.TraceId.ToString();
 

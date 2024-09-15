@@ -3,15 +3,8 @@
 namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 
 [ApiController]
-public sealed class GetCounterValueQueryController : ControllerBase
+public sealed class GetCounterValueQueryController(IGetCounterValueQueryHandler handler) : ControllerBase
 {
-    private readonly IGetCounterValueQueryHandler handler;
-
-    public GetCounterValueQueryController(IGetCounterValueQueryHandler handler)
-    {
-        this.handler = handler;
-    }
-
     [HttpGet("/api/custom/getCounterValue")]
     public async Task<GetCounterValueQueryResponse> ExecuteQuery([FromQuery] GetCounterValueQuery query, CancellationToken cancellationToken)
     {

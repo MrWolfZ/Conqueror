@@ -5,15 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Streaming;
 
-internal sealed class InMemoryStreamProducerTransport : IStreamProducerTransportClient
+internal sealed class InMemoryStreamProducerTransport(Type producerType) : IStreamProducerTransportClient
 {
-    private readonly Type producerType;
-
-    public InMemoryStreamProducerTransport(Type producerType)
-    {
-        this.producerType = producerType;
-    }
-
     public IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
                                                                    IServiceProvider serviceProvider,
                                                                    CancellationToken cancellationToken)

@@ -5,16 +5,11 @@ using System.Linq;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventObserverTransportBuilder : IEventObserverTransportBuilder
+internal sealed class EventObserverTransportBuilder(IServiceProvider serviceProvider) : IEventObserverTransportBuilder
 {
     private readonly ConcurrentDictionary<Type, IEventObserverTransportConfiguration> configurationsByType = new();
 
-    public EventObserverTransportBuilder(IServiceProvider serviceProvider)
-    {
-        ServiceProvider = serviceProvider;
-    }
-
-    public IServiceProvider ServiceProvider { get; }
+    public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public IEventObserverTransportBuilder AddOrReplaceConfiguration<TConfiguration>(TConfiguration configuration)
         where TConfiguration : class, IEventObserverTransportConfiguration

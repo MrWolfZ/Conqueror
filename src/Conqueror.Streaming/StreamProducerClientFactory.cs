@@ -8,15 +8,8 @@ using Conqueror.Common;
 namespace Conqueror.Streaming;
 
 // TODO: improve performance by caching creation functions via compiled expressions
-internal sealed class StreamProducerClientFactory
+internal sealed class StreamProducerClientFactory(StreamProducerMiddlewareRegistry producerMiddlewareRegistry)
 {
-    private readonly StreamProducerMiddlewareRegistry producerMiddlewareRegistry;
-
-    public StreamProducerClientFactory(StreamProducerMiddlewareRegistry producerMiddlewareRegistry)
-    {
-        this.producerMiddlewareRegistry = producerMiddlewareRegistry;
-    }
-
     public TProducer CreateStreamProducerClient<TProducer>(IServiceProvider serviceProvider,
                                                            Func<IStreamProducerTransportClientBuilder, Task<IStreamProducerTransportClient>> transportClientFactory,
                                                            Action<IStreamProducerPipelineBuilder>? configurePipeline)

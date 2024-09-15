@@ -7,14 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventObserverPipeline
+internal sealed class EventObserverPipeline(IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration, IEventObserverMiddlewareInvoker Invoker)> middlewares)
 {
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IEventObserverMiddlewareInvoker Invoker)> middlewares;
-
-    public EventObserverPipeline(IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration, IEventObserverMiddlewareInvoker Invoker)> middlewares)
-    {
-        this.middlewares = middlewares.ToList();
-    }
+    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IEventObserverMiddlewareInvoker Invoker)> middlewares = middlewares.ToList();
 
     public async Task Execute<TEvent>(IServiceProvider serviceProvider,
                                       Type observerType,

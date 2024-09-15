@@ -3,14 +3,9 @@ using System.Linq;
 
 namespace Conqueror.Streaming;
 
-internal sealed class StreamProducerRegistry : IStreamProducerRegistry
+internal sealed class StreamProducerRegistry(IEnumerable<StreamProducerRegistration> registrations) : IStreamProducerRegistry
 {
-    private readonly IReadOnlyCollection<StreamProducerRegistration> registrations;
-
-    public StreamProducerRegistry(IEnumerable<StreamProducerRegistration> registrations)
-    {
-        this.registrations = registrations.ToList();
-    }
+    private readonly IReadOnlyCollection<StreamProducerRegistration> registrations = registrations.ToList();
 
     public IReadOnlyCollection<StreamProducerRegistration> GetStreamProducerRegistrations() => registrations;
 }

@@ -586,124 +586,80 @@ public sealed class ConquerorContextCommandTests : TestBase
 
     public sealed record NestedTestCommand;
 
-    public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    public sealed class TestCommandHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                  TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.FromResult(new TestCommandResponse());
         }
     }
 
-    public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+    public sealed class TestCommandHandlerWithoutResponse(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandHandler<TestCommandWithoutResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestCommandHandlerWithoutResponse(IConquerorContextAccessor conquerorContextAccessor,
-                                                 TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.CompletedTask;
         }
     }
 
-    public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
+    public sealed class TestCommandHandlerWithoutPayload(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestCommandHandlerWithoutPayload(IConquerorContextAccessor conquerorContextAccessor,
-                                                TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.FromResult(new TestCommandResponse());
         }
     }
 
-    public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
+    public sealed class TestCommandHandlerWithoutResponseWithoutPayload(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestCommandHandlerWithoutResponseWithoutPayload(IConquerorContextAccessor conquerorContextAccessor,
-                                                               TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.CompletedTask;
         }
     }
 
-    public sealed class TestCommandWithNestedCommandHandler : ICommandHandler<TestCommandWithNestedCommand, TestCommandResponse>
+    public sealed class TestCommandWithNestedCommandHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler,
+        TestObservations observations)
+        : ICommandHandler<TestCommandWithNestedCommand, TestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler;
-        private readonly TestObservations testObservations;
-
-        public TestCommandWithNestedCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                                   ICommandHandler<NestedTestCommand, TestCommandResponse> nestedHandler,
-                                                   TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-            this.nestedHandler = nestedHandler;
-        }
-
         public Task<TestCommandResponse> ExecuteCommand(TestCommandWithNestedCommand command, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return nestedHandler.ExecuteCommand(new(), cancellationToken);
         }
     }
 
-    public sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, TestCommandResponse>
+    public sealed class NestedTestCommandHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandHandler<NestedTestCommand, TestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public NestedTestCommandHandler(IConquerorContextAccessor conquerorContextAccessor,
-                                        TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
         {
-            ObserveAndSetContextData(testObservations, conquerorContextAccessor);
+            ObserveAndSetContextData(observations, conquerorContextAccessor);
 
             return Task.FromResult(new TestCommandResponse());
         }
@@ -725,24 +681,13 @@ public sealed class ConquerorContextCommandTests : TestBase
     }
 
     [ApiController]
-    private sealed class TestHttpCommandController : ControllerBase
+    private sealed class TestHttpCommandController(
+        ICommandHandler<TestCommand, TestCommandResponse> commandHandler,
+        ICommandHandler<TestCommandWithoutPayload, TestCommandResponse> commandWithoutPayloadHandler,
+        ICommandHandler<TestCommandWithoutResponse> commandWithoutResponseHandler,
+        ICommandHandler<TestCommandWithoutResponseWithoutPayload> commandWithoutResponseWithoutPayloadHandler)
+        : ControllerBase
     {
-        private readonly ICommandHandler<TestCommand, TestCommandResponse> commandHandler;
-        private readonly ICommandHandler<TestCommandWithoutPayload, TestCommandResponse> commandWithoutPayloadHandler;
-        private readonly ICommandHandler<TestCommandWithoutResponse> commandWithoutResponseHandler;
-        private readonly ICommandHandler<TestCommandWithoutResponseWithoutPayload> commandWithoutResponseWithoutPayloadHandler;
-
-        public TestHttpCommandController(ICommandHandler<TestCommand, TestCommandResponse> commandHandler,
-                                         ICommandHandler<TestCommandWithoutPayload, TestCommandResponse> commandWithoutPayloadHandler,
-                                         ICommandHandler<TestCommandWithoutResponse> commandWithoutResponseHandler,
-                                         ICommandHandler<TestCommandWithoutResponseWithoutPayload> commandWithoutResponseWithoutPayloadHandler)
-        {
-            this.commandHandler = commandHandler;
-            this.commandWithoutPayloadHandler = commandWithoutPayloadHandler;
-            this.commandWithoutResponseHandler = commandWithoutResponseHandler;
-            this.commandWithoutResponseWithoutPayloadHandler = commandWithoutResponseWithoutPayloadHandler;
-        }
-
         [HttpPost("/api/custom/commands/test")]
         public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
         {
@@ -780,17 +725,11 @@ public sealed class ConquerorContextCommandTests : TestBase
         protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpCommandController);
     }
 
-    private sealed class DisposableActivity : IDisposable
+    private sealed class DisposableActivity(Activity activity, params IDisposable[] disposables) : IDisposable
     {
-        private readonly IReadOnlyCollection<IDisposable> disposables;
+        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
 
-        public DisposableActivity(Activity activity, params IDisposable[] disposables)
-        {
-            Activity = activity;
-            this.disposables = disposables;
-        }
-
-        public Activity Activity { get; }
+        public Activity Activity { get; } = activity;
 
         public string TraceId => Activity.TraceId.ToString();
 

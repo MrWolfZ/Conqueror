@@ -1347,58 +1347,40 @@ public sealed class ConquerorContextDataTests
 
     private sealed record NestedTestStreamingRequest;
 
-    private sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware
+    private sealed class TestStreamProducerMiddleware(
+        TestDataInstructions dataInstructions,
+        TestObservations observations)
+        : IStreamProducerMiddleware
     {
-        private readonly TestDataInstructions testDataInstructions;
-        private readonly TestObservations testObservations;
-
-        public TestStreamProducerMiddleware(TestDataInstructions dataInstructions, TestObservations observations)
-        {
-            testDataInstructions = dataInstructions;
-            testObservations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
             await Task.Yield();
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePreExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.MiddlewarePreExecution);
 
             await foreach (var item in ctx.Next(ctx.Request, ctx.CancellationToken))
             {
                 yield return item;
             }
 
-            SetAndObserveContextData(ctx.ConquerorContext, testDataInstructions, testObservations, Location.MiddlewarePostExecution);
+            SetAndObserveContextData(ctx.ConquerorContext, dataInstructions, observations, Location.MiddlewarePostExecution);
         }
     }
 
-    private sealed class NestedTestClass
+    private sealed class NestedTestClass(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations,
+        TestDataInstructions dataInstructions,
+        IStreamProducer<NestedTestStreamingRequest, TestItem> nestedStreamProducer)
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly IStreamProducer<NestedTestStreamingRequest, TestItem> nestedStreamProducer;
-        private readonly TestDataInstructions testDataInstructions;
-        private readonly TestObservations testObservations;
-
-        public NestedTestClass(IConquerorContextAccessor conquerorContextAccessor,
-                               TestObservations observations,
-                               TestDataInstructions dataInstructions,
-                               IStreamProducer<NestedTestStreamingRequest, TestItem> nestedStreamProducer)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            testObservations = observations;
-            this.nestedStreamProducer = nestedStreamProducer;
-            testDataInstructions = dataInstructions;
-        }
-
         public async Task Execute()
         {
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, testDataInstructions, testObservations, Location.NestedClassPreExecution);
+            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPreExecution);
 
             _ = await nestedStreamProducer.ExecuteRequest(new()).Drain();
 
-            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, testDataInstructions, testObservations, Location.NestedClassPostExecution);
+            SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPostExecution);
         }
     }
 

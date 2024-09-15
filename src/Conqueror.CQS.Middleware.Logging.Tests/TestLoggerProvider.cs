@@ -3,15 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Conqueror.CQS.Middleware.Logging.Tests;
 
-internal sealed class TestLoggerProvider : ILoggerProvider
+internal sealed class TestLoggerProvider(TestLogSink logSink) : ILoggerProvider
 {
     private readonly ConcurrentDictionary<string, TestLogger> loggers = new(StringComparer.OrdinalIgnoreCase);
-    private readonly TestLogSink logSink;
-
-    public TestLoggerProvider(TestLogSink logSink)
-    {
-        this.logSink = logSink;
-    }
 
     public ILogger CreateLogger(string categoryName) =>
         loggers.GetOrAdd(categoryName, catName => new(catName, logSink));

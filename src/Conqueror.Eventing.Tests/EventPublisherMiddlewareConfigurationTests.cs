@@ -132,25 +132,13 @@ public sealed class EventPublisherMiddlewareConfigurationTests
         }
     }
 
-    private sealed class TestEventPublisherMiddlewareConfiguration
+    private sealed class TestEventPublisherMiddlewareConfiguration(int parameter)
     {
-        public TestEventPublisherMiddlewareConfiguration(int parameter)
-        {
-            Parameter = parameter;
-        }
-
-        public int Parameter { get; set; }
+        public int Parameter { get; set; } = parameter;
     }
 
-    private sealed class TestEventPublisherMiddleware : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
+    private sealed class TestEventPublisherMiddleware(TestObservations observations) : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
     {
-        private readonly TestObservations observations;
-
-        public TestEventPublisherMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent, TestEventPublisherMiddlewareConfiguration> ctx)
             where TEvent : class
         {

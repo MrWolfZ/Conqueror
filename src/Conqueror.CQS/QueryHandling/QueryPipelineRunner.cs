@@ -6,18 +6,12 @@ using System.Threading.Tasks;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class QueryPipelineRunner<TQuery, TResponse>
+internal sealed class QueryPipelineRunner<TQuery, TResponse>(
+    IConquerorContext conquerorContext,
+    List<IQueryMiddleware<TQuery, TResponse>> middlewares)
     where TQuery : class
 {
-    private readonly IConquerorContext conquerorContext;
-    private readonly List<IQueryMiddleware<TQuery, TResponse>> middlewares;
-
-    public QueryPipelineRunner(IConquerorContext conquerorContext,
-                               List<IQueryMiddleware<TQuery, TResponse>> middlewares)
-    {
-        this.conquerorContext = conquerorContext;
-        this.middlewares = middlewares.AsEnumerable().Reverse().ToList();
-    }
+    private readonly List<IQueryMiddleware<TQuery, TResponse>> middlewares = middlewares.AsEnumerable().Reverse().ToList();
 
     public async Task<TResponse> Execute(IServiceProvider serviceProvider,
                                          TQuery initialQuery,

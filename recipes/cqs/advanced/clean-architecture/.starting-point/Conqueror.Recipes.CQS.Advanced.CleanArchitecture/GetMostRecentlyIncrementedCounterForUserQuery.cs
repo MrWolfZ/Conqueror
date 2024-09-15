@@ -9,15 +9,10 @@ public interface IGetMostRecentlyIncrementedCounterForUserQueryHandler : IQueryH
 {
 }
 
-internal sealed class GetMostRecentlyIncrementedCounterForUserQueryHandler : IGetMostRecentlyIncrementedCounterForUserQueryHandler
+internal sealed class GetMostRecentlyIncrementedCounterForUserQueryHandler(
+    UserHistoryRepository repository)
+    : IGetMostRecentlyIncrementedCounterForUserQueryHandler
 {
-    private readonly UserHistoryRepository repository;
-
-    public GetMostRecentlyIncrementedCounterForUserQueryHandler(UserHistoryRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public static void ConfigurePipeline(IQueryPipeline<GetMostRecentlyIncrementedCounterForUserQuery, GetMostRecentlyIncrementedCounterForUserQueryResponse> pipeline) => pipeline.UseDefault();
 
     public async Task<GetMostRecentlyIncrementedCounterForUserQueryResponse> ExecuteQuery(GetMostRecentlyIncrementedCounterForUserQuery query, CancellationToken cancellationToken = default)

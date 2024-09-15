@@ -6,18 +6,10 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming;
 
-internal sealed class StreamProducerPipeline
+internal sealed class StreamProducerPipeline(
+    IConquerorContext conquerorContext,
+    List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamProducerMiddlewareInvoker Invoker)> middlewares)
 {
-    private readonly IConquerorContext conquerorContext;
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamProducerMiddlewareInvoker Invoker)> middlewares;
-
-    public StreamProducerPipeline(IConquerorContext conquerorContext,
-                                  List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamProducerMiddlewareInvoker Invoker)> middlewares)
-    {
-        this.conquerorContext = conquerorContext;
-        this.middlewares = middlewares;
-    }
-
     public IAsyncEnumerable<TItem> Execute<TRequest, TItem>(IServiceProvider serviceProvider,
                                                             TRequest initialRequest,
                                                             StreamProducerTransportClientFactory transportClientFactory,

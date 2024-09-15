@@ -413,15 +413,9 @@ public sealed class EventTransportPublisherRegistrationTests
     {
     }
 
-    private sealed class TestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportAttribute>
+    private sealed class TestEventTransportPublisher(TestObservations observations) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventTransportPublisher(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class

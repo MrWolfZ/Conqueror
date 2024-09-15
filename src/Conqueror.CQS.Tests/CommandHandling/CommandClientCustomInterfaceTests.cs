@@ -65,15 +65,8 @@ public abstract class CommandClientCustomInterfaceTests
     {
     }
 
-    private sealed class TestCommandTransport : ICommandTransportClient
+    private sealed class TestCommandTransport(TestObservations responses) : ICommandTransportClient
     {
-        private readonly TestObservations responses;
-
-        public TestCommandTransport(TestObservations responses)
-        {
-            this.responses = responses;
-        }
-
         public CommandTransportType TransportType { get; } = new("test", CommandTransportRole.Client);
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,

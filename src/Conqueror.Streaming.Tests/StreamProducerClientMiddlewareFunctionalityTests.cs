@@ -586,15 +586,8 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
         public int Parameter { get; set; }
     }
 
-    private sealed class TestStreamProducerMiddleware : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
+    private sealed class TestStreamProducerMiddleware(TestObservations observations) : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx)
             where TRequest : class
         {
@@ -611,15 +604,8 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestStreamProducerMiddleware2 : IStreamProducerMiddleware
+    private sealed class TestStreamProducerMiddleware2(TestObservations observations) : IStreamProducerMiddleware
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerMiddleware2(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
@@ -635,15 +621,8 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestStreamProducerRetryMiddleware : IStreamProducerMiddleware
+    private sealed class TestStreamProducerRetryMiddleware(TestObservations observations) : IStreamProducerMiddleware
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
@@ -665,17 +644,8 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestStreamProducerMiddleware : IStreamProducerMiddleware
+    private sealed class MutatingTestStreamProducerMiddleware(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IStreamProducerMiddleware
     {
-        private readonly CancellationTokensToUse cancellationTokensToUse;
-        private readonly TestObservations observations;
-
-        public MutatingTestStreamProducerMiddleware(TestObservations observations, CancellationTokensToUse cancellationTokensToUse)
-        {
-            this.observations = observations;
-            this.cancellationTokensToUse = cancellationTokensToUse;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
@@ -707,17 +677,8 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestStreamProducerMiddleware2 : IStreamProducerMiddleware
+    private sealed class MutatingTestStreamProducerMiddleware2(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IStreamProducerMiddleware
     {
-        private readonly CancellationTokensToUse cancellationTokensToUse;
-        private readonly TestObservations observations;
-
-        public MutatingTestStreamProducerMiddleware2(TestObservations observations, CancellationTokensToUse cancellationTokensToUse)
-        {
-            this.observations = observations;
-            this.cancellationTokensToUse = cancellationTokensToUse;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem> ctx)
             where TRequest : class
         {
@@ -749,15 +710,8 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestStreamProducerMiddleware : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
+    private sealed class ThrowingTestStreamProducerMiddleware(Exception exception) : IStreamProducerMiddleware<TestStreamProducerMiddlewareConfiguration>
     {
-        private readonly Exception exception;
-
-        public ThrowingTestStreamProducerMiddleware(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async IAsyncEnumerable<TItem> Execute<TRequest, TItem>(StreamProducerMiddlewareContext<TRequest, TItem, TestStreamProducerMiddlewareConfiguration> ctx)
             where TRequest : class
         {
@@ -773,15 +727,8 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestStreamProducerTransport : IStreamProducerTransportClient
+    private sealed class TestStreamProducerTransport(TestObservations observations) : IStreamProducerTransportClient
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerTransport(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
                                                                              IServiceProvider serviceProvider,
                                                                              [EnumeratorCancellation] CancellationToken cancellationToken)

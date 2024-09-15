@@ -7,15 +7,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventPublisherPipeline<TConfiguration>
+internal sealed class EventPublisherPipeline<TConfiguration>(IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration, IEventPublisherMiddlewareInvoker Invoker)> middlewares)
     where TConfiguration : Attribute, IConquerorEventTransportConfigurationAttribute
 {
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IEventPublisherMiddlewareInvoker Invoker)> middlewares;
-
-    public EventPublisherPipeline(IEnumerable<(Type MiddlewareType, object? MiddlewareConfiguration, IEventPublisherMiddlewareInvoker Invoker)> middlewares)
-    {
-        this.middlewares = middlewares.ToList();
-    }
+    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IEventPublisherMiddlewareInvoker Invoker)> middlewares = middlewares.ToList();
 
     public async Task Execute<TEvent>(IServiceProvider serviceProvider,
                                       Type publisherType,

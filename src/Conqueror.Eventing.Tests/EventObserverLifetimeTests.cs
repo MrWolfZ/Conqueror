@@ -424,15 +424,9 @@ public sealed class EventObserverLifetimeTests
 
     private sealed record TestEvent2;
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>
+    private sealed class TestEventObserver(TestObservations observations) : IEventObserver<TestEvent>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserver(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -442,15 +436,9 @@ public sealed class EventObserverLifetimeTests
         }
     }
 
-    private sealed class TestEventObserver2 : IEventObserver<TestEvent>
+    private sealed class TestEventObserver2(TestObservations observations) : IEventObserver<TestEvent>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserver2(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -460,15 +448,9 @@ public sealed class EventObserverLifetimeTests
         }
     }
 
-    private sealed class TestEventObserverWithMultipleInterfaces : IEventObserver<TestEvent>, IEventObserver<TestEvent2>
+    private sealed class TestEventObserverWithMultipleInterfaces(TestObservations observations) : IEventObserver<TestEvent>, IEventObserver<TestEvent2>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserverWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {

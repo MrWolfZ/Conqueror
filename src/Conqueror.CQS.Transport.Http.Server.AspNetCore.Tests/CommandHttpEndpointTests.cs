@@ -545,24 +545,13 @@ public sealed class CommandHttpEndpointTests : TestBase
     }
 
     [ApiController]
-    private sealed class TestHttpCommandController : ControllerBase
+    private sealed class TestHttpCommandController(
+        ICommandHandler<TestCommand, TestCommandResponse> commandHandler,
+        ICommandHandler<TestCommandWithoutPayload, TestCommandResponse> commandWithoutPayloadHandler,
+        ICommandHandler<TestCommandWithoutResponse> commandWithoutResponseHandler,
+        ICommandHandler<TestCommandWithoutResponseWithoutPayload> commandWithoutResponseWithoutPayloadHandler)
+        : ControllerBase
     {
-        private readonly ICommandHandler<TestCommand, TestCommandResponse> commandHandler;
-        private readonly ICommandHandler<TestCommandWithoutPayload, TestCommandResponse> commandWithoutPayloadHandler;
-        private readonly ICommandHandler<TestCommandWithoutResponse> commandWithoutResponseHandler;
-        private readonly ICommandHandler<TestCommandWithoutResponseWithoutPayload> commandWithoutResponseWithoutPayloadHandler;
-
-        public TestHttpCommandController(ICommandHandler<TestCommand, TestCommandResponse> commandHandler,
-                                         ICommandHandler<TestCommandWithoutPayload, TestCommandResponse> commandWithoutPayloadHandler,
-                                         ICommandHandler<TestCommandWithoutResponse> commandWithoutResponseHandler,
-                                         ICommandHandler<TestCommandWithoutResponseWithoutPayload> commandWithoutResponseWithoutPayloadHandler)
-        {
-            this.commandHandler = commandHandler;
-            this.commandWithoutPayloadHandler = commandWithoutPayloadHandler;
-            this.commandWithoutResponseHandler = commandWithoutResponseHandler;
-            this.commandWithoutResponseWithoutPayloadHandler = commandWithoutResponseWithoutPayloadHandler;
-        }
-
         [HttpPost("/api/custom/commands/test")]
         public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
         {

@@ -1,14 +1,7 @@
 namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounters;
 
-internal sealed class PublishSharedCounterIncrementToHubEventObserver : ISharedCounterIncrementedEventObserver
+internal sealed class PublishSharedCounterIncrementToHubEventObserver(IEventHub eventHub) : ISharedCounterIncrementedEventObserver
 {
-    private readonly IEventHub eventHub;
-
-    public PublishSharedCounterIncrementToHubEventObserver(IEventHub eventHub)
-    {
-        this.eventHub = eventHub;
-    }
-
     public async Task HandleEvent(SharedCounterIncrementedEvent evt, CancellationToken cancellationToken = default)
     {
         await eventHub.PublishEvent(evt);

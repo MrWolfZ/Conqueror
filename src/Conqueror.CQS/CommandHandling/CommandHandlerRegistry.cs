@@ -3,14 +3,9 @@ using System.Linq;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class CommandHandlerRegistry : ICommandHandlerRegistry
+internal sealed class CommandHandlerRegistry(IEnumerable<CommandHandlerRegistration> registrations) : ICommandHandlerRegistry
 {
-    private readonly IReadOnlyCollection<CommandHandlerRegistration> registrations;
-
-    public CommandHandlerRegistry(IEnumerable<CommandHandlerRegistration> registrations)
-    {
-        this.registrations = registrations.ToList();
-    }
+    private readonly IReadOnlyCollection<CommandHandlerRegistration> registrations = registrations.ToList();
 
     public IReadOnlyCollection<CommandHandlerRegistration> GetCommandHandlerRegistrations() => registrations;
 }

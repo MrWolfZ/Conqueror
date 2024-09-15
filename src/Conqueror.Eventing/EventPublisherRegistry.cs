@@ -6,15 +6,10 @@ using System.Reflection;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventPublisherRegistry
+internal sealed class EventPublisherRegistry(IEnumerable<EventPublisherRegistration> registrations)
 {
-    private readonly List<EventPublisherRegistration> registrations;
+    private readonly List<EventPublisherRegistration> registrations = registrations.ToList();
     private readonly ConcurrentDictionary<Type, List<(EventPublisherRegistration Registration, object Configuration)>> registrationsByEventType = new();
-
-    public EventPublisherRegistry(IEnumerable<EventPublisherRegistration> registrations)
-    {
-        this.registrations = registrations.ToList();
-    }
 
     public IReadOnlyCollection<(EventPublisherRegistration Registration, object Configuration)> GetRelevantPublishersForEventType<TEvent>()
         where TEvent : class

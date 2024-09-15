@@ -39,15 +39,8 @@ public abstract class StreamProducerClientCustomInterfaceTests
     // ReSharper disable once MemberCanBePrivate.Global (needs to be public for reflection)
     public interface ITestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>;
 
-    private sealed class TestStreamProducerTransport : IStreamProducerTransportClient
+    private sealed class TestStreamProducerTransport(TestObservations observations) : IStreamProducerTransportClient
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerTransport(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TItem> ExecuteRequest<TRequest, TItem>(TRequest request,
                                                                              IServiceProvider serviceProvider,
                                                                              [EnumeratorCancellation] CancellationToken cancellationToken)

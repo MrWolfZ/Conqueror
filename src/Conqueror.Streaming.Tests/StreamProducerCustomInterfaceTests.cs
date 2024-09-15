@@ -246,15 +246,8 @@ public sealed class StreamProducerCustomInterfaceTests
         void ExtraMethod();
     }
 
-    private sealed class TestStreamProducer : ITestStreamProducer
+    private sealed class TestStreamProducer(TestObservations observations) : ITestStreamProducer
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducer(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -267,16 +260,9 @@ public sealed class StreamProducerCustomInterfaceTests
         }
     }
 
-    private sealed class TestStreamProducerWithMultipleInterfaces : ITestStreamProducer,
-                                                                    ITestStreamProducer2
+    private sealed class TestStreamProducerWithMultipleInterfaces(TestObservations observations) : ITestStreamProducer,
+                                                                                                   ITestStreamProducer2
     {
-        private readonly TestObservations observations;
-
-        public TestStreamProducerWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -298,15 +284,8 @@ public sealed class StreamProducerCustomInterfaceTests
         }
     }
 
-    private sealed class GenericTestStreamProducer<T> : IGenericTestStreamProducer<T>
+    private sealed class GenericTestStreamProducer<T>(TestObservations observations) : IGenericTestStreamProducer<T>
     {
-        private readonly TestObservations observations;
-
-        public GenericTestStreamProducer(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async IAsyncEnumerable<GenericTestItem<T>> ExecuteRequest(GenericTestStreamingRequest<T> request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -318,15 +297,8 @@ public sealed class StreamProducerCustomInterfaceTests
         }
     }
 
-    private sealed class ThrowingStreamProducer : IThrowingStreamProducer
+    private sealed class ThrowingStreamProducer(Exception exception) : IThrowingStreamProducer
     {
-        private readonly Exception exception;
-
-        public ThrowingStreamProducer(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await Task.Yield();

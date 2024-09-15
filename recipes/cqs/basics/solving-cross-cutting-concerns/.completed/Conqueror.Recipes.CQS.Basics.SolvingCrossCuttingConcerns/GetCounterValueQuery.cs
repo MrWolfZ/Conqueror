@@ -8,15 +8,8 @@ public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQue
 {
 }
 
-internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
+internal sealed class GetCounterValueQueryHandler(CountersRepository repository) : IGetCounterValueQueryHandler
 {
-    private readonly CountersRepository repository;
-
-    public GetCounterValueQueryHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public static void ConfigurePipeline(IQueryPipeline<GetCounterValueQuery, GetCounterValueQueryResponse> pipeline) =>
         pipeline.UseDefault()
                 .ConfigureRetry(o => o.RetryAttemptLimit = 3);

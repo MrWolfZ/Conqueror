@@ -7,16 +7,11 @@ using System.Reflection;
 
 namespace Conqueror.CQS.Transport.Http.Client;
 
-internal sealed class ConfigurationProvider : IDisposable
+internal sealed class ConfigurationProvider(IEnumerable<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions) : IDisposable
 {
-    private readonly IReadOnlyCollection<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions;
+    private readonly IReadOnlyCollection<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions = configureGlobalOptions.ToList();
     private readonly Lazy<HttpClient> httpClientLazy = new();
     private readonly ConcurrentDictionary<Type, bool> httpValidityByRequestType = new();
-
-    public ConfigurationProvider(IEnumerable<Action<ConquerorCqsHttpClientGlobalOptions>> configureGlobalOptions)
-    {
-        this.configureGlobalOptions = configureGlobalOptions.ToList();
-    }
 
     public void Dispose()
     {

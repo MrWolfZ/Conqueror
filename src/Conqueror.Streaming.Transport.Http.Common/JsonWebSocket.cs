@@ -9,17 +9,8 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Streaming.Transport.Http.Common;
 
-internal sealed class JsonWebSocket : IDisposable
+internal sealed class JsonWebSocket(TextWebSocketWithHeartbeat socket, JsonSerializerOptions jsonSerializerOptions) : IDisposable
 {
-    private readonly JsonSerializerOptions jsonSerializerOptions;
-    private readonly TextWebSocketWithHeartbeat socket;
-
-    public JsonWebSocket(TextWebSocketWithHeartbeat socket, JsonSerializerOptions jsonSerializerOptions)
-    {
-        this.socket = socket;
-        this.jsonSerializerOptions = jsonSerializerOptions;
-    }
-
     public void Dispose()
     {
         socket.Dispose();

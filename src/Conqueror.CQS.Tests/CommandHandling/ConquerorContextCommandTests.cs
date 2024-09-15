@@ -438,17 +438,11 @@ public sealed class ConquerorContextCommandTests
         return new(activity.TraceId.ToString(), activitySource, activityListener, activity);
     }
 
-    private sealed class DisposableActivity : IDisposable
+    private sealed class DisposableActivity(string traceId, params IDisposable[] disposables) : IDisposable
     {
-        private readonly IReadOnlyCollection<IDisposable> disposables;
+        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
 
-        public DisposableActivity(string traceId, params IDisposable[] disposables)
-        {
-            TraceId = traceId;
-            this.disposables = disposables;
-        }
-
-        public string TraceId { get; }
+        public string TraceId { get; } = traceId;
 
         public void Dispose()
         {
@@ -475,27 +469,14 @@ public sealed class ConquerorContextCommandTests
 
     private sealed record NestedTestCommandResponse(int Payload);
 
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    private sealed class TestCommandHandler(
+        Func<TestCommand, IConquerorContext?, TestCommandResponse> handlerFn,
+        Action<IConquerorContext?> preReturnFn,
+        IConquerorContextAccessor conquerorContextAccessor,
+        NestedClass nestedClass,
+        ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
+        : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<TestCommand, IConquerorContext?, TestCommandResponse> handlerFn;
-        private readonly NestedClass nestedClass;
-        private readonly ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler;
-        private readonly Action<IConquerorContext?> preReturnFn;
-
-        public TestCommandHandler(Func<TestCommand, IConquerorContext?, TestCommandResponse> handlerFn,
-                                  Action<IConquerorContext?> preReturnFn,
-                                  IConquerorContextAccessor conquerorContextAccessor,
-                                  NestedClass nestedClass,
-                                  ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
-        {
-            this.handlerFn = handlerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.nestedClass = nestedClass;
-            this.nestedCommandHandler = nestedCommandHandler;
-            this.preReturnFn = preReturnFn;
-        }
-
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -510,19 +491,12 @@ public sealed class ConquerorContextCommandTests
                                                                                                                      .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFn>(typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>))));
     }
 
-    private sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
+    private sealed class TestCommandHandlerWithoutResponse(
+        Action<TestCommandWithoutResponse, IConquerorContext?> handlerFn,
+        IConquerorContextAccessor conquerorContextAccessor,
+        NestedClass nestedClass)
+        : ICommandHandler<TestCommandWithoutResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Action<TestCommandWithoutResponse, IConquerorContext?> handlerFn;
-        private readonly NestedClass nestedClass;
-
-        public TestCommandHandlerWithoutResponse(Action<TestCommandWithoutResponse, IConquerorContext?> handlerFn, IConquerorContextAccessor conquerorContextAccessor, NestedClass nestedClass)
-        {
-            this.handlerFn = handlerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.nestedClass = nestedClass;
-        }
-
         public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -533,17 +507,11 @@ public sealed class ConquerorContextCommandTests
         public static void ConfigurePipeline(ICommandPipeline<TestCommandWithoutResponse> pipeline) => pipeline.Use(new TestCommandMiddlewareWithoutResponse<TestCommandWithoutResponse, UnitCommandResponse>(pipeline.ServiceProvider.GetRequiredKeyedService<MiddlewareFnWithoutResponse>(typeof(TestCommandMiddlewareWithoutResponse<TestCommandWithoutResponse, UnitCommandResponse>))));
     }
 
-    private sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
+    private sealed class NestedTestCommandHandler(
+        Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn,
+        IConquerorContextAccessor conquerorContextAccessor)
+        : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn;
-
-        public NestedTestCommandHandler(Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn, IConquerorContextAccessor conquerorContextAccessor)
-        {
-            this.handlerFn = handlerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-        }
-
         public async Task<NestedTestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -551,16 +519,9 @@ public sealed class ConquerorContextCommandTests
         }
     }
 
-    private sealed class OuterTestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    private sealed class OuterTestCommandMiddleware<TCommand, TResponse>(MiddlewareFn middlewareFn) : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
     {
-        private readonly MiddlewareFn middlewareFn;
-
-        public OuterTestCommandMiddleware(MiddlewareFn middlewareFn)
-        {
-            this.middlewareFn = middlewareFn;
-        }
-
         public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
@@ -572,16 +533,9 @@ public sealed class ConquerorContextCommandTests
         }
     }
 
-    private sealed class TestCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    private sealed class TestCommandMiddleware<TCommand, TResponse>(MiddlewareFn middlewareFn) : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
     {
-        private readonly MiddlewareFn middlewareFn;
-
-        public TestCommandMiddleware(MiddlewareFn middlewareFn)
-        {
-            this.middlewareFn = middlewareFn;
-        }
-
         public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
@@ -593,16 +547,9 @@ public sealed class ConquerorContextCommandTests
         }
     }
 
-    private sealed class TestCommandMiddlewareWithoutResponse<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    private sealed class TestCommandMiddlewareWithoutResponse<TCommand, TResponse>(MiddlewareFnWithoutResponse middlewareFn) : ICommandMiddleware<TCommand, TResponse>
         where TCommand : class
     {
-        private readonly MiddlewareFnWithoutResponse middlewareFn;
-
-        public TestCommandMiddlewareWithoutResponse(MiddlewareFnWithoutResponse middlewareFn)
-        {
-            this.middlewareFn = middlewareFn;
-        }
-
         public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
         {
             await Task.Yield();
@@ -615,17 +562,8 @@ public sealed class ConquerorContextCommandTests
         }
     }
 
-    private sealed class NestedClass
+    private sealed class NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Action<IConquerorContext?> nestedClassFn;
-
-        public NestedClass(Action<IConquerorContext?> nestedClassFn, IConquerorContextAccessor conquerorContextAccessor)
-        {
-            this.nestedClassFn = nestedClassFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-        }
-
         public void Execute()
         {
             nestedClassFn(conquerorContextAccessor.ConquerorContext);

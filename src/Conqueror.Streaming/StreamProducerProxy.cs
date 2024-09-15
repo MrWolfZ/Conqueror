@@ -8,25 +8,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Streaming;
 
-internal sealed class StreamProducerProxy<TRequest, TItem> : IStreamProducer<TRequest, TItem>
+internal sealed class StreamProducerProxy<TRequest, TItem>(
+    IServiceProvider serviceProvider,
+    StreamProducerTransportClientFactory transportClientFactory,
+    Action<IStreamProducerPipelineBuilder>? configurePipeline,
+    StreamProducerMiddlewareRegistry producerMiddlewareRegistry)
+    : IStreamProducer<TRequest, TItem>
     where TRequest : class
 {
-    private readonly Action<IStreamProducerPipelineBuilder>? configurePipeline;
-    private readonly StreamProducerMiddlewareRegistry producerMiddlewareRegistry;
-    private readonly IServiceProvider serviceProvider;
-    private readonly StreamProducerTransportClientFactory transportClientFactory;
-
-    public StreamProducerProxy(IServiceProvider serviceProvider,
-                               StreamProducerTransportClientFactory transportClientFactory,
-                               Action<IStreamProducerPipelineBuilder>? configurePipeline,
-                               StreamProducerMiddlewareRegistry producerMiddlewareRegistry)
-    {
-        this.serviceProvider = serviceProvider;
-        this.transportClientFactory = transportClientFactory;
-        this.configurePipeline = configurePipeline;
-        this.producerMiddlewareRegistry = producerMiddlewareRegistry;
-    }
-
     // note that it is important for this function to be async instead of just returning the result
     // of pipeline.Execute directly, since otherwise the conqueror context will be set "too early",
     // i.e. during the creation of the enumerable instead of during the actual enumeration

@@ -250,15 +250,8 @@ public sealed class EventObserverCustomInterfaceTests
         void ExtraMethod();
     }
 
-    private sealed class TestEventObserver : ITestEventObserver
+    private sealed class TestEventObserver(TestObservations observations) : ITestEventObserver
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserver(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -268,15 +261,8 @@ public sealed class EventObserverCustomInterfaceTests
         }
     }
 
-    private sealed class GenericTestEventObserver<TPayload> : IGenericTestEventObserver<TPayload>
+    private sealed class GenericTestEventObserver<TPayload>(TestObservations observations) : IGenericTestEventObserver<TPayload>
     {
-        private readonly TestObservations observations;
-
-        public GenericTestEventObserver(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(GenericTestEvent<TPayload> evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -286,15 +272,8 @@ public sealed class EventObserverCustomInterfaceTests
         }
     }
 
-    private sealed class ThrowingTestEventObserver : IThrowingTestEventObserver
+    private sealed class ThrowingTestEventObserver(Exception exception) : IThrowingTestEventObserver
     {
-        private readonly Exception exception;
-
-        public ThrowingTestEventObserver(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -302,15 +281,8 @@ public sealed class EventObserverCustomInterfaceTests
         }
     }
 
-    private sealed class TestEventObserverWithMultipleInterfaces : ITestEventObserver, ITestEventObserver2
+    private sealed class TestEventObserverWithMultipleInterfaces(TestObservations observations) : ITestEventObserver, ITestEventObserver2
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverWithMultipleInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -328,15 +300,8 @@ public sealed class EventObserverCustomInterfaceTests
         }
     }
 
-    private sealed class TestEventObserverWithMultipleMixedInterfaces : ITestEventObserver, IEventObserver<TestEvent2>
+    private sealed class TestEventObserverWithMultipleMixedInterfaces(TestObservations observations) : ITestEventObserver, IEventObserver<TestEvent2>
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverWithMultipleMixedInterfaces(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

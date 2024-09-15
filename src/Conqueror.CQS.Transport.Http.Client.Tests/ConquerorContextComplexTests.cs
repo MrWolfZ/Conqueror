@@ -239,24 +239,18 @@ public class ConquerorContextComplexTests : TestBase
         public int Payload { get; init; }
     }
 
-    public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    public sealed class TestQueryHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestQueryHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
-            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
-            if (testObservations.ShouldAddUpstreamData)
+            if (observations.ShouldAddUpstreamData)
             {
                 foreach (var item in ContextData)
                 {
@@ -269,7 +263,7 @@ public class ConquerorContextComplexTests : TestBase
                 }
             }
 
-            if (testObservations.ShouldAddBidirectionalData)
+            if (observations.ShouldAddBidirectionalData)
             {
                 foreach (var item in ContextData)
                 {
@@ -297,24 +291,18 @@ public class ConquerorContextComplexTests : TestBase
         public int Payload { get; init; }
     }
 
-    public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    public sealed class TestCommandHandler(
+        IConquerorContextAccessor conquerorContextAccessor,
+        TestObservations observations)
+        : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly TestObservations testObservations;
-
-        public TestCommandHandler(IConquerorContextAccessor conquerorContextAccessor, TestObservations testObservations)
-        {
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.testObservations = testObservations;
-        }
-
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
-            testObservations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
-            testObservations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
+            observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
-            if (testObservations.ShouldAddUpstreamData)
+            if (observations.ShouldAddUpstreamData)
             {
                 foreach (var item in ContextData)
                 {
@@ -327,7 +315,7 @@ public class ConquerorContextComplexTests : TestBase
                 }
             }
 
-            if (testObservations.ShouldAddBidirectionalData)
+            if (observations.ShouldAddBidirectionalData)
             {
                 foreach (var item in ContextData)
                 {

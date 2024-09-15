@@ -1171,18 +1171,11 @@ public sealed class EventMiddlewareFunctionalityTests
         public int Payload { get; init; }
     }
 
-    private sealed class TestEventObserverWithSingleMiddleware : IEventObserver<TestEvent>,
-                                                                 IEventObserver<TestEventWithCustomPublisher>,
-                                                                 IEventObserver<TestEventWithMultipleCustomPublishers>,
-                                                                 IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithSingleMiddleware(TestObservations observations) : IEventObserver<TestEvent>,
+                                                                                                IEventObserver<TestEventWithCustomPublisher>,
+                                                                                                IEventObserver<TestEventWithMultipleCustomPublishers>,
+                                                                                                IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverWithSingleMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -1210,15 +1203,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithSingleMiddlewareWithParameter : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithSingleMiddlewareWithParameter(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverWithSingleMiddlewareWithParameter(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -1232,15 +1218,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithMultipleMiddlewares(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverWithMultipleMiddlewares(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -1255,15 +1234,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithConfigurableMiddlewares : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithConfigurableMiddlewares(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverWithConfigurableMiddlewares(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -1278,15 +1250,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithRetryMiddleware : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithRetryMiddleware(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverWithRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -1302,15 +1267,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithMultipleMutatingMiddlewares : IEventObserver<TestEvent>, IEventObserver<TestEventWithCustomPublisher>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithMultipleMutatingMiddlewares(TestObservations observations) : IEventObserver<TestEvent>, IEventObserver<TestEventWithCustomPublisher>, IConfigureEventObserverPipeline
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverWithMultipleMutatingMiddlewares(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -1364,15 +1322,8 @@ public sealed class EventMiddlewareFunctionalityTests
         public int Parameter { get; set; }
     }
 
-    private sealed class TestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
+    private sealed class TestEventObserverMiddleware(TestObservations observations) : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
             where TEvent : class
         {
@@ -1386,15 +1337,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverMiddleware2 : IEventObserverMiddleware
+    private sealed class TestEventObserverMiddleware2(TestObservations observations) : IEventObserverMiddleware
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverMiddleware2(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1407,15 +1351,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverRetryMiddleware : IEventObserverMiddleware
+    private sealed class TestEventObserverRetryMiddleware(TestObservations observations) : IEventObserverMiddleware
     {
-        private readonly TestObservations observations;
-
-        public TestEventObserverRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1429,17 +1366,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestEventObserverMiddleware : IEventObserverMiddleware
+    private sealed class MutatingTestEventObserverMiddleware(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IEventObserverMiddleware
     {
-        private readonly CancellationTokensToUse cancellationTokensToUse;
-        private readonly TestObservations observations;
-
-        public MutatingTestEventObserverMiddleware(TestObservations observations, CancellationTokensToUse cancellationTokensToUse)
-        {
-            this.observations = observations;
-            this.cancellationTokensToUse = cancellationTokensToUse;
-        }
-
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1467,17 +1395,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestEventObserverMiddleware2 : IEventObserverMiddleware
+    private sealed class MutatingTestEventObserverMiddleware2(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IEventObserverMiddleware
     {
-        private readonly CancellationTokensToUse cancellationTokensToUse;
-        private readonly TestObservations observations;
-
-        public MutatingTestEventObserverMiddleware2(TestObservations observations, CancellationTokensToUse cancellationTokensToUse)
-        {
-            this.observations = observations;
-            this.cancellationTokensToUse = cancellationTokensToUse;
-        }
-
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1505,15 +1424,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestEventObserverMiddleware : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
+    private sealed class ThrowingTestEventObserverMiddleware(Exception exception) : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
     {
-        private readonly Exception exception;
-
-        public ThrowingTestEventObserverMiddleware(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
             where TEvent : class
         {
@@ -1524,15 +1436,8 @@ public sealed class EventMiddlewareFunctionalityTests
 
     private sealed record TestEventPublisherMiddlewareConfiguration;
 
-    private sealed class TestEventPublisherMiddleware : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
+    private sealed class TestEventPublisherMiddleware(TestObservations observations) : IEventPublisherMiddleware<TestEventPublisherMiddlewareConfiguration>
     {
-        private readonly TestObservations observations;
-
-        public TestEventPublisherMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent, TestEventPublisherMiddlewareConfiguration> ctx)
             where TEvent : class
         {
@@ -1545,15 +1450,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventPublisherMiddleware2 : IEventPublisherMiddleware
+    private sealed class TestEventPublisherMiddleware2(TestObservations observations) : IEventPublisherMiddleware
     {
-        private readonly TestObservations observations;
-
-        public TestEventPublisherMiddleware2(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1566,15 +1464,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventPublisherRetryMiddleware : IEventPublisherMiddleware
+    private sealed class TestEventPublisherRetryMiddleware(TestObservations observations) : IEventPublisherMiddleware
     {
-        private readonly TestObservations observations;
-
-        public TestEventPublisherRetryMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1588,17 +1479,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestEventPublisherMiddleware : IEventPublisherMiddleware
+    private sealed class MutatingTestEventPublisherMiddleware(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IEventPublisherMiddleware
     {
-        private readonly CancellationTokensToUse cancellationTokensToUse;
-        private readonly TestObservations observations;
-
-        public MutatingTestEventPublisherMiddleware(TestObservations observations, CancellationTokensToUse cancellationTokensToUse)
-        {
-            this.observations = observations;
-            this.cancellationTokensToUse = cancellationTokensToUse;
-        }
-
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1626,17 +1508,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MutatingTestEventPublisherMiddleware2 : IEventPublisherMiddleware
+    private sealed class MutatingTestEventPublisherMiddleware2(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IEventPublisherMiddleware
     {
-        private readonly CancellationTokensToUse cancellationTokensToUse;
-        private readonly TestObservations observations;
-
-        public MutatingTestEventPublisherMiddleware2(TestObservations observations, CancellationTokensToUse cancellationTokensToUse)
-        {
-            this.observations = observations;
-            this.cancellationTokensToUse = cancellationTokensToUse;
-        }
-
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1664,15 +1537,8 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestEventPublisherMiddleware : IEventPublisherMiddleware
+    private sealed class ThrowingTestEventPublisherMiddleware(Exception exception) : IEventPublisherMiddleware
     {
-        private readonly Exception exception;
-
-        public ThrowingTestEventPublisherMiddleware(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
             where TEvent : class
         {
@@ -1710,17 +1576,8 @@ public sealed class EventMiddlewareFunctionalityTests
     {
     }
 
-    private sealed class TestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportAttribute>
+    private sealed class TestEventTransportPublisher(TestObservations observations, IConquerorEventTransportClientRegistrar registrar) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
     {
-        private readonly TestObservations observations;
-        private readonly IConquerorEventTransportClientRegistrar registrar;
-
-        public TestEventTransportPublisher(TestObservations observations, IConquerorEventTransportClientRegistrar registrar)
-        {
-            this.observations = observations;
-            this.registrar = registrar;
-        }
-
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class
         {
@@ -1741,17 +1598,8 @@ public sealed class EventMiddlewareFunctionalityTests
     {
     }
 
-    private sealed class TestEventTransportPublisher2 : IConquerorEventTransportPublisher<TestEventTransport2Attribute>
+    private sealed class TestEventTransportPublisher2(TestObservations observations, InMemoryEventPublisher inMemoryPublisher) : IConquerorEventTransportPublisher<TestEventTransport2Attribute>
     {
-        private readonly InMemoryEventPublisher inMemoryPublisher;
-        private readonly TestObservations observations;
-
-        public TestEventTransportPublisher2(TestObservations observations, InMemoryEventPublisher inMemoryPublisher)
-        {
-            this.observations = observations;
-            this.inMemoryPublisher = inMemoryPublisher;
-        }
-
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransport2Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
             where TEvent : class
         {

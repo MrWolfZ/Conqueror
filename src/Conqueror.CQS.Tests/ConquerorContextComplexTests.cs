@@ -276,17 +276,11 @@ public sealed class ConquerorContextComplexTests
         return new(activity.TraceId.ToString(), activitySource, activityListener, activity);
     }
 
-    private sealed class DisposableActivity : IDisposable
+    private sealed class DisposableActivity(string traceId, params IDisposable[] disposables) : IDisposable
     {
-        private readonly IReadOnlyCollection<IDisposable> disposables;
+        private readonly IReadOnlyCollection<IDisposable> disposables = disposables;
 
-        public DisposableActivity(string traceId, params IDisposable[] disposables)
-        {
-            TraceId = traceId;
-            this.disposables = disposables;
-        }
-
-        public string TraceId { get; }
+        public string TraceId { get; } = traceId;
 
         public void Dispose()
         {
@@ -305,21 +299,12 @@ public sealed class ConquerorContextComplexTests
 
     private sealed record NestedTestCommandResponse(int Payload);
 
-    private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
+    private sealed class TestCommandHandler(
+        Func<TestCommand, IConquerorContext?, Func<Task<TestCommandResponse>>, Task<TestCommandResponse>> handlerFn,
+        IConquerorContextAccessor conquerorContextAccessor,
+        IQueryHandler<NestedTestQuery, NestedTestQueryResponse> nestedQueryHandler)
+        : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<TestCommand, IConquerorContext?, Func<Task<TestCommandResponse>>, Task<TestCommandResponse>> handlerFn;
-        private readonly IQueryHandler<NestedTestQuery, NestedTestQueryResponse> nestedQueryHandler;
-
-        public TestCommandHandler(Func<TestCommand, IConquerorContext?, Func<Task<TestCommandResponse>>, Task<TestCommandResponse>> handlerFn,
-                                  IConquerorContextAccessor conquerorContextAccessor,
-                                  IQueryHandler<NestedTestQuery, NestedTestQueryResponse> nestedQueryHandler)
-        {
-            this.handlerFn = handlerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.nestedQueryHandler = nestedQueryHandler;
-        }
-
         public async Task<TestCommandResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -331,17 +316,11 @@ public sealed class ConquerorContextComplexTests
         }
     }
 
-    private sealed class NestedTestCommandHandler : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
+    private sealed class NestedTestCommandHandler(
+        Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn,
+        IConquerorContextAccessor conquerorContextAccessor)
+        : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn;
-
-        public NestedTestCommandHandler(Func<NestedTestCommand, IConquerorContext?, NestedTestCommandResponse> handlerFn, IConquerorContextAccessor conquerorContextAccessor)
-        {
-            this.handlerFn = handlerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-        }
-
         public async Task<NestedTestCommandResponse> ExecuteCommand(NestedTestCommand query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -357,21 +336,12 @@ public sealed class ConquerorContextComplexTests
 
     private sealed record NestedTestQueryResponse(int Payload);
 
-    private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
+    private sealed class TestQueryHandler(
+        Func<TestQuery, IConquerorContext?, Func<Task<TestQueryResponse>>, Task<TestQueryResponse>> handlerFn,
+        IConquerorContextAccessor conquerorContextAccessor,
+        ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
+        : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<TestQuery, IConquerorContext?, Func<Task<TestQueryResponse>>, Task<TestQueryResponse>> handlerFn;
-        private readonly ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler;
-
-        public TestQueryHandler(Func<TestQuery, IConquerorContext?, Func<Task<TestQueryResponse>>, Task<TestQueryResponse>> handlerFn,
-                                IConquerorContextAccessor conquerorContextAccessor,
-                                ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
-        {
-            this.handlerFn = handlerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-            this.nestedCommandHandler = nestedCommandHandler;
-        }
-
         public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -383,17 +353,11 @@ public sealed class ConquerorContextComplexTests
         }
     }
 
-    private sealed class NestedTestQueryHandler : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>
+    private sealed class NestedTestQueryHandler(
+        Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse> handlerFn,
+        IConquerorContextAccessor conquerorContextAccessor)
+        : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>
     {
-        private readonly IConquerorContextAccessor conquerorContextAccessor;
-        private readonly Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse> handlerFn;
-
-        public NestedTestQueryHandler(Func<NestedTestQuery, IConquerorContext?, NestedTestQueryResponse> handlerFn, IConquerorContextAccessor conquerorContextAccessor)
-        {
-            this.handlerFn = handlerFn;
-            this.conquerorContextAccessor = conquerorContextAccessor;
-        }
-
         public async Task<NestedTestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();

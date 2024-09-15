@@ -3,15 +3,8 @@ using Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares;
 
 namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounters;
 
-internal sealed class GetSharedCounterValueQueryHandler : IGetSharedCounterValueQueryHandler
+internal sealed class GetSharedCounterValueQueryHandler(SharedCounter counter) : IGetSharedCounterValueQueryHandler
 {
-    private readonly SharedCounter counter;
-
-    public GetSharedCounterValueQueryHandler(SharedCounter counter)
-    {
-        this.counter = counter;
-    }
-
     public async Task<GetSharedCounterValueQueryResponse> ExecuteQuery(GetSharedCounterValueQuery query, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;

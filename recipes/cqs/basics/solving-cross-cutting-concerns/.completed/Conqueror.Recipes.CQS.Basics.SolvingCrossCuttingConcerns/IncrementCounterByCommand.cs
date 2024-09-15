@@ -12,15 +12,8 @@ public interface IIncrementCounterByCommandHandler : ICommandHandler<IncrementCo
 {
 }
 
-internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
+internal sealed class IncrementCounterByCommandHandler(CountersRepository repository) : IIncrementCounterByCommandHandler
 {
-    private readonly CountersRepository repository;
-
-    public IncrementCounterByCommandHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) =>
         pipeline.UseDefault()
                 .ConfigureRetry(o => o.RetryAttemptLimit = 3);

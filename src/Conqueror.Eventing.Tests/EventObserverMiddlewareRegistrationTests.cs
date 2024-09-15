@@ -642,15 +642,9 @@ public sealed class EventObserverMiddlewareRegistrationTests
             pipeline.Use<TestEventObserverMiddleware>();
     }
 
-    private sealed class TestEventObserverMiddleware : IEventObserverMiddleware
+    private sealed class TestEventObserverMiddleware(TestObservations observations) : IEventObserverMiddleware
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserverMiddleware(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent> ctx)
             where TEvent : class
@@ -663,15 +657,9 @@ public sealed class EventObserverMiddlewareRegistrationTests
 
     private sealed record TestEventObserverMiddlewareConfiguration;
 
-    private sealed class TestEventObserverMiddlewareWithConfiguration : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
+    private sealed class TestEventObserverMiddlewareWithConfiguration(TestObservations observations) : IEventObserverMiddleware<TestEventObserverMiddlewareConfiguration>
     {
-        private readonly TestObservations observations;
         private int invocationCount;
-
-        public TestEventObserverMiddlewareWithConfiguration(TestObservations observations)
-        {
-            this.observations = observations;
-        }
 
         public async Task Execute<TEvent>(EventObserverMiddlewareContext<TEvent, TestEventObserverMiddlewareConfiguration> ctx)
             where TEvent : class

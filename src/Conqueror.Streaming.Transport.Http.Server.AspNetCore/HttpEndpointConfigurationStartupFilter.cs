@@ -5,21 +5,12 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore;
 
-internal sealed class HttpEndpointConfigurationStartupFilter : IStartupFilter
+internal sealed class HttpEndpointConfigurationStartupFilter(
+    ApplicationPartManager applicationPartManager,
+    HttpEndpointRegistry httpEndpointRegistry,
+    HttpEndpointActionDescriptorChangeProvider actionDescriptorChangeProvider)
+    : IStartupFilter
 {
-    private readonly HttpEndpointActionDescriptorChangeProvider actionDescriptorChangeProvider;
-    private readonly ApplicationPartManager applicationPartManager;
-    private readonly HttpEndpointRegistry httpEndpointRegistry;
-
-    public HttpEndpointConfigurationStartupFilter(ApplicationPartManager applicationPartManager,
-                                                  HttpEndpointRegistry httpEndpointRegistry,
-                                                  HttpEndpointActionDescriptorChangeProvider actionDescriptorChangeProvider)
-    {
-        this.applicationPartManager = applicationPartManager;
-        this.httpEndpointRegistry = httpEndpointRegistry;
-        this.actionDescriptorChangeProvider = actionDescriptorChangeProvider;
-    }
-
     public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
     {
         return b =>

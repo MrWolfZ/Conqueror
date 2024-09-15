@@ -6,21 +6,13 @@ using System.Reflection;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore;
 
-internal sealed class HttpEndpointRegistry
+internal sealed class HttpEndpointRegistry(
+    ICommandHandlerRegistry commandHandlerRegistry,
+    IQueryHandlerRegistry queryHandlerRegistry,
+    ConquerorCqsHttpTransportServerAspNetCoreOptions options)
 {
     private const string DefaultCommandControllerName = "Commands";
     private const string DefaultQueryControllerName = "Queries";
-
-    private readonly ICommandHandlerRegistry commandHandlerRegistry;
-    private readonly ConquerorCqsHttpTransportServerAspNetCoreOptions options;
-    private readonly IQueryHandlerRegistry queryHandlerRegistry;
-
-    public HttpEndpointRegistry(ICommandHandlerRegistry commandHandlerRegistry, IQueryHandlerRegistry queryHandlerRegistry, ConquerorCqsHttpTransportServerAspNetCoreOptions options)
-    {
-        this.commandHandlerRegistry = commandHandlerRegistry;
-        this.queryHandlerRegistry = queryHandlerRegistry;
-        this.options = options;
-    }
 
     public IReadOnlyCollection<HttpEndpoint> GetEndpoints()
     {

@@ -2,17 +2,11 @@ using System;
 
 namespace Conqueror.Common;
 
-internal sealed class DisposableConquerorContext : IDisposableConquerorContext
+internal sealed class DisposableConquerorContext(
+    IConquerorContext wrappedContext,
+    Action? onDispose = null)
+    : IDisposableConquerorContext
 {
-    private readonly Action? onDispose;
-    private readonly IConquerorContext wrappedContext;
-
-    public DisposableConquerorContext(IConquerorContext wrappedContext, Action? onDispose = null)
-    {
-        this.onDispose = onDispose;
-        this.wrappedContext = wrappedContext;
-    }
-
     public string TraceId => wrappedContext.TraceId;
 
     public IConquerorContextData DownstreamContextData => wrappedContext.DownstreamContextData;

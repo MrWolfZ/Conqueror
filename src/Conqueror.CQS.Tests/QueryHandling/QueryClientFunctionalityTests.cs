@@ -140,15 +140,8 @@ public abstract class QueryClientFunctionalityTests
 
     private interface ITestQueryHandlerWithoutValidInterfaces : IQueryHandler;
 
-    private sealed class TestQueryTransport : IQueryTransportClient
+    private sealed class TestQueryTransport(TestObservations observations) : IQueryTransportClient
     {
-        private readonly TestObservations observations;
-
-        public TestQueryTransport(TestObservations observations)
-        {
-            this.observations = observations;
-        }
-
         public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
 
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
@@ -165,15 +158,8 @@ public abstract class QueryClientFunctionalityTests
         }
     }
 
-    private sealed class ThrowingTestQueryTransport : IQueryTransportClient
+    private sealed class ThrowingTestQueryTransport(Exception exception) : IQueryTransportClient
     {
-        private readonly Exception exception;
-
-        public ThrowingTestQueryTransport(Exception exception)
-        {
-            this.exception = exception;
-        }
-
         public QueryTransportType TransportType { get; } = new("test", QueryTransportRole.Client);
 
         public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
