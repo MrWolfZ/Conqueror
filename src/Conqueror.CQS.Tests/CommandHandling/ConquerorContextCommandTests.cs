@@ -85,46 +85,6 @@ public sealed class ConquerorContextCommandTests
     }
 
     [Test]
-    [Combinatorial]
-    public async Task GivenCommandExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassRegardlessOfLifetime(
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime handlerLifetime,
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime middlewareLifetime,
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime nestedClassLifetime)
-    {
-        var command = new TestCommand(10);
-        var observedContexts = new List<ConquerorContext>();
-
-        var provider = Setup(
-            (cmd, ctx) =>
-            {
-                observedContexts.Add(ctx!);
-                return new(cmd.Payload);
-            },
-            (cmd, _) => new(cmd.Payload),
-            (ctx, next) =>
-            {
-                observedContexts.Add(ctx.ConquerorContext);
-                return next(ctx.Command);
-            },
-            (ctx, next) => next(ctx.Command),
-            ctx => observedContexts.Add(ctx!),
-            _ => { },
-            handlerLifetime,
-            middlewareLifetime,
-            nestedClassLifetime);
-
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
-
-        Assert.That(observedContexts, Has.Count.EqualTo(3));
-        Assert.That(observedContexts[0], Is.Not.Null);
-        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
-        Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
-    }
-
-    [Test]
     public async Task GivenCommandExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
     {
         var command = new TestCommand(10);
@@ -361,8 +321,6 @@ public sealed class ConquerorContextCommandTests
                                    MiddlewareFn? outerMiddlewareFn = null,
                                    Action<ConquerorContext?>? nestedClassFn = null,
                                    Action<ConquerorContext?>? handlerPreReturnFn = null,
-                                   ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
-                                   ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
     {
         handlerFn ??= (cmd, _) => new(cmd.Payload);
@@ -380,10 +338,9 @@ public sealed class ConquerorContextCommandTests
                                                                              handlerPreReturnFn,
                                                                              p.GetRequiredService<IConquerorContextAccessor>(),
                                                                              p.GetRequiredService<NestedClass>(),
-                                                                             p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
-                                                                    handlerLifetime);
+                                                                             p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()));
 
-        _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()), nestedHandlerLifetime);
+        _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()));
 
         _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), middlewareFn);
         _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(OuterTestCommandMiddleware<TestCommand, TestCommandResponse>), outerMiddlewareFn);

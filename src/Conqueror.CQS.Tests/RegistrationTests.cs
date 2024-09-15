@@ -87,7 +87,7 @@ public sealed class RegistrationTests
     [Test]
     public void GivenServiceCollectionWithHandlerAlreadyRegistered_AddingAllTypesFromAssemblyDoesNotAddHandlerAgain()
     {
-        var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>(ServiceLifetime.Singleton)
+        var services = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandler>()
                                               .AddConquerorCQSTypesFromAssembly(typeof(RegistrationTests).Assembly);
 
         Assert.That(services.Count(d => d.ImplementationType == d.ServiceType && d.ServiceType == typeof(TestCommandHandler)), Is.EqualTo(1));

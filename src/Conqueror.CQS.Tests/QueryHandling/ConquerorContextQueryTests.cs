@@ -75,46 +75,6 @@ public sealed class ConquerorContextQueryTests
     }
 
     [Test]
-    [Combinatorial]
-    public async Task GivenQueryExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassRegardlessOfLifetime(
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime handlerLifetime,
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime middlewareLifetime,
-        [Values(ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
-        ServiceLifetime nestedClassLifetime)
-    {
-        var query = new TestQuery(10);
-        var observedContexts = new List<ConquerorContext>();
-
-        var provider = Setup(
-            (q, ctx) =>
-            {
-                observedContexts.Add(ctx!);
-                return new(q.Payload);
-            },
-            (q, _) => new(q.Payload),
-            (ctx, next) =>
-            {
-                observedContexts.Add(ctx.ConquerorContext);
-                return next(ctx.Query);
-            },
-            (ctx, next) => next(ctx.Query),
-            ctx => observedContexts.Add(ctx!),
-            _ => { },
-            handlerLifetime,
-            middlewareLifetime,
-            nestedClassLifetime);
-
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
-
-        Assert.That(observedContexts, Has.Count.EqualTo(3));
-        Assert.That(observedContexts[0], Is.Not.Null);
-        Assert.That(observedContexts[1], Is.SameAs(observedContexts[0]));
-        Assert.That(observedContexts[2], Is.SameAs(observedContexts[0]));
-    }
-
-    [Test]
     public async Task GivenQueryExecution_ConquerorContextIsTheSameInMiddlewareHandlerAndNestedClassWithConfigureAwait()
     {
         var query = new TestQuery(10);
@@ -351,8 +311,6 @@ public sealed class ConquerorContextQueryTests
                                    MiddlewareFn? outerMiddlewareFn = null,
                                    Action<ConquerorContext?>? nestedClassFn = null,
                                    Action<ConquerorContext?>? handlerPreReturnFn = null,
-                                   ServiceLifetime handlerLifetime = ServiceLifetime.Transient,
-                                   ServiceLifetime nestedHandlerLifetime = ServiceLifetime.Transient,
                                    ServiceLifetime nestedClassLifetime = ServiceLifetime.Transient)
     {
         handlerFn ??= (query, _) => new(query.Payload);
@@ -370,11 +328,9 @@ public sealed class ConquerorContextQueryTests
                                                                          handlerPreReturnFn,
                                                                          p.GetRequiredService<IConquerorContextAccessor>(),
                                                                          p.GetRequiredService<NestedClass>(),
-                                                                         p.GetRequiredService<IQueryHandler<NestedTestQuery, NestedTestQueryResponse>>()),
-                                                                handlerLifetime);
+                                                                         p.GetRequiredService<IQueryHandler<NestedTestQuery, NestedTestQueryResponse>>()));
 
-        _ = services.AddConquerorQueryHandler<NestedTestQueryHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                      nestedHandlerLifetime);
+        _ = services.AddConquerorQueryHandler<NestedTestQueryHandler>(p => new(nestedHandlerFn, p.GetRequiredService<IConquerorContextAccessor>()));
 
         _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), middlewareFn);
         _ = services.AddKeyedSingleton<MiddlewareFn>(typeof(OuterTestQueryMiddleware<TestQuery, TestQueryResponse>), outerMiddlewareFn);

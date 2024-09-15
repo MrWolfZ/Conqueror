@@ -218,11 +218,7 @@ public sealed class ConquerorContextComplexTests
     private IServiceProvider Setup(Func<TestCommand, ConquerorContext?, Func<Task<TestCommandResponse>>, Task<TestCommandResponse>>? commandHandlerFn = null,
                                    Func<TestQuery, ConquerorContext?, Func<Task<TestQueryResponse>>, Task<TestQueryResponse>>? queryHandlerFn = null,
                                    Func<NestedTestCommand, ConquerorContext?, NestedTestCommandResponse>? nestedCommandHandlerFn = null,
-                                   Func<NestedTestQuery, ConquerorContext?, NestedTestQueryResponse>? nestedQueryHandlerFn = null,
-                                   ServiceLifetime commandHandlerLifetime = ServiceLifetime.Transient,
-                                   ServiceLifetime queryHandlerLifetime = ServiceLifetime.Transient,
-                                   ServiceLifetime nestedCommandHandlerLifetime = ServiceLifetime.Transient,
-                                   ServiceLifetime nestedQueryHandlerLifetime = ServiceLifetime.Transient)
+                                   Func<NestedTestQuery, ConquerorContext?, NestedTestQueryResponse>? nestedQueryHandlerFn = null)
     {
         commandHandlerFn ??= (_, _, next) => next();
         queryHandlerFn ??= (_, _, next) => next();
@@ -233,21 +229,17 @@ public sealed class ConquerorContextComplexTests
 
         _ = services.AddConquerorCommandHandler<TestCommandHandler>(p => new(commandHandlerFn,
                                                                              p.GetRequiredService<IConquerorContextAccessor>(),
-                                                                             p.GetRequiredService<IQueryHandler<NestedTestQuery, NestedTestQueryResponse>>()),
-                                                                    commandHandlerLifetime);
+                                                                             p.GetRequiredService<IQueryHandler<NestedTestQuery, NestedTestQueryResponse>>()));
 
         _ = services.AddConquerorCommandHandler<NestedTestCommandHandler>(p => new(nestedCommandHandlerFn,
-                                                                                   p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                          nestedCommandHandlerLifetime);
+                                                                                   p.GetRequiredService<IConquerorContextAccessor>()));
 
         _ = services.AddConquerorQueryHandler<TestQueryHandler>(p => new(queryHandlerFn,
                                                                          p.GetRequiredService<IConquerorContextAccessor>(),
-                                                                         p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()),
-                                                                queryHandlerLifetime);
+                                                                         p.GetRequiredService<ICommandHandler<NestedTestCommand, NestedTestCommandResponse>>()));
 
         _ = services.AddConquerorQueryHandler<NestedTestQueryHandler>(p => new(nestedQueryHandlerFn,
-                                                                               p.GetRequiredService<IConquerorContextAccessor>()),
-                                                                      nestedQueryHandlerLifetime);
+                                                                               p.GetRequiredService<IConquerorContextAccessor>()));
 
         var provider = services.BuildServiceProvider();
 

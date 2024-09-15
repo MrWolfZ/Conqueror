@@ -14,26 +14,17 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
 {
-    public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services,
-                                                                          ServiceLifetime lifetime = ServiceLifetime.Transient)
+    public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services)
         where THandler : class, ICommandHandler
     {
-        return services.AddConquerorCommandHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), typeof(THandler), lifetime));
+        return services.AddConquerorCommandHandler(typeof(THandler), ServiceDescriptor.Transient(typeof(THandler), typeof(THandler)));
     }
 
     public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services,
-                                                                          Func<IServiceProvider, THandler> factory,
-                                                                          ServiceLifetime lifetime = ServiceLifetime.Transient)
+                                                                          Func<IServiceProvider, THandler> factory)
         where THandler : class, ICommandHandler
     {
-        return services.AddConquerorCommandHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), factory, lifetime));
-    }
-
-    public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services,
-                                                                          THandler instance)
-        where THandler : class, ICommandHandler
-    {
-        return services.AddConquerorCommandHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), instance));
+        return services.AddConquerorCommandHandler(typeof(THandler), ServiceDescriptor.Transient(typeof(THandler), factory));
     }
 
     public static IServiceCollection AddConquerorCommandHandlerDelegate<TCommand, TResponse>(this IServiceCollection services,

@@ -14,26 +14,17 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
 {
-    public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services,
-                                                                        ServiceLifetime lifetime = ServiceLifetime.Transient)
+    public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services)
         where THandler : class, IQueryHandler
     {
-        return services.AddConquerorQueryHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), typeof(THandler), lifetime));
+        return services.AddConquerorQueryHandler(typeof(THandler), ServiceDescriptor.Transient(typeof(THandler), typeof(THandler)));
     }
 
     public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services,
-                                                                        Func<IServiceProvider, THandler> factory,
-                                                                        ServiceLifetime lifetime = ServiceLifetime.Transient)
+                                                                        Func<IServiceProvider, THandler> factory)
         where THandler : class, IQueryHandler
     {
-        return services.AddConquerorQueryHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), factory, lifetime));
-    }
-
-    public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services,
-                                                                        THandler instance)
-        where THandler : class, IQueryHandler
-    {
-        return services.AddConquerorQueryHandler(typeof(THandler), new ServiceDescriptor(typeof(THandler), instance));
+        return services.AddConquerorQueryHandler(typeof(THandler), ServiceDescriptor.Transient(typeof(THandler), factory));
     }
 
     public static IServiceCollection AddConquerorQueryHandlerDelegate<TQuery, TResponse>(this IServiceCollection services,

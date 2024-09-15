@@ -354,7 +354,6 @@ public sealed class CommandHandlerFunctionalityTests
     {
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithoutValidInterfaces>());
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithoutValidInterfaces>(_ => new()));
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCommandHandler(new TestCommandHandlerWithoutValidInterfaces()));
     }
 
     private sealed record TestCommand(int Payload);

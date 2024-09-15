@@ -8,11 +8,7 @@ var services = new ServiceCollection();
 // add the in-memory repository, which contains the counters, as a singleton
 services.AddSingleton<CountersRepository>();
 
-// add some handlers manually for demonstration purposes
-services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>(ServiceLifetime.Singleton)
-        .AddConquerorCommandHandler<IncrementCounterCommandHandler>(ServiceLifetime.Scoped);
-
-// add all remaining handlers automatically as transient
+// add all handlers automatically
 services.AddConquerorCQSTypesFromExecutingAssembly();
 
 await using var serviceProvider = services.BuildServiceProvider();

@@ -211,6 +211,8 @@ services.AddSingleton<CountersRepository>();
 await using var serviceProvider = services.BuildServiceProvider();
 ```
 
+> Note that handlers are always registered as transient. During the development of **Conqueror** we considered the option to specify the lifetime of handlers, but we decided against this since we believe it encourages bad design to couple handlers to any particular scope. If your handler requires access to scoped data or singleton data, this should be done by injecting instances with the correct scope into the handler (e.g. using a singleton `IMemoryCache`).
+
 Now that we have everything set up, we can implement the `list` operation of our application in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)):
 
 ```diff
@@ -330,7 +332,7 @@ internal sealed class IncrementCounterCommandHandler(CountersRepository reposito
 
 ```
 
-We can now use this handler to implement the `inc` operation in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)). At this point you may come to the conclusion that it is a bit annoying that you have to add every handler separately to the services. **Conqueror.CQS** provides two convenience extension methods `AddConquerorCQSTypesFromExecutingAssembly()` and `AddConquerorCQSTypesFromAssembly(Assembly assembly)` which discover and add all handlers in an assembly to the services as transient. The methods will not overwrite any handlers that are already added, meaning you can add non-transient handlers yourself (e.g. `services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>(ServiceLifetime.Singleton)`) and then register all remaining ones automatically with the convenience methods. Let's do that for demonstration purposes:
+We can now use this handler to implement the `inc` operation in `Program.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.GettingStarted/Program.cs)). At this point you may come to the conclusion that it is a bit annoying that you have to add every handler separately to the services. **Conqueror.CQS** provides two convenience extension methods `AddConquerorCQSTypesFromExecutingAssembly()` and `AddConquerorCQSTypesFromAssembly(Assembly assembly)` which discover and add all handlers in an assembly to the services. Let's do that for demonstration purposes:
 
 ```diff
 services.AddSingleton<CountersRepository>();
@@ -338,11 +340,8 @@ services.AddSingleton<CountersRepository>();
 - // add all query handlers
 - services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>()
 -         .AddConquerorQueryHandler<GetCounterValueQueryHandler>();
-+ // add some handlers manually for demonstration purposes
-+ services.AddConquerorQueryHandler<GetCounterNamesQueryHandler>(ServiceLifetime.Singleton)
-+         .AddConquerorCommandHandler<IncrementCounterCommandHandler>(ServiceLifetime.Scoped);
-+
-+ // add all remaining handlers automatically as transient
+
++ // add all handlers automatically
 + services.AddConquerorCQSTypesFromExecutingAssembly();
 
 await using var serviceProvider = services.BuildServiceProvider();

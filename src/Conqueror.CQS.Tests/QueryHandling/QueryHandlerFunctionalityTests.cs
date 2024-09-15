@@ -244,7 +244,6 @@ public sealed class QueryHandlerFunctionalityTests
     {
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithoutValidInterfaces>());
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithoutValidInterfaces>(_ => new()));
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryHandler(new TestQueryHandlerWithoutValidInterfaces()));
     }
 
     private sealed record TestQuery(int Payload);

@@ -215,48 +215,6 @@ public sealed class CommandHandlerCustomInterfaceTests
     }
 
     [Test]
-    public async Task GivenHandlerWithCustomInterface_ResolvingHandlerViaPlainAndCustomInterfaceReturnsEquivalentInstance()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCommandHandler<TestCommandHandler>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var plainInterfaceHandler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-        var customInterfaceHandler = provider.GetRequiredService<ITestCommandHandler>();
-
-        _ = await plainInterfaceHandler.ExecuteCommand(new(), CancellationToken.None);
-        _ = await customInterfaceHandler.ExecuteCommand(new(), CancellationToken.None);
-
-        Assert.That(observations.Instances, Has.Count.EqualTo(2));
-        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
-    }
-
-    [Test]
-    public async Task GivenHandlerWithoutResponseWithCustomInterface_ResolvingHandlerViaPlainAndCustomInterfaceReturnsEquivalentInstance()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var plainInterfaceHandler = provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>();
-        var customInterfaceHandler = provider.GetRequiredService<ITestCommandHandlerWithoutResponse>();
-
-        await plainInterfaceHandler.ExecuteCommand(new(), CancellationToken.None);
-        await customInterfaceHandler.ExecuteCommand(new(), CancellationToken.None);
-
-        Assert.That(observations.Instances, Has.Count.EqualTo(2));
-        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
-    }
-
-    [Test]
     public void GivenHandlerWithMultipleCustomInterfaces_HandlerCanBeResolvedFromAllInterfaces()
     {
         var services = new ServiceCollection();

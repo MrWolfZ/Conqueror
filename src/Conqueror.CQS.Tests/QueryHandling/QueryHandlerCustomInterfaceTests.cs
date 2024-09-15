@@ -146,27 +146,6 @@ public sealed class QueryHandlerCustomInterfaceTests
     }
 
     [Test]
-    public async Task GivenHandlerWithCustomInterface_ResolvingHandlerViaPlainAndCustomInterfaceReturnsEquivalentInstance()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorQueryHandler<TestQueryHandler>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var plainInterfaceHandler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
-        var customInterfaceHandler = provider.GetRequiredService<ITestQueryHandler>();
-
-        _ = await plainInterfaceHandler.ExecuteQuery(new(), CancellationToken.None);
-        _ = await customInterfaceHandler.ExecuteQuery(new(), CancellationToken.None);
-
-        Assert.That(observations.Instances, Has.Count.EqualTo(2));
-        Assert.That(observations.Instances[1], Is.SameAs(observations.Instances[0]));
-    }
-
-    [Test]
     public void GivenHandlerWithMultipleCustomInterfaces_HandlerCanBeResolvedFromAllInterfaces()
     {
         var services = new ServiceCollection();
