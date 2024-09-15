@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Conqueror.CQS.QueryHandling;
 
@@ -24,6 +25,11 @@ internal sealed class QueryPipeline<TQuery, TResponse>(
     {
         middlewares.Add(middleware);
         return this;
+    }
+
+    public IQueryPipeline<TQuery, TResponse> Use(QueryMiddlewareFn<TQuery, TResponse> middlewareFn)
+    {
+        return Use(new DelegateQueryMiddleware(middlewareFn));
     }
 
     public IQueryPipeline<TQuery, TResponse> Without<TMiddleware>()
@@ -63,5 +69,10 @@ internal sealed class QueryPipeline<TQuery, TResponse>(
     public QueryPipelineRunner<TQuery, TResponse> Build(ConquerorContext conquerorContext)
     {
         return new(conquerorContext, middlewares);
+    }
+
+    private sealed class DelegateQueryMiddleware(QueryMiddlewareFn<TQuery, TResponse> middlewareFn) : IQueryMiddleware<TQuery, TResponse>
+    {
+        public Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx) => middlewareFn(ctx);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Conqueror.CQS.CommandHandling;
 
@@ -24,6 +25,11 @@ internal sealed class CommandPipeline<TCommand, TResponse>(
     {
         middlewares.Add(middleware);
         return this;
+    }
+
+    public ICommandPipeline<TCommand, TResponse> Use(CommandMiddlewareFn<TCommand, TResponse> middlewareFn)
+    {
+        return Use(new DelegateCommandMiddleware(middlewareFn));
     }
 
     public ICommandPipeline<TCommand, TResponse> Without<TMiddleware>()
@@ -63,5 +69,10 @@ internal sealed class CommandPipeline<TCommand, TResponse>(
     public CommandPipelineRunner<TCommand, TResponse> Build(ConquerorContext conquerorContext)
     {
         return new(conquerorContext, middlewares);
+    }
+
+    private sealed class DelegateCommandMiddleware(CommandMiddlewareFn<TCommand, TResponse> middlewareFn) : ICommandMiddleware<TCommand, TResponse>
+    {
+        public Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx) => middlewareFn(ctx);
     }
 }

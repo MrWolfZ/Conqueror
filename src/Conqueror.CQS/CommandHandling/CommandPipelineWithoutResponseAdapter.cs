@@ -19,6 +19,11 @@ internal sealed class CommandPipelineWithoutResponseAdapter<TCommand>(
         return commandPipelineImplementation.Use(middleware);
     }
 
+    public ICommandPipeline<TCommand, UnitCommandResponse> Use(CommandMiddlewareFn<TCommand, UnitCommandResponse> middlewareFn)
+    {
+        return commandPipelineImplementation.Use(middlewareFn);
+    }
+
     public ICommandPipeline<TCommand, UnitCommandResponse> Without<TMiddleware>()
         where TMiddleware : ICommandMiddleware<TCommand, UnitCommandResponse>
     {

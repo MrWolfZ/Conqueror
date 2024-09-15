@@ -83,6 +83,66 @@ public sealed class CommandMiddlewareFunctionalityTests
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
+        // delegate middleware
+        yield return new(p => p.Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>));
+                             observations.CommandsFromMiddlewares.Add(ctx.Command);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Command, ctx.CancellationToken);
+                         }),
+                         null,
+                         [
+                             (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ]);
+
+        yield return new(null,
+                         p => p.Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>));
+                             observations.CommandsFromMiddlewares.Add(ctx.Command);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Command, ctx.CancellationToken);
+                         }),
+                         [
+                             (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ]);
+
+        yield return new(p => p.Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>));
+                             observations.CommandsFromMiddlewares.Add(ctx.Command);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Command, ctx.CancellationToken);
+                         }),
+                         p => p.Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>));
+                             observations.CommandsFromMiddlewares.Add(ctx.Command);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Command, ctx.CancellationToken);
+                         }),
+                         [
+                             (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                             (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ]);
+
         // multiple different middlewares
         yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
@@ -109,6 +169,24 @@ public sealed class CommandMiddlewareFunctionalityTests
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ]);
+
+        // mix delegate and normal middleware
+        yield return new(p => p.Use(async ctx =>
+                         {
+                             await Task.Yield();
+                             var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
+                             observations.MiddlewareTypes.Add(typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>));
+                             observations.CommandsFromMiddlewares.Add(ctx.Command);
+                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+
+                             return await ctx.Next(ctx.Command, ctx.CancellationToken);
+                         }).Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
+                         null,
+                         [
+                             (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                             (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                          ]);
 
         // same middleware multiple times
@@ -564,6 +642,13 @@ public sealed class CommandMiddlewareFunctionalityTests
         }
     }
 
+    // only used as a marker for pipeline type check
+    private sealed class DelegateCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+        where TCommand : class
+    {
+        public Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx) => throw new NotSupportedException();
+    }
+
     private sealed class CommandPipelineWithoutResponseAdapter(
         ICommandPipeline<TestCommand> commandPipelineImplementation)
         : ICommandPipeline<TestCommand, TestCommandResponse>
@@ -578,6 +663,28 @@ public sealed class CommandMiddlewareFunctionalityTests
             where TMiddleware : ICommandMiddleware<TestCommand, TestCommandResponse>
         {
             _ = commandPipelineImplementation.Use(new MiddlewareAdapter<TMiddleware>(middleware));
+            return this;
+        }
+
+        public ICommandPipeline<TestCommand, TestCommandResponse> Use(CommandMiddlewareFn<TestCommand, TestCommandResponse> middlewareFn)
+        {
+            _ = commandPipelineImplementation.Use(async ctx =>
+            {
+                _ = await middlewareFn(new DefaultCommandMiddlewareContext<TestCommand, TestCommandResponse>(
+                                           ctx.Command,
+                                           async (c, t) =>
+                                           {
+                                               _ = await ctx.Next(c, t);
+                                               return new(ctx.Command.Payload);
+                                           },
+                                           ctx.ServiceProvider,
+                                           ctx.ConquerorContext,
+                                           ctx.TransportType,
+                                           ctx.CancellationToken));
+
+                return UnitCommandResponse.Instance;
+            });
+
             return this;
         }
 

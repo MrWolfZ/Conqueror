@@ -18,7 +18,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] add support for delegate middlewares
 - [ ] add `.Has()` method to pipelines
 - [ ] make pipeline enumerable
 - [ ] add trace logging to transports

@@ -1,6 +1,10 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Conqueror;
+
+public delegate Task<TResponse> QueryMiddlewareFn<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> context)
+    where TQuery : class;
 
 public interface IQueryPipeline<TQuery, TResponse>
     where TQuery : class
@@ -19,6 +23,8 @@ public interface IQueryPipeline<TQuery, TResponse>
 
     IQueryPipeline<TQuery, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : IQueryMiddleware<TQuery, TResponse>;
+
+    IQueryPipeline<TQuery, TResponse> Use(QueryMiddlewareFn<TQuery, TResponse> middlewareFn);
 
     IQueryPipeline<TQuery, TResponse> Without<TMiddleware>()
         where TMiddleware : IQueryMiddleware<TQuery, TResponse>;

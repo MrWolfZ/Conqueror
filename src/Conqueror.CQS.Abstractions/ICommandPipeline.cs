@@ -1,6 +1,10 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Conqueror;
+
+public delegate Task<TResponse> CommandMiddlewareFn<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> context)
+    where TCommand : class;
 
 public interface ICommandPipeline<TCommand> : ICommandPipeline<TCommand, UnitCommandResponse>
     where TCommand : class;
@@ -22,6 +26,8 @@ public interface ICommandPipeline<TCommand, TResponse>
 
     ICommandPipeline<TCommand, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : ICommandMiddleware<TCommand, TResponse>;
+
+    ICommandPipeline<TCommand, TResponse> Use(CommandMiddlewareFn<TCommand, TResponse> middlewareFn);
 
     ICommandPipeline<TCommand, TResponse> Without<TMiddleware>()
         where TMiddleware : ICommandMiddleware<TCommand, TResponse>;
