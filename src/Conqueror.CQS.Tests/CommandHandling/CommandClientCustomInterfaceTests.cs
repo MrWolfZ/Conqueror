@@ -1,6 +1,5 @@
 namespace Conqueror.CQS.Tests.CommandHandling;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
 public abstract class CommandClientCustomInterfaceTests
 {
     [Test]
@@ -89,7 +88,6 @@ public abstract class CommandClientCustomInterfaceTests
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class CommandClientCustomInterfaceWithSyncFactoryTests : CommandClientCustomInterfaceTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,
@@ -100,7 +98,6 @@ public sealed class CommandClientCustomInterfaceWithSyncFactoryTests : CommandCl
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class CommandClientCustomInterfaceWithAsyncFactoryTests : CommandClientCustomInterfaceTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,

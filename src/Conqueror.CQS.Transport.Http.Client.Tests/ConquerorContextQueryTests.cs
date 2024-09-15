@@ -5,7 +5,6 @@ namespace Conqueror.CQS.Transport.Http.Client.Tests;
 
 [TestFixture]
 [NonParallelizable]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public class ConquerorContextQueryTests : TestBase
 {
     private static readonly Dictionary<string, string> ContextData = new()
@@ -187,7 +186,6 @@ public class ConquerorContextQueryTests : TestBase
     }
 
     [Test]
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
     public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInHandlerAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
@@ -227,7 +225,6 @@ public class ConquerorContextQueryTests : TestBase
     }
 
     [Test]
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
     public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInHandlerAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
@@ -267,7 +264,6 @@ public class ConquerorContextQueryTests : TestBase
     }
 
     [Test]
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
     public async Task GivenManuallyCreatedContextOnClientWithDownstreamAndBidirectionalData_ContextIsReceivedInHandlerAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
@@ -365,7 +361,6 @@ public class ConquerorContextQueryTests : TestBase
     }
 
     [Test]
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
     public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInPostHandlerAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
@@ -405,7 +400,6 @@ public class ConquerorContextQueryTests : TestBase
     }
 
     [Test]
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
     public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInPostHandlerAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
@@ -445,7 +439,6 @@ public class ConquerorContextQueryTests : TestBase
     }
 
     [Test]
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
     public async Task GivenManuallyCreatedContextOnClientWithDownstreamData_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
@@ -486,7 +479,6 @@ public class ConquerorContextQueryTests : TestBase
     }
 
     [Test]
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1407:Arithmetic expressions should declare precedence", Justification = "conflicts with formatting rules")]
     public async Task GivenManuallyCreatedContextOnClientWithBidirectionalData_ContextIsReceivedInDifferentHandlersAcrossMultipleInvocations()
     {
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();

@@ -1,6 +1,5 @@
 namespace Conqueror.CQS.Tests.QueryHandling;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
 public abstract class QueryClientCustomInterfaceTests
 {
     [Test]
@@ -58,7 +57,6 @@ public abstract class QueryClientCustomInterfaceTests
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class QueryClientCustomInterfaceWithSyncFactoryTests : QueryClientCustomInterfaceTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,
@@ -69,7 +67,6 @@ public sealed class QueryClientCustomInterfaceWithSyncFactoryTests : QueryClient
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class QueryClientCustomInterfaceWithAsyncFactoryTests : QueryClientCustomInterfaceTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,

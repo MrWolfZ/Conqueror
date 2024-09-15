@@ -31,10 +31,8 @@ internal sealed class HttpQueryTransportClient(
     {
         var attribute = typeof(TQuery).GetCustomAttribute<HttpQueryAttribute>()!;
 
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get;
 
         SetHeaders(requestMessage.Headers);
 

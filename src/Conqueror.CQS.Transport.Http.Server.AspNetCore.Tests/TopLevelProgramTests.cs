@@ -45,12 +45,10 @@ public sealed class TopLevelProgramTests : IDisposable
 
         conquerorContext.ContextData.Set("testKey", "testValue", ConquerorContextDataScope.AcrossTransports);
 
-        using var msg = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/api/queries/topLevelTest?payload=10", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = HttpMethod.Get;
+        msg.RequestUri = new("/api/queries/topLevelTest?payload=10", UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertStatusCode(HttpStatusCode.OK);
@@ -83,12 +81,10 @@ public sealed class TopLevelProgramTests : IDisposable
 
         conquerorContext.ContextData.Set("testKey", "testValue", ConquerorContextDataScope.AcrossTransports);
 
-        using var msg = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/customQueryEndpoint?payload=10", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = HttpMethod.Get;
+        msg.RequestUri = new("/customQueryEndpoint?payload=10", UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertStatusCode(HttpStatusCode.OK);
@@ -123,13 +119,11 @@ public sealed class TopLevelProgramTests : IDisposable
 
         using var content = JsonContent.Create(new TopLevelTestCommand(10));
 
-        using var msg = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new("/api/commands/topLevelTest", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-            Content = content,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = HttpMethod.Post;
+        msg.RequestUri = new("/api/commands/topLevelTest", UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
+        msg.Content = content;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertStatusCode(HttpStatusCode.OK);
@@ -164,13 +158,11 @@ public sealed class TopLevelProgramTests : IDisposable
 
         using var content = JsonContent.Create(new TopLevelTestCommand(10));
 
-        using var msg = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new("/customCommandEndpoint", UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-            Content = content,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = HttpMethod.Post;
+        msg.RequestUri = new("/customCommandEndpoint", UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
+        msg.Content = content;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertStatusCode(HttpStatusCode.OK);
@@ -183,10 +175,5 @@ public sealed class TopLevelProgramTests : IDisposable
         conquerorContext.DecodeContextData(responseContextHeader);
 
         Assert.That(conquerorContext.ContextData.WhereScopeIsAcrossTransports(), Is.EquivalentTo(new Dictionary<string, string> { { "testKey", "testValue" } }));
-    }
-
-    private IDisposableConquerorContext CreateConquerorContext()
-    {
-        return applicationFactory.Services.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
     }
 }

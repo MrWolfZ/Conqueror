@@ -181,7 +181,6 @@ public abstract class QueryClientFunctionalityTests
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class QueryClientFunctionalityWithSyncFactoryTests : QueryClientFunctionalityTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,
@@ -192,7 +191,6 @@ public sealed class QueryClientFunctionalityWithSyncFactoryTests : QueryClientFu
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class QueryClientFunctionalityWithAsyncFactoryTests : QueryClientFunctionalityTests
 {
     protected override void AddQueryClient<THandler>(IServiceCollection services,

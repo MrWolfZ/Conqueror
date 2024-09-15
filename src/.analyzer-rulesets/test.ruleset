@@ -5,6 +5,15 @@
 
     <!-- overrule some specific rules for test projects -->
     <Rules AnalyzerId="Microsoft.CodeQuality.Analyzers" RuleNamespace="Microsoft.CodeQuality.Analyzers">
+        <!-- remove need for standard exception constructors in test code -->
+        <Rule Id="CA1032" Action="None" />
+
+        <!-- allow public nested classes, which we often use to make assembly scanning work -->
+        <Rule Id="CA1034" Action="None" />
+
+        <!-- allow private exceptions, which are useful for testing -->
+        <Rule Id="CA1064" Action="None" />
+
         <!-- allow underscores in identifiers (necessary for test naming conventions) -->
         <Rule Id="CA1707" Action="None" />
 
@@ -19,7 +28,10 @@
     </Rules>
 
     <Rules AnalyzerId="SonarAnalyzer.CSharp" RuleNamespace="SonarAnalyzer.CSharp">
-        <!-- empty classes can be useful for tests that test functionality depending on generics -->
-        <Rule Id="S2094" Action="None" />
+        <!-- disable ordering constraints so that we can mix public and private types, which is often useful for nested test classes -->
+        <Rule Id="SA1202" Action="None" />
+
+        <!-- allow multiple types per file since it is a useful pattern to have a test base classes with multiple variants -->
+        <Rule Id="SA1402" Action="None" />
     </Rules>
 </RuleSet>

@@ -39,11 +39,9 @@ public sealed class HttpAuthenticationTests : TestBase
     [Test]
     public async Task GivenGetEndpoint_WhenExecutingWithAuthenticatedPrincipal_EndpointObservesCorrectPrincipal()
     {
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/api/test?payload=10", UriKind.Relative),
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = HttpMethod.Get;
+        requestMessage.RequestUri = new("/api/test?payload=10", UriKind.Relative);
 
         WithAuthenticatedPrincipal(requestMessage.Headers, TestUserId);
 
@@ -58,12 +56,10 @@ public sealed class HttpAuthenticationTests : TestBase
     public async Task GivenPostEndpoint_WhenExecutingWithAuthenticatedPrincipal_EndpointObservesCorrectPrincipal()
     {
         using var content = JsonContent.Create(new TestRequest { Payload = 10 });
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new("/api/test", UriKind.Relative),
-            Content = content,
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = HttpMethod.Post;
+        requestMessage.RequestUri = new("/api/test", UriKind.Relative);
+        requestMessage.Content = content;
 
         WithAuthenticatedPrincipal(requestMessage.Headers, TestUserId);
 

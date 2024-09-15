@@ -4,8 +4,6 @@ using Conqueror.CQS.QueryHandling;
 namespace Conqueror.CQS.Tests;
 
 [TestFixture]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for assembly scanning to work")]
-[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "for testing purposes we want to mix public and private classes")]
 public sealed class RegistrationTests
 {
     [Test]

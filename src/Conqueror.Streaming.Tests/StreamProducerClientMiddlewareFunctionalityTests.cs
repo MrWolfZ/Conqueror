@@ -771,7 +771,6 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class StreamProducerClientMiddlewareFunctionalityWithSyncFactoryTests : StreamProducerClientMiddlewareFunctionalityTests
 {
     protected override void AddStreamingRequestClient<TProducer>(IServiceCollection services,
@@ -783,7 +782,6 @@ public sealed class StreamProducerClientMiddlewareFunctionalityWithSyncFactoryTe
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class StreamProducerClientMiddlewareFunctionalityWithAsyncFactoryTests : StreamProducerClientMiddlewareFunctionalityTests
 {
     protected override void AddStreamingRequestClient<TProducer>(IServiceCollection services,

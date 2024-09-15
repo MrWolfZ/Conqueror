@@ -17,11 +17,6 @@ internal static class QueryHandlerTypeExtensions
         }).ToList();
     }
 
-    public static IReadOnlyCollection<Type> GetQueryHandlerInterfaceTypes(this Type type)
-    {
-        return type.GetInterfaces().Concat([type]).Where(i => i.IsQueryHandlerInterfaceType()).ToList();
-    }
-
     public static void ValidateNoInvalidQueryHandlerInterface(this Type type)
     {
         if (!type.IsQueryHandlerInterfaceType())
@@ -46,11 +41,16 @@ internal static class QueryHandlerTypeExtensions
         }
     }
 
-    public static bool IsCustomQueryHandlerInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsQueryHandlerInterfaceType);
-
     public static bool IsCustomQueryHandlerInterfaceType<TQuery, TResponse>(this Type t)
         where TQuery : class =>
         t.IsInterface && Array.Exists(t.GetInterfaces(), i => i == typeof(IQueryHandler<TQuery, TResponse>));
 
     public static bool IsQueryHandlerInterfaceType(this Type t) => t.IsInterface && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IQueryHandler<,>);
+
+    private static IReadOnlyCollection<Type> GetQueryHandlerInterfaceTypes(this Type type)
+    {
+        return type.GetInterfaces().Concat([type]).Where(i => i.IsQueryHandlerInterfaceType()).ToList();
+    }
+
+    private static bool IsCustomQueryHandlerInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsQueryHandlerInterfaceType);
 }

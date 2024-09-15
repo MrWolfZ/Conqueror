@@ -14,7 +14,6 @@ using Microsoft.Extensions.Options;
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests;
 
 [TestFixture]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public sealed class StreamHttpEndpointTests : TestBase
 {
     [Test]

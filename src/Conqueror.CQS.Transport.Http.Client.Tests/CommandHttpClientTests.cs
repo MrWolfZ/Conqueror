@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.CQS.Transport.Http.Client.Tests;
 
 [TestFixture]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public sealed class CommandHttpClientTests : TestBase
 {
     private const string ErrorPayload = "{\"Message\":\"this is an error\"}";

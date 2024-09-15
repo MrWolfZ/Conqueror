@@ -2,8 +2,6 @@ using Conqueror.CQS.CommandHandling;
 
 namespace Conqueror.CQS.Tests.CommandHandling;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public to test case class")]
-[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "member order makes sense")]
 public sealed class CommandMiddlewareFunctionalityTests
 {
     [Test]

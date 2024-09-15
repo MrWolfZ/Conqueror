@@ -1,6 +1,5 @@
 namespace Conqueror.CQS.Tests.CommandHandling;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
 public sealed class CommandHandlerCustomInterfaceTests
 {
     [Test]

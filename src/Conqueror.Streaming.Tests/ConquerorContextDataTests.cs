@@ -12,7 +12,7 @@ public sealed class ConquerorContextDataTests
     [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "parameter name makes sense here")]
     public async Task GivenDataSetup_WhenExecutingProducer_DataIsCorrectlyAvailable(ConquerorContextDataTestCase testCase)
     {
-        const string testStringValue = "TestValue";
+        const string stringValue = "TestValue";
 
         var testDataInstructions = new TestDataInstructions();
         var testObservations = new TestObservations();
@@ -35,7 +35,7 @@ public sealed class ConquerorContextDataTests
 
         foreach (var (data, i) in testCase.TestData.Select((value, i) => (value, i)))
         {
-            dataToSetCol.Add((TestKey, data.DataType == DataType.String ? testStringValue + i : new TestDataEntry(i), data.DataSettingLocation));
+            dataToSetCol.Add((TestKey, data.DataType == DataType.String ? stringValue + i : new TestDataEntry(i), data.DataSettingLocation));
 
             if (data.DataRemovalLocation is not null)
             {
@@ -95,7 +95,7 @@ public sealed class ConquerorContextDataTests
 
         foreach (var (data, i) in testCase.TestData.Select((value, i) => (value, i)))
         {
-            object value = data.DataType == DataType.String ? testStringValue + i : new TestDataEntry(i);
+            object value = data.DataType == DataType.String ? stringValue + i : new TestDataEntry(i);
 
             var errorMessage = $"test case:\n{JsonSerializer.Serialize(testCase, new JsonSerializerOptions { WriteIndented = true })}";
 
@@ -1210,11 +1210,9 @@ public sealed class ConquerorContextDataTests
         }
     }
 
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "must be public for test method signature")]
     [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
     public sealed record ConquerorContextDataTestCase(string DataDirection, List<ConquerorContextDataTestCaseData> TestData);
 
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "must be public for test method signature")]
     [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
     public sealed record ConquerorContextDataTestCaseData(
         string DataType,

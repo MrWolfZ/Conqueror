@@ -22,11 +22,9 @@ public sealed class HttpAuthorizationTests : TestBase
     {
         testData.ExceptionToThrow = new ConquerorOperationTypeAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
 
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/api/test?payload=10", UriKind.Relative),
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = HttpMethod.Get;
+        requestMessage.RequestUri = new("/api/test?payload=10", UriKind.Relative);
 
         WithAuthenticatedPrincipal(requestMessage.Headers, TestUserId);
 
@@ -40,12 +38,10 @@ public sealed class HttpAuthorizationTests : TestBase
         testData.ExceptionToThrow = new ConquerorOperationTypeAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
 
         using var content = JsonContent.Create(new TestRequest { Payload = 10 });
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new("/api/test", UriKind.Relative),
-            Content = content,
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = HttpMethod.Post;
+        requestMessage.RequestUri = new("/api/test", UriKind.Relative);
+        requestMessage.Content = content;
 
         WithAuthenticatedPrincipal(requestMessage.Headers, TestUserId);
 
@@ -58,11 +54,9 @@ public sealed class HttpAuthorizationTests : TestBase
     {
         testData.ExceptionToThrow = new ConquerorOperationPayloadAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
 
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/api/test?payload=10", UriKind.Relative),
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = HttpMethod.Get;
+        requestMessage.RequestUri = new("/api/test?payload=10", UriKind.Relative);
 
         WithAuthenticatedPrincipal(requestMessage.Headers, TestUserId);
 
@@ -76,12 +70,10 @@ public sealed class HttpAuthorizationTests : TestBase
         testData.ExceptionToThrow = new ConquerorOperationPayloadAuthorizationFailedException("test", ConquerorAuthorizationResult.Failure("test"));
 
         using var content = JsonContent.Create(new TestRequest { Payload = 10 });
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new("/api/test", UriKind.Relative),
-            Content = content,
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = HttpMethod.Post;
+        requestMessage.RequestUri = new("/api/test", UriKind.Relative);
+        requestMessage.Content = content;
 
         WithAuthenticatedPrincipal(requestMessage.Headers, TestUserId);
 
@@ -92,11 +84,9 @@ public sealed class HttpAuthorizationTests : TestBase
     [Test]
     public async Task GivenAspDefaultAuthorizationPolicy_WhenExecutingGetRequestWithUserWhichWouldFailAspAuthorization_RequestIsPassedThroughToEndpoint()
     {
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/api/test?payload=10", UriKind.Relative),
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = HttpMethod.Get;
+        requestMessage.RequestUri = new("/api/test?payload=10", UriKind.Relative);
 
         WithAuthenticatedPrincipal(requestMessage.Headers, "unauthorized_user");
 
@@ -110,12 +100,10 @@ public sealed class HttpAuthorizationTests : TestBase
     public async Task GivenAspDefaultAuthorizationPolicy_WhenExecutingPostRequestWithUserWhichWouldFailAspAuthorization_RequestIsPassedThroughToEndpoint()
     {
         using var content = JsonContent.Create(new TestRequest { Payload = 10 });
-        using var requestMessage = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new("/api/test", UriKind.Relative),
-            Content = content,
-        };
+        using var requestMessage = new HttpRequestMessage();
+        requestMessage.Method = HttpMethod.Post;
+        requestMessage.RequestUri = new("/api/test", UriKind.Relative);
+        requestMessage.Content = content;
 
         WithAuthenticatedPrincipal(requestMessage.Headers, "unauthorized_user");
 

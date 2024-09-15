@@ -89,6 +89,7 @@
         <Rule Id="S1944" Action="Info" />
         <Rule Id="S1994" Action="None" />
         <Rule Id="S2070" Action="None" />
+        <Rule Id="S2094" Action="None" /> <!-- empty classes can be useful for null objects or testing -->
         <Rule Id="S2114" Action="Info" />
         <Rule Id="S2123" Action="Info" />
         <Rule Id="S2148" Action="None" />

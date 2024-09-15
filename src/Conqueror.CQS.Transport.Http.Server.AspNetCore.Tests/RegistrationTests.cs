@@ -6,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 {
     [TestFixture]
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public class RegistrationTests
     {
         [Test]
@@ -300,7 +299,6 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed record TestQueryResponse;
 
-        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "okay for testing purposes")]
         public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
             public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
@@ -319,7 +317,6 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed record TestCommandResponse;
 
-        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "okay for testing purposes")]
         public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
             public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)

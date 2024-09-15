@@ -7,7 +7,6 @@ using Microsoft.Extensions.Hosting;
 namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 {
     [TestFixture]
-    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
     public class RegistrationTests
     {
         [Test]
@@ -151,7 +150,6 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests
 
         public sealed record TestItem;
 
-        [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "okay for testing purposes")]
         public sealed class TestStreamProducer : IStreamProducer<TestStreamingRequest, TestItem>
         {
             public async IAsyncEnumerable<TestItem> ExecuteRequest(TestStreamingRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)

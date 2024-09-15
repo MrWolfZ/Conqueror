@@ -3,8 +3,6 @@ using Conqueror.CQS.CommandHandling;
 namespace Conqueror.CQS.Tests.CommandHandling;
 
 [TestFixture]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for dynamic type generation and assembly scanning to work")]
-[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "order makes sense, but some types must be private to not interfere with assembly scanning")]
 public sealed class CommandHandlerRegistryTests
 {
     [Test]

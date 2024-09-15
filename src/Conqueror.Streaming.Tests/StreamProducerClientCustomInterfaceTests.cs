@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace Conqueror.Streaming.Tests;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
 public abstract class StreamProducerClientCustomInterfaceTests
 {
     [Test]
@@ -60,7 +59,6 @@ public abstract class StreamProducerClientCustomInterfaceTests
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class StreamProducerClientCustomInterfaceWithSyncFactoryTests : StreamProducerClientCustomInterfaceTests
 {
     protected override void AddStreamingRequestClient<TProducer>(IServiceCollection services,
@@ -72,7 +70,6 @@ public sealed class StreamProducerClientCustomInterfaceWithSyncFactoryTests : St
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class StreamProducerClientCustomInterfaceWithAsyncFactoryTests : StreamProducerClientCustomInterfaceTests
 {
     protected override void AddStreamingRequestClient<TProducer>(IServiceCollection services,

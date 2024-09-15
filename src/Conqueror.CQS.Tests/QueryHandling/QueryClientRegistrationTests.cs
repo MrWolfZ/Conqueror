@@ -1,6 +1,5 @@
 namespace Conqueror.CQS.Tests.QueryHandling;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
 public sealed class QueryClientRegistrationTests
 {
     [Test]
@@ -738,7 +737,5 @@ public sealed class QueryClientRegistrationTests
         }
     }
 
-    [SuppressMessage("Design", "CA1064:Exceptions should be public", Justification = "test code")]
-    [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "test code")]
     private sealed class TestAssertionException : Exception;
 }

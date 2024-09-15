@@ -314,7 +314,7 @@ public sealed class HttpContextDataTests : TestBase
     [TestCase("POST", "/api/testWithoutResponseWithoutPayload", "")]
     public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string method, string path, string data)
     {
-        const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
+        const string expectedTraceId = "80e1a2ed08e019fc1110464cfa66635c";
 
         var response = await ExecuteRequest(method, path, data, [
             (HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01"),
@@ -324,7 +324,7 @@ public sealed class HttpContextDataTests : TestBase
 
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { testTraceId }));
+        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { expectedTraceId }));
     }
 
     [TestCase("GET", "/api/test", "")]
@@ -423,11 +423,9 @@ public sealed class HttpContextDataTests : TestBase
             return await HttpClient.PostAsync(path, content);
         }
 
-        using var message = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-        };
+        using var message = new HttpRequestMessage();
+        message.Method = HttpMethod.Get;
+        message.RequestUri = new(path, UriKind.Relative);
 
         if (headers is not null)
         {

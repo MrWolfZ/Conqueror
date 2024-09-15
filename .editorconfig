@@ -7,6 +7,13 @@ indent_size = 4
 [{Program,Startup,*ServiceCollectionExtensions}.cs]
 dotnet_diagnostic.IDE0058.severity = none
 
+[*Tests.cs]
+# in test classes we often require nested public types that are accessed via reflection
+resharper_member_can_be_private_global_highlighting = none
+
+# we don't really care about performance in test code
+resharper_usage_of_default_struct_equality_highlighting = none
+
 [*.csproj]
 end_of_line = lf
 indent_size = 4

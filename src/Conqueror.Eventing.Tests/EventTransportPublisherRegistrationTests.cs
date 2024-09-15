@@ -1,7 +1,5 @@
 namespace Conqueror.Eventing.Tests;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public assembly scanning to work")]
-[SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1202:Elements should be ordered by access", Justification = "order makes sense, but some types must be private to not interfere with assembly scanning")]
 public sealed class EventTransportPublisherRegistrationTests
 {
     [Test]

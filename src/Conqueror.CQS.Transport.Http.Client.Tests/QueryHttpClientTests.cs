@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.CQS.Transport.Http.Client.Tests;
 
 [TestFixture]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public sealed class QueryHttpClientTests : TestBase
 {
     private const string ErrorPayload = "{\"Message\":\"this is an error\"}";
@@ -60,14 +59,14 @@ public sealed class QueryHttpClientTests : TestBase
     [Test]
     public async Task GivenSuccessfulHttpCallWithStringPayload_ReturnsQueryResponse()
     {
-        const string testPayload = "an example test payload";
+        const string payload = "an example test payload";
 
         var handler = ResolveOnClient<ITestQueryWithStringPayloadHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = testPayload }, CancellationToken.None);
+        var result = await handler.ExecuteQuery(new() { Payload = payload }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Payload, Is.EqualTo(testPayload));
+        Assert.That(result.Payload, Is.EqualTo(payload));
     }
 
     [Test]

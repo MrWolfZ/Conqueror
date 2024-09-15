@@ -7,7 +7,6 @@ namespace Conqueror.Streaming.Transport.Http.Client.Tests;
 
 [TestFixture]
 [Parallelizable(ParallelScope.None)]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "request, response, and interface types must be public for dynamic type generation to work")]
 public sealed class StreamingHttpClientNonTestHostTests
 {
     private const string ListenAddress = "http://localhost:59876";

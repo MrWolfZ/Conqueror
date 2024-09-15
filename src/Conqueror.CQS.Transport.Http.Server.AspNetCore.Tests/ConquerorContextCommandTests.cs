@@ -13,7 +13,6 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
 
 [TestFixture]
 [NonParallelizable]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public sealed class ConquerorContextCommandTests : TestBase
 {
     private static readonly Dictionary<string, string> ContextData = new()
@@ -141,10 +140,8 @@ public sealed class ConquerorContextCommandTests : TestBase
             conquerorContext.DownstreamContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
         }
 
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-        };
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertSuccessStatusCode();
@@ -174,10 +171,8 @@ public sealed class ConquerorContextCommandTests : TestBase
             conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
         }
 
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-        };
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertSuccessStatusCode();
@@ -207,10 +202,8 @@ public sealed class ConquerorContextCommandTests : TestBase
             conquerorContext.ContextData.Set(key, value, ConquerorContextDataScope.AcrossTransports);
         }
 
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-        };
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertSuccessStatusCode();
@@ -253,14 +246,9 @@ public sealed class ConquerorContextCommandTests : TestBase
 
         var encodedData2 = conquerorContext.EncodeDownstreamContextData();
 
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers =
-            {
-                { HttpConstants.ConquerorContextHeaderName, encodedData1 },
-                { HttpConstants.ConquerorContextHeaderName, encodedData2 },
-            },
-        };
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HttpConstants.ConquerorContextHeaderName, encodedData1);
+        content.Headers.Add(HttpConstants.ConquerorContextHeaderName, encodedData2);
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertSuccessStatusCode();
@@ -285,10 +273,8 @@ public sealed class ConquerorContextCommandTests : TestBase
     [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
     public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path, string data)
     {
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers = { { HttpConstants.ConquerorContextHeaderName, "foo=bar" } },
-        };
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HttpConstants.ConquerorContextHeaderName, "foo=bar");
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertStatusCode(HttpStatusCode.BadRequest);
@@ -310,10 +296,8 @@ public sealed class ConquerorContextCommandTests : TestBase
         using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
         conquerorContext.SetCommandId(commandId);
 
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-        };
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertSuccessStatusCode();
@@ -356,34 +340,24 @@ public sealed class ConquerorContextCommandTests : TestBase
     [TestCase("/api/custom/commands/testCommandWithoutResponseWithoutPayload", "")]
     public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string data)
     {
-        const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers =
-            {
-                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-            },
-        };
+        const string traceId = "80e1a2ed08e019fc1110464cfa66635c";
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertSuccessStatusCode();
 
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { testTraceId }));
+        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { traceId }));
     }
 
     [Test]
     public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandlerAndNestedHandler()
     {
-        const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
-        using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
-        {
-            Headers =
-            {
-                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-            },
-        };
+        const string traceId = "80e1a2ed08e019fc1110464cfa66635c";
+        using var content = new StringContent("{}", null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
         await response.AssertSuccessStatusCode();
@@ -391,8 +365,8 @@ public sealed class ConquerorContextCommandTests : TestBase
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
         Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
-        Assert.That(receivedTraceIds[0], Is.EqualTo(testTraceId));
-        Assert.That(receivedTraceIds[1], Is.EqualTo(testTraceId));
+        Assert.That(receivedTraceIds[0], Is.EqualTo(traceId));
+        Assert.That(receivedTraceIds[1], Is.EqualTo(traceId));
     }
 
     [TestCase("/api/commands/test", "{}")]
@@ -409,13 +383,8 @@ public sealed class ConquerorContextCommandTests : TestBase
         using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandler));
         activity = a;
 
-        using var content = new StringContent(data, null, MediaTypeNames.Application.Json)
-        {
-            Headers =
-            {
-                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-            },
-        };
+        using var content = new StringContent(data, null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await HttpClient.PostAsync(path, content);
         await response.AssertSuccessStatusCode();
@@ -431,13 +400,8 @@ public sealed class ConquerorContextCommandTests : TestBase
         using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler));
         activity = a;
 
-        using var content = new StringContent("{}", null, MediaTypeNames.Application.Json)
-        {
-            Headers =
-            {
-                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-            },
-        };
+        using var content = new StringContent("{}", null, MediaTypeNames.Application.Json);
+        content.Headers.Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await HttpClient.PostAsync("/api/commands/testCommandWithNested", content);
         await response.AssertSuccessStatusCode();

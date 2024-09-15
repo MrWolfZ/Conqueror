@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -43,5 +42,4 @@ internal sealed class StreamProducerMiddlewareInvoker<TMiddleware, TConfiguratio
     }
 }
 
-[SuppressMessage("Minor Code Smell", "S2094:Classes should not be empty", Justification = "It is fine for a null-object to be empty.")]
 internal sealed record NullStreamProducerMiddlewareConfiguration;

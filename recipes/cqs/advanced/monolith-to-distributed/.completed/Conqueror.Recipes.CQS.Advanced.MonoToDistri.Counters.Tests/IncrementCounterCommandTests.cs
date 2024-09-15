@@ -50,18 +50,18 @@ public sealed class IncrementCounterCommandTests : TestBase
     [Test]
     public async Task WhenIncrementingCounter_MostRecentlyIncrementedCounterIsSetAndCanBeFetched()
     {
-        const string testCounterName1 = "counter1";
-        const string testCounterName2 = "counter2";
+        const string counterName1 = "counter1";
+        const string counterName2 = "counter2";
 
-        _ = await CommandClient.ExecuteCommand(new(testCounterName1, TestUserId));
+        _ = await CommandClient.ExecuteCommand(new(counterName1, TestUserId));
 
         var response1 = await GetMostRecentlyIncrementedCounterForUserQueryClient.ExecuteQuery(new(TestUserId));
 
-        _ = await CommandClient.ExecuteCommand(new(testCounterName2, TestUserId));
+        _ = await CommandClient.ExecuteCommand(new(counterName2, TestUserId));
 
         var response2 = await GetMostRecentlyIncrementedCounterForUserQueryClient.ExecuteQuery(new(TestUserId));
 
-        Assert.That(response1.CounterName, Is.EqualTo(testCounterName1));
-        Assert.That(response2.CounterName, Is.EqualTo(testCounterName2));
+        Assert.That(response1.CounterName, Is.EqualTo(counterName1));
+        Assert.That(response2.CounterName, Is.EqualTo(counterName2));
     }
 }

@@ -4,7 +4,6 @@ using System.Text.Json;
 namespace Conqueror.CQS.Transport.Http.Client.Tests;
 
 [TestFixture]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic interface generation")]
 [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "false positive")]
 public sealed class QueryHttpClientRegistrationTests
 {
@@ -39,7 +38,8 @@ public sealed class QueryHttpClientRegistrationTests
     {
         var expectedBaseAddress = new Uri("http://expected.localhost");
         var unexpectedBaseAddress = new Uri("http://unexpected.localhost");
-        using var testClient = new TestHttpClient { BaseAddress = expectedBaseAddress };
+        using var testClient = new TestHttpClient();
+        testClient.BaseAddress = expectedBaseAddress;
 
         var services = new ServiceCollection();
         _ = services.AddConquerorCQSHttpClientServices(o => o.UseHttpClient(testClient))

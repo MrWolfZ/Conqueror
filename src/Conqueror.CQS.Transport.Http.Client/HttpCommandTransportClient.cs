@@ -31,12 +31,10 @@ internal sealed class HttpCommandTransportClient(
 
         var path = Options.CommandPathConvention?.GetCommandPath(typeof(TCommand), attribute) ?? DefaultHttpCommandPathConvention.Instance.GetCommandPath(typeof(TCommand), attribute);
 
-        using var message = new HttpRequestMessage
-        {
-            Method = HttpMethod.Post,
-            RequestUri = new(Options.BaseAddress, path),
-            Content = content,
-        };
+        using var message = new HttpRequestMessage();
+        message.Method = HttpMethod.Post;
+        message.RequestUri = new(Options.BaseAddress, path);
+        message.Content = content;
 
         SetHeaders(message.Headers);
 

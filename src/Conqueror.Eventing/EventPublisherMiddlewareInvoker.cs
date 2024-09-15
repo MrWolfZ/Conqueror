@@ -55,5 +55,4 @@ internal sealed class EventPublisherMiddlewareInvoker<TMiddleware, TConfiguratio
     }
 }
 
-[SuppressMessage("Minor Code Smell", "S2094:Classes should not be empty", Justification = "It is fine for a null-object to be empty.")]
 internal sealed record NullPublisherMiddlewareConfiguration;

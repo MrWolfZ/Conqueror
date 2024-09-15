@@ -17,11 +17,6 @@ internal static class CommandHandlerTypeExtensions
         }).ToList();
     }
 
-    public static IReadOnlyCollection<Type> GetCommandHandlerInterfaceTypes(this Type type)
-    {
-        return type.GetInterfaces().Concat([type]).Where(i => i.IsCommandHandlerInterfaceType()).ToList();
-    }
-
     public static void ValidateNoInvalidCommandHandlerInterface(this Type type)
     {
         if (!type.IsCommandHandlerInterfaceType())
@@ -46,8 +41,6 @@ internal static class CommandHandlerTypeExtensions
         }
     }
 
-    public static bool IsCustomCommandHandlerInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsCommandHandlerInterfaceType);
-
     public static bool IsCustomCommandHandlerInterfaceType<TCommand, TResponse>(this Type t)
         where TCommand : class =>
         t.IsInterface && Array.Exists(t.GetInterfaces(), i => i == typeof(ICommandHandler<TCommand>) || i == typeof(ICommandHandler<TCommand, TResponse>));
@@ -56,4 +49,11 @@ internal static class CommandHandlerTypeExtensions
         t.IsInterface && t.IsGenericType
                       && (t.GetGenericTypeDefinition() == typeof(ICommandHandler<>)
                           || t.GetGenericTypeDefinition() == typeof(ICommandHandler<,>));
+
+    private static IReadOnlyCollection<Type> GetCommandHandlerInterfaceTypes(this Type type)
+    {
+        return type.GetInterfaces().Concat([type]).Where(i => i.IsCommandHandlerInterfaceType()).ToList();
+    }
+
+    private static bool IsCustomCommandHandlerInterfaceType(this Type t) => t.IsInterface && Array.Exists(t.GetInterfaces(), IsCommandHandlerInterfaceType);
 }

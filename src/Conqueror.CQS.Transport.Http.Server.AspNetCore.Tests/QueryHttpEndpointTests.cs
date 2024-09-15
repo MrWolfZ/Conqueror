@@ -13,7 +13,6 @@ using Microsoft.Extensions.Options;
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
 
 [TestFixture]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public sealed class QueryHttpEndpointTests : TestBase
 {
     [Test]

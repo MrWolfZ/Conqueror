@@ -230,7 +230,6 @@ public abstract class CommandClientFunctionalityTests
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class CommandClientFunctionalityWithSyncFactoryTests : CommandClientFunctionalityTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,
@@ -241,7 +240,6 @@ public sealed class CommandClientFunctionalityWithSyncFactoryTests : CommandClie
 }
 
 [TestFixture]
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "it makes sense for these test sub-classes to be here")]
 public sealed class CommandClientFunctionalityWithAsyncFactoryTests : CommandClientFunctionalityTests
 {
     protected override void AddCommandClient<THandler>(IServiceCollection services,

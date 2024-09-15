@@ -9,17 +9,17 @@ public sealed class IncrementCounterCommandTests : TestBase
     [Test]
     public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncrementedAndNewValueIsReturned()
     {
-        const string testCounterName = "testCounter";
+        const string counterName = "testCounter";
         const int initialCounterValue = 10;
         const int expectedCounterValue = 11;
 
         var countersRepository = ResolveOnServer<CountersRepository>();
 
-        await countersRepository.SetCounterValue(testCounterName, initialCounterValue);
+        await countersRepository.SetCounterValue(counterName, initialCounterValue);
 
-        var response = await CommandClient.ExecuteCommand(new(testCounterName));
+        var response = await CommandClient.ExecuteCommand(new(counterName));
 
-        var storedCounterValue = await countersRepository.GetCounterValue(testCounterName);
+        var storedCounterValue = await countersRepository.GetCounterValue(counterName);
 
         Assert.That(response.NewCounterValue, Is.EqualTo(expectedCounterValue).And.EqualTo(storedCounterValue));
     }

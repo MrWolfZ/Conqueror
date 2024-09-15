@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.Streaming.Transport.Http.Client.Tests;
 
 [TestFixture]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "request, response, and interface types must be public for dynamic type generation to work")]
 public sealed class StreamingHttpClientTests : TestBase
 {
     private const string ErrorPayload = "{\"Message\":\"this is an error\"}";

@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace Conqueror.Streaming.Tests;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "interface and event types must be public for dynamic type generation to work")]
 public sealed class StreamProducerCustomInterfaceTests
 {
     [Test]

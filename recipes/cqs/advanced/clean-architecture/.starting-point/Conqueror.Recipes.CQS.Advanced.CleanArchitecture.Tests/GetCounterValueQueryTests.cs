@@ -10,14 +10,14 @@ public sealed class GetCounterValueQueryTests : TestBase
     [Test]
     public async Task GivenExistingCounter_WhenGettingCounterValue_CounterValueIsReturned()
     {
-        const int testCounterValue = 10;
+        const int counterValue = 10;
 
-        await ResolveOnServer<CountersRepository>().SetCounterValue(TestCounterName, testCounterValue);
+        await ResolveOnServer<CountersRepository>().SetCounterValue(TestCounterName, counterValue);
 
         var response = await QueryClient.ExecuteQuery(new(TestCounterName));
 
         Assert.That(response.CounterExists, Is.True);
-        Assert.That(response.CounterValue, Is.EqualTo(testCounterValue));
+        Assert.That(response.CounterValue, Is.EqualTo(counterValue));
     }
 
     [Test]

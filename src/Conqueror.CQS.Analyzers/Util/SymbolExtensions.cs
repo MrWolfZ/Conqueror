@@ -54,7 +54,7 @@ public static class SymbolExtensions
         return IsQueryHandlerType(declaredTypeSymbol, compilation);
     }
 
-    public static bool IsEquivalent(this ISymbol symbol1, ISymbol symbol2)
+    private static bool IsEquivalent(this ISymbol symbol1, ISymbol symbol2)
     {
         return symbol1.MetadataName == symbol2.MetadataName && symbol1.ContainingAssembly.Name == symbol2.ContainingAssembly.Name;
     }

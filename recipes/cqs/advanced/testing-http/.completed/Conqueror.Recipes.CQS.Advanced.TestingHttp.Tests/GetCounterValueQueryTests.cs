@@ -20,16 +20,16 @@ public sealed class GetCounterValueQueryTests : IDisposable
     [Test]
     public async Task GivenExistingCounter_WhenGettingCounterValue_CounterValueIsReturned()
     {
-        const string testCounterName = "testCounter";
-        const int testCounterValue = 10;
+        const string counterName = "testCounter";
+        const int counterValue = 10;
 
-        await applicationFactory.Services.GetRequiredService<CountersRepository>().SetCounterValue(testCounterName, testCounterValue);
+        await applicationFactory.Services.GetRequiredService<CountersRepository>().SetCounterValue(counterName, counterValue);
 
-        var response = await httpTestClient.GetFromJsonAsync<GetCounterValueQueryResponse>($"/api/v1/queries/getCounterValue?counterName={testCounterName}");
+        var response = await httpTestClient.GetFromJsonAsync<GetCounterValueQueryResponse>($"/api/v1/queries/getCounterValue?counterName={counterName}");
 
         Assert.That(response, Is.Not.Null);
         Assert.That(response!.CounterExists, Is.True);
-        Assert.That(response.CounterValue, Is.EqualTo(testCounterValue));
+        Assert.That(response.CounterValue, Is.EqualTo(counterValue));
     }
 
     [Test]

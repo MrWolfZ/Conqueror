@@ -13,7 +13,6 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests;
 
 [TestFixture]
 [NonParallelizable]
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "necessary for dynamic controller generation")]
 public sealed class ConquerorContextQueryTests : TestBase
 {
     private static readonly Dictionary<string, string> ContextData = new()
@@ -130,13 +129,11 @@ public sealed class ConquerorContextQueryTests : TestBase
         }
 
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
@@ -164,13 +161,11 @@ public sealed class ConquerorContextQueryTests : TestBase
         }
 
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
@@ -198,13 +193,11 @@ public sealed class ConquerorContextQueryTests : TestBase
         }
 
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
@@ -245,17 +238,12 @@ public sealed class ConquerorContextQueryTests : TestBase
         var encodedData2 = conquerorContext.EncodeDownstreamContextData();
 
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers =
-            {
-                { HttpConstants.ConquerorContextHeaderName, encodedData1 },
-                { HttpConstants.ConquerorContextHeaderName, encodedData2 },
-            },
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, encodedData1);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, encodedData2);
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
@@ -278,13 +266,11 @@ public sealed class ConquerorContextQueryTests : TestBase
     public async Task GivenInvalidConquerorContextRequestHeader_ReturnsBadRequest(string path, string? postContent = null)
     {
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, "foo=bar" } },
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, "foo=bar");
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertStatusCode(HttpStatusCode.BadRequest);
@@ -304,13 +290,11 @@ public sealed class ConquerorContextQueryTests : TestBase
         conquerorContext.SetQueryId(queryId);
 
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers = { { HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData() } },
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Headers.Add(HttpConstants.ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
@@ -329,12 +313,10 @@ public sealed class ConquerorContextQueryTests : TestBase
     public async Task GivenNoQueryIdInContext_NonEmptyQueryIdIsObservedByHandler(string path, string? postContent = null)
     {
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
@@ -353,40 +335,30 @@ public sealed class ConquerorContextQueryTests : TestBase
     [TestCase("/api/custom/queries/testQueryWithoutPayload")]
     public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandler(string path, string? postContent = null)
     {
-        const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
+        const string traceId = "80e1a2ed08e019fc1110464cfa66635c";
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers =
-            {
-                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-            },
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Headers.Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
 
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { testTraceId }));
+        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { traceId }));
     }
 
     [Test]
     public async Task GivenTraceIdInTraceParentHeaderWithoutActiveActivity_IdFromHeaderIsObservedByHandlerAndNestedHandler()
     {
-        const string testTraceId = "80e1a2ed08e019fc1110464cfa66635c";
-        using var msg = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/api/queries/testQueryWithNested", UriKind.Relative),
-            Headers =
-            {
-                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-            },
-        };
+        const string traceId = "80e1a2ed08e019fc1110464cfa66635c";
+        using var msg = new HttpRequestMessage();
+        msg.Method = HttpMethod.Get;
+        msg.RequestUri = new("/api/queries/testQueryWithNested", UriKind.Relative);
+        msg.Headers.Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
@@ -394,8 +366,8 @@ public sealed class ConquerorContextQueryTests : TestBase
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
         Assert.That(receivedTraceIds, Has.Count.EqualTo(2));
-        Assert.That(receivedTraceIds[0], Is.EqualTo(testTraceId));
-        Assert.That(receivedTraceIds[1], Is.EqualTo(testTraceId));
+        Assert.That(receivedTraceIds[0], Is.EqualTo(traceId));
+        Assert.That(receivedTraceIds[1], Is.EqualTo(traceId));
     }
 
     [TestCase("/api/queries/test?payload=10")]
@@ -410,16 +382,11 @@ public sealed class ConquerorContextQueryTests : TestBase
         activity = a;
 
         using var content = new StringContent(postContent ?? string.Empty, null, MediaTypeNames.Application.Json);
-        using var msg = new HttpRequestMessage
-        {
-            Method = postContent != null ? HttpMethod.Post : HttpMethod.Get,
-            RequestUri = new(path, UriKind.Relative),
-            Headers =
-            {
-                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-            },
-            Content = postContent != null ? content : null,
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = postContent != null ? HttpMethod.Post : HttpMethod.Get;
+        msg.RequestUri = new(path, UriKind.Relative);
+        msg.Headers.Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
+        msg.Content = postContent != null ? content : null;
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();
@@ -435,15 +402,10 @@ public sealed class ConquerorContextQueryTests : TestBase
         using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_IdFromActivityIsObservedByHandlerAndNestedHandler));
         activity = a;
 
-        using var msg = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            RequestUri = new("/api/queries/testQueryWithNested", UriKind.Relative),
-            Headers =
-            {
-                { HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01" },
-            },
-        };
+        using var msg = new HttpRequestMessage();
+        msg.Method = HttpMethod.Get;
+        msg.RequestUri = new("/api/queries/testQueryWithNested", UriKind.Relative);
+        msg.Headers.Add(HeaderNames.TraceParent, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await HttpClient.SendAsync(msg);
         await response.AssertSuccessStatusCode();

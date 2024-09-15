@@ -1,7 +1,5 @@
 namespace Conqueror.Streaming.Tests;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "types must be public for dynamic type generation to work")]
-[SuppressMessage("ReSharper", "MemberCanBePrivate.Global", Justification = "types must be public for dynamic type generation to work")]
 public sealed class StreamConsumerCustomInterfaceTests
 {
     [Test]
