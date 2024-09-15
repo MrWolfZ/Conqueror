@@ -153,17 +153,17 @@ public sealed class ConquerorContextQueryTests
         var provider = Setup(
             (q, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(q.Payload);
             },
             (q, _) => new(q.Payload),
             (ctx, next) =>
             {
-                observedTraceIds.Add(ctx.ConquerorContext.TraceId);
+                observedTraceIds.Add(ctx.ConquerorContext.GetTraceId());
                 return next(ctx.Query);
             },
             (ctx, next) => next(ctx.Query),
-            ctx => observedTraceIds.Add(ctx!.TraceId));
+            ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
@@ -183,17 +183,17 @@ public sealed class ConquerorContextQueryTests
         var provider = Setup(
             (q, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(q.Payload);
             },
             (q, _) => new(q.Payload),
             (ctx, next) =>
             {
-                observedTraceIds.Add(ctx.ConquerorContext.TraceId);
+                observedTraceIds.Add(ctx.ConquerorContext.GetTraceId());
                 return next(ctx.Query);
             },
             (ctx, next) => next(ctx.Query),
-            ctx => observedTraceIds.Add(ctx!.TraceId));
+            ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
 
@@ -212,12 +212,12 @@ public sealed class ConquerorContextQueryTests
         var provider = Setup(
             (q, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(q.Payload);
             },
             (q, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(q.Payload);
             });
 
@@ -238,12 +238,12 @@ public sealed class ConquerorContextQueryTests
         var provider = Setup(
             (q, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(q.Payload);
             },
             (q, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(q.Payload);
             });
 
@@ -275,13 +275,13 @@ public sealed class ConquerorContextQueryTests
         var provider = Setup((q, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(expectedTraceId));
             return new(q.Payload);
         });
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        expectedTraceId = conquerorContext.TraceId;
+        expectedTraceId = conquerorContext.GetTraceId();
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
     }
@@ -296,7 +296,7 @@ public sealed class ConquerorContextQueryTests
         var provider = Setup((q, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(activity.TraceId));
             return new(q.Payload);
         });
 
@@ -314,13 +314,13 @@ public sealed class ConquerorContextQueryTests
         var provider = Setup(nestedHandlerFn: (q, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(expectedTraceId));
             return new(q.Payload);
         });
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        expectedTraceId = conquerorContext.TraceId;
+        expectedTraceId = conquerorContext.GetTraceId();
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
     }
@@ -335,7 +335,7 @@ public sealed class ConquerorContextQueryTests
         var provider = Setup(nestedHandlerFn: (q, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(activity.TraceId));
             return new(q.Payload);
         });
 

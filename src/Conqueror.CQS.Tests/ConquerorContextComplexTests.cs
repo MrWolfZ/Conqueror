@@ -45,12 +45,12 @@ public sealed class ConquerorContextComplexTests
         var provider = Setup(
             queryHandlerFn: (_, ctx, next) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return next();
             },
             nestedCommandHandlerFn: (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             });
 
@@ -71,12 +71,12 @@ public sealed class ConquerorContextComplexTests
         var provider = Setup(
             queryHandlerFn: (_, ctx, next) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return next();
             },
             nestedCommandHandlerFn: (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             });
 
@@ -95,12 +95,12 @@ public sealed class ConquerorContextComplexTests
         var provider = Setup(
             (_, ctx, next) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return next();
             },
             nestedQueryHandlerFn: (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             });
 
@@ -121,12 +121,12 @@ public sealed class ConquerorContextComplexTests
         var provider = Setup(
             (_, ctx, next) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return next();
             },
             nestedQueryHandlerFn: (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             });
 
@@ -145,13 +145,13 @@ public sealed class ConquerorContextComplexTests
         var provider = Setup(nestedCommandHandlerFn: (cmd, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(expectedTraceId));
             return new(cmd.Payload);
         });
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        expectedTraceId = conquerorContext.TraceId;
+        expectedTraceId = conquerorContext.GetTraceId();
 
         _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
     }
@@ -166,7 +166,7 @@ public sealed class ConquerorContextComplexTests
         var provider = Setup(nestedCommandHandlerFn: (cmd, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(activity.TraceId));
             return new(cmd.Payload);
         });
 
@@ -184,13 +184,13 @@ public sealed class ConquerorContextComplexTests
         var provider = Setup(nestedQueryHandlerFn: (cmd, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(expectedTraceId));
             return new(cmd.Payload);
         });
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        expectedTraceId = conquerorContext.TraceId;
+        expectedTraceId = conquerorContext.GetTraceId();
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
     }
@@ -205,7 +205,7 @@ public sealed class ConquerorContextComplexTests
         var provider = Setup(nestedQueryHandlerFn: (cmd, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(activity.TraceId));
             return new(cmd.Payload);
         });
 

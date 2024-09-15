@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading;
 
 namespace Conqueror.Common;
@@ -14,7 +13,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
     public IConquerorContext? ConquerorContext
     {
         get => ConquerorContextCurrent.Value?.Context;
-        set
+        private set
         {
             if (value == null)
             {
@@ -22,7 +21,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
             }
 
             // Use an object indirection to hold the ConquerorContext in the AsyncLocal,
-            // so it can be cleared in all ExecutionContexts when its cleared.
+            // so it can be cleared in all ExecutionContexts when it's cleared.
             ConquerorContextCurrent.Value = new() { Context = value };
         }
     }
@@ -30,7 +29,7 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
     public IDisposableConquerorContext GetOrCreate()
     {
         // if there already is a context, we just wrap it without any disposal action
-        return ConquerorContext != null ? new DisposableConquerorContext(ConquerorContext) : CreateContext();
+        return ConquerorContext != null ? new(ConquerorContext) : CreateContext();
     }
 
     public IDisposableConquerorContext CloneOrCreate()
@@ -38,20 +37,20 @@ internal sealed class DefaultConquerorContextAccessor : IConquerorContextAccesso
         return ConquerorContext != null ? CloneContext() : CreateContext();
     }
 
-    private IDisposableConquerorContext CreateContext()
+    private DisposableConquerorContext CreateContext()
     {
-        // if we create the context, we make sure that disposing it causes the context to be cleared
-        var context = new DefaultConquerorContext(Activity.Current?.TraceId.ToString() ?? ActivityTraceId.CreateRandom().ToString());
+        var context = new DefaultConquerorContext();
+        context.InitializeTraceId();
         var disposableContext = new DisposableConquerorContext(context, ClearContext);
         ConquerorContext = disposableContext;
         return disposableContext;
     }
 
-    private IDisposableConquerorContext CloneContext()
+    private DisposableConquerorContext CloneContext()
     {
         var parentContext = ConquerorContext!;
 
-        var context = new DefaultConquerorContext(parentContext.TraceId);
+        var context = new DefaultConquerorContext();
 
         // copy over all downstream data
         foreach (var (key, value, scope) in parentContext.DownstreamContextData)

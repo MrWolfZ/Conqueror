@@ -74,7 +74,7 @@ internal sealed class HttpQueryTransportClient(
 
     private void SetHeaders(HttpHeaders headers)
     {
-        if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.TraceId is { } traceId)
+        if (Activity.Current is null && conquerorContextAccessor.ConquerorContext?.GetTraceId() is { } traceId)
         {
             headers.Add(HttpConstants.TraceParentHeaderName, TracingHelper.CreateTraceParent(traceId: traceId));
         }

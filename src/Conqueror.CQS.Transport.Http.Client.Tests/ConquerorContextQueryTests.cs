@@ -858,7 +858,7 @@ public class ConquerorContextQueryTests : TestBase
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
             observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
             observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
@@ -900,7 +900,7 @@ public class ConquerorContextQueryTests : TestBase
         public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
             observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
             observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
@@ -947,7 +947,7 @@ public class ConquerorContextQueryTests : TestBase
         public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
 
             if (observations.ShouldAddOuterDownstreamData)
             {
@@ -993,7 +993,7 @@ public class ConquerorContextQueryTests : TestBase
         public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestPostQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
 
             if (observations.ShouldAddOuterDownstreamData)
             {
@@ -1065,7 +1065,7 @@ public class ConquerorContextQueryTests : TestBase
             where TQuery : class
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
 
             return wrapped.ExecuteQuery<TQuery, TResponse>(query, serviceProvider, cancellationToken);
         }

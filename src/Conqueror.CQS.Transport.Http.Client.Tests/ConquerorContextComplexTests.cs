@@ -186,7 +186,7 @@ public class ConquerorContextComplexTests : TestBase
 
         _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(observations.ReceivedTraceIds, Is.EquivalentTo(new[] { context.TraceId, context.TraceId, context.TraceId }));
+        Assert.That(observations.ReceivedTraceIds, Is.EquivalentTo(new[] { context.GetTraceId(), context.GetTraceId(), context.GetTraceId() }));
     }
 
     protected override void ConfigureServerServices(IServiceCollection services)
@@ -241,7 +241,7 @@ public class ConquerorContextComplexTests : TestBase
     {
         public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
         {
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
             observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
             observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
@@ -293,7 +293,7 @@ public class ConquerorContextComplexTests : TestBase
     {
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
             observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
             observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 

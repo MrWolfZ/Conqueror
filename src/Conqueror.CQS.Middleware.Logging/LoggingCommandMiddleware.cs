@@ -28,7 +28,7 @@ public sealed class LoggingCommandMiddleware<TCommand, TResponse> : ICommandMidd
         var logger = GetLogger(ctx);
 
         var commandId = ctx.ConquerorContext.GetCommandId() ?? "unknown";
-        var traceId = ctx.ConquerorContext.TraceId;
+        var traceId = ctx.ConquerorContext.GetTraceId();
 
         var sw = Stopwatch.StartNew();
         StackTrace? executionStackTrace = null;

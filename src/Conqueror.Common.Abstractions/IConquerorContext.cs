@@ -8,12 +8,6 @@ namespace Conqueror;
 public interface IConquerorContext
 {
     /// <summary>
-    ///     Gets a unique identifier to represent all Conqueror operations in trace logs. If there is an active
-    ///     <see cref="System.Diagnostics.Activity" />, its trace ID is returned.
-    /// </summary>
-    string TraceId { get; }
-
-    /// <summary>
     ///     The context data which flows only to downstream Conqueror operations.<br />
     ///     <br />
     ///     For example, if command handler A executes query handler B, and query handler B calls query handler C,
@@ -54,13 +48,6 @@ public interface IConquerorContext
     ///     <see cref="ConquerorContextDataScope" />).<br />
     /// </summary>
     IConquerorContextData ContextData { get; }
-
-    /// <summary>
-    ///     Allows setting the <see cref="IConquerorContext.TraceId" />. This method is typically called from
-    ///     a server-side transport implementation and does not need to be called by user-code.
-    /// </summary>
-    /// <param name="traceId">The trace ID to set</param>
-    void SetTraceId(string traceId);
 }
 
 /// <inheritdoc cref="IConquerorContext" />

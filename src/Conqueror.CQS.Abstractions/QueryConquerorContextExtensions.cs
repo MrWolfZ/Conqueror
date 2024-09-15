@@ -1,7 +1,6 @@
-﻿// ReSharper disable once CheckNamespace (we want these extensions to be accessible without an extra import)
-namespace Conqueror;
+﻿namespace Conqueror;
 
-public static class ConquerorContextQueryExtensions
+public static class QueryConquerorContextExtensions
 {
     private const string QueryIdKey = "conqueror-query-id";
 

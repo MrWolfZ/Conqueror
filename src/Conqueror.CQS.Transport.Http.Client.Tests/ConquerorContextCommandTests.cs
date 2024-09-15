@@ -857,7 +857,7 @@ public class ConquerorContextCommandTests : TestBase
         public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
         {
             observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
             observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
             observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
@@ -899,7 +899,7 @@ public class ConquerorContextCommandTests : TestBase
         public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
             observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
             observations.ReceivedBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
 
@@ -946,7 +946,7 @@ public class ConquerorContextCommandTests : TestBase
         public async Task<OuterTestCommandResponse> ExecuteCommand(OuterTestCommand command, CancellationToken cancellationToken = default)
         {
             observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
 
             if (observations.ShouldAddOuterDownstreamData)
             {
@@ -992,7 +992,7 @@ public class ConquerorContextCommandTests : TestBase
         public async Task ExecuteCommand(OuterTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
 
             if (observations.ShouldAddOuterDownstreamData)
             {
@@ -1063,7 +1063,7 @@ public class ConquerorContextCommandTests : TestBase
             where TCommand : class
         {
             observations.ReceivedCommandIds.Add(conquerorContextAccessor.ConquerorContext?.GetCommandId());
-            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.TraceId);
+            observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
 
             return wrapped.ExecuteCommand<TCommand, TResponse>(command, serviceProvider, cancellationToken);
         }

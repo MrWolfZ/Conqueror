@@ -163,17 +163,17 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(
             (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             },
             (cmd, _) => new(cmd.Payload),
             (ctx, next) =>
             {
-                observedTraceIds.Add(ctx.ConquerorContext.TraceId);
+                observedTraceIds.Add(ctx.ConquerorContext.GetTraceId());
                 return next(ctx.Command);
             },
             (ctx, next) => next(ctx.Command),
-            ctx => observedTraceIds.Add(ctx!.TraceId));
+            ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
@@ -193,17 +193,17 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(
             (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             },
             (cmd, _) => new(cmd.Payload),
             (ctx, next) =>
             {
-                observedTraceIds.Add(ctx.ConquerorContext.TraceId);
+                observedTraceIds.Add(ctx.ConquerorContext.GetTraceId());
                 return next(ctx.Command);
             },
             (ctx, next) => next(ctx.Command),
-            ctx => observedTraceIds.Add(ctx!.TraceId));
+            ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
 
@@ -222,12 +222,12 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(
             (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             },
             (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             });
 
@@ -248,12 +248,12 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(
             (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             },
             (cmd, ctx) =>
             {
-                observedTraceIds.Add(ctx!.TraceId);
+                observedTraceIds.Add(ctx!.GetTraceId());
                 return new(cmd.Payload);
             });
 
@@ -285,13 +285,13 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup((cmd, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(expectedTraceId));
             return new(cmd.Payload);
         });
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        expectedTraceId = conquerorContext.TraceId;
+        expectedTraceId = conquerorContext.GetTraceId();
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
     }
@@ -306,7 +306,7 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup((cmd, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(activity.TraceId));
             return new(cmd.Payload);
         });
 
@@ -324,13 +324,13 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(expectedTraceId));
             return new(cmd.Payload);
         });
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        expectedTraceId = conquerorContext.TraceId;
+        expectedTraceId = conquerorContext.GetTraceId();
 
         _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
     }
@@ -345,7 +345,7 @@ public sealed class ConquerorContextCommandTests
         var provider = Setup(nestedHandlerFn: (cmd, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(activity.TraceId));
             return new(cmd.Payload);
         });
 

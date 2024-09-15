@@ -169,17 +169,17 @@ public sealed class ConquerorContextStreamingRequestTests
 
         var provider = Setup((q, ctx) =>
                              {
-                                 observedTraceIds.Add(ctx!.TraceId);
+                                 observedTraceIds.Add(ctx!.GetTraceId());
                                  return AsyncEnumerableHelper.Of(new TestItem(q.Payload));
                              },
                              (q, _) => AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload)),
                              (ctx, next) =>
                              {
-                                 observedTraceIds.Add(ctx.ConquerorContext.TraceId);
+                                 observedTraceIds.Add(ctx.ConquerorContext.GetTraceId());
                                  return next(ctx.Request);
                              },
                              (ctx, next) => next(ctx.Request),
-                             ctx => observedTraceIds.Add(ctx!.TraceId));
+                             ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
         _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
@@ -200,17 +200,17 @@ public sealed class ConquerorContextStreamingRequestTests
 
         var provider = Setup((q, ctx) =>
                              {
-                                 observedTraceIds.Add(ctx!.TraceId);
+                                 observedTraceIds.Add(ctx!.GetTraceId());
                                  return AsyncEnumerableHelper.Of(new TestItem(q.Payload));
                              },
                              (q, _) => AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload)),
                              (ctx, next) =>
                              {
-                                 observedTraceIds.Add(ctx.ConquerorContext.TraceId);
+                                 observedTraceIds.Add(ctx.ConquerorContext.GetTraceId());
                                  return next(ctx.Request);
                              },
                              (ctx, next) => next(ctx.Request),
-                             ctx => observedTraceIds.Add(ctx!.TraceId));
+                             ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
         _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
@@ -230,12 +230,12 @@ public sealed class ConquerorContextStreamingRequestTests
 
         var provider = Setup((q, ctx) =>
                              {
-                                 observedTraceIds.Add(ctx!.TraceId);
+                                 observedTraceIds.Add(ctx!.GetTraceId());
                                  return AsyncEnumerableHelper.Of(new TestItem(q.Payload));
                              },
                              (q, ctx) =>
                              {
-                                 observedTraceIds.Add(ctx!.TraceId);
+                                 observedTraceIds.Add(ctx!.GetTraceId());
                                  return AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload));
                              });
 
@@ -257,12 +257,12 @@ public sealed class ConquerorContextStreamingRequestTests
 
         var provider = Setup((q, ctx) =>
                              {
-                                 observedTraceIds.Add(ctx!.TraceId);
+                                 observedTraceIds.Add(ctx!.GetTraceId());
                                  return AsyncEnumerableHelper.Of(new TestItem(q.Payload));
                              },
                              (q, ctx) =>
                              {
-                                 observedTraceIds.Add(ctx!.TraceId);
+                                 observedTraceIds.Add(ctx!.GetTraceId());
                                  return AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload));
                              });
 
@@ -296,13 +296,13 @@ public sealed class ConquerorContextStreamingRequestTests
         var provider = Setup((q, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(expectedTraceId));
             return AsyncEnumerableHelper.Of(new TestItem(q.Payload));
         });
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        expectedTraceId = conquerorContext.TraceId;
+        expectedTraceId = conquerorContext.GetTraceId();
 
         _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
@@ -319,7 +319,7 @@ public sealed class ConquerorContextStreamingRequestTests
         var provider = Setup((q, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(activity.TraceId));
             return AsyncEnumerableHelper.Of(new TestItem(q.Payload));
         });
 
@@ -339,13 +339,13 @@ public sealed class ConquerorContextStreamingRequestTests
         var provider = Setup(nestedProducerFn: (q, ctx) =>
         {
             // ReSharper disable once AccessToModifiedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(expectedTraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(expectedTraceId));
             return AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload));
         });
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        expectedTraceId = conquerorContext.TraceId;
+        expectedTraceId = conquerorContext.GetTraceId();
 
         _ = await provider.GetRequiredService<IStreamProducer<TestStreamingRequest, TestItem>>()
                           .ExecuteRequest(request, CancellationToken.None)
@@ -362,7 +362,7 @@ public sealed class ConquerorContextStreamingRequestTests
         var provider = Setup(nestedProducerFn: (q, ctx) =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            Assert.That(ctx?.TraceId, Is.EqualTo(activity.TraceId));
+            Assert.That(ctx?.GetTraceId(), Is.EqualTo(activity.TraceId));
             return AsyncEnumerableHelper.Of(new NestedTestItem(q.Payload));
         });
 
