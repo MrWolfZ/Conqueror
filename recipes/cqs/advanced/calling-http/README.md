@@ -73,9 +73,7 @@ public sealed record IncrementCounterCommand([Required] string CounterName);
 
 public sealed record IncrementCounterCommandResponse(int NewCounterValue);
 
-public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCounterCommand, IncrementCounterCommandResponse>
-{
-}
+public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCounterCommand, IncrementCounterCommandResponse>;
 ```
 
 Next, create a new file `GetCounterValueQuery.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Advanced.CallingHttp.Contracts/GetCounterValueQuery.cs)) in the contracts project:
@@ -90,9 +88,7 @@ public sealed record GetCounterValueQuery([Required] string CounterName);
 
 public sealed record GetCounterValueQueryResponse(bool CounterExists, int? CounterValue);
 
-public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>
-{
-}
+public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>;
 ```
 
 If you have not yet done so, you can now remove the command and query types from the server application code and reference the types from the contracts project instead. To reduce the noise in your code you may want to add the `Conqueror.Recipes.CQS.Advanced.CallingHttp.Contracts` namespace as a global using statement in [Usings.cs](Conqueror.Recipes.CQS.Advanced.CallingHttp.Server/Usings.cs).

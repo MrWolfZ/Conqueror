@@ -174,15 +174,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 
 [ApiController]
-public sealed class IncrementCounterCommandController : ControllerBase
+public sealed class IncrementCounterCommandController(IIncrementCounterCommandHandler handler) : ControllerBase
 {
-    private readonly IIncrementCounterCommandHandler handler;
-
-    public IncrementCounterCommandController(IIncrementCounterCommandHandler handler)
-    {
-        this.handler = handler;
-    }
-
     [HttpPost("/api/custom/incrementCounter")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IncrementCounterCommandResponse))]
     public async Task<IActionResult> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken)
@@ -204,15 +197,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 
 [ApiController]
-public sealed class GetCounterValueQueryController : ControllerBase
+public sealed class GetCounterValueQueryController(IGetCounterValueQueryHandler handler) : ControllerBase
 {
-    private readonly IGetCounterValueQueryHandler handler;
-
-    public GetCounterValueQueryController(IGetCounterValueQueryHandler handler)
-    {
-        this.handler = handler;
-    }
-
     [HttpGet("/api/custom/getCounterValue")]
     public async Task<GetCounterValueQueryResponse> ExecuteQuery([FromQuery] GetCounterValueQuery query, CancellationToken cancellationToken)
     {

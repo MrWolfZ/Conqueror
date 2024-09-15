@@ -52,19 +52,10 @@ Now we can start using the middleware in our command handler. Each handler confi
 Let's add a pipeline configuration for our command handler in `IncrementCounterByCommandHandler.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/IncrementCounterByCommand.cs)):
 
 ```diff
-  public interface IIncrementCounterByCommandHandler : ICommandHandler<IncrementCounterByCommand, IncrementCounterByCommandResponse>
-  {
-  }
+  public interface IIncrementCounterByCommandHandler : ICommandHandler<IncrementCounterByCommand, IncrementCounterByCommandResponse>;
 
-  internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
+  internal sealed class IncrementCounterByCommandHandler(CountersRepository repository) : IIncrementCounterByCommandHandler
   {
-      private readonly CountersRepository repository;
-
-      public IncrementCounterByCommandHandler(CountersRepository repository)
-      {
-          this.repository = repository;
-      }
-+
 +     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) => 
 +         pipeline.Use(new DataAnnotationValidationCommandMiddleware());
 
@@ -234,17 +225,17 @@ The ability to resolve dependencies from the service provider can be very useful
 ```diff
   namespace Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns;
 
-  internal sealed class RetryCommandMiddleware : ICommandMiddleware
+  internal sealed class RetryCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+      where TCommand : class
   {
 +      public required RetryMiddlewareConfiguration Configuration { get; init; }
 +
-       public async Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-          where TCommand : class
-      {
--         var retryAttemptLimit = ctx.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>().RetryAttemptLimit;
-+         var retryAttemptLimit = Configuration.RetryAttemptLimit;
+       public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
+       {
+-           var retryAttemptLimit = ctx.ServiceProvider.GetRequiredService<RetryMiddlewareConfiguration>().RetryAttemptLimit;
++           var retryAttemptLimit = Configuration.RetryAttemptLimit;
 
-          var usedRetryAttempts = 0;
+            var usedRetryAttempts = 0;
 ```
 
 Finally, we adjust how we use the middleware in our command handler's pipeline in `IncrementCounterByCommand.cs` ([view completed file](.completed/Conqueror.Recipes.CQS.Basics.SolvingCrossCuttingConcerns/IncrementCounterByCommand.cs)):

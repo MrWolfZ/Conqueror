@@ -13,15 +13,8 @@ Let's take a look at the `IncrementCounterByCommandHandler` from the [recipe abo
 > Everything discussed here is the same for query handlers, so we'll only look at a command handler in this recipe for simplicity.
 
 ```cs
-internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
+internal sealed class IncrementCounterByCommandHandler(CountersRepository repository) : IIncrementCounterByCommandHandler
 {
-    private readonly CountersRepository repository;
-
-    public IncrementCounterByCommandHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) => 
         pipeline.UseDataAnnotationValidation();
 
@@ -37,10 +30,10 @@ internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByComm
 The data annotation validation middleware is fairly trivial, since it simply invokes the validation of the command in a single line of code.
 
 ```cs
-internal sealed class DataAnnotationValidationCommandMiddleware : ICommandMiddleware
+internal sealed class DataAnnotationValidationCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
+    where TCommand : class
 {
-    public Task<TResponse> Execute<TCommand, TResponse>(CommandMiddlewareContext<TCommand, TResponse> ctx)
-        where TCommand : class
+    public Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
         Validator.ValidateObject(ctx.Command, new(ctx.Command), true);
         return ctx.Next(ctx.Command, ctx.CancellationToken);
@@ -62,15 +55,8 @@ public void GivenNonExistingCounter_WhenExecutingCommandWithNegativeIncrementBy_
 The critical insight here is that when looking at a handler from the outside, it does not matter whether a behavior is coded directly into its `ExecuteCommand` method or whether it is added with a middleware in the pipeline. In essence, this means that **the middleware pipeline of a handler becomes an inseparable part of its public API**. In our case this means we treat the handler as if it was written without a pipeline like this:
 
 ```cs
-internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByCommandHandler
+internal sealed class IncrementCounterByCommandHandler(CountersRepository repository) : IIncrementCounterByCommandHandler
 {
-    private readonly CountersRepository repository;
-
-    public IncrementCounterByCommandHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
     {
         Validator.ValidateObject(command, new(command), true);

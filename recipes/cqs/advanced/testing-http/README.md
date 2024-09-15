@@ -65,16 +65,16 @@ With this we are now ready to to write our first test. Let's write a test which 
 [Test]
 public async Task GivenExistingCounter_WhenGettingCounterValue_ThenCounterValueIsReturned()
 {
-    const string testCounterName = "testCounter";
-    const int testCounterValue = 10;
+    const string counterName = "testCounter";
+    const int counterValue = 10;
 
-    await applicationFactory.Services.GetRequiredService<CountersRepository>().SetCounterValue(testCounterName, testCounterValue);
+    await applicationFactory.Services.GetRequiredService<CountersRepository>().SetCounterValue(counterName, counterValue);
 
-    var response = await httpTestClient.GetFromJsonAsync<GetCounterValueQueryResponse>($"/api/v1/queries/getCounterValue?counterName={testCounterName}");
+    var response = await httpTestClient.GetFromJsonAsync<GetCounterValueQueryResponse>($"/api/v1/queries/getCounterValue?counterName={counterName}");
 
     Assert.That(response, Is.Not.Null);
     Assert.That(response!.CounterExists, Is.True);
-    Assert.That(response.CounterValue, Is.EqualTo(testCounterValue));
+    Assert.That(response.CounterValue, Is.EqualTo(counterValue));
 }
 ```
 
@@ -174,17 +174,17 @@ As you can see, the client implements exactly the same interface as the command 
 [Test]
 public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncrementedAndNewValueIsReturned()
 {
-    const string testCounterName = "testCounter";
+    const string counterName = "testCounter";
     const int initialCounterValue = 10;
     const int expectedCounterValue = 11;
 
     var countersRepository = Resolve<CountersRepository>();
 
-    await countersRepository.SetCounterValue(testCounterName, initialCounterValue);
+    await countersRepository.SetCounterValue(counterName, initialCounterValue);
 
-    var response = await CommandClient.ExecuteCommand(new(testCounterName));
+    var response = await CommandClient.ExecuteCommand(new(counterName));
 
-    var storedCounterValue = await countersRepository.GetCounterValue(testCounterName);
+    var storedCounterValue = await countersRepository.GetCounterValue(counterName);
 
     Assert.That(response.NewCounterValue, Is.EqualTo(expectedCounterValue).And.EqualTo(storedCounterValue));
 }

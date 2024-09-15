@@ -157,14 +157,9 @@ internal sealed class CountersRepository
 
 // we use an exception to handle the case of a non-existing counter; there are other approaches to this
 // as well (e.g. returning `null` or a boolean) but an exception allows for unified error handling
-public sealed class CounterNotFoundException : Exception
+public sealed class CounterNotFoundException(string counterName) : Exception
 {
-    public CounterNotFoundException(string counterName)
-    {
-        CounterName = counterName;
-    }
-
-    public string CounterName { get; }
+    public string CounterName { get; } = counterName;
 }
 ```
 
@@ -195,15 +190,8 @@ public sealed record GetCounterNamesQuery;
 
 public sealed record GetCounterNamesQueryResponse(IReadOnlyCollection<string> CounterNames);
 
-internal sealed class GetCounterNamesQueryHandler : IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>
+internal sealed class GetCounterNamesQueryHandler(CountersRepository repository) : IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>
 {
-    private readonly CountersRepository repository;
-
-    public GetCounterNamesQueryHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public async Task<GetCounterNamesQueryResponse> ExecuteQuery(GetCounterNamesQuery query, CancellationToken cancellationToken = default)
     {
         var counters = await repository.GetCounters();
@@ -258,19 +246,10 @@ public sealed record GetCounterValueQueryResponse(int CounterValue);
 
 // this interface can be resolved or injected to call a handler; note that the interface
 // must not have any extra methods, it just inherits from the generic handler interface
-public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>
+public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>;
+
+internal sealed class GetCounterValueQueryHandler(CountersRepository repository) : IGetCounterValueQueryHandler
 {
-}
-
-internal sealed class GetCounterValueQueryHandler : IGetCounterValueQueryHandler
-{
-    private readonly CountersRepository repository;
-
-    public GetCounterValueQueryHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query, CancellationToken cancellationToken = default)
     {
         return new(await repository.GetCounterValue(query.CounterName));
@@ -325,19 +304,10 @@ public sealed record IncrementCounterCommand(string CounterName);
 
 public sealed record IncrementCounterCommandResponse(int NewCounterValue);
 
-public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCounterCommand, IncrementCounterCommandResponse>
+public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCounterCommand, IncrementCounterCommandResponse>;
+
+internal sealed class IncrementCounterCommandHandler(CountersRepository repository) : IIncrementCounterCommandHandler
 {
-}
-
-internal sealed class IncrementCounterCommandHandler : IIncrementCounterCommandHandler
-{
-    private readonly CountersRepository repository;
-
-    public IncrementCounterCommandHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await GetCounterValue(command.CounterName);
@@ -415,19 +385,10 @@ namespace Conqueror.Recipes.CQS.Basics.GettingStarted;
 public sealed record DeleteCounterCommand(string CounterName);
 
 // a command handler does not need to have a response
-public interface IDeleteCounterCommandHandler : ICommandHandler<DeleteCounterCommand>
+public interface IDeleteCounterCommandHandler : ICommandHandler<DeleteCounterCommand>;
+
+internal sealed class DeleteCounterCommandHandler(CountersRepository repository) : IDeleteCounterCommandHandler
 {
-}
-
-internal sealed class DeleteCounterCommandHandler : IDeleteCounterCommandHandler
-{
-    private readonly CountersRepository repository;
-
-    public DeleteCounterCommandHandler(CountersRepository repository)
-    {
-        this.repository = repository;
-    }
-
     public async Task ExecuteCommand(DeleteCounterCommand command, CancellationToken cancellationToken = default)
     {
         await repository.DeleteCounter(command.CounterName);
