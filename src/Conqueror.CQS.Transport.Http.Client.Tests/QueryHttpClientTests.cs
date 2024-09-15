@@ -164,7 +164,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithCollectionPayloadHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = new() { 10, 11 } }, CancellationToken.None);
+        var result = await handler.ExecuteQuery(new() { Payload = [10, 11] }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Has.Count.EqualTo(3));
@@ -189,7 +189,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithComplexPayloadWithCollectionPropertyHandler>();
 
-        var result = await handler.ExecuteQuery(new(new(new() { 10, 11 })), CancellationToken.None);
+        var result = await handler.ExecuteQuery(new(new([10, 11])), CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(22));
@@ -416,12 +416,12 @@ public sealed class QueryHttpClientTests : TestBase
                     .AddConquerorQueryClient<ITestQueryWithCustomHeadersHandler>(b => b.UseHttp(baseAddress, o =>
                     {
                         o.Headers.Authorization = new("Basic", "test");
-                        o.Headers.Add("test-header", new[] { "value1", "value2" });
+                        o.Headers.Add("test-header", ["value1", "value2"]);
                     }))
                     .AddConquerorQueryClient<ITestPostQueryWithCustomHeadersHandler>(b => b.UseHttp(baseAddress, o =>
                     {
                         o.Headers.Authorization = new("Basic", "test");
-                        o.Headers.Add("test-header", new[] { "value1", "value2" });
+                        o.Headers.Add("test-header", ["value1", "value2"]);
                     }))
                     .AddConquerorQueryClient<IQueryHandler<TestDelegateQuery, TestDelegateQueryResponse>>(b => b.UseHttp(baseAddress))
                     .AddConquerorQueryClient<IQueryHandler<TestPostDelegateQuery, TestDelegateQueryResponse>>(b => b.UseHttp(baseAddress));
@@ -478,12 +478,12 @@ public sealed class QueryHttpClientTests : TestBase
     [HttpQuery]
     public sealed record TestQueryWithCollectionPayload
     {
-        public List<int> Payload { get; init; } = new();
+        public List<int> Payload { get; init; } = [];
     }
 
     public sealed record TestQueryWithCollectionPayloadResponse
     {
-        public List<int> Payload { get; init; } = new();
+        public List<int> Payload { get; init; } = [];
     }
 
     [HttpQuery]
@@ -702,7 +702,7 @@ public sealed class QueryHttpClientTests : TestBase
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            return new() { Payload = new(query.Payload) { 1 } };
+            return new() { Payload = [..query.Payload, 1] };
         }
     }
 

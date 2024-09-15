@@ -11,5 +11,5 @@ public sealed class PayloadAuthorizationQueryMiddlewareConfiguration<TQuery>
     /// <summary>
     ///     The delegate to use for checking payload authorization.
     /// </summary>
-    public List<ConquerorOperationPayloadAuthorizationCheckAsync<TQuery>> AuthorizationChecks { get; } = new();
+    public List<ConquerorOperationPayloadAuthorizationCheckAsync<TQuery>> AuthorizationChecks { get; } = [];
 }

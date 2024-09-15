@@ -315,10 +315,10 @@ public sealed class StreamConsumerCustomInterfaceTests
 
     private sealed class TestObservations
     {
-        public List<object> Instances { get; } = new();
+        public List<object> Instances { get; } = [];
 
-        public List<object> Items { get; } = new();
+        public List<object> Items { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 }

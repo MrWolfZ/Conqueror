@@ -717,7 +717,7 @@ public sealed class QueryHttpEndpointTests : TestBase
     {
         public override string Name => nameof(TestControllerApplicationPart);
 
-        public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpQueryController).GetTypeInfo() };
+        public IEnumerable<TypeInfo> Types { get; } = [typeof(TestHttpQueryController).GetTypeInfo()];
     }
 
     private sealed class TestControllerFeatureProvider : ControllerFeatureProvider

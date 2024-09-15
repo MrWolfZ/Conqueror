@@ -184,8 +184,8 @@ public sealed class EventTransportPublisherFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<object> Events { get; } = new();
+        public List<object> Events { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 }

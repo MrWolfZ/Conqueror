@@ -50,7 +50,7 @@ public sealed class ConquerorAuthorizationResult : ISerializable
     ///     Create an authorization result that represents a failed authorization check.
     /// </summary>
     /// <param name="reason">The reason for the authorization failure</param>
-    public static ConquerorAuthorizationResult Failure(string reason) => new(new[] { reason });
+    public static ConquerorAuthorizationResult Failure(string reason) => new([reason]);
 
     /// <summary>
     ///     Create an authorization result that represents a failed authorization check.

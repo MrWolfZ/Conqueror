@@ -20,7 +20,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
     private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.Analyzer0002Description), Resources.ResourceManager, typeof(Resources));
     private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Hidden, true, Description);
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Rule];
 
     public override void Initialize(AnalysisContext context)
     {

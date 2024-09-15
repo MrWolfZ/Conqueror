@@ -151,6 +151,6 @@ public sealed class EventPublisherMiddlewareConfigurationTests
 
     private sealed class TestObservations
     {
-        public List<TestEventPublisherMiddlewareConfiguration> Configurations { get; } = new();
+        public List<TestEventPublisherMiddlewareConfiguration> Configurations { get; } = [];
     }
 }

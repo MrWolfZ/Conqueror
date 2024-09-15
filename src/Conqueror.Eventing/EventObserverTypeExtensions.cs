@@ -14,7 +14,7 @@ internal static class EventObserverTypeExtensions
 
     public static IReadOnlyCollection<Type> GetEventObserverInterfaceTypes(this Type type)
     {
-        return type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsEventObserverInterfaceType()).ToList();
+        return type.GetInterfaces().Concat([type]).Where(i => i.IsEventObserverInterfaceType()).ToList();
     }
 
     public static Type GetPublisherConfigurationAttributeType(this Type publisherType)
@@ -24,7 +24,7 @@ internal static class EventObserverTypeExtensions
 
     public static IReadOnlyCollection<Type> GetPublisherInterfaceTypes(this Type type)
     {
-        return type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsEventPublisherInterfaceType()).ToList();
+        return type.GetInterfaces().Concat([type]).Where(i => i.IsEventPublisherInterfaceType()).ToList();
     }
 
     public static void ValidateNoInvalidEventObserverInterface(this Type type)
@@ -39,7 +39,7 @@ internal static class EventObserverTypeExtensions
         }
 
         var invalidInterface = type.GetInterfaces()
-                                   .Concat(new[] { type })
+                                   .Concat([type])
                                    .Where(i => i.IsCustomEventObserverInterfaceType())
                                    .FirstOrDefault(i => i.AllMethods().Count() > 1);
 

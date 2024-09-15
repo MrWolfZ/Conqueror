@@ -57,7 +57,7 @@ public static class ConquerorEventingObserverMiddlewareServiceCollectionExtensio
 
         try
         {
-            return (bool)genericRegistrationCheckMethod.Invoke(null, new object[] { services })!;
+            return (bool)genericRegistrationCheckMethod.Invoke(null, [services])!;
         }
         catch (TargetInvocationException ex) when (ex.InnerException != null)
         {
@@ -91,7 +91,7 @@ public static class ConquerorEventingObserverMiddlewareServiceCollectionExtensio
 
         try
         {
-            _ = genericConfigurationMethod.Invoke(null, new object[] { services });
+            _ = genericConfigurationMethod.Invoke(null, [services]);
         }
         catch (TargetInvocationException ex) when (ex.InnerException != null)
         {

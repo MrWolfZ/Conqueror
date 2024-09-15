@@ -357,10 +357,10 @@ public sealed class StreamProducerFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<object> Requests { get; } = new();
+        public List<object> Requests { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
 
-        public List<Type> DisposedTypes { get; } = new();
+        public List<Type> DisposedTypes { get; } = [];
     }
 }

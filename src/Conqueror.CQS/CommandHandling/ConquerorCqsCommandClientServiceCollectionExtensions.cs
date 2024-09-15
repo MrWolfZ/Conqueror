@@ -68,7 +68,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
 
             try
             {
-                _ = genericAddClientMethod.Invoke(null, new object?[] { services, transportClientFactory, configurePipeline });
+                _ = genericAddClientMethod.Invoke(null, [services, transportClientFactory, configurePipeline]);
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
@@ -135,7 +135,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
         static Type? GetCustomCommandHandlerInterfaceType()
         {
             var interfaces = typeof(THandler).GetInterfaces()
-                                             .Concat(new[] { typeof(THandler) })
+                                             .Concat([typeof(THandler)])
                                              .Where(i => i.IsCustomCommandHandlerInterfaceType<TCommand, TResponse>())
                                              .ToList();
 

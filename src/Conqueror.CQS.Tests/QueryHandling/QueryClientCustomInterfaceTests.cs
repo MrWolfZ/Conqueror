@@ -55,7 +55,7 @@ public abstract class QueryClientCustomInterfaceTests
 
     private sealed class TestObservations
     {
-        public List<object> Queries { get; } = new();
+        public List<object> Queries { get; } = [];
     }
 }
 

@@ -911,10 +911,10 @@ public sealed class EventPublisherMiddlewareLifetimeTests
 
     private sealed class TestObservations
     {
-        public List<int> ObserverInvocationCounts { get; } = new();
+        public List<int> ObserverInvocationCounts { get; } = [];
 
-        public List<int> InvocationCounts { get; } = new();
+        public List<int> InvocationCounts { get; } = [];
 
-        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = [];
     }
 }

@@ -19,7 +19,7 @@ internal static class QueryHandlerTypeExtensions
 
     public static IReadOnlyCollection<Type> GetQueryHandlerInterfaceTypes(this Type type)
     {
-        return type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsQueryHandlerInterfaceType()).ToList();
+        return type.GetInterfaces().Concat([type]).Where(i => i.IsQueryHandlerInterfaceType()).ToList();
     }
 
     public static void ValidateNoInvalidQueryHandlerInterface(this Type type)
@@ -35,7 +35,7 @@ internal static class QueryHandlerTypeExtensions
 
         var invalidInterface = type
                                .GetInterfaces()
-                               .Concat(new[] { type })
+                               .Concat([type])
                                .Where(i => i.IsCustomQueryHandlerInterfaceType())
                                .FirstOrDefault(i => i.AllMethods().Count() > 1);
 

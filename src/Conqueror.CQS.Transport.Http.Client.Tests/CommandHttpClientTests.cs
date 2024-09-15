@@ -265,7 +265,7 @@ public sealed class CommandHttpClientTests : TestBase
                     .AddConquerorCommandClient<ITestCommandWithCustomHeadersHandler>(b => b.UseHttp(baseAddress, o =>
                     {
                         o.Headers.Authorization = new("Basic", "test");
-                        o.Headers.Add("test-header", new[] { "value1", "value2" });
+                        o.Headers.Add("test-header", ["value1", "value2"]);
                     }))
                     .AddConquerorCommandClient<ICommandHandler<TestDelegateCommand, TestDelegateCommandResponse>>(b => b.UseHttp(baseAddress))
                     .AddConquerorCommandClient<ICommandHandler<TestDelegateCommandWithoutResponse>>(b => b.UseHttp(baseAddress));

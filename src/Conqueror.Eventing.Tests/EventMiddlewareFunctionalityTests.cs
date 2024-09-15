@@ -1613,26 +1613,26 @@ public sealed class EventMiddlewareFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<Type> MiddlewareTypes { get; } = new();
+        public List<Type> MiddlewareTypes { get; } = [];
 
-        public List<object> EventsFromObservers { get; } = new();
+        public List<object> EventsFromObservers { get; } = [];
 
-        public List<object> EventsFromMiddlewares { get; } = new();
+        public List<object> EventsFromMiddlewares { get; } = [];
 
-        public List<object> EventsFromPublisher { get; } = new();
+        public List<object> EventsFromPublisher { get; } = [];
 
-        public List<CancellationToken> CancellationTokensFromObservers { get; } = new();
+        public List<CancellationToken> CancellationTokensFromObservers { get; } = [];
 
-        public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
+        public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
 
-        public List<CancellationToken> CancellationTokensFromPublisher { get; } = new();
+        public List<CancellationToken> CancellationTokensFromPublisher { get; } = [];
 
-        public List<object> ConfigurationFromMiddlewares { get; } = new();
+        public List<object> ConfigurationFromMiddlewares { get; } = [];
     }
 
     private sealed class CancellationTokensToUse
     {
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 
     private sealed class TestService

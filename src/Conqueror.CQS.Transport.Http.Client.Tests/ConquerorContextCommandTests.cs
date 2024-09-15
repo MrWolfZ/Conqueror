@@ -1036,9 +1036,9 @@ public class ConquerorContextCommandTests : TestBase
 
     public sealed class TestObservations
     {
-        public List<string?> ReceivedCommandIds { get; } = new();
+        public List<string?> ReceivedCommandIds { get; } = [];
 
-        public List<string?> ReceivedTraceIds { get; } = new();
+        public List<string?> ReceivedTraceIds { get; } = [];
 
         public bool ShouldAddUpstreamData { get; set; }
 

@@ -542,6 +542,6 @@ public sealed class StreamConsumerLifetimeTests
 
     private sealed class TestObservations
     {
-        public List<int> InvocationCounts { get; } = new();
+        public List<int> InvocationCounts { get; } = [];
     }
 }

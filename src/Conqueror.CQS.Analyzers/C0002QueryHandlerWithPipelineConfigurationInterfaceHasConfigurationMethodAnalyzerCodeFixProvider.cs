@@ -18,7 +18,7 @@ namespace Conqueror.CQS.Analyzers;
 [Shared]
 public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzerCodeFixProvider : CodeFixProvider
 {
-    public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId);
+    public override ImmutableArray<string> FixableDiagnosticIds => [C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfigurationMethodAnalyzer.DiagnosticId];
 
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 

@@ -146,13 +146,12 @@ public sealed class ConquerorContextDataTests
 
     private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateDownstreamTestCaseData(string dataType)
     {
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.PreExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -163,17 +162,17 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
+                ],
                 Array.Empty<string>()),
-        };
 
-        yield return new()
-        {
+        ];
+
+        yield return
+        [
             new(dataType,
                 Location.PipelineBuilder,
                 null,
-                new[]
-                {
+                [
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
@@ -182,21 +181,19 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.MiddlewarePreExecution,
                 null,
-                new[]
-                {
+                [
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
@@ -204,26 +201,23 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.MiddlewarePostExecution,
                 null,
-                new[]
-                {
+                [
                     Location.MiddlewarePostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -233,44 +227,40 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.ProducerPreNestedExecution,
                 null,
-                new[]
-                {
+                [
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.ProducerPostNestedExecution,
                 null,
-                new[]
-                {
+                [
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -279,45 +269,41 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedClassPreExecution,
                 null,
-                new[]
-                {
+                [
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedClassPostExecution,
                 null,
-                new[]
-                {
+                [
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -325,20 +311,18 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedStreamProducer,
                 null,
-                new[]
-                {
+                [
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -348,26 +332,24 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
-                }),
-        };
+                ]),
+        ];
 
         // overwrite tests
 
         foreach (var overWriteDataType in new[] { DataType.String, DataType.Object })
         {
-            yield return new()
-            {
+            yield return
+            [
                 new(dataType,
                     Location.PreExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PreExecution,
                         Location.PostExecution,
                         Location.PipelineBuilder,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
@@ -375,13 +357,12 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    }),
+                    ]),
 
                 new(overWriteDataType,
                     Location.MiddlewarePreExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
@@ -389,74 +370,67 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PostExecution,
                         Location.PipelineBuilder,
-                    }),
-            };
+                    ]),
+            ];
 
-            yield return new()
-            {
+            yield return
+            [
                 new(dataType,
                     Location.PreExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PreExecution,
                         Location.PostExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
                         Location.ProducerPostNestedExecution,
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    }),
+                    ]),
 
                 new(overWriteDataType,
                     Location.ProducerPreNestedExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
                         Location.ProducerPostNestedExecution,
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PostExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
-                    }),
-            };
+                    ]),
+            ];
         }
 
         // removal tests
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.PreExecution,
                 Location.MiddlewarePreExecution,
-                new[]
-                {
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
@@ -464,140 +438,128 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.PreExecution,
                 Location.ProducerPreNestedExecution,
-                new[]
-                {
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
     }
 
     private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateUpstreamTestCaseData(string dataType)
     {
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedStreamProducer,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedClassPreExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedClassPostExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.ProducerPreNestedExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.ProducerPostNestedExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
@@ -605,16 +567,15 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.MiddlewarePreExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
@@ -622,27 +583,24 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.MiddlewarePostExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
@@ -651,26 +609,24 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
         // overwrite tests
 
         foreach (var overWriteDataType in new[] { DataType.String, DataType.Object })
         {
-            yield return new()
-            {
+            yield return
+            [
                 new(dataType,
                     Location.NestedStreamProducer,
                     null,
-                    new[]
-                    {
+                    [
                         Location.ProducerPostNestedExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PostExecution,
                         Location.PipelineBuilder,
@@ -678,18 +634,16 @@ public sealed class ConquerorContextDataTests
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
                         Location.NestedClassPreExecution,
-                    }),
+                    ]),
 
                 new(overWriteDataType,
                     Location.MiddlewarePostExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PostExecution,
                         Location.MiddlewarePostExecution,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
@@ -698,21 +652,19 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    }),
-            };
+                    ]),
+            ];
 
-            yield return new()
-            {
+            yield return
+            [
                 new(dataType,
                     Location.NestedClassPreExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PostExecution,
                         Location.PipelineBuilder,
@@ -721,19 +673,17 @@ public sealed class ConquerorContextDataTests
                         Location.ProducerPreNestedExecution,
                         Location.ProducerPostNestedExecution,
                         Location.NestedStreamProducer,
-                    }),
+                    ]),
 
                 new(overWriteDataType,
                     Location.ProducerPostNestedExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PostExecution,
                         Location.MiddlewarePostExecution,
                         Location.ProducerPostNestedExecution,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
@@ -741,20 +691,18 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    }),
-            };
+                    ]),
+            ];
 
-            yield return new()
-            {
+            yield return
+            [
                 new(dataType,
                     Location.PreExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PreExecution,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PostExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
@@ -764,45 +712,42 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    }),
+                    ]),
 
                 new(overWriteDataType,
                     Location.ProducerPreNestedExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PostExecution,
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
                         Location.ProducerPostNestedExecution,
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
                         Location.NestedStreamProducer,
-                    }),
-            };
+                    ]),
+
+            ];
         }
 
         // removal tests
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedStreamProducer,
                 Location.MiddlewarePostExecution,
-                new[]
-                {
+                [
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -810,21 +755,19 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedClassPreExecution,
                 Location.ProducerPostNestedExecution,
-                new[]
-                {
+                [
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -833,19 +776,18 @@ public sealed class ConquerorContextDataTests
                     Location.ProducerPreNestedExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
     }
 
     private static IEnumerable<List<ConquerorContextDataTestCaseData>> GenerateBidirectionalTestCaseData(string dataType)
     {
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.PreExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -856,17 +798,17 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
+                ],
                 Array.Empty<string>()),
-        };
 
-        yield return new()
-        {
+        ];
+
+        yield return
+        [
             new(dataType,
                 Location.PipelineBuilder,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
@@ -876,20 +818,18 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.MiddlewarePreExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
@@ -898,26 +838,23 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.MiddlewarePostExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
@@ -926,16 +863,15 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.ProducerPreNestedExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
@@ -943,28 +879,25 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.ProducerPostNestedExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
@@ -972,94 +905,86 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedClassPreExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedClassPostExecution,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPostExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedStreamProducer,
                 null,
-                new[]
-                {
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
-                }),
-        };
+                ]),
+        ];
 
         // overwrite tests
 
         foreach (var overWriteDataType in new[] { DataType.String, DataType.Object })
         {
-            yield return new()
-            {
+            yield return
+            [
                 new(dataType,
                     Location.PreExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PreExecution,
                         Location.PipelineBuilder,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PostExecution,
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
@@ -1068,13 +993,12 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    }),
+                    ]),
 
                 new(overWriteDataType,
                     Location.MiddlewarePreExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PostExecution,
                         Location.MiddlewarePreExecution,
                         Location.MiddlewarePostExecution,
@@ -1083,27 +1007,24 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PipelineBuilder,
-                    }),
-            };
+                    ]),
+            ];
 
-            yield return new()
-            {
+            yield return
+            [
                 new(dataType,
                     Location.PreExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PreExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PostExecution,
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
@@ -1111,13 +1032,12 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    }),
+                    ]),
 
                 new(overWriteDataType,
                     Location.ProducerPreNestedExecution,
                     null,
-                    new[]
-                    {
+                    [
                         Location.PostExecution,
                         Location.MiddlewarePostExecution,
                         Location.ProducerPreNestedExecution,
@@ -1125,30 +1045,27 @@ public sealed class ConquerorContextDataTests
                         Location.NestedClassPreExecution,
                         Location.NestedClassPostExecution,
                         Location.NestedStreamProducer,
-                    },
-                    new[]
-                    {
+                    ],
+                    [
                         Location.PreExecution,
                         Location.PipelineBuilder,
                         Location.MiddlewarePreExecution,
-                    }),
-            };
+                    ]),
+            ];
         }
 
         // removal tests
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.PreExecution,
                 Location.MiddlewarePreExecution,
-                new[]
-                {
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PostExecution,
                     Location.MiddlewarePreExecution,
                     Location.MiddlewarePostExecution,
@@ -1157,22 +1074,20 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.PreExecution,
                 Location.ProducerPreNestedExecution,
-                new[]
-                {
+                [
                     Location.PreExecution,
                     Location.PipelineBuilder,
                     Location.MiddlewarePreExecution,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PostExecution,
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
@@ -1180,22 +1095,20 @@ public sealed class ConquerorContextDataTests
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedStreamProducer,
                 Location.MiddlewarePostExecution,
-                new[]
-                {
+                [
                     Location.ProducerPostNestedExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -1203,22 +1116,20 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.NestedClassPreExecution,
-                }),
-        };
+                ]),
+        ];
 
-        yield return new()
-        {
+        yield return
+        [
             new(dataType,
                 Location.NestedClassPreExecution,
                 Location.ProducerPostNestedExecution,
-                new[]
-                {
+                [
                     Location.NestedClassPreExecution,
                     Location.NestedClassPostExecution,
                     Location.NestedStreamProducer,
-                },
-                new[]
-                {
+                ],
+                [
                     Location.PreExecution,
                     Location.PostExecution,
                     Location.PipelineBuilder,
@@ -1226,8 +1137,8 @@ public sealed class ConquerorContextDataTests
                     Location.MiddlewarePostExecution,
                     Location.ProducerPreNestedExecution,
                     Location.ProducerPostNestedExecution,
-                }),
-        };
+                ]),
+        ];
     }
 
     private static void SetAndObserveContextData(IConquerorContext ctx, TestDataInstructions testDataInstructions, TestObservations testObservations, string location)
@@ -1386,25 +1297,25 @@ public sealed class ConquerorContextDataTests
 
     private sealed class TestDataInstructions
     {
-        public List<(string Key, object Value, string Location)> DownstreamDataToSet { get; } = new();
+        public List<(string Key, object Value, string Location)> DownstreamDataToSet { get; } = [];
 
-        public List<(string Key, string Location)> DownstreamDataToRemove { get; } = new();
+        public List<(string Key, string Location)> DownstreamDataToRemove { get; } = [];
 
-        public List<(string Key, object Value, string Location)> UpstreamDataToSet { get; } = new();
+        public List<(string Key, object Value, string Location)> UpstreamDataToSet { get; } = [];
 
-        public List<(string Key, string Location)> UpstreamDataToRemove { get; } = new();
+        public List<(string Key, string Location)> UpstreamDataToRemove { get; } = [];
 
-        public List<(string Key, object Value, string Location)> BidirectionalDataToSet { get; } = new();
+        public List<(string Key, object Value, string Location)> BidirectionalDataToSet { get; } = [];
 
-        public List<(string Key, string Location)> BidirectionalDataToRemove { get; } = new();
+        public List<(string Key, string Location)> BidirectionalDataToRemove { get; } = [];
     }
 
     private sealed class TestObservations
     {
-        public List<(string Key, object Value, string Location)> ObservedDownstreamData { get; } = new();
+        public List<(string Key, object Value, string Location)> ObservedDownstreamData { get; } = [];
 
-        public List<(string Key, object Value, string Location)> ObservedUpstreamData { get; } = new();
+        public List<(string Key, object Value, string Location)> ObservedUpstreamData { get; } = [];
 
-        public List<(string Key, object Value, string Location)> ObservedBidirectionalData { get; } = new();
+        public List<(string Key, object Value, string Location)> ObservedBidirectionalData { get; } = [];
     }
 }

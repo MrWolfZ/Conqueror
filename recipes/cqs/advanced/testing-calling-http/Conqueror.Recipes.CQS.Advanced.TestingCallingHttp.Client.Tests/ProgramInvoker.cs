@@ -20,7 +20,7 @@ public static class ProgramInvoker
 
             // call the implicitly created entry point
             var result = typeof(Program).GetMethod("<Main>$", BindingFlags.NonPublic | BindingFlags.Static)!
-                                        .Invoke(null, new object?[] { args });
+                                        .Invoke(null, [args]);
 
             if (result is Task t)
             {

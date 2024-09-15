@@ -628,11 +628,11 @@ public abstract class StreamProducerClientMiddlewareLifetimeTests
 
     private sealed class TestObservations
     {
-        public List<int> TransportInvocationCounts { get; } = new();
+        public List<int> TransportInvocationCounts { get; } = [];
 
-        public List<int> InvocationCounts { get; } = new();
+        public List<int> InvocationCounts { get; } = [];
 
-        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = [];
     }
 }
 

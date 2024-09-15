@@ -305,9 +305,9 @@ public abstract class CommandClientFactoryTests
 
     private sealed class TestObservations
     {
-        public List<object> Commands { get; } = new();
+        public List<object> Commands { get; } = [];
 
-        public List<Type> MiddlewareTypes { get; } = new();
+        public List<Type> MiddlewareTypes { get; } = [];
     }
 }
 

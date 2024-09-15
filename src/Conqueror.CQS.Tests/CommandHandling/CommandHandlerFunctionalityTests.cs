@@ -438,10 +438,10 @@ public sealed class CommandHandlerFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<object> Commands { get; } = new();
+        public List<object> Commands { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
 
-        public List<Type> DisposedTypes { get; } = new();
+        public List<Type> DisposedTypes { get; } = [];
     }
 }

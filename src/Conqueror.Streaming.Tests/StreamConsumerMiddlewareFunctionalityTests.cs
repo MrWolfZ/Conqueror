@@ -748,22 +748,22 @@ public sealed class StreamConsumerMiddlewareFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<Type> MiddlewareTypes { get; } = new();
+        public List<Type> MiddlewareTypes { get; } = [];
 
-        public List<object> ItemsFromConsumers { get; } = new();
+        public List<object> ItemsFromConsumers { get; } = [];
 
-        public List<object?> ItemsFromMiddlewares { get; } = new();
+        public List<object?> ItemsFromMiddlewares { get; } = [];
 
-        public List<CancellationToken> CancellationTokensFromConsumers { get; } = new();
+        public List<CancellationToken> CancellationTokensFromConsumers { get; } = [];
 
-        public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
+        public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
 
-        public List<object> ConfigurationFromMiddlewares { get; } = new();
+        public List<object> ConfigurationFromMiddlewares { get; } = [];
     }
 
     private sealed class CancellationTokensToUse
     {
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 
     private sealed class TestService

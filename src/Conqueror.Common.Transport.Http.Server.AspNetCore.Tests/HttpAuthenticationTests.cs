@@ -203,7 +203,7 @@ public sealed class HttpAuthenticationTests : TestBase
     {
         public override string Name => nameof(TestControllerApplicationPart);
 
-        public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestController).GetTypeInfo() };
+        public IEnumerable<TypeInfo> Types { get; } = [typeof(TestController).GetTypeInfo()];
     }
 
     private sealed class TestControllerFeatureProvider : ControllerFeatureProvider

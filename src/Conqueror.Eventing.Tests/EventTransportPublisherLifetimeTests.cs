@@ -801,8 +801,8 @@ public sealed class EventTransportPublisherLifetimeTests
     {
         public ConcurrentQueue<int> InvocationCounts { get; } = new();
 
-        public List<int> DependencyResolvedDuringPublisherExecutionInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringPublisherExecutionInvocationCounts { get; } = [];
 
-        public List<int> DependencyResolvedDuringPublisherPipelineBuildInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringPublisherPipelineBuildInvocationCounts { get; } = [];
     }
 }

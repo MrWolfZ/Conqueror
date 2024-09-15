@@ -488,6 +488,6 @@ public sealed class EventObserverRegistrationTests
 
     private sealed class TestObservations
     {
-        public List<int> InvocationCounts { get; } = new();
+        public List<int> InvocationCounts { get; } = [];
     }
 }

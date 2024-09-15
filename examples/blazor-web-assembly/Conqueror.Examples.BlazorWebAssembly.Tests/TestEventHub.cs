@@ -2,7 +2,7 @@ namespace Conqueror.Examples.BlazorWebAssembly.Tests;
 
 public sealed class TestEventHub : IEventHub
 {
-    private readonly List<object> observedEvents = new();
+    private readonly List<object> observedEvents = [];
 
     public IReadOnlyCollection<object> ObservedEvents => observedEvents;
 

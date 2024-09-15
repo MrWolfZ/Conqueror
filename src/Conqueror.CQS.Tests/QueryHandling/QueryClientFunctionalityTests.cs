@@ -174,9 +174,9 @@ public abstract class QueryClientFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<object> Queries { get; } = new();
+        public List<object> Queries { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 }
 

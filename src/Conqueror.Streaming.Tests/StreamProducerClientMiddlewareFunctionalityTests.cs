@@ -747,24 +747,24 @@ public abstract class StreamProducerClientMiddlewareFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<Type> MiddlewareTypes { get; } = new();
+        public List<Type> MiddlewareTypes { get; } = [];
 
-        public List<object> RequestsFromTransports { get; } = new();
+        public List<object> RequestsFromTransports { get; } = [];
 
-        public List<object> RequestsFromMiddlewares { get; } = new();
+        public List<object> RequestsFromMiddlewares { get; } = [];
 
-        public List<object> ItemsFromMiddlewares { get; } = new();
+        public List<object> ItemsFromMiddlewares { get; } = [];
 
-        public List<CancellationToken> CancellationTokensFromTransports { get; } = new();
+        public List<CancellationToken> CancellationTokensFromTransports { get; } = [];
 
-        public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = new();
+        public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
 
-        public List<object> ConfigurationFromMiddlewares { get; } = new();
+        public List<object> ConfigurationFromMiddlewares { get; } = [];
     }
 
     private sealed class CancellationTokensToUse
     {
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 
     private sealed class TestService

@@ -1046,12 +1046,12 @@ public sealed class EventObserverMiddlewareLifetimeTests
 
     private sealed class TestObservations
     {
-        public List<int> ObserverInvocationCounts { get; } = new();
+        public List<int> ObserverInvocationCounts { get; } = [];
 
-        public List<int> InvocationCounts { get; } = new();
+        public List<int> InvocationCounts { get; } = [];
 
-        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = [];
 
-        public List<int> DependencyResolvedDuringPipelineBuildInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringPipelineBuildInvocationCounts { get; } = [];
     }
 }

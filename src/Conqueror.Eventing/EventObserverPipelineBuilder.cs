@@ -8,7 +8,7 @@ namespace Conqueror.Eventing;
 internal sealed class EventObserverPipelineBuilder : IEventObserverPipelineBuilder
 {
     private readonly IReadOnlyDictionary<Type, IEventObserverMiddlewareInvoker> middlewareInvokersByMiddlewareTypes;
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IEventObserverMiddlewareInvoker Invoker)> middlewares = new();
+    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IEventObserverMiddlewareInvoker Invoker)> middlewares = [];
 
     public EventObserverPipelineBuilder(IServiceProvider serviceProvider)
     {

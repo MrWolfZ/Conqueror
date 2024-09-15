@@ -328,10 +328,10 @@ public sealed class EventObserverCustomInterfaceTests
 
     private sealed class TestObservations
     {
-        public List<object> Instances { get; } = new();
+        public List<object> Instances { get; } = [];
 
-        public List<object> Events { get; } = new();
+        public List<object> Events { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 }

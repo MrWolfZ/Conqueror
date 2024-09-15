@@ -581,7 +581,7 @@ public sealed class CommandHttpEndpointTests : TestBase
     {
         public override string Name => nameof(TestControllerApplicationPart);
 
-        public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpCommandController).GetTypeInfo() };
+        public IEnumerable<TypeInfo> Types { get; } = [typeof(TestHttpCommandController).GetTypeInfo()];
     }
 
     private sealed class TestControllerFeatureProvider : ControllerFeatureProvider

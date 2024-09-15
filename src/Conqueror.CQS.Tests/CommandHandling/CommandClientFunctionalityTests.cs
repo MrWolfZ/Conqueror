@@ -223,9 +223,9 @@ public abstract class CommandClientFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<object> Commands { get; } = new();
+        public List<object> Commands { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 }
 

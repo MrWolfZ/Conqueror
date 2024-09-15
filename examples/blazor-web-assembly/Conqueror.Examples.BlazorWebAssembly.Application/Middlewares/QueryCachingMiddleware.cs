@@ -6,7 +6,7 @@ public sealed record QueryCachingMiddlewareConfiguration
 
     public int MaxCacheSizeInMegabytes { get; set; } = 10;
 
-    public Type[] InvalidateResultsOnEventTypes { get; set; } = Array.Empty<Type>();
+    public Type[] InvalidateResultsOnEventTypes { get; set; } = [];
 }
 
 public sealed class QueryCachingMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>

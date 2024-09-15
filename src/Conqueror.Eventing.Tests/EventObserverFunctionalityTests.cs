@@ -481,12 +481,12 @@ public sealed class EventObserverFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<object> Events { get; } = new();
+        public List<object> Events { get; } = [];
 
-        public List<(object Event, Type ObserverType)> EventsWithObserverTypes { get; } = new();
+        public List<(object Event, Type ObserverType)> EventsWithObserverTypes { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
 
-        public List<Type> DisposedTypes { get; } = new();
+        public List<Type> DisposedTypes { get; } = [];
     }
 }

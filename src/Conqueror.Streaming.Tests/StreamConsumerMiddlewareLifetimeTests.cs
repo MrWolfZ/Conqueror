@@ -936,10 +936,10 @@ public sealed class StreamConsumerMiddlewareLifetimeTests
 
     private sealed class TestObservations
     {
-        public List<int> ConsumerInvocationCounts { get; } = new();
+        public List<int> ConsumerInvocationCounts { get; } = [];
 
-        public List<int> InvocationCounts { get; } = new();
+        public List<int> InvocationCounts { get; } = [];
 
-        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = [];
     }
 }

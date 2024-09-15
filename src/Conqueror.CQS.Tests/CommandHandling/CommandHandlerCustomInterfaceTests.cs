@@ -432,10 +432,10 @@ public sealed class CommandHandlerCustomInterfaceTests
 
     private sealed class TestObservations
     {
-        public List<object> Instances { get; } = new();
+        public List<object> Instances { get; } = [];
 
-        public List<object> Commands { get; } = new();
+        public List<object> Commands { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 }

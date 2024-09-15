@@ -21,7 +21,7 @@ internal static class TypeExtensions
 
     public static IReadOnlyCollection<Type> GetEventObserverInterfaceTypes(this Type observerType)
     {
-        var interfaces = observerType.GetInterfaces().Concat(new[] { observerType }).Where(i => i.IsEventObserverInterfaceType()).ToList();
+        var interfaces = observerType.GetInterfaces().Concat([observerType]).Where(i => i.IsEventObserverInterfaceType()).ToList();
 
         return interfaces.Count switch
         {

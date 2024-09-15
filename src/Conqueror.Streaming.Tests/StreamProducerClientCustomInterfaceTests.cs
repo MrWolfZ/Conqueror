@@ -55,7 +55,7 @@ public abstract class StreamProducerClientCustomInterfaceTests
 
     private sealed class TestObservations
     {
-        public List<object> Requests { get; } = new();
+        public List<object> Requests { get; } = [];
     }
 }
 

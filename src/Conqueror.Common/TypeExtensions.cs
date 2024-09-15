@@ -14,7 +14,7 @@ internal static class TypeExtensions
     }
 
     public static IEnumerable<MethodInfo> AllMethods(this Type t) => t.GetInterfaces()
-                                                                      .Concat(new[] { t })
+                                                                      .Concat([t])
                                                                       .SelectMany(s => s.GetMethods())
                                                                       .Where(mi => !mi.IsStatic);
 

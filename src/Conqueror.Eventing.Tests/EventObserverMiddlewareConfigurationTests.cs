@@ -174,6 +174,6 @@ public sealed class EventObserverMiddlewareConfigurationTests
 
     private sealed class TestObservations
     {
-        public List<TestEventObserverMiddlewareConfiguration> Configurations { get; } = new();
+        public List<TestEventObserverMiddlewareConfiguration> Configurations { get; } = [];
     }
 }

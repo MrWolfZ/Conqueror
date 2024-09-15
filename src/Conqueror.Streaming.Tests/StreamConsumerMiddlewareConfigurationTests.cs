@@ -170,6 +170,6 @@ public sealed class StreamConsumerMiddlewareConfigurationTests
 
     private sealed class TestObservations
     {
-        public List<TestStreamConsumerMiddlewareConfiguration> Configurations { get; } = new();
+        public List<TestStreamConsumerMiddlewareConfiguration> Configurations { get; } = [];
     }
 }

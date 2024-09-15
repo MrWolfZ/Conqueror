@@ -255,9 +255,9 @@ public abstract class QueryClientFactoryTests
 
     private sealed class TestObservations
     {
-        public List<object> Queries { get; } = new();
+        public List<object> Queries { get; } = [];
 
-        public List<Type> MiddlewareTypes { get; } = new();
+        public List<Type> MiddlewareTypes { get; } = [];
     }
 }
 

@@ -67,7 +67,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
             try
             {
-                _ = genericAddClientMethod.Invoke(null, new object?[] { services, transportClientFactory });
+                _ = genericAddClientMethod.Invoke(null, [services, transportClientFactory]);
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
@@ -122,7 +122,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
         static Type? GetCustomQueryHandlerInterfaceType()
         {
             var interfaces = typeof(THandler).GetInterfaces()
-                                             .Concat(new[] { typeof(THandler) })
+                                             .Concat([typeof(THandler)])
                                              .Where(i => i.IsCustomQueryHandlerInterfaceType<TQuery, TResponse>())
                                              .ToList();
 

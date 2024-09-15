@@ -8,7 +8,7 @@ internal sealed class StreamProducerPipelineBuilder(
     StreamProducerMiddlewareRegistry producerMiddlewareRegistry)
     : IStreamProducerPipelineBuilder
 {
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamProducerMiddlewareInvoker Invoker)> middlewares = new();
+    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamProducerMiddlewareInvoker Invoker)> middlewares = [];
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 

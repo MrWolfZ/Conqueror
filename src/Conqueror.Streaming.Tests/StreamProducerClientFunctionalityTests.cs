@@ -195,9 +195,9 @@ public abstract class StreamProducerClientFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<object> Requests { get; } = new();
+        public List<object> Requests { get; } = [];
 
-        public List<CancellationToken> CancellationTokens { get; } = new();
+        public List<CancellationToken> CancellationTokens { get; } = [];
     }
 }
 

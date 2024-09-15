@@ -693,7 +693,7 @@ public sealed class StreamHttpEndpointTests : TestBase
     {
         public override string Name => nameof(TestControllerApplicationPart);
 
-        public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpStreamController).GetTypeInfo() };
+        public IEnumerable<TypeInfo> Types { get; } = [typeof(TestHttpStreamController).GetTypeInfo()];
     }
 
     private sealed class TestControllerFeatureProvider : ControllerFeatureProvider

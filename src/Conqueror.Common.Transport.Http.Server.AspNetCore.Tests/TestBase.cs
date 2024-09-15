@@ -73,7 +73,7 @@ public abstract class TestBase
                                                                  options.TokenValidationParameters.ValidAudience = Audience;
                                                                  options.TokenValidationParameters.ValidIssuer = Issuer;
 
-                                                                 options.TokenValidationParameters.IssuerSigningKeyResolver = (_, _, _, _) => new[] { signingKeyLazy.Value };
+                                                                 options.TokenValidationParameters.IssuerSigningKeyResolver = (_, _, _, _) => [signingKeyLazy.Value];
                                                              });
             });
 

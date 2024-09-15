@@ -767,10 +767,10 @@ public sealed class StreamProducerMiddlewareLifetimeTests
 
     private sealed class TestObservations
     {
-        public List<int> ProducerInvocationCounts { get; } = new();
+        public List<int> ProducerInvocationCounts { get; } = [];
 
-        public List<int> InvocationCounts { get; } = new();
+        public List<int> InvocationCounts { get; } = [];
 
-        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = [];
     }
 }

@@ -465,7 +465,7 @@ public sealed class HttpContextDataTests : TestBase
 
     private sealed class TestObservations
     {
-        public List<string?> ReceivedTraceIds { get; } = new();
+        public List<string?> ReceivedTraceIds { get; } = [];
 
         public bool ShouldAddUpstreamData { get; set; }
 
@@ -577,7 +577,7 @@ public sealed class HttpContextDataTests : TestBase
     {
         public override string Name => nameof(TestControllerApplicationPart);
 
-        public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpCommandController).GetTypeInfo() };
+        public IEnumerable<TypeInfo> Types { get; } = [typeof(TestHttpCommandController).GetTypeInfo()];
     }
 
     private sealed class TestControllerFeatureProvider : ControllerFeatureProvider

@@ -261,9 +261,9 @@ public abstract class StreamProducerClientFactoryTests
 
     private sealed class TestObservations
     {
-        public List<object> Requests { get; } = new();
+        public List<object> Requests { get; } = [];
 
-        public List<Type> MiddlewareTypes { get; } = new();
+        public List<Type> MiddlewareTypes { get; } = [];
     }
 }
 

@@ -112,7 +112,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
 
         var observerId = new ConquerorEventObserverId(Guid.NewGuid());
 
-        var registration = new EventObserverRegistration(observerId, new[] { typeof(TEvent) }, null, UntypedObserverFn, configurePipeline, configureTransports);
+        var registration = new EventObserverRegistration(observerId, [typeof(TEvent)], null, UntypedObserverFn, configurePipeline, configureTransports);
         services.AddSingleton(registration);
 
         return services;
@@ -133,7 +133,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
 
             try
             {
-                _ = method.Invoke(null, new object?[] { services });
+                _ = method.Invoke(null, [services]);
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
@@ -157,7 +157,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
         static Type? GetCustomEventObserverInterfaceType()
         {
             var interfaces = typeof(TObserver).GetInterfaces()
-                                              .Concat(new[] { typeof(TObserver) })
+                                              .Concat([typeof(TObserver)])
                                               .Where(i => i.IsCustomEventObserverInterfaceType<TEvent>())
                                               .ToList();
 

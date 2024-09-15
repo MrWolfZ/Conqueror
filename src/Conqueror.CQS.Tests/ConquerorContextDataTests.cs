@@ -730,25 +730,25 @@ public sealed class ConquerorContextDataTests
 
     private sealed class TestDataInstructions
     {
-        public List<(string Key, object Value, string Location)> DownstreamDataToSet { get; } = new();
+        public List<(string Key, object Value, string Location)> DownstreamDataToSet { get; } = [];
 
-        public List<(string Key, string Location)> DownstreamDataToRemove { get; } = new();
+        public List<(string Key, string Location)> DownstreamDataToRemove { get; } = [];
 
-        public List<(string Key, object Value, string Location)> UpstreamDataToSet { get; } = new();
+        public List<(string Key, object Value, string Location)> UpstreamDataToSet { get; } = [];
 
-        public List<(string Key, string Location)> UpstreamDataToRemove { get; } = new();
+        public List<(string Key, string Location)> UpstreamDataToRemove { get; } = [];
 
-        public List<(string Key, object Value, string Location)> BidirectionalDataToSet { get; } = new();
+        public List<(string Key, object Value, string Location)> BidirectionalDataToSet { get; } = [];
 
-        public List<(string Key, string Location)> BidirectionalDataToRemove { get; } = new();
+        public List<(string Key, string Location)> BidirectionalDataToRemove { get; } = [];
     }
 
     private sealed class TestObservations
     {
-        public List<(string Key, object Value, string Location)> ObservedDownstreamData { get; } = new();
+        public List<(string Key, object Value, string Location)> ObservedDownstreamData { get; } = [];
 
-        public List<(string Key, object Value, string Location)> ObservedUpstreamData { get; } = new();
+        public List<(string Key, object Value, string Location)> ObservedUpstreamData { get; } = [];
 
-        public List<(string Key, object Value, string Location)> ObservedBidirectionalData { get; } = new();
+        public List<(string Key, object Value, string Location)> ObservedBidirectionalData { get; } = [];
     }
 }

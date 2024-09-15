@@ -388,6 +388,6 @@ public sealed class EventTypeFilteringEventObserverMiddlewareTests
 
     private sealed class TestObservations
     {
-        public List<object> Events { get; } = new();
+        public List<object> Events { get; } = [];
     }
 }

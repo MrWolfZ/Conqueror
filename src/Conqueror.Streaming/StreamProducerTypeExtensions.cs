@@ -35,7 +35,7 @@ internal static class StreamProducerTypeExtensions
 
         var invalidInterface = type
                                .GetInterfaces()
-                               .Concat(new[] { type })
+                               .Concat([type])
                                .Where(i => i.IsCustomStreamProducerInterfaceType())
                                .FirstOrDefault(i => i.AllMethods().Count() > 1);
 

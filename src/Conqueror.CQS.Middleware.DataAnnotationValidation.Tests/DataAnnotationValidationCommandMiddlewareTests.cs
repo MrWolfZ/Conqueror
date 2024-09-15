@@ -916,7 +916,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
 
         var testCommand = new TestCommandClassWithSingleComplexEnumerablePropertyWithValidationAnnotation
         {
-            OuterPayload = new() { new() { InnerPayload = "test" } },
+            OuterPayload = [new() { InnerPayload = "test" }],
         };
 
         Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(testCommand));
@@ -931,7 +931,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         var testCommand1 = new TestCommandClassWithSingleComplexEnumerablePropertyWithValidationAnnotation();
         var testCommand2 = new TestCommandClassWithSingleComplexEnumerablePropertyWithValidationAnnotation
         {
-            OuterPayload = new() { new() { InnerPayload = null } },
+            OuterPayload = [new() { InnerPayload = null }],
         };
 
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(testCommand1));
@@ -961,7 +961,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
 
         var testCommand = new TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation
         {
-            OuterPayload = new() { new() { InnerPayload = "test" } },
+            OuterPayload = [new() { InnerPayload = "test" }],
         };
 
         Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(testCommand));
@@ -976,7 +976,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         var testCommand1 = new TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation();
         var testCommand2 = new TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation
         {
-            OuterPayload = new() { new() { InnerPayload = null } },
+            OuterPayload = [new() { InnerPayload = null }],
         };
 
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(testCommand1));
@@ -1002,7 +1002,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         using var host = CreateHost<TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation>();
         var handler = CreateHandler<TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation>(host);
 
-        var testCommand = new TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation(new() { new("test") });
+        var testCommand = new TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation([new("test")]);
 
         Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(testCommand));
     }
@@ -1014,7 +1014,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         var handler = CreateHandler<TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation>(host);
 
         var testCommand1 = new TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation(null);
-        var testCommand2 = new TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation(new() { new(null) });
+        var testCommand2 = new TestCommandClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation([new(null)]);
 
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(testCommand1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(testCommand2));
@@ -1033,7 +1033,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         using var host = CreateHost<TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation>();
         var handler = CreateHandler<TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation>(host);
 
-        var testCommand = new TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation(new() { new("test") });
+        var testCommand = new TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation([new("test")]);
 
         Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(testCommand));
     }
@@ -1045,7 +1045,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         var handler = CreateHandler<TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation>(host);
 
         var testCommand1 = new TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation(null);
-        var testCommand2 = new TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation(new() { new(null) });
+        var testCommand2 = new TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation([new(null)]);
 
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(testCommand1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(testCommand2));

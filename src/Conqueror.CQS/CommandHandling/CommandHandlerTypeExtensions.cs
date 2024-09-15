@@ -19,7 +19,7 @@ internal static class CommandHandlerTypeExtensions
 
     public static IReadOnlyCollection<Type> GetCommandHandlerInterfaceTypes(this Type type)
     {
-        return type.GetInterfaces().Concat(new[] { type }).Where(i => i.IsCommandHandlerInterfaceType()).ToList();
+        return type.GetInterfaces().Concat([type]).Where(i => i.IsCommandHandlerInterfaceType()).ToList();
     }
 
     public static void ValidateNoInvalidCommandHandlerInterface(this Type type)
@@ -35,7 +35,7 @@ internal static class CommandHandlerTypeExtensions
 
         var invalidInterface = type
                                .GetInterfaces()
-                               .Concat(new[] { type })
+                               .Concat([type])
                                .Where(i => i.IsCustomCommandHandlerInterfaceType())
                                .FirstOrDefault(i => i.AllMethods().Count() > 1);
 

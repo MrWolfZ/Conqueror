@@ -334,7 +334,7 @@ public class ConquerorContextComplexTests : TestBase
 
     public sealed class TestObservations
     {
-        public List<string?> ReceivedTraceIds { get; } = new();
+        public List<string?> ReceivedTraceIds { get; } = [];
 
         public bool ShouldAddUpstreamData { get; set; }
 

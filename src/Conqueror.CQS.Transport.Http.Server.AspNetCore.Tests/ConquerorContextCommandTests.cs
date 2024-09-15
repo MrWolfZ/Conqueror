@@ -667,9 +667,9 @@ public sealed class ConquerorContextCommandTests : TestBase
 
     public sealed class TestObservations
     {
-        public List<string?> ReceivedCommandIds { get; } = new();
+        public List<string?> ReceivedCommandIds { get; } = [];
 
-        public List<string?> ReceivedTraceIds { get; } = new();
+        public List<string?> ReceivedTraceIds { get; } = [];
 
         public bool ShouldAddUpstreamData { get; set; }
 
@@ -717,7 +717,7 @@ public sealed class ConquerorContextCommandTests : TestBase
     {
         public override string Name => nameof(TestControllerApplicationPart);
 
-        public IEnumerable<TypeInfo> Types { get; } = new[] { typeof(TestHttpCommandController).GetTypeInfo() };
+        public IEnumerable<TypeInfo> Types { get; } = [typeof(TestHttpCommandController).GetTypeInfo()];
     }
 
     private sealed class TestControllerFeatureProvider : ControllerFeatureProvider

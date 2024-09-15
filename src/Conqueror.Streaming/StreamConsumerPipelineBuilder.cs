@@ -7,7 +7,7 @@ internal sealed class StreamConsumerPipelineBuilder(
     IServiceProvider serviceProvider,
     StreamConsumerMiddlewareRegistry producerMiddlewareRegistry) : IStreamConsumerPipelineBuilder
 {
-    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamConsumerMiddlewareInvoker Invoker)> middlewares = new();
+    private readonly List<(Type MiddlewareType, object? MiddlewareConfiguration, IStreamConsumerMiddlewareInvoker Invoker)> middlewares = [];
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 

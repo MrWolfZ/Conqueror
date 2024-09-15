@@ -88,7 +88,7 @@ public abstract class CommandClientCustomInterfaceTests
 
     private sealed class TestObservations
     {
-        public List<object> Commands { get; } = new();
+        public List<object> Commands { get; } = [];
     }
 }
 

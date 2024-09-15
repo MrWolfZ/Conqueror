@@ -167,6 +167,6 @@ public sealed class CommandMiddlewareLifetimeTests
 
     private sealed class TestObservations
     {
-        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = new();
+        public List<int> DependencyResolvedDuringMiddlewareExecutionInvocationCounts { get; } = [];
     }
 }
