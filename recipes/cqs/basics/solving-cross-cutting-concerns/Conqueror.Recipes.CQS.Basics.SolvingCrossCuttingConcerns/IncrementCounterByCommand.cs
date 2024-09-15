@@ -8,7 +8,7 @@ public interface IIncrementCounterByCommandHandler : ICommandHandler<IncrementCo
 
 internal sealed class IncrementCounterByCommandHandler(CountersRepository repository) : IIncrementCounterByCommandHandler
 {
-    public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterByCommandResponse> Handle(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await repository.GetCounterValue(command.CounterName);
         await repository.SetCounterValue(command.CounterName, counterValue + command.IncrementBy);

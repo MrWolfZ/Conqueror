@@ -9,7 +9,7 @@ public interface IHttpExampleQueryHandler : IQueryHandler<HttpExampleQuery, Http
 
 public sealed class HttpExampleQueryHandler : IHttpExampleQueryHandler
 {
-    public async Task<HttpExampleQueryResponse> ExecuteQuery(HttpExampleQuery command, CancellationToken cancellationToken = default)
+    public async Task<HttpExampleQueryResponse> Handle(HttpExampleQuery command, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
         return new(command.Parameter);

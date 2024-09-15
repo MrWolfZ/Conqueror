@@ -18,7 +18,7 @@ public sealed class ConquerorContextQueryTests
             return new(q.Payload);
         });
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [Test]
@@ -34,7 +34,7 @@ public sealed class ConquerorContextQueryTests
             return await next(ctx.Query);
         });
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [Test]
@@ -46,7 +46,7 @@ public sealed class ConquerorContextQueryTests
             nestedClassFn: b => Assert.That(b, Is.Not.Null),
             nestedClassLifetime: ServiceLifetime.Scoped);
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [Test]
@@ -61,7 +61,7 @@ public sealed class ConquerorContextQueryTests
             return new(q.Payload);
         });
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [Test]
@@ -71,7 +71,7 @@ public sealed class ConquerorContextQueryTests
 
         var provider = Setup(handlerPreReturnFn: b => Assert.That(b, Is.Not.Null));
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [Test]
@@ -96,7 +96,7 @@ public sealed class ConquerorContextQueryTests
             (ctx, next) => next(ctx.Query),
             ctx => observedContexts.Add(ctx!));
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(3));
         Assert.That(observedContexts[0], Is.Not.Null);
@@ -125,7 +125,7 @@ public sealed class ConquerorContextQueryTests
             (ctx, next) => next(ctx.Query),
             ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(3));
         Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
@@ -155,7 +155,7 @@ public sealed class ConquerorContextQueryTests
             (ctx, next) => next(ctx.Query),
             ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(3));
         Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
@@ -181,7 +181,7 @@ public sealed class ConquerorContextQueryTests
                 return new(q.Payload);
             });
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(2));
         Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
@@ -207,7 +207,7 @@ public sealed class ConquerorContextQueryTests
                 return new(q.Payload);
             });
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(2));
         Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
@@ -243,7 +243,7 @@ public sealed class ConquerorContextQueryTests
 
         expectedTraceId = conquerorContext.GetTraceId();
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [Test]
@@ -262,7 +262,7 @@ public sealed class ConquerorContextQueryTests
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [Test]
@@ -282,7 +282,7 @@ public sealed class ConquerorContextQueryTests
 
         expectedTraceId = conquerorContext.GetTraceId();
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [Test]
@@ -301,7 +301,7 @@ public sealed class ConquerorContextQueryTests
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
@@ -394,12 +394,12 @@ public sealed class ConquerorContextQueryTests
         IQueryHandler<NestedTestQuery, NestedTestQueryResponse> nestedQueryHandler)
         : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             var response = handlerFn(query, conquerorContextAccessor.ConquerorContext);
             nestedClass.Execute();
-            _ = await nestedQueryHandler.ExecuteQuery(new(query.Payload), cancellationToken);
+            _ = await nestedQueryHandler.Handle(new(query.Payload), cancellationToken);
             preReturnFn(conquerorContextAccessor.ConquerorContext);
             return response;
         }
@@ -413,7 +413,7 @@ public sealed class ConquerorContextQueryTests
         IConquerorContextAccessor conquerorContextAccessor)
         : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>
     {
-        public async Task<NestedTestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken = default)
+        public async Task<NestedTestQueryResponse> Handle(NestedTestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return handlerFn(query, conquerorContextAccessor.ConquerorContext);

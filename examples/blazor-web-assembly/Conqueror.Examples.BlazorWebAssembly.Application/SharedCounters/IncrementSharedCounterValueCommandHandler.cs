@@ -8,7 +8,7 @@ internal sealed class IncrementSharedCounterValueCommandHandler(
     ISharedCounterIncrementedEventObserver eventObserver)
     : IIncrementSharedCounterValueCommandHandler
 {
-    public async Task<IncrementSharedCounterValueCommandResponse> ExecuteCommand(IncrementSharedCounterValueCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementSharedCounterValueCommandResponse> Handle(IncrementSharedCounterValueCommand command, CancellationToken cancellationToken = default)
     {
         var valueAfterIncrement = counter.IncrementBy(command.IncrementBy);
         await eventObserver.HandleEvent(new(valueAfterIncrement, command.IncrementBy), cancellationToken);

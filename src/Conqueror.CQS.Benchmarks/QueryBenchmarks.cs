@@ -15,10 +15,10 @@ public class QueryBenchmarks
                                                                         .BuildServiceProvider();
 
     [Benchmark]
-    public void ExecuteQueryWithMiddleware()
+    public void RunQueryBenchmark()
     {
         var result = provider.GetRequiredService<IQueryHandler<TestQuery, TestResponse>>()
-                             .ExecuteQuery(new(0))
+                             .Handle(new(0))
                              .GetAwaiter()
                              .GetResult();
 
@@ -47,7 +47,7 @@ public class QueryBenchmarks
 
     private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestResponse>
     {
-        public async Task<TestResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = new())
+        public async Task<TestResponse> Handle(TestQuery query, CancellationToken cancellationToken = new())
         {
             await Task.Yield();
             return new(query.Value);

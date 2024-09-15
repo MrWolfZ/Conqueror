@@ -19,7 +19,7 @@ public abstract class QueryClientCustomInterfaceTests
 
         var query = new TestQuery();
 
-        _ = await client.ExecuteQuery(query, CancellationToken.None);
+        _ = await client.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -38,7 +38,7 @@ public abstract class QueryClientCustomInterfaceTests
     {
         public string TransportTypeName => "test";
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+        public async Task<TResponse> Send<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)
             where TQuery : class

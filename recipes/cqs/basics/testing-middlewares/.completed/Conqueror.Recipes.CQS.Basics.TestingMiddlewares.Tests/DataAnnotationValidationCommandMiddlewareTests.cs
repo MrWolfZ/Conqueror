@@ -8,7 +8,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
     {
         await using var serviceProvider = BuildServiceProvider();
         var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-        Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(new(-1)));
+        Assert.ThrowsAsync<ValidationException>(() => handler.Handle(new(-1)));
     }
 
     [Test]
@@ -16,7 +16,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
     {
         await using var serviceProvider = BuildServiceProvider();
         var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-        Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(1)));
+        Assert.DoesNotThrowAsync(() => handler.Handle(new(1)));
     }
 
     private sealed record TestCommand(int Parameter)
@@ -32,7 +32,7 @@ public sealed class DataAnnotationValidationCommandMiddlewareTests
         public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) =>
             pipeline.UseDataAnnotationValidation();
 
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             // since we are only testing the input validation, the handler does not need to do anything
             return Task.FromResult<TestCommandResponse>(new(command.Parameter));

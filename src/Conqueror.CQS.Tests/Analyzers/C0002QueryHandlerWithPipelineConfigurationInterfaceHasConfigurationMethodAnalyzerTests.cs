@@ -24,7 +24,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -55,7 +55,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
                     public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -91,7 +91,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
                         public string Property { get; set; }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -119,7 +119,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
                         public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => throw new System.NotImplementedException();
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -156,7 +156,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
                         public string Property { get; set; }
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -185,7 +185,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
 
                         public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline) => throw new System.NotImplementedException();
 
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -308,7 +308,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -339,7 +339,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
                     public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -369,7 +369,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public sealed record TestQueryResponse;
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -401,7 +401,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse> {}
                     public sealed class {|#0:TestQueryHandler|} : ITestQueryHandler
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -433,7 +433,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public interface IQueryHandler<TQuery, TResponse> {}
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery, TestQueryResponse>
                     {
-                        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -458,7 +458,7 @@ public sealed class C0002QueryHandlerWithPipelineConfigurationInterfaceHasConfig
                     public interface IQueryHandler<TQuery> {}
                     public sealed class {|#0:TestQueryHandler|} : IQueryHandler<TestQuery>
                     {
-                        public async Task ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestQuery query, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }

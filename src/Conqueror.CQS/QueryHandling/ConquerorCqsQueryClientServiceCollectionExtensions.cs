@@ -140,7 +140,7 @@ public static class ConquerorCqsQueryClientServiceCollectionExtensions
 
             if (customHandlerInterface.AllMethods().Count() > 1)
             {
-                throw new ArgumentException($"query handler type '{typeof(THandler).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom query handler interface types are not allowed to have any additional methods beside the '{nameof(IQueryHandler<object, object>.ExecuteQuery)}' inherited from '{typeof(IQueryHandler<,>).Name}'");
+                throw new ArgumentException($"query handler type '{typeof(THandler).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom query handler interface types are not allowed to have any additional methods beside the '{nameof(IQueryHandler<object, object>.Handle)}' inherited from '{typeof(IQueryHandler<,>).Name}'");
             }
 
             return customHandlerInterface;

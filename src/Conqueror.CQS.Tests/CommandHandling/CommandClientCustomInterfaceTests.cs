@@ -19,7 +19,7 @@ public abstract class CommandClientCustomInterfaceTests
 
         var command = new TestCommand();
 
-        _ = await client.ExecuteCommand(command, CancellationToken.None);
+        _ = await client.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -41,7 +41,7 @@ public abstract class CommandClientCustomInterfaceTests
 
         var command = new TestCommandWithoutResponse();
 
-        await client.ExecuteCommand(command, CancellationToken.None);
+        await client.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -64,7 +64,7 @@ public abstract class CommandClientCustomInterfaceTests
     {
         public string TransportTypeName { get; } = "test";
 
-        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+        public async Task<TResponse> Send<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)
             where TCommand : class

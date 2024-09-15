@@ -24,7 +24,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommandResponse;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -53,7 +53,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommand;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -83,7 +83,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -113,7 +113,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -148,7 +148,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -176,7 +176,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => throw new System.NotImplementedException();
 
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -211,7 +211,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -237,7 +237,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public static void ConfigurePipeline(ICommandPipeline<TestCommand> pipeline) => throw new System.NotImplementedException();
 
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -273,7 +273,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -302,7 +302,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) => throw new System.NotImplementedException();
 
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -338,7 +338,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public string Property { get; set; }
 
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -365,7 +365,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
 
                         public static void ConfigurePipeline(ICommandPipeline<TestCommand> pipeline) => throw new System.NotImplementedException();
 
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -487,7 +487,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommandResponse;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -516,7 +516,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommand;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -546,7 +546,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -576,7 +576,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -605,7 +605,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommandResponse;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -635,7 +635,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public sealed record TestCommand;
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -666,7 +666,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -697,7 +697,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ITestCommandHandler : ICommandHandler<TestCommand> {}
                     public sealed class {|#0:TestCommandHandler|} : ITestCommandHandler
                     {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -728,7 +728,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ICommandHandler<TCommand, TResponse> {}
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand, TestCommandResponse>
                     {
-                        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                             return new();
@@ -754,7 +754,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ICommandHandler<TCommand> {}
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }
@@ -778,7 +778,7 @@ public sealed class C0001CommandHandlerWithPipelineConfigurationInterfaceHasConf
                     public interface ICommandHandler<TCommand> {}
                     public sealed class {|#0:TestCommandHandler|} : ICommandHandler<TestCommand>
                     {
-                        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+                        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
                         {
                             await Task.Yield();
                         }

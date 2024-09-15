@@ -22,7 +22,7 @@ public sealed class PollyCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.Use(new PollyCommandMiddleware<TestCommand, TestCommandResponse> { Configuration = new() });
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -41,7 +41,7 @@ public sealed class PollyCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.Use(new PollyCommandMiddleware<TestCommand, TestCommandResponse> { Configuration = new() });
 
-        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testCommand));
 
         Assert.That(thrownException, Is.SameAs(expectedException));
     }
@@ -72,7 +72,7 @@ public sealed class PollyCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UsePolly(policy);
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
         Assert.That(executionCount, Is.EqualTo(2));
@@ -99,7 +99,7 @@ public sealed class PollyCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UsePolly(policy);
 
-        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testCommand));
 
         Assert.That(thrownException, Is.SameAs(expectedException));
         Assert.That(executionCount, Is.EqualTo(4));
@@ -132,7 +132,7 @@ public sealed class PollyCommandMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UsePolly(Policy.NoOpAsync())
                                                 .ConfigurePollyPolicy(policy);
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
         Assert.That(executionCount, Is.EqualTo(2));
@@ -160,7 +160,7 @@ public sealed class PollyCommandMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UsePolly(Policy.NoOpAsync())
                                                 .ConfigurePollyPolicy(policy);
 
-        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testCommand));
 
         Assert.That(thrownException, Is.SameAs(expectedException));
         Assert.That(executionCount, Is.EqualTo(4));
@@ -193,7 +193,7 @@ public sealed class PollyCommandMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UsePolly(policy)
                                                 .WithoutPolly();
 
-        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testCommand));
 
         Assert.That(thrownException, Is.SameAs(expectedException));
         Assert.That(executionCount, Is.EqualTo(1));

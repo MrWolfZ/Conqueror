@@ -6,7 +6,7 @@ public sealed record GetCounterNamesQueryResponse(IReadOnlyCollection<string> Co
 
 internal sealed class GetCounterNamesQueryHandler(CountersRepository repository) : IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>
 {
-    public async Task<GetCounterNamesQueryResponse> ExecuteQuery(GetCounterNamesQuery query, CancellationToken cancellationToken = default)
+    public async Task<GetCounterNamesQueryResponse> Handle(GetCounterNamesQuery query, CancellationToken cancellationToken = default)
     {
         var counters = await repository.GetCounters();
         return new(counters.Keys.ToList());

@@ -7,9 +7,9 @@ public sealed class IncrementCounterCommandController(IIncrementCounterCommandHa
 {
     [HttpPost("/api/custom/incrementCounter")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IncrementCounterCommandResponse))]
-    public async Task<IActionResult> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> IncrementCounter(IncrementCounterCommand command, CancellationToken cancellationToken)
     {
-        var response = await handler.ExecuteCommand(command, cancellationToken);
+        var response = await handler.Handle(command, cancellationToken);
 
         return StatusCode(StatusCodes.Status201Created, response);
     }

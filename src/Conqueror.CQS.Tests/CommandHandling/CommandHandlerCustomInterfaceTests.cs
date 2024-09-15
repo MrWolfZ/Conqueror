@@ -17,7 +17,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -37,7 +37,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
         var command = new GenericTestCommand<string>("test string");
 
-        _ = await handler.ExecuteCommand(command, CancellationToken.None);
+        _ = await handler.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -57,7 +57,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
         var command = new TestCommandWithoutResponse(10);
 
-        await handler.ExecuteCommand(command, CancellationToken.None);
+        await handler.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -77,7 +77,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
         var command = new GenericTestCommand<string>("test string");
 
-        await handler.ExecuteCommand(command, CancellationToken.None);
+        await handler.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -96,7 +96,7 @@ public sealed class CommandHandlerCustomInterfaceTests
         var handler = provider.GetRequiredService<ITestCommandHandler>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await handler.ExecuteCommand(new(10), tokenSource.Token);
+        _ = await handler.Handle(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -115,7 +115,7 @@ public sealed class CommandHandlerCustomInterfaceTests
         var handler = provider.GetRequiredService<ITestCommandHandlerWithoutResponse>();
         using var tokenSource = new CancellationTokenSource();
 
-        await handler.ExecuteCommand(new(10), tokenSource.Token);
+        await handler.Handle(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -135,7 +135,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
         var command = new TestCommand(10);
 
-        var response = await handler.ExecuteCommand(command, CancellationToken.None);
+        var response = await handler.Handle(command, CancellationToken.None);
 
         Assert.That(response.Payload, Is.EqualTo(command.Payload + 1));
     }
@@ -153,7 +153,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
         var handler = provider.GetRequiredService<IThrowingTestCommandHandler>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10), CancellationToken.None));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -280,7 +280,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
     private sealed class TestCommandHandler(TestObservations observations) : ITestCommandHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -292,7 +292,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
     private sealed class TestCommandHandlerWithoutResponse(TestObservations observations) : ITestCommandHandlerWithoutResponse
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -306,7 +306,7 @@ public sealed class CommandHandlerCustomInterfaceTests
                                                                                                    ITestCommandHandlerWithoutResponse,
                                                                                                    IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -315,7 +315,7 @@ public sealed class CommandHandlerCustomInterfaceTests
             return new(command.Payload + 1);
         }
 
-        public async Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse2> Handle(TestCommand2 command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -324,13 +324,13 @@ public sealed class CommandHandlerCustomInterfaceTests
             return new();
         }
 
-        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
         }
 
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -340,7 +340,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
     private sealed class GenericTestCommandHandler<T>(TestObservations responses) : IGenericTestCommandHandler<T>
     {
-        public async Task<GenericTestCommandResponse<T>> ExecuteCommand(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
+        public async Task<GenericTestCommandResponse<T>> Handle(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             responses.Commands.Add(command);
@@ -351,7 +351,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
     private sealed class GenericTestCommandHandlerWithoutResponse<T>(TestObservations responses) : IGenericTestCommandHandlerWithoutResponse<T>
     {
-        public async Task ExecuteCommand(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
+        public async Task Handle(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             responses.Commands.Add(command);
@@ -361,7 +361,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
     private sealed class ThrowingCommandHandler(Exception exception) : IThrowingTestCommandHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             throw exception;
@@ -370,7 +370,7 @@ public sealed class CommandHandlerCustomInterfaceTests
 
     private sealed class TestCommandHandlerWithCustomInterfaceWithExtraMethod : ITestCommandHandlerWithExtraMethod
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
         public void ExtraMethod() => throw new NotSupportedException();
     }

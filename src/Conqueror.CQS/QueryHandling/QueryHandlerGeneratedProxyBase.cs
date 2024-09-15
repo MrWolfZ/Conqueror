@@ -7,9 +7,9 @@ namespace Conqueror.CQS.QueryHandling;
 internal abstract class QueryHandlerGeneratedProxyBase<TQuery, TResponse>(IQueryHandler<TQuery, TResponse> target) : IQueryHandler<TQuery, TResponse>
     where TQuery : class
 {
-    public Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
+    public Task<TResponse> Handle(TQuery query, CancellationToken cancellationToken = default)
     {
-        return target.ExecuteQuery(query, cancellationToken);
+        return target.Handle(query, cancellationToken);
     }
 
     public IQueryHandler<TQuery, TResponse> WithPipeline(Action<IQueryPipeline<TQuery, TResponse>> configure)

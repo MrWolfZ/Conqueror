@@ -10,12 +10,12 @@ internal sealed class IncrementCounterCommandHandler(
 {
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterCommand, IncrementCounterCommandResponse> pipeline) => pipeline.UseDefault();
 
-    public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterCommandResponse> Handle(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await countersReadRepository.GetCounterValue(command.CounterName);
         var newCounterValue = (counterValue ?? 0) + 1;
         await countersWriteRepository.SetCounterValue(command.CounterName, newCounterValue);
-        await setMostRecentlyIncrementedCounterForUserCommandHandler.ExecuteCommand(new(command.UserId, command.CounterName), cancellationToken);
+        await setMostRecentlyIncrementedCounterForUserCommandHandler.Handle(new(command.UserId, command.CounterName), cancellationToken);
         return new(newCounterValue);
     }
 }

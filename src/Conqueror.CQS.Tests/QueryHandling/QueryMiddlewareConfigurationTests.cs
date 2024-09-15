@@ -22,7 +22,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new());
+        _ = await handler.Handle(new());
 
         Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
     }
@@ -49,7 +49,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new());
+        _ = await handler.Handle(new());
 
         Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20, 40, 60 }));
     }
@@ -74,7 +74,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new());
+        _ = await handler.Handle(new());
 
         Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
     }
@@ -97,7 +97,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
     }
 
     private sealed record TestQuery;
@@ -106,7 +106,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
     private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();

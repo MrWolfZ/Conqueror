@@ -12,7 +12,7 @@ public sealed class DefaultCommandPipelineTests : TestBase
     [Test]
     public void GivenHandlerWithDefaultPipeline_WhenExecutingWithInvalidCommand_ValidationExceptionIsThrown()
     {
-        Assert.ThrowsAsync<ValidationException>(() => Handler.ExecuteCommand(new(-1)));
+        Assert.ThrowsAsync<ValidationException>(() => Handler.Handle(new(-1)));
     }
 
     [Test]
@@ -32,7 +32,7 @@ public sealed class DefaultCommandPipelineTests : TestBase
             throw new InvalidOperationException("test exception");
         };
 
-        Assert.DoesNotThrowAsync(() => Handler.ExecuteCommand(new(1)));
+        Assert.DoesNotThrowAsync(() => Handler.Handle(new(1)));
     }
 
     [Test]
@@ -55,7 +55,7 @@ public sealed class DefaultCommandPipelineTests : TestBase
             throw new InvalidOperationException("test exception");
         };
 
-        Assert.DoesNotThrowAsync(() => Handler.ExecuteCommand(new(1)));
+        Assert.DoesNotThrowAsync(() => Handler.Handle(new(1)));
     }
 
     protected override void ConfigureServices(IServiceCollection services)

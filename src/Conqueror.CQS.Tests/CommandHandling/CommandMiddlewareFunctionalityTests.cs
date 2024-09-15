@@ -22,7 +22,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).ExecuteCommand(command, tokenSource.Token);
+        _ = await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).Handle(command, tokenSource.Token);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
@@ -48,7 +48,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).ExecuteCommand(command, tokenSource.Token);
+        await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).Handle(command, tokenSource.Token);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
@@ -271,7 +271,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var response = await handler.ExecuteCommand(new(0), tokens.CancellationTokens[0]);
+        var response = await handler.Handle(new(0), tokens.CancellationTokens[0]);
 
         var command1 = new TestCommand(0);
         var command2 = new TestCommand(1);
@@ -305,7 +305,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10)));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10)));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -323,7 +323,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestCommandMiddleware<TestCommand, TestCommandResponse>(exception))).ExecuteCommand(new(10)));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestCommandMiddleware<TestCommand, TestCommandResponse>(exception))).Handle(new(10)));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -343,7 +343,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         _ = await handler.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                          .WithPipeline(p => p.Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                         .ExecuteCommand(new(10));
+                         .Handle(new(10));
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
@@ -370,7 +370,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await handler.ExecuteCommand(command);
+        _ = await handler.Handle(command);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
@@ -395,7 +395,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         var query = new TestCommand(10);
 
-        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).ExecuteCommand(query);
+        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).Handle(query);
 
         Assert.That(transportTypeFromClient, Is.EqualTo(new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Client)));
         Assert.That(transportTypeFromHandler, Is.EqualTo(new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server)));
@@ -417,7 +417,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
     private sealed class TestCommandHandler(TestObservations observations) : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.CommandsFromHandlers.Add(command);
@@ -433,7 +433,7 @@ public sealed class CommandMiddlewareFunctionalityTests
 
     private sealed class TestCommandHandlerWithoutResponse(TestObservations observations) : ICommandHandler<TestCommand>
     {
-        public async Task ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.CommandsFromHandlers.Add(command);

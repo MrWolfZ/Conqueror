@@ -24,11 +24,11 @@ public sealed class CommandMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse>>();
 
-        _ = await handler1.ExecuteCommand(new());
-        _ = await handler2.ExecuteCommand(new());
-        _ = await handler3.ExecuteCommand(new());
-        _ = await handler4.ExecuteCommand(new());
-        _ = await handler5.ExecuteCommand(new());
+        _ = await handler1.Handle(new());
+        _ = await handler2.Handle(new());
+        _ = await handler3.Handle(new());
+        _ = await handler4.Handle(new());
+        _ = await handler5.Handle(new());
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -55,11 +55,11 @@ public sealed class CommandMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse>>();
 
-        _ = await handler1.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
-        _ = await handler2.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
-        _ = await handler3.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).ExecuteCommand(new());
-        _ = await handler4.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
-        _ = await handler5.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler1.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).Handle(new());
+        _ = await handler2.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).Handle(new());
+        _ = await handler3.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).Handle(new());
+        _ = await handler4.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).Handle(new());
+        _ = await handler5.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).Handle(new());
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -86,11 +86,11 @@ public sealed class CommandMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand2, TestCommandResponse>>();
 
-        _ = await handler1.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
-        _ = await handler2.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
-        _ = await handler3.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).ExecuteCommand(new());
-        _ = await handler4.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).ExecuteCommand(new());
-        _ = await handler5.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).ExecuteCommand(new());
+        _ = await handler1.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).Handle(new());
+        _ = await handler2.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).Handle(new());
+        _ = await handler3.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).Handle(new());
+        _ = await handler4.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>())).Handle(new());
+        _ = await handler5.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand2, TestCommandResponse>())).Handle(new());
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 1, 2, 3, 4 }));
     }
@@ -103,7 +103,7 @@ public sealed class CommandMiddlewareLifetimeTests
 
     private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();
@@ -114,7 +114,7 @@ public sealed class CommandMiddlewareLifetimeTests
 
     private sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand2 command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();
@@ -125,7 +125,7 @@ public sealed class CommandMiddlewareLifetimeTests
 
     private sealed class TestCommandHandlerWithoutMiddleware : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();
@@ -134,7 +134,7 @@ public sealed class CommandMiddlewareLifetimeTests
 
     private sealed class TestCommandHandlerWithoutMiddleware2 : ICommandHandler<TestCommand2, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand2 command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();

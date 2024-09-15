@@ -20,7 +20,7 @@ public abstract class QueryClientFactoryTests
 
         var query = new TestQuery();
 
-        _ = await client.ExecuteQuery(query, CancellationToken.None);
+        _ = await client.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -43,7 +43,7 @@ public abstract class QueryClientFactoryTests
 
         var query = new TestQuery();
 
-        _ = await client.ExecuteQuery(query, CancellationToken.None);
+        _ = await client.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -68,7 +68,7 @@ public abstract class QueryClientFactoryTests
         var query = new TestQuery();
 
         _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                        .ExecuteQuery(query, CancellationToken.None);
+                        .Handle(query, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
@@ -93,7 +93,7 @@ public abstract class QueryClientFactoryTests
         var query = new TestQuery();
 
         _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                        .ExecuteQuery(query, CancellationToken.None);
+                        .Handle(query, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
@@ -213,7 +213,7 @@ public abstract class QueryClientFactoryTests
 
     private sealed class TestQueryHandler : ITestQueryHandler
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     private sealed class TestQueryMiddleware<TQuery, TResponse>(TestObservations observations) : IQueryMiddleware<TQuery, TResponse>
@@ -232,7 +232,7 @@ public abstract class QueryClientFactoryTests
     {
         public string TransportTypeName => "test";
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+        public async Task<TResponse> Send<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)
             where TQuery : class

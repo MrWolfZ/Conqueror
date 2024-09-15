@@ -34,13 +34,13 @@ while (true)
         {
             case "inc" when counterName != null:
                 var incrementHandler = serviceProvider.GetRequiredService<IIncrementCounterByCommandHandler>();
-                var incResponse = await incrementHandler.ExecuteCommand(new(counterName, value));
+                var incResponse = await incrementHandler.Handle(new(counterName, value));
                 Console.WriteLine($"incremented counter '{counterName}'; new value: {incResponse.NewCounterValue}");
                 break;
 
             case "get" when counterName != null:
                 var getValueHandler = serviceProvider.GetRequiredService<IGetCounterValueQueryHandler>();
-                var getValueResponse = await getValueHandler.ExecuteQuery(new(counterName));
+                var getValueResponse = await getValueHandler.Handle(new(counterName));
                 Console.WriteLine($"counter '{counterName}' value: {getValueResponse.CounterValue}");
                 break;
 

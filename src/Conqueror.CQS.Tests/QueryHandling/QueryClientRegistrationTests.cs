@@ -116,7 +116,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>((Func<IQueryTransportClientBuilder, IQueryTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(new()));
     }
 
     [Test]
@@ -127,7 +127,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>((_, _, _) => Task.FromException<TestQueryResponse>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(new()));
     }
 
     [Test]
@@ -160,7 +160,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(_ => Task.FromException<IQueryTransportClient>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(new()));
     }
 
     [Test]
@@ -175,7 +175,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>((_, _, _) => Task.FromException<TestQueryResponse>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(new()));
     }
 
     [Test]
@@ -216,7 +216,7 @@ public sealed class QueryClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(new()));
     }
 
     [Test]
@@ -248,7 +248,7 @@ public sealed class QueryClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(new()));
     }
 
     [Test]
@@ -276,7 +276,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryClient<ITestQueryHandler>((Func<IQueryTransportClientBuilder, IQueryTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -287,7 +287,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>((Func<IQueryTransportClientBuilder, IQueryTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -298,7 +298,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>((_, _, _) => Task.FromException<TestQueryResponse>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -340,7 +340,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryClient<ITestQueryHandler>((Func<IQueryTransportClientBuilder, IQueryTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -355,7 +355,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>((Func<IQueryTransportClientBuilder, IQueryTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -370,7 +370,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>((_, _, _) => Task.FromException<TestQueryResponse>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -424,7 +424,7 @@ public sealed class QueryClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -439,7 +439,7 @@ public sealed class QueryClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -484,7 +484,7 @@ public sealed class QueryClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -503,7 +503,7 @@ public sealed class QueryClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -548,7 +548,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>((Func<IQueryTransportClientBuilder, IQueryTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -581,7 +581,7 @@ public sealed class QueryClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -605,7 +605,7 @@ public sealed class QueryClientRegistrationTests
 
         _ = services.AddConquerorQueryClient<ITestQueryHandler>((Func<IQueryTransportClientBuilder, IQueryTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -629,7 +629,7 @@ public sealed class QueryClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().ExecuteQuery(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestQueryHandler>().Handle(new()));
     }
 
     [Test]
@@ -716,7 +716,7 @@ public sealed class QueryClientRegistrationTests
     {
         public string TransportTypeName => "test";
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+        public async Task<TResponse> Send<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)
             where TQuery : class
@@ -729,7 +729,7 @@ public sealed class QueryClientRegistrationTests
 
     private sealed class TestQueryHandler : ITestQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 

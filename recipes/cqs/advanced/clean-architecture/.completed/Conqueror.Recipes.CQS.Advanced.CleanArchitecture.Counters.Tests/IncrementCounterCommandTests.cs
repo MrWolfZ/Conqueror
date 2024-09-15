@@ -24,7 +24,7 @@ public sealed class IncrementCounterCommandTests : TestBase
 
         await countersWriteRepository.SetCounterValue(TestCounterName, initialCounterValue);
 
-        var response = await CommandClient.ExecuteCommand(new(TestCounterName, TestUserId));
+        var response = await CommandClient.Handle(new(TestCounterName, TestUserId));
 
         var storedCounterValue = await countersReadRepository.GetCounterValue(TestCounterName);
 
@@ -38,7 +38,7 @@ public sealed class IncrementCounterCommandTests : TestBase
 
         var countersRepository = ResolveOnServer<ICountersReadRepository>();
 
-        var response = await CommandClient.ExecuteCommand(new(TestCounterName, TestUserId));
+        var response = await CommandClient.Handle(new(TestCounterName, TestUserId));
 
         var storedCounterValue = await countersRepository.GetCounterValue(TestCounterName);
 
@@ -51,13 +51,13 @@ public sealed class IncrementCounterCommandTests : TestBase
         const string counterName1 = "counter1";
         const string counterName2 = "counter2";
 
-        _ = await CommandClient.ExecuteCommand(new(counterName1, TestUserId));
+        _ = await CommandClient.Handle(new(counterName1, TestUserId));
 
-        var response1 = await GetMostRecentlyIncrementedCounterForUserQueryClient.ExecuteQuery(new(TestUserId));
+        var response1 = await GetMostRecentlyIncrementedCounterForUserQueryClient.Handle(new(TestUserId));
 
-        _ = await CommandClient.ExecuteCommand(new(counterName2, TestUserId));
+        _ = await CommandClient.Handle(new(counterName2, TestUserId));
 
-        var response2 = await GetMostRecentlyIncrementedCounterForUserQueryClient.ExecuteQuery(new(TestUserId));
+        var response2 = await GetMostRecentlyIncrementedCounterForUserQueryClient.Handle(new(TestUserId));
 
         Assert.That(response1.CounterName, Is.EqualTo(counterName1));
         Assert.That(response2.CounterName, Is.EqualTo(counterName2));

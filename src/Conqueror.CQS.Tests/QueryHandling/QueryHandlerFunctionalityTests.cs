@@ -17,7 +17,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -44,7 +44,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -64,7 +64,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var query = new GenericTestQuery<string>("test string");
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -83,7 +83,7 @@ public sealed class QueryHandlerFunctionalityTests
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await handler.ExecuteQuery(new(10), tokenSource.Token);
+        _ = await handler.Handle(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -109,7 +109,7 @@ public sealed class QueryHandlerFunctionalityTests
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await handler.ExecuteQuery(new(10), tokenSource.Token);
+        _ = await handler.Handle(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -127,7 +127,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(10));
+        _ = await handler.Handle(new(10));
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
     }
@@ -152,7 +152,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(10));
+        _ = await handler.Handle(new(10));
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
     }
@@ -172,7 +172,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var query = new TestQuery(10);
 
-        var response = await handler.ExecuteQuery(query, CancellationToken.None);
+        var response = await handler.Handle(query, CancellationToken.None);
 
         Assert.That(response.Payload, Is.EqualTo(query.Payload + 1));
     }
@@ -196,7 +196,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var command = new TestQuery(10);
 
-        var response = await handler.ExecuteQuery(command, CancellationToken.None);
+        var response = await handler.Handle(command, CancellationToken.None);
 
         Assert.That(response.Payload, Is.EqualTo(command.Payload + 1));
     }
@@ -214,7 +214,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10), CancellationToken.None));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -232,7 +232,7 @@ public sealed class QueryHandlerFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new(10), CancellationToken.None);
+        _ = await handler.Handle(new(10), CancellationToken.None);
 
         await provider.DisposeAsync();
 
@@ -256,7 +256,7 @@ public sealed class QueryHandlerFunctionalityTests
 
     private sealed class TestQueryHandler(TestObservations observations) : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Queries.Add(query);
@@ -267,7 +267,7 @@ public sealed class QueryHandlerFunctionalityTests
 
     private sealed class GenericTestQueryHandler<T>(TestObservations observations) : IQueryHandler<GenericTestQuery<T>, GenericTestQueryResponse<T>>
     {
-        public async Task<GenericTestQueryResponse<T>> ExecuteQuery(GenericTestQuery<T> query, CancellationToken cancellationToken = default)
+        public async Task<GenericTestQueryResponse<T>> Handle(GenericTestQuery<T> query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Queries.Add(query);
@@ -278,7 +278,7 @@ public sealed class QueryHandlerFunctionalityTests
 
     private sealed class ThrowingQueryHandler(Exception exception) : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             throw exception;
@@ -287,7 +287,7 @@ public sealed class QueryHandlerFunctionalityTests
 
     private sealed class DisposableQueryHandler(TestObservations observations) : IQueryHandler<TestQuery, TestQueryResponse>, IDisposable
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new(command.Payload);

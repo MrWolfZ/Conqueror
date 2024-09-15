@@ -8,7 +8,7 @@ public interface ICustomInterfaceExampleQueryHandler : IQueryHandler<CustomInter
 
 public sealed class CustomInterfaceExampleQueryHandler : ICustomInterfaceExampleQueryHandler
 {
-    public async Task<CustomInterfaceExampleQueryResponse> ExecuteQuery(CustomInterfaceExampleQuery command, CancellationToken cancellationToken = default)
+    public async Task<CustomInterfaceExampleQueryResponse> Handle(CustomInterfaceExampleQuery command, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
         return new(command.Parameter);

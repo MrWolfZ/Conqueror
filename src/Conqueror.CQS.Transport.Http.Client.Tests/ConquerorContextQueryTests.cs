@@ -36,7 +36,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(context.UpstreamContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(context.ContextData, Is.Empty);
@@ -51,7 +51,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(context.UpstreamContextData, Is.Empty);
         Assert.That(context.ContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
@@ -67,7 +67,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(context.UpstreamContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(context.ContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
@@ -82,7 +82,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(context.UpstreamContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(context.ContextData, Is.Empty);
@@ -97,7 +97,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(context.ContextData.AsKeyValuePairs<string>(), Is.EquivalentTo(ContextData));
         Assert.That(context.UpstreamContextData, Is.Empty);
@@ -120,7 +120,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
@@ -146,7 +146,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
@@ -174,7 +174,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         var receivedDownstreamContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
         var receivedBidirectionalContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
@@ -208,15 +208,15 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -247,15 +247,15 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -288,17 +288,17 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
@@ -325,7 +325,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         var receivedContextData = Resolve<TestObservations>().ReceivedDownstreamContextData;
 
@@ -351,7 +351,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         var receivedContextData = Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
@@ -383,15 +383,15 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -422,15 +422,15 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -462,15 +462,15 @@ public class ConquerorContextQueryTests : TestBase
         var handler1 = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
         var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler2.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -502,15 +502,15 @@ public class ConquerorContextQueryTests : TestBase
         var handler1 = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
         var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler2.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler1.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -527,7 +527,7 @@ public class ConquerorContextQueryTests : TestBase
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
 
         var observations = ResolveOnClient<TestObservations>();
 
@@ -545,7 +545,7 @@ public class ConquerorContextQueryTests : TestBase
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
 
         var observations = ResolveOnClient<TestObservations>();
 
@@ -564,7 +564,7 @@ public class ConquerorContextQueryTests : TestBase
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
 
         var observations = ResolveOnClient<TestObservations>();
 
@@ -583,7 +583,7 @@ public class ConquerorContextQueryTests : TestBase
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
 
         var observations = ResolveOnClient<TestObservations>();
 
@@ -602,7 +602,7 @@ public class ConquerorContextQueryTests : TestBase
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
 
         var observations = Resolve<TestObservations>();
 
@@ -621,7 +621,7 @@ public class ConquerorContextQueryTests : TestBase
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
 
         var observations = Resolve<TestObservations>();
 
@@ -640,7 +640,7 @@ public class ConquerorContextQueryTests : TestBase
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
 
         var observations = Resolve<TestObservations>();
 
@@ -659,7 +659,7 @@ public class ConquerorContextQueryTests : TestBase
 
         using var context = ResolveOnClient<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await handler.ExecuteQuery(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
 
         var observations = Resolve<TestObservations>();
 
@@ -674,7 +674,7 @@ public class ConquerorContextQueryTests : TestBase
     {
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(ResolveOnClient<TestObservations>().ReceivedQueryIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedQueryIds));
     }
@@ -684,7 +684,7 @@ public class ConquerorContextQueryTests : TestBase
     {
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(ResolveOnClient<TestObservations>().ReceivedQueryIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedQueryIds));
     }
@@ -694,7 +694,7 @@ public class ConquerorContextQueryTests : TestBase
     {
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
@@ -704,7 +704,7 @@ public class ConquerorContextQueryTests : TestBase
     {
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
@@ -716,7 +716,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
         Assert.That(Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault(), Is.EqualTo(activity.TraceId));
@@ -729,7 +729,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
         Assert.That(Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault(), Is.EqualTo(activity.TraceId));
@@ -742,7 +742,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
@@ -754,7 +754,7 @@ public class ConquerorContextQueryTests : TestBase
 
         var handler = ResolveOnClient<IQueryHandler<TestPostQuery, TestQueryResponse>>();
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
@@ -855,7 +855,7 @@ public class ConquerorContextQueryTests : TestBase
         TestObservations observations)
         : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
@@ -897,7 +897,7 @@ public class ConquerorContextQueryTests : TestBase
         TestObservations observations)
         : IQueryHandler<TestPostQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(TestPostQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
@@ -944,7 +944,7 @@ public class ConquerorContextQueryTests : TestBase
         IQueryHandler<TestQuery, TestQueryResponse> nestedHandler)
         : IQueryHandler<OuterTestQuery, OuterTestQueryResponse>
     {
-        public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestQuery query, CancellationToken cancellationToken = default)
+        public async Task<OuterTestQueryResponse> Handle(OuterTestQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
@@ -975,7 +975,7 @@ public class ConquerorContextQueryTests : TestBase
                 }
             }
 
-            _ = await nestedHandler.ExecuteQuery(new(), cancellationToken);
+            _ = await nestedHandler.Handle(new(), cancellationToken);
             observations.ReceivedOuterUpstreamContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
             observations.ReceivedOuterBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
             return new();
@@ -990,7 +990,7 @@ public class ConquerorContextQueryTests : TestBase
         IQueryHandler<TestPostQuery, TestQueryResponse> nestedHandler)
         : IQueryHandler<OuterTestPostQuery, OuterTestQueryResponse>
     {
-        public async Task<OuterTestQueryResponse> ExecuteQuery(OuterTestPostQuery query, CancellationToken cancellationToken = default)
+        public async Task<OuterTestQueryResponse> Handle(OuterTestPostQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
@@ -1021,7 +1021,7 @@ public class ConquerorContextQueryTests : TestBase
                 }
             }
 
-            _ = await nestedHandler.ExecuteQuery(new(), cancellationToken);
+            _ = await nestedHandler.Handle(new(), cancellationToken);
             observations.ReceivedOuterUpstreamContextData = conquerorContextAccessor.ConquerorContext?.UpstreamContextData;
             observations.ReceivedOuterBidirectionalContextData = conquerorContextAccessor.ConquerorContext?.ContextData;
             return new();
@@ -1059,7 +1059,7 @@ public class ConquerorContextQueryTests : TestBase
     {
         public string TransportTypeName => "test";
 
-        public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+        public Task<TResponse> Send<TQuery, TResponse>(TQuery query,
                                                                IServiceProvider serviceProvider,
                                                                CancellationToken cancellationToken)
             where TQuery : class
@@ -1067,7 +1067,7 @@ public class ConquerorContextQueryTests : TestBase
             observations.ReceivedQueryIds.Add(conquerorContextAccessor.ConquerorContext?.GetQueryId());
             observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
 
-            return wrapped.ExecuteQuery<TQuery, TResponse>(query, serviceProvider, cancellationToken);
+            return wrapped.Send<TQuery, TResponse>(query, serviceProvider, cancellationToken);
         }
     }
 

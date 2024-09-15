@@ -22,7 +22,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -43,7 +43,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -64,7 +64,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -85,7 +85,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -104,7 +104,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -125,7 +125,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -143,7 +143,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.Handle(new()));
     }
 
     [Test]
@@ -159,7 +159,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.Handle(new()));
     }
 
     [Test]
@@ -177,7 +177,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutCommandTypeAuthorization();
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -199,7 +199,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -221,7 +221,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }

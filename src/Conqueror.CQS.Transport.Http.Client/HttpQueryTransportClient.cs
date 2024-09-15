@@ -24,7 +24,7 @@ internal sealed class HttpQueryTransportClient(
 
     public ResolvedHttpClientOptions Options { get; } = options;
 
-    public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+    public async Task<TResponse> Send<TQuery, TResponse>(TQuery query,
                                                                  IServiceProvider serviceProvider,
                                                                  CancellationToken cancellationToken)
         where TQuery : class

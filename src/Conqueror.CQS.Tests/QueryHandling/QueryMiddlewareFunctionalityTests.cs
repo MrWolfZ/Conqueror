@@ -22,7 +22,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).ExecuteQuery(query, tokenSource.Token);
+        _ = await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).Handle(query, tokenSource.Token);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(query, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
@@ -235,7 +235,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var response = await handler.ExecuteQuery(new(0), tokens.CancellationTokens[0]);
+        var response = await handler.Handle(new(0), tokens.CancellationTokens[0]);
 
         var query1 = new TestQuery(0);
         var query2 = new TestQuery(1);
@@ -269,7 +269,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10)));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10)));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -287,7 +287,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestQueryMiddleware<TestQuery, TestQueryResponse>(exception))).ExecuteQuery(new(10)));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestQueryMiddleware<TestQuery, TestQueryResponse>(exception))).Handle(new(10)));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -307,7 +307,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         _ = await handler.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                          .WithPipeline(p => p.Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                         .ExecuteQuery(new(10));
+                         .Handle(new(10));
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
@@ -334,7 +334,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.ExecuteQuery(query);
+        _ = await handler.Handle(query);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query }));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
@@ -359,7 +359,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).ExecuteQuery(query);
+        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).Handle(query);
 
         Assert.That(transportTypeFromClient, Is.EqualTo(new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Client)));
         Assert.That(transportTypeFromHandler, Is.EqualTo(new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server)));
@@ -376,7 +376,7 @@ public sealed class QueryMiddlewareFunctionalityTests
 
     private sealed class TestQueryHandler(TestObservations observations) : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.QueriesFromHandlers.Add(query);

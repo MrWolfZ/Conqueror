@@ -21,9 +21,9 @@ var app = builder.Build();
 
 app.UseConqueror();
 
-app.MapGet("/customQueryEndpoint", (HttpContext ctx, int payload, ITopLevelTestQueryHandler handler) => handler.ExecuteQuery(new(payload), ctx.RequestAborted));
+app.MapGet("/customQueryEndpoint", (HttpContext ctx, int payload, ITopLevelTestQueryHandler handler) => handler.Handle(new(payload), ctx.RequestAborted));
 
-app.MapPost("/customCommandEndpoint", (HttpContext ctx, [FromBody] TopLevelTestCommand command, ITopLevelTestCommandHandler handler) => handler.ExecuteCommand(command, ctx.RequestAborted));
+app.MapPost("/customCommandEndpoint", (HttpContext ctx, [FromBody] TopLevelTestCommand command, ITopLevelTestCommandHandler handler) => handler.Handle(command, ctx.RequestAborted));
 
 app.MapControllers();
 

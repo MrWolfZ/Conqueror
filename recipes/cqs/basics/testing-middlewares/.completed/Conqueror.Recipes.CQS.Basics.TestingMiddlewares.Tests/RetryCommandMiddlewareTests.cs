@@ -21,7 +21,7 @@ public sealed class RetryCommandMiddlewareTests
         });
 
         var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-        Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(1)));
+        Assert.DoesNotThrowAsync(() => handler.Handle(new(1)));
     }
 
     [Test]
@@ -31,7 +31,7 @@ public sealed class RetryCommandMiddlewareTests
         await using var serviceProvider = BuildServiceProvider(_ => throw expectedException);
 
         var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(1)));
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(new(1)));
         Assert.That(thrownException, Is.SameAs(expectedException));
     }
 
@@ -53,7 +53,7 @@ public sealed class RetryCommandMiddlewareTests
         }, pipeline => pipeline.UseRetry(o => o.RetryAttemptLimit = 3));
 
         var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-        Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(1)));
+        Assert.DoesNotThrowAsync(() => handler.Handle(new(1)));
     }
 
     [Test]
@@ -63,7 +63,7 @@ public sealed class RetryCommandMiddlewareTests
         await using var serviceProvider = BuildServiceProvider(_ => throw expectedException, pipeline => pipeline.UseRetry(o => o.RetryAttemptLimit = 3));
 
         var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(1)));
+        var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(new(1)));
         Assert.That(thrownException, Is.SameAs(expectedException));
     }
 

@@ -20,7 +20,7 @@ internal sealed class HttpCommandTransportClient(
 
     public ResolvedHttpClientOptions Options { get; } = options;
 
-    public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+    public async Task<TResponse> Send<TCommand, TResponse>(TCommand command,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)
         where TCommand : class

@@ -14,7 +14,7 @@ public sealed class GetCounterValueQueryTests : TestBase
 
         await ResolveOnServer<ICountersWriteRepository>().SetCounterValue(TestCounterName, counterValue);
 
-        var response = await QueryClient.ExecuteQuery(new(TestCounterName));
+        var response = await QueryClient.Handle(new(TestCounterName));
 
         Assert.That(response.CounterExists, Is.True);
         Assert.That(response.CounterValue, Is.EqualTo(counterValue));
@@ -23,7 +23,7 @@ public sealed class GetCounterValueQueryTests : TestBase
     [Test]
     public async Task GivenNonExistingCounter_WhenGettingCounterValue_NullIsReturned()
     {
-        var response = await QueryClient.ExecuteQuery(new(TestCounterName));
+        var response = await QueryClient.Handle(new(TestCounterName));
 
         Assert.That(response.CounterExists, Is.False);
         Assert.That(response.CounterValue, Is.Null);

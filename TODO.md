@@ -22,9 +22,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add `.Has()` method to pipelines
 - [ ] make pipeline enumerable
 - [ ] add trace logging to transports
-- [ ] write tests to ensure that client pipeline sees transport type as client and handler sees it as server
-- [ ] when registering client, validate it is not a concrete class
-- [ ] rename `ExecuteQuery` and `ExecuteCommand` to `Handle`
 - [ ] allow custom method name for custom handler interfaces
   - [ ] redirect `IncrementCounter` to `Handle` in interface
   - [ ] caller and handler use custom method name

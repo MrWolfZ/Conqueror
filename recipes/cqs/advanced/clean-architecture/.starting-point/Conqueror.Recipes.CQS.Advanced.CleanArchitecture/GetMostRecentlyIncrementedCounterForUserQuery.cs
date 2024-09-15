@@ -13,7 +13,7 @@ internal sealed class GetMostRecentlyIncrementedCounterForUserQueryHandler(
 {
     public static void ConfigurePipeline(IQueryPipeline<GetMostRecentlyIncrementedCounterForUserQuery, GetMostRecentlyIncrementedCounterForUserQueryResponse> pipeline) => pipeline.UseDefault();
 
-    public async Task<GetMostRecentlyIncrementedCounterForUserQueryResponse> ExecuteQuery(GetMostRecentlyIncrementedCounterForUserQuery query, CancellationToken cancellationToken = default)
+    public async Task<GetMostRecentlyIncrementedCounterForUserQueryResponse> Handle(GetMostRecentlyIncrementedCounterForUserQuery query, CancellationToken cancellationToken = default)
     {
         var counterName = await repository.GetMostRecentlyIncrementedCounterByUserId(query.UserId);
         return new(counterName);

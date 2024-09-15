@@ -21,7 +21,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestCommandHandler>();
 
-        var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -34,7 +34,7 @@ public sealed class CommandHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.Handle(new() { Payload = 10 }, CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
@@ -49,7 +49,7 @@ public sealed class CommandHttpClientTests : TestBase
 
         var handler = ResolveOnClient<ITestCommandHandler>();
 
-        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.Handle(new() { Payload = 10 }, CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That(ex?.StatusCode, Is.Null);
@@ -61,7 +61,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestCommandWithoutResponseHandler>();
 
-        await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
     }
 
     [Test]
@@ -71,7 +71,7 @@ public sealed class CommandHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.Handle(new() { Payload = 10 }, CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
@@ -84,7 +84,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestCommandWithoutPayloadHandler>();
 
-        var result = await handler.ExecuteCommand(new(), CancellationToken.None);
+        var result = await handler.Handle(new(), CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -97,7 +97,7 @@ public sealed class CommandHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new(), CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.Handle(new(), CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
@@ -110,7 +110,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestCommandWithoutResponseWithoutPayloadHandler>();
 
-        await handler.ExecuteCommand(new(), CancellationToken.None);
+        await handler.Handle(new(), CancellationToken.None);
     }
 
     [Test]
@@ -120,7 +120,7 @@ public sealed class CommandHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.ExecuteCommand(new(), CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpCommandFailedException>(() => handler.Handle(new(), CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
@@ -133,7 +133,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestCommandWithCustomSerializedPayloadTypeHandler>();
 
-        var result = await handler.ExecuteCommand(new(new(10)), CancellationToken.None);
+        var result = await handler.Handle(new(new(10)), CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload.Payload, Is.EqualTo(11));
@@ -144,7 +144,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestCommandWithCustomPathConventionHandler>();
 
-        var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -155,7 +155,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestCommandWithCustomPathHandler>();
 
-        var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -166,7 +166,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestCommandWithVersionHandler>();
 
-        var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -188,7 +188,7 @@ public sealed class CommandHttpClientTests : TestBase
             return next();
         };
 
-        _ = await handler.ExecuteCommand(new(10), CancellationToken.None);
+        _ = await handler.Handle(new(10), CancellationToken.None);
 
         Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
         Assert.That(seenTestHeaderValues, Is.EquivalentTo(new[] { "value1", "value2" }));
@@ -199,7 +199,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ICommandHandler<TestDelegateCommand, TestDelegateCommandResponse>>();
 
-        var result = await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -210,7 +210,7 @@ public sealed class CommandHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ICommandHandler<TestDelegateCommandWithoutResponse>>();
 
-        await handler.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
     }
 
     protected override void ConfigureServerServices(IServiceCollection services)
@@ -395,7 +395,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandHandler : ITestCommandHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -405,7 +405,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandWithoutPayloadHandler : ITestCommandWithoutPayloadHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -415,7 +415,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandWithoutResponseHandler : ITestCommandWithoutResponseHandler
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -424,7 +424,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandWithoutResponseWithoutPayloadHandler : ITestCommandWithoutResponseWithoutPayloadHandler
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -433,7 +433,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler
     {
-        public async Task<TestCommandWithCustomSerializedPayloadTypeResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandWithCustomSerializedPayloadTypeResponse> Handle(TestCommandWithCustomSerializedPayloadType command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -466,7 +466,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandWithCustomPathConventionHandler : ITestCommandWithCustomPathConventionHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPathConvention command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithCustomPathConvention command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -476,7 +476,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandWithCustomPathHandler : ITestCommandWithCustomPathHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -486,7 +486,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandWithVersionHandler : ITestCommandWithVersionHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithVersion command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithVersion command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -496,7 +496,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class TestCommandWithCustomHeadersHandler : ITestCommandWithCustomHeadersHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomHeaders command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithCustomHeaders command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -506,7 +506,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class NonHttpTestCommandHandler : INonHttpTestCommandHandler
     {
-        public Task<TestCommandResponse> ExecuteCommand(NonHttpTestCommand command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse> Handle(NonHttpTestCommand command, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }
@@ -514,7 +514,7 @@ public sealed class CommandHttpClientTests : TestBase
 
     public sealed class NonHttpTestCommandWithoutResponseHandler : INonHttpTestCommandWithoutResponseHandler
     {
-        public Task ExecuteCommand(NonHttpTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public Task Handle(NonHttpTestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }

@@ -18,7 +18,7 @@ public sealed class ConquerorContextCommandTests
             return new(cmd.Payload);
         });
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -28,7 +28,7 @@ public sealed class ConquerorContextCommandTests
 
         var provider = SetupWithoutResponse((_, ctx) => { Assert.That(ctx, Is.Not.Null); });
 
-        await provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>().ExecuteCommand(command, CancellationToken.None);
+        await provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -44,7 +44,7 @@ public sealed class ConquerorContextCommandTests
             return await next(ctx.Command);
         });
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -56,7 +56,7 @@ public sealed class ConquerorContextCommandTests
             nestedClassFn: b => Assert.That(b, Is.Not.Null),
             nestedClassLifetime: ServiceLifetime.Scoped);
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -71,7 +71,7 @@ public sealed class ConquerorContextCommandTests
             return new(cmd.Payload);
         });
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -81,7 +81,7 @@ public sealed class ConquerorContextCommandTests
 
         var provider = Setup(handlerPreReturnFn: b => Assert.That(b, Is.Not.Null));
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -106,7 +106,7 @@ public sealed class ConquerorContextCommandTests
             (ctx, next) => next(ctx.Command),
             ctx => observedContexts.Add(ctx!));
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
 
         Assert.That(observedContexts, Has.Count.EqualTo(3));
         Assert.That(observedContexts[0], Is.Not.Null);
@@ -135,7 +135,7 @@ public sealed class ConquerorContextCommandTests
             (ctx, next) => next(ctx.Command),
             ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(3));
         Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
@@ -165,7 +165,7 @@ public sealed class ConquerorContextCommandTests
             (ctx, next) => next(ctx.Command),
             ctx => observedTraceIds.Add(ctx!.GetTraceId()));
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(3));
         Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
@@ -191,7 +191,7 @@ public sealed class ConquerorContextCommandTests
                 return new(cmd.Payload);
             });
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(2));
         Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
@@ -217,7 +217,7 @@ public sealed class ConquerorContextCommandTests
                 return new(cmd.Payload);
             });
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
 
         Assert.That(observedTraceIds, Has.Count.EqualTo(2));
         Assert.That(observedTraceIds[1], Is.SameAs(observedTraceIds[0]));
@@ -253,7 +253,7 @@ public sealed class ConquerorContextCommandTests
 
         expectedTraceId = conquerorContext.GetTraceId();
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -272,7 +272,7 @@ public sealed class ConquerorContextCommandTests
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -292,7 +292,7 @@ public sealed class ConquerorContextCommandTests
 
         expectedTraceId = conquerorContext.GetTraceId();
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [Test]
@@ -311,7 +311,7 @@ public sealed class ConquerorContextCommandTests
 
         using var conquerorContext = provider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "fine for testing")]
@@ -434,12 +434,12 @@ public sealed class ConquerorContextCommandTests
         ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
         : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             var response = handlerFn(command, conquerorContextAccessor.ConquerorContext);
             nestedClass.Execute();
-            _ = await nestedCommandHandler.ExecuteCommand(new(command.Payload), cancellationToken);
+            _ = await nestedCommandHandler.Handle(new(command.Payload), cancellationToken);
             preReturnFn(conquerorContextAccessor.ConquerorContext);
             return response;
         }
@@ -454,7 +454,7 @@ public sealed class ConquerorContextCommandTests
         NestedClass nestedClass)
         : ICommandHandler<TestCommandWithoutResponse>
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             handlerFn(command, conquerorContextAccessor.ConquerorContext);
@@ -469,7 +469,7 @@ public sealed class ConquerorContextCommandTests
         IConquerorContextAccessor conquerorContextAccessor)
         : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
     {
-        public async Task<NestedTestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
+        public async Task<NestedTestCommandResponse> Handle(NestedTestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return handlerFn(command, conquerorContextAccessor.ConquerorContext);

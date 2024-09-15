@@ -14,7 +14,7 @@ internal sealed class IncrementCounterByCommandHandler : IIncrementCounterByComm
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) =>
         pipeline.UseLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
 
-    public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterByCommandResponse> Handle(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
     {
         // simulate an asynchronous operation
         await Task.CompletedTask;

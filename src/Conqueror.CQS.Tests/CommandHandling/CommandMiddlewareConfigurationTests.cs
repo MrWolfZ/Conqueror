@@ -22,7 +22,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new());
+        _ = await handler.Handle(new());
 
         Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
     }
@@ -49,7 +49,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new());
+        _ = await handler.Handle(new());
 
         Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20, 40, 60 }));
     }
@@ -74,7 +74,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new());
+        _ = await handler.Handle(new());
 
         Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
     }
@@ -97,7 +97,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await handler.ExecuteCommand(new(), CancellationToken.None);
+        _ = await handler.Handle(new(), CancellationToken.None);
     }
 
     private sealed record TestCommand;
@@ -106,7 +106,7 @@ public sealed class CommandMiddlewareConfigurationTests
 
     private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();

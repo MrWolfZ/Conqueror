@@ -5,7 +5,7 @@ namespace Conqueror.Examples.BlazorWebAssembly.Application.SharedCounters;
 
 internal sealed class GetSharedCounterValueQueryHandler(SharedCounter counter) : IGetSharedCounterValueQueryHandler
 {
-    public async Task<GetSharedCounterValueQueryResponse> ExecuteQuery(GetSharedCounterValueQuery query, CancellationToken cancellationToken = default)
+    public async Task<GetSharedCounterValueQueryResponse> Handle(GetSharedCounterValueQuery query, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask;
         return new(counter.GetValue());

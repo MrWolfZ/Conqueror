@@ -41,7 +41,7 @@ public sealed class MiddlewaresExampleQueryTests
     [Test]
     public async Task GivenParameter_ReturnsParameterValue()
     {
-        var response = await QueryHandler.ExecuteQuery(new(10), CancellationToken.None);
+        var response = await QueryHandler.Handle(new(10), CancellationToken.None);
         Assert.That(response.Value, Is.EqualTo(10));
     }
 }

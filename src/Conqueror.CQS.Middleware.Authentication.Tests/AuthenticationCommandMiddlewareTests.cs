@@ -22,7 +22,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication();
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -43,7 +43,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -64,7 +64,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -83,7 +83,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().AllowAnonymousAccess();
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -104,7 +104,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -125,7 +125,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -141,7 +141,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal();
 
-        _ = Assert.ThrowsAsync<ConquerorAuthenticationMissingPrincipalException>(() => Handler.ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<ConquerorAuthenticationMissingPrincipalException>(() => Handler.Handle(new()));
     }
 
     [Test]
@@ -157,7 +157,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        _ = Assert.ThrowsAsync<ConquerorAuthenticationUnauthenticatedPrincipalException>(() => Handler.ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<ConquerorAuthenticationUnauthenticatedPrincipalException>(() => Handler.Handle(new()));
     }
 
     [Test]
@@ -175,7 +175,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d2 = ConquerorContext.SetCurrentPrincipal(null);
 
-        _ = Assert.ThrowsAsync<ConquerorAuthenticationMissingPrincipalException>(() => Handler.ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<ConquerorAuthenticationMissingPrincipalException>(() => Handler.Handle(new()));
     }
 
     [Test]
@@ -194,7 +194,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -213,7 +213,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal().AllowAnonymousAccess();
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -234,7 +234,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -255,7 +255,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -271,7 +271,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().AllowAnonymousAccess().RequireAuthenticatedPrincipal();
 
-        _ = Assert.ThrowsAsync<ConquerorAuthenticationMissingPrincipalException>(() => Handler.ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<ConquerorAuthenticationMissingPrincipalException>(() => Handler.Handle(new()));
     }
 
     [Test]
@@ -287,7 +287,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        _ = Assert.ThrowsAsync<ConquerorAuthenticationUnauthenticatedPrincipalException>(() => Handler.ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<ConquerorAuthenticationUnauthenticatedPrincipalException>(() => Handler.Handle(new()));
     }
 
     [Test]
@@ -306,7 +306,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -325,7 +325,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal().WithoutAuthentication();
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -346,7 +346,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -367,7 +367,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }

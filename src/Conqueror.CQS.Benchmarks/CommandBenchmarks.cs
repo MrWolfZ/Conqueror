@@ -16,9 +16,9 @@ public class CommandBenchmarks
                                                                                                  .GetRequiredService<ICommandHandler<TestCommand, TestResponse>>();
 
     [Benchmark]
-    public void ExecuteCommand()
+    public void RunCommandBenchmark()
     {
-        var result = handler.ExecuteCommand(new(0)).GetAwaiter().GetResult();
+        var result = handler.Handle(new(0)).GetAwaiter().GetResult();
 
         if (result.Value != NumOfMiddlewares)
         {
@@ -45,7 +45,7 @@ public class CommandBenchmarks
 
     private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestResponse>
     {
-        public async Task<TestResponse> ExecuteCommand(TestCommand query, CancellationToken cancellationToken = new())
+        public async Task<TestResponse> Handle(TestCommand query, CancellationToken cancellationToken = new())
         {
             await Task.Yield();
             return new(query.Value);

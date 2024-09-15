@@ -11,7 +11,7 @@ internal sealed class IncrementCounterCommandHandler(
     IAdminNotificationService adminNotificationService)
     : IIncrementCounterCommandHandler
 {
-    public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterCommandResponse> Handle(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await GetCounterValue(command.CounterName);
         var newCounterValue = counterValue + 1;

@@ -555,7 +555,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         TestObservations observations)
         : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -568,7 +568,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         TestObservations observations)
         : IQueryHandler<TestPostQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(TestPostQuery query, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -581,7 +581,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         TestObservations observations)
         : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -595,11 +595,11 @@ public sealed class ConquerorContextQueryTests : TestBase
         TestObservations observations)
         : IQueryHandler<TestQueryWithNestedQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQueryWithNestedQuery query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(TestQueryWithNestedQuery query, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
-            return nestedHandler.ExecuteQuery(new(), cancellationToken);
+            return nestedHandler.Handle(new(), cancellationToken);
         }
     }
 
@@ -608,7 +608,7 @@ public sealed class ConquerorContextQueryTests : TestBase
         TestObservations observations)
         : IQueryHandler<NestedTestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(NestedTestQuery query, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -640,13 +640,13 @@ public sealed class ConquerorContextQueryTests : TestBase
         [HttpGet("/api/custom/queries/test")]
         public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
         {
-            return queryHandler.ExecuteQuery(query, cancellationToken);
+            return queryHandler.Handle(query, cancellationToken);
         }
 
         [HttpGet("/api/custom/queries/testQueryWithoutPayload")]
         public Task<TestQueryResponse> ExecuteTestQueryWithoutPayload(CancellationToken cancellationToken)
         {
-            return queryWithoutPayloadHandler.ExecuteQuery(new(), cancellationToken);
+            return queryWithoutPayloadHandler.Handle(new(), cancellationToken);
         }
     }
 

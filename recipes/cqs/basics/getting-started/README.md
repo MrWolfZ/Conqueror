@@ -192,7 +192,7 @@ public sealed record GetCounterNamesQueryResponse(IReadOnlyCollection<string> Co
 
 internal sealed class GetCounterNamesQueryHandler(CountersRepository repository) : IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>
 {
-    public async Task<GetCounterNamesQueryResponse> ExecuteQuery(GetCounterNamesQuery query, CancellationToken cancellationToken = default)
+    public async Task<GetCounterNamesQueryResponse> Handle(GetCounterNamesQuery query, CancellationToken cancellationToken = default)
     {
         var counters = await repository.GetCounters();
         return new(counters.Keys.ToList());
@@ -219,7 +219,7 @@ Now that we have everything set up, we can implement the `list` operation of our
 case "list" when counterName == null:
 -   // ...
 +   var listHandler = serviceProvider.GetRequiredService<IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>>();
-+   var listResponse = await listHandler.ExecuteQuery(new());
++   var listResponse = await listHandler.Handle(new());
 +   Console.WriteLine(listResponse.CounterNames.Any() ? $"counters:\n{string.Join("\n", listResponse.CounterNames)}" : "no counters exist");
     break;
 ```
@@ -252,7 +252,7 @@ public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQue
 
 internal sealed class GetCounterValueQueryHandler(CountersRepository repository) : IGetCounterValueQueryHandler
 {
-    public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query, CancellationToken cancellationToken = default)
+    public async Task<GetCounterValueQueryResponse> Handle(GetCounterValueQuery query, CancellationToken cancellationToken = default)
     {
         return new(await repository.GetCounterValue(query.CounterName));
     }
@@ -279,7 +279,7 @@ await using var serviceProvider = services.BuildServiceProvider();
 case "get" when counterName != null:
 -   // ...
 +   var getValueHandler = serviceProvider.GetRequiredService<IGetCounterValueQueryHandler>();
-+   var getValueResponse = await getValueHandler.ExecuteQuery(new(counterName));
++   var getValueResponse = await getValueHandler.Handle(new(counterName));
 +   Console.WriteLine($"counter '{counterName}' value: {getValueResponse.CounterValue}");
     break;
 ```
@@ -310,7 +310,7 @@ public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCoun
 
 internal sealed class IncrementCounterCommandHandler(CountersRepository repository) : IIncrementCounterCommandHandler
 {
-    public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterCommandResponse> Handle(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await GetCounterValue(command.CounterName);
         await repository.SetCounterValue(command.CounterName, counterValue + 1);
@@ -351,7 +351,7 @@ await using var serviceProvider = services.BuildServiceProvider();
 case "inc" when counterName != null:
 -   // ...
 +   var incrementHandler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
-+   var incResponse = await incrementHandler.ExecuteCommand(new(counterName));
++   var incResponse = await incrementHandler.Handle(new(counterName));
 +   Console.WriteLine($"incremented counter '{counterName}'; new value: {incResponse.NewCounterValue}");
     break;
 ```
@@ -388,7 +388,7 @@ public interface IDeleteCounterCommandHandler : ICommandHandler<DeleteCounterCom
 
 internal sealed class DeleteCounterCommandHandler(CountersRepository repository) : IDeleteCounterCommandHandler
 {
-    public async Task ExecuteCommand(DeleteCounterCommand command, CancellationToken cancellationToken = default)
+    public async Task Handle(DeleteCounterCommand command, CancellationToken cancellationToken = default)
     {
         await repository.DeleteCounter(command.CounterName);
     }
@@ -401,7 +401,7 @@ And finally we can use this handler to implement the `del` operation in `Program
 case "del" when counterName != null:
 -   // ...
 +   var deleteHandler = serviceProvider.GetRequiredService<IDeleteCounterCommandHandler>();
-+   await deleteHandler.ExecuteCommand(new(counterName));
++   await deleteHandler.Handle(new(counterName));
 +   Console.WriteLine($"deleted counter '{counterName}'");
     break;
 ```

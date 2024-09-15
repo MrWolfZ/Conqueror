@@ -372,7 +372,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandler : ITestCommandHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -382,7 +382,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
     {
-        public Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse2> Handle(TestCommand2 command, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }
@@ -390,7 +390,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandler3 : ICommandHandler<TestCommand3, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand3 command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand3 command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -400,7 +400,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandler4 : ICommandHandler<TestCommand4, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand4 command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand4 command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -410,7 +410,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -420,7 +420,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandlerWithMiddleware : ICommandHandler<TestWithMiddlewareCommand, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestWithMiddlewareCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestWithMiddlewareCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -433,7 +433,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -442,7 +442,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -451,7 +451,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandHandlerWithMiddlewareWithoutResponse : ICommandHandler<TestWithMiddlewareWithoutResponseCommand>
     {
-        public async Task ExecuteCommand(TestWithMiddlewareWithoutResponseCommand command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestWithMiddlewareWithoutResponseCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -463,7 +463,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandWithCustomSerializedPayloadTypeHandler : ITestCommandWithCustomSerializedPayloadTypeHandler
     {
-        public async Task<TestCommandWithCustomSerializedPayloadTypeResponse> ExecuteCommand(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+        public async Task<TestCommandWithCustomSerializedPayloadTypeResponse> Handle(TestCommandWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -496,7 +496,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandWithCustomPathHandler : ICommandHandler<TestCommandWithCustomPath, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -506,7 +506,7 @@ public sealed class CommandHttpEndpointTests : TestBase
 
     public sealed class TestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithVersion command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithVersion command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -550,25 +550,25 @@ public sealed class CommandHttpEndpointTests : TestBase
         [HttpPost("/api/custom/commands/test")]
         public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
         {
-            return commandHandler.ExecuteCommand(command, cancellationToken);
+            return commandHandler.Handle(command, cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutPayload")]
         public Task<TestCommandResponse> ExecuteTestCommandWithoutPayload(CancellationToken cancellationToken)
         {
-            return commandWithoutPayloadHandler.ExecuteCommand(new(), cancellationToken);
+            return commandWithoutPayloadHandler.Handle(new(), cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutResponse")]
         public Task ExecuteTestCommandWithoutResponse(TestCommandWithoutResponse command, CancellationToken cancellationToken)
         {
-            return commandWithoutResponseHandler.ExecuteCommand(command, cancellationToken);
+            return commandWithoutResponseHandler.Handle(command, cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutResponseWithoutPayload")]
         public Task ExecuteTestCommandWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
         {
-            return commandWithoutResponseWithoutPayloadHandler.ExecuteCommand(new(), cancellationToken);
+            return commandWithoutResponseWithoutPayloadHandler.Handle(new(), cancellationToken);
         }
     }
 

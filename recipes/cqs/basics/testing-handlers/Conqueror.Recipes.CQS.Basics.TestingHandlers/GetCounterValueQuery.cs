@@ -8,7 +8,7 @@ public interface IGetCounterValueQueryHandler : IQueryHandler<GetCounterValueQue
 
 internal sealed class GetCounterValueQueryHandler(CountersRepository repository) : IGetCounterValueQueryHandler
 {
-    public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query, CancellationToken cancellationToken = default)
+    public async Task<GetCounterValueQueryResponse> Handle(GetCounterValueQuery query, CancellationToken cancellationToken = default)
     {
         return new(await repository.GetCounterValue(query.CounterName));
     }

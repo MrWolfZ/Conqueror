@@ -86,7 +86,7 @@ internal static class DynamicCqsEndpointControllerFactory
         MethodInfo GetCommandExecutorMethod()
         {
             var executionMethods = typeof(HttpCommandExecutor).GetMethods(BindingFlags.Public | BindingFlags.Static)
-                                                              .Where(m => m.Name == nameof(HttpCommandExecutor.ExecuteCommand));
+                                                              .Where(m => m.Name == nameof(HttpCommandExecutor.Execute));
 
             return hasPayload switch
             {
@@ -100,7 +100,7 @@ internal static class DynamicCqsEndpointControllerFactory
         MethodInfo GetQueryExecutorMethod()
         {
             var executionMethods = typeof(HttpQueryExecutor).GetMethods(BindingFlags.Public | BindingFlags.Static)
-                                                            .Where(m => m.Name == nameof(HttpQueryExecutor.ExecuteQuery));
+                                                            .Where(m => m.Name == nameof(HttpQueryExecutor.Execute));
 
             return hasPayload switch
             {

@@ -6,8 +6,8 @@ namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 public sealed class GetCounterValueQueryController(IGetCounterValueQueryHandler handler) : ControllerBase
 {
     [HttpGet("/api/custom/getCounterValue")]
-    public async Task<GetCounterValueQueryResponse> ExecuteQuery([FromQuery] GetCounterValueQuery query, CancellationToken cancellationToken)
+    public async Task<GetCounterValueQueryResponse> GetCounterValue([FromQuery] GetCounterValueQuery query, CancellationToken cancellationToken)
     {
-        return await handler.ExecuteQuery(query, cancellationToken);
+        return await handler.Handle(query, cancellationToken);
     }
 }

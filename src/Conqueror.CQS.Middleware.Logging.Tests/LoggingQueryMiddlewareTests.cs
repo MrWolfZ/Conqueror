@@ -16,7 +16,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
     {
         var testQuery = new TestQuery(10);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}");
     }
@@ -26,7 +26,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
     {
         var testQuery = new TestQueryWithoutPayload();
 
-        _ = await HandlerWithoutPayload.ExecuteQuery(testQuery);
+        _ = await HandlerWithoutPayload.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Information);
     }
@@ -36,7 +36,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
     {
         var testQuery = new TestQuery(10);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPostExecutionLogMessage(LogLevel.Information, "{\"ResponsePayload\":10}");
     }
@@ -49,7 +49,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         handlerFn = _ => throw exception;
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testQuery));
 
         AssertLogEntryContains(LogLevel.Error, "An exception occurred while executing query");
         AssertLogEntryContains(LogLevel.Error, exception.Message);
@@ -66,7 +66,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Debug, "{\"Payload\":10}");
     }
@@ -78,7 +78,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipelineWithoutPayload = b => b.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
 
-        _ = await HandlerWithoutPayload.ExecuteQuery(testQuery);
+        _ = await HandlerWithoutPayload.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Debug);
     }
@@ -90,7 +90,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.PostExecutionLogLevel = LogLevel.Debug);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPostExecutionLogMessage(LogLevel.Debug, "{\"ResponsePayload\":10}");
     }
@@ -105,7 +105,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testQuery));
 
         AssertLogEntryContains(LogLevel.Critical, "An exception occurred while executing query");
         AssertLogEntryContains(LogLevel.Critical, exception.Message);
@@ -122,7 +122,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.OmitJsonSerializedQueryPayload = true);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Information);
     }
@@ -134,7 +134,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipelineWithoutPayload = b => b.UseLogging(o => o.OmitJsonSerializedQueryPayload = true);
 
-        _ = await HandlerWithoutPayload.ExecuteQuery(testQuery);
+        _ = await HandlerWithoutPayload.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Information);
     }
@@ -146,7 +146,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.OmitJsonSerializedResponsePayload = true);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPostExecutionLogMessage(LogLevel.Information);
     }
@@ -158,7 +158,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.LoggerNameFactory = qry => $"Custom{qry.GetType().Name}");
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", $"Custom{testQuery.GetType().Name}");
     }
@@ -170,7 +170,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.LoggerNameFactory = _ => null);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", testQuery.GetType().FullName!.Replace("+", "."));
     }
@@ -204,7 +204,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
             };
         });
 
-        _ = await handler.ExecuteQuery(testQuery);
+        _ = await handler.Handle(testQuery);
 
         seenContext?.Logger.LogCritical("validation");
 
@@ -225,7 +225,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.PreExecutionHook = _ => false);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertNoLogEntryContains(LogLevel.Information, "Executing query");
     }
@@ -259,7 +259,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
             };
         });
 
-        var response = await handler.ExecuteQuery(testQuery);
+        var response = await handler.Handle(testQuery);
 
         seenContext?.Logger.LogCritical("validation");
 
@@ -282,7 +282,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.PostExecutionHook = _ => false);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertNoLogEntryContains(LogLevel.Information, "Executed query");
     }
@@ -319,7 +319,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         handlerFn = _ => throw exception;
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteQuery(testQuery));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(testQuery));
 
         seenContext?.Logger.LogTrace("validation");
 
@@ -346,7 +346,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         handlerFn = _ => throw exception;
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteQuery(testQuery));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testQuery));
 
         AssertNoLogEntryContains(LogLevel.Error, "An exception occurred while executing query");
     }
@@ -358,7 +358,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Information, "{\"payload\":10}");
     }
@@ -370,7 +370,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPostExecutionLogMessage(LogLevel.Information, "{\"responsePayload\":10}");
     }
@@ -387,7 +387,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
             o.JsonSerializerOptions = new() { PropertyNamingPolicy = new ThrowingJsonNamingPolicy() };
         });
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertNoLogEntryContains(LogLevel.None, "Executing query");
     }
@@ -404,7 +404,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
             o.JsonSerializerOptions = new() { PropertyNamingPolicy = new ThrowingJsonNamingPolicy() };
         });
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertNoLogEntryContains(LogLevel.None, "Executed query");
     }
@@ -419,7 +419,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
         using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
         conquerorContext.SetTraceId(traceId);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertLogEntryContains(LogLevel.Information, $"Trace ID: {traceId}", nrOfTimes: 2);
     }
@@ -438,7 +438,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
             _ = b.UseLogging();
         };
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertLogEntryContains(LogLevel.Information, $"Query ID: {queryId}", nrOfTimes: 2);
     }
@@ -450,7 +450,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging().ConfigureLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertPreExecutionLogMessage(LogLevel.Debug, "{\"Payload\":10}");
     }
@@ -462,7 +462,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging().WithoutLogging();
 
-        _ = await Handler.ExecuteQuery(testQuery);
+        _ = await Handler.Handle(testQuery);
 
         AssertNoLogEntryContains(LogLevel.Debug, "Executing query");
     }

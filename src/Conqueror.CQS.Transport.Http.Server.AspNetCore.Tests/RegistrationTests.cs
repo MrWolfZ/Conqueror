@@ -225,7 +225,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+            public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
@@ -235,7 +235,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestCommand2Handler : ICommandHandler<TestCommand2, TestCommand2Response>
         {
-            public async Task<TestCommand2Response> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
+            public async Task<TestCommand2Response> Handle(TestCommand2 command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
@@ -255,7 +255,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+            public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
@@ -265,7 +265,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestQuery2Handler : IQueryHandler<TestQuery2, TestQuery2Response>
         {
-            public async Task<TestQuery2Response> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+            public async Task<TestQuery2Response> Handle(TestQuery2 query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
@@ -301,7 +301,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
         {
-            public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+            public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
@@ -319,7 +319,7 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests
 
         public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
         {
-            public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+            public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();

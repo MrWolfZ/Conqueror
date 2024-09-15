@@ -23,7 +23,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
                                                 .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -45,7 +45,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -67,7 +67,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -89,7 +89,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -110,7 +110,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
                                                 .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()))
                                                 .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Success());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -133,7 +133,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -156,7 +156,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -176,7 +176,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UsePayloadAuthorization()
                                                 .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -198,7 +198,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -219,7 +219,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
+        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.Handle(new()));
 
         Assert.That(thrownException?.Result, Is.SameAs(result));
     }
@@ -240,7 +240,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
+        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.Handle(new()));
 
         Assert.That(thrownException?.Result, Is.SameAs(result));
     }
@@ -261,7 +261,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
                                                 .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test 1")))
                                                 .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Failure("test 2"));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -284,7 +284,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -307,7 +307,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
+        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.Handle(new()));
 
         Assert.That(thrownException?.Result.FailureReasons, Is.EquivalentTo(result1.FailureReasons.Concat(result2.FailureReasons)));
     }
@@ -328,7 +328,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
                                                 .AddPayloadAuthorizationCheck((_, _) => ConquerorAuthorizationResult.Success())
                                                 .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -351,7 +351,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -374,7 +374,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
+        var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.Handle(new()));
 
         Assert.That(thrownException?.Result, Is.SameAs(failureResult));
     }
@@ -395,7 +395,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
                                                 .AddPayloadAuthorizationCheck((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutPayloadAuthorization();
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -418,7 +418,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new());
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }
@@ -441,7 +441,7 @@ public sealed class PayloadAuthorizationCommandMiddlewareTests : TestBase
 
         using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        var response = await Handler.ExecuteCommand(testCommand);
+        var response = await Handler.Handle(testCommand);
 
         Assert.That(response, Is.SameAs(expectedResponse));
     }

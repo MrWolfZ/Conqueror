@@ -38,25 +38,25 @@ while (true)
         {
             case "list" when counterName == null:
                 var listHandler = serviceProvider.GetRequiredService<IQueryHandler<GetCounterNamesQuery, GetCounterNamesQueryResponse>>();
-                var listResponse = await listHandler.ExecuteQuery(new());
+                var listResponse = await listHandler.Handle(new());
                 Console.WriteLine(listResponse.CounterNames.Any() ? $"counters:\n{string.Join("\n", listResponse.CounterNames)}" : "no counters exist");
                 break;
 
             case "get" when counterName != null:
                 var getValueHandler = serviceProvider.GetRequiredService<IGetCounterValueQueryHandler>();
-                var getValueResponse = await getValueHandler.ExecuteQuery(new(counterName));
+                var getValueResponse = await getValueHandler.Handle(new(counterName));
                 Console.WriteLine($"counter '{counterName}' value: {getValueResponse.CounterValue}");
                 break;
 
             case "inc" when counterName != null:
                 var incrementHandler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
-                var incResponse = await incrementHandler.ExecuteCommand(new(counterName));
+                var incResponse = await incrementHandler.Handle(new(counterName));
                 Console.WriteLine($"incremented counter '{counterName}'; new value: {incResponse.NewCounterValue}");
                 break;
 
             case "del" when counterName != null:
                 var deleteHandler = serviceProvider.GetRequiredService<IDeleteCounterCommandHandler>();
-                await deleteHandler.ExecuteCommand(new(counterName));
+                await deleteHandler.Handle(new(counterName));
                 Console.WriteLine($"deleted counter '{counterName}'");
                 break;
 

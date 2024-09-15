@@ -57,16 +57,16 @@ public sealed class QueryServiceCollectionConfigurationTests
 
     private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<TestQueryResponse> Handle(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     private sealed class DuplicateTestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<TestQueryResponse> Handle(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     private sealed class DuplicateTestQueryHandlerWithDifferentResponseType : IQueryHandler<TestQuery, TestQueryResponse2>
     {
-        public Task<TestQueryResponse2> ExecuteQuery(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<TestQueryResponse2> Handle(TestQuery command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

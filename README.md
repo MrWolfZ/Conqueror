@@ -123,8 +123,8 @@ internal sealed class IncrementCounterByCommandHandler
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) =>
         pipeline.UseLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
 
-    public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command,
-                                                                        CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterByCommandResponse> Handle(IncrementCounterByCommand command,
+                                                                CancellationToken cancellationToken = default)
     {
         // simulate an asynchronous operation
         await Task.CompletedTask;
@@ -161,8 +161,8 @@ internal sealed class GetCounterValueQueryHandler
     public static void ConfigurePipeline(IQueryPipeline<GetCounterValueQuery, GetCounterValueQueryResponse> pipeline) =>
         pipeline.UseLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
 
-    public async Task<GetCounterValueQueryResponse> ExecuteQuery(GetCounterValueQuery query,
-                                                                 CancellationToken cancellationToken = default)
+    public async Task<GetCounterValueQueryResponse> Handle(GetCounterValueQuery query,
+                                                           CancellationToken cancellationToken = default)
     {
         // simulate an asynchronous operation
         await Task.CompletedTask;

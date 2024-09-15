@@ -277,26 +277,26 @@ public sealed class QueryHandlerRegistryTests
 
     public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
     }
 
     private sealed class TestQueryHandler2 : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
     }
 
     public sealed class TestQueryHandlerWithCustomInterface : ITestQueryHandler
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
     }
 
     private sealed class TestQueryHandlerWithCustomInterface2 : ITestQueryHandler
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
     }
 
     public sealed class TestQuery2Handler : IQueryHandler<TestQuery2, TestQuery2Response>
     {
-        public Task<TestQuery2Response> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQuery2Response());
+        public Task<TestQuery2Response> Handle(TestQuery2 query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQuery2Response());
     }
 }

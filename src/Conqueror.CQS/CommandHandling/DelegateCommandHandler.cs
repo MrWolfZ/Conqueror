@@ -10,7 +10,7 @@ internal sealed class DelegateCommandHandler<TCommand, TResponse>(
     : ICommandHandler<TCommand, TResponse>
     where TCommand : class
 {
-    public Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
+    public Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken = default)
     {
         return handlerFn(command, serviceProvider, cancellationToken);
     }
@@ -22,7 +22,7 @@ internal sealed class DelegateCommandHandler<TCommand>(
     : ICommandHandler<TCommand>
     where TCommand : class
 {
-    public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
+    public Task Handle(TCommand command, CancellationToken cancellationToken = default)
     {
         return handlerFn(command, serviceProvider, cancellationToken);
     }

@@ -43,7 +43,7 @@ With **Conqueror.CQS** you can create command and query clients that use a speci
 
 ```cs
 var handler = Resolve<IIncrementCounterCommandHandler>();
-var response = await handler.ExecuteCommand(new IncrementCounterCommand(counterName));
+var response = await handler.Handle(new IncrementCounterCommand(counterName));
 ```
 
 This means your code is perfectly type-safe and can work with and without HTTP or any other transport. It all just depends on how the `IIncrementCounterCommandHandler` is added to your services. Before we look at how this works for HTTP clients, there is one more thing we need to do in preparation. As you may have noticed above, we were using the `IIncrementCounterCommandHandler` and `IncrementCounterCommand` types when executing the command. We want to do this in our client command line app, but currently these types are defined inside our server web application. We could just add a project reference from the client project to the server project, but that would cause a code dependency which we do not want. Instead, the recommended approach is to extract your HTTP commands and queries into a separate shared class library, which is typically called `Contracts` or `DataTransferObjects`. Let's create such a project and add references to it from the client and server applications:
@@ -115,7 +115,7 @@ With this change in place we can start using the command. Let's resolve and call
 ```diff
   case "inc":
 +     var incrementHandler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
-+     var incResponse = await incrementHandler.ExecuteCommand(new(counterName));
++     var incResponse = await incrementHandler.Handle(new(counterName));
 +     Console.WriteLine($"incremented counter '{counterName}'; new value: {incResponse.NewCounterValue}");
       break;
 ```
@@ -135,7 +135,7 @@ Instead of configuring the client on the services you can also create clients dy
   case "get":
 +     var queryClientFactory = serviceProvider.GetRequiredService<IQueryClientFactory>();
 +     var getValueHandler = queryClientFactory.CreateQueryClient<IGetCounterValueQueryHandler>(b => b.UseHttp(serverAddress));
-+     var getValueResponse = await getValueHandler.ExecuteQuery(new(counterName));
++     var getValueResponse = await getValueHandler.Handle(new(counterName));
 +     Console.WriteLine($"counter '{counterName}' value: {getValueResponse.CounterValue}");
       break;
 ```
@@ -288,9 +288,9 @@ Now we can configure our command client to use the middleware in a pipeline:
 
 ```diff
           var incrementHandler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
--         var incResponse = await incrementHandler.ExecuteCommand(new(counterName));
+-         var incResponse = await incrementHandler.Handle(new(counterName));
 +         var incResponse = await incrementHandler.WithPipeline(pipeline => pipeline.UseDataAnnotationValidation())
-+                                                 .ExecuteCommand(new(counterName));
++                                                 .Handle(new(counterName));
           Console.WriteLine($"incremented counter '{counterName}'; new value: {incResponse.NewCounterValue}");
 ```
 
@@ -317,7 +317,7 @@ public static ICommandPipeline<TCommand, TResponse> UseClientDefault<TCommand, T
 With this extension method, using a client with the default pipeline becomes very simple:
 
 ```cs
-await incrementHandler.WithPipeline(pipeline => pipeline.UseClientDefault()).ExecuteCommand(new(counterName));
+await incrementHandler.WithPipeline(pipeline => pipeline.UseClientDefault()).Handle(new(counterName));
 ```
 
 For even more convenience you can go one step further and create default pipeline methods directly on the handler interfaces:
@@ -339,7 +339,7 @@ public static ICommandHandler<TCommand> WithDefaultClientPipeline<TCommand>(this
 This simplifies the handler call even further:
 
 ```cs
-await incrementHandler.WithDefaultClientPipeline().ExecuteCommand(new(counterName));
+await incrementHandler.WithDefaultClientPipeline().Handle(new(counterName));
 ```
 
 > You can even reuse the same shared pipelines in both clients and handlers, since they use the same pipeline builder interfaces and underlying mechanism.

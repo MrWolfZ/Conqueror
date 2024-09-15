@@ -15,7 +15,7 @@ internal sealed class IncrementCounterCommandHandler(
 {
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterCommand, IncrementCounterCommandResponse> pipeline) => pipeline.UseDefault();
 
-    public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterCommandResponse> Handle(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await countersReadRepository.GetCounterValue(command.CounterName);
         var newCounterValue = (counterValue ?? 0) + 1;

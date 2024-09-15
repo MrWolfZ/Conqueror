@@ -12,7 +12,7 @@ public sealed class MiddlewaresExampleQueryHandler : IMiddlewaresExampleQueryHan
     public static void ConfigurePipeline(IQueryPipeline<MiddlewaresExampleQuery, MiddlewaresExampleQueryResponse> pipeline) =>
         pipeline.UseLogging(o => o.LogQueryPayload = false);
 
-    public async Task<MiddlewaresExampleQueryResponse> ExecuteQuery(MiddlewaresExampleQuery command, CancellationToken cancellationToken = default)
+    public async Task<MiddlewaresExampleQueryResponse> Handle(MiddlewaresExampleQuery command, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
         return new(command.Parameter);

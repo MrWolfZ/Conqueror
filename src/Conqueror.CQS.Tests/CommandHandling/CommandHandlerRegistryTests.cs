@@ -506,46 +506,46 @@ public sealed class CommandHandlerRegistryTests
 
     public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 
     private sealed class TestCommandHandler2 : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 
     public sealed class TestCommandHandlerWithCustomInterface : ITestCommandHandler
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 
     private sealed class TestCommandHandlerWithCustomInterface2 : ITestCommandHandler
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 
     public sealed class TestCommand2Handler : ICommandHandler<TestCommand2, TestCommand2Response>
     {
-        public Task<TestCommand2Response> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommand2Response());
+        public Task<TestCommand2Response> Handle(TestCommand2 command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommand2Response());
     }
 
     public sealed class TestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
     {
-        public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class TestCommandWithoutResponseHandler2 : ICommandHandler<TestCommandWithoutResponse>
     {
-        public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     public sealed class TestCommandWithoutResponseHandlerWithCustomInterface : ITestCommandWithoutResponseHandler
     {
-        public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class TestCommandWithoutResponseHandlerWithCustomInterface2 : ITestCommandWithoutResponseHandler
     {
-        public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }

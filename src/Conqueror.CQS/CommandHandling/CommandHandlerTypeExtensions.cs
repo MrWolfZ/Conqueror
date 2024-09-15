@@ -37,7 +37,7 @@ internal static class CommandHandlerTypeExtensions
         if (invalidInterface != null)
         {
             throw new ArgumentException(
-                $"command handler interface type '{invalidInterface.Name}' has extra methods; custom command handler interface types are not allowed to have any additional methods beside the '{nameof(ICommandHandler<object>.ExecuteCommand)}' inherited from '{typeof(ICommandHandler<>).Name}'");
+                $"command handler interface type '{invalidInterface.Name}' has extra methods; custom command handler interface types are not allowed to have any additional methods beside the '{nameof(ICommandHandler<object>.Handle)}' inherited from '{typeof(ICommandHandler<>).Name}'");
         }
     }
 

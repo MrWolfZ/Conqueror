@@ -110,7 +110,7 @@ public sealed class ConquerorContextDataTests
                 SetAndObserveContextData(pipeline.ConquerorContext, testDataInstructions, testObservations, Location.ClientPipelineBuilder);
                 _ = pipeline.Use(new TestClientCommandMiddleware<TestCommand, TestCommandResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
                                                                                                    pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
-            }).ExecuteCommand(new());
+            }).Handle(new());
         }
 
         if (testCase.RequestType == RequestType.Query)
@@ -127,7 +127,7 @@ public sealed class ConquerorContextDataTests
                 SetAndObserveContextData(pipeline.ConquerorContext, testDataInstructions, testObservations, Location.ClientPipelineBuilder);
                 _ = pipeline.Use(new TestClientQueryMiddleware<TestQuery, TestQueryResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
                                                                                              pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
-            }).ExecuteQuery(new());
+            }).Handle(new());
         }
 
         SetAndObserveContextData(conquerorContext, testDataInstructions, testObservations, Location.PostExecution);
@@ -719,8 +719,8 @@ public sealed class ConquerorContextDataTests
         {
             SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPreExecution);
 
-            _ = await nestedCommandHandler.ExecuteCommand(new());
-            _ = await nestedQueryHandler.ExecuteQuery(new());
+            _ = await nestedCommandHandler.Handle(new());
+            _ = await nestedQueryHandler.Handle(new());
 
             SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPostExecution);
         }

@@ -43,7 +43,7 @@ private sealed class TestCommandHandler : ICommandHandler<TestCommand, TestComma
     public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline) =>
         pipeline.UseDataAnnotationValidation();
 
-    public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+    public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
     {
         // since we are only testing the input validation, the handler does not need to do anything
         return Task.FromResult<TestCommandResponse>(new(command.Parameter));
@@ -71,7 +71,7 @@ public async Task GivenHandlerWithValidationAnnotations_WhenExecutingWithInvalid
 {
     await using var serviceProvider = BuildServiceProvider();
     var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-    Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(new(-1)));
+    Assert.ThrowsAsync<ValidationException>(() => handler.Handle(new(-1)));
 }
 ```
 
@@ -83,7 +83,7 @@ public async Task GivenHandlerWithValidationAnnotations_WhenExecutingWithValidCo
 {
     await using var serviceProvider = BuildServiceProvider();
     var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-    Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(1)));
+    Assert.DoesNotThrowAsync(() => handler.Handle(new(1)));
 }
 ```
 
@@ -143,7 +143,7 @@ public async Task GivenHandlerThatThrowsOnceWithDefaultConfiguration_WhenExecuti
     });
 
     var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-    Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(1)));
+    Assert.DoesNotThrowAsync(() => handler.Handle(new(1)));
 }
 ```
 
@@ -157,7 +157,7 @@ public async Task GivenHandlerThatContinuouslyThrowsWithDefaultConfiguration_Whe
     await using var serviceProvider = BuildServiceProvider(_ => throw expectedException);
 
     var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-    var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(1)));
+    var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(new(1)));
     Assert.That(thrownException, Is.SameAs(expectedException));
 }
 ```
@@ -200,7 +200,7 @@ public async Task GivenHandlerThatThrowsThreeTimesWithCustomRetryAttemptLimitOfT
     }, pipeline => pipeline.UseRetry(o => o.RetryAttemptLimit = 3));
 
     var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-    Assert.DoesNotThrowAsync(() => handler.ExecuteCommand(new(1)));
+    Assert.DoesNotThrowAsync(() => handler.Handle(new(1)));
 }
 ```
 
@@ -215,7 +215,7 @@ public async Task GivenHandlerThatContinuouslyThrowsWithCustomRetryAttemptLimitO
                                                            pipeline => pipeline.UseRetry(o => o.RetryAttemptLimit = 3));
 
     var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
-    var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(new(1)));
+    var thrownException = Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(new(1)));
     Assert.That(thrownException, Is.SameAs(expectedException));
 }
 ```
@@ -315,7 +315,7 @@ When considering which tests to write for a reusable pipeline you have a few opt
 [Test]
 public void GivenHandlerWithDefaultPipeline_WhenExecutingWithInvalidCommand_ValidationExceptionIsThrown()
 {
-    Assert.ThrowsAsync<ValidationException>(() => Handler.ExecuteCommand(new(-1)));
+    Assert.ThrowsAsync<ValidationException>(() => Handler.Handle(new(-1)));
 }
 
 [Test]
@@ -335,7 +335,7 @@ public void GivenHandlerThatThrowsOnceWithDefaultPipeline_WhenExecutingCommand_N
         throw new InvalidOperationException("test exception");
     };
 
-    Assert.DoesNotThrowAsync(() => Handler.ExecuteCommand(new(1)));
+    Assert.DoesNotThrowAsync(() => Handler.Handle(new(1)));
 }
 ```
 
@@ -362,7 +362,7 @@ public void GivenHandlerThatThrowsTwiceWithDefaultPipelineAndCustomRetryConfigur
         throw new InvalidOperationException("test exception");
     };
 
-    Assert.DoesNotThrowAsync(() => Handler.ExecuteCommand(new(1)));
+    Assert.DoesNotThrowAsync(() => Handler.Handle(new(1)));
 }
 ```
 

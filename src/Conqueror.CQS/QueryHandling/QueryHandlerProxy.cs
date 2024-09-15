@@ -15,7 +15,7 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse>(
     : IQueryHandler<TQuery, TResponse>
     where TQuery : class
 {
-    public async Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
+    public async Task<TResponse> Handle(TQuery query, CancellationToken cancellationToken = default)
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 

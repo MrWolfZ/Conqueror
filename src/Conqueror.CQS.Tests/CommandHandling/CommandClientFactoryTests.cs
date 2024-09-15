@@ -20,7 +20,7 @@ public abstract class CommandClientFactoryTests
 
         var command = new TestCommand();
 
-        _ = await client.ExecuteCommand(command, CancellationToken.None);
+        _ = await client.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -43,7 +43,7 @@ public abstract class CommandClientFactoryTests
 
         var command = new TestCommand();
 
-        _ = await client.ExecuteCommand(command, CancellationToken.None);
+        _ = await client.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -66,7 +66,7 @@ public abstract class CommandClientFactoryTests
 
         var command = new TestCommandWithoutResponse();
 
-        await client.ExecuteCommand(command, CancellationToken.None);
+        await client.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -89,7 +89,7 @@ public abstract class CommandClientFactoryTests
 
         var command = new TestCommandWithoutResponse();
 
-        await client.ExecuteCommand(command, CancellationToken.None);
+        await client.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -114,7 +114,7 @@ public abstract class CommandClientFactoryTests
         var command = new TestCommand();
 
         _ = await client.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                        .ExecuteCommand(command, CancellationToken.None);
+                        .Handle(command, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
@@ -138,7 +138,7 @@ public abstract class CommandClientFactoryTests
         var command = new TestCommand();
 
         _ = await client.WithPipeline(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                        .ExecuteCommand(command, CancellationToken.None);
+                        .Handle(command, CancellationToken.None);
 
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
@@ -258,7 +258,7 @@ public abstract class CommandClientFactoryTests
 
     private sealed class TestCommandHandler : ITestCommandHandler
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     private sealed class TestCommandMiddleware<TCommand, TResponse>(TestObservations observations) : ICommandMiddleware<TCommand, TResponse>
@@ -277,7 +277,7 @@ public abstract class CommandClientFactoryTests
     {
         public string TransportTypeName { get; } = "test";
 
-        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+        public async Task<TResponse> Send<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)
             where TCommand : class

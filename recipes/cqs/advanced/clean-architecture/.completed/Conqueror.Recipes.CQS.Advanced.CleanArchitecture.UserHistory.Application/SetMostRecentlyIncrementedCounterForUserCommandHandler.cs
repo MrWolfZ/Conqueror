@@ -6,7 +6,7 @@ internal sealed class SetMostRecentlyIncrementedCounterForUserCommandHandler(
 {
     public static void ConfigurePipeline(ICommandPipeline<SetMostRecentlyIncrementedCounterForUserCommand> pipeline) => pipeline.UseDefault();
 
-    public async Task ExecuteCommand(SetMostRecentlyIncrementedCounterForUserCommand command, CancellationToken cancellationToken = default)
+    public async Task Handle(SetMostRecentlyIncrementedCounterForUserCommand command, CancellationToken cancellationToken = default)
     {
         await userHistoryWriteRepository.SetMostRecentlyIncrementedCounter(command.UserId, command.CounterName);
     }

@@ -7,9 +7,9 @@ namespace Conqueror.CQS.CommandHandling;
 internal sealed class CommandHandlerWithoutResponseAdapter<TCommand>(ICommandHandler<TCommand, UnitCommandResponse> wrapped) : ICommandHandler<TCommand>
     where TCommand : class
 {
-    public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
+    public Task Handle(TCommand command, CancellationToken cancellationToken = default)
     {
-        return wrapped.ExecuteCommand(command, cancellationToken);
+        return wrapped.Handle(command, cancellationToken);
     }
 
     public ICommandHandler<TCommand> WithPipeline(Action<ICommandPipeline<TCommand>> configure)

@@ -23,7 +23,7 @@ public sealed class QueryIdTests
             (ctx, next) => next(ctx.Query),
             ctx => { observedQueryIds.Add(ctx!.GetQueryId()); });
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
 
         Assert.That(observedQueryIds, Has.Count.EqualTo(3));
         Assert.That(observedQueryIds[1], Is.SameAs(observedQueryIds[0]));
@@ -48,7 +48,7 @@ public sealed class QueryIdTests
                 return new(cmd.Payload);
             });
 
-        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().ExecuteQuery(query, CancellationToken.None);
+        _ = await provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>().Handle(query, CancellationToken.None);
 
         Assert.That(observedQueryIds, Has.Count.EqualTo(2));
         Assert.That(observedQueryIds[1], Is.Not.SameAs(observedQueryIds[0]));
@@ -107,12 +107,12 @@ public sealed class QueryIdTests
         IQueryHandler<NestedTestQuery, NestedTestQueryResponse> nestedQueryHandler)
         : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             var response = handlerFn(query, conquerorContextAccessor.ConquerorContext);
             nestedClass.Execute();
-            _ = await nestedQueryHandler.ExecuteQuery(new(query.Payload), cancellationToken);
+            _ = await nestedQueryHandler.Handle(new(query.Payload), cancellationToken);
             return response;
         }
 
@@ -125,7 +125,7 @@ public sealed class QueryIdTests
         IConquerorContextAccessor conquerorContextAccessor)
         : IQueryHandler<NestedTestQuery, NestedTestQueryResponse>
     {
-        public async Task<NestedTestQueryResponse> ExecuteQuery(NestedTestQuery query, CancellationToken cancellationToken = default)
+        public async Task<NestedTestQueryResponse> Handle(NestedTestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return handlerFn(query, conquerorContextAccessor.ConquerorContext);

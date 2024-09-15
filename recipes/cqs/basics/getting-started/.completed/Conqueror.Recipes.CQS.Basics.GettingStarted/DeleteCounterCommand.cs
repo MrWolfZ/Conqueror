@@ -7,7 +7,7 @@ public interface IDeleteCounterCommandHandler : ICommandHandler<DeleteCounterCom
 
 internal sealed class DeleteCounterCommandHandler(CountersRepository repository) : IDeleteCounterCommandHandler
 {
-    public async Task ExecuteCommand(DeleteCounterCommand command, CancellationToken cancellationToken = default)
+    public async Task Handle(DeleteCounterCommand command, CancellationToken cancellationToken = default)
     {
         await repository.DeleteCounter(command.CounterName);
     }

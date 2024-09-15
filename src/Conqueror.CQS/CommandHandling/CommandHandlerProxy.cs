@@ -15,7 +15,7 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse>(
     : ICommandHandler<TCommand, TResponse>
     where TCommand : class
 {
-    public async Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
+    public async Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken = default)
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 

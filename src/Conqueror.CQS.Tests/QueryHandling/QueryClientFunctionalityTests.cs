@@ -19,7 +19,7 @@ public abstract class QueryClientFunctionalityTests
 
         var query = new TestQuery(10);
 
-        _ = await client.ExecuteQuery(query, CancellationToken.None);
+        _ = await client.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -41,7 +41,7 @@ public abstract class QueryClientFunctionalityTests
 
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await client.ExecuteQuery(new(10), tokenSource.Token);
+        _ = await client.Handle(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -63,7 +63,7 @@ public abstract class QueryClientFunctionalityTests
 
         var query = new TestQuery(10);
 
-        var response = await client.ExecuteQuery(query, CancellationToken.None);
+        var response = await client.Handle(query, CancellationToken.None);
 
         Assert.That(response.Payload, Is.EqualTo(query.Payload + 1));
     }
@@ -95,9 +95,9 @@ public abstract class QueryClientFunctionalityTests
         var client2 = scope1.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var client3 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await client1.ExecuteQuery(new(10), CancellationToken.None);
-        _ = await client2.ExecuteQuery(new(10), CancellationToken.None);
-        _ = await client3.ExecuteQuery(new(10), CancellationToken.None);
+        _ = await client1.Handle(new(10), CancellationToken.None);
+        _ = await client2.Handle(new(10), CancellationToken.None);
+        _ = await client3.Handle(new(10), CancellationToken.None);
 
         Assert.That(seenInstances, Has.Count.EqualTo(3));
         Assert.That(seenInstances[1], Is.SameAs(seenInstances[0]));
@@ -119,7 +119,7 @@ public abstract class QueryClientFunctionalityTests
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10), CancellationToken.None));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -144,7 +144,7 @@ public abstract class QueryClientFunctionalityTests
     {
         public string TransportTypeName => "test";
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+        public async Task<TResponse> Send<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)
             where TQuery : class
@@ -162,7 +162,7 @@ public abstract class QueryClientFunctionalityTests
     {
         public string TransportTypeName => "test";
 
-        public async Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+        public async Task<TResponse> Send<TQuery, TResponse>(TQuery query,
                                                                      IServiceProvider serviceProvider,
                                                                      CancellationToken cancellationToken)
             where TQuery : class

@@ -24,11 +24,11 @@ public sealed class QueryMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteQuery(new());
-        _ = await handler2.ExecuteQuery(new());
-        _ = await handler3.ExecuteQuery(new());
-        _ = await handler4.ExecuteQuery(new());
-        _ = await handler5.ExecuteQuery(new());
+        _ = await handler1.Handle(new());
+        _ = await handler2.Handle(new());
+        _ = await handler3.Handle(new());
+        _ = await handler4.Handle(new());
+        _ = await handler5.Handle(new());
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -55,11 +55,11 @@ public sealed class QueryMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse>>();
 
-        _ = await handler1.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).ExecuteQuery(new());
-        _ = await handler2.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).ExecuteQuery(new());
-        _ = await handler3.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery2, TestQueryResponse>())).ExecuteQuery(new());
-        _ = await handler4.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).ExecuteQuery(new());
-        _ = await handler5.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery2, TestQueryResponse>())).ExecuteQuery(new());
+        _ = await handler1.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).Handle(new());
+        _ = await handler2.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).Handle(new());
+        _ = await handler3.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery2, TestQueryResponse>())).Handle(new());
+        _ = await handler4.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).Handle(new());
+        _ = await handler5.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery2, TestQueryResponse>())).Handle(new());
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 1, 2 }));
     }
@@ -86,11 +86,11 @@ public sealed class QueryMiddlewareLifetimeTests
         var handler4 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
         var handler5 = scope2.ServiceProvider.GetRequiredService<IQueryHandler<TestQuery2, TestQueryResponse>>();
 
-        _ = await handler1.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).ExecuteQuery(new());
-        _ = await handler2.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).ExecuteQuery(new());
-        _ = await handler3.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery2, TestQueryResponse>())).ExecuteQuery(new());
-        _ = await handler4.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).ExecuteQuery(new());
-        _ = await handler5.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery2, TestQueryResponse>())).ExecuteQuery(new());
+        _ = await handler1.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).Handle(new());
+        _ = await handler2.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).Handle(new());
+        _ = await handler3.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery2, TestQueryResponse>())).Handle(new());
+        _ = await handler4.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>())).Handle(new());
+        _ = await handler5.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery2, TestQueryResponse>())).Handle(new());
 
         Assert.That(observations.DependencyResolvedDuringMiddlewareExecutionInvocationCounts, Is.EquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 1, 2, 3, 4 }));
     }
@@ -103,7 +103,7 @@ public sealed class QueryMiddlewareLifetimeTests
 
     private sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();
@@ -114,7 +114,7 @@ public sealed class QueryMiddlewareLifetimeTests
 
     private sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery2 query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();
@@ -125,7 +125,7 @@ public sealed class QueryMiddlewareLifetimeTests
 
     private sealed class TestQueryHandlerWithoutMiddleware : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();
@@ -134,7 +134,7 @@ public sealed class QueryMiddlewareLifetimeTests
 
     private sealed class TestQueryHandlerWithoutMiddleware2 : IQueryHandler<TestQuery2, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery2 query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return new();

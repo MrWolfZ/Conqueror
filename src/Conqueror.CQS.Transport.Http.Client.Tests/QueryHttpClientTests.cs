@@ -21,7 +21,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -34,7 +34,7 @@ public sealed class QueryHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.Handle(new() { Payload = 10 }, CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
@@ -49,7 +49,7 @@ public sealed class QueryHttpClientTests : TestBase
 
         var handler = ResolveOnClient<ITestQueryHandler>();
 
-        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.Handle(new() { Payload = 10 }, CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That(ex?.StatusCode, Is.Null);
@@ -63,7 +63,7 @@ public sealed class QueryHttpClientTests : TestBase
 
         var handler = ResolveOnClient<ITestQueryWithStringPayloadHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = payload }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = payload }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(payload));
@@ -74,7 +74,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithoutPayloadHandler>();
 
-        var result = await handler.ExecuteQuery(new(), CancellationToken.None);
+        var result = await handler.Handle(new(), CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -87,7 +87,7 @@ public sealed class QueryHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new(), CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.Handle(new(), CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
@@ -100,7 +100,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestPostQueryHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -113,7 +113,7 @@ public sealed class QueryHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.Handle(new() { Payload = 10 }, CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
@@ -126,7 +126,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestPostQueryWithoutPayloadHandler>();
 
-        var result = await handler.ExecuteQuery(new(), CancellationToken.None);
+        var result = await handler.Handle(new(), CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -139,7 +139,7 @@ public sealed class QueryHttpClientTests : TestBase
 
         customResponseStatusCode = StatusCodes.Status402PaymentRequired;
 
-        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.ExecuteQuery(new(), CancellationToken.None));
+        var ex = Assert.ThrowsAsync<HttpQueryFailedException>(() => handler.Handle(new(), CancellationToken.None));
 
         Assert.That(ex, Is.Not.Null);
         Assert.That((int?)ex?.StatusCode, Is.EqualTo(customResponseStatusCode));
@@ -152,7 +152,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestPostQueryWithCustomSerializedPayloadTypeHandler>();
 
-        var result = await handler.ExecuteQuery(new(new(10)), CancellationToken.None);
+        var result = await handler.Handle(new(new(10)), CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload.Payload, Is.EqualTo(11));
@@ -163,7 +163,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithCollectionPayloadHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = [10, 11] }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = [10, 11] }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Has.Count.EqualTo(3));
@@ -177,7 +177,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithComplexPayloadHandler>();
 
-        var result = await handler.ExecuteQuery(new(new(10)), CancellationToken.None);
+        var result = await handler.Handle(new(new(10)), CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -188,7 +188,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithComplexPayloadWithCollectionPropertyHandler>();
 
-        var result = await handler.ExecuteQuery(new(new([10, 11])), CancellationToken.None);
+        var result = await handler.Handle(new(new([10, 11])), CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(22));
@@ -199,7 +199,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithOptionalPropertyHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10, OptionalPayload = 5 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10, OptionalPayload = 5 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(16));
@@ -210,7 +210,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithOptionalPropertyHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -221,7 +221,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithCustomPathConventionHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -232,7 +232,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestPostQueryWithCustomPathConventionHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -243,7 +243,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithCustomPathHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -254,7 +254,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestPostQueryWithCustomPathHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -265,7 +265,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestQueryWithVersionHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -276,7 +276,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<ITestPostQueryWithVersionHandler>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -298,7 +298,7 @@ public sealed class QueryHttpClientTests : TestBase
             return next();
         };
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
         Assert.That(seenTestHeaderValues, Is.EquivalentTo(new[] { "value1", "value2" }));
@@ -320,7 +320,7 @@ public sealed class QueryHttpClientTests : TestBase
             return next();
         };
 
-        _ = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
         Assert.That(seenTestHeaderValues, Is.EquivalentTo(new[] { "value1", "value2" }));
@@ -331,7 +331,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<IQueryHandler<TestDelegateQuery, TestDelegateQueryResponse>>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -342,7 +342,7 @@ public sealed class QueryHttpClientTests : TestBase
     {
         var handler = ResolveOnClient<IQueryHandler<TestPostDelegateQuery, TestDelegateQueryResponse>>();
 
-        var result = await handler.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        var result = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Payload, Is.EqualTo(11));
@@ -629,7 +629,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryHandler : ITestQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -639,7 +639,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithStringPayloadHandler : ITestQueryWithStringPayloadHandler
     {
-        public async Task<TestQueryWithStringPayloadResponse> ExecuteQuery(TestQueryWithStringPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryWithStringPayloadResponse> Handle(TestQueryWithStringPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -649,7 +649,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithoutPayloadHandler : ITestQueryWithoutPayloadHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -659,7 +659,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithCollectionPayloadHandler : ITestQueryWithCollectionPayloadHandler
     {
-        public async Task<TestQueryWithCollectionPayloadResponse> ExecuteQuery(TestQueryWithCollectionPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryWithCollectionPayloadResponse> Handle(TestQueryWithCollectionPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -669,7 +669,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithComplexPayloadHandler : ITestQueryWithComplexPayloadHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -679,7 +679,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithComplexPayloadWithCollectionPropertyHandler : ITestQueryWithComplexPayloadWithCollectionPropertyHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayloadWithCollectionProperty query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithComplexPayloadWithCollectionProperty query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -689,7 +689,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithOptionalPropertyHandler : ITestQueryWithOptionalPropertyHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithOptionalProperty query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithOptionalProperty query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -699,7 +699,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithCustomPathConventionHandler : ITestQueryWithCustomPathConventionHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomPathConvention query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithCustomPathConvention query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -709,7 +709,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithCustomPathHandler : ITestQueryWithCustomPathHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomPath query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithCustomPath query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -719,7 +719,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithVersionHandler : ITestQueryWithVersionHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithVersion query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithVersion query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -729,7 +729,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestQueryWithCustomHeadersHandler : ITestQueryWithCustomHeadersHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomHeaders query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithCustomHeaders query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -739,7 +739,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestPostQueryHandler : ITestPostQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -749,7 +749,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestPostQueryWithoutPayloadHandler : ITestPostQueryWithoutPayloadHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -759,7 +759,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestPostQueryWithCustomSerializedPayloadTypeHandler : ITestPostQueryWithCustomSerializedPayloadTypeHandler
     {
-        public async Task<TestPostQueryWithCustomSerializedPayloadTypeResponse> ExecuteQuery(TestPostQueryWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+        public async Task<TestPostQueryWithCustomSerializedPayloadTypeResponse> Handle(TestPostQueryWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -792,7 +792,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestPostQueryWithCustomPathConventionHandler : ITestPostQueryWithCustomPathConventionHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomPathConvention query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithCustomPathConvention query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -802,7 +802,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestPostQueryWithCustomPathHandler : ITestPostQueryWithCustomPathHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -812,7 +812,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestPostQueryWithVersionHandler : ITestPostQueryWithVersionHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -822,7 +822,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class TestPostQueryWithCustomHeadersHandler : ITestPostQueryWithCustomHeadersHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomHeaders query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithCustomHeaders query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -832,7 +832,7 @@ public sealed class QueryHttpClientTests : TestBase
 
     public sealed class NonHttpTestQueryHandler : INonHttpTestQueryHandler
     {
-        public Task<TestQueryResponse> ExecuteQuery(NonHttpTestQuery query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(NonHttpTestQuery query, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }

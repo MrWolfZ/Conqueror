@@ -28,7 +28,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
     }
@@ -49,7 +49,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(testClient.LastSeenRequestUri, Is.Not.Null);
         Assert.That(expectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!), Is.True);
@@ -70,7 +70,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(testClient.LastSeenRequestUri, Is.Not.Null);
         Assert.That(expectedBaseAddress.IsBaseOf(testClient.LastSeenRequestUri!), Is.True);
@@ -97,7 +97,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
     }
@@ -124,7 +124,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
         Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
@@ -153,7 +153,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
         Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
@@ -181,7 +181,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
         Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
@@ -208,7 +208,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
@@ -234,7 +234,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
@@ -260,7 +260,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
     }
@@ -286,7 +286,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
     }
@@ -314,7 +314,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
         Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
@@ -343,7 +343,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenHttpClient, Is.SameAs(expectedHttpClient));
         Assert.That(seenHttpClient, Is.Not.SameAs(unexpectedHttpClient));
@@ -371,14 +371,14 @@ public sealed class CommandHttpClientRegistrationTests
         var client1 = scope1.ServiceProvider.GetRequiredService<ITestCommandHandler>();
         var client2 = scope1.ServiceProvider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client1.ExecuteCommand(new(), CancellationToken.None);
-        _ = await client2.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client1.Handle(new(), CancellationToken.None);
+        _ = await client2.Handle(new(), CancellationToken.None);
 
         using var scope2 = provider.CreateScope();
 
         var client3 = scope2.ServiceProvider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client3.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client3.Handle(new(), CancellationToken.None);
 
         Assert.That(seenInstances, Has.Count.EqualTo(2));
     }
@@ -402,7 +402,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenOptions, Is.SameAs(expectedOptions));
     }
@@ -426,7 +426,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenOptions, Is.SameAs(expectedOptions));
     }
@@ -451,7 +451,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenOptions, Is.SameAs(expectedOptions));
         Assert.That(seenOptions, Is.Not.SameAs(globalOptions));
@@ -476,7 +476,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenConvention, Is.SameAs(expectedConvention));
     }
@@ -500,7 +500,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenConvention, Is.SameAs(expectedConvention));
     }
@@ -525,7 +525,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenConvention, Is.SameAs(expectedConvention));
         Assert.That(seenConvention, Is.Not.SameAs(globalConvention));
@@ -559,7 +559,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenOptions, Is.SameAs(expectedOptions));
         Assert.That(seenOptions, Is.Not.SameAs(unexpectedOptions));
@@ -594,7 +594,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = await client.ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.Handle(new(), CancellationToken.None);
 
         Assert.That(seenOptions, Is.SameAs(expectedOptions));
         Assert.That(seenOptions, Is.Not.SameAs(unexpectedOptions));
@@ -612,7 +612,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteCommand(new(), CancellationToken.None));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.Handle(new(), CancellationToken.None));
     }
 
     [Test]
@@ -630,7 +630,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        Assert.DoesNotThrowAsync(() => client.ExecuteCommand(new(), CancellationToken.None));
+        Assert.DoesNotThrowAsync(() => client.Handle(new(), CancellationToken.None));
     }
 
     [Test]
@@ -644,7 +644,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
-        var thrownException = Assert.ThrowsAsync<ArgumentNullException>(() => client.ExecuteCommand(new(), CancellationToken.None));
+        var thrownException = Assert.ThrowsAsync<ArgumentNullException>(() => client.Handle(new(), CancellationToken.None));
 
         Assert.That(thrownException?.ParamName, Is.EqualTo("baseAddress"));
     }
@@ -660,7 +660,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<ICommandHandler<NonHttpTestCommand, TestCommandResponse>>();
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteCommand(new(), CancellationToken.None));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.Handle(new(), CancellationToken.None));
     }
 
     [Test]
@@ -674,7 +674,7 @@ public sealed class CommandHttpClientRegistrationTests
 
         var client = provider.GetRequiredService<INonHttpTestCommandHandler>();
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.ExecuteCommand(new(), CancellationToken.None));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => client.Handle(new(), CancellationToken.None));
     }
 
     [Test]
@@ -691,7 +691,7 @@ public sealed class CommandHttpClientRegistrationTests
         var client = provider.GetRequiredService<ITestCommandHandler>();
 
         var middleware = new TestCommandMiddleware<TestCommand, TestCommandResponse>();
-        _ = await client.WithPipeline(pipeline => pipeline.Use(middleware)).ExecuteCommand(new(), CancellationToken.None);
+        _ = await client.WithPipeline(pipeline => pipeline.Use(middleware)).Handle(new(), CancellationToken.None);
 
         var seenTransportType = middleware.SeenTransportType;
         Assert.That(seenTransportType?.IsHttp(), Is.True);
@@ -731,7 +731,7 @@ public sealed class CommandHttpClientRegistrationTests
     {
         public string TransportTypeName { get; } = "test";
 
-        public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+        public Task<TResponse> Send<TCommand, TResponse>(TCommand command,
                                                                    IServiceProvider serviceProvider,
                                                                    CancellationToken cancellationToken)
             where TCommand : class

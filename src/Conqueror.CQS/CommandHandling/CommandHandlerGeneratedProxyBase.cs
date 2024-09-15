@@ -9,9 +9,9 @@ internal abstract class CommandHandlerGeneratedProxyBase<TCommand, TResponse>(
     : ICommandHandler<TCommand, TResponse>
     where TCommand : class
 {
-    public Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
+    public Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken = default)
     {
-        return target.ExecuteCommand(command, cancellationToken);
+        return target.Handle(command, cancellationToken);
     }
 
     public ICommandHandler<TCommand, TResponse> WithPipeline(Action<ICommandPipeline<TCommand, TResponse>> configure)
@@ -23,9 +23,9 @@ internal abstract class CommandHandlerGeneratedProxyBase<TCommand, TResponse>(
 internal abstract class CommandHandlerGeneratedProxyBase<TCommand>(ICommandHandler<TCommand> target) : ICommandHandler<TCommand>
     where TCommand : class
 {
-    public Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default)
+    public Task Handle(TCommand command, CancellationToken cancellationToken = default)
     {
-        return target.ExecuteCommand(command, cancellationToken);
+        return target.Handle(command, cancellationToken);
     }
 
     public ICommandHandler<TCommand> WithPipeline(Action<ICommandPipeline<TCommand>> configure)

@@ -37,7 +37,7 @@ internal static class QueryHandlerTypeExtensions
         if (invalidInterface != null)
         {
             throw new ArgumentException(
-                $"query handler interface type '{invalidInterface.Name}' has extra methods; custom query handler interface types are not allowed to have any additional methods beside the '{nameof(IQueryHandler<object, object>.ExecuteQuery)}' inherited from '{typeof(IQueryHandler<,>).Name}'");
+                $"query handler interface type '{invalidInterface.Name}' has extra methods; custom query handler interface types are not allowed to have any additional methods beside the '{nameof(IQueryHandler<object, object>.Handle)}' inherited from '{typeof(IQueryHandler<,>).Name}'");
         }
     }
 

@@ -555,7 +555,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         TestObservations observations)
         : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -568,7 +568,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         TestObservations observations)
         : ICommandHandler<TestCommandWithoutResponse>
     {
-        public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -581,7 +581,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         TestObservations observations)
         : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse> Handle(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -594,7 +594,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         TestObservations observations)
         : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
     {
-        public Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
+        public Task Handle(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -608,11 +608,11 @@ public sealed class ConquerorContextCommandTests : TestBase
         TestObservations observations)
         : ICommandHandler<TestCommandWithNestedCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommandWithNestedCommand command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse> Handle(TestCommandWithNestedCommand command, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
-            return nestedHandler.ExecuteCommand(new(), cancellationToken);
+            return nestedHandler.Handle(new(), cancellationToken);
         }
     }
 
@@ -621,7 +621,7 @@ public sealed class ConquerorContextCommandTests : TestBase
         TestObservations observations)
         : ICommandHandler<NestedTestCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse> Handle(NestedTestCommand command, CancellationToken cancellationToken = default)
         {
             ObserveAndSetContextData(observations, conquerorContextAccessor);
 
@@ -655,25 +655,25 @@ public sealed class ConquerorContextCommandTests : TestBase
         [HttpPost("/api/custom/commands/test")]
         public Task<TestCommandResponse> ExecuteTestCommand(TestCommand command, CancellationToken cancellationToken)
         {
-            return commandHandler.ExecuteCommand(command, cancellationToken);
+            return commandHandler.Handle(command, cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutPayload")]
         public Task<TestCommandResponse> ExecuteTestCommandWithoutPayload(CancellationToken cancellationToken)
         {
-            return commandWithoutPayloadHandler.ExecuteCommand(new(), cancellationToken);
+            return commandWithoutPayloadHandler.Handle(new(), cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutResponse")]
         public Task ExecuteTestCommandWithoutResponse(TestCommandWithoutResponse command, CancellationToken cancellationToken)
         {
-            return commandWithoutResponseHandler.ExecuteCommand(command, cancellationToken);
+            return commandWithoutResponseHandler.Handle(command, cancellationToken);
         }
 
         [HttpPost("/api/custom/commands/testCommandWithoutResponseWithoutPayload")]
         public Task ExecuteTestCommandWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
         {
-            return commandWithoutResponseWithoutPayloadHandler.ExecuteCommand(new(), cancellationToken);
+            return commandWithoutResponseWithoutPayloadHandler.Handle(new(), cancellationToken);
         }
     }
 

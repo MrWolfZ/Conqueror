@@ -29,14 +29,14 @@ try
         case "inc":
             var incrementHandler = serviceProvider.GetRequiredService<IIncrementCounterCommandHandler>();
             var incResponse = await incrementHandler.WithPipeline(pipeline => pipeline.UseDataAnnotationValidation())
-                                                    .ExecuteCommand(new(counterName));
+                                                    .Handle(new(counterName));
             Console.WriteLine($"incremented counter '{counterName}'; new value: {incResponse.NewCounterValue}");
             break;
 
         case "get":
             var queryClientFactory = serviceProvider.GetRequiredService<IQueryClientFactory>();
             var getValueHandler = queryClientFactory.CreateQueryClient<IGetCounterValueQueryHandler>(b => b.UseHttp(serverAddress));
-            var getValueResponse = await getValueHandler.ExecuteQuery(new(counterName));
+            var getValueResponse = await getValueHandler.Handle(new(counterName));
             Console.WriteLine($"counter '{counterName}' value: {getValueResponse.CounterValue}");
             break;
 

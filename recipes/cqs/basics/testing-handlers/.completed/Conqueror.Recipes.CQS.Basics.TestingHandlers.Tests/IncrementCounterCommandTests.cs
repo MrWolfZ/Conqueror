@@ -12,7 +12,7 @@ public sealed class IncrementCounterCommandTests : TestBase
     [Test]
     public async Task GivenNonExistingCounter_WhenIncrementingCounter_CounterIsCreatedAndInitialValueIsReturned()
     {
-        var response = await Handler.ExecuteCommand(new(TestCounterName));
+        var response = await Handler.Handle(new(TestCounterName));
 
         // we validate the result of the command by checking the repository directly, which is a small
         // violation of the black-box testing approach; the alternative would be to fetch the counter's
@@ -31,7 +31,7 @@ public sealed class IncrementCounterCommandTests : TestBase
     {
         await CountersRepository.SetCounterValue(TestCounterName, 10);
 
-        var response = await Handler.ExecuteCommand(new(TestCounterName));
+        var response = await Handler.Handle(new(TestCounterName));
 
         var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
 
@@ -43,7 +43,7 @@ public sealed class IncrementCounterCommandTests : TestBase
     {
         await CountersRepository.SetCounterValue(TestCounterName, 999);
 
-        _ = await Handler.ExecuteCommand(new(TestCounterName));
+        _ = await Handler.Handle(new(TestCounterName));
 
         AdminNotificationServiceMock.Verify(s => s.SendCounterIncrementedBeyondThresholdNotification(TestCounterName));
     }
@@ -53,7 +53,7 @@ public sealed class IncrementCounterCommandTests : TestBase
     {
         await CountersRepository.SetCounterValue(TestCounterName, 10);
 
-        _ = await Handler.ExecuteCommand(new(TestCounterName));
+        _ = await Handler.Handle(new(TestCounterName));
 
         AdminNotificationServiceMock.Verify(s => s.SendCounterIncrementedBeyondThresholdNotification(TestCounterName), Times.Never);
     }

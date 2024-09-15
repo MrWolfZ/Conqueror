@@ -463,7 +463,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryHandler : ITestQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -473,7 +473,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
     {
-        public Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse2> Handle(TestQuery2 query, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }
@@ -481,7 +481,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryHandler3 : IQueryHandler<TestQuery3, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery3 query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery3 query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -491,7 +491,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryHandler4 : IQueryHandler<TestQuery4, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery4 query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery4 query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -501,7 +501,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -511,7 +511,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryHandlerWithMiddleware : IQueryHandler<TestWithMiddlewareQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestWithMiddlewareQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestWithMiddlewareQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -524,7 +524,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -534,7 +534,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryWithCustomPathHandler : IQueryHandler<TestQueryWithCustomPath, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomPath query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithCustomPath query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -544,7 +544,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestQueryWithVersionHandler : IQueryHandler<TestQueryWithVersion, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithVersion query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithVersion query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -554,7 +554,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestPostQueryHandler : ITestPostQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -564,7 +564,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestPostQueryHandler2 : IQueryHandler<TestPostQuery2, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery2 query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQuery2 query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -574,7 +574,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestPostQueryHandlerWithoutPayload : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -584,7 +584,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestPostQueryHandlerWithMiddleware : IQueryHandler<TestPostWithMiddlewareQuery, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostWithMiddlewareQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostWithMiddlewareQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -597,7 +597,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestPostQueryWithCustomSerializedPayloadTypeHandler : ITestPostQueryWithCustomSerializedPayloadTypeHandler
     {
-        public async Task<TestPostQueryWithCustomSerializedPayloadTypeResponse> ExecuteQuery(TestPostQueryWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
+        public async Task<TestPostQueryWithCustomSerializedPayloadTypeResponse> Handle(TestPostQueryWithCustomSerializedPayloadType query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -630,7 +630,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestPostQueryWithCustomPathHandler : IQueryHandler<TestPostQueryWithCustomPath, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -640,7 +640,7 @@ public sealed class QueryHttpEndpointTests : TestBase
 
     public sealed class TestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -684,25 +684,25 @@ public sealed class QueryHttpEndpointTests : TestBase
         [HttpGet("/api/custom/queries/test")]
         public Task<TestQueryResponse> ExecuteTestQuery([FromQuery] TestQuery query, CancellationToken cancellationToken)
         {
-            return queryHandler.ExecuteQuery(query, cancellationToken);
+            return queryHandler.Handle(query, cancellationToken);
         }
 
         [HttpGet("/api/custom/queries/testQueryWithoutPayload")]
         public Task<TestQueryResponse> ExecuteTestQueryWithoutPayload(CancellationToken cancellationToken)
         {
-            return queryWithoutPayloadHandler.ExecuteQuery(new(), cancellationToken);
+            return queryWithoutPayloadHandler.Handle(new(), cancellationToken);
         }
 
         [HttpPost("/api/custom/queries/testPost")]
         public Task<TestQueryResponse> ExecuteTestQueryWithoutResponse(TestPostQuery query, CancellationToken cancellationToken)
         {
-            return postQueryHandler.ExecuteQuery(query, cancellationToken);
+            return postQueryHandler.Handle(query, cancellationToken);
         }
 
         [HttpPost("/api/custom/queries/testPostQueryWithoutPayload")]
         public Task<TestQueryResponse> ExecuteTestQueryWithoutResponse(CancellationToken cancellationToken)
         {
-            return postQueryWithoutPayloadHandler.ExecuteQuery(new(), cancellationToken);
+            return postQueryWithoutPayloadHandler.Handle(new(), cancellationToken);
         }
     }
 

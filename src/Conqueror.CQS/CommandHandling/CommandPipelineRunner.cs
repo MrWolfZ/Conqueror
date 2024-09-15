@@ -19,7 +19,7 @@ internal sealed class CommandPipelineRunner<TCommand, TResponse>(
                                          CommandTransportType transportType,
                                          CancellationToken cancellationToken)
     {
-        var next = (TCommand command, CancellationToken token) => transportClient.ExecuteCommand<TCommand, TResponse>(command, serviceProvider, token);
+        var next = (TCommand command, CancellationToken token) => transportClient.Send<TCommand, TResponse>(command, serviceProvider, token);
 
         foreach (var middleware in middlewares)
         {

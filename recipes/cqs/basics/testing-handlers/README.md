@@ -70,7 +70,7 @@ public async Task GivenNonExistingCounter_WhenGettingCounterValue_CounterNotFoun
 
     var handler = serviceProvider.GetRequiredService<IGetCounterValueQueryHandler>();
 
-    Assert.ThrowsAsync<CounterNotFoundException>(() => handler.ExecuteQuery(new("test-counter")));
+    Assert.ThrowsAsync<CounterNotFoundException>(() => handler.Handle(new("test-counter")));
 }
 ```
 
@@ -94,7 +94,7 @@ public async Task GivenExistingCounter_WhenGettingCounterValue_CounterValueIsRet
 
     await repository.SetCounterValue("test-counter", 10);
 
-    var response = await handler.ExecuteQuery(new("test-counter"));
+    var response = await handler.Handle(new("test-counter"));
 
     Assert.That(response.CounterValue, Is.EqualTo(10));
 }
@@ -121,8 +121,8 @@ public sealed class GetCounterValueQueryTests
 
         var handler = serviceProvider.GetRequiredService<IGetCounterValueQueryHandler>();
 
--       Assert.ThrowsAsync<CounterNotFoundException>(() => handler.ExecuteQuery(new("test-counter")));
-+       Assert.ThrowsAsync<CounterNotFoundException>(() => handler.ExecuteQuery(new(TestCounterName)));
+-       Assert.ThrowsAsync<CounterNotFoundException>(() => handler.Handle(new("test-counter")));
++       Assert.ThrowsAsync<CounterNotFoundException>(() => handler.Handle(new(TestCounterName)));
     }
 
     [Test]
@@ -142,8 +142,8 @@ public sealed class GetCounterValueQueryTests
 -       await repository.SetCounterValue("test-counter", 10);
 +       await repository.SetCounterValue(TestCounterName, 10);
 
--       var response = await handler.ExecuteQuery(new("test-counter"));
-+       var response = await handler.ExecuteQuery(new(TestCounterName));
+-       var response = await handler.Handle(new("test-counter"));
++       var response = await handler.Handle(new(TestCounterName));
 
         Assert.That(response.CounterValue, Is.EqualTo(10));
     }
@@ -225,7 +225,7 @@ Our first test is going to validate what happens when we increment a non-existin
 [Test]
 public async Task GivenNonExistingCounter_WhenIncrementingCounter_CounterIsCreatedAndInitialValueIsReturned()
 {
-    var response = await Handler.ExecuteCommand(new(TestCounterName));
+    var response = await Handler.Handle(new(TestCounterName));
 
     var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
 
@@ -245,7 +245,7 @@ public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncremen
 {
     await CountersRepository.SetCounterValue(TestCounterName, 10);
 
-    var response = await Handler.ExecuteCommand(new(TestCounterName));
+    var response = await Handler.Handle(new(TestCounterName));
 
     var storedCounterValue = await CountersRepository.GetCounterValue(TestCounterName);
 
@@ -313,7 +313,7 @@ public async Task GivenExistingCounter_WhenIncrementingCounterAboveThreshold_Adm
 {
     await CountersRepository.SetCounterValue(TestCounterName, 999);
 
-    _ = await Handler.ExecuteCommand(new(TestCounterName));
+    _ = await Handler.Handle(new(TestCounterName));
 
     AdminNotificationServiceMock.Verify(s => s.SendCounterIncrementedBeyondThresholdNotification(TestCounterName));
 }
@@ -329,7 +329,7 @@ public async Task GivenExistingCounter_WhenIncrementingCounterBelowThreshold_NoA
 {
     await CountersRepository.SetCounterValue(TestCounterName, 10);
 
-    _ = await Handler.ExecuteCommand(new(TestCounterName));
+    _ = await Handler.Handle(new(TestCounterName));
 
     AdminNotificationServiceMock.Verify(s => s.SendCounterIncrementedBeyondThresholdNotification(TestCounterName), Times.Never);
 }

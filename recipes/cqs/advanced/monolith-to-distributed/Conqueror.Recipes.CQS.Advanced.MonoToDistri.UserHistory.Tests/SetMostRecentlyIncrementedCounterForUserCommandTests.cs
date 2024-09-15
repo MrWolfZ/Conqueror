@@ -18,7 +18,7 @@ public sealed class SetMostRecentlyIncrementedCounterForUserCommandTests : TestB
     [Test]
     public async Task GivenNonExistingUserHistory_WhenSettingMostRecentlyIncrementedCounterForUser_SetsHistory()
     {
-        await CommandClient.ExecuteCommand(new(TestUserId, TestCounterName));
+        await CommandClient.Handle(new(TestUserId, TestCounterName));
 
         var storedCounterName = await ReadRepository.GetMostRecentlyIncrementedCounterByUserId(TestUserId);
 
@@ -30,7 +30,7 @@ public sealed class SetMostRecentlyIncrementedCounterForUserCommandTests : TestB
     {
         await WriteRepository.SetMostRecentlyIncrementedCounter(TestUserId, "existingCounter");
 
-        await CommandClient.ExecuteCommand(new(TestUserId, TestCounterName));
+        await CommandClient.Handle(new(TestUserId, TestCounterName));
 
         var storedCounterName = await ReadRepository.GetMostRecentlyIncrementedCounterByUserId(TestUserId);
 

@@ -59,7 +59,7 @@ Let's add a pipeline configuration for our command handler in `IncrementCounterB
 +     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) => 
 +         pipeline.Use(new DataAnnotationValidationCommandMiddleware());
 
-      public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
+      public async Task<IncrementCounterByCommandResponse> Handle(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
       {
 ```
 

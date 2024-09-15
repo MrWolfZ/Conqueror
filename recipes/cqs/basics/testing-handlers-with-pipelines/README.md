@@ -18,7 +18,7 @@ internal sealed class IncrementCounterByCommandHandler(CountersRepository reposi
     public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) => 
         pipeline.UseDataAnnotationValidation();
 
-    public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterByCommandResponse> Handle(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await repository.GetCounterValue(command.CounterName);
         await repository.SetCounterValue(command.CounterName, counterValue + command.IncrementBy);
@@ -41,23 +41,23 @@ internal sealed class DataAnnotationValidationCommandMiddleware<TCommand, TRespo
 }
 ```
 
-Now let's think about how we would test the handler. We would certainly want to write functional tests which assert that counters can correctly be incremented with this command (which happens in the body of the `ExecuteCommand` method). However, we also would want to assert that invalid commands lead to a validation error. How can we do this? By simply executing the command handler like we would normally do, but with an invalid command, and then asserting that the execution throws an exception.
+Now let's think about how we would test the handler. We would certainly want to write functional tests which assert that counters can correctly be incremented with this command (which happens in the body of the `Handle` method). However, we also would want to assert that invalid commands lead to a validation error. How can we do this? By simply executing the command handler like we would normally do, but with an invalid command, and then asserting that the execution throws an exception.
 
 ```cs
 [Test]
 public void GivenNonExistingCounter_WhenExecutingCommandWithNegativeIncrementBy_ValidationExceptionIsThrown()
 {
     var handler = Resolve<IIncrementCounterCommandHandler>();
-    Assert.ThrowsAsync<ValidationException>(() => handler.ExecuteCommand(new(TestCounterName, -1)));
+    Assert.ThrowsAsync<ValidationException>(() => handler.Handle(new(TestCounterName, -1)));
 }
 ```
 
-The critical insight here is that when looking at a handler from the outside, it does not matter whether a behavior is coded directly into its `ExecuteCommand` method or whether it is added with a middleware in the pipeline. In essence, this means that **the middleware pipeline of a handler becomes an inseparable part of its public API**. In our case this means we treat the handler as if it was written without a pipeline like this:
+The critical insight here is that when looking at a handler from the outside, it does not matter whether a behavior is coded directly into its `Handle` method or whether it is added with a middleware in the pipeline. In essence, this means that **the middleware pipeline of a handler becomes an inseparable part of its public API**. In our case this means we treat the handler as if it was written without a pipeline like this:
 
 ```cs
 internal sealed class IncrementCounterByCommandHandler(CountersRepository repository) : IIncrementCounterByCommandHandler
 {
-    public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterByCommandResponse> Handle(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
     {
         Validator.ValidateObject(command, new(command), true);
 

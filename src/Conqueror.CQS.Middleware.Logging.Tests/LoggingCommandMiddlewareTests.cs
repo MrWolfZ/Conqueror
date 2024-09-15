@@ -17,7 +17,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         var testCommand = new TestCommand(10);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}");
     }
@@ -27,7 +27,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         var testCommand = new TestCommandWithoutPayload();
 
-        _ = await HandlerWithoutPayload.ExecuteCommand(testCommand);
+        _ = await HandlerWithoutPayload.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Information);
     }
@@ -37,7 +37,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         var testCommand = new TestCommand(10);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPostExecutionLogMessage(LogLevel.Information, "{\"ResponsePayload\":10}");
     }
@@ -47,7 +47,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     {
         var testCommand = new TestCommandWithoutResponse(10);
 
-        await HandlerWithoutResponse.ExecuteCommand(testCommand);
+        await HandlerWithoutResponse.Handle(testCommand);
 
         AssertPostExecutionLogMessage(LogLevel.Information);
     }
@@ -60,7 +60,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         handlerFn = _ => throw exception;
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testCommand));
 
         AssertLogEntryContains(LogLevel.Error, "An exception occurred while executing command");
         AssertLogEntryContains(LogLevel.Error, exception.Message);
@@ -77,7 +77,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Debug, "{\"Payload\":10}");
     }
@@ -89,7 +89,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipelineWithoutPayload = b => b.UseLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
 
-        _ = await HandlerWithoutPayload.ExecuteCommand(testCommand);
+        _ = await HandlerWithoutPayload.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Debug);
     }
@@ -101,7 +101,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.PostExecutionLogLevel = LogLevel.Debug);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPostExecutionLogMessage(LogLevel.Debug, "{\"ResponsePayload\":10}");
     }
@@ -113,7 +113,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipelineWithoutResponse = b => b.UseLogging(o => o.PostExecutionLogLevel = LogLevel.Debug);
 
-        await HandlerWithoutResponse.ExecuteCommand(testCommand);
+        await HandlerWithoutResponse.Handle(testCommand);
 
         AssertPostExecutionLogMessage(LogLevel.Debug);
     }
@@ -128,7 +128,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testCommand));
 
         AssertLogEntryContains(LogLevel.Critical, "An exception occurred while executing command");
         AssertLogEntryContains(LogLevel.Critical, exception.Message);
@@ -145,7 +145,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.OmitJsonSerializedCommandPayload = true);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Information);
     }
@@ -157,7 +157,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipelineWithoutPayload = b => b.UseLogging(o => o.OmitJsonSerializedCommandPayload = true);
 
-        _ = await HandlerWithoutPayload.ExecuteCommand(testCommand);
+        _ = await HandlerWithoutPayload.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Information);
     }
@@ -169,7 +169,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.OmitJsonSerializedResponsePayload = true);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPostExecutionLogMessage(LogLevel.Information);
     }
@@ -181,7 +181,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipelineWithoutResponse = b => b.UseLogging(o => o.OmitJsonSerializedResponsePayload = true);
 
-        await HandlerWithoutResponse.ExecuteCommand(testCommand);
+        await HandlerWithoutResponse.Handle(testCommand);
 
         AssertPostExecutionLogMessage(LogLevel.Information);
     }
@@ -193,7 +193,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.LoggerNameFactory = cmd => $"Custom{cmd.GetType().Name}");
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", $"Custom{testCommand.GetType().Name}");
     }
@@ -205,7 +205,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.LoggerNameFactory = _ => null);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", testCommand.GetType().FullName!.Replace("+", "."));
     }
@@ -239,7 +239,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
             };
         });
 
-        _ = await handler.ExecuteCommand(testCommand);
+        _ = await handler.Handle(testCommand);
 
         seenContext?.Logger.LogCritical("validation");
 
@@ -260,7 +260,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.PreExecutionHook = _ => false);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertNoLogEntryContains(LogLevel.Information, "Executing command");
     }
@@ -294,7 +294,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
             };
         });
 
-        var response = await handler.ExecuteCommand(testCommand);
+        var response = await handler.Handle(testCommand);
 
         seenContext?.Logger.LogCritical("validation");
 
@@ -317,7 +317,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.PostExecutionHook = _ => false);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertNoLogEntryContains(LogLevel.Information, "Executed command");
     }
@@ -354,7 +354,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         handlerFn = _ => throw exception;
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteCommand(testCommand));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(testCommand));
 
         seenContext?.Logger.LogTrace("validation");
 
@@ -380,7 +380,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         handlerFn = _ => throw exception;
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.ExecuteCommand(testCommand));
+        _ = Assert.ThrowsAsync<InvalidOperationException>(() => Handler.Handle(testCommand));
 
         AssertNoLogEntryContains(LogLevel.Error, "An exception occurred while executing command");
     }
@@ -392,7 +392,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Information, "{\"payload\":10}");
     }
@@ -404,7 +404,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging(o => o.JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPostExecutionLogMessage(LogLevel.Information, "{\"responsePayload\":10}");
     }
@@ -421,7 +421,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
             o.JsonSerializerOptions = new() { PropertyNamingPolicy = new ThrowingJsonNamingPolicy() };
         });
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertNoLogEntryContains(LogLevel.None, "Executing command");
     }
@@ -438,7 +438,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
             o.JsonSerializerOptions = new() { PropertyNamingPolicy = new ThrowingJsonNamingPolicy() };
         });
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertNoLogEntryContains(LogLevel.None, "Executed command");
     }
@@ -453,7 +453,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         using var conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
         conquerorContext.SetTraceId(traceId);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertLogEntryContains(LogLevel.Information, $"Trace ID: {traceId}", nrOfTimes: 2);
     }
@@ -472,7 +472,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
             _ = b.UseLogging();
         };
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertLogEntryContains(LogLevel.Information, $"Command ID: {commandId}", nrOfTimes: 2);
     }
@@ -484,7 +484,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging().ConfigureLogging(o => o.PreExecutionLogLevel = LogLevel.Debug);
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertPreExecutionLogMessage(LogLevel.Debug, "{\"Payload\":10}");
     }
@@ -496,7 +496,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         configurePipeline = b => b.UseLogging().WithoutLogging();
 
-        _ = await Handler.ExecuteCommand(testCommand);
+        _ = await Handler.Handle(testCommand);
 
         AssertNoLogEntryContains(LogLevel.Debug, "Executing command");
     }

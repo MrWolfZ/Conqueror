@@ -182,7 +182,7 @@ public async Task GivenExistingCounter_WhenIncrementingCounter_CounterIsIncremen
 
     await countersRepository.SetCounterValue(counterName, initialCounterValue);
 
-    var response = await CommandClient.ExecuteCommand(new(counterName));
+    var response = await CommandClient.Handle(new(counterName));
 
     var storedCounterValue = await countersRepository.GetCounterValue(counterName);
 
@@ -200,7 +200,7 @@ This HTTP client abstraction works perfectly for successful commands and queries
 [Test]
 public void WhenExecutingInvalidCommand_ExecutionFailsWithValidationError()
 {
-    var exception = Assert.ThrowsAsync<HttpCommandFailedException>(() => CommandClient.ExecuteCommand(new(string.Empty)));
+    var exception = Assert.ThrowsAsync<HttpCommandFailedException>(() => CommandClient.Handle(new(string.Empty)));
 
     Assert.That(exception?.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
 }

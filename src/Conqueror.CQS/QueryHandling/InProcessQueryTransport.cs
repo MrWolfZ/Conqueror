@@ -9,7 +9,7 @@ internal sealed class InProcessQueryTransport(Type handlerType, Delegate? config
 {
     public string TransportTypeName => InProcessQueryTransportTypeExtensions.TransportName;
 
-    public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
+    public Task<TResponse> Send<TQuery, TResponse>(TQuery query,
                                                            IServiceProvider serviceProvider,
                                                            CancellationToken cancellationToken)
         where TQuery : class
@@ -19,18 +19,18 @@ internal sealed class InProcessQueryTransport(Type handlerType, Delegate? config
                                                              configurePipeline as Action<IQueryPipeline<TQuery, TResponse>>,
                                                              QueryTransportRole.Server);
 
-        return proxy.ExecuteQuery(query, cancellationToken);
+        return proxy.Handle(query, cancellationToken);
     }
 
     private sealed class HandlerInvoker(Type handlerType) : IQueryTransportClient
     {
         public string TransportTypeName => InProcessQueryTransportTypeExtensions.TransportName;
 
-        public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        public Task<TResponse> Send<TQuery, TResponse>(TQuery query, IServiceProvider serviceProvider, CancellationToken cancellationToken)
             where TQuery : class
         {
             var handler = (IQueryHandler<TQuery, TResponse>)serviceProvider.GetRequiredService(handlerType);
-            return handler.ExecuteQuery(query, cancellationToken);
+            return handler.Handle(query, cancellationToken);
         }
     }
 }

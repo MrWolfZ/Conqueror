@@ -9,7 +9,7 @@ internal sealed class InProcessCommandTransport(Type handlerType, Delegate? conf
 {
     public string TransportTypeName => InProcessCommandTransportTypeExtensions.TransportName;
 
-    public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+    public Task<TResponse> Send<TCommand, TResponse>(TCommand command,
                                                                IServiceProvider serviceProvider,
                                                                CancellationToken cancellationToken)
         where TCommand : class
@@ -19,14 +19,14 @@ internal sealed class InProcessCommandTransport(Type handlerType, Delegate? conf
                                                                  configurePipeline as Action<ICommandPipeline<TCommand, TResponse>>,
                                                                  CommandTransportRole.Server);
 
-        return proxy.ExecuteCommand(command, cancellationToken);
+        return proxy.Handle(command, cancellationToken);
     }
 
     private sealed class HandlerInvoker(Type handlerType) : ICommandTransportClient
     {
         public string TransportTypeName => InProcessCommandTransportTypeExtensions.TransportName;
 
-        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+        public async Task<TResponse> Send<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)
             where TCommand : class
@@ -35,10 +35,10 @@ internal sealed class InProcessCommandTransport(Type handlerType, Delegate? conf
 
             if (handler is ICommandHandler<TCommand, TResponse> h)
             {
-                return await h.ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
+                return await h.Handle(command, cancellationToken).ConfigureAwait(false);
             }
 
-            await ((ICommandHandler<TCommand>)handler).ExecuteCommand(command, cancellationToken).ConfigureAwait(false);
+            await ((ICommandHandler<TCommand>)handler).Handle(command, cancellationToken).ConfigureAwait(false);
             return (TResponse)(object)UnitCommandResponse.Instance;
         }
     }

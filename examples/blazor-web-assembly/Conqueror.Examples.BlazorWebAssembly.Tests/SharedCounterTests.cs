@@ -16,7 +16,7 @@ public sealed class SharedCounterTests : TestBase
         var sharedCounter = Resolve<SharedCounter>();
         var expectedValue = sharedCounter.IncrementBy(10);
 
-        var response = await GetValueHandler.ExecuteQuery(new(), CancellationToken.None);
+        var response = await GetValueHandler.Handle(new(), CancellationToken.None);
 
         Assert.That(expectedValue, Is.EqualTo(response.Value));
     }
@@ -28,7 +28,7 @@ public sealed class SharedCounterTests : TestBase
         var existingValue = sharedCounter.IncrementBy(10);
         var incrementBy = 5;
 
-        var response = await IncrementHandler.ExecuteCommand(new() { IncrementBy = incrementBy }, CancellationToken.None);
+        var response = await IncrementHandler.Handle(new() { IncrementBy = incrementBy }, CancellationToken.None);
 
         Assert.That(existingValue + incrementBy, Is.EqualTo(response.ValueAfterIncrement));
         Assert.That(sharedCounter.GetValue(), Is.EqualTo(response.ValueAfterIncrement));
@@ -43,7 +43,7 @@ public sealed class SharedCounterTests : TestBase
         var existingValue = sharedCounter.IncrementBy(10);
         var incrementBy = 5;
 
-        await IncrementHandler.ExecuteCommand(new() { IncrementBy = incrementBy }, CancellationToken.None);
+        await IncrementHandler.Handle(new() { IncrementBy = incrementBy }, CancellationToken.None);
 
         Assert.That(eventHub.ObservedEvents, Is.EquivalentTo(new[] { new SharedCounterIncrementedEvent(existingValue + incrementBy, incrementBy) }));
     }
@@ -57,7 +57,7 @@ public sealed class SharedCounterTests : TestBase
         var existingValue = sharedCounter.IncrementBy(10);
         var incrementBy = 5;
 
-        await IncrementHandler.ExecuteCommand(new() { IncrementBy = incrementBy }, CancellationToken.None);
+        await IncrementHandler.Handle(new() { IncrementBy = incrementBy }, CancellationToken.None);
 
         Assert.That(eventStore.GetEvents(), Is.EquivalentTo(new[] { new SharedCounterIncrementedEvent(existingValue + incrementBy, incrementBy) }));
     }
@@ -65,7 +65,7 @@ public sealed class SharedCounterTests : TestBase
     [Test]
     public void GivenInvalidIncrementByValue_WhenIncrementingCounter_IncrementFailsWithBadRequest()
     {
-        var exception = Assert.ThrowsAsync<HttpCommandFailedException>(() => IncrementHandler.ExecuteCommand(new() { IncrementBy = -1 }, CancellationToken.None));
+        var exception = Assert.ThrowsAsync<HttpCommandFailedException>(() => IncrementHandler.Handle(new() { IncrementBy = -1 }, CancellationToken.None));
 
         Assert.That(exception, Is.Not.Null);
         Assert.That(HttpStatusCode.BadRequest, Is.EqualTo(exception?.Response?.StatusCode));
@@ -74,6 +74,6 @@ public sealed class SharedCounterTests : TestBase
     [Test]
     public void GivenInvalidIncrementByValue_WhenIncrementingCounterDirectly_IncrementFailsWithValidationException()
     {
-        Assert.ThrowsAsync<ValidationException>(() => Resolve<IIncrementSharedCounterValueCommandHandler>().ExecuteCommand(new() { IncrementBy = -1 }, CancellationToken.None));
+        Assert.ThrowsAsync<ValidationException>(() => Resolve<IIncrementSharedCounterValueCommandHandler>().Handle(new() { IncrementBy = -1 }, CancellationToken.None));
     }
 }

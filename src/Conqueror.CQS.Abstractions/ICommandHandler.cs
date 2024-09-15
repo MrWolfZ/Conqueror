@@ -10,7 +10,7 @@ public interface ICommandHandler;
 public interface ICommandHandler<TCommand> : ICommandHandler
     where TCommand : class
 {
-    Task ExecuteCommand(TCommand command, CancellationToken cancellationToken = default);
+    Task Handle(TCommand command, CancellationToken cancellationToken = default);
 
     static virtual void ConfigurePipeline(ICommandPipeline<TCommand> pipeline)
     {
@@ -21,7 +21,7 @@ public interface ICommandHandler<TCommand> : ICommandHandler
 public interface ICommandHandler<TCommand, TResponse> : ICommandHandler
     where TCommand : class
 {
-    Task<TResponse> ExecuteCommand(TCommand command, CancellationToken cancellationToken = default);
+    Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken = default);
 
     static virtual void ConfigurePipeline(ICommandPipeline<TCommand, TResponse> pipeline)
     {

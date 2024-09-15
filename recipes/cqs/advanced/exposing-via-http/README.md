@@ -178,9 +178,9 @@ public sealed class IncrementCounterCommandController(IIncrementCounterCommandHa
 {
     [HttpPost("/api/custom/incrementCounter")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IncrementCounterCommandResponse))]
-    public async Task<IActionResult> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> IncrementCounter(IncrementCounterCommand command, CancellationToken cancellationToken)
     {
-        var response = await handler.ExecuteCommand(command, cancellationToken);
+        var response = await handler.Handle(command, cancellationToken);
 
         return StatusCode(StatusCodes.Status201Created, response);
     }
@@ -200,9 +200,9 @@ namespace Conqueror.Recipes.CQS.Advanced.ExposingViaHttp;
 public sealed class GetCounterValueQueryController(IGetCounterValueQueryHandler handler) : ControllerBase
 {
     [HttpGet("/api/custom/getCounterValue")]
-    public async Task<GetCounterValueQueryResponse> ExecuteQuery([FromQuery] GetCounterValueQuery query, CancellationToken cancellationToken)
+    public async Task<GetCounterValueQueryResponse> GetCounterValue([FromQuery] GetCounterValueQuery query, CancellationToken cancellationToken)
     {
-        return await handler.ExecuteQuery(query, cancellationToken);
+        return await handler.Handle(query, cancellationToken);
     }
 }
 ```
@@ -213,9 +213,9 @@ For commands and queries without a payload, you can simply omit the correspondin
 
 ```cs
 [HttpGet("/api/custom/myQueryWithoutPayload")]
-public async Task<MyQueryResponse> ExecuteQuery(CancellationToken cancellationToken)
+public async Task<MyQueryResponse> MyQuery(CancellationToken cancellationToken)
 {
-    return await myQueryWithoutPayloadHandler.ExecuteQuery(new(), cancellationToken);
+    return await myQueryWithoutPayloadHandler.Handle(new(), cancellationToken);
 }
 ```
 

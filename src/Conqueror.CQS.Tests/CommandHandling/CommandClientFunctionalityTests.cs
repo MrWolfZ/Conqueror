@@ -19,7 +19,7 @@ public abstract class CommandClientFunctionalityTests
 
         var command = new TestCommand(10);
 
-        _ = await client.ExecuteCommand(command, CancellationToken.None);
+        _ = await client.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -41,7 +41,7 @@ public abstract class CommandClientFunctionalityTests
 
         var command = new TestCommandWithoutResponse(10);
 
-        await client.ExecuteCommand(command, CancellationToken.None);
+        await client.Handle(command, CancellationToken.None);
 
         Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
     }
@@ -63,7 +63,7 @@ public abstract class CommandClientFunctionalityTests
 
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await client.ExecuteCommand(new(10), tokenSource.Token);
+        _ = await client.Handle(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -85,7 +85,7 @@ public abstract class CommandClientFunctionalityTests
 
         using var tokenSource = new CancellationTokenSource();
 
-        await client.ExecuteCommand(new(10), tokenSource.Token);
+        await client.Handle(new(10), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -107,7 +107,7 @@ public abstract class CommandClientFunctionalityTests
 
         var command = new TestCommand(10);
 
-        var response = await client.ExecuteCommand(command, CancellationToken.None);
+        var response = await client.Handle(command, CancellationToken.None);
 
         Assert.That(response.Payload, Is.EqualTo(command.Payload + 1));
     }
@@ -139,9 +139,9 @@ public abstract class CommandClientFunctionalityTests
         var client2 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
         var client3 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        _ = await client1.ExecuteCommand(new(10), CancellationToken.None);
-        _ = await client2.ExecuteCommand(new(10), CancellationToken.None);
-        _ = await client3.ExecuteCommand(new(10), CancellationToken.None);
+        _ = await client1.Handle(new(10), CancellationToken.None);
+        _ = await client2.Handle(new(10), CancellationToken.None);
+        _ = await client3.Handle(new(10), CancellationToken.None);
 
         Assert.That(seenInstances, Has.Count.EqualTo(3));
         Assert.That(seenInstances[1], Is.SameAs(seenInstances[0]));
@@ -163,7 +163,7 @@ public abstract class CommandClientFunctionalityTests
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteCommand(new(10), CancellationToken.None));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10), CancellationToken.None));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -190,7 +190,7 @@ public abstract class CommandClientFunctionalityTests
     {
         public string TransportTypeName { get; } = "test";
 
-        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+        public async Task<TResponse> Send<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)
             where TCommand : class
@@ -213,7 +213,7 @@ public abstract class CommandClientFunctionalityTests
     {
         public string TransportTypeName { get; } = "test";
 
-        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        public async Task<TResponse> Send<TCommand, TResponse>(TCommand command, IServiceProvider serviceProvider, CancellationToken cancellationToken)
             where TCommand : class
         {
             await Task.Yield();

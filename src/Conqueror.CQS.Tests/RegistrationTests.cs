@@ -148,33 +148,33 @@ public sealed class RegistrationTests
 
     public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
     }
 
     public sealed class TestQueryHandlerWithCustomInterface : ITestQueryHandler
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomInterface query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        public Task<TestQueryResponse> Handle(TestQueryWithCustomInterface query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
     }
 
     public sealed class TestQuery2Handler : IQueryHandler<TestQuery2, TestQuery2Response>
     {
-        public Task<TestQuery2Response> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQuery2Response());
+        public Task<TestQuery2Response> Handle(TestQuery2 query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQuery2Response());
     }
 
     public abstract class AbstractTestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
     }
 
     public sealed class GenericTestQueryHandler<T> : IQueryHandler<TestQuery, T>
         where T : new()
     {
-        public Task<T> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new T());
+        public Task<T> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new T());
     }
 
     private sealed class PrivateTestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
     }
 
     public sealed record TestCommand;
@@ -197,47 +197,47 @@ public sealed class RegistrationTests
 
     public sealed class TestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 
     public sealed class TestCommandHandlerWithCustomInterface : ITestCommandHandler
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomInterface command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommandWithCustomInterface command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 
     public sealed class TestCommand2Handler : ICommandHandler<TestCommand2, TestCommand2Response>
     {
-        public Task<TestCommand2Response> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommand2Response());
+        public Task<TestCommand2Response> Handle(TestCommand2 command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommand2Response());
     }
 
     public abstract class AbstractTestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 
     public sealed class GenericTestCommandHandler<T> : ICommandHandler<TestCommand, T>
         where T : new()
     {
-        public Task<T> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new T());
+        public Task<T> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new T());
     }
 
     public abstract class AbstractTestCommandHandlerWithCustomInterface : ITestCommandHandler
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomInterface command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommandWithCustomInterface command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 
     public sealed class TestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>
     {
-        public Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     public sealed class TestCommandWithoutResponseHandlerWithCustomInterface : ITestCommandWithoutResponseHandler
     {
-        public Task ExecuteCommand(TestCommandWithoutResponseWithCustomInterface command, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Handle(TestCommandWithoutResponseWithCustomInterface command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class PrivateTestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
     }
 }

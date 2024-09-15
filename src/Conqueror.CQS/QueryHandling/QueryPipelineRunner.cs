@@ -19,7 +19,7 @@ internal sealed class QueryPipelineRunner<TQuery, TResponse>(
                                          QueryTransportType transportType,
                                          CancellationToken cancellationToken)
     {
-        var next = (TQuery query, CancellationToken token) => transportClient.ExecuteQuery<TQuery, TResponse>(query, serviceProvider, token);
+        var next = (TQuery query, CancellationToken token) => transportClient.Send<TQuery, TResponse>(query, serviceProvider, token);
 
         foreach (var middleware in middlewares)
         {

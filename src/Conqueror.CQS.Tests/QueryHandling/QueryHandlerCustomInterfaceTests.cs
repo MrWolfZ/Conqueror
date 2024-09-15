@@ -17,7 +17,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
         var query = new TestQuery();
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -37,7 +37,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
         var query = new GenericTestQuery<string>("test string");
 
-        _ = await handler.ExecuteQuery(query, CancellationToken.None);
+        _ = await handler.Handle(query, CancellationToken.None);
 
         Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
     }
@@ -56,7 +56,7 @@ public sealed class QueryHandlerCustomInterfaceTests
         var handler = provider.GetRequiredService<ITestQueryHandler>();
         using var tokenSource = new CancellationTokenSource();
 
-        _ = await handler.ExecuteQuery(new(), tokenSource.Token);
+        _ = await handler.Handle(new(), tokenSource.Token);
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
     }
@@ -74,7 +74,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
         var handler = provider.GetRequiredService<ITestQueryHandler>();
 
-        _ = await handler.ExecuteQuery(new());
+        _ = await handler.Handle(new());
 
         Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
     }
@@ -94,7 +94,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
         var query = new TestQuery(10);
 
-        var response = await handler.ExecuteQuery(query, CancellationToken.None);
+        var response = await handler.Handle(query, CancellationToken.None);
 
         Assert.That(response.Payload, Is.EqualTo(query.Payload + 1));
     }
@@ -112,7 +112,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
         var handler = provider.GetRequiredService<IThrowingQueryHandler>();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.ExecuteQuery(new(10), CancellationToken.None));
+        var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10), CancellationToken.None));
 
         Assert.That(thrownException, Is.SameAs(exception));
     }
@@ -203,7 +203,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
     private sealed class TestQueryHandler(TestObservations observations) : ITestQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -217,7 +217,7 @@ public sealed class QueryHandlerCustomInterfaceTests
                                                                                                  ITestQueryHandler2,
                                                                                                  ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -226,7 +226,7 @@ public sealed class QueryHandlerCustomInterfaceTests
             return new(query.Payload + 1);
         }
 
-        public async Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse2> Handle(TestQuery2 query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -235,7 +235,7 @@ public sealed class QueryHandlerCustomInterfaceTests
             return new();
         }
 
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Instances.Add(this);
@@ -245,7 +245,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
     private sealed class GenericTestQueryHandler<T>(TestObservations observations) : IGenericTestQueryHandler<T>
     {
-        public async Task<GenericTestQueryResponse<T>> ExecuteQuery(GenericTestQuery<T> query, CancellationToken cancellationToken = default)
+        public async Task<GenericTestQueryResponse<T>> Handle(GenericTestQuery<T> query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             observations.Queries.Add(query);
@@ -256,7 +256,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
     private sealed class ThrowingQueryHandler(Exception exception) : IThrowingQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             throw exception;
@@ -265,7 +265,7 @@ public sealed class QueryHandlerCustomInterfaceTests
 
     private sealed class TestQueryHandlerWithCustomInterfaceWithExtraMethod : ITestQueryHandlerWithExtraMethod
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
         public void ExtraMethod() => throw new NotSupportedException();
     }

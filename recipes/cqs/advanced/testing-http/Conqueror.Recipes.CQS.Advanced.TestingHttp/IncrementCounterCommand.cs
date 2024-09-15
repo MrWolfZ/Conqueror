@@ -9,7 +9,7 @@ public interface IIncrementCounterCommandHandler : ICommandHandler<IncrementCoun
 
 internal sealed class IncrementCounterCommandHandler(CountersRepository repository) : IIncrementCounterCommandHandler
 {
-    public async Task<IncrementCounterCommandResponse> ExecuteCommand(IncrementCounterCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterCommandResponse> Handle(IncrementCounterCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await repository.GetCounterValue(command.CounterName);
         var newCounterValue = (counterValue ?? 0) + 1;

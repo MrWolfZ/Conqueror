@@ -10,7 +10,7 @@ internal sealed class DelegateQueryHandler<TQuery, TResponse>(
     : IQueryHandler<TQuery, TResponse>
     where TQuery : class
 {
-    public Task<TResponse> ExecuteQuery(TQuery query, CancellationToken cancellationToken = default)
+    public Task<TResponse> Handle(TQuery query, CancellationToken cancellationToken = default)
     {
         return handlerFn(query, serviceProvider, cancellationToken);
     }

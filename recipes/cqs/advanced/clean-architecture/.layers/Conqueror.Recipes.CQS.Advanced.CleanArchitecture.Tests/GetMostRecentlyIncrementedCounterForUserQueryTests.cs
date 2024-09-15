@@ -15,7 +15,7 @@ public sealed class GetMostRecentlyIncrementedCounterForUserQueryTests : TestBas
     {
         await ResolveOnServer<IUserHistoryWriteRepository>().SetMostRecentlyIncrementedCounter(TestUserId, TestCounterName);
 
-        var response = await QueryClient.ExecuteQuery(new(TestUserId));
+        var response = await QueryClient.Handle(new(TestUserId));
 
         Assert.That(response.CounterName, Is.EqualTo(TestCounterName));
     }
@@ -23,7 +23,7 @@ public sealed class GetMostRecentlyIncrementedCounterForUserQueryTests : TestBas
     [Test]
     public async Task GivenNonExistingUserHistory_WhenGettingMostRecentlyIncrementedCounterForUser_NullIsReturned()
     {
-        var response = await QueryClient.ExecuteQuery(new(TestCounterName));
+        var response = await QueryClient.Handle(new(TestCounterName));
 
         Assert.That(response.CounterName, Is.Null);
     }

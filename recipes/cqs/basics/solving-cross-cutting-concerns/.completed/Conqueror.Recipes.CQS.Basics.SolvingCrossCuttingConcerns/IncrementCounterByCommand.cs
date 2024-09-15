@@ -16,7 +16,7 @@ internal sealed class IncrementCounterByCommandHandler(CountersRepository reposi
         pipeline.UseDefault()
                 .ConfigureRetry(o => o.RetryAttemptLimit = 3);
 
-    public async Task<IncrementCounterByCommandResponse> ExecuteCommand(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
+    public async Task<IncrementCounterByCommandResponse> Handle(IncrementCounterByCommand command, CancellationToken cancellationToken = default)
     {
         var counterValue = await repository.GetCounterValue(command.CounterName);
         await repository.SetCounterValue(command.CounterName, counterValue + command.IncrementBy);

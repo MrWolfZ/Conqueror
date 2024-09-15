@@ -153,7 +153,7 @@ public static class ConquerorCqsCommandClientServiceCollectionExtensions
 
             if (customHandlerInterface.AllMethods().Count() > 1)
             {
-                throw new ArgumentException($"command handler type '{typeof(THandler).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom command handler interface types are not allowed to have any additional methods beside the '{nameof(ICommandHandler<object>.ExecuteCommand)}' inherited from '{typeof(ICommandHandler<>).Name}'");
+                throw new ArgumentException($"command handler type '{typeof(THandler).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom command handler interface types are not allowed to have any additional methods beside the '{nameof(ICommandHandler<object>.Handle)}' inherited from '{typeof(ICommandHandler<>).Name}'");
             }
 
             return customHandlerInterface;

@@ -7,17 +7,17 @@ namespace Conqueror.CQS.Transport.Http.Server.AspNetCore;
 
 internal static class HttpQueryExecutor
 {
-    public static Task<TResponse> ExecuteQuery<TQuery, TResponse>(HttpContext httpContext, TQuery query, CancellationToken cancellationToken)
+    public static Task<TResponse> Execute<TQuery, TResponse>(HttpContext httpContext, TQuery query, CancellationToken cancellationToken)
         where TQuery : class
     {
         var queryHandler = httpContext.RequestServices.GetRequiredService<IQueryHandler<TQuery, TResponse>>();
-        return queryHandler.ExecuteQuery(query, cancellationToken);
+        return queryHandler.Handle(query, cancellationToken);
     }
 
-    public static Task<TResponse> ExecuteQuery<TQuery, TResponse>(HttpContext httpContext, CancellationToken cancellationToken)
+    public static Task<TResponse> Execute<TQuery, TResponse>(HttpContext httpContext, CancellationToken cancellationToken)
         where TQuery : class, new()
     {
         var queryHandler = httpContext.RequestServices.GetRequiredService<IQueryHandler<TQuery, TResponse>>();
-        return queryHandler.ExecuteQuery(new(), cancellationToken);
+        return queryHandler.Handle(new(), cancellationToken);
     }
 }

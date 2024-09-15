@@ -488,7 +488,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryHandler : ITestQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -498,7 +498,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryHandler2 : IQueryHandler<TestQuery2, TestQueryResponse2>
     {
-        public Task<TestQueryResponse2> ExecuteQuery(TestQuery2 query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse2> Handle(TestQuery2 query, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }
@@ -506,7 +506,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryHandler3 : IQueryHandler<TestQuery3, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery3 query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(TestQuery3 query, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }
@@ -514,7 +514,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryHandlerWithoutPayload : IQueryHandler<TestQueryWithoutPayload, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -524,7 +524,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryHandlerWithComplexPayload : IQueryHandler<TestQueryWithComplexPayload, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithComplexPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -534,7 +534,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryWithCustomPathHandler : IQueryHandler<TestQueryWithCustomPath, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithCustomPath query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithCustomPath query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -544,7 +544,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryWithVersionHandler : IQueryHandler<TestQueryWithVersion, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithVersion query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithVersion query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -554,7 +554,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryWithOperationIdHandler : IQueryHandler<TestQueryWithOperationId, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithOperationId query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithOperationId query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -564,7 +564,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestQueryWithApiGroupNameHandler : IQueryHandler<TestQueryWithApiGroupName, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestQueryWithApiGroupName query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestQueryWithApiGroupName query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -574,7 +574,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestPostQueryHandler : ITestPostQueryHandler
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQuery query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -584,7 +584,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestPostQueryHandler2 : IQueryHandler<TestPostQuery2, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQuery2 query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQuery2 query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -594,7 +594,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestPostQueryHandlerWithoutPayload : IQueryHandler<TestPostQueryWithoutPayload, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithoutPayload query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -604,7 +604,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestPostQueryWithCustomPathHandler : IQueryHandler<TestPostQueryWithCustomPath, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithCustomPath query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -614,7 +614,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestPostQueryWithVersionHandler : IQueryHandler<TestPostQueryWithVersion, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithVersion query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -624,7 +624,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestPostQueryWithOperationIdHandler : IQueryHandler<TestPostQueryWithOperationId, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithOperationId query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithOperationId query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -634,7 +634,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestPostQueryWithApiGroupNameHandler : IQueryHandler<TestPostQueryWithApiGroupName, TestQueryResponse>
     {
-        public async Task<TestQueryResponse> ExecuteQuery(TestPostQueryWithApiGroupName query, CancellationToken cancellationToken = default)
+        public async Task<TestQueryResponse> Handle(TestPostQueryWithApiGroupName query, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -704,7 +704,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandHandler : ITestCommandHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -714,7 +714,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandHandler2 : ICommandHandler<TestCommand2, TestCommandResponse2>
     {
-        public Task<TestCommandResponse2> ExecuteCommand(TestCommand2 command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse2> Handle(TestCommand2 command, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }
@@ -722,7 +722,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandHandler3 : ICommandHandler<TestCommand3, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand3 command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse> Handle(TestCommand3 command, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }
@@ -730,7 +730,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandHandlerWithoutPayload : ICommandHandler<TestCommandWithoutPayload, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithoutPayload command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -740,7 +740,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -749,7 +749,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandHandlerWithoutResponseWithoutPayload : ICommandHandler<TestCommandWithoutResponseWithoutPayload>
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponseWithoutPayload command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -758,7 +758,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandWithCustomPathHandler : ICommandHandler<TestCommandWithCustomPath, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithCustomPath command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -768,7 +768,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandWithVersionHandler : ICommandHandler<TestCommandWithVersion, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithVersion command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithVersion command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -778,7 +778,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandWithOperationIdHandler : ICommandHandler<TestCommandWithOperationId, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithOperationId command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithOperationId command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
@@ -788,7 +788,7 @@ public class ApiDescriptionTests : TestBase
 
     public sealed class TestCommandWithApiGroupNameHandler : ICommandHandler<TestCommandWithApiGroupName, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommandWithApiGroupName command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommandWithApiGroupName command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();

@@ -178,7 +178,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>((Func<ICommandTransportClientBuilder, ICommandTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(new()));
     }
 
     [Test]
@@ -189,7 +189,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((_, _, _) => Task.FromException<TestCommandResponse>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(new()));
     }
 
     [Test]
@@ -240,7 +240,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(_ => Task.FromException<ICommandTransportClient>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(new()));
     }
 
     [Test]
@@ -255,7 +255,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((_, _, _) => Task.FromException<TestCommandResponse>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(new()));
     }
 
     [Test]
@@ -322,7 +322,7 @@ public sealed class CommandClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(new()));
     }
 
     [Test]
@@ -367,7 +367,7 @@ public sealed class CommandClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(new()));
     }
 
     [Test]
@@ -412,7 +412,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandClient<ITestCommandHandler>((Func<ICommandTransportClientBuilder, ICommandTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -423,7 +423,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>((Func<ICommandTransportClientBuilder, ICommandTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -434,7 +434,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((_, _, _) => Task.FromException<TestCommandResponse>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -503,7 +503,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandClient<ITestCommandHandler>((Func<ICommandTransportClientBuilder, ICommandTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -518,7 +518,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>((Func<ICommandTransportClientBuilder, ICommandTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -533,7 +533,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((_, _, _) => Task.FromException<TestCommandResponse>(new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -626,7 +626,7 @@ public sealed class CommandClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -641,7 +641,7 @@ public sealed class CommandClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -712,7 +712,7 @@ public sealed class CommandClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -731,7 +731,7 @@ public sealed class CommandClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -810,7 +810,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>((Func<ICommandTransportClientBuilder, ICommandTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -861,7 +861,7 @@ public sealed class CommandClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -898,7 +898,7 @@ public sealed class CommandClientRegistrationTests
 
         _ = services.AddConquerorCommandClient<ITestCommandHandler>((Func<ICommandTransportClientBuilder, ICommandTransportClient>)(_ => throw new TestAssertionException()));
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -931,7 +931,7 @@ public sealed class CommandClientRegistrationTests
             throw new TestAssertionException();
         });
 
-        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().ExecuteCommand(new()));
+        _ = Assert.ThrowsAsync<TestAssertionException>(() => services.BuildServiceProvider().GetRequiredService<ITestCommandHandler>().Handle(new()));
     }
 
     [Test]
@@ -1037,7 +1037,7 @@ public sealed class CommandClientRegistrationTests
     {
         public string TransportTypeName { get; } = "test";
 
-        public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
+        public async Task<TResponse> Send<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,
                                                                          CancellationToken cancellationToken)
             where TCommand : class
@@ -1050,7 +1050,7 @@ public sealed class CommandClientRegistrationTests
 
     private sealed class TestCommandHandler : ITestCommandHandler
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 

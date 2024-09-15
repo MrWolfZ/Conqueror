@@ -48,15 +48,15 @@ public class ConquerorContextComplexTests : TestBase
         var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler2.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -86,15 +86,15 @@ public class ConquerorContextComplexTests : TestBase
         var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler2.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -126,17 +126,17 @@ public class ConquerorContextComplexTests : TestBase
         var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler2.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedDownstreamContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
@@ -160,9 +160,9 @@ public class ConquerorContextComplexTests : TestBase
         var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler2.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
@@ -180,11 +180,11 @@ public class ConquerorContextComplexTests : TestBase
         var handler1 = ResolveOnClient<ICommandHandler<TestCommand, TestCommandResponse>>();
         var handler2 = ResolveOnClient<IQueryHandler<TestQuery, TestQueryResponse>>();
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        _ = await handler2.ExecuteQuery(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler2.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        _ = await handler1.ExecuteCommand(new() { Payload = 10 }, CancellationToken.None);
+        _ = await handler1.Handle(new() { Payload = 10 }, CancellationToken.None);
 
         Assert.That(observations.ReceivedTraceIds, Is.EquivalentTo(new[] { context.GetTraceId(), context.GetTraceId(), context.GetTraceId() }));
     }
@@ -239,7 +239,7 @@ public class ConquerorContextComplexTests : TestBase
         TestObservations observations)
         : IQueryHandler<TestQuery, TestQueryResponse>
     {
-        public Task<TestQueryResponse> ExecuteQuery(TestQuery query, CancellationToken cancellationToken = default)
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
             observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
             observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;
@@ -291,7 +291,7 @@ public class ConquerorContextComplexTests : TestBase
         TestObservations observations)
         : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             observations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
             observations.ReceivedDownstreamContextData = conquerorContextAccessor.ConquerorContext?.DownstreamContextData;

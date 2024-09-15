@@ -23,7 +23,7 @@ public sealed class CommandIdTests
             (ctx, next) => next(ctx.Command),
             ctx => { observedCommandIds.Add(ctx!.GetCommandId()); });
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
 
         Assert.That(observedCommandIds, Has.Count.EqualTo(3));
         Assert.That(observedCommandIds[1], Is.SameAs(observedCommandIds[0]));
@@ -40,7 +40,7 @@ public sealed class CommandIdTests
             (_, ctx) => observedCommandIds.Add(ctx!.GetCommandId()),
             ctx => observedCommandIds.Add(ctx!.GetCommandId()));
 
-        await provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>().ExecuteCommand(command, CancellationToken.None);
+        await provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>().Handle(command, CancellationToken.None);
 
         Assert.That(observedCommandIds, Has.Count.EqualTo(2));
         Assert.That(observedCommandIds[1], Is.SameAs(observedCommandIds[0]));
@@ -64,7 +64,7 @@ public sealed class CommandIdTests
                 return new(cmd.Payload);
             });
 
-        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().ExecuteCommand(command, CancellationToken.None);
+        _ = await provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>().Handle(command, CancellationToken.None);
 
         Assert.That(observedCommandIds, Has.Count.EqualTo(2));
         Assert.That(observedCommandIds[1], Is.Not.SameAs(observedCommandIds[0]));
@@ -146,12 +146,12 @@ public sealed class CommandIdTests
         ICommandHandler<NestedTestCommand, NestedTestCommandResponse> nestedCommandHandler)
         : ICommandHandler<TestCommand, TestCommandResponse>
     {
-        public async Task<TestCommandResponse> ExecuteCommand(TestCommand command, CancellationToken cancellationToken = default)
+        public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             var response = handlerFn(command, conquerorContextAccessor.ConquerorContext);
             nestedClass.Execute();
-            _ = await nestedCommandHandler.ExecuteCommand(new(command.Payload), cancellationToken);
+            _ = await nestedCommandHandler.Handle(new(command.Payload), cancellationToken);
             return response;
         }
 
@@ -165,7 +165,7 @@ public sealed class CommandIdTests
         NestedClass nestedClass)
         : ICommandHandler<TestCommandWithoutResponse>
     {
-        public async Task ExecuteCommand(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
+        public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             handlerFn(command, conquerorContextAccessor.ConquerorContext);
@@ -178,7 +178,7 @@ public sealed class CommandIdTests
         IConquerorContextAccessor conquerorContextAccessor)
         : ICommandHandler<NestedTestCommand, NestedTestCommandResponse>
     {
-        public async Task<NestedTestCommandResponse> ExecuteCommand(NestedTestCommand command, CancellationToken cancellationToken = default)
+        public async Task<NestedTestCommandResponse> Handle(NestedTestCommand command, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
             return handlerFn(command, conquerorContextAccessor.ConquerorContext);

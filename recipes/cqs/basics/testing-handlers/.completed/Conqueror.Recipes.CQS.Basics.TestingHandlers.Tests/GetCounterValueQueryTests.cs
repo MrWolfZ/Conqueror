@@ -14,7 +14,7 @@ public sealed class GetCounterValueQueryTests
 
         var handler = serviceProvider.GetRequiredService<IGetCounterValueQueryHandler>();
 
-        Assert.ThrowsAsync<CounterNotFoundException>(() => handler.ExecuteQuery(new(TestCounterName)));
+        Assert.ThrowsAsync<CounterNotFoundException>(() => handler.Handle(new(TestCounterName)));
     }
 
     [Test]
@@ -27,7 +27,7 @@ public sealed class GetCounterValueQueryTests
 
         await repository.SetCounterValue(TestCounterName, 10);
 
-        var response = await handler.ExecuteQuery(new(TestCounterName));
+        var response = await handler.Handle(new(TestCounterName));
 
         Assert.That(response.CounterValue, Is.EqualTo(10));
     }
