@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Conqueror;
@@ -6,7 +7,7 @@ namespace Conqueror;
 public delegate Task<TResponse> QueryMiddlewareFn<TQuery, TResponse>(QueryMiddlewareContext<TQuery, TResponse> context)
     where TQuery : class;
 
-public interface IQueryPipeline<TQuery, TResponse>
+public interface IQueryPipeline<TQuery, TResponse> : IReadOnlyCollection<IQueryMiddleware<TQuery, TResponse>>
     where TQuery : class
 {
     IServiceProvider ServiceProvider { get; }

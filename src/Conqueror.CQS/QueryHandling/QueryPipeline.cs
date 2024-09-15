@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,6 +20,8 @@ internal sealed class QueryPipeline<TQuery, TResponse>(
     public ConquerorContext ConquerorContext { get; } = conquerorContext;
 
     public QueryTransportType TransportType { get; } = transportType;
+
+    public int Count => middlewares.Count;
 
     public IQueryPipeline<TQuery, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : IQueryMiddleware<TQuery, TResponse>
@@ -70,6 +73,10 @@ internal sealed class QueryPipeline<TQuery, TResponse>(
     {
         return new(conquerorContext, middlewares);
     }
+
+    public IEnumerator<IQueryMiddleware<TQuery, TResponse>> GetEnumerator() => middlewares.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     private sealed class DelegateQueryMiddleware(QueryMiddlewareFn<TQuery, TResponse> middlewareFn) : IQueryMiddleware<TQuery, TResponse>
     {

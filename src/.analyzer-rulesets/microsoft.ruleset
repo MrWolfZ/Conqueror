@@ -40,7 +40,7 @@
         <Rule Id="CA1508" Action="None" />
         <Rule Id="CA1707" Action="Error" />
         <Rule Id="CA1708" Action="Error" />
-        <Rule Id="CA1710" Action="Error" />
+        <Rule Id="CA1710" Action="None" /> <!-- We often intentionally do not adhere to naming suffix conventions, so we disable this rule -->
         <Rule Id="CA1711" Action="Error" />
         <Rule Id="CA1714" Action="Error" />
         <Rule Id="CA1715" Action="Error" />

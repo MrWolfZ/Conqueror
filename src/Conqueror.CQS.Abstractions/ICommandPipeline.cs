@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Conqueror;
@@ -9,7 +10,7 @@ public delegate Task<TResponse> CommandMiddlewareFn<TCommand, TResponse>(Command
 public interface ICommandPipeline<TCommand> : ICommandPipeline<TCommand, UnitCommandResponse>
     where TCommand : class;
 
-public interface ICommandPipeline<TCommand, TResponse>
+public interface ICommandPipeline<TCommand, TResponse> : IReadOnlyCollection<ICommandMiddleware<TCommand, TResponse>>
     where TCommand : class
 {
     IServiceProvider ServiceProvider { get; }

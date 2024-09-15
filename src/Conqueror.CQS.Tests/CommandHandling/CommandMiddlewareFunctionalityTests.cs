@@ -1,3 +1,4 @@
+using System.Collections;
 using Conqueror.CQS.CommandHandling;
 
 namespace Conqueror.CQS.Tests.CommandHandling;
@@ -461,22 +462,56 @@ public sealed class CommandMiddlewareFunctionalityTests
         CommandTransportType? transportTypeFromClient = null;
         CommandTransportType? transportTypeFromHandler = null;
 
-        _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (query, _, _) =>
+        _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>(async (command, _, _) =>
         {
             await Task.Yield();
-            return new(query.Payload + 1);
+            return new(command.Payload + 1);
         }, pipeline => transportTypeFromHandler = pipeline.TransportType);
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
-        var query = new TestCommand(10);
+        var command = new TestCommand(10);
 
-        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).Handle(query);
+        _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).Handle(command);
 
         Assert.That(transportTypeFromClient, Is.EqualTo(new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Client)));
         Assert.That(transportTypeFromHandler, Is.EqualTo(new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server)));
+    }
+
+    [Test]
+    public async Task GivenHandlerAndClientPipeline_WhenPipelineIsBeingBuilt_MiddlewaresCanBeEnumerated()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorCommandHandlerDelegate<TestCommand, TestCommandResponse>((command, _, _) => Task.FromResult<TestCommandResponse>(new(command.Payload + 1)),
+                                                                                          pipeline =>
+                                                                                          {
+                                                                                              var middleware1 = new TestCommandMiddleware<TestCommand, TestCommandResponse>(new());
+                                                                                              var middleware2 = new TestCommandMiddleware2<TestCommand, TestCommandResponse>(new());
+                                                                                              _ = pipeline.Use(middleware1).Use(middleware2);
+
+                                                                                              Assert.That(pipeline, Has.Count.EqualTo(2));
+                                                                                              Assert.That(pipeline, Is.EquivalentTo(new ICommandMiddleware<TestCommand, TestCommandResponse>[] { middleware1, middleware2 }));
+                                                                                          });
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        var command = new TestCommand(10);
+
+        _ = await handler.WithPipeline(pipeline =>
+                         {
+                             var middleware1 = new TestCommandMiddleware<TestCommand, TestCommandResponse>(new());
+                             var middleware2 = new TestCommandMiddleware2<TestCommand, TestCommandResponse>(new());
+                             _ = pipeline.Use(middleware1).Use(middleware2);
+
+                             Assert.That(pipeline, Has.Count.EqualTo(2));
+                             Assert.That(pipeline, Is.EquivalentTo(new ICommandMiddleware<TestCommand, TestCommandResponse>[] { middleware1, middleware2 }));
+                         })
+                         .Handle(command);
     }
 
     public sealed record ConquerorMiddlewareFunctionalityTestCase(
@@ -659,6 +694,8 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         public CommandTransportType TransportType => commandPipelineImplementation.TransportType;
 
+        public int Count => commandPipelineImplementation.Count;
+
         public ICommandPipeline<TestCommand, TestCommandResponse> Use<TMiddleware>(TMiddleware middleware)
             where TMiddleware : ICommandMiddleware<TestCommand, TestCommandResponse>
         {
@@ -701,6 +738,10 @@ public sealed class CommandMiddlewareFunctionalityTests
             _ = commandPipelineImplementation.Configure<MiddlewareAdapter<TMiddleware>>(m => configure(m.Wrapped));
             return this;
         }
+
+        public IEnumerator<ICommandMiddleware<TestCommand, TestCommandResponse>> GetEnumerator() => throw new NotSupportedException();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         private sealed class MiddlewareAdapter<TMiddleware>(TMiddleware wrapped) : ICommandMiddleware<TestCommand, UnitCommandResponse>
             where TMiddleware : ICommandMiddleware<TestCommand, TestCommandResponse>

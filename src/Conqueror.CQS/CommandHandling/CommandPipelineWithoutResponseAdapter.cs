@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Conqueror.CQS.CommandHandling;
 
@@ -12,6 +14,8 @@ internal sealed class CommandPipelineWithoutResponseAdapter<TCommand>(
     public ConquerorContext ConquerorContext => commandPipelineImplementation.ConquerorContext;
 
     public CommandTransportType TransportType => commandPipelineImplementation.TransportType;
+
+    public int Count => commandPipelineImplementation.Count;
 
     public ICommandPipeline<TCommand, UnitCommandResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : ICommandMiddleware<TCommand, UnitCommandResponse>
@@ -35,4 +39,8 @@ internal sealed class CommandPipelineWithoutResponseAdapter<TCommand>(
     {
         return commandPipelineImplementation.Configure(configure);
     }
+
+    public IEnumerator<ICommandMiddleware<TCommand, UnitCommandResponse>> GetEnumerator() => commandPipelineImplementation.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

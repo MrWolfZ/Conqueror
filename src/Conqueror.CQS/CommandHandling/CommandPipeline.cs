@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,6 +20,8 @@ internal sealed class CommandPipeline<TCommand, TResponse>(
     public ConquerorContext ConquerorContext { get; } = conquerorContext;
 
     public CommandTransportType TransportType { get; } = transportType;
+
+    public int Count => middlewares.Count;
 
     public ICommandPipeline<TCommand, TResponse> Use<TMiddleware>(TMiddleware middleware)
         where TMiddleware : ICommandMiddleware<TCommand, TResponse>
@@ -70,6 +73,10 @@ internal sealed class CommandPipeline<TCommand, TResponse>(
     {
         return new(conquerorContext, middlewares);
     }
+
+    public IEnumerator<ICommandMiddleware<TCommand, TResponse>> GetEnumerator() => middlewares.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     private sealed class DelegateCommandMiddleware(CommandMiddlewareFn<TCommand, TResponse> middlewareFn) : ICommandMiddleware<TCommand, TResponse>
     {

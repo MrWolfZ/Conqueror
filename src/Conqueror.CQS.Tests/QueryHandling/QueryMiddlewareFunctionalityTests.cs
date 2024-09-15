@@ -443,6 +443,40 @@ public sealed class QueryMiddlewareFunctionalityTests
         Assert.That(transportTypeFromHandler, Is.EqualTo(new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server)));
     }
 
+    [Test]
+    public async Task GivenHandlerAndClientPipeline_WhenPipelineIsBeingBuilt_MiddlewaresCanBeEnumerated()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorQueryHandlerDelegate<TestQuery, TestQueryResponse>((query, _, _) => Task.FromResult<TestQueryResponse>(new(query.Payload + 1)),
+                                                                                    pipeline =>
+                                                                                    {
+                                                                                        var middleware1 = new TestQueryMiddleware<TestQuery, TestQueryResponse>(new());
+                                                                                        var middleware2 = new TestQueryMiddleware2<TestQuery, TestQueryResponse>(new());
+                                                                                        _ = pipeline.Use(middleware1).Use(middleware2);
+
+                                                                                        Assert.That(pipeline, Has.Count.EqualTo(2));
+                                                                                        Assert.That(pipeline, Is.EquivalentTo(new IQueryMiddleware<TestQuery, TestQueryResponse>[] { middleware1, middleware2 }));
+                                                                                    });
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        var query = new TestQuery(10);
+
+        _ = await handler.WithPipeline(pipeline =>
+                         {
+                             var middleware1 = new TestQueryMiddleware<TestQuery, TestQueryResponse>(new());
+                             var middleware2 = new TestQueryMiddleware2<TestQuery, TestQueryResponse>(new());
+                             _ = pipeline.Use(middleware1).Use(middleware2);
+
+                             Assert.That(pipeline, Has.Count.EqualTo(2));
+                             Assert.That(pipeline, Is.EquivalentTo(new IQueryMiddleware<TestQuery, TestQueryResponse>[] { middleware1, middleware2 }));
+                         })
+                         .Handle(query);
+    }
+
     public sealed record ConquerorMiddlewareFunctionalityTestCase(
         Action<IQueryPipeline<TestQuery, TestQueryResponse>>? ConfigureHandlerPipeline,
         Action<IQueryPipeline<TestQuery, TestQueryResponse>>? ConfigureClientPipeline,
