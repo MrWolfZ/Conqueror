@@ -14,8 +14,7 @@ public sealed class AuthenticationCommandMiddleware<TCommand, TResponse> : IComm
     {
         if (Configuration.RequireAuthenticatedPrincipal)
         {
-            var authenticationContext = new ConquerorAuthenticationContext();
-            var currentPrincipal = authenticationContext.CurrentPrincipal;
+            var currentPrincipal = ctx.ConquerorContext.GetCurrentPrincipal();
 
             if (currentPrincipal is null)
             {

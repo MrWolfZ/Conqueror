@@ -13,8 +13,7 @@ public sealed class PayloadAuthorizationCommandMiddleware<TCommand, TResponse> :
 
     public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
-        var authenticationContext = new ConquerorAuthenticationContext();
-        if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
+        if (ctx.ConquerorContext.GetCurrentPrincipal() is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var results = await Task.WhenAll(Configuration.AuthorizationChecks.Select(c => c(principal, ctx.Command))).ConfigureAwait(false);
             var failures = results.Where(r => !r.IsSuccess).ToList();

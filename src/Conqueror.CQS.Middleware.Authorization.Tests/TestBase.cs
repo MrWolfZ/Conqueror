@@ -6,6 +6,7 @@ namespace Conqueror.CQS.Middleware.Authorization.Tests;
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "resources are disposed in test teardown")]
 public abstract class TestBase
 {
+    private IDisposableConquerorContext? conquerorContext;
     private IHost? host;
     private CancellationTokenSource? timeoutCancellationTokenSource;
 
@@ -25,6 +26,9 @@ public abstract class TestBase
     protected virtual TimeSpan TestTimeout => TimeSpan.FromSeconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 2 : 10);
 
     protected CancellationToken TestTimeoutToken => TimeoutCancellationTokenSource.Token;
+
+    protected IConquerorContext ConquerorContext => Resolve<IConquerorContextAccessor>().ConquerorContext
+                                                    ?? throw new InvalidOperationException("conqueror context is not available");
 
     private CancellationTokenSource TimeoutCancellationTokenSource
     {
@@ -52,12 +56,16 @@ public abstract class TestBase
         {
             TimeoutCancellationTokenSource.CancelAfter(TestTimeout);
         }
+
+        // force the creation of the conqueror context so that it can be used to set data in tests
+        conquerorContext = Resolve<IConquerorContextAccessor>().GetOrCreate();
     }
 
     [TearDown]
     public void TearDown()
     {
         timeoutCancellationTokenSource?.Cancel();
+        conquerorContext?.Dispose();
         host?.Dispose();
         timeoutCancellationTokenSource?.Dispose();
     }

@@ -162,10 +162,12 @@ public sealed class HttpAuthenticationTests : TestBase
     private sealed class TestController : ControllerBase
     {
         private readonly TestData testData;
+        private readonly IConquerorContextAccessor conquerorContextAccessor;
 
-        public TestController(TestData data)
+        public TestController(TestData data, IConquerorContextAccessor conquerorContextAccessor)
         {
             testData = data;
+            this.conquerorContextAccessor = conquerorContextAccessor;
         }
 
         [HttpGet("/api/test")]
@@ -173,7 +175,7 @@ public sealed class HttpAuthenticationTests : TestBase
         {
             await Task.Yield();
 
-            testData.ObservedPrincipal = new ConquerorAuthenticationContext().CurrentPrincipal;
+            testData.ObservedPrincipal = conquerorContextAccessor.ConquerorContext?.GetCurrentPrincipal();
 
             if (testData.ExceptionToThrow is not null)
             {
@@ -190,7 +192,7 @@ public sealed class HttpAuthenticationTests : TestBase
         {
             await Task.Yield();
 
-            testData.ObservedPrincipal = new ConquerorAuthenticationContext().CurrentPrincipal;
+            testData.ObservedPrincipal = conquerorContextAccessor.ConquerorContext?.GetCurrentPrincipal();
 
             if (testData.ExceptionToThrow is not null)
             {

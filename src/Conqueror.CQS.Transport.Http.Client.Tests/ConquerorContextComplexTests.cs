@@ -102,7 +102,7 @@ public class ConquerorContextComplexTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 3));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, object>(t.Key, t.Value)), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]
@@ -146,8 +146,8 @@ public class ConquerorContextComplexTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count * 6));
-        Assert.That(ContextData, Is.SubsetOf(Resolve<TestObservations>().ReceivedDownstreamContextData!.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value))));
-        Assert.That(ContextData, Is.SubsetOf(Resolve<TestObservations>().ReceivedBidirectionalContextData!.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value))));
+        Assert.That(ContextData, Is.SubsetOf(Resolve<TestObservations>().ReceivedDownstreamContextData!.Select(t => new KeyValuePair<string, object>(t.Key, t.Value))));
+        Assert.That(ContextData, Is.SubsetOf(Resolve<TestObservations>().ReceivedBidirectionalContextData!.Select(t => new KeyValuePair<string, object>(t.Key, t.Value))));
     }
 
     [Test]
@@ -172,7 +172,7 @@ public class ConquerorContextComplexTests : TestBase
         allReceivedKeys.AddRange(observations.ReceivedBidirectionalContextData?.Select(t => t.Key).Where(ContextData.ContainsKey) ?? Array.Empty<string>());
 
         Assert.That(allReceivedKeys, Has.Count.EqualTo(ContextData.Count));
-        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, string>(t.Key, (string)t.Value)), Is.Not.SubsetOf(ContextData));
+        Assert.That(Resolve<TestObservations>().ReceivedDownstreamContextData?.Select(t => new KeyValuePair<string, object>(t.Key, t.Value)), Is.Not.SubsetOf(ContextData));
     }
 
     [Test]

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Conqueror.CQS.Middleware.Authorization;
 
 /// <summary>
-///     The configuration options for <see cref="PayloadAuthorizationCommandMiddleware" />.
+///     The configuration options for <see cref="PayloadAuthorizationCommandMiddleware{TCommand,TResponse}" />.
 /// </summary>
 public sealed class PayloadAuthorizationCommandMiddlewareConfiguration
 {

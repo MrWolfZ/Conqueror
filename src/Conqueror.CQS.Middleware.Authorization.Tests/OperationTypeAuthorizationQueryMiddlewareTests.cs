@@ -8,8 +8,6 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
     private Func<TestQuery, TestQueryResponse> handlerFn = _ => new();
     private Action<IQueryPipeline<TestQuery, TestQueryResponse>> configurePipeline = _ => { };
 
-    private static ConquerorAuthenticationContext AuthenticationContext => new();
-
     [Test]
     public async Task GivenSuccessfulAuthorizationCheck_WhenExecutedWithoutPrincipal_AllowsExecution()
     {
@@ -43,7 +41,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -64,7 +62,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -85,7 +83,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => ConquerorAuthorizationResult.Success());
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -125,7 +123,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -143,7 +141,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteQuery(new()));
     }
@@ -159,7 +157,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => ConquerorAuthorizationResult.Failure("test"));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteQuery(new()));
     }
@@ -199,7 +197,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutQueryTypeAuthorization();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteQuery(testQuery);
 
@@ -221,7 +219,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UseQueryTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutQueryTypeAuthorization();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteQuery(testQuery);
 

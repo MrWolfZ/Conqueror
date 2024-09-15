@@ -1,7 +1,7 @@
 namespace Conqueror.CQS.Middleware.Authorization;
 
 /// <summary>
-///     The configuration options for <see cref="OperationTypeAuthorizationQueryMiddleware" />.
+///     The configuration options for <see cref="OperationTypeAuthorizationQueryMiddleware{TQuery,TResponse}" />.
 /// </summary>
 public sealed class OperationTypeAuthorizationQueryMiddlewareConfiguration
 {
@@ -11,7 +11,7 @@ public sealed class OperationTypeAuthorizationQueryMiddlewareConfiguration
     }
 
     /// <summary>
-    ///     The delegate to use for checking operation type authorization. 
+    ///     The delegate to use for checking operation type authorization.
     /// </summary>
     public ConquerorOperationTypeAuthorizationCheckAsync AuthorizationCheck { get; set; }
 }

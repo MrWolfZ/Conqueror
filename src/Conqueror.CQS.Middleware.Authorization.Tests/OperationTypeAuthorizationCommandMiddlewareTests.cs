@@ -8,8 +8,6 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
     private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
     private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = _ => { };
 
-    private static ConquerorAuthenticationContext AuthenticationContext => new();
-
     [Test]
     public async Task GivenSuccessfulAuthorizationCheck_WhenExecutedWithoutPrincipal_AllowsExecution()
     {
@@ -43,7 +41,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -64,7 +62,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Success()));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -85,7 +83,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => ConquerorAuthorizationResult.Success());
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -125,7 +123,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -143,7 +141,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
     }
@@ -159,7 +157,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => ConquerorAuthorizationResult.Failure("test"));
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         _ = Assert.ThrowsAsync<ConquerorOperationTypeAuthorizationFailedException>(() => Handler.ExecuteCommand(new()));
     }
@@ -199,7 +197,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutCommandTypeAuthorization();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -221,7 +219,7 @@ public sealed class OperationTypeAuthorizationCommandMiddlewareTests : TestBase
         configurePipeline = pipeline => pipeline.UseCommandTypeAuthorization((_, _) => Task.FromResult(ConquerorAuthorizationResult.Failure("test")))
                                                 .WithoutCommandTypeAuthorization();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 

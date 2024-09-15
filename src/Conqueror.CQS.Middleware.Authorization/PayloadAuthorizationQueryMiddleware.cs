@@ -13,8 +13,7 @@ public sealed class PayloadAuthorizationQueryMiddleware<TQuery, TResponse> : IQu
 
     public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
     {
-        var authenticationContext = new ConquerorAuthenticationContext();
-        if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
+        if (ctx.ConquerorContext.GetCurrentPrincipal() is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var results = await Task.WhenAll(Configuration.AuthorizationChecks.Select(c => c(principal, ctx.Query))).ConfigureAwait(false);
             var failures = results.Where(r => !r.IsSuccess).ToList();

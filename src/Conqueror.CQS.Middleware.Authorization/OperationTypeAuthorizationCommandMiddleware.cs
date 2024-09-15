@@ -12,8 +12,7 @@ public sealed class OperationTypeAuthorizationCommandMiddleware<TCommand, TRespo
 
     public async Task<TResponse> Execute(CommandMiddlewareContext<TCommand, TResponse> ctx)
     {
-        var authenticationContext = new ConquerorAuthenticationContext();
-        if (authenticationContext.CurrentPrincipal is { Identity: { IsAuthenticated: true } identity } principal)
+        if (ctx.ConquerorContext.GetCurrentPrincipal() is { Identity: { IsAuthenticated: true } identity } principal)
         {
             var result = await Configuration.AuthorizationCheck(principal, typeof(TCommand)).ConfigureAwait(false);
 

@@ -8,8 +8,6 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
     private Func<TestCommand, TestCommandResponse> handlerFn = _ => new();
     private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = _ => { };
 
-    private static ConquerorAuthenticationContext AuthenticationContext => new();
-
     [Test]
     public async Task GivenDefaultConfiguration_WhenExecutedWithoutPrincipal_AllowsExecution()
     {
@@ -43,7 +41,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -64,7 +62,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -104,7 +102,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().AllowAnonymousAccess();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -125,7 +123,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().AllowAnonymousAccess();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -157,7 +155,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         _ = Assert.ThrowsAsync<ConquerorAuthenticationUnauthenticatedPrincipalException>(() => Handler.ExecuteCommand(new()));
     }
@@ -173,9 +171,9 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
-        using var d2 = AuthenticationContext.SetCurrentPrincipal(null);
+        using var d2 = ConquerorContext.SetCurrentPrincipal(null);
 
         _ = Assert.ThrowsAsync<ConquerorAuthenticationMissingPrincipalException>(() => Handler.ExecuteCommand(new()));
     }
@@ -194,7 +192,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -234,7 +232,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal().AllowAnonymousAccess();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -255,7 +253,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal().AllowAnonymousAccess();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -287,7 +285,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().AllowAnonymousAccess().RequireAuthenticatedPrincipal();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         _ = Assert.ThrowsAsync<ConquerorAuthenticationUnauthenticatedPrincipalException>(() => Handler.ExecuteCommand(new()));
     }
@@ -306,7 +304,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().AllowAnonymousAccess().RequireAuthenticatedPrincipal();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -346,7 +344,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal().WithoutAuthentication();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new());
+        using var d = ConquerorContext.SetCurrentPrincipal(new());
 
         var response = await Handler.ExecuteCommand(testCommand);
 
@@ -367,7 +365,7 @@ public sealed class AuthenticationCommandMiddlewareTests : TestBase
 
         configurePipeline = pipeline => pipeline.UseAuthentication().RequireAuthenticatedPrincipal().WithoutAuthentication();
 
-        using var d = AuthenticationContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
+        using var d = ConquerorContext.SetCurrentPrincipal(new(new ClaimsIdentity("test")));
 
         var response = await Handler.ExecuteCommand(testCommand);
 
