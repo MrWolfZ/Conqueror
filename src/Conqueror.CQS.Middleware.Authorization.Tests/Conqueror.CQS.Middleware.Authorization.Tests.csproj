@@ -3,7 +3,6 @@
     <Import Project="../.targets/test.targets" />
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Common.Middleware.Authentication\Conqueror.Common.Middleware.Authentication.csproj" />
         <ProjectReference Include="..\Conqueror.CQS.Middleware.Authorization\Conqueror.CQS.Middleware.Authorization.csproj" />
     </ItemGroup>
 

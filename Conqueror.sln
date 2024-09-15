@@ -308,8 +308,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.EntryPoint.WebApi", "recipes\cqs\advanced\monolith-to-distributed\.completed\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.EntryPoint.WebApi\Conqueror.Recipes.CQS.Advanced.MonoToDistri.UserHistory.EntryPoint.WebApi.csproj", "{830E2684-E493-4C85-87E7-8A0A5A15C4B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication", "src\Conqueror.Common.Middleware.Authentication\Conqueror.Common.Middleware.Authentication.csproj", "{83D2ACA6-4844-4049-81B1-2E846D538C00}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Middleware.Authentication.Abstractions", "src\Conqueror.Common.Middleware.Authentication.Abstractions\Conqueror.Common.Middleware.Authentication.Abstractions.csproj", "{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Common.Transport.Http.Server.AspNetCore", "src\Conqueror.Common.Transport.Http.Server.AspNetCore\Conqueror.Common.Transport.Http.Server.AspNetCore.csproj", "{E366FF0A-FFDD-49A4-AE7A-EE6235B353F2}"
@@ -801,10 +799,6 @@ Global
 		{830E2684-E493-4C85-87E7-8A0A5A15C4B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{830E2684-E493-4C85-87E7-8A0A5A15C4B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{830E2684-E493-4C85-87E7-8A0A5A15C4B1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{83D2ACA6-4844-4049-81B1-2E846D538C00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{83D2ACA6-4844-4049-81B1-2E846D538C00}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{83D2ACA6-4844-4049-81B1-2E846D538C00}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{83D2ACA6-4844-4049-81B1-2E846D538C00}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -987,7 +981,6 @@ Global
 		{33D6AAA3-68D0-4A1E-AFB0-A403845A9004} = {044DD0EE-C049-4AC7-9C53-C9A3311F049C}
 		{F182AD90-241B-4318-AD7D-19DD0B818061} = {044DD0EE-C049-4AC7-9C53-C9A3311F049C}
 		{FB759742-C0E1-446C-AD62-E48E5832EE58} = {044DD0EE-C049-4AC7-9C53-C9A3311F049C}
-		{83D2ACA6-4844-4049-81B1-2E846D538C00} = {FB759742-C0E1-446C-AD62-E48E5832EE58}
 		{D5DD5E0A-2772-4FE5-9C8D-07ADC8E27383} = {FB759742-C0E1-446C-AD62-E48E5832EE58}
 		{0C6C6AC7-D416-45CE-A916-1AE312D63CF0} = {FB759742-C0E1-446C-AD62-E48E5832EE58}
 		{146AB97D-ECA3-4F28-8081-2A8CFFE647C6} = {044DD0EE-C049-4AC7-9C53-C9A3311F049C}

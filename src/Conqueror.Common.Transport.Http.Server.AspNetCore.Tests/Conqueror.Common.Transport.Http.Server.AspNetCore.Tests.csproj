@@ -8,7 +8,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Common.Middleware.Authentication\Conqueror.Common.Middleware.Authentication.csproj" />
         <ProjectReference Include="..\Conqueror.Common.Transport.Http.Server.AspNetCore\Conqueror.Common.Transport.Http.Server.AspNetCore.csproj" />
     </ItemGroup>
 
