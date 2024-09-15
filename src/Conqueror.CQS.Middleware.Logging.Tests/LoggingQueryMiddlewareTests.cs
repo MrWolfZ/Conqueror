@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Conqueror.Common;
 using Microsoft.Extensions.Logging;
 
 namespace Conqueror.CQS.Middleware.Logging.Tests;
@@ -7,6 +8,8 @@ namespace Conqueror.CQS.Middleware.Logging.Tests;
 [TestFixture]
 public sealed class LoggingQueryMiddlewareTests : TestBase
 {
+    private const string TestTransportTypeName = "test-transport";
+
     private Func<TestQuery, TestQueryResponse> handlerFn = qry => new(qry.Payload);
     private Action<IQueryPipeline<TestQuery, TestQueryResponse>> configurePipeline = b => b.UseLogging();
     private Action<IQueryPipeline<TestQueryWithoutPayload, TestQueryResponse>> configurePipelineWithoutPayload = b => b.UseLogging();
@@ -32,6 +35,17 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
     }
 
     [Test]
+    public async Task GivenDefaultLoggingMiddlewareConfiguration_LogsTransportTypePreExecution()
+    {
+        var testQuery = new TestQueryWithTransport();
+
+        _ = await Resolve<IQueryHandler<TestQueryWithTransport, TestQueryResponse>>().WithPipeline(p => p.UseLogging()).Handle(testQuery);
+
+        AssertPreExecutionLogMessage(LogLevel.Information, null, TestTransportTypeName, QueryTransportRole.Client);
+        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", TestTransportTypeName, QueryTransportRole.Server);
+    }
+
+    [Test]
     public async Task GivenDefaultLoggingMiddlewareConfiguration_LogsResponseWithPayloadPostExecution()
     {
         var testQuery = new TestQuery(10);
@@ -39,6 +53,18 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
         _ = await Handler.Handle(testQuery);
 
         AssertPostExecutionLogMessage(LogLevel.Information, "{\"ResponsePayload\":10}");
+    }
+
+    [Test]
+    public async Task GivenDefaultLoggingMiddlewareConfiguration_LogsQueryWithTransportTypePostExecution()
+    {
+        var testQuery = new TestQueryWithTransport();
+
+        _ = await Resolve<IQueryHandler<TestQueryWithTransport, TestQueryResponse>>().WithPipeline(p => p.UseLogging(o => o.OmitJsonSerializedResponsePayload = true))
+                                                                                     .Handle(testQuery);
+
+        AssertPostExecutionLogMessage(LogLevel.Information, null, TestTransportTypeName, QueryTransportRole.Client);
+        AssertPostExecutionLogMessage(LogLevel.Information, "{\"ResponsePayload\":10}", TestTransportTypeName, QueryTransportRole.Server);
     }
 
     [Test]
@@ -160,7 +186,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         _ = await Handler.Handle(testQuery);
 
-        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", $"Custom{testQuery.GetType().Name}");
+        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", loggerName: $"Custom{testQuery.GetType().Name}");
     }
 
     [Test]
@@ -172,7 +198,7 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
         _ = await Handler.Handle(testQuery);
 
-        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", testQuery.GetType().FullName!.Replace("+", "."));
+        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", loggerName: testQuery.GetType().FullName!.Replace("+", "."));
     }
 
     [Test]
@@ -467,29 +493,45 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
         AssertNoLogEntryContains(LogLevel.Debug, "Executing query");
     }
 
-    private void AssertPreExecutionLogMessage(LogLevel logLevel, string? expectedSerializedQuery = null, string? loggerName = null)
+    [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "middleware logic is to use lowercase")]
+    private void AssertPreExecutionLogMessage(LogLevel logLevel,
+                                              string? expectedSerializedQuery = null,
+                                              string? expectedTransportTypeName = null,
+                                              QueryTransportRole? expectedTransportRole = null,
+                                              string? loggerName = null)
     {
+        var transportTypeNameFragment = expectedTransportTypeName is null ? string.Empty : $" {expectedTransportTypeName}";
+        var transportRoleFragment = expectedTransportRole is null ? string.Empty : $" on {Enum.GetName(expectedTransportRole.Value)?.ToLowerInvariant()}";
+
         if (expectedSerializedQuery is null)
         {
-            var regexWithoutPayload = new Regex(@"Executing query \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+            var regexWithoutPayload = new Regex($@"Executing{transportTypeNameFragment} query{transportRoleFragment} \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
             AssertLogEntryMatches(logLevel, regexWithoutPayload, loggerName);
             return;
         }
 
-        var regexWithPayload = new Regex(@"Executing query with payload " + Regex.Escape(expectedSerializedQuery) + @" \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+        var regexWithPayload = new Regex($"Executing{transportTypeNameFragment} query{transportRoleFragment} with payload " + Regex.Escape(expectedSerializedQuery) + @" \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
         AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
     }
 
-    private void AssertPostExecutionLogMessage(LogLevel logLevel, string? expectedSerializedResponse = null, string? loggerName = null)
+    [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "middleware logic is to use lowercase")]
+    private void AssertPostExecutionLogMessage(LogLevel logLevel,
+                                               string? expectedSerializedResponse = null,
+                                               string? expectedTransportTypeName = null,
+                                               QueryTransportRole? expectedTransportRole = null,
+                                               string? loggerName = null)
     {
+        var transportTypeNameFragment = expectedTransportTypeName is null ? string.Empty : $" {expectedTransportTypeName}";
+        var transportRoleFragment = expectedTransportRole is null ? string.Empty : $" on {Enum.GetName(expectedTransportRole.Value)?.ToLowerInvariant()}";
+
         if (expectedSerializedResponse is null)
         {
-            var regexWithoutPayload = new Regex(@"Executed query in [0-9.]+ms \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+            var regexWithoutPayload = new Regex($@"Executed{transportTypeNameFragment} query{transportRoleFragment} in [0-9.]+ms \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
             AssertLogEntryMatches(logLevel, regexWithoutPayload, loggerName);
             return;
         }
 
-        var regexWithPayload = new Regex(@"Executed query and got response " + Regex.Escape(expectedSerializedResponse) + @" in [0-9.]+ms \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+        var regexWithPayload = new Regex($"Executed{transportTypeNameFragment} query{transportRoleFragment} and got response " + Regex.Escape(expectedSerializedResponse) + @" in [0-9.]+ms \(Query ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
         AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
     }
 
@@ -512,7 +554,8 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
                             await Task.Yield();
                             return new(0);
                         },
-                        pipeline => configurePipelineWithoutPayload(pipeline));
+                        pipeline => configurePipelineWithoutPayload(pipeline))
+                    .AddConquerorQueryClient<IQueryHandler<TestQueryWithTransport, TestQueryResponse>>(_ => new TestQueryTransportClient());
     }
 
     private sealed record TestQuery(int Payload);
@@ -521,11 +564,27 @@ public sealed class LoggingQueryMiddlewareTests : TestBase
 
     private sealed record TestQueryWithoutPayload;
 
+    private sealed record TestQueryWithTransport;
+
     private sealed class ThrowingJsonNamingPolicy : JsonNamingPolicy
     {
         public override string ConvertName(string name)
         {
             throw new NotSupportedException();
+        }
+    }
+
+    private sealed class TestQueryTransportClient : IQueryTransportClient
+    {
+        public string TransportTypeName => TestTransportTypeName;
+
+        public async Task<TResponse> Send<TQuery, TResponse>(TQuery query, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+            where TQuery : class
+        {
+            serviceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.SignalExecutionFromTransport(TestTransportTypeName);
+            var handler = serviceProvider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+            var response = await handler.Handle(new(10), cancellationToken);
+            return (TResponse)(object)new TestQueryResponse(response.ResponsePayload + 10);
         }
     }
 }

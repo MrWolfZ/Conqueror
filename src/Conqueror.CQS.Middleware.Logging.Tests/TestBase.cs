@@ -77,25 +77,33 @@ public abstract class TestBase
 
     protected void AssertLogEntryMatches(LogLevel logLevel, Regex regex, string? categoryName = null, int nrOfTimes = 1)
     {
-        Assert.That(LogSink.LogEntries, Has.Exactly(nrOfTimes).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => (categoryName is null || t.CategoryName == categoryName) &&
-                                                                                                                                      t.LogLevel == logLevel &&
-                                                                                                                                      regex.IsMatch(t.Message)));
+        Assert.That(LogSink.LogEntries, Has.Exactly(nrOfTimes)
+                                           .Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => (categoryName is null || t.CategoryName == categoryName) &&
+                                                                                                                   t.LogLevel == logLevel &&
+                                                                                                                   regex.IsMatch(t.Message)),
+                    $"category name: {categoryName}, log level: {logLevel}, regex: {regex}");
     }
 
     protected void AssertLogEntryContains(LogLevel logLevel, string fragment, string? categoryName = null, int nrOfTimes = 1)
     {
-        Assert.That(LogSink.LogEntries, Has.Exactly(nrOfTimes).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => (categoryName is null || t.CategoryName == categoryName) &&
-                                                                                                                                      t.LogLevel == logLevel &&
-                                                                                                                                      t.Message.Contains(fragment)));
+        Assert.That(LogSink.LogEntries, Has.Exactly(nrOfTimes)
+                                           .Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => (categoryName is null || t.CategoryName == categoryName) &&
+                                                                                                                   t.LogLevel == logLevel &&
+                                                                                                                   t.Message.Contains(fragment)),
+                    $"category name: {categoryName}, log level: {logLevel}, fragment: {fragment}");
     }
 
     protected void AssertNoLogEntryMatches(LogLevel logLevel, Regex regex)
     {
-        Assert.That(LogSink.LogEntries, Has.Exactly(0).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && regex.IsMatch(t.Message)));
+        Assert.That(LogSink.LogEntries,
+                    Has.Exactly(0).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && regex.IsMatch(t.Message)),
+                    $"log level: {logLevel}, regex: {regex}");
     }
 
     protected void AssertNoLogEntryContains(LogLevel logLevel, string fragment)
     {
-        Assert.That(LogSink.LogEntries, Has.Exactly(0).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && t.Message.Contains(fragment)));
+        Assert.That(LogSink.LogEntries,
+                    Has.Exactly(0).Matches<(string CategoryName, LogLevel LogLevel, string Message)>(t => t.LogLevel == logLevel && t.Message.Contains(fragment)),
+                    $"log level: {logLevel}, fragment: {fragment}");
     }
 }

@@ -9,12 +9,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Common
 
-- [ ] instead of just marking execution from a transport in the conqueror context, set a field that contains the transport name
-  - [ ] add this name to the logging output of logging middlewares
 - [ ] in development environment, add problem details body to auth failures
 - [ ] throw on empty context data key
-- [ ] do not use base64 encoding for context data, but instead use cookie-like encoding (URL-encode the value)
-- [ ] add pipeline configuration methods to base handler interface (virtual with default implementation instead of abstract) and deal with generics limitation by introducing an intermediate interface
 
 ## CQS
 

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Conqueror.CQS.QueryHandling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -17,6 +18,7 @@ namespace Conqueror.CQS.Middleware.Logging;
 ///         <item>If an exception gets thrown during query execution</item>
 ///     </list>
 /// </summary>
+[SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "it is more natural for the log message to be lowercase")]
 public sealed class LoggingQueryMiddleware<TQuery, TResponse> : IQueryMiddleware<TQuery, TResponse>
     where TQuery : class
 {
@@ -78,12 +80,35 @@ public sealed class LoggingQueryMiddleware<TQuery, TResponse> : IQueryMiddleware
 
         if (shouldOmitPayload || !hasPayload)
         {
-            logger.Log(Configuration.PreExecutionLogLevel, "Executing query (Query ID: {QueryId}, Trace ID: {TraceId})", queryId, traceId);
+            if (ctx.TransportType.IsInProcess())
+            {
+                logger.Log(Configuration.PreExecutionLogLevel, "Executing query (Query ID: {QueryId}, Trace ID: {TraceId})", queryId, traceId);
+                return;
+            }
+
+            logger.Log(Configuration.PreExecutionLogLevel,
+                       "Executing {TransportTypeName} query on {TransportRole} (Query ID: {QueryId}, Trace ID: {TraceId})",
+                       ctx.TransportType.Name,
+                       Enum.GetName(ctx.TransportType.Role)?.ToLowerInvariant(),
+                       queryId,
+                       traceId);
+            return;
+        }
+
+        if (ctx.TransportType.IsInProcess())
+        {
+            logger.Log(Configuration.PreExecutionLogLevel,
+                       "Executing query with payload {QueryPayload} (Query ID: {QueryId}, Trace ID: {TraceId})",
+                       Serialize(ctx.Query, Configuration.JsonSerializerOptions),
+                       queryId,
+                       traceId);
             return;
         }
 
         logger.Log(Configuration.PreExecutionLogLevel,
-                   "Executing query with payload {QueryPayload} (Query ID: {QueryId}, Trace ID: {TraceId})",
+                   "Executing {TransportTypeName} query on {TransportRole} with payload {QueryPayload} (Query ID: {QueryId}, Trace ID: {TraceId})",
+                   ctx.TransportType.Name,
+                   Enum.GetName(ctx.TransportType.Role)?.ToLowerInvariant(),
                    Serialize(ctx.Query, Configuration.JsonSerializerOptions),
                    queryId,
                    traceId);
@@ -123,8 +148,33 @@ public sealed class LoggingQueryMiddleware<TQuery, TResponse> : IQueryMiddleware
 
         if (shouldOmitPayload)
         {
+            if (ctx.TransportType.IsInProcess())
+            {
+                logger.Log(Configuration.PostExecutionLogLevel,
+                           "Executed query in {ResponseLatency:0.0000}ms (Query ID: {QueryId}, Trace ID: {TraceId})",
+                           elapsedTime.TotalMilliseconds,
+                           queryId,
+                           traceId);
+
+                return;
+            }
+
             logger.Log(Configuration.PostExecutionLogLevel,
-                       "Executed query in {ResponseLatency:0.0000}ms (Query ID: {QueryId}, Trace ID: {TraceId})",
+                       "Executed {TransportTypeName} query on {TransportRole} in {ResponseLatency:0.0000}ms (Query ID: {QueryId}, Trace ID: {TraceId})",
+                       ctx.TransportType.Name,
+                       Enum.GetName(ctx.TransportType.Role)?.ToLowerInvariant(),
+                       elapsedTime.TotalMilliseconds,
+                       queryId,
+                       traceId);
+
+            return;
+        }
+
+        if (ctx.TransportType.IsInProcess())
+        {
+            logger.Log(Configuration.PostExecutionLogLevel,
+                       "Executed query and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Query ID: {QueryId}, Trace ID: {TraceId})",
+                       Serialize(response, Configuration.JsonSerializerOptions),
                        elapsedTime.TotalMilliseconds,
                        queryId,
                        traceId);
@@ -133,7 +183,9 @@ public sealed class LoggingQueryMiddleware<TQuery, TResponse> : IQueryMiddleware
         }
 
         logger.Log(Configuration.PostExecutionLogLevel,
-                   "Executed query and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Query ID: {QueryId}, Trace ID: {TraceId})",
+                   "Executed {TransportTypeName} query on {TransportRole} and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Query ID: {QueryId}, Trace ID: {TraceId})",
+                   ctx.TransportType.Name,
+                   Enum.GetName(ctx.TransportType.Role)?.ToLowerInvariant(),
                    Serialize(response, Configuration.JsonSerializerOptions),
                    elapsedTime.TotalMilliseconds,
                    queryId,

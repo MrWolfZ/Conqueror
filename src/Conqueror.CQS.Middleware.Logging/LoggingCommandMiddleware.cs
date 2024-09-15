@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Conqueror.CQS.CommandHandling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -17,6 +18,7 @@ namespace Conqueror.CQS.Middleware.Logging;
 ///         <item>If an exception gets thrown during command execution</item>
 ///     </list>
 /// </summary>
+[SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "it is more natural for the log message to be lowercase")]
 public sealed class LoggingCommandMiddleware<TCommand, TResponse> : ICommandMiddleware<TCommand, TResponse>
     where TCommand : class
 {
@@ -78,12 +80,36 @@ public sealed class LoggingCommandMiddleware<TCommand, TResponse> : ICommandMidd
 
         if (shouldOmitPayload || !hasPayload)
         {
-            logger.Log(Configuration.PreExecutionLogLevel, "Executing command (Command ID: {CommandId}, Trace ID: {TraceId})", commandId, traceId);
+            if (ctx.TransportType.IsInProcess())
+            {
+                logger.Log(Configuration.PreExecutionLogLevel, "Executing command (Command ID: {CommandId}, Trace ID: {TraceId})", commandId, traceId);
+                return;
+            }
+
+            logger.Log(Configuration.PreExecutionLogLevel,
+                       "Executing {TransportTypeName} command on {TransportRole} (Command ID: {CommandId}, Trace ID: {TraceId})",
+                       ctx.TransportType.Name,
+                       Enum.GetName(ctx.TransportType.Role)?.ToLowerInvariant(),
+                       commandId,
+                       traceId);
+            return;
+        }
+
+        if (ctx.TransportType.IsInProcess())
+        {
+            logger.Log(Configuration.PreExecutionLogLevel,
+                       "Executing command with payload {CommandPayload} (Command ID: {CommandId}, Trace ID: {TraceId})",
+                       Serialize(ctx.Command, Configuration.JsonSerializerOptions),
+                       commandId,
+                       traceId);
+
             return;
         }
 
         logger.Log(Configuration.PreExecutionLogLevel,
-                   "Executing command with payload {CommandPayload} (Command ID: {CommandId}, Trace ID: {TraceId})",
+                   "Executing {TransportTypeName} command on {TransportRole} with payload {CommandPayload} (Command ID: {CommandId}, Trace ID: {TraceId})",
+                   ctx.TransportType.Name,
+                   Enum.GetName(ctx.TransportType.Role)?.ToLowerInvariant(),
                    Serialize(ctx.Command, Configuration.JsonSerializerOptions),
                    commandId,
                    traceId);
@@ -123,8 +149,33 @@ public sealed class LoggingCommandMiddleware<TCommand, TResponse> : ICommandMidd
 
         if (shouldOmitPayload || ctx.HasUnitResponse)
         {
+            if (ctx.TransportType.IsInProcess())
+            {
+                logger.Log(Configuration.PostExecutionLogLevel,
+                           "Executed command in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
+                           elapsedTime.TotalMilliseconds,
+                           commandId,
+                           traceId);
+
+                return;
+            }
+
             logger.Log(Configuration.PostExecutionLogLevel,
-                       "Executed command in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
+                       "Executed {TransportTypeName} command on {TransportRole} in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
+                       ctx.TransportType.Name,
+                       Enum.GetName(ctx.TransportType.Role)?.ToLowerInvariant(),
+                       elapsedTime.TotalMilliseconds,
+                       commandId,
+                       traceId);
+
+            return;
+        }
+
+        if (ctx.TransportType.IsInProcess())
+        {
+            logger.Log(Configuration.PostExecutionLogLevel,
+                       "Executed command and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
+                       Serialize(response, Configuration.JsonSerializerOptions),
                        elapsedTime.TotalMilliseconds,
                        commandId,
                        traceId);
@@ -133,7 +184,9 @@ public sealed class LoggingCommandMiddleware<TCommand, TResponse> : ICommandMidd
         }
 
         logger.Log(Configuration.PostExecutionLogLevel,
-                   "Executed command and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
+                   "Executed {TransportTypeName} command on {TransportRole} and got response {ResponsePayload} in {ResponseLatency:0.0000}ms (Command ID: {CommandId}, Trace ID: {TraceId})",
+                   ctx.TransportType.Name,
+                   Enum.GetName(ctx.TransportType.Role)?.ToLowerInvariant(),
                    Serialize(response, Configuration.JsonSerializerOptions),
                    elapsedTime.TotalMilliseconds,
                    commandId,

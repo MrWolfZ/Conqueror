@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Conqueror.Common;
 using Microsoft.Extensions.Logging;
 
 namespace Conqueror.CQS.Middleware.Logging.Tests;
@@ -7,6 +8,8 @@ namespace Conqueror.CQS.Middleware.Logging.Tests;
 [TestFixture]
 public sealed class LoggingCommandMiddlewareTests : TestBase
 {
+    private const string TestTransportTypeName = "test-transport";
+
     private Func<TestCommand, TestCommandResponse> handlerFn = cmd => new(cmd.Payload);
     private Action<ICommandPipeline<TestCommand, TestCommandResponse>> configurePipeline = b => b.UseLogging();
     private Action<ICommandPipeline<TestCommandWithoutPayload, TestCommandResponse>> configurePipelineWithoutPayload = b => b.UseLogging();
@@ -33,6 +36,17 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
     }
 
     [Test]
+    public async Task GivenDefaultLoggingMiddlewareConfiguration_LogsTransportTypePreExecution()
+    {
+        var testCommand = new TestCommandWithTransport();
+
+        _ = await Resolve<ICommandHandler<TestCommandWithTransport, TestCommandResponse>>().WithPipeline(p => p.UseLogging()).Handle(testCommand);
+
+        AssertPreExecutionLogMessage(LogLevel.Information, null, TestTransportTypeName, CommandTransportRole.Client);
+        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", TestTransportTypeName, CommandTransportRole.Server);
+    }
+
+    [Test]
     public async Task GivenDefaultLoggingMiddlewareConfiguration_LogsResponseWithPayloadPostExecution()
     {
         var testCommand = new TestCommand(10);
@@ -50,6 +64,18 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         await HandlerWithoutResponse.Handle(testCommand);
 
         AssertPostExecutionLogMessage(LogLevel.Information);
+    }
+
+    [Test]
+    public async Task GivenDefaultLoggingMiddlewareConfiguration_LogsCommandWithTransportTypePostExecution()
+    {
+        var testCommand = new TestCommandWithTransport();
+
+        _ = await Resolve<ICommandHandler<TestCommandWithTransport, TestCommandResponse>>().WithPipeline(p => p.UseLogging(o => o.OmitJsonSerializedResponsePayload = true))
+                                                                                     .Handle(testCommand);
+
+        AssertPostExecutionLogMessage(LogLevel.Information, null, TestTransportTypeName, CommandTransportRole.Client);
+        AssertPostExecutionLogMessage(LogLevel.Information, "{\"ResponsePayload\":10}", TestTransportTypeName, CommandTransportRole.Server);
     }
 
     [Test]
@@ -195,7 +221,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         _ = await Handler.Handle(testCommand);
 
-        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", $"Custom{testCommand.GetType().Name}");
+        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", loggerName: $"Custom{testCommand.GetType().Name}");
     }
 
     [Test]
@@ -207,7 +233,7 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
         _ = await Handler.Handle(testCommand);
 
-        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", testCommand.GetType().FullName!.Replace("+", "."));
+        AssertPreExecutionLogMessage(LogLevel.Information, "{\"Payload\":10}", loggerName: testCommand.GetType().FullName!.Replace("+", "."));
     }
 
     [Test]
@@ -501,29 +527,45 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
         AssertNoLogEntryContains(LogLevel.Debug, "Executing command");
     }
 
-    private void AssertPreExecutionLogMessage(LogLevel logLevel, string? expectedSerializedCommand = null, string? loggerName = null)
+    [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "middleware logic is to use lowercase")]
+    private void AssertPreExecutionLogMessage(LogLevel logLevel,
+                                              string? expectedSerializedCommand = null,
+                                              string? expectedTransportTypeName = null,
+                                              CommandTransportRole? expectedTransportRole = null,
+                                              string? loggerName = null)
     {
+        var transportTypeNameFragment = expectedTransportTypeName is null ? string.Empty : $" {expectedTransportTypeName}";
+        var transportRoleFragment = expectedTransportRole is null ? string.Empty : $" on {Enum.GetName(expectedTransportRole.Value)?.ToLowerInvariant()}";
+
         if (expectedSerializedCommand is null)
         {
-            var regexWithoutPayload = new Regex(@"Executing command \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+            var regexWithoutPayload = new Regex($@"Executing{transportTypeNameFragment} command{transportRoleFragment} \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
             AssertLogEntryMatches(logLevel, regexWithoutPayload, loggerName);
             return;
         }
 
-        var regexWithPayload = new Regex("Executing command with payload " + Regex.Escape(expectedSerializedCommand) + @" \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+        var regexWithPayload = new Regex($"Executing{transportTypeNameFragment} command{transportRoleFragment} with payload " + Regex.Escape(expectedSerializedCommand) + @" \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
         AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
     }
 
-    private void AssertPostExecutionLogMessage(LogLevel logLevel, string? expectedSerializedResponse = null, string? loggerName = null)
+    [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "middleware logic is to use lowercase")]
+    private void AssertPostExecutionLogMessage(LogLevel logLevel,
+                                               string? expectedSerializedResponse = null,
+                                               string? expectedTransportTypeName = null,
+                                               CommandTransportRole? expectedTransportRole = null,
+                                               string? loggerName = null)
     {
+        var transportTypeNameFragment = expectedTransportTypeName is null ? string.Empty : $" {expectedTransportTypeName}";
+        var transportRoleFragment = expectedTransportRole is null ? string.Empty : $" on {Enum.GetName(expectedTransportRole.Value)?.ToLowerInvariant()}";
+
         if (expectedSerializedResponse is null)
         {
-            var regexWithoutPayload = new Regex(@"Executed command in [0-9.]+ms \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+            var regexWithoutPayload = new Regex($@"Executed{transportTypeNameFragment} command{transportRoleFragment} in [0-9.]+ms \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
             AssertLogEntryMatches(logLevel, regexWithoutPayload, loggerName);
             return;
         }
 
-        var regexWithPayload = new Regex("Executed command and got response " + Regex.Escape(expectedSerializedResponse) + @" in [0-9.]+ms \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
+        var regexWithPayload = new Regex($"Executed{transportTypeNameFragment} command{transportRoleFragment} and got response " + Regex.Escape(expectedSerializedResponse) + @" in [0-9.]+ms \(Command ID: [a-z0-9]+, Trace ID: [a-z0-9]+\)");
         AssertLogEntryMatches(logLevel, regexWithPayload, loggerName);
     }
 
@@ -551,7 +593,8 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
                             await Task.Yield();
                             return new(0);
                         },
-                        pipeline => configurePipelineWithoutPayload(pipeline));
+                        pipeline => configurePipelineWithoutPayload(pipeline))
+                    .AddConquerorCommandClient<ICommandHandler<TestCommandWithTransport, TestCommandResponse>>(_ => new TestCommandTransportClient());
     }
 
     private sealed record TestCommand(int Payload);
@@ -562,11 +605,27 @@ public sealed class LoggingCommandMiddlewareTests : TestBase
 
     private sealed record TestCommandWithoutPayload;
 
+    private sealed record TestCommandWithTransport;
+
     private sealed class ThrowingJsonNamingPolicy : JsonNamingPolicy
     {
         public override string ConvertName(string name)
         {
             throw new NotSupportedException();
+        }
+    }
+
+    private sealed class TestCommandTransportClient : ICommandTransportClient
+    {
+        public string TransportTypeName => TestTransportTypeName;
+
+        public async Task<TResponse> Send<TCommand, TResponse>(TCommand command, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+            where TCommand : class
+        {
+            serviceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.SignalExecutionFromTransport(TestTransportTypeName);
+            var handler = serviceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+            var response = await handler.Handle(new(10), cancellationToken);
+            return (TResponse)(object)new TestCommandResponse(response.ResponsePayload + 10);
         }
     }
 }
