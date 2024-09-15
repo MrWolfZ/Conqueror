@@ -27,7 +27,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(query, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
-        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new QueryTransportType(InMemoryQueryTransportTypeExtensions.TransportName, t.TransportRole))));
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, t.TransportRole))));
     }
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase> GenerateTestCases()

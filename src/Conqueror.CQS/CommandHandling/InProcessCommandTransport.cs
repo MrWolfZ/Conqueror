@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class InMemoryCommandTransport(Type handlerType, Delegate? configurePipeline) : ICommandTransportClient
+internal sealed class InProcessCommandTransport(Type handlerType, Delegate? configurePipeline) : ICommandTransportClient
 {
-    public CommandTransportType TransportType => new(InMemoryCommandTransportTypeExtensions.TransportName, CommandTransportRole.Client);
+    public CommandTransportType TransportType => new(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Client);
 
     public Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                IServiceProvider serviceProvider,
@@ -22,7 +22,7 @@ internal sealed class InMemoryCommandTransport(Type handlerType, Delegate? confi
 
     private sealed class HandlerInvoker(Type handlerType) : ICommandTransportClient
     {
-        public CommandTransportType TransportType => new(InMemoryCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server);
+        public CommandTransportType TransportType => new(InProcessCommandTransportTypeExtensions.TransportName, CommandTransportRole.Server);
 
         public async Task<TResponse> ExecuteCommand<TCommand, TResponse>(TCommand command,
                                                                          IServiceProvider serviceProvider,

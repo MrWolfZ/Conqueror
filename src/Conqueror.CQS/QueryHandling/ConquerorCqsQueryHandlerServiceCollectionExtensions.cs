@@ -126,7 +126,7 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
 
         var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
 
-        services.AddConquerorQueryClient<THandler>(new InMemoryQueryTransport(typeof(THandler), pipelineConfigurationAction));
+        services.AddConquerorQueryClient<THandler>(new InProcessQueryTransport(typeof(THandler), pipelineConfigurationAction));
 
         return services;
 

@@ -21,7 +21,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add support for delegate middlewares
 - [ ] add `.Has()` method to pipelines
 - [ ] make pipeline enumerable
-- [ ] rename inmemory to inprocess transport
 - [ ] remove lifetime support from handlers (explain in recipe that this was an explicit design decision and that lifetimes encourage bad practices by making handlers stateful when they should be stateless; also show how you can use injected classes to compensate, e.g. `IMemoryCache`)
 - [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines
 - [ ] add trace logging to transports

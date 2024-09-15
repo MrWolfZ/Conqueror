@@ -27,7 +27,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
-        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InMemoryCommandTransportTypeExtensions.TransportName, t.TransportRole))));
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, t.TransportRole))));
     }
 
     [Test]
@@ -53,7 +53,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
-        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InMemoryCommandTransportTypeExtensions.TransportName, t.TransportRole))));
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, t.TransportRole))));
     }
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase> GenerateTestCases()

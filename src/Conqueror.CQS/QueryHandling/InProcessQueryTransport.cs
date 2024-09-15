@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class InMemoryQueryTransport(Type handlerType, Delegate? configurePipeline) : IQueryTransportClient
+internal sealed class InProcessQueryTransport(Type handlerType, Delegate? configurePipeline) : IQueryTransportClient
 {
-    public QueryTransportType TransportType => new(InMemoryQueryTransportTypeExtensions.TransportName, QueryTransportRole.Client);
+    public QueryTransportType TransportType => new(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Client);
 
     public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query,
                                                            IServiceProvider serviceProvider,
@@ -22,13 +22,13 @@ internal sealed class InMemoryQueryTransport(Type handlerType, Delegate? configu
 
     private sealed class HandlerInvoker(Type handlerType) : IQueryTransportClient
     {
+        public QueryTransportType TransportType => new(InProcessQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server);
+
         public Task<TResponse> ExecuteQuery<TQuery, TResponse>(TQuery query, IServiceProvider serviceProvider, CancellationToken cancellationToken)
             where TQuery : class
         {
             var handler = (IQueryHandler<TQuery, TResponse>)serviceProvider.GetRequiredService(handlerType);
             return handler.ExecuteQuery(query, cancellationToken);
         }
-
-        public QueryTransportType TransportType => new(InMemoryQueryTransportTypeExtensions.TransportName, QueryTransportRole.Server);
     }
 }

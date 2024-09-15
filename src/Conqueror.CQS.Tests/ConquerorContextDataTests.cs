@@ -102,7 +102,7 @@ public sealed class ConquerorContextDataTests
                                                .CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b =>
                                                {
                                                    SetAndObserveContextData(b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.TransportBuilder);
-                                                   return b.UseInMemory();
+                                                   return b.UseInProcess();
                                                });
 
             _ = await handlerClient.WithPipeline(pipeline =>
@@ -119,7 +119,7 @@ public sealed class ConquerorContextDataTests
                                                .CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b =>
                                                {
                                                    SetAndObserveContextData(b.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.TransportBuilder);
-                                                   return b.UseInMemory();
+                                                   return b.UseInProcess();
                                                });
 
             _ = await handlerClient.WithPipeline(pipeline =>
