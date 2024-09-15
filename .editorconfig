@@ -1,6 +1,7 @@
 [*.cs]
 dotnet_diagnostic.IDE0058.severity = error
 csharp_style_unused_value_expression_statement_preference = discard_variable
+resharper_captured_primary_constructor_parameter_is_mutable_highlighting = error
 indent_style = space
 indent_size = 4
 
