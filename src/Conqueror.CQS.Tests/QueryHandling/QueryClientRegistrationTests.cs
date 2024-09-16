@@ -646,6 +646,28 @@ public sealed class QueryClientRegistrationTests
     }
 
     [Test]
+    public void GivenCustomInterfaceWithoutValidInterfaces_WhenRegistering_ThrowsArgumentException()
+    {
+        var services = new ServiceCollection();
+        _ = services;
+
+        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorQueryClient<ITestQueryHandlerWithoutValidInterfaces>(_ => new TestQueryTransport()));
+    }
+
+    [Test]
+    public void GivenCustomInterfaceWithoutValidInterfaces_WhenRegisteringWithAsyncClientFactory_ThrowsArgumentException()
+    {
+        var services = new ServiceCollection();
+        _ = services;
+
+        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorQueryClient<ITestQueryHandlerWithoutValidInterfaces>(async _ =>
+        {
+            await Task.CompletedTask;
+            return new TestQueryTransport();
+        }));
+    }
+
+    [Test]
     public void GivenCustomInterfaceWithExtraMethods_WhenRegistering_ThrowsArgumentException()
     {
         var services = new ServiceCollection();
@@ -695,15 +717,13 @@ public sealed class QueryClientRegistrationTests
 
     public sealed record TestQueryResponse2;
 
-    public sealed record TestQueryWithoutResponse;
-
     public sealed record UnregisteredTestQuery;
-
-    public sealed record UnregisteredTestQueryWithoutResponse;
 
     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
     public interface ITestQueryHandler2 : IQueryHandler<TestQuery, TestQueryResponse2>;
+
+    private interface ITestQueryHandlerWithoutValidInterfaces : IQueryHandler;
 
     public interface ITestQueryHandlerWithExtraMethod : IQueryHandler<TestQuery, TestQueryResponse>
     {

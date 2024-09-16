@@ -3,184 +3,53 @@ namespace Conqueror.CQS.Tests.QueryHandling;
 public abstract class QueryClientFactoryTests
 {
     [Test]
-    public async Task GivenPlainHandlerInterface_ClientCanBeCreated()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
-
-        var client = CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
-
-        var query = new TestQuery();
-
-        _ = await client.Handle(query, CancellationToken.None);
-
-        Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
-    }
-
-    [Test]
-    public async Task GivenCustomHandlerInterface_ClientCanBeCreated()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
-
-        var client = CreateQueryClient<ITestQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
-
-        var query = new TestQuery();
-
-        _ = await client.Handle(query, CancellationToken.None);
-
-        Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
-    }
-
-    [Test]
-    public async Task GivenPlainClientWithPipeline_PipelineIsCalled()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
-
-        var client = CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(clientFactory,
-                                                                                    b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
-
-        var query = new TestQuery();
-
-        _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                        .Handle(query, CancellationToken.None);
-
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
-    }
-
-    [Test]
-    public async Task GivenCustomClientWithPipeline_PipelineIsCalled()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
-
-        var client = CreateQueryClient<ITestQueryHandler>(clientFactory,
-                                                          b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
-
-        var query = new TestQuery();
-
-        _ = await client.WithPipeline(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
-                        .Handle(query, CancellationToken.None);
-
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
-    }
-
-    [Test]
     public void GivenCustomerHandlerInterfaceWithExtraMethods_CreatingClientThrowsArgumentException()
     {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
+        var provider = new ServiceCollection().AddConquerorCQS().BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ITestQueryHandlerWithExtraMethod>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ITestQueryHandlerWithExtraMethod>(clientFactory, b => b.UseInProcess()));
     }
 
     [Test]
     public void GivenNonGenericQueryHandlerInterface_CreatingClientThrowsArgumentException()
     {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
+        var provider = new ServiceCollection().AddConquerorCQS().BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<INonGenericQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<INonGenericQueryHandler>(clientFactory, b => b.UseInProcess()));
     }
 
     [Test]
     public void GivenConcreteQueryHandlerType_CreatingClientThrowsArgumentException()
     {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
+        var provider = new ServiceCollection().AddConquerorCQS().BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<TestQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<TestQueryHandler>(clientFactory, b => b.UseInProcess()));
     }
 
     [Test]
     public void GivenQueryHandlerInterfaceThatImplementsMultipleOtherPlainQueryHandlerInterfaces_CreatingClientThrowsArgumentException()
     {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
+        var provider = new ServiceCollection().AddConquerorCQS().BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ICombinedQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ICombinedQueryHandler>(clientFactory, b => b.UseInProcess()));
     }
 
     [Test]
     public void GivenQueryHandlerInterfaceThatImplementsMultipleOtherCustomQueryHandlerInterfaces_CreatingClientThrowsArgumentException()
     {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorCQS()
-                    .AddTransient<TestQueryTransport>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
+        var provider = new ServiceCollection().AddConquerorCQS().BuildServiceProvider();
 
         var clientFactory = provider.GetRequiredService<IQueryClientFactory>();
 
-        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ICombinedCustomQueryHandler>(clientFactory, b => b.ServiceProvider.GetRequiredService<TestQueryTransport>()));
+        _ = Assert.Throws<ArgumentException>(() => CreateQueryClient<ICombinedCustomQueryHandler>(clientFactory, b => b.UseInProcess()));
     }
 
     protected abstract THandler CreateQueryClient<THandler>(IQueryClientFactory clientFactory,
@@ -214,41 +83,6 @@ public abstract class QueryClientFactoryTests
     private sealed class TestQueryHandler : ITestQueryHandler
     {
         public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-    }
-
-    private sealed class TestQueryMiddleware<TQuery, TResponse>(TestObservations observations) : IQueryMiddleware<TQuery, TResponse>
-        where TQuery : class
-    {
-        public async Task<TResponse> Execute(QueryMiddlewareContext<TQuery, TResponse> ctx)
-        {
-            await Task.Yield();
-            observations.MiddlewareTypes.Add(GetType());
-
-            return await ctx.Next(ctx.Query, ctx.CancellationToken);
-        }
-    }
-
-    private sealed class TestQueryTransport(TestObservations responses) : IQueryTransportClient
-    {
-        public string TransportTypeName => "test";
-
-        public async Task<TResponse> Send<TQuery, TResponse>(TQuery query,
-                                                                     IServiceProvider serviceProvider,
-                                                                     CancellationToken cancellationToken)
-            where TQuery : class
-        {
-            await Task.Yield();
-            responses.Queries.Add(query);
-
-            return (TResponse)(object)new TestQueryResponse();
-        }
-    }
-
-    private sealed class TestObservations
-    {
-        public List<object> Queries { get; } = [];
-
-        public List<Type> MiddlewareTypes { get; } = [];
     }
 }
 

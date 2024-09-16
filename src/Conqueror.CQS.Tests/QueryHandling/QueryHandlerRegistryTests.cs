@@ -284,6 +284,36 @@ public sealed class QueryHandlerRegistryTests
         Assert.That(registrations, Contains.Item(new QueryHandlerRegistration(typeof(TestQuery2), typeof(TestQuery2Response), typeof(TestQuery2Handler), null)));
     }
 
+    [Test]
+    public void GivenHandlerWithInvalidInterface_RegisteringHandlerThrowsArgumentException()
+    {
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithoutValidInterfaces>());
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithoutValidInterfaces>(_ => new()));
+    }
+
+    [Test]
+    public void GivenHandlerWithCustomInterfaceWithExtraMethods_RegisteringHandlerThrowsArgumentException()
+    {
+        var services = new ServiceCollection();
+
+        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorQueryHandler<TestQueryHandlerWithCustomInterfaceWithExtraMethod>());
+    }
+
+    [Test]
+    public void GivenHandlerWithMultipleCustomInterfaces_HandlerCanBeResolvedFromAllInterfaces()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandlerWithMultipleInterfaces>();
+
+        var provider = services.BuildServiceProvider();
+
+        Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<ITestQueryHandler>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery2, TestQuery2Response>>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<ITestQueryHandler2>());
+    }
+
     public sealed record TestQuery;
 
     public sealed record TestQueryResponse;
@@ -293,6 +323,13 @@ public sealed class QueryHandlerRegistryTests
     public sealed record TestQuery2Response;
 
     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
+
+    public interface ITestQueryHandler2 : IQueryHandler<TestQuery2, TestQuery2Response>;
+
+    public interface ITestQueryHandlerWithExtraMethod : IQueryHandler<TestQuery, TestQueryResponse>
+    {
+        void ExtraMethod();
+    }
 
     public sealed class TestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>
     {
@@ -319,6 +356,27 @@ public sealed class QueryHandlerRegistryTests
         public Task<TestQuery2Response> Handle(TestQuery2 query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQuery2Response());
     }
 
+    private sealed class TestQueryHandlerWithCustomInterfaceWithExtraMethod : ITestQueryHandlerWithExtraMethod
+    {
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public void ExtraMethod() => throw new NotSupportedException();
+    }
+
+    private sealed class TestQueryHandlerWithMultipleInterfaces : ITestQueryHandler,
+                                                                  ITestQueryHandler2
+    {
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<TestQuery2Response> Handle(TestQuery2 query, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
     private sealed class TestQueryHandlerWithPipeline : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
@@ -327,4 +385,6 @@ public sealed class QueryHandlerRegistryTests
         {
         }
     }
+
+    private sealed class TestQueryHandlerWithoutValidInterfaces : IQueryHandler;
 }
