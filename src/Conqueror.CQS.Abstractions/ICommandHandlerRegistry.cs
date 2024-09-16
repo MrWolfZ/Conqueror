@@ -5,7 +5,9 @@ namespace Conqueror;
 
 public interface ICommandHandlerRegistry
 {
-    public IReadOnlyCollection<CommandHandlerRegistration> GetCommandHandlerRegistrations();
+    IReadOnlyCollection<CommandHandlerRegistration> GetCommandHandlerRegistrations();
+
+    CommandHandlerRegistration? GetCommandHandlerRegistration(Type commandType, Type? responseType);
 }
 
-public sealed record CommandHandlerRegistration(Type CommandType, Type? ResponseType, Type HandlerType);
+public sealed record CommandHandlerRegistration(Type CommandType, Type? ResponseType, Type HandlerType, Delegate? ConfigurePipeline);

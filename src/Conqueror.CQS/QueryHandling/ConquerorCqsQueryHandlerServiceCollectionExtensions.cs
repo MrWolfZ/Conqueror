@@ -97,6 +97,8 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
         where THandler : class, IQueryHandler
         where TQuery : class
     {
+        var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
+
         var existingRegistrations = services.Where(d => d.ImplementationInstance is QueryHandlerRegistration)
                                             .ToDictionary(d => ((QueryHandlerRegistration)d.ImplementationInstance!).QueryType);
 
@@ -105,25 +107,31 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
             if (typeof(THandler) != ((QueryHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
             {
                 services.Remove(existingDescriptor);
-                var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler));
+                var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler), pipelineConfigurationAction);
                 services.AddSingleton(registration);
             }
         }
         else
         {
-            var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler));
+            var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler), pipelineConfigurationAction);
             services.AddSingleton(registration);
         }
-
-        var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
 
         services.AddConquerorQueryClient<THandler>(new InProcessQueryTransport(typeof(THandler), pipelineConfigurationAction));
 
         return services;
 
-        static Action<IQueryPipeline<TQuery, TResponse>> CreatePipelineConfigurationFunction(Type handlerType)
+        static Action<IQueryPipeline<TQuery, TResponse>>? CreatePipelineConfigurationFunction(Type handlerType)
         {
-            var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IQueryHandler<TQuery, TResponse>)).TargetMethods.Single(m => m.Name == nameof(IQueryHandler<TQuery, TResponse>.ConfigurePipeline));
+            var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IQueryHandler<TQuery, TResponse>))
+                                                         .TargetMethods
+                                                         .Where(m => m.DeclaringType == handlerType)
+                                                         .SingleOrDefault(m => m.Name == nameof(IQueryHandler<TQuery, TResponse>.ConfigurePipeline));
+
+            if (pipelineConfigurationMethod is null)
+            {
+                return null;
+            }
 
             var builderParam = Expression.Parameter(typeof(IQueryPipeline<TQuery, TResponse>));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);

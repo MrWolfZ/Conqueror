@@ -15,12 +15,31 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
 
         Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+    }
+
+    [Test]
+    public void GivenManuallyRegisteredCommandHandlerWithPipeline_ReturnsRegistration()
+    {
+        var provider = new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithPipeline>()
+                                              .BuildServiceProvider();
+
+        var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
+
+        var registrations = registry.GetCommandHandlerRegistrations();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(registrations.Single().CommandType, Is.EqualTo(typeof(TestCommand)));
+            Assert.That(registrations.Single().ResponseType, Is.EqualTo(typeof(TestCommandResponse)));
+            Assert.That(registrations.Single().HandlerType, Is.EqualTo(typeof(TestCommandHandlerWithPipeline)));
+            Assert.That(registrations.Single().ConfigurePipeline, Is.Not.Null);
+        });
     }
 
     [Test]
@@ -34,7 +53,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler2)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler2), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -53,7 +72,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -72,7 +91,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -90,7 +109,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -109,7 +128,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler2)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler2), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -128,7 +147,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface2)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface2), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -147,7 +166,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -165,7 +184,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -184,7 +203,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -203,7 +222,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -222,7 +241,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -240,7 +259,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -259,7 +278,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler2)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler2), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -278,7 +297,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -297,7 +316,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -315,7 +334,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -334,7 +353,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -353,7 +372,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface2)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface2), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -372,7 +391,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -390,7 +409,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -409,7 +428,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -428,7 +447,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -447,7 +466,7 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>)),
+            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(DelegateCommandHandler<TestCommandWithoutResponse>), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -466,8 +485,8 @@ public sealed class CommandHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler)),
-            new CommandHandlerRegistration(typeof(TestCommand2), typeof(TestCommand2Response), typeof(TestCommand2Handler)),
+            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler), null),
+            new CommandHandlerRegistration(typeof(TestCommand2), typeof(TestCommand2Response), typeof(TestCommand2Handler), null),
         };
 
         var registrations = registry.GetCommandHandlerRegistrations();
@@ -485,9 +504,9 @@ public sealed class CommandHandlerRegistryTests
 
         var registrations = registry.GetCommandHandlerRegistrations();
 
-        Assert.That(registrations, Contains.Item(new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler)))
-                                           .Or.Contains(new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface))));
-        Assert.That(registrations, Contains.Item(new CommandHandlerRegistration(typeof(TestCommand2), typeof(TestCommand2Response), typeof(TestCommand2Handler))));
+        Assert.That(registrations, Contains.Item(new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler), null))
+                                           .Or.Contains(new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandlerWithCustomInterface), null)));
+        Assert.That(registrations, Contains.Item(new CommandHandlerRegistration(typeof(TestCommand2), typeof(TestCommand2Response), typeof(TestCommand2Handler), null)));
     }
 
     public sealed record TestCommand;
@@ -547,5 +566,14 @@ public sealed class CommandHandlerRegistryTests
     private sealed class TestCommandWithoutResponseHandlerWithCustomInterface2 : ITestCommandWithoutResponseHandler
     {
         public Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class TestCommandHandlerWithPipeline : ICommandHandler<TestCommand, TestCommandResponse>
+    {
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
+
+        public static void ConfigurePipeline(ICommandPipeline<TestCommand, TestCommandResponse> pipeline)
+        {
+        }
     }
 }

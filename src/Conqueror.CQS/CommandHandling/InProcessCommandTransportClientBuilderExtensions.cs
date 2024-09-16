@@ -1,5 +1,6 @@
 using System;
 using Conqueror.CQS.CommandHandling;
+using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
 namespace Conqueror;
@@ -8,20 +9,15 @@ public static class InProcessCommandTransportClientBuilderExtensions
 {
     public static ICommandTransportClient UseInProcess(this ICommandTransportClientBuilder builder)
     {
-        return new InProcessCommandTransport(typeof(ICommandHandler<,>).MakeGenericType(builder.CommandType, builder.ResponseType), null);
-    }
+        var registration = builder.ServiceProvider
+                                  .GetRequiredService<ICommandHandlerRegistry>()
+                                  .GetCommandHandlerRegistration(builder.CommandType, builder.ResponseType);
 
-    public static ICommandTransportClient UseInProcess<TCommand, TResponse>(this ICommandTransportClientBuilder builder,
-                                                                            Action<ICommandPipeline<TCommand, TResponse>> configure)
-        where TCommand : class
-    {
-        return new InProcessCommandTransport(typeof(ICommandHandler<,>).MakeGenericType(builder.CommandType, builder.ResponseType), configure);
-    }
+        if (registration is null)
+        {
+            throw new InvalidOperationException($"there is no handler registered for command type {builder.CommandType} and response type {builder.ResponseType}");
+        }
 
-    public static ICommandTransportClient UseInProcess<TCommand>(this ICommandTransportClientBuilder builder,
-                                                                 Action<ICommandPipeline<TCommand>> configure)
-        where TCommand : class
-    {
-        return new InProcessCommandTransport(typeof(ICommandHandler<,>).MakeGenericType(builder.CommandType, builder.ResponseType), configure);
+        return new InProcessCommandTransport(registration.HandlerType, registration.ConfigurePipeline);
     }
 }

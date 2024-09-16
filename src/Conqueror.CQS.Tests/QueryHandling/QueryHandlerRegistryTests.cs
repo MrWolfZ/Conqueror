@@ -15,12 +15,31 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
 
         Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+    }
+
+    [Test]
+    public void GivenManuallyRegisteredQueryHandlerWithPipeline_ReturnsRegistration()
+    {
+        var provider = new ServiceCollection().AddConquerorQueryHandler<TestQueryHandlerWithPipeline>()
+                                              .BuildServiceProvider();
+
+        var registry = provider.GetRequiredService<IQueryHandlerRegistry>();
+
+        var registrations = registry.GetQueryHandlerRegistrations();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(registrations.Single().QueryType, Is.EqualTo(typeof(TestQuery)));
+            Assert.That(registrations.Single().ResponseType, Is.EqualTo(typeof(TestQueryResponse)));
+            Assert.That(registrations.Single().HandlerType, Is.EqualTo(typeof(TestQueryHandlerWithPipeline)));
+            Assert.That(registrations.Single().ConfigurePipeline, Is.Not.Null);
+        });
     }
 
     [Test]
@@ -34,7 +53,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler2)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler2), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -53,7 +72,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -72,7 +91,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -90,7 +109,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -109,7 +128,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler2)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler2), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -128,7 +147,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface2)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface2), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -147,7 +166,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -165,7 +184,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -184,7 +203,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -203,7 +222,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -222,7 +241,7 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -241,8 +260,8 @@ public sealed class QueryHandlerRegistryTests
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler)),
-            new QueryHandlerRegistration(typeof(TestQuery2), typeof(TestQuery2Response), typeof(TestQuery2Handler)),
+            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler), null),
+            new QueryHandlerRegistration(typeof(TestQuery2), typeof(TestQuery2Response), typeof(TestQuery2Handler), null),
         };
 
         var registrations = registry.GetQueryHandlerRegistrations();
@@ -260,9 +279,9 @@ public sealed class QueryHandlerRegistryTests
 
         var registrations = registry.GetQueryHandlerRegistrations();
 
-        Assert.That(registrations, Contains.Item(new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler)))
-                                           .Or.Contains(new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface))));
-        Assert.That(registrations, Contains.Item(new QueryHandlerRegistration(typeof(TestQuery2), typeof(TestQuery2Response), typeof(TestQuery2Handler))));
+        Assert.That(registrations, Contains.Item(new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler), null))
+                                           .Or.Contains(new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandlerWithCustomInterface), null)));
+        Assert.That(registrations, Contains.Item(new QueryHandlerRegistration(typeof(TestQuery2), typeof(TestQuery2Response), typeof(TestQuery2Handler), null)));
     }
 
     public sealed record TestQuery;
@@ -298,5 +317,14 @@ public sealed class QueryHandlerRegistryTests
     public sealed class TestQuery2Handler : IQueryHandler<TestQuery2, TestQuery2Response>
     {
         public Task<TestQuery2Response> Handle(TestQuery2 query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQuery2Response());
+    }
+
+    private sealed class TestQueryHandlerWithPipeline : IQueryHandler<TestQuery, TestQueryResponse>
+    {
+        public Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default) => Task.FromResult(new TestQueryResponse());
+
+        public static void ConfigurePipeline(IQueryPipeline<TestQuery, TestQueryResponse> pipeline)
+        {
+        }
     }
 }

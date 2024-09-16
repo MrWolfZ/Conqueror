@@ -107,6 +107,28 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
     {
         var isWithoutResponse = typeof(THandler).IsAssignableTo(typeof(ICommandHandler<TCommand>));
 
+        Action<ICommandPipeline<TCommand, TResponse>>? pipelineConfigurationAction = null;
+
+        if (isWithoutResponse)
+        {
+            var configureWithoutResponse = (Action<ICommandPipeline<TCommand>>?)configurePipeline
+                                           ?? CreatePipelineWithoutResponseConfigurationFunction(typeof(THandler));
+
+            if (configureWithoutResponse is not null)
+            {
+                pipelineConfigurationAction = p =>
+                {
+                    var adapter = new CommandPipelineWithoutResponseAdapter<TCommand>((ICommandPipeline<TCommand, UnitCommandResponse>)p);
+                    configureWithoutResponse(adapter);
+                };
+            }
+        }
+        else
+        {
+            pipelineConfigurationAction = (Action<ICommandPipeline<TCommand, TResponse>>?)configurePipeline
+                                          ?? CreatePipelineConfigurationFunction(typeof(THandler));
+        }
+
         var existingRegistrations = services.Where(d => d.ImplementationInstance is CommandHandlerRegistration)
                                             .ToDictionary(d => ((CommandHandlerRegistration)d.ImplementationInstance!).CommandType);
 
@@ -116,45 +138,32 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
             {
                 services.Remove(existingDescriptor);
                 var responseType = isWithoutResponse ? null : typeof(TResponse);
-                var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler));
+                var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler), pipelineConfigurationAction);
                 services.AddSingleton(registration);
             }
         }
         else
         {
             var responseType = isWithoutResponse ? null : typeof(TResponse);
-            var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler));
+            var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler), pipelineConfigurationAction);
             services.AddSingleton(registration);
-        }
-
-        Action<ICommandPipeline<TCommand, TResponse>> pipelineConfigurationAction;
-
-        if (isWithoutResponse)
-        {
-            var configureWithoutResponse = (Action<ICommandPipeline<TCommand>>?)configurePipeline
-                                           ?? CreatePipelineWithoutResponseConfigurationFunction(typeof(THandler));
-
-            pipelineConfigurationAction = p =>
-            {
-                var adapter = new CommandPipelineWithoutResponseAdapter<TCommand>((ICommandPipeline<TCommand, UnitCommandResponse>)p);
-                configureWithoutResponse(adapter);
-            };
-        }
-        else
-        {
-            pipelineConfigurationAction = (Action<ICommandPipeline<TCommand, TResponse>>?)configurePipeline
-                                          ?? CreatePipelineConfigurationFunction(typeof(THandler));
         }
 
         services.AddConquerorCommandClient<THandler>(new InProcessCommandTransport(typeof(THandler), pipelineConfigurationAction));
 
         return services;
 
-        static Action<ICommandPipeline<TCommand, TResponse>> CreatePipelineConfigurationFunction(Type handlerType)
+        static Action<ICommandPipeline<TCommand, TResponse>>? CreatePipelineConfigurationFunction(Type handlerType)
         {
             var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(ICommandHandler<TCommand, TResponse>))
                                                          .TargetMethods
-                                                         .Single(m => m.Name == nameof(ICommandHandler<TCommand, TResponse>.ConfigurePipeline));
+                                                         .Where(m => m.DeclaringType == handlerType)
+                                                         .SingleOrDefault(m => m.Name == nameof(ICommandHandler<TCommand, TResponse>.ConfigurePipeline));
+
+            if (pipelineConfigurationMethod is null)
+            {
+                return null;
+            }
 
             var builderParam = Expression.Parameter(typeof(ICommandPipeline<TCommand, TResponse>));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
@@ -162,11 +171,17 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
             return (Action<ICommandPipeline<TCommand, TResponse>>)lambda;
         }
 
-        static Action<ICommandPipeline<TCommand>> CreatePipelineWithoutResponseConfigurationFunction(Type handlerType)
+        static Action<ICommandPipeline<TCommand>>? CreatePipelineWithoutResponseConfigurationFunction(Type handlerType)
         {
             var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(ICommandHandler<TCommand>))
                                                          .TargetMethods
-                                                         .Single(m => m.Name == nameof(ICommandHandler<TCommand>.ConfigurePipeline));
+                                                         .Where(m => m.DeclaringType == handlerType)
+                                                         .SingleOrDefault(m => m.Name == nameof(ICommandHandler<TCommand>.ConfigurePipeline));
+
+            if (pipelineConfigurationMethod is null)
+            {
+                return null;
+            }
 
             var builderParam = Expression.Parameter(typeof(ICommandPipeline<TCommand>));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
