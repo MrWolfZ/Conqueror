@@ -20,7 +20,8 @@ internal sealed class CommandHandlerProxy<TCommand, TResponse>(
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
         var transportTypeName = conquerorContext.GetExecutionTransportTypeName();
-        if (transportTypeName is null || conquerorContext.GetCommandId() is null)
+        var isInProcessClient = transportTypeName is null && transportRole == CommandTransportRole.Client;
+        if (conquerorContext.GetCommandId() is null || isInProcessClient)
         {
             conquerorContext.SetCommandId(ActivitySpanId.CreateRandom().ToString());
         }

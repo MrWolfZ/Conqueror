@@ -20,7 +20,8 @@ internal sealed class QueryHandlerProxy<TQuery, TResponse>(
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
         var transportTypeName = conquerorContext.GetExecutionTransportTypeName();
-        if (transportTypeName is null || conquerorContext.GetQueryId() is null)
+        var isInProcessClient = transportTypeName is null && transportRole == QueryTransportRole.Client;
+        if (conquerorContext.GetQueryId() is null || isInProcessClient)
         {
             conquerorContext.SetQueryId(ActivitySpanId.CreateRandom().ToString());
         }
