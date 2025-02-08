@@ -70,7 +70,7 @@ internal static class HttpStreamExecutor
         {
             try
             {
-                await foreach (var msg in socket.Read(cts.Token))
+                await foreach (var msg in socket.Read(cts.Token).ConfigureAwait(false))
                 {
                     await channel.Writer.WriteAsync(msg, cts.Token).ConfigureAwait(false);
                 }

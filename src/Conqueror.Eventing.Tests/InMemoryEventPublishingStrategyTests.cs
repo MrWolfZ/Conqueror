@@ -455,7 +455,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         await dispatcher.DispatchEvent(new object());
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var evt = new TestEvent { Payload = 10 };
 
@@ -512,7 +512,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         await dispatcher.DispatchEvent(new object());
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var evt = new TestEvent { Payload = 10 };
 
@@ -572,7 +572,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         await dispatcher.DispatchEvent(new object());
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var evt = new TestEvent { Payload = 10 };
 
@@ -631,7 +631,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         await dispatcher.DispatchEvent(new object());
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var evt = new TestEvent { Payload = 10 };
 
@@ -941,7 +941,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         await dispatcher.DispatchEvent(new object());
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var evt = new TestEvent { Payload = 10 };
 
@@ -998,7 +998,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         await dispatcher.DispatchEvent(new object());
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var evt = new TestEvent { Payload = 10 };
 
@@ -1058,7 +1058,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         await dispatcher.DispatchEvent(new object());
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var evt = new TestEvent { Payload = 10 };
 
@@ -1117,7 +1117,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         await dispatcher.DispatchEvent(new object());
 
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var evt = new TestEvent { Payload = 10 };
 

@@ -30,7 +30,7 @@ internal sealed class TextWebSocket(WebSocket socket) : IDisposable
 
         // run foreach loop instead of returning the channel enumerable directly to ensure
         // the linked cancellation token source has the correct lifetime
-        await foreach (var msg in channel.Reader.ReadAllAsync(cancellationToken))
+        await foreach (var msg in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
             yield return msg;
         }

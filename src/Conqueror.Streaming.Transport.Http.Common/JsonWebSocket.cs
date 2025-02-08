@@ -20,7 +20,7 @@ internal sealed class JsonWebSocket(TextWebSocketWithHeartbeat socket, JsonSeria
                                                Func<string, Type> messageTypeLookup,
                                                [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await foreach (var msg in socket.Read(cancellationToken))
+        await foreach (var msg in socket.Read(cancellationToken).ConfigureAwait(false))
         {
             var parsed = JsonSerializer.Deserialize<JsonObject>(msg, jsonSerializerOptions);
 

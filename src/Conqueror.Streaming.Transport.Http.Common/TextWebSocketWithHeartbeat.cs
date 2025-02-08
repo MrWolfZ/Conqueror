@@ -36,7 +36,7 @@ internal sealed class TextWebSocketWithHeartbeat : IDisposable
     {
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
 
-        await foreach (var msg in socket.Read(cts.Token))
+        await foreach (var msg in socket.Read(cts.Token).ConfigureAwait(false))
         {
             if (msg == HeartbeatContent && !heartbeatTimeoutTimer.Change(heartbeatTimeout, Timeout.InfiniteTimeSpan))
             {
@@ -60,7 +60,7 @@ internal sealed class TextWebSocketWithHeartbeat : IDisposable
 
     private async void OnHeartbeatTimeout(object? state)
     {
-        cancellationTokenSource.Cancel();
+        await cancellationTokenSource.CancelAsync().ConfigureAwait(false);
         await Close(CancellationToken.None).ConfigureAwait(false);
     }
 }

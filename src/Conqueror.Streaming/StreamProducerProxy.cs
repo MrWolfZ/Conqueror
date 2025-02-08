@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,7 +35,7 @@ internal sealed class StreamProducerProxy<TRequest, TItem>(
 
         var pipeline = pipelineBuilder.Build(conquerorContext);
 
-        await foreach (var item in pipeline.Execute<TRequest, TItem>(serviceProvider, request, transportClientFactory, cancellationToken))
+        await foreach (var item in pipeline.Execute<TRequest, TItem>(serviceProvider, request, transportClientFactory, cancellationToken).ConfigureAwait(false))
         {
             // workaround for execution context not being automatically captured across
             // yields (see https://github.com/dotnet/runtime/issues/47802)

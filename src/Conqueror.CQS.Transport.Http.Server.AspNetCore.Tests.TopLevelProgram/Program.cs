@@ -27,4 +27,4 @@ app.MapPost("/customCommandEndpoint", (HttpContext ctx, [FromBody] TopLevelTestC
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync().ConfigureAwait(false);
