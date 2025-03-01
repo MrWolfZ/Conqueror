@@ -961,6 +961,28 @@ public sealed class CommandClientRegistrationTests
     }
 
     [Test]
+    public void GivenCustomInterfaceWithoutValidInterfaces_WhenRegistering_ThrowsArgumentException()
+    {
+        var services = new ServiceCollection();
+        _ = services;
+
+        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCommandClient<ITestCommandHandlerWithoutValidInterfaces>(_ => new TestCommandTransport()));
+    }
+
+    [Test]
+    public void GivenCustomInterfaceWithoutValidInterfaces_WhenRegisteringWithAsyncClientFactory_ThrowsArgumentException()
+    {
+        var services = new ServiceCollection();
+        _ = services;
+
+        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCommandClient<ITestCommandHandlerWithoutValidInterfaces>(async _ =>
+        {
+            await Task.CompletedTask;
+            return new TestCommandTransport();
+        }));
+    }
+
+    [Test]
     public void GivenCustomInterfaceWithExtraMethods_WhenRegistering_ThrowsArgumentException()
     {
         var services = new ServiceCollection();
@@ -1021,6 +1043,8 @@ public sealed class CommandClientRegistrationTests
     public interface ITestCommandHandler2 : ICommandHandler<TestCommand, TestCommandResponse2>;
 
     public interface ITestCommandHandler3 : ICommandHandler<TestCommand>;
+
+    private interface ITestCommandHandlerWithoutValidInterfaces : ICommandHandler;
 
     public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>;
 

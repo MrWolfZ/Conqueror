@@ -509,6 +509,36 @@ public sealed class CommandHandlerRegistryTests
         Assert.That(registrations, Contains.Item(new CommandHandlerRegistration(typeof(TestCommand2), typeof(TestCommand2Response), typeof(TestCommand2Handler), null)));
     }
 
+    [Test]
+    public void GivenHandlerWithInvalidInterface_RegisteringHandlerThrowsArgumentException()
+    {
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithoutValidInterfaces>());
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorCommandHandler<TestCommandHandlerWithoutValidInterfaces>(_ => new()));
+    }
+
+    [Test]
+    public void GivenHandlerWithCustomInterfaceWithExtraMethods_RegisteringHandlerThrowsArgumentException()
+    {
+        var services = new ServiceCollection();
+
+        _ = Assert.Throws<ArgumentException>(() => services.AddConquerorCommandHandler<TestCommandHandlerWithCustomInterfaceWithExtraMethod>());
+    }
+
+    [Test]
+    public void GivenHandlerWithMultipleCustomInterfaces_HandlerCanBeResolvedFromAllInterfaces()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorCommandHandler<TestCommandHandlerWithMultipleInterfaces>();
+
+        var provider = services.BuildServiceProvider();
+
+        Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand2, TestCommand2Response>>());
+        Assert.DoesNotThrow(() => provider.GetRequiredService<ITestCommandHandler2>());
+    }
+
     public sealed record TestCommand;
 
     public sealed record TestCommandResponse;
@@ -520,6 +550,13 @@ public sealed class CommandHandlerRegistryTests
     public sealed record TestCommandWithoutResponse;
 
     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
+
+    public interface ITestCommandHandler2 : ICommandHandler<TestCommand2, TestCommand2Response>;
+
+    public interface ITestCommandHandlerWithExtraMethod : ICommandHandler<TestCommand, TestCommandResponse>
+    {
+        void ExtraMethod();
+    }
 
     public interface ITestCommandWithoutResponseHandler : ICommandHandler<TestCommandWithoutResponse>;
 
@@ -568,6 +605,27 @@ public sealed class CommandHandlerRegistryTests
         public Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
+    private sealed class TestCommandHandlerWithCustomInterfaceWithExtraMethod : ITestCommandHandlerWithExtraMethod
+    {
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public void ExtraMethod() => throw new NotSupportedException();
+    }
+
+    private sealed class TestCommandHandlerWithMultipleInterfaces : ITestCommandHandler,
+                                                                    ITestCommandHandler2
+    {
+        public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<TestCommand2Response> Handle(TestCommand2 command, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
     private sealed class TestCommandHandlerWithPipeline : ICommandHandler<TestCommand, TestCommandResponse>
     {
         public Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new TestCommandResponse());
@@ -576,4 +634,6 @@ public sealed class CommandHandlerRegistryTests
         {
         }
     }
+
+    private sealed class TestCommandHandlerWithoutValidInterfaces : ICommandHandler;
 }

@@ -14,7 +14,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] simplify command functionality tests and ensure all combinations are covered (see [query changes](https://github.com/MrWolfZ/Conqueror/commit/04cbe0d57f52b23abc91534ccbd2533576e2a19a))
 - [ ] add `.Has()` method to pipelines
 - [ ] add trace logging to transports
 - [ ] allow custom method name for custom handler interfaces
