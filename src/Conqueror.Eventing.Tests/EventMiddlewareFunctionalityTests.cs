@@ -1,3 +1,5 @@
+using Conqueror.Eventing.Publishing;
+
 namespace Conqueror.Eventing.Tests;
 
 public sealed class EventMiddlewareFunctionalityTests

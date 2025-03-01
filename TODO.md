@@ -78,7 +78,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
-- [ ] move publisher and observer code (tests and implementation) into dedicated directories
 - [ ] integrate pipeline configuration interface into observer interface (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/0694be8f2444892a25112148ea1a381d4a486e13))
 - [ ] split client creation methods so that there are no optional arguments (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/828d8709a420b9b8f684bedb56b070204031e975))
 - [ ] configure client pipeline at the call site instead of during client registration (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/5042ec259b4a7f720dbbc09dd1732d8c41ddec90))

@@ -3,6 +3,8 @@ using System.Linq;
 using System.Reflection;
 using Conqueror;
 using Conqueror.Eventing;
+using Conqueror.Eventing.Observing;
+using Conqueror.Eventing.Publishing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
