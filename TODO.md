@@ -14,6 +14,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] simplify command functionality tests and ensure all combinations are covered (see [query changes](https://github.com/MrWolfZ/Conqueror/commit/04cbe0d57f52b23abc91534ccbd2533576e2a19a))
 - [ ] add `.Has()` method to pipelines
 - [ ] add trace logging to transports
 - [ ] allow custom method name for custom handler interfaces
@@ -78,33 +79,46 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
-- [ ] refactor context data tests to use smarter test case generation
-- [ ] create transport client before pipeline execution
-- [ ] expose transport type on middleware context
+- [ ] move publisher and observer code (tests and implementation) into dedicated directories
+- [ ] integrate pipeline configuration interface into observer interface (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/0694be8f2444892a25112148ea1a381d4a486e13))
+- [ ] split client creation methods so that there are no optional arguments (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/828d8709a420b9b8f684bedb56b070204031e975))
+- [ ] configure client pipeline at the call site instead of during client registration (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/5042ec259b4a7f720dbbc09dd1732d8c41ddec90))
+- [ ] refactor context data tests to use smarter test case generation (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/db5b68d1fbfd1e408e3ad3965dd013c5b3e0fd2a))
+- [ ] create transport client before pipeline execution (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/91e86f4b287e22782645b01e48f1ac1bedb96bfe))
+- [ ] make pipeline builder interface generic (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/725c336cd1648be0ac2212073e2fbcab73fa493f))
+- [ ] remove "builder" from pipeline extension class names (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ec2740d5bdab398a7bcd12fa9e6eda61985af13b))
+- [ ] add generic parameters for pipeline references in xml docs (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/a19a2577a24f5340ef1fe3d1f30149cf37dcb1e7))
+- [ ] ensure proper exception is thrown when invalid handler interface is used when registering client (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/23c2ae510d853c065e5c54c53e61c640679514ed))
+- [ ] ensure that full stack trace is contained in exception logs (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/c4a9419b896fa225372ae348d76c31ef8715a78f))
+- [ ] improve performance by using loop instead of recursion in pipeline (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/0e7fe9634ac7ca528d44d61276afba37009150a1))
+- [ ] refactor pipeline logic to take middleware instances instead of resolving them (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/25adf2f62dd3abf55753bbb39261ddc0d924aeb1))
+- [ ] expose transport type on middleware context (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/325c9365f155488d8ecc6727a467d54806706b68))
   - [ ] including http and client/server
   - [ ] add helper methods to check transport type
   - [ ] expose `UseInMemory` transport builder extension method
-- [ ] move publisher and observer code into dedicated directories
-- [ ] integrate pipeline configuration interface into observer interface
-- [ ] make pipeline builder interface generic
-- [ ] refactor pipeline logic to take middleware instances instead of resolving them
-- [ ] add support for delegate middlewares
+- [ ] make middleware interface generic in query and response type (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/7936901f02180babcbc8ad974552e4120a2842e7))
+- [ ] adjust recipes to new middleware conventions (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/1b1534dd6238f615b4767da985c1120a30430574))
+- [ ] rename inmemory to inprocess transport (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/da80ff49cf0a6653bf602c8e1216c1594f81dd45))
+- [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/abbb6066826c3d710bafd5db4ff32db3f17cf50c))
+- [ ] remove handler lifetimes (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ef420402a7c5ec60bbf8f6489fba025f9ade8468))
+- [ ] rename `HandleEvent` to `Handle` (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ed3f2e4cb86f9daf9784f4f40708d9d7031d6276))
+- [ ] add support for delegate middlewares (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/f52d1341e59519e09cad38abc766bd79219344c5))
+- [ ] make pipeline enumerable (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/f306f5a8c3030eb104d9915eed49f15190153a32))
+- [ ] add transport type info to log output (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/652f8610456333a9e8eba40056738c0517d160b7))
+- [ ] ensure that dynamically generated in-process clients create a correct transport with the handler type and pipeline (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/caa8a3a3e52618a83f5f30b4e48ad65bf087986b))
+- [ ] properly propagate event IDs (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ea08dc4420033656ef5012079bfa63830078bd4d))
+- [ ] simplify functionality tests and ensure all combinations are covered (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/04cbe0d57f52b23abc91534ccbd2533576e2a19a))
+- [ ] refactor all tests to use `Assert.That` for exceptions
+- [ ] add dedicated solution
 - [ ] add `.Has()` method to pipelines
-- [ ] make pipeline enumerable
-- [ ] improve performance by using loop instead of recursion in pipeline
-- [ ] rename inmemory to inprocess transport
-- [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines
 - [ ] add trace logging to transports
 - [ ] write tests to ensure that client pipeline sees transport type as observer and handler sees it as publisher
 - [ ] when registering client, validate it is not a concrete class
-- [ ] rename `HandleEvent` to `Handle`
 - [ ] update all recipes and examples to drop `Event` suffix
 - [ ] align all tests names to `Given_When_Then` style
 - [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
-- [ ] create benchmark app
+- [ ] create benchmark app (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/65f4197bf2df717cc387f74bacd264ae519f9e53))
   - [ ] add benchmarks for running with and without context items
-- [ ] add tests for middleware lifetimes when applied to different handler types
-- [ ] refactor all tests to use `Assert.That` for exceptions
 - [ ] provide HTTP websocket transport
   - [ ] add test for edge case where different observers for the same event type are configured with different remote hosts and ensure that events are only dispatched to correct observers
   - [ ] add test for edge case where transport initialization throws (expect that hosted service retries with exponential backoff)
