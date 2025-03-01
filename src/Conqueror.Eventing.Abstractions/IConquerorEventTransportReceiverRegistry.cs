@@ -4,23 +4,23 @@ using System.Threading.Tasks;
 
 namespace Conqueror;
 
-public interface IConquerorEventTransportClientRegistrar
+public interface IConquerorEventTransportReceiverRegistry
 {
-    Task<ConquerorEventTransportClientRegistration<TObserverTransportConfiguration, TConfigurationAttribute>> RegisterTransportClient<TObserverTransportConfiguration, TConfigurationAttribute>(
-        Action<IConquerorInMemoryEventPublishingStrategyBuilder> inMemoryPublishingStrategyConfiguration)
+    Task<ConquerorEventTransportReceiverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>> RegisterReceiver<TObserverTransportConfiguration, TConfigurationAttribute>(
+        Action<IConquerorEventBroadcastingStrategyBuilder> broadcastingStrategyConfiguration)
         where TObserverTransportConfiguration : class, IEventObserverTransportConfiguration
         where TConfigurationAttribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 }
 
-public sealed record ConquerorEventTransportClientRegistration<TObserverTransportConfiguration, TConfigurationAttribute>(
-    IConquerorEventTransportClientDispatcher Dispatcher,
-    IReadOnlyCollection<ConquerorEventTransportClientObserverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>> RelevantObservers)
+public sealed record ConquerorEventTransportReceiverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>(
+    IConquerorEventTransportReceiverDispatcher Dispatcher,
+    IReadOnlyCollection<ConquerorEventTransportReceiverObserverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>> RelevantObservers)
     where TObserverTransportConfiguration : class, IEventObserverTransportConfiguration
     where TConfigurationAttribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
 public sealed record ConquerorEventObserverId(Guid Id);
 
-public sealed record ConquerorEventTransportClientObserverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>(
+public sealed record ConquerorEventTransportReceiverObserverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>(
     ConquerorEventObserverId ObserverId,
     Type EventType,
     TConfigurationAttribute ConfigurationAttribute,

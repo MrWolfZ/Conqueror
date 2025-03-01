@@ -266,7 +266,7 @@ public sealed class RegistrationTests
 
     public sealed class TestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportPublisherConfigurationAttribute>
     {
-        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             return Task.CompletedTask;
@@ -275,7 +275,7 @@ public sealed class RegistrationTests
 
     public abstract class AbstractEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportPublisherConfigurationAttribute>
     {
-        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             return Task.CompletedTask;
@@ -285,7 +285,7 @@ public sealed class RegistrationTests
     public sealed class GenericTestEventTransportPublisher<T> : IConquerorEventTransportPublisher<T>
         where T : Attribute, IConquerorEventTransportConfigurationAttribute
     {
-        public Task PublishEvent<TEvent>(TEvent evt, T configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public Task PublishEvent<TEvent>(TEvent evt, T configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             return Task.CompletedTask;
@@ -294,7 +294,7 @@ public sealed class RegistrationTests
 
     private sealed class PrivateTestEventTransportPublisher : IConquerorEventTransportPublisher<TestEventTransportPublisherConfigurationAttribute>
     {
-        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public Task PublishEvent<TEvent>(TEvent evt, TestEventTransportPublisherConfigurationAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             return Task.CompletedTask;

@@ -1576,16 +1576,16 @@ public sealed class EventMiddlewareFunctionalityTests
     [AttributeUsage(AttributeTargets.Class)]
     private sealed class TestEventTransportAttribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
-    private sealed class TestEventTransportPublisher(TestObservations observations, IConquerorEventTransportClientRegistrar registrar) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
+    private sealed class TestEventTransportPublisher(TestObservations observations, IConquerorEventTransportReceiverRegistry registry, IServiceProvider serviceProvider) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();
             observations.EventsFromPublisher.Add(evt);
             observations.CancellationTokensFromPublisher.Add(cancellationToken);
 
-            var registration = await registrar.RegisterTransportClient<InMemoryEventObserverTransportConfiguration, TestEventTransportAttribute>(builder => builder.UseSequentialAsDefault())
+            var registration = await registry.RegisterReceiver<InMemoryEventObserverTransportConfiguration, TestEventTransportAttribute>(builder => builder.UseSequentialAsDefault())
                                               .ConfigureAwait(false);
 
             var observersToDispatchTo = registration.RelevantObservers.Select(r => r.ObserverId).ToHashSet();
@@ -1598,14 +1598,14 @@ public sealed class EventMiddlewareFunctionalityTests
 
     private sealed class TestEventTransportPublisher2(TestObservations observations, InMemoryEventPublisher inMemoryPublisher) : IConquerorEventTransportPublisher<TestEventTransport2Attribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransport2Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransport2Attribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();
             observations.EventsFromPublisher.Add(evt);
             observations.CancellationTokensFromPublisher.Add(cancellationToken);
 
-            await inMemoryPublisher.PublishEvent(evt, new(), serviceProvider, cancellationToken);
+            await inMemoryPublisher.PublishEvent(evt, new(), cancellationToken);
         }
     }
 

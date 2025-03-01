@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing.Publishing;
 
-internal sealed class InMemorySequentialPublishingStrategy(SequentialInMemoryEventPublishingStrategyConfiguration configuration) : IConquerorInMemoryEventPublishingStrategy
+internal sealed class SequentialBroadcastingStrategy(SequentialEventBroadcastingStrategyConfiguration configuration) : IConquerorEventBroadcastingStrategy
 {
-    public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
+    public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
         where TEvent : class
     {
-        var shouldThrowOnFirst = configuration.ExceptionHandling == SequentialInMemoryEventPublishingStrategyExceptionHandling.ThrowOnFirstException;
+        var shouldThrowOnFirst = configuration.ExceptionHandling == SequentialEventBroadcastingStrategyExceptionHandling.ThrowOnFirstException;
         var thrownExceptions = new List<Exception>();
         var thrownCancellationExceptions = new List<Exception>();
 

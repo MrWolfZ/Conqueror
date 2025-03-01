@@ -53,29 +53,12 @@ public static class ConquerorEventingTransportPublisherServiceCollectionExtensio
 
     public static IServiceCollection AddConquerorInMemoryEventPublisher(this IServiceCollection services)
     {
-        services.Replace(ServiceDescriptor.Singleton(new InMemoryEventPublisher.State(_ => { })));
         return services.AddConquerorEventTransportPublisher<InMemoryEventPublisher>();
     }
 
     public static IServiceCollection AddConquerorInMemoryEventPublisher(this IServiceCollection services,
                                                                         Action<IEventPublisherPipelineBuilder> configurePipeline)
     {
-        services.Replace(ServiceDescriptor.Singleton(new InMemoryEventPublisher.State(_ => { })));
-        return services.AddConquerorEventTransportPublisher<InMemoryEventPublisher>(configurePipeline);
-    }
-
-    public static IServiceCollection AddConquerorInMemoryEventPublisher(this IServiceCollection services,
-                                                                        Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy)
-    {
-        services.Replace(ServiceDescriptor.Singleton(new InMemoryEventPublisher.State(configureStrategy)));
-        return services.AddConquerorEventTransportPublisher<InMemoryEventPublisher>();
-    }
-
-    public static IServiceCollection AddConquerorInMemoryEventPublisher(this IServiceCollection services,
-                                                                        Action<IEventPublisherPipelineBuilder> configurePipeline,
-                                                                        Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy)
-    {
-        services.Replace(ServiceDescriptor.Singleton(new InMemoryEventPublisher.State(configureStrategy)));
         return services.AddConquerorEventTransportPublisher<InMemoryEventPublisher>(configurePipeline);
     }
 
@@ -100,9 +83,14 @@ public static class ConquerorEventingTransportPublisherServiceCollectionExtensio
         return services.AddConquerorEventTransportPublisher(publisherType, configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorEventTransportPublisher(this IServiceCollection services,
-                                                                           Type publisherType,
-                                                                           Action<IEventPublisherPipelineBuilder>? configurePipeline)
+    internal static bool IsEventTransportPublisherRegistered(this IServiceCollection services, Type publisherType)
+    {
+        return services.Any(d => d.ImplementationInstance is EventPublisherRegistration r && r.PublisherType == publisherType);
+    }
+
+    private static IServiceCollection AddConquerorEventTransportPublisher(this IServiceCollection services,
+                                                                          Type publisherType,
+                                                                          Action<IEventPublisherPipelineBuilder>? configurePipeline)
     {
         publisherType.ValidateNoInvalidEventPublisherInterface();
 
@@ -123,10 +111,5 @@ public static class ConquerorEventingTransportPublisherServiceCollectionExtensio
         services.AddConquerorEventing();
 
         return services;
-    }
-
-    internal static bool IsEventTransportPublisherRegistered(this IServiceCollection services, Type publisherType)
-    {
-        return services.Any(d => d.ImplementationInstance is EventPublisherRegistration r && r.PublisherType == publisherType);
     }
 }

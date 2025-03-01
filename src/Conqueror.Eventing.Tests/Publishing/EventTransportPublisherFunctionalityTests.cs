@@ -165,7 +165,7 @@ public sealed class EventTransportPublisherFunctionalityTests
 
     private sealed class TestEventTransportPublisher(TestObservations observations, Exception? exceptionToThrow = null) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();

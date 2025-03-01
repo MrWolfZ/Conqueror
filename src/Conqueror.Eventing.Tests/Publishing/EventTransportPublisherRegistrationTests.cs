@@ -372,7 +372,7 @@ public sealed class EventTransportPublisherRegistrationTests
     {
         private int invocationCount;
 
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             invocationCount += 1;
@@ -387,13 +387,13 @@ public sealed class EventTransportPublisherRegistrationTests
 
     private sealed class TestEventTransportPublisherWithMultipleInterfaces : IConquerorEventTransportPublisher<TestEventTransportAttribute>, IConquerorEventTransportPublisher<TestEventTransport2Attribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();
         }
 
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransport2Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransport2Attribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();
@@ -407,7 +407,7 @@ public sealed class EventTransportPublisherRegistrationTests
     {
         public int InvocationCount { get; private set; }
 
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportForAssemblyScanningAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportForAssemblyScanningAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             InvocationCount += 1;

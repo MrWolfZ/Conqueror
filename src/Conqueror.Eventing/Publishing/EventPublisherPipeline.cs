@@ -26,7 +26,7 @@ internal sealed class EventPublisherPipeline<TConfiguration>(IEnumerable<(Type M
             if (index >= middlewares.Count)
             {
                 var publisher = (IConquerorEventTransportPublisher<TConfiguration>)serviceProvider.GetRequiredService(publisherType);
-                await publisher.PublishEvent(evt, configuration, serviceProvider, token).ConfigureAwait(false);
+                await publisher.PublishEvent(evt, configuration, token).ConfigureAwait(false);
                 return;
             }
 

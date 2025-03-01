@@ -7,7 +7,7 @@ namespace Conqueror;
 public interface IConquerorEventTransportPublisher<in TConfigurationAttribute> : IConquerorEventTransportPublisher
     where TConfigurationAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
 {
-    Task PublishEvent<TEvent>(TEvent evt, TConfigurationAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    Task PublishEvent<TEvent>(TEvent evt, TConfigurationAttribute configurationAttribute, CancellationToken cancellationToken = default)
         where TEvent : class;
 }
 

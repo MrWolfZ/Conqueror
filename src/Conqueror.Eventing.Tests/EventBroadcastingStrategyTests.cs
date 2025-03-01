@@ -1,17 +1,17 @@
 using System.Collections.Concurrent;
 
-namespace Conqueror.Eventing.Tests.Publishing;
+namespace Conqueror.Eventing.Tests;
 
-public sealed class InMemoryEventPublishingStrategyTests
+public sealed class EventBroadcastingStrategyTests
 {
     [Test]
-    public async Task GivenCustomInMemoryPublishingStrategy_CustomStrategyIsUsedWhenPublishing()
+    public async Task GivenCustomBroadcastingStrategy_CustomStrategyIsUsedWhenPublishing()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseDefault(new TestPublishingStrategy1(observations)))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseDefault(new TestBroadcastingStrategy1(observations)))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -35,14 +35,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public void GivenCustomInMemoryPublishingStrategyThatThrows_SameExceptionIsRethrownFromPublishing()
+    public void GivenCustomBroadcastingStrategyThatThrows_SameExceptionIsRethrownFromPublishing()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
         var exception = new Exception();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseDefault(new TestPublishingStrategy1(observations, exception)))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseDefault(new TestBroadcastingStrategy1(observations, exception)))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -62,14 +62,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenOverriddenDefaultInMemoryPublishingStrategy_LastConfiguredDefaultIsUsedWhenPublishing()
+    public async Task GivenOverriddenDefaultBroadcastingStrategy_LastConfiguredDefaultIsUsedWhenPublishing()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseDefault(new TestPublishingStrategy1(observations))
-                                                                                             .UseDefault(new TestPublishingStrategy2(observations)))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseDefault(new TestBroadcastingStrategy1(observations))
+                                                                                             .UseDefault(new TestBroadcastingStrategy2(observations)))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -81,15 +81,15 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         await observer.HandleEvent(evt);
 
-        Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[] { typeof(TestPublishingStrategy2) }));
+        Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[] { typeof(TestBroadcastingStrategy2) }));
 
         await dispatcher.DispatchEvent(evt);
 
-        Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[] { typeof(TestPublishingStrategy2), typeof(TestPublishingStrategy2) }));
+        Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[] { typeof(TestBroadcastingStrategy2), typeof(TestBroadcastingStrategy2) }));
     }
 
     [Test]
-    public async Task GivenNoExplicitInMemoryPublishingStrategy_SequentialStrategyIsUsed()
+    public async Task GivenNoExplicitBroadcastingStrategy_SequentialStrategyIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -185,14 +185,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenSequentialInMemoryPublishingStrategyForEventType_SequentialStrategyIsUsedOnlyForThatEventType()
+    public async Task GivenSequentialBroadcastingStrategyForEventType_SequentialStrategyIsUsedOnlyForThatEventType()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseDefault(new TestPublishingStrategy1(observations))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseDefault(new TestBroadcastingStrategy1(observations))
                                                                                              .UseSequentialForEventType<TestEvent>())
                     .AddSingleton(observations);
 
@@ -213,27 +213,27 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
+            typeof(TestBroadcastingStrategy1),
         }));
 
         await dispatcher.DispatchEvent(evt1);
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
+            typeof(TestBroadcastingStrategy1),
         }));
 
         await dispatcher.DispatchEvent(evt2);
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
-            typeof(TestPublishingStrategy1),
+            typeof(TestBroadcastingStrategy1),
+            typeof(TestBroadcastingStrategy1),
         }));
     }
 
     [Test]
-    public void GivenSequentialInMemoryPublishingStrategyWithDefaultConfiguration_WhenObserverThrows_RethrowsExceptionImmediately()
+    public void GivenSequentialBroadcastingStrategyWithDefaultConfiguration_WhenObserverThrows_RethrowsExceptionImmediately()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -242,7 +242,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseSequentialAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseSequentialAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -279,7 +279,7 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public void GivenSequentialInMemoryPublishingStrategyWithThrowOnFirstException_WhenObserverThrows_RethrowsExceptionImmediately()
+    public void GivenSequentialBroadcastingStrategyWithThrowOnFirstException_WhenObserverThrows_RethrowsExceptionImmediately()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -288,7 +288,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseSequentialAsDefault(o => o.ExceptionHandling = SequentialInMemoryEventPublishingStrategyExceptionHandling.ThrowOnFirstException))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseSequentialAsDefault(o => o.ExceptionHandling = SequentialEventBroadcastingStrategyExceptionHandling.ThrowOnFirstException))
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -325,7 +325,7 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public void GivenSequentialInMemoryPublishingStrategyWithThrowAfterAll_WhenObserverThrows_RethrowsExceptionAfterAllObserversHaveFinished()
+    public void GivenSequentialBroadcastingStrategyWithThrowAfterAll_WhenObserverThrows_RethrowsExceptionAfterAllObserversHaveFinished()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -334,7 +334,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseSequentialAsDefault(o => o.ExceptionHandling = SequentialInMemoryEventPublishingStrategyExceptionHandling.ThrowAfterAll))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseSequentialAsDefault(o => o.ExceptionHandling = SequentialEventBroadcastingStrategyExceptionHandling.ThrowAfterAll))
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -378,7 +378,7 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public void GivenSequentialInMemoryPublishingStrategyWithThrowAfterAll_WhenMultipleObserversThrow_ThrowsAggregateExceptionAfterAllObserversHaveFinished()
+    public void GivenSequentialBroadcastingStrategyWithThrowAfterAll_WhenMultipleObserversThrow_ThrowsAggregateExceptionAfterAllObserversHaveFinished()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -388,7 +388,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseSequentialAsDefault(o => o.ExceptionHandling = SequentialInMemoryEventPublishingStrategyExceptionHandling.ThrowAfterAll))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseSequentialAsDefault(o => o.ExceptionHandling = SequentialEventBroadcastingStrategyExceptionHandling.ThrowAfterAll))
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -435,14 +435,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenSequentialInMemoryPublishingStrategy_WhenPublishIsCancelledAndNoObserverThrows_CompletesExecutionWithoutException()
+    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndNoObserverThrows_CompletesExecutionWithoutException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseSequentialAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseSequentialAsDefault())
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -486,14 +486,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenSequentialInMemoryPublishingStrategy_WhenPublishIsCancelledAndOneObserverThrowsCancellationException_ThrowsCancellationExceptionAfterAllObserversHaveExecuted()
+    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndOneObserverThrowsCancellationException_ThrowsCancellationExceptionAfterAllObserversHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseSequentialAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseSequentialAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, ct) =>
@@ -540,14 +540,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenSequentialInMemoryPublishingStrategy_WhenPublishIsCancelledAndMultipleObserversThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllObserversHaveExecuted()
+    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndMultipleObserversThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllObserversHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseSequentialAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseSequentialAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, ct) =>
@@ -597,7 +597,7 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenSequentialInMemoryPublishingStrategy_WhenPublishIsCancelledAndSingleObserversThrowCancellationExceptionWhileOtherObserverThrowsOtherException_ThrowsAggregateException()
+    public async Task GivenSequentialBroadcastingStrategy_WhenPublishIsCancelledAndSingleObserversThrowCancellationExceptionWhileOtherObserverThrowsOtherException_ThrowsAggregateException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -606,7 +606,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseSequentialAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseSequentialAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, ct) =>
@@ -660,7 +660,7 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenConfiguredParallelInMemoryPublishingStrategy_ParallelStrategyIsUsed()
+    public async Task GivenConfiguredParallelBroadcastingStrategy_ParallelStrategyIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -670,7 +670,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault())
                     .AddSingleton(observations);
 
         // ReSharper disable AccessToModifiedClosure (intentional)
@@ -763,14 +763,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenParallelInMemoryPublishingStrategyForEventType_ParallelStrategyIsUsedOnlyForThatEventType()
+    public async Task GivenParallelBroadcastingStrategyForEventType_ParallelStrategyIsUsedOnlyForThatEventType()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseDefault(new TestPublishingStrategy1(observations))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseDefault(new TestBroadcastingStrategy1(observations))
                                                                                              .UseParallelForEventType<TestEvent>())
                     .AddSingleton(observations);
 
@@ -791,27 +791,27 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
+            typeof(TestBroadcastingStrategy1),
         }));
 
         await dispatcher.DispatchEvent(evt1);
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
+            typeof(TestBroadcastingStrategy1),
         }));
 
         await dispatcher.DispatchEvent(evt2);
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
-            typeof(TestPublishingStrategy1),
+            typeof(TestBroadcastingStrategy1),
+            typeof(TestBroadcastingStrategy1),
         }));
     }
 
     [Test]
-    public void GivenParallelInMemoryPublishingStrategy_WhenObserverThrows_ThrowsAggregateExceptionAfterAllObserversHaveFinished()
+    public void GivenParallelBroadcastingStrategy_WhenObserverThrows_ThrowsAggregateExceptionAfterAllObserversHaveFinished()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -820,7 +820,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -864,7 +864,7 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public void GivenParallelInMemoryPublishingStrategy_WhenMultipleObserversThrow_ThrowsAggregateExceptionAfterAllObserversHaveFinished()
+    public void GivenParallelBroadcastingStrategy_WhenMultipleObserversThrow_ThrowsAggregateExceptionAfterAllObserversHaveFinished()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -874,7 +874,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -921,14 +921,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenParallelInMemoryPublishingStrategy_WhenPublishIsCancelledAndNoObserverThrows_CompletesExecutionWithoutException()
+    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndNoObserverThrows_CompletesExecutionWithoutException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault())
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -972,14 +972,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenParallelInMemoryPublishingStrategy_WhenPublishIsCancelledAndOneObserverThrowsCancellationException_ThrowsCancellationExceptionAfterAllObserversHaveExecuted()
+    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndOneObserverThrowsCancellationException_ThrowsCancellationExceptionAfterAllObserversHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, ct) =>
@@ -1026,14 +1026,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenParallelInMemoryPublishingStrategy_WhenPublishIsCancelledAndMultipleObserversThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllObserversHaveExecuted()
+    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndMultipleObserversThrowCancellationException_ThrowsSingleCancellationExceptionAfterAllObserversHaveExecuted()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, ct) =>
@@ -1083,7 +1083,7 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenParallelInMemoryPublishingStrategy_WhenPublishIsCancelledAndSingleObserversThrowCancellationExceptionWhileOtherObserverThrowsOtherException_ThrowsAggregateException()
+    public async Task GivenParallelBroadcastingStrategy_WhenPublishIsCancelledAndSingleObserversThrowCancellationExceptionWhileOtherObserverThrowsOtherException_ThrowsAggregateException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -1092,7 +1092,7 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault())
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, ct) =>
@@ -1146,14 +1146,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public async Task GivenConfiguredInMemoryPublishingStrategyForEventType_StrategyIsUsedForThatEventTypeAndDefaultIsUsedForOtherEventTypes()
+    public async Task GivenConfiguredBroadcastingStrategyForEventType_StrategyIsUsedForThatEventTypeAndDefaultIsUsedForOtherEventTypes()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseDefault(new TestPublishingStrategy1(observations))
-                                                                                             .UseForEventType<TestEvent2>(new TestPublishingStrategy2(observations)))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseDefault(new TestBroadcastingStrategy1(observations))
+                                                                                             .UseForEventType<TestEvent2>(new TestBroadcastingStrategy2(observations)))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -1169,39 +1169,39 @@ public sealed class InMemoryEventPublishingStrategyTests
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
+            typeof(TestBroadcastingStrategy1),
         }));
 
         await observer2.HandleEvent(evt2);
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
-            typeof(TestPublishingStrategy2),
+            typeof(TestBroadcastingStrategy1),
+            typeof(TestBroadcastingStrategy2),
         }));
 
         await dispatcher.DispatchEvent(evt1);
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
-            typeof(TestPublishingStrategy2),
-            typeof(TestPublishingStrategy1),
+            typeof(TestBroadcastingStrategy1),
+            typeof(TestBroadcastingStrategy2),
+            typeof(TestBroadcastingStrategy1),
         }));
 
         await dispatcher.DispatchEvent(evt2);
 
         Assert.That(observations.ObservedStrategyTypes, Is.EqualTo(new[]
         {
-            typeof(TestPublishingStrategy1),
-            typeof(TestPublishingStrategy2),
-            typeof(TestPublishingStrategy1),
-            typeof(TestPublishingStrategy2),
+            typeof(TestBroadcastingStrategy1),
+            typeof(TestBroadcastingStrategy2),
+            typeof(TestBroadcastingStrategy1),
+            typeof(TestBroadcastingStrategy2),
         }));
     }
 
     [Test]
-    public async Task GivenParallelInMemoryPublishingStrategyWithNonNegativeDegreeOfParallelism_ParallelStrategyIsUsedWithConfiguredParallelism()
+    public async Task GivenParallelBroadcastingStrategyWithNonNegativeDegreeOfParallelism_ParallelStrategyIsUsedWithConfiguredParallelism()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -1213,7 +1213,7 @@ public sealed class InMemoryEventPublishingStrategyTests
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
                     .AddConquerorEventObserver<TestEventObserver3>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault(o => o.MaxDegreeOfParallelism = 2))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault(o => o.MaxDegreeOfParallelism = 2))
                     .AddSingleton(observations);
 
         // ReSharper disable AccessToModifiedClosure (intentional)
@@ -1323,14 +1323,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public void GivenParallelInMemoryPublishingStrategyWithNegativeDegreeOfParallelism_ThrowsArgumentException()
+    public void GivenParallelBroadcastingStrategyWithNegativeDegreeOfParallelism_ThrowsArgumentException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault(o => o.MaxDegreeOfParallelism = -1))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault(o => o.MaxDegreeOfParallelism = -1))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -1346,14 +1346,14 @@ public sealed class InMemoryEventPublishingStrategyTests
     }
 
     [Test]
-    public void GivenParallelInMemoryPublishingStrategyWithZeroDegreeOfParallelism_ThrowsArgumentException()
+    public void GivenParallelBroadcastingStrategyWithZeroDegreeOfParallelism_ThrowsArgumentException()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddConquerorInMemoryEventPublisher(configureStrategy: builder => builder.UseParallelAsDefault(o => o.MaxDegreeOfParallelism = 0))
+                    .ConfigureInProcessEventBroadcastingStrategy(builder => builder.UseParallelAsDefault(o => o.MaxDegreeOfParallelism = 0))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -1483,12 +1483,12 @@ public sealed class InMemoryEventPublishingStrategyTests
         }
     }
 
-    private sealed class TestPublishingStrategy1(
+    private sealed class TestBroadcastingStrategy1(
         TestObservations observations,
         Exception? exceptionToThrow = null)
-        : IConquerorInMemoryEventPublishingStrategy
+        : IConquerorEventBroadcastingStrategy
     {
-        public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
+        public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
             where TEvent : class
         {
             observations.ObservedStrategyTypes.Enqueue(GetType());
@@ -1507,9 +1507,9 @@ public sealed class InMemoryEventPublishingStrategyTests
         }
     }
 
-    private sealed class TestPublishingStrategy2(TestObservations observations) : IConquerorInMemoryEventPublishingStrategy
+    private sealed class TestBroadcastingStrategy2(TestObservations observations) : IConquerorEventBroadcastingStrategy
     {
-        public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
+        public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
             where TEvent : class
         {
             observations.ObservedStrategyTypes.Enqueue(GetType());

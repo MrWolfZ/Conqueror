@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing.Publishing;
 
-internal sealed class InMemoryParallelPublishingStrategy(ParallelInMemoryEventPublishingStrategyConfiguration configuration) : IConquerorInMemoryEventPublishingStrategy
+internal sealed class ParallelBroadcastingStrategy(ParallelEventBroadcastingStrategyConfiguration configuration) : IConquerorEventBroadcastingStrategy
 {
-    public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
+    public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
         where TEvent : class
     {
         if (configuration.MaxDegreeOfParallelism <= 0)

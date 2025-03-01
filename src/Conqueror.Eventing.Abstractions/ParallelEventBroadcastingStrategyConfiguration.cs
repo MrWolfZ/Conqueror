@@ -1,6 +1,6 @@
 ﻿namespace Conqueror;
 
-public sealed record ParallelInMemoryEventPublishingStrategyConfiguration
+public sealed record ParallelEventBroadcastingStrategyConfiguration
 {
     public int? MaxDegreeOfParallelism { get; set; }
 }

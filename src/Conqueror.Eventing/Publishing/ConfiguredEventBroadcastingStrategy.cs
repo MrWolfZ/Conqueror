@@ -8,14 +8,17 @@ using Conqueror.Eventing.Observing;
 
 namespace Conqueror.Eventing.Publishing;
 
-internal sealed class InMemoryEventPublishingConfiguredStrategy(
-    IConquerorInMemoryEventPublishingStrategy defaultStrategy,
-    Dictionary<Type, IConquerorInMemoryEventPublishingStrategy> strategyByEventType,
+internal sealed class ConfiguredEventBroadcastingStrategy(
+    IConquerorEventBroadcastingStrategy defaultStrategy,
+    Dictionary<Type, IConquerorEventBroadcastingStrategy> strategyByEventType,
     IReadOnlyCollection<EventObserverRegistration> observerRegistrations)
 {
     private readonly ConcurrentDictionary<Type, IReadOnlyCollection<(Type EventType, EventObserverRegistration Registration)>> observerRegistrationsByEventType = new();
 
-    public Task DispatchEvent<TEvent>(TEvent evt, ISet<ConquerorEventObserverId> observersToDispatchTo, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    public Task DispatchEvent<TEvent>(TEvent evt,
+                                      ISet<ConquerorEventObserverId> observersToDispatchTo,
+                                      IServiceProvider serviceProvider,
+                                      CancellationToken cancellationToken = default)
         where TEvent : class
     {
         var registrations = observerRegistrationsByEventType.GetOrAdd(typeof(TEvent), GetObserverRegistrationsForEventType);
@@ -48,7 +51,7 @@ internal sealed class InMemoryEventPublishingConfiguredStrategy(
             }
         }
 
-        return strategy.PublishEvent(observers, evt, cancellationToken);
+        return strategy.BroadcastEvent(observers, evt, cancellationToken);
     }
 
     private IReadOnlyCollection<(Type EventType, EventObserverRegistration Registration)> GetObserverRegistrationsForEventType(Type eventType)

@@ -620,7 +620,7 @@ public sealed class EventObserverTransportTests : IDisposable
                     .AddSingleton<CustomEventTransport2PublisherState>()
                     .AddSingleton<CustomEventTransport1Client>()
                     .AddSingleton<CustomEventTransport2Client>()
-                    .AddSingleton<Func<ConquerorEventTransportClientObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>>(r => r.Configuration is not null)
+                    .AddSingleton<Func<ConquerorEventTransportReceiverObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>>(r => r.Configuration is not null)
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -809,7 +809,7 @@ public sealed class EventObserverTransportTests : IDisposable
 
     private sealed class CustomEventTransport1Publisher(CustomEventTransport1PublisherState state) : IConquerorEventTransportPublisher<CustomEventTransport1Attribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, CustomEventTransport1Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, CustomEventTransport1Attribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();
@@ -841,16 +841,16 @@ public sealed class EventObserverTransportTests : IDisposable
     private sealed class CustomEventTransport1Client(
         TestObservations observations,
         CustomEventTransport1PublisherState publisherState,
-        IConquerorEventTransportClientRegistrar transportClientRegistrar,
+        IConquerorEventTransportReceiverRegistry transportReceiverRegistry,
         IServiceProvider serviceProvider,
-        Func<ConquerorEventTransportClientObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>? observerFilter = null)
+        Func<ConquerorEventTransportReceiverObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>? observerFilter = null)
     {
         public async Task Start()
         {
-            var registration = await transportClientRegistrar.RegisterTransportClient<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>(builder =>
+            var registration = await transportReceiverRegistry.RegisterReceiver<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>(builder =>
             {
                 // test publishing with custom strategy
-                _ = builder.UseDefault(new CustomInMemoryPublishingStrategy(observations));
+                _ = builder.UseDefault(new CustomBroadcastingStrategy(observations));
             });
 
             foreach (var transportClientRegistration in registration.RelevantObservers)
@@ -872,9 +872,9 @@ public sealed class EventObserverTransportTests : IDisposable
         }
     }
 
-    private sealed class CustomInMemoryPublishingStrategy(TestObservations observations) : IConquerorInMemoryEventPublishingStrategy
+    private sealed class CustomBroadcastingStrategy(TestObservations observations) : IConquerorEventBroadcastingStrategy
     {
-        public async Task PublishEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
+        public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
             where TEvent : class
         {
             observations.EventsFromStrategy.Enqueue(evt);
@@ -911,7 +911,7 @@ public sealed class EventObserverTransportTests : IDisposable
 
     private sealed class CustomEventTransport2Publisher(CustomEventTransport2PublisherState state) : IConquerorEventTransportPublisher<CustomEventTransport2Attribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, CustomEventTransport2Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, CustomEventTransport2Attribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();
@@ -943,12 +943,12 @@ public sealed class EventObserverTransportTests : IDisposable
     private sealed class CustomEventTransport2Client(
         TestObservations observations,
         CustomEventTransport2PublisherState publisherState,
-        IConquerorEventTransportClientRegistrar transportClientRegistrar,
+        IConquerorEventTransportReceiverRegistry transportReceiverRegistry,
         IServiceProvider serviceProvider)
     {
         public async Task Start()
         {
-            var registration = await transportClientRegistrar.RegisterTransportClient<CustomEventObserverTransport2Configuration, CustomEventTransport2Attribute>(builder => builder.UseSequentialAsDefault())
+            var registration = await transportReceiverRegistry.RegisterReceiver<CustomEventObserverTransport2Configuration, CustomEventTransport2Attribute>(builder => builder.UseSequentialAsDefault())
                                                              .ConfigureAwait(false);
 
             foreach (var transportClientRegistration in registration.RelevantObservers)

@@ -349,7 +349,7 @@ public sealed class EventTransportPublisherSelectionTests
 
     private sealed class TestEventTransportPublisher1(TestObservations observations, Exception? exception = null) : IConquerorEventTransportPublisher<TestEventPublisher1Attribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher1Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher1Attribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();
@@ -373,7 +373,7 @@ public sealed class EventTransportPublisherSelectionTests
 
     private sealed class TestEventTransportPublisher2(TestObservations observations, Exception? exception = null) : IConquerorEventTransportPublisher<TestEventPublisher2Attribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher2Attribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher2Attribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
         {
             await Task.Yield();

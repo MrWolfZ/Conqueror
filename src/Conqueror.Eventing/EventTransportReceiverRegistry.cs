@@ -10,24 +10,24 @@ using Conqueror.Eventing.Publishing;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventTransportClientRegistrar(
+internal sealed class EventTransportReceiverRegistry(
     IServiceProvider serviceProvider,
     IEnumerable<EventObserverRegistration> registrations)
-    : IConquerorEventTransportClientRegistrar, IDisposable
+    : IConquerorEventTransportReceiverRegistry, IDisposable
 {
     private readonly IReadOnlyCollection<EventObserverRegistration> registrations = registrations.ToList();
     private readonly SemaphoreSlim semaphore = new(1);
 
     private Dictionary<ConquerorEventObserverId, IReadOnlyCollection<IEventObserverTransportConfiguration>>? transportConfigurationsByObserverId;
 
-    public async Task<ConquerorEventTransportClientRegistration<TObserverTransportConfiguration, TConfigurationAttribute>> RegisterTransportClient<TObserverTransportConfiguration, TConfigurationAttribute>(
-        Action<IConquerorInMemoryEventPublishingStrategyBuilder> inMemoryPublishingStrategyConfiguration)
+    public async Task<ConquerorEventTransportReceiverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>> RegisterReceiver<TObserverTransportConfiguration, TConfigurationAttribute>(
+        Action<IConquerorEventBroadcastingStrategyBuilder> broadcastingStrategyConfiguration)
         where TObserverTransportConfiguration : class, IEventObserverTransportConfiguration
         where TConfigurationAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
     {
         var configurationsByObserverId = await GetTransportConfigurations().ConfigureAwait(false);
 
-        var relevantTransportClientObserversRegistrations = new List<ConquerorEventTransportClientObserverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>>();
+        var relevantTransportClientObserversRegistrations = new List<ConquerorEventTransportReceiverObserverRegistration<TObserverTransportConfiguration, TConfigurationAttribute>>();
         var relevantObserverRegistrations = new List<EventObserverRegistration>();
 
         foreach (var (registration, eventType) in from r in registrations from et in r.ObservedEventTypes select (r, et))
@@ -54,13 +54,13 @@ internal sealed class EventTransportClientRegistrar(
             relevantTransportClientObserversRegistrations.Add(new(registration.ObserverId, eventType, configurationAttribute, configuration));
         }
 
-        var strategyBuilder = new InMemoryEventPublishingStrategyBuilder(serviceProvider);
+        var strategyBuilder = new EventBroadcastingStrategyBuilder(serviceProvider);
 
-        inMemoryPublishingStrategyConfiguration(strategyBuilder);
+        broadcastingStrategyConfiguration(strategyBuilder);
 
         var strategy = strategyBuilder.Build(relevantObserverRegistrations.DistinctBy(r => r.ObserverId).ToList());
 
-        var dispatcher = new InMemoryDispatcher(strategy);
+        var dispatcher = new ReceiverDispatcher(strategy);
 
         return new(dispatcher, relevantTransportClientObserversRegistrations);
     }
@@ -112,26 +112,32 @@ internal sealed class EventTransportClientRegistrar(
         return transportConfigurationsByObserverId;
     }
 
-    private sealed class InMemoryDispatcher(InMemoryEventPublishingConfiguredStrategy strategy) : IConquerorEventTransportClientDispatcher
+    private sealed class ReceiverDispatcher(ConfiguredEventBroadcastingStrategy strategy) : IConquerorEventTransportReceiverDispatcher
     {
-        private readonly ConcurrentDictionary<Type, IConquerorEventTransportClientDispatcher> genericDispatchers = new();
+        private readonly ConcurrentDictionary<Type, IConquerorEventTransportReceiverDispatcher> genericDispatchers = new();
 
-        public Task DispatchEvent(object evt, ISet<ConquerorEventObserverId> observersToDispatchTo, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+        public Task DispatchEvent(object evt,
+                                  ISet<ConquerorEventObserverId> observersToDispatchTo,
+                                  IServiceProvider serviceProvider,
+                                  CancellationToken cancellationToken = default)
         {
             var dispatcher = genericDispatchers.GetOrAdd(evt.GetType(), CreateGenericDispatcher);
             return dispatcher.DispatchEvent(evt, observersToDispatchTo, serviceProvider, cancellationToken);
         }
 
-        private IConquerorEventTransportClientDispatcher CreateGenericDispatcher(Type eventType)
+        private IConquerorEventTransportReceiverDispatcher CreateGenericDispatcher(Type eventType)
         {
             var dispatcherType = typeof(GenericDispatcher<>).MakeGenericType(eventType);
-            return (IConquerorEventTransportClientDispatcher)Activator.CreateInstance(dispatcherType, strategy)!;
+            return (IConquerorEventTransportReceiverDispatcher)Activator.CreateInstance(dispatcherType, strategy)!;
         }
 
-        private sealed class GenericDispatcher<TEvent>(InMemoryEventPublishingConfiguredStrategy strategy) : IConquerorEventTransportClientDispatcher
+        private sealed class GenericDispatcher<TEvent>(ConfiguredEventBroadcastingStrategy strategy) : IConquerorEventTransportReceiverDispatcher
             where TEvent : class
         {
-            public Task DispatchEvent(object evt, ISet<ConquerorEventObserverId> observersToDispatchTo, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+            public Task DispatchEvent(object evt,
+                                      ISet<ConquerorEventObserverId> observersToDispatchTo,
+                                      IServiceProvider serviceProvider,
+                                      CancellationToken cancellationToken = default)
             {
                 return strategy.DispatchEvent((TEvent)evt, observersToDispatchTo, serviceProvider, cancellationToken);
             }

@@ -18,10 +18,11 @@ public static class ConquerorEventingServiceCollectionExtensions
         services.TryAddTransient(typeof(IEventObserver<>), typeof(EventObserverDispatcher<>));
         services.TryAddSingleton<EventPublisherDispatcher>();
         services.TryAddSingleton<EventPublisherRegistry>();
-        services.TryAddSingleton<EventTransportClientRegistrar>();
-        services.TryAddSingleton<IConquerorEventTransportClientRegistrar>(p => p.GetRequiredService<EventTransportClientRegistrar>());
+        services.TryAddSingleton<EventTransportReceiverRegistry>();
+        services.TryAddSingleton<IConquerorEventTransportReceiverRegistry>(p => p.GetRequiredService<EventTransportReceiverRegistry>());
 
         services.TryAddDefaultInMemoryEventPublisher();
+        services.AddInProcessEventTransportReceiver();
 
         return services;
     }
