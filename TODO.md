@@ -78,9 +78,9 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
+- [ ] remove publisher lifetimes (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ef420402a7c5ec60bbf8f6489fba025f9ade8468))
 - [ ] integrate pipeline configuration interface into observer interface (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/0694be8f2444892a25112148ea1a381d4a486e13))
-- [ ] split client creation methods so that there are no optional arguments (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/828d8709a420b9b8f684bedb56b070204031e975))
-- [ ] configure client pipeline at the call site instead of during client registration (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/5042ec259b4a7f720dbbc09dd1732d8c41ddec90))
+- [ ] configure publisher pipeline at the call site instead of during publisher registration (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/5042ec259b4a7f720dbbc09dd1732d8c41ddec90))
 - [ ] refactor context data tests to use smarter test case generation (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/db5b68d1fbfd1e408e3ad3965dd013c5b3e0fd2a))
 - [ ] create transport client before pipeline execution (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/91e86f4b287e22782645b01e48f1ac1bedb96bfe))
 - [ ] make pipeline builder interface generic (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/725c336cd1648be0ac2212073e2fbcab73fa493f))
@@ -98,7 +98,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] adjust recipes to new middleware conventions (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/1b1534dd6238f615b4767da985c1120a30430574))
 - [ ] rename inmemory to inprocess transport (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/da80ff49cf0a6653bf602c8e1216c1594f81dd45))
 - [ ] expose transporttype on pipeline in addition to middleware context to enable conditional pipelines (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/abbb6066826c3d710bafd5db4ff32db3f17cf50c))
-- [ ] remove handler lifetimes (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ef420402a7c5ec60bbf8f6489fba025f9ade8468))
 - [ ] rename `HandleEvent` to `Handle` (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ed3f2e4cb86f9daf9784f4f40708d9d7031d6276))
 - [ ] add support for delegate middlewares (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/f52d1341e59519e09cad38abc766bd79219344c5))
 - [ ] make pipeline enumerable (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/f306f5a8c3030eb104d9915eed49f15190153a32))

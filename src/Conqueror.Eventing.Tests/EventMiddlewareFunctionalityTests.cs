@@ -885,7 +885,7 @@ public sealed class EventMiddlewareFunctionalityTests
         var observedInstances = new List<TestService>();
 
         _ = services.AddConquerorEventObserver<TestEventObserverWithConfigurableMiddlewares>()
-                    .AddConquerorInMemoryEventPublisher(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()))
+                    .AddConquerorInMemoryEventPublisher(configurePipeline: pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()))
                     .AddScoped<TestService>()
                     .AddSingleton(observations);
 

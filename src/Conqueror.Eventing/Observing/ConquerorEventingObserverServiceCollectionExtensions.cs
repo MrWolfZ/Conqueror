@@ -16,34 +16,91 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorEventingObserverServiceCollectionExtensions
 {
+    public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services)
+        where TObserver : class, IEventObserver
+    {
+        return services.AddConquerorEventObserver<TObserver>(ServiceLifetime.Transient);
+    }
+
+    public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services, ServiceLifetime lifetime)
+        where TObserver : class, IEventObserver
+    {
+        return services.AddConquerorEventObserver(typeof(TObserver), new(typeof(TObserver), typeof(TObserver), lifetime), null);
+    }
+
     public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services,
-                                                                          ServiceLifetime lifetime = ServiceLifetime.Transient,
-                                                                          Action<IEventObserverTransportBuilder>? configureTransports = null)
+                                                                          Action<IEventObserverTransportBuilder> configureTransports)
+        where TObserver : class, IEventObserver
+    {
+        return services.AddConquerorEventObserver<TObserver>(configureTransports, ServiceLifetime.Transient);
+    }
+
+    public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services,
+                                                                          Action<IEventObserverTransportBuilder> configureTransports,
+                                                                          ServiceLifetime lifetime)
         where TObserver : class, IEventObserver
     {
         return services.AddConquerorEventObserver(typeof(TObserver), new(typeof(TObserver), typeof(TObserver), lifetime), configureTransports);
     }
 
     public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services,
+                                                                          Func<IServiceProvider, TObserver> factory)
+        where TObserver : class, IEventObserver
+    {
+        return services.AddConquerorEventObserver(factory, ServiceLifetime.Transient);
+    }
+
+    public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services,
                                                                           Func<IServiceProvider, TObserver> factory,
-                                                                          ServiceLifetime lifetime = ServiceLifetime.Transient,
-                                                                          Action<IEventObserverTransportBuilder>? configureTransports = null)
+                                                                          ServiceLifetime lifetime)
+        where TObserver : class, IEventObserver
+    {
+        return services.AddConquerorEventObserver(typeof(TObserver), new(typeof(TObserver), factory, lifetime), null);
+    }
+
+    public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services,
+                                                                          Func<IServiceProvider, TObserver> factory,
+                                                                          Action<IEventObserverTransportBuilder> configureTransports)
+        where TObserver : class, IEventObserver
+    {
+        return services.AddConquerorEventObserver(factory, configureTransports, ServiceLifetime.Transient);
+    }
+
+    public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services,
+                                                                          Func<IServiceProvider, TObserver> factory,
+                                                                          Action<IEventObserverTransportBuilder> configureTransports,
+                                                                          ServiceLifetime lifetime)
         where TObserver : class, IEventObserver
     {
         return services.AddConquerorEventObserver(typeof(TObserver), new(typeof(TObserver), factory, lifetime), configureTransports);
     }
 
+    public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services, TObserver instance)
+        where TObserver : class, IEventObserver
+    {
+        return services.AddConquerorEventObserver(typeof(TObserver), new(typeof(TObserver), instance), null);
+    }
+
     public static IServiceCollection AddConquerorEventObserver<TObserver>(this IServiceCollection services,
                                                                           TObserver instance,
-                                                                          Action<IEventObserverTransportBuilder>? configureTransports = null)
+                                                                          Action<IEventObserverTransportBuilder> configureTransports)
         where TObserver : class, IEventObserver
     {
         return services.AddConquerorEventObserver(typeof(TObserver), new(typeof(TObserver), instance), configureTransports);
     }
 
     public static IServiceCollection AddConquerorEventObserverDelegate<TEvent>(this IServiceCollection services,
+                                                                               Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn)
+        where TEvent : class
+    {
+        services.AddConquerorEventing();
+
+        return services.AddConquerorEventObserverDelegateRegistration(observerFn, null, null);
+    }
+
+    public static IServiceCollection AddConquerorEventObserverDelegate<TEvent>(this IServiceCollection services,
                                                                                Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
-                                                                               Action<IEventObserverTransportBuilder>? configureTransports = null)
+                                                                               Action<IEventObserverTransportBuilder> configureTransports)
         where TEvent : class
     {
         services.AddConquerorEventing();
@@ -53,8 +110,18 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
 
     public static IServiceCollection AddConquerorEventObserverDelegate<TEvent>(this IServiceCollection services,
                                                                                Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
+                                                                               Action<IEventObserverPipelineBuilder> configurePipeline)
+        where TEvent : class
+    {
+        services.AddConquerorEventing();
+
+        return services.AddConquerorEventObserverDelegateRegistration(observerFn, configurePipeline, null);
+    }
+
+    public static IServiceCollection AddConquerorEventObserverDelegate<TEvent>(this IServiceCollection services,
+                                                                               Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
                                                                                Action<IEventObserverPipelineBuilder> configurePipeline,
-                                                                               Action<IEventObserverTransportBuilder>? configureTransports = null)
+                                                                               Action<IEventObserverTransportBuilder> configureTransports)
         where TEvent : class
     {
         services.AddConquerorEventing();

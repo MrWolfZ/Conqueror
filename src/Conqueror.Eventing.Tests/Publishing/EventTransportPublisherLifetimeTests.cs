@@ -377,8 +377,8 @@ public sealed class EventTransportPublisherLifetimeTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventPublisherMiddleware<TestEventPublisherRetryMiddleware>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(configurePipeline: pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>(configurePipeline: pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>(pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -412,8 +412,8 @@ public sealed class EventTransportPublisherLifetimeTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventPublisherMiddleware<TestEventPublisherRetryMiddleware>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(ServiceLifetime.Scoped, pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>(configurePipeline: pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>(), ServiceLifetime.Scoped)
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>(pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -447,8 +447,8 @@ public sealed class EventTransportPublisherLifetimeTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventPublisherMiddleware<TestEventPublisherRetryMiddleware>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(ServiceLifetime.Singleton, pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>(configurePipeline: pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>(), ServiceLifetime.Singleton)
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>(pipeline => pipeline.Use<TestEventPublisherRetryMiddleware>())
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -518,9 +518,9 @@ public sealed class EventTransportPublisherLifetimeTests
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(configurePipeline: pipeline => pipeline.ServiceProvider
-                                                                                                                              .GetRequiredService<DependencyResolvedDuringPublisherPipelineBuild>()
-                                                                                                                              .Execute())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(pipeline => pipeline.ServiceProvider
+                                                                                                           .GetRequiredService<DependencyResolvedDuringPublisherPipelineBuild>()
+                                                                                                           .Execute())
                     .AddScoped<DependencyResolvedDuringPublisherPipelineBuild>()
                     .AddSingleton(observations);
 
@@ -594,9 +594,10 @@ public sealed class EventTransportPublisherLifetimeTests
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(ServiceLifetime.Scoped, pipeline => pipeline.ServiceProvider
-                                                                                                                                   .GetRequiredService<DependencyResolvedDuringPublisherPipelineBuild>()
-                                                                                                                                   .Execute())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(pipeline => pipeline.ServiceProvider
+                                                                                                           .GetRequiredService<DependencyResolvedDuringPublisherPipelineBuild>()
+                                                                                                           .Execute(),
+                                                                                       ServiceLifetime.Scoped)
                     .AddScoped<DependencyResolvedDuringPublisherPipelineBuild>()
                     .AddSingleton(observations);
 
@@ -670,9 +671,10 @@ public sealed class EventTransportPublisherLifetimeTests
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(ServiceLifetime.Singleton, pipeline => pipeline.ServiceProvider
-                                                                                                                                      .GetRequiredService<DependencyResolvedDuringPublisherPipelineBuild>()
-                                                                                                                                      .Execute())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>(pipeline => pipeline.ServiceProvider
+                                                                                                           .GetRequiredService<DependencyResolvedDuringPublisherPipelineBuild>()
+                                                                                                           .Execute(),
+                                                                                       ServiceLifetime.Singleton)
                     .AddScoped<DependencyResolvedDuringPublisherPipelineBuild>()
                     .AddSingleton(observations);
 
