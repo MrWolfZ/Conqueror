@@ -59,27 +59,6 @@ public sealed class EventTransportPublisherRegistrationTests
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredPlainPublisher_RegisteringSamePublisherWithDifferentLifetimeOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher>>();
-
-        await observer.HandleEvent(new());
-        await observer.HandleEvent(new());
-
-        Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1, 2 }));
-    }
-
-    [Test]
     public async Task GivenAlreadyRegisteredPlainPublisher_RegisteringSamePublisherWithDifferentPipelineConfigurationOverwritesRegistration()
     {
         var services = new ServiceCollection();
@@ -192,26 +171,6 @@ public sealed class EventTransportPublisherRegistrationTests
 
         Assert.That(factoryWasCalled, Is.False);
         Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1 }));
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredPublisherWithFactory_RegisteringSamePublisherWithDifferentLifetimeOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(_ => new(observations))
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(_ => new(observations), ServiceLifetime.Singleton);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher>>();
-
-        await observer.HandleEvent(new());
-        await observer.HandleEvent(new());
-
-        Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1, 2 }));
     }
 
     [Test]

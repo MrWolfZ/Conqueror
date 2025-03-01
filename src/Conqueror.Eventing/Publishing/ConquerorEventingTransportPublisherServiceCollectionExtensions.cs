@@ -12,43 +12,21 @@ public static class ConquerorEventingTransportPublisherServiceCollectionExtensio
     public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services)
         where TPublisher : class, IConquerorEventTransportPublisher
     {
-        return services.AddConquerorEventTransportPublisher<TPublisher>(ServiceLifetime.Transient);
-    }
-
-    public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services, ServiceLifetime lifetime)
-        where TPublisher : class, IConquerorEventTransportPublisher
-    {
-        return services.AddConquerorEventTransportPublisher(typeof(TPublisher), new(typeof(TPublisher), typeof(TPublisher), lifetime), null);
+        return services.AddConquerorEventTransportPublisher(typeof(TPublisher), new(typeof(TPublisher), typeof(TPublisher), ServiceLifetime.Transient), null);
     }
 
     public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services,
                                                                                      Action<IEventPublisherPipelineBuilder> configurePipeline)
         where TPublisher : class, IConquerorEventTransportPublisher
     {
-        return services.AddConquerorEventTransportPublisher<TPublisher>(configurePipeline, ServiceLifetime.Transient);
-    }
-
-    public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services,
-                                                                                     Action<IEventPublisherPipelineBuilder> configurePipeline,
-                                                                                     ServiceLifetime lifetime)
-        where TPublisher : class, IConquerorEventTransportPublisher
-    {
-        return services.AddConquerorEventTransportPublisher(typeof(TPublisher), new(typeof(TPublisher), typeof(TPublisher), lifetime), configurePipeline);
+        return services.AddConquerorEventTransportPublisher(typeof(TPublisher), new(typeof(TPublisher), typeof(TPublisher), ServiceLifetime.Transient), configurePipeline);
     }
 
     public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services,
                                                                                      Func<IServiceProvider, TPublisher> factory)
         where TPublisher : class, IConquerorEventTransportPublisher
     {
-        return services.AddConquerorEventTransportPublisher(factory, ServiceLifetime.Transient);
-    }
-
-    public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services,
-                                                                                     Func<IServiceProvider, TPublisher> factory,
-                                                                                     ServiceLifetime lifetime)
-        where TPublisher : class, IConquerorEventTransportPublisher
-    {
-        return services.AddConquerorEventTransportPublisher(typeof(TPublisher), new(typeof(TPublisher), factory, lifetime), null);
+        return services.AddConquerorEventTransportPublisher(typeof(TPublisher), new(typeof(TPublisher), factory, ServiceLifetime.Transient), null);
     }
 
     public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services,
@@ -56,16 +34,7 @@ public static class ConquerorEventingTransportPublisherServiceCollectionExtensio
                                                                                      Action<IEventPublisherPipelineBuilder> configurePipeline)
         where TPublisher : class, IConquerorEventTransportPublisher
     {
-        return services.AddConquerorEventTransportPublisher(factory, configurePipeline, ServiceLifetime.Transient);
-    }
-
-    public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services,
-                                                                                     Func<IServiceProvider, TPublisher> factory,
-                                                                                     Action<IEventPublisherPipelineBuilder> configurePipeline,
-                                                                                     ServiceLifetime lifetime)
-        where TPublisher : class, IConquerorEventTransportPublisher
-    {
-        return services.AddConquerorEventTransportPublisher(typeof(TPublisher), new(typeof(TPublisher), factory, lifetime), configurePipeline);
+        return services.AddConquerorEventTransportPublisher(typeof(TPublisher), new(typeof(TPublisher), factory, ServiceLifetime.Transient), configurePipeline);
     }
 
     public static IServiceCollection AddConquerorEventTransportPublisher<TPublisher>(this IServiceCollection services, TPublisher instance)
@@ -84,32 +53,30 @@ public static class ConquerorEventingTransportPublisherServiceCollectionExtensio
 
     public static IServiceCollection AddConquerorInMemoryEventPublisher(this IServiceCollection services)
     {
-        return services.AddConquerorEventTransportPublisher(p => new InMemoryEventPublisher(p.GetRequiredService<IConquerorEventTransportClientRegistrar>(), _ => { }),
-                                                            ServiceLifetime.Singleton);
+        services.Replace(ServiceDescriptor.Singleton(new InMemoryEventPublisher.State(_ => { })));
+        return services.AddConquerorEventTransportPublisher<InMemoryEventPublisher>();
     }
 
     public static IServiceCollection AddConquerorInMemoryEventPublisher(this IServiceCollection services,
                                                                         Action<IEventPublisherPipelineBuilder> configurePipeline)
     {
-        return services.AddConquerorEventTransportPublisher(p => new InMemoryEventPublisher(p.GetRequiredService<IConquerorEventTransportClientRegistrar>(), _ => { }),
-                                                            configurePipeline,
-                                                            ServiceLifetime.Singleton);
+        services.Replace(ServiceDescriptor.Singleton(new InMemoryEventPublisher.State(_ => { })));
+        return services.AddConquerorEventTransportPublisher<InMemoryEventPublisher>(configurePipeline);
     }
 
     public static IServiceCollection AddConquerorInMemoryEventPublisher(this IServiceCollection services,
                                                                         Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy)
     {
-        return services.AddConquerorEventTransportPublisher(p => new InMemoryEventPublisher(p.GetRequiredService<IConquerorEventTransportClientRegistrar>(), configureStrategy),
-                                                            ServiceLifetime.Singleton);
+        services.Replace(ServiceDescriptor.Singleton(new InMemoryEventPublisher.State(configureStrategy)));
+        return services.AddConquerorEventTransportPublisher<InMemoryEventPublisher>();
     }
 
     public static IServiceCollection AddConquerorInMemoryEventPublisher(this IServiceCollection services,
                                                                         Action<IEventPublisherPipelineBuilder> configurePipeline,
                                                                         Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy)
     {
-        return services.AddConquerorEventTransportPublisher(p => new InMemoryEventPublisher(p.GetRequiredService<IConquerorEventTransportClientRegistrar>(), configureStrategy),
-                                                            configurePipeline,
-                                                            ServiceLifetime.Singleton);
+        services.Replace(ServiceDescriptor.Singleton(new InMemoryEventPublisher.State(configureStrategy)));
+        return services.AddConquerorEventTransportPublisher<InMemoryEventPublisher>(configurePipeline);
     }
 
     internal static void TryAddDefaultInMemoryEventPublisher(this IServiceCollection services)

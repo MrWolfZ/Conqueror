@@ -11,13 +11,10 @@ namespace Conqueror.Eventing.Publishing;
 /// </summary>
 internal sealed class InMemoryEventPublisher(
     IConquerorEventTransportClientRegistrar registrar,
-    Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy)
+    InMemoryEventPublisher.State state)
     : IConquerorEventTransportPublisher<InMemoryEventAttribute>, IDisposable
 {
     private readonly SemaphoreSlim semaphore = new(1);
-
-    private IConquerorEventTransportClientDispatcher? dispatcher;
-    private ISet<ConquerorEventObserverId> observersToDispatchTo = new HashSet<ConquerorEventObserverId>();
 
     public async Task PublishEvent<TEvent>(TEvent evt, InMemoryEventAttribute configurationAttribute, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
         where TEvent : class
@@ -25,23 +22,23 @@ internal sealed class InMemoryEventPublisher(
         // no need for strict thread-safe only-once initialization, since the registrar ensures
         // only-once initialization; the field is just a minor performance improvement in order
         // to only call the registrar when necessary
-        if (dispatcher is not null)
+        if (state.Dispatcher is not null)
         {
-            await dispatcher.DispatchEvent(evt, observersToDispatchTo, serviceProvider, cancellationToken).ConfigureAwait(false);
+            await state.Dispatcher.DispatchEvent(evt, state.ObserversToDispatchTo, serviceProvider, cancellationToken).ConfigureAwait(false);
             return;
         }
 
         await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-        if (dispatcher is not null)
-        {
-            await dispatcher.DispatchEvent(evt, observersToDispatchTo, serviceProvider, cancellationToken).ConfigureAwait(false);
-            return;
-        }
-
         try
         {
-            await Initialize().ConfigureAwait(false);
+            if (state.Dispatcher is not null)
+            {
+                await state.Dispatcher.DispatchEvent(evt, state.ObserversToDispatchTo, serviceProvider, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            await InitializeState().ConfigureAwait(false);
             await PublishEvent(evt, configurationAttribute, serviceProvider, cancellationToken).ConfigureAwait(false);
         }
         finally
@@ -55,10 +52,19 @@ internal sealed class InMemoryEventPublisher(
         semaphore.Dispose();
     }
 
-    private async Task Initialize()
+    private async Task InitializeState()
     {
-        var registration = await registrar.RegisterTransportClient<InMemoryEventObserverTransportConfiguration, InMemoryEventAttribute>(configureStrategy).ConfigureAwait(false);
-        observersToDispatchTo = registration.RelevantObservers.Select(r => r.ObserverId).ToHashSet();
-        dispatcher = registration.Dispatcher;
+        var registration = await registrar.RegisterTransportClient<InMemoryEventObserverTransportConfiguration, InMemoryEventAttribute>(state.ConfigureStrategy).ConfigureAwait(false);
+        state.ObserversToDispatchTo = registration.RelevantObservers.Select(r => r.ObserverId).ToHashSet();
+        state.Dispatcher = registration.Dispatcher;
+    }
+
+    internal sealed class State(Action<IConquerorInMemoryEventPublishingStrategyBuilder> configureStrategy)
+    {
+        public Action<IConquerorInMemoryEventPublishingStrategyBuilder> ConfigureStrategy { get; } = configureStrategy;
+
+        public IConquerorEventTransportClientDispatcher? Dispatcher { get; set; }
+
+        public ISet<ConquerorEventObserverId> ObserversToDispatchTo { get; set; } = new HashSet<ConquerorEventObserverId>();
     }
 }

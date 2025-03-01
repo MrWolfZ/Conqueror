@@ -78,7 +78,6 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
-- [ ] remove publisher lifetimes (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ef420402a7c5ec60bbf8f6489fba025f9ade8468))
 - [ ] integrate pipeline configuration interface into observer interface (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/0694be8f2444892a25112148ea1a381d4a486e13))
 - [ ] configure publisher pipeline at the call site instead of during publisher registration (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/5042ec259b4a7f720dbbc09dd1732d8c41ddec90))
 - [ ] refactor context data tests to use smarter test case generation (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/db5b68d1fbfd1e408e3ad3965dd013c5b3e0fd2a))
