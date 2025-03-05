@@ -6,7 +6,7 @@ namespace Conqueror.Eventing.Observing;
 
 internal sealed class EventObserverProxy<TEvent>(
     IServiceProvider serviceProvider,
-    Action<IEventObserverPipelineBuilder>? configurePipeline,
+    Action<IEventObserverPipelineBuilder> configurePipeline,
     Type observerType,
     Type observedEventType)
     : IEventObserver<TEvent>
@@ -16,7 +16,7 @@ internal sealed class EventObserverProxy<TEvent>(
     {
         var pipelineBuilder = new EventObserverPipelineBuilder(serviceProvider);
 
-        configurePipeline?.Invoke(pipelineBuilder);
+        configurePipeline.Invoke(pipelineBuilder);
 
         var pipeline = pipelineBuilder.Build();
 

@@ -901,7 +901,7 @@ public sealed class EventObserverMiddlewareLifetimeTests
 
     private sealed record TestEvent;
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserver : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -911,7 +911,7 @@ public sealed class EventObserverMiddlewareLifetimeTests
         public static void ConfigurePipeline(IEventObserverPipelineBuilder pipeline) => pipeline.Use<TestEventObserverMiddleware>();
     }
 
-    private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithMultipleMiddlewares : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -925,7 +925,7 @@ public sealed class EventObserverMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventObserverWithSameMiddlewareMultipleTimes : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithSameMiddlewareMultipleTimes : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -939,7 +939,7 @@ public sealed class EventObserverMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventObserverWithRetryMiddleware(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithRetryMiddleware(TestObservations observations) : IEventObserver<TestEvent>
     {
         private int invocationCount;
 
@@ -958,7 +958,7 @@ public sealed class EventObserverMiddlewareLifetimeTests
         }
     }
 
-    private sealed class TestEventObserverWithDependencyDuringPipelineBuild : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithDependencyDuringPipelineBuild : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {

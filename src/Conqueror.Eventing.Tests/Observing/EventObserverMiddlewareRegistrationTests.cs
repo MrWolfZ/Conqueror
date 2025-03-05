@@ -629,7 +629,7 @@ public sealed class EventObserverMiddlewareRegistrationTests
 
     private sealed record TestEvent;
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserver : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {

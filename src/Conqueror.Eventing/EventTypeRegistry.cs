@@ -40,7 +40,7 @@ internal sealed class EventTypeRegistry : IConquerorEventTypeRegistry
 internal sealed record EventObserverRegistration(
     Type EventType,
     Type ObserverType,
-    Action<IEventObserverPipelineBuilder>? ConfigurePipeline);
+    Action<IEventObserverPipelineBuilder> ConfigurePipeline);
 
 internal sealed record EventObserverDelegateRegistration(
     Type EventType,

@@ -214,16 +214,9 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
 
         return services;
 
-        static Action<IEventObserverPipelineBuilder>? CreatePipelineConfigurationFunction(Type observerType)
+        static Action<IEventObserverPipelineBuilder> CreatePipelineConfigurationFunction(Type observerType)
         {
-            if (!observerType.IsAssignableTo(typeof(IConfigureEventObserverPipeline)))
-            {
-                return null;
-            }
-
-            var pipelineConfigurationMethod = observerType.GetInterfaceMap(typeof(IConfigureEventObserverPipeline)).TargetMethods.Single();
-
-            // var pipelineConfigurationMethod = observerType.GetInterfaceMap(typeof(IEventObserver<TEvent>)).TargetMethods.Single(m => m.Name == nameof(IEventObserver<TEvent>.ConfigurePipeline));
+            var pipelineConfigurationMethod = observerType.GetInterfaceMap(typeof(IEventObserver<TEvent>)).TargetMethods.Single(m => m.Name == nameof(IEventObserver<TEvent>.ConfigurePipeline));
 
             var builderParam = Expression.Parameter(typeof(IEventObserverPipelineBuilder));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);

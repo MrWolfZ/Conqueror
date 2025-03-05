@@ -477,7 +477,7 @@ public sealed class EventObserverTransportTests : IDisposable
         }
     }
 
-    private sealed class TestEventObserverWithMiddleware(TestObservations observations) : IEventObserver<TestEventWithCustomTransport>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithMiddleware(TestObservations observations) : IEventObserver<TestEventWithCustomTransport>
     {
         public async Task HandleEvent(TestEventWithCustomTransport evt, CancellationToken cancellationToken = default)
         {

@@ -141,7 +141,7 @@ public sealed class EventObserverMiddlewareConfigurationTests
 
     private sealed record TestEvent;
 
-    private sealed class TestEventObserver : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserver : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent query, CancellationToken cancellationToken = default)
         {

@@ -706,32 +706,6 @@ public sealed class EventMiddlewareFunctionalityTests
     }
 
     [Test]
-    public async Task GivenObserverWithPipelineConfigurationMethodWithoutPipelineConfigurationInterface_MiddlewaresAreNotCalled()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventObserver<TestEventObserverWithPipelineConfigurationWithoutPipelineConfigurationInterface>()
-                    .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var evt = new TestEvent { Payload = 10 };
-
-        await observer.HandleEvent(evt);
-
-        Assert.That(observations.MiddlewareTypes, Is.Empty);
-
-        await dispatcher.DispatchEvent(evt);
-
-        Assert.That(observations.MiddlewareTypes, Is.Empty);
-    }
-
-    [Test]
     public async Task GivenObserverAndPublisherMiddlewares_MiddlewaresCanChangeTheEvent()
     {
         var services = new ServiceCollection();
@@ -1175,8 +1149,7 @@ public sealed class EventMiddlewareFunctionalityTests
 
     private sealed class TestEventObserverWithSingleMiddleware(TestObservations observations) : IEventObserver<TestEvent>,
                                                                                                 IEventObserver<TestEventWithCustomPublisher>,
-                                                                                                IEventObserver<TestEventWithMultipleCustomPublishers>,
-                                                                                                IConfigureEventObserverPipeline
+                                                                                                IEventObserver<TestEventWithMultipleCustomPublishers>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -1205,7 +1178,7 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithSingleMiddlewareWithParameter(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithSingleMiddlewareWithParameter(TestObservations observations) : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -1220,7 +1193,7 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithMultipleMiddlewares(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithMultipleMiddlewares(TestObservations observations) : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -1236,7 +1209,7 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithConfigurableMiddlewares(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithConfigurableMiddlewares(TestObservations observations) : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -1252,7 +1225,7 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithRetryMiddleware(TestObservations observations) : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithRetryMiddleware(TestObservations observations) : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -1269,7 +1242,7 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithMultipleMutatingMiddlewares(TestObservations observations) : IEventObserver<TestEvent>, IEventObserver<TestEventWithCustomPublisher>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithMultipleMutatingMiddlewares(TestObservations observations) : IEventObserver<TestEvent>, IEventObserver<TestEventWithCustomPublisher>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
@@ -1306,7 +1279,7 @@ public sealed class EventMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class TestEventObserverWithThrowingMiddleware : IEventObserver<TestEvent>, IConfigureEventObserverPipeline
+    private sealed class TestEventObserverWithThrowingMiddleware : IEventObserver<TestEvent>
     {
         public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
         {
