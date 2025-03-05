@@ -18,11 +18,13 @@ public static class ConquerorEventingServiceCollectionExtensions
         services.TryAddTransient(typeof(IEventObserver<>), typeof(EventObserverDispatcher<>));
         services.TryAddSingleton<EventPublisherDispatcher>();
         services.TryAddSingleton<EventPublisherRegistry>();
-        services.TryAddSingleton<EventTransportReceiverRegistry>();
-        services.TryAddSingleton<IConquerorEventTransportReceiverRegistry>(p => p.GetRequiredService<EventTransportReceiverRegistry>());
+        services.TryAddSingleton<EventTypeRegistry>();
+        services.TryAddSingleton<IConquerorEventTypeRegistry>(p => p.GetRequiredService<EventTypeRegistry>());
+        services.TryAddSingleton<InProcessEventTransportReceiver>();
+        services.TryAddSingleton<IConquerorEventBroadcastingStrategy>(new SequentialBroadcastingStrategy(new()));
+        services.TryAddSingleton<IConquerorEventTransportReceiverBroadcaster, EventTransportReceiverBroadcaster>();
 
         services.TryAddDefaultInMemoryEventPublisher();
-        services.AddInProcessEventTransportReceiver();
 
         return services;
     }
@@ -38,7 +40,7 @@ public static class ConquerorEventingServiceCollectionExtensions
         foreach (var eventObserverType in validTypes.Where(t => t.IsAssignableTo(typeof(IEventObserver)))
                                                     .Where(t => !services.IsEventObserverRegistered(t)))
         {
-            services.AddConquerorEventObserver(eventObserverType, ServiceDescriptor.Transient(eventObserverType, eventObserverType), null);
+            services.AddConquerorEventObserver(eventObserverType, ServiceDescriptor.Transient(eventObserverType, eventObserverType));
         }
 
         foreach (var eventObserverMiddlewareType in validTypes.Where(t => Array.Exists(t.GetInterfaces(), IsEventObserverMiddlewareInterface))

@@ -170,8 +170,8 @@ public sealed class EventMiddlewareFunctionalityTests
         _ = services.AddConquerorEventObserver<TestEventObserverWithConfigurableMiddlewares>()
                     .AddConquerorEventPublisherMiddleware<TestEventPublisherMiddleware>()
                     .AddConquerorEventPublisherMiddleware<TestEventPublisherMiddleware2>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(configurePipeline: pipeline => pipeline.Use<TestEventPublisherMiddleware, TestEventPublisherMiddlewareConfiguration>(new()))
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>(configurePipeline: pipeline => pipeline.Use<TestEventPublisherMiddleware2>())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(pipeline => pipeline.Use<TestEventPublisherMiddleware, TestEventPublisherMiddlewareConfiguration>(new()))
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>(pipeline => pipeline.Use<TestEventPublisherMiddleware2>())
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -743,8 +743,8 @@ public sealed class EventMiddlewareFunctionalityTests
                     .AddConquerorEventObserverMiddleware<MutatingTestEventObserverMiddleware2>()
                     .AddConquerorEventPublisherMiddleware<MutatingTestEventPublisherMiddleware>()
                     .AddConquerorEventPublisherMiddleware<MutatingTestEventPublisherMiddleware2>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(configurePipeline: pipeline => pipeline.Use<MutatingTestEventPublisherMiddleware>()
-                                                                                                                             .Use<MutatingTestEventPublisherMiddleware2>())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(pipeline => pipeline.Use<MutatingTestEventPublisherMiddleware>()
+                                                                                                          .Use<MutatingTestEventPublisherMiddleware2>())
                     .AddSingleton(observations)
                     .AddSingleton(tokens);
 
@@ -781,7 +781,7 @@ public sealed class EventMiddlewareFunctionalityTests
         _ = services.AddConquerorEventObserver<TestEventObserverWithSingleMiddleware>()
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
                     .AddConquerorEventPublisherMiddleware<TestEventPublisherMiddleware>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(configurePipeline: pipeline => pipeline.Use<TestEventPublisherMiddleware, TestEventPublisherMiddlewareConfiguration>(new()))
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(pipeline => pipeline.Use<TestEventPublisherMiddleware, TestEventPublisherMiddlewareConfiguration>(new()))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -814,8 +814,8 @@ public sealed class EventMiddlewareFunctionalityTests
                     .AddConquerorEventObserverMiddleware<MutatingTestEventObserverMiddleware2>()
                     .AddConquerorEventPublisherMiddleware<MutatingTestEventPublisherMiddleware>()
                     .AddConquerorEventPublisherMiddleware<MutatingTestEventPublisherMiddleware2>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(configurePipeline: pipeline => pipeline.Use<MutatingTestEventPublisherMiddleware>()
-                                                                                                                             .Use<MutatingTestEventPublisherMiddleware2>())
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>(pipeline => pipeline.Use<MutatingTestEventPublisherMiddleware>()
+                                                                                                          .Use<MutatingTestEventPublisherMiddleware2>())
                     .AddSingleton(observations)
                     .AddSingleton(tokens);
 
@@ -885,7 +885,7 @@ public sealed class EventMiddlewareFunctionalityTests
         var observedInstances = new List<TestService>();
 
         _ = services.AddConquerorEventObserver<TestEventObserverWithConfigurableMiddlewares>()
-                    .AddConquerorInMemoryEventPublisher(configurePipeline: pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()))
+                    .AddConquerorInMemoryEventPublisher(pipeline => observedInstances.Add(pipeline.ServiceProvider.GetRequiredService<TestService>()))
                     .AddScoped<TestService>()
                     .AddSingleton(observations);
 
@@ -1576,7 +1576,11 @@ public sealed class EventMiddlewareFunctionalityTests
     [AttributeUsage(AttributeTargets.Class)]
     private sealed class TestEventTransportAttribute : Attribute, IConquerorEventTransportConfigurationAttribute;
 
-    private sealed class TestEventTransportPublisher(TestObservations observations, IConquerorEventTransportReceiverRegistry registry, IServiceProvider serviceProvider) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
+    private sealed class TestEventTransportPublisher(
+        TestObservations observations,
+        IConquerorEventTypeRegistry registry,
+        IConquerorEventTransportReceiverBroadcaster broadcaster,
+        IServiceProvider serviceProvider) : IConquerorEventTransportPublisher<TestEventTransportAttribute>
     {
         public async Task PublishEvent<TEvent>(TEvent evt, TestEventTransportAttribute configurationAttribute, CancellationToken cancellationToken = default)
             where TEvent : class
@@ -1585,11 +1589,10 @@ public sealed class EventMiddlewareFunctionalityTests
             observations.EventsFromPublisher.Add(evt);
             observations.CancellationTokensFromPublisher.Add(cancellationToken);
 
-            var registration = await registry.RegisterReceiver<InMemoryEventObserverTransportConfiguration, TestEventTransportAttribute>(builder => builder.UseSequentialAsDefault())
-                                              .ConfigureAwait(false);
-
-            var observersToDispatchTo = registration.RelevantObservers.Select(r => r.ObserverId).ToHashSet();
-            await registration.Dispatcher.DispatchEvent(evt, observersToDispatchTo, serviceProvider, cancellationToken);
+            if (registry.TryGetConfigurationForReceiver<TestEventTransportAttribute>(evt.GetType(), out _))
+            {
+                await broadcaster.Broadcast(evt, serviceProvider, cancellationToken);
+            }
         }
     }
 

@@ -76,36 +76,6 @@ public sealed class EventObserverRegistrationTests
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredPlainObserver_RegisteringSameObserverWithDifferentTransportOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var builderConfiguration1WasCalled = false;
-        var builderConfiguration2WasCalled = false;
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>(configureTransports: b =>
-                    {
-                        builderConfiguration1WasCalled = true;
-                        _ = b.UseInMemory();
-                    })
-                    .AddConquerorEventObserver<TestEventObserver>(configureTransports: b =>
-                    {
-                        builderConfiguration2WasCalled = true;
-                        _ = b.UseInMemory();
-                    })
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(builderConfiguration1WasCalled, Is.False);
-        Assert.That(builderConfiguration2WasCalled, Is.True);
-    }
-
-    [Test]
     public void GivenAlreadyRegisteredPlainObserver_RegisteringViaAssemblyScanningDoesNothing()
     {
         var services = new ServiceCollection();
@@ -245,36 +215,6 @@ public sealed class EventObserverRegistrationTests
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredObserverWithFactory_RegisteringSameObserverWithDifferentTransportOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var builderConfiguration1WasCalled = false;
-        var builderConfiguration2WasCalled = false;
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>(_ => new(observations), configureTransports: b =>
-                    {
-                        builderConfiguration1WasCalled = true;
-                        _ = b.UseInMemory();
-                    })
-                    .AddConquerorEventObserver<TestEventObserver>(_ => new(observations), configureTransports: b =>
-                    {
-                        builderConfiguration2WasCalled = true;
-                        _ = b.UseInMemory();
-                    })
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(builderConfiguration1WasCalled, Is.False);
-        Assert.That(builderConfiguration2WasCalled, Is.True);
-    }
-
-    [Test]
     public async Task GivenAlreadyRegisteredObserverWithFactory_RegisteringViaAssemblyScanningDoesNothing()
     {
         var services = new ServiceCollection();
@@ -365,36 +305,6 @@ public sealed class EventObserverRegistrationTests
 
         Assert.That(observations1.InvocationCounts, Is.Empty);
         Assert.That(observations2.InvocationCounts, Is.EqualTo(new[] { 1 }));
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredObserverSingleton_RegisteringSameObserverWithDifferentTransportOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var singleton = new TestEventObserver(observations);
-        var builderConfiguration1WasCalled = false;
-        var builderConfiguration2WasCalled = false;
-
-        _ = services.AddConquerorEventObserver(singleton, b =>
-                    {
-                        builderConfiguration1WasCalled = true;
-                        _ = b.UseInMemory();
-                    })
-                    .AddConquerorEventObserver(singleton, b =>
-                    {
-                        builderConfiguration2WasCalled = true;
-                        _ = b.UseInMemory();
-                    });
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(builderConfiguration1WasCalled, Is.False);
-        Assert.That(builderConfiguration2WasCalled, Is.True);
     }
 
     [Test]

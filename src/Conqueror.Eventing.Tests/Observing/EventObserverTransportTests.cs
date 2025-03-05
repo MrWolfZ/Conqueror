@@ -7,10 +7,6 @@ public sealed class EventObserverTransportTests : IDisposable
 {
     private readonly CancellationTokenSource timeoutCancellationTokenSource = new();
 
-    private static TimeSpan TestTimeout => TimeSpan.FromSeconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 1 : 10);
-
-    private CancellationToken TestTimeoutToken => timeoutCancellationTokenSource.Token;
-
     public EventObserverTransportTests()
     {
         if (!Debugger.IsAttached)
@@ -19,8 +15,12 @@ public sealed class EventObserverTransportTests : IDisposable
         }
     }
 
+    private static TimeSpan TestTimeout => TimeSpan.FromSeconds(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 1 : 10);
+
+    private CancellationToken TestTimeoutToken => timeoutCancellationTokenSource.Token;
+
     [Test]
-    public async Task GivenEventObserverWithoutTransportConfigurationForEventWithCustomTransport_TransportClientIsUsed()
+    public async Task GivenEventObserverForEventWithCustomTransport_TransportClientIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -32,14 +32,14 @@ public sealed class EventObserverTransportTests : IDisposable
                     .AddSingleton<CustomEventTransport1PublisherState>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
                     .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
+                    .AddSingleton<CustomEventTransport1Receiver>()
+                    .AddSingleton<CustomEventTransport2Receiver>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
+        await provider.GetRequiredService<CustomEventTransport1Receiver>().Start();
+        await provider.GetRequiredService<CustomEventTransport2Receiver>().Start();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
         var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
@@ -49,24 +49,20 @@ public sealed class EventObserverTransportTests : IDisposable
         await observer.HandleEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, null),
-        }));
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[] { (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute) }));
 
         await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent), (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[]
         {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, null),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
         }));
     }
 
     [Test]
-    public async Task GivenEventObserverDelegateWithoutTransportConfigurationForEventWithCustomTransport_TransportClientIsUsed()
+    public async Task GivenEventObserverDelegateForEventWithCustomTransport_TransportClientIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -85,14 +81,14 @@ public sealed class EventObserverTransportTests : IDisposable
                     .AddSingleton<CustomEventTransport1PublisherState>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
                     .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
+                    .AddSingleton<CustomEventTransport1Receiver>()
+                    .AddSingleton<CustomEventTransport2Receiver>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
+        await provider.GetRequiredService<CustomEventTransport1Receiver>().Start();
+        await provider.GetRequiredService<CustomEventTransport2Receiver>().Start();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
         var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
@@ -102,147 +98,40 @@ public sealed class EventObserverTransportTests : IDisposable
         await observer.HandleEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, null),
-        }));
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[] { (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute) }));
 
         await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent), (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[]
         {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, null),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
         }));
     }
 
     [Test]
-    public async Task GivenEventObserverWithTransportConfigurationForEventWithCustomTransport_TransportClientIsUsedWithConfiguration()
+    public async Task GivenEventObserverWithPipelineForEventWithCustomTransport_TransportClientIsUsedAndMiddlewaresAreCalled()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        var transportConfiguration = new CustomEventObserverTransport1Configuration { Parameter = 50 };
         var transportAttribute = new CustomEventTransport1Attribute { Parameter = 10 }; // matches annotation on event type
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>(builder => builder.AddOrReplaceConfiguration(transportConfiguration))
-                    .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
-                    .AddSingleton<CustomEventTransport1PublisherState>()
-                    .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
-                    .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithCustomTransport();
-
-        await observer.HandleEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, transportConfiguration),
-        }));
-
-        await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent), (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, transportConfiguration),
-        }));
-    }
-
-    [Test]
-    public async Task GivenEventObserverDelegateWithTransportConfigurationForEventWithCustomTransport_TransportClientIsUsedWithConfiguration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        var transportConfiguration = new CustomEventObserverTransport1Configuration { Parameter = 50 };
-        var transportAttribute = new CustomEventTransport1Attribute { Parameter = 10 }; // matches annotation on event type
-
-        _ = services.AddConquerorEventObserverDelegate<TestEventWithCustomTransport>(async (evt, p, _) =>
-                                                                                     {
-                                                                                         await Task.Yield();
-
-                                                                                         var testObservations = p.GetRequiredService<TestObservations>();
-
-                                                                                         testObservations.EventsFromObserver.Enqueue(evt);
-                                                                                     },
-                                                                                     builder => builder.AddOrReplaceConfiguration(transportConfiguration))
-                    .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
-                    .AddSingleton<CustomEventTransport1PublisherState>()
-                    .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
-                    .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithCustomTransport();
-
-        await observer.HandleEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.EquivalentTo(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, transportConfiguration),
-        }));
-
-        await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent), (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.EquivalentTo(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, transportConfiguration),
-        }));
-    }
-
-    [Test]
-    public async Task GivenEventObserverWithPipelineForEventWithCustomTransport_TransportClientIsUsedWithConfigurationAndMiddlewaresAreCalled()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        var transportConfiguration = new CustomEventObserverTransport1Configuration { Parameter = 50 };
-        var transportAttribute = new CustomEventTransport1Attribute { Parameter = 10 }; // matches annotation on event type
-
-        _ = services.AddConquerorEventObserver<TestEventObserverWithMiddleware>(builder => builder.AddOrReplaceConfiguration(transportConfiguration))
+        _ = services.AddConquerorEventObserver<TestEventObserverWithMiddleware>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
                     .AddSingleton<CustomEventTransport1PublisherState>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
                     .AddSingleton<CustomEventTransport2PublisherState>()
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
+                    .AddSingleton<CustomEventTransport1Receiver>()
+                    .AddSingleton<CustomEventTransport2Receiver>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
+        await provider.GetRequiredService<CustomEventTransport1Receiver>().Start();
+        await provider.GetRequiredService<CustomEventTransport2Receiver>().Start();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
         var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
@@ -253,30 +142,25 @@ public sealed class EventObserverTransportTests : IDisposable
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
         Assert.That(observations.EventsFromMiddleware, Is.EqualTo(new[] { testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.EquivalentTo(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, transportConfiguration),
-        }));
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[] { (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute) }));
 
         await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
         Assert.That(observations.EventsFromMiddleware, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent), (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.EquivalentTo(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[]
         {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, transportConfiguration),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
         }));
     }
 
     [Test]
-    public async Task GivenEventObserverDelegateWithPipelineForEventWithCustomTransport_TransportClientIsUsedWithConfigurationAndMiddlewaresAreCalled()
+    public async Task GivenEventObserverDelegateWithPipelineForEventWithCustomTransport_TransportClientIsUsedAndMiddlewaresAreCalled()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        var transportConfiguration = new CustomEventObserverTransport1Configuration { Parameter = 50 };
         var transportAttribute = new CustomEventTransport1Attribute { Parameter = 10 }; // matches annotation on event type
 
         _ = services.AddConquerorEventObserverDelegate<TestEventWithCustomTransport>(async (evt, p, _) =>
@@ -287,21 +171,20 @@ public sealed class EventObserverTransportTests : IDisposable
 
                                                                                          testObservations.EventsFromObserver.Enqueue(evt);
                                                                                      },
-                                                                                     pipeline => pipeline.Use<TestEventObserverMiddleware>(),
-                                                                                     builder => builder.AddOrReplaceConfiguration(transportConfiguration))
+                                                                                     pipeline => pipeline.Use<TestEventObserverMiddleware>())
                     .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
                     .AddSingleton<CustomEventTransport1PublisherState>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
                     .AddSingleton<CustomEventTransport2PublisherState>()
                     .AddConquerorEventObserverMiddleware<TestEventObserverMiddleware>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
+                    .AddSingleton<CustomEventTransport1Receiver>()
+                    .AddSingleton<CustomEventTransport2Receiver>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
+        await provider.GetRequiredService<CustomEventTransport1Receiver>().Start();
+        await provider.GetRequiredService<CustomEventTransport2Receiver>().Start();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
         var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
@@ -312,25 +195,21 @@ public sealed class EventObserverTransportTests : IDisposable
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
         Assert.That(observations.EventsFromMiddleware, Is.EqualTo(new[] { testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.EquivalentTo(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, transportConfiguration),
-        }));
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[] { (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute) }));
 
         await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
         Assert.That(observations.EventsFromMiddleware, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent), (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.EquivalentTo(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[]
         {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransport), transportAttribute, transportConfiguration),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
         }));
     }
 
     [Test]
-    public async Task GivenEventObserverWithoutTransportConfigurationsForEventWithMultipleCustomTransports_TransportClientsAreUsed()
+    public async Task GivenEventObserverForEventWithMultipleCustomTransports_TransportClientsAreUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -343,14 +222,14 @@ public sealed class EventObserverTransportTests : IDisposable
                     .AddSingleton<CustomEventTransport1PublisherState>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
                     .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
+                    .AddSingleton<CustomEventTransport1Receiver>()
+                    .AddSingleton<CustomEventTransport2Receiver>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
+        await provider.GetRequiredService<CustomEventTransport1Receiver>().Start();
+        await provider.GetRequiredService<CustomEventTransport2Receiver>().Start();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultipleTransports>>();
         var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
@@ -360,204 +239,23 @@ public sealed class EventObserverTransportTests : IDisposable
         await observer.HandleEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EquivalentTo(new[]
+        Assert.That(observations.EventsFromReceiver, Is.EquivalentTo(new[]
         {
-            (typeof(CustomEventTransport1Client), testEvent),
-            (typeof(CustomEventTransport2Client), testEvent),
-        }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithMultipleTransports), transport1Attribute, null),
-            (typeof(CustomEventTransport2Client), typeof(TestEventWithMultipleTransports), transport2Attribute, null),
+            (typeof(CustomEventTransport1Receiver), testEvent, (object)transport1Attribute),
+            (typeof(CustomEventTransport2Receiver), testEvent, transport2Attribute),
         }));
 
         await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent, testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EquivalentTo(new[]
+        Assert.That(observations.EventsFromReceiver, Is.EquivalentTo(new[]
         {
-            (typeof(CustomEventTransport1Client), testEvent),
-            (typeof(CustomEventTransport2Client), testEvent),
+            (typeof(CustomEventTransport1Receiver), testEvent, (object)transport1Attribute),
+            (typeof(CustomEventTransport2Receiver), testEvent, transport2Attribute),
 
-            (typeof(CustomEventTransport1Client), testEvent),
-            (typeof(CustomEventTransport2Client), testEvent),
+            (typeof(CustomEventTransport1Receiver), testEvent, transport1Attribute),
+            (typeof(CustomEventTransport2Receiver), testEvent, transport2Attribute),
         }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithMultipleTransports), transport1Attribute, null),
-            (typeof(CustomEventTransport2Client), typeof(TestEventWithMultipleTransports), transport2Attribute, null),
-        }));
-    }
-
-    [Test]
-    public async Task GivenEventObserverWithTransportConfigurationsForEventWithMultipleCustomTransports_TransportClientsAreUsedWithConfiguration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        var transport1Configuration = new CustomEventObserverTransport1Configuration { Parameter = 50 };
-        var transport2Configuration = new CustomEventObserverTransport2Configuration { Parameter = 100 };
-        var transport1Attribute = new CustomEventTransport1Attribute { Parameter = 10 }; // matches annotation on event type
-        var transport2Attribute = new CustomEventTransport2Attribute { Parameter = 20 }; // matches annotation on event type
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>(builder => builder.AddOrReplaceConfiguration(transport1Configuration)
-                                                                                    .AddOrReplaceConfiguration(transport2Configuration))
-                    .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
-                    .AddSingleton<CustomEventTransport1PublisherState>()
-                    .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
-                    .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultipleTransports>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithMultipleTransports();
-
-        await observer.HandleEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EquivalentTo(new[]
-        {
-            (typeof(CustomEventTransport1Client), testEvent),
-            (typeof(CustomEventTransport2Client), testEvent),
-        }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithMultipleTransports), transport1Attribute, transport1Configuration),
-            (typeof(CustomEventTransport2Client), typeof(TestEventWithMultipleTransports), transport2Attribute, transport2Configuration),
-        }));
-
-        await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent, testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EquivalentTo(new[]
-        {
-            (typeof(CustomEventTransport1Client), testEvent),
-            (typeof(CustomEventTransport2Client), testEvent),
-
-            (typeof(CustomEventTransport1Client), testEvent),
-            (typeof(CustomEventTransport2Client), testEvent),
-        }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithMultipleTransports), transport1Attribute, transport1Configuration),
-            (typeof(CustomEventTransport2Client), typeof(TestEventWithMultipleTransports), transport2Attribute, transport2Configuration),
-        }));
-    }
-
-    [Test]
-    public async Task GivenEventObserverWithCustomTransportConfiguration_TransportBuilderIsOnlyCalledOnceEvenIfUsedMultipleTimes()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var builderCallCount = 0;
-
-        var transportConfiguration = new CustomEventObserverTransport1Configuration { Parameter = 50 };
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>(builder =>
-                    {
-                        builderCallCount += 1;
-                        _ = builder.AddOrReplaceConfiguration(transportConfiguration);
-                    })
-                    .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
-                    .AddSingleton<CustomEventTransport1PublisherState>()
-                    .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
-                    .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
-
-        var observer1 = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
-        var observer2 = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithCustomTransport();
-
-        await observer1.HandleEvent(testEvent, TestTimeoutToken);
-        await observer2.HandleEvent(testEvent, TestTimeoutToken);
-        await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(builderCallCount, Is.EqualTo(1));
-    }
-
-    [Test]
-    public void GivenEventObserverWithTransportConfigurationCallbackThatThrowsOnce_WhenPublishingViaInMemoryPublisher_OnlyFirstPublishFailsAndSubsequentPublishesSucceed()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var hasThrown = false;
-        var exception = new Exception();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>(_ =>
-                    {
-                        if (!hasThrown)
-                        {
-                            hasThrown = true;
-                            throw exception;
-                        }
-                    })
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithoutCustomTransport>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithoutCustomTransport();
-
-        Assert.That(() => observer.HandleEvent(testEvent, TestTimeoutToken), Throws.Exception.SameAs(exception));
-        Assert.That(() => observer.HandleEvent(testEvent, TestTimeoutToken), Throws.Nothing);
-        Assert.That(() => dispatcher.DispatchEvent(testEvent, TestTimeoutToken), Throws.Nothing);
-    }
-
-    [Test]
-    public async Task GivenEventWithCustomTransportAndInMemoryPublishingStrategy_EventsForTransportAreDispatchedViaCustomStrategy()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        var transportConfiguration = new CustomEventObserverTransport1Configuration { Parameter = 50 };
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>(builder => builder.AddOrReplaceConfiguration(transportConfiguration))
-                    .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
-                    .AddSingleton<CustomEventTransport1PublisherState>()
-                    .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
-                    .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithCustomTransport();
-
-        await observer.HandleEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(observations.EventsFromStrategy, Is.EqualTo(new[] { testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent) }));
-
-        await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
-
-        Assert.That(observations.EventsFromStrategy, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent), (typeof(CustomEventTransport1Client), testEvent) }));
     }
 
     [Test]
@@ -572,14 +270,14 @@ public sealed class EventObserverTransportTests : IDisposable
                     .AddSingleton<CustomEventTransport1PublisherState>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
                     .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
+                    .AddSingleton<CustomEventTransport1Receiver>()
+                    .AddSingleton<CustomEventTransport2Receiver>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
+        await provider.GetRequiredService<CustomEventTransport1Receiver>().Start();
+        await provider.GetRequiredService<CustomEventTransport2Receiver>().Start();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
         var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
@@ -607,26 +305,22 @@ public sealed class EventObserverTransportTests : IDisposable
     }
 
     [Test]
-    public async Task GivenMultipleEventObserversForEventWithCustomTransport_WhenClientFiltersOutObserver_OnlyObserversSpecifiedByClientAreCalled()
+    public async Task GivenEventWithCustomTransport_WhenReceiverFiltersOutEventType_NoObserversAreCalled()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventObserver<TestEventObserver2>(builder => builder.AddOrReplaceConfiguration(new CustomEventObserverTransport1Configuration()))
+                    .AddConquerorEventObserver<TestEventObserver2>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
                     .AddSingleton<CustomEventTransport1PublisherState>()
-                    .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
-                    .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
-                    .AddSingleton<Func<ConquerorEventTransportReceiverObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>>(r => r.Configuration is not null)
+                    .AddSingleton<CustomEventTransport1Receiver>()
+                    .AddSingleton<Func<Type, bool>>(_ => false)
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
+        await provider.GetRequiredService<CustomEventTransport1Receiver>().Start();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransport>>();
         var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
@@ -635,18 +329,36 @@ public sealed class EventObserverTransportTests : IDisposable
 
         await observer.HandleEvent(testEvent, TestTimeoutToken);
 
-        Assert.That(observations.EventsFromObserverWithObserverType, Is.EqualTo(new[]
-        {
-            (typeof(TestEventObserver2), testEvent),
-        }));
+        Assert.That(observations.EventsFromObserverWithObserverType, Is.Empty);
 
         await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
 
-        Assert.That(observations.EventsFromObserverWithObserverType, Is.EqualTo(new[]
-        {
-            (typeof(TestEventObserver2), testEvent),
-            (typeof(TestEventObserver2), testEvent),
-        }));
+        Assert.That(observations.EventsFromObserverWithObserverType, Is.Empty);
+    }
+
+    [Test]
+    public async Task GivenEventObserverForBaseEventTypeWithDefaultTransport_WhenClientPublishesSubType_ObserverIsCalled()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorEventObserver<TestEventObserverForBaseClass>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEventSub>>();
+        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+
+        var testEvent = new TestEventSub();
+
+        await observer.HandleEvent(testEvent, TestTimeoutToken);
+
+        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
+
+        await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
+
+        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
     }
 
     [Test]
@@ -657,19 +369,19 @@ public sealed class EventObserverTransportTests : IDisposable
 
         var transportAttribute = new CustomEventTransport1Attribute { Parameter = 10 }; // matches annotation on event type
 
-        _ = services.AddConquerorEventObserver<TestEventObserverForBaseClass>()
+        _ = services.AddConquerorEventObserver<TestEventObserverForBaseClassWithCustomTransport>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport1Publisher>()
                     .AddSingleton<CustomEventTransport1PublisherState>()
                     .AddConquerorEventTransportPublisher<CustomEventTransport2Publisher>()
                     .AddSingleton<CustomEventTransport2PublisherState>()
-                    .AddSingleton<CustomEventTransport1Client>()
-                    .AddSingleton<CustomEventTransport2Client>()
+                    .AddSingleton<CustomEventTransport1Receiver>()
+                    .AddSingleton<CustomEventTransport2Receiver>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        await provider.GetRequiredService<CustomEventTransport1Client>().Start();
-        await provider.GetRequiredService<CustomEventTransport2Client>().Start();
+        await provider.GetRequiredService<CustomEventTransport1Receiver>().Start();
+        await provider.GetRequiredService<CustomEventTransport2Receiver>().Start();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomTransportSub>>();
         var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
@@ -679,19 +391,15 @@ public sealed class EventObserverTransportTests : IDisposable
         await observer.HandleEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
-        {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransportBase), transportAttribute, null),
-        }));
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[] { (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute) }));
 
         await dispatcher.DispatchEvent(testEvent, TestTimeoutToken);
 
         Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
-        Assert.That(observations.EventsFromClient, Is.EqualTo(new[] { (typeof(CustomEventTransport1Client), testEvent), (typeof(CustomEventTransport1Client), testEvent) }));
-        Assert.That(observations.ObservedTransportRegistrations, Is.SupersetOf(new (Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)[]
+        Assert.That(observations.EventsFromReceiver, Is.EqualTo(new[]
         {
-            (typeof(CustomEventTransport1Client), typeof(TestEventWithCustomTransportBase), transportAttribute, null),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
+            (typeof(CustomEventTransport1Receiver), testEvent, transportAttribute),
         }));
     }
 
@@ -700,14 +408,16 @@ public sealed class EventObserverTransportTests : IDisposable
         timeoutCancellationTokenSource.Dispose();
     }
 
-    private sealed record TestEventWithoutCustomTransport;
-
     [CustomEventTransport1(Parameter = 10)]
     private sealed record TestEventWithCustomTransport;
 
     [CustomEventTransport1(Parameter = 10)]
     [CustomEventTransport2(Parameter = 20)]
     private sealed record TestEventWithMultipleTransports;
+
+    private sealed record TestEventSub : TestEventBase;
+
+    private abstract record TestEventBase;
 
     private sealed record TestEventWithCustomTransportSub : TestEventWithCustomTransportBase;
 
@@ -745,7 +455,18 @@ public sealed class EventObserverTransportTests : IDisposable
         }
     }
 
-    private sealed class TestEventObserverForBaseClass(TestObservations observations) : IEventObserver<TestEventWithCustomTransportBase>
+    private sealed class TestEventObserverForBaseClass(TestObservations observations) : IEventObserver<TestEventBase>
+    {
+        public async Task HandleEvent(TestEventBase evt, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+
+            observations.EventsFromObserver.Enqueue(evt);
+            observations.EventsFromObserverWithObserverType.Enqueue((GetType(), evt));
+        }
+    }
+
+    private sealed class TestEventObserverForBaseClassWithCustomTransport(TestObservations observations) : IEventObserver<TestEventWithCustomTransportBase>
     {
         public async Task HandleEvent(TestEventWithCustomTransportBase evt, CancellationToken cancellationToken = default)
         {
@@ -833,56 +554,30 @@ public sealed class EventObserverTransportTests : IDisposable
         }
     }
 
-    private sealed class CustomEventObserverTransport1Configuration : IEventObserverTransportConfiguration
-    {
-        public int Parameter { get; set; }
-    }
-
-    private sealed class CustomEventTransport1Client(
+    private sealed class CustomEventTransport1Receiver(
         TestObservations observations,
         CustomEventTransport1PublisherState publisherState,
-        IConquerorEventTransportReceiverRegistry transportReceiverRegistry,
+        IConquerorEventTypeRegistry typeRegistry,
+        IConquerorEventTransportReceiverBroadcaster broadcaster,
         IServiceProvider serviceProvider,
-        Func<ConquerorEventTransportReceiverObserverRegistration<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>, bool>? observerFilter = null)
+        Func<Type, bool>? observerFilter = null)
     {
         public async Task Start()
         {
-            var registration = await transportReceiverRegistry.RegisterReceiver<CustomEventObserverTransport1Configuration, CustomEventTransport1Attribute>(builder =>
-            {
-                // test publishing with custom strategy
-                _ = builder.UseDefault(new CustomBroadcastingStrategy(observations));
-            });
-
-            foreach (var transportClientRegistration in registration.RelevantObservers)
-            {
-                observations.ObservedTransportRegistrations.Enqueue((GetType(),
-                                                                     transportClientRegistration.EventType,
-                                                                     transportClientRegistration.ConfigurationAttribute,
-                                                                     transportClientRegistration.Configuration));
-            }
-
-            var observersToDispatchTo = registration.RelevantObservers.Where(r => observerFilter?.Invoke(r) ?? true).Select(r => r.ObserverId).ToHashSet();
+            await Task.Yield();
 
             publisherState.OnEvent += async (evt, resetEvent) =>
             {
-                observations.EventsFromClient.Enqueue((GetType(), evt));
-                await registration.Dispatcher.DispatchEvent(evt, observersToDispatchTo, serviceProvider);
+                if (typeRegistry.TryGetConfigurationForReceiver<CustomEventTransport1Attribute>(evt.GetType(), out var configurationAttribute)
+                    && (observerFilter?.Invoke(evt.GetType()) ?? true))
+                {
+                    observations.EventsFromReceiver.Enqueue((GetType(), evt, configurationAttribute));
+
+                    await broadcaster.Broadcast(evt, serviceProvider, CancellationToken.None);
+                }
+
                 resetEvent.Set();
             };
-        }
-    }
-
-    private sealed class CustomBroadcastingStrategy(TestObservations observations) : IConquerorEventBroadcastingStrategy
-    {
-        public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
-            where TEvent : class
-        {
-            observations.EventsFromStrategy.Enqueue(evt);
-
-            foreach (var observer in eventObservers)
-            {
-                await observer.HandleEvent(evt, cancellationToken);
-            }
         }
     }
 
@@ -935,36 +630,26 @@ public sealed class EventObserverTransportTests : IDisposable
         }
     }
 
-    private sealed class CustomEventObserverTransport2Configuration : IEventObserverTransportConfiguration
-    {
-        public int Parameter { get; set; }
-    }
-
-    private sealed class CustomEventTransport2Client(
+    private sealed class CustomEventTransport2Receiver(
         TestObservations observations,
         CustomEventTransport2PublisherState publisherState,
-        IConquerorEventTransportReceiverRegistry transportReceiverRegistry,
+        IConquerorEventTypeRegistry typeRegistry,
+        IConquerorEventTransportReceiverBroadcaster broadcaster,
         IServiceProvider serviceProvider)
     {
         public async Task Start()
         {
-            var registration = await transportReceiverRegistry.RegisterReceiver<CustomEventObserverTransport2Configuration, CustomEventTransport2Attribute>(builder => builder.UseSequentialAsDefault())
-                                                             .ConfigureAwait(false);
-
-            foreach (var transportClientRegistration in registration.RelevantObservers)
-            {
-                observations.ObservedTransportRegistrations.Enqueue((GetType(),
-                                                                     transportClientRegistration.EventType,
-                                                                     transportClientRegistration.ConfigurationAttribute,
-                                                                     transportClientRegistration.Configuration));
-            }
-
-            var observersToDispatchTo = registration.RelevantObservers.Select(r => r.ObserverId).ToHashSet();
+            await Task.Yield();
 
             publisherState.OnEvent += async (evt, resetEvent) =>
             {
-                observations.EventsFromClient.Enqueue((GetType(), evt));
-                await registration.Dispatcher.DispatchEvent(evt, observersToDispatchTo, serviceProvider);
+                if (typeRegistry.TryGetConfigurationForReceiver<CustomEventTransport2Attribute>(evt.GetType(), out var configurationAttribute))
+                {
+                    observations.EventsFromReceiver.Enqueue((GetType(), evt, configurationAttribute));
+
+                    await broadcaster.Broadcast(evt, serviceProvider, CancellationToken.None);
+                }
+
                 resetEvent.Set();
             };
         }
@@ -972,16 +657,12 @@ public sealed class EventObserverTransportTests : IDisposable
 
     private sealed class TestObservations
     {
-        public ConcurrentQueue<(Type ClientType, Type EventType, object ConfigurationAttribute, object? Configuration)> ObservedTransportRegistrations { get; } = new();
-
         public ConcurrentQueue<object> EventsFromObserver { get; } = new();
 
         public ConcurrentQueue<(Type ObserverType, object Event)> EventsFromObserverWithObserverType { get; } = new();
 
-        public ConcurrentQueue<(Type ClientType, object Event)> EventsFromClient { get; } = new();
+        public ConcurrentQueue<(Type ReceiverType, object Event, object ConfigurationAttribute)> EventsFromReceiver { get; } = new();
 
         public ConcurrentQueue<object> EventsFromMiddleware { get; } = new();
-
-        public ConcurrentQueue<object> EventsFromStrategy { get; } = new();
     }
 }

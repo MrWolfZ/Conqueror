@@ -12,11 +12,6 @@ internal sealed class ParallelBroadcastingStrategy(ParallelEventBroadcastingStra
     public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
         where TEvent : class
     {
-        if (configuration.MaxDegreeOfParallelism <= 0)
-        {
-            throw new ArgumentException($"maximum degree of parallelism for parallel in-memory publishing must be a positive integer, but was {configuration.MaxDegreeOfParallelism}");
-        }
-
         using var semaphore = new SemaphoreSlim(configuration.MaxDegreeOfParallelism ?? 1_000_000);
 
         // ReSharper disable once AccessToDisposedClosure (semaphore is disposed only after all executions have finished)
