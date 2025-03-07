@@ -408,6 +408,68 @@ public sealed class CommandMiddlewareFunctionalityTests
     }
 
     [Test]
+    public async Task GivenHandlerWithMiddlewares_WhenMiddlewareIsExecuted_ServiceProviderInContextAndPipelineConfigurationIsFromResolutionScope()
+    {
+        var services = new ServiceCollection();
+
+        IServiceProvider? providerFromHandlerPipelineBuild = null;
+        IServiceProvider? providerFromHandlerMiddleware = null;
+        IServiceProvider? providerFromClientPipelineBuild = null;
+        IServiceProvider? providerFromClientMiddleware = null;
+
+        _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                    .AddTransient<TestObservations>()
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
+                    {
+                        providerFromHandlerPipelineBuild = pipeline.ServiceProvider;
+                        _ = pipeline.Use(ctx =>
+                        {
+                            providerFromHandlerMiddleware = ctx.ServiceProvider;
+                            return ctx.Next(ctx.Command, ctx.CancellationToken);
+                        });
+                    });
+
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = scope1.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+        var handler2 = scope2.ServiceProvider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        _ = await handler1.WithPipeline(pipeline =>
+        {
+            providerFromClientPipelineBuild = pipeline.ServiceProvider;
+            _ = pipeline.Use(ctx =>
+            {
+                providerFromClientMiddleware = ctx.ServiceProvider;
+                return ctx.Next(ctx.Command, ctx.CancellationToken);
+            });
+        }).Handle(new(10));
+
+        Assert.That(providerFromHandlerPipelineBuild, Is.SameAs(scope1.ServiceProvider));
+        Assert.That(providerFromHandlerMiddleware, Is.SameAs(scope1.ServiceProvider));
+        Assert.That(providerFromClientPipelineBuild, Is.SameAs(scope1.ServiceProvider));
+        Assert.That(providerFromClientMiddleware, Is.SameAs(scope1.ServiceProvider));
+
+        _ = await handler2.WithPipeline(pipeline =>
+        {
+            providerFromClientPipelineBuild = pipeline.ServiceProvider;
+            _ = pipeline.Use(ctx =>
+            {
+                providerFromClientMiddleware = ctx.ServiceProvider;
+                return ctx.Next(ctx.Command, ctx.CancellationToken);
+            });
+        }).Handle(new(10));
+
+        Assert.That(providerFromHandlerPipelineBuild, Is.Not.SameAs(scope1.ServiceProvider));
+        Assert.That(providerFromHandlerPipelineBuild, Is.SameAs(scope2.ServiceProvider));
+        Assert.That(providerFromHandlerMiddleware, Is.SameAs(scope2.ServiceProvider));
+        Assert.That(providerFromClientPipelineBuild, Is.SameAs(scope2.ServiceProvider));
+        Assert.That(providerFromClientMiddleware, Is.SameAs(scope2.ServiceProvider));
+    }
+
+    [Test]
     public async Task GivenMultipleClientPipelineConfigurations_WhenHandlerIsCalled_PipelinesAreExecutedInReverseOrder()
     {
         var services = new ServiceCollection();

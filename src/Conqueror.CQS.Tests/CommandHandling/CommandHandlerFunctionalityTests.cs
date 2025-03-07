@@ -178,6 +178,54 @@ public abstract class CommandHandlerFunctionalityTests
         Assert.That(thrownException, Is.SameAs(exception));
     }
 
+    [Test]
+    public async Task GivenHandler_HandlerIsResolvedFromResolutionScope()
+    {
+        var observations = new TestObservations();
+
+        var provider = RegisterHandler(new ServiceCollection())
+                       .AddSingleton(observations)
+                       .BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = ResolveHandler(scope1.ServiceProvider);
+        var handler2 = ResolveHandler(scope2.ServiceProvider);
+
+        _ = await handler1.Handle(CreateCommand());
+        _ = await handler1.Handle(CreateCommand());
+        _ = await handler2.Handle(CreateCommand());
+
+        Assert.That(observations.ServiceProviders, Has.Count.EqualTo(3));
+        Assert.That(observations.ServiceProviders[0], Is.SameAs(observations.ServiceProviders[1]));
+        Assert.That(observations.ServiceProviders[0], Is.Not.SameAs(observations.ServiceProviders[2]));
+    }
+
+    [Test]
+    public async Task GivenHandlerWithoutResponse_HandlerIsResolvedFromResolutionScope()
+    {
+        var observations = new TestObservations();
+
+        var provider = RegisterHandlerWithoutResponse(new ServiceCollection())
+                       .AddSingleton(observations)
+                       .BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = ResolveHandlerWithoutResponse(scope1.ServiceProvider);
+        var handler2 = ResolveHandlerWithoutResponse(scope2.ServiceProvider);
+
+        await handler1.Handle(CreateCommandWithoutResponse());
+        await handler1.Handle(CreateCommandWithoutResponse());
+        await handler2.Handle(CreateCommandWithoutResponse());
+
+        Assert.That(observations.ServiceProviders, Has.Count.EqualTo(3));
+        Assert.That(observations.ServiceProviders[0], Is.SameAs(observations.ServiceProviders[1]));
+        Assert.That(observations.ServiceProviders[0], Is.Not.SameAs(observations.ServiceProviders[2]));
+    }
+
     public record TestCommand(int Payload);
 
     public record TestCommandResponse(int Payload);
@@ -189,6 +237,10 @@ public abstract class CommandHandlerFunctionalityTests
         public List<object> Commands { get; } = [];
 
         public List<CancellationToken> CancellationTokens { get; } = [];
+
+        public List<IServiceProvider> ServiceProviders { get; } = [];
+
+        public List<IServiceProvider> ServiceProvidersFromTransportFactory { get; } = [];
     }
 }
 
@@ -225,7 +277,7 @@ public sealed class CommandHandlerFunctionalityDefaultTests : CommandHandlerFunc
         return services.AddConquerorCommandHandler<TestCommandHandlerWithoutResponse>();
     }
 
-    private sealed class TestCommandHandler(TestObservations observations, Exception? exception = null) : ICommandHandler<TestCommand, TestCommandResponse>
+    private sealed class TestCommandHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : ICommandHandler<TestCommand, TestCommandResponse>
     {
         public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
@@ -238,11 +290,12 @@ public sealed class CommandHandlerFunctionalityDefaultTests : CommandHandlerFunc
 
             observations.Commands.Add(command);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
             return new(command.Payload + 1);
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponse(TestObservations observations, Exception? exception = null) : ICommandHandler<TestCommandWithoutResponse>
+    private sealed class TestCommandHandlerWithoutResponse(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : ICommandHandler<TestCommandWithoutResponse>
     {
         public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
@@ -255,6 +308,7 @@ public sealed class CommandHandlerFunctionalityDefaultTests : CommandHandlerFunc
 
             observations.Commands.Add(command);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
         }
     }
 
@@ -293,6 +347,7 @@ public sealed class CommandHandlerFunctionalityDelegateTests : CommandHandlerFun
             var obs = p.GetRequiredService<TestObservations>();
             obs.Commands.Add(command);
             obs.CancellationTokens.Add(cancellationToken);
+            obs.ServiceProviders.Add(p);
             return new(command.Payload + 1);
         });
     }
@@ -312,6 +367,7 @@ public sealed class CommandHandlerFunctionalityDelegateTests : CommandHandlerFun
             var obs = p.GetRequiredService<TestObservations>();
             obs.Commands.Add(command);
             obs.CancellationTokens.Add(cancellationToken);
+            obs.ServiceProviders.Add(p);
         });
     }
 }
@@ -353,7 +409,7 @@ public sealed class CommandHandlerFunctionalityGenericTests : CommandHandlerFunc
 
     private sealed record GenericTestCommandResponse<T>(T GenericPayload) : TestCommandResponse(11);
 
-    private sealed class GenericTestCommandHandler<T>(TestObservations observations, Exception? exception = null) : ICommandHandler<GenericTestCommand<T>, GenericTestCommandResponse<T>>
+    private sealed class GenericTestCommandHandler<T>(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : ICommandHandler<GenericTestCommand<T>, GenericTestCommandResponse<T>>
     {
         public async Task<GenericTestCommandResponse<T>> Handle(GenericTestCommand<T> command, CancellationToken cancellationToken = default)
         {
@@ -366,11 +422,12 @@ public sealed class CommandHandlerFunctionalityGenericTests : CommandHandlerFunc
 
             observations.Commands.Add(command);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
             return new(command.GenericPayload);
         }
     }
 
-    private sealed class GenericTestCommandHandlerWithoutResponse<T>(TestObservations observations, Exception? exception = null) : ICommandHandler<GenericTestCommandWithoutResponse<T>>
+    private sealed class GenericTestCommandHandlerWithoutResponse<T>(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : ICommandHandler<GenericTestCommandWithoutResponse<T>>
     {
         public async Task Handle(GenericTestCommandWithoutResponse<T> command, CancellationToken cancellationToken = default)
         {
@@ -383,6 +440,7 @@ public sealed class CommandHandlerFunctionalityGenericTests : CommandHandlerFunc
 
             observations.Commands.Add(command);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
         }
     }
 
@@ -446,7 +504,7 @@ public sealed class CommandHandlerFunctionalityCustomInterfaceTests : CommandHan
 
     public interface ITestCommandHandlerWithoutResponse : ICommandHandler<TestCommandWithoutResponse>;
 
-    private sealed class TestCommandHandler(TestObservations observations, Exception? exception = null) : ITestCommandHandler
+    private sealed class TestCommandHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : ITestCommandHandler
     {
         public async Task<TestCommandResponse> Handle(TestCommand command, CancellationToken cancellationToken = default)
         {
@@ -459,11 +517,12 @@ public sealed class CommandHandlerFunctionalityCustomInterfaceTests : CommandHan
 
             observations.Commands.Add(command);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
             return new(command.Payload + 1);
         }
     }
 
-    private sealed class TestCommandHandlerWithoutResponse(TestObservations observations, Exception? exception = null) : ITestCommandHandlerWithoutResponse
+    private sealed class TestCommandHandlerWithoutResponse(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : ITestCommandHandlerWithoutResponse
     {
         public async Task Handle(TestCommandWithoutResponse command, CancellationToken cancellationToken = default)
         {
@@ -476,12 +535,61 @@ public sealed class CommandHandlerFunctionalityCustomInterfaceTests : CommandHan
 
             observations.Commands.Add(command);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
         }
     }
 }
 
 public abstract class CommandHandlerFunctionalityClientTests : CommandHandlerFunctionalityTests
 {
+    [Test]
+    public async Task GivenHandlerClient_ServiceProviderInTransportBuilderIsFromResolutionScope()
+    {
+        var observations = new TestObservations();
+
+        var provider = RegisterHandler(new ServiceCollection())
+                       .AddSingleton(observations)
+                       .BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = ResolveHandler(scope1.ServiceProvider);
+        var handler2 = ResolveHandler(scope2.ServiceProvider);
+
+        _ = await handler1.Handle(CreateCommand());
+        _ = await handler1.Handle(CreateCommand());
+        _ = await handler2.Handle(CreateCommand());
+
+        Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
+        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+    }
+
+    [Test]
+    public async Task GivenHandlerClientWithoutResponse_ServiceProviderInTransportBuilderIsFromResolutionScope()
+    {
+        var observations = new TestObservations();
+
+        var provider = RegisterHandlerWithoutResponse(new ServiceCollection())
+                       .AddSingleton(observations)
+                       .BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = ResolveHandlerWithoutResponse(scope1.ServiceProvider);
+        var handler2 = ResolveHandlerWithoutResponse(scope2.ServiceProvider);
+
+        await handler1.Handle(CreateCommandWithoutResponse());
+        await handler1.Handle(CreateCommandWithoutResponse());
+        await handler2.Handle(CreateCommandWithoutResponse());
+
+        Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
+        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+    }
+
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
         return services.AddSingleton<TestCommandTransport>();
@@ -492,7 +600,7 @@ public abstract class CommandHandlerFunctionalityClientTests : CommandHandlerFun
         return services.AddSingleton<TestCommandTransport>();
     }
 
-    protected sealed class TestCommandTransport(TestObservations observations, Exception? exception = null) : ICommandTransportClient
+    protected sealed class TestCommandTransport(Exception? exception = null) : ICommandTransportClient
     {
         public string TransportTypeName => "test";
 
@@ -508,8 +616,10 @@ public abstract class CommandHandlerFunctionalityClientTests : CommandHandlerFun
                 throw exception;
             }
 
+            var observations = serviceProvider.GetRequiredService<TestObservations>();
             observations.Commands.Add(command);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
 
             if (command is TestCommandWithoutResponse)
             {
@@ -528,13 +638,21 @@ public sealed class CommandHandlerFunctionalityClientWithSyncTransportFactoryTes
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
         return base.RegisterHandler(services)
-                   .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+                   .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b =>
+                   {
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                       return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                   });
     }
 
     protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
         return base.RegisterHandler(services)
-                   .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+                   .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b =>
+                   {
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                       return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                   });
     }
 }
 
@@ -544,13 +662,21 @@ public sealed class CommandHandlerFunctionalityClientCustomInterfaceWithSyncTran
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
         return base.RegisterHandler(services)
-                   .AddConquerorCommandClient<ITestCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+                   .AddConquerorCommandClient<ITestCommandHandler>(b =>
+                   {
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                       return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                   });
     }
 
     protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
         return base.RegisterHandler(services)
-                   .AddConquerorCommandClient<ITestCommandHandlerWithoutResponse>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+                   .AddConquerorCommandClient<ITestCommandHandlerWithoutResponse>(b =>
+                   {
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                       return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                   });
     }
 
     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
@@ -567,6 +693,7 @@ public sealed class CommandHandlerFunctionalityClientWithAsyncTransportFactoryTe
                    .AddConquerorCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async b =>
                    {
                        await Task.Delay(1);
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                        return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
                    });
     }
@@ -577,6 +704,7 @@ public sealed class CommandHandlerFunctionalityClientWithAsyncTransportFactoryTe
                    .AddConquerorCommandClient<ICommandHandler<TestCommandWithoutResponse>>(async b =>
                    {
                        await Task.Delay(1);
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                        return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
                    });
     }
@@ -591,6 +719,7 @@ public sealed class CommandHandlerFunctionalityClientCustomInterfaceWithAsyncTra
                    .AddConquerorCommandClient<ITestCommandHandler>(async b =>
                    {
                        await Task.Delay(1);
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                        return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
                    });
     }
@@ -601,6 +730,7 @@ public sealed class CommandHandlerFunctionalityClientCustomInterfaceWithAsyncTra
                    .AddConquerorCommandClient<ITestCommandHandlerWithoutResponse>(async b =>
                    {
                        await Task.Delay(1);
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                        return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
                    });
     }
@@ -656,13 +786,21 @@ public sealed class CommandHandlerFunctionalityClientFromFactoryWithSyncTranspor
     protected override ICommandHandler<TestCommand, TestCommandResponse> ResolveHandler(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<ICommandClientFactory>()
-                              .CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+                              .CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(b =>
+                              {
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                                  return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                              });
     }
 
     protected override ICommandHandler<TestCommandWithoutResponse> ResolveHandlerWithoutResponse(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<ICommandClientFactory>()
-                              .CreateCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+                              .CreateCommandClient<ICommandHandler<TestCommandWithoutResponse>>(b =>
+                              {
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                                  return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                              });
     }
 }
 
@@ -672,13 +810,21 @@ public sealed class CommandHandlerFunctionalityClientWithCustomInterfaceFromFact
     protected override ICommandHandler<TestCommand, TestCommandResponse> ResolveHandler(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<ICommandClientFactory>()
-                              .CreateCommandClient<ITestCommandHandler>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+                              .CreateCommandClient<ITestCommandHandler>(b =>
+                              {
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                                  return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                              });
     }
 
     protected override ICommandHandler<TestCommandWithoutResponse> ResolveHandlerWithoutResponse(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<ICommandClientFactory>()
-                              .CreateCommandClient<ITestCommandHandlerWithoutResponse>(b => b.ServiceProvider.GetRequiredService<TestCommandTransport>());
+                              .CreateCommandClient<ITestCommandHandlerWithoutResponse>(b =>
+                              {
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                                  return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
+                              });
     }
 
     public interface ITestCommandHandler : ICommandHandler<TestCommand, TestCommandResponse>;
@@ -695,6 +841,7 @@ public sealed class CommandHandlerFunctionalityClientFromFactoryWithAsyncTranspo
                               .CreateCommandClient<ICommandHandler<TestCommand, TestCommandResponse>>(async b =>
                               {
                                   await Task.Delay(1);
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                                   return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
                               });
     }
@@ -705,6 +852,7 @@ public sealed class CommandHandlerFunctionalityClientFromFactoryWithAsyncTranspo
                               .CreateCommandClient<ICommandHandler<TestCommandWithoutResponse>>(async b =>
                               {
                                   await Task.Delay(1);
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                                   return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
                               });
     }
@@ -719,6 +867,7 @@ public sealed class CommandHandlerFunctionalityClientWithCustomInterfaceFromFact
                               .CreateCommandClient<ITestCommandHandler>(async b =>
                               {
                                   await Task.Delay(1);
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                                   return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
                               });
     }
@@ -729,6 +878,7 @@ public sealed class CommandHandlerFunctionalityClientWithCustomInterfaceFromFact
                               .CreateCommandClient<ITestCommandHandlerWithoutResponse>(async b =>
                               {
                                   await Task.Delay(1);
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                                   return b.ServiceProvider.GetRequiredService<TestCommandTransport>();
                               });
     }

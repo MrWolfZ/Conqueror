@@ -100,6 +100,30 @@ public abstract class QueryHandlerFunctionalityTests
         Assert.That(thrownException, Is.SameAs(exception));
     }
 
+    [Test]
+    public async Task GivenHandler_HandlerIsResolvedFromResolutionScope()
+    {
+        var observations = new TestObservations();
+
+        var provider = RegisterHandler(new ServiceCollection())
+                       .AddSingleton(observations)
+                       .BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = ResolveHandler(scope1.ServiceProvider);
+        var handler2 = ResolveHandler(scope2.ServiceProvider);
+
+        _ = await handler1.Handle(CreateQuery());
+        _ = await handler1.Handle(CreateQuery());
+        _ = await handler2.Handle(CreateQuery());
+
+        Assert.That(observations.ServiceProviders, Has.Count.EqualTo(3));
+        Assert.That(observations.ServiceProviders[0], Is.SameAs(observations.ServiceProviders[1]));
+        Assert.That(observations.ServiceProviders[0], Is.Not.SameAs(observations.ServiceProviders[2]));
+    }
+
     public record TestQuery(int Payload);
 
     public record TestQueryResponse(int Payload);
@@ -109,6 +133,10 @@ public abstract class QueryHandlerFunctionalityTests
         public List<object> Queries { get; } = [];
 
         public List<CancellationToken> CancellationTokens { get; } = [];
+
+        public List<IServiceProvider> ServiceProviders { get; } = [];
+
+        public List<IServiceProvider> ServiceProvidersFromTransportFactory { get; } = [];
     }
 }
 
@@ -140,7 +168,7 @@ public sealed class QueryHandlerFunctionalityDefaultTests : QueryHandlerFunction
         return services.AddConquerorQueryHandler<TestQueryHandler>();
     }
 
-    private sealed class TestQueryHandler(TestObservations observations, Exception? exception = null) : IQueryHandler<TestQuery, TestQueryResponse>
+    private sealed class TestQueryHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : IQueryHandler<TestQuery, TestQueryResponse>
     {
         public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
@@ -153,6 +181,7 @@ public sealed class QueryHandlerFunctionalityDefaultTests : QueryHandlerFunction
 
             observations.Queries.Add(query);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
             return new(query.Payload + 1);
         }
     }
@@ -192,6 +221,7 @@ public sealed class QueryHandlerFunctionalityDelegateTests : QueryHandlerFunctio
             var obs = p.GetRequiredService<TestObservations>();
             obs.Queries.Add(query);
             obs.CancellationTokens.Add(cancellationToken);
+            obs.ServiceProviders.Add(p);
             return new(query.Payload + 1);
         });
     }
@@ -219,7 +249,7 @@ public sealed class QueryHandlerFunctionalityGenericTests : QueryHandlerFunction
 
     private sealed record GenericTestQueryResponse<T>(T GenericPayload) : TestQueryResponse(11);
 
-    private sealed class GenericTestQueryHandler<T>(TestObservations observations, Exception? exception = null) : IQueryHandler<GenericTestQuery<T>, GenericTestQueryResponse<T>>
+    private sealed class GenericTestQueryHandler<T>(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : IQueryHandler<GenericTestQuery<T>, GenericTestQueryResponse<T>>
     {
         public async Task<GenericTestQueryResponse<T>> Handle(GenericTestQuery<T> query, CancellationToken cancellationToken = default)
         {
@@ -232,6 +262,7 @@ public sealed class QueryHandlerFunctionalityGenericTests : QueryHandlerFunction
 
             observations.Queries.Add(query);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
             return new(query.GenericPayload);
         }
     }
@@ -275,7 +306,7 @@ public sealed class QueryHandlerFunctionalityCustomInterfaceTests : QueryHandler
 
     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
 
-    private sealed class TestQueryHandler(TestObservations observations, Exception? exception = null) : ITestQueryHandler
+    private sealed class TestQueryHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null) : ITestQueryHandler
     {
         public async Task<TestQueryResponse> Handle(TestQuery query, CancellationToken cancellationToken = default)
         {
@@ -288,6 +319,7 @@ public sealed class QueryHandlerFunctionalityCustomInterfaceTests : QueryHandler
 
             observations.Queries.Add(query);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
             return new(query.Payload + 1);
         }
     }
@@ -295,12 +327,36 @@ public sealed class QueryHandlerFunctionalityCustomInterfaceTests : QueryHandler
 
 public abstract class QueryHandlerFunctionalityClientTests : QueryHandlerFunctionalityTests
 {
+    [Test]
+    public async Task GivenHandlerClient_ServiceProviderInTransportBuilderIsFromResolutionScope()
+    {
+        var observations = new TestObservations();
+
+        var provider = RegisterHandler(new ServiceCollection())
+                       .AddSingleton(observations)
+                       .BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+
+        var handler1 = ResolveHandler(scope1.ServiceProvider);
+        var handler2 = ResolveHandler(scope2.ServiceProvider);
+
+        _ = await handler1.Handle(CreateQuery());
+        _ = await handler1.Handle(CreateQuery());
+        _ = await handler2.Handle(CreateQuery());
+
+        Assert.That(observations.ServiceProvidersFromTransportFactory, Has.Count.EqualTo(3));
+        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.SameAs(observations.ServiceProvidersFromTransportFactory[1]));
+        Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
+    }
+
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
         return services.AddSingleton<TestQueryTransport>();
     }
 
-    protected sealed class TestQueryTransport(TestObservations observations, Exception? exception = null) : IQueryTransportClient
+    protected sealed class TestQueryTransport(Exception? exception = null) : IQueryTransportClient
     {
         public string TransportTypeName => "test";
 
@@ -316,8 +372,10 @@ public abstract class QueryHandlerFunctionalityClientTests : QueryHandlerFunctio
                 throw exception;
             }
 
+            var observations = serviceProvider.GetRequiredService<TestObservations>();
             observations.Queries.Add(query);
             observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
 
             var cmd = (TestQuery)(object)query;
             return (TResponse)(object)new TestQueryResponse(cmd.Payload + 1);
@@ -331,7 +389,11 @@ public sealed class QueryHandlerFunctionalityClientWithSyncTransportFactoryTests
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
         return base.RegisterHandler(services)
-                   .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+                   .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b =>
+                   {
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                       return b.ServiceProvider.GetRequiredService<TestQueryTransport>();
+                   });
     }
 }
 
@@ -341,7 +403,11 @@ public sealed class QueryHandlerFunctionalityClientCustomInterfaceWithSyncTransp
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
         return base.RegisterHandler(services)
-                   .AddConquerorQueryClient<ITestQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+                   .AddConquerorQueryClient<ITestQueryHandler>(b =>
+                   {
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                       return b.ServiceProvider.GetRequiredService<TestQueryTransport>();
+                   });
     }
 
     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
@@ -356,6 +422,7 @@ public sealed class QueryHandlerFunctionalityClientWithAsyncTransportFactoryTest
                    .AddConquerorQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async b =>
                    {
                        await Task.Delay(1);
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                        return b.ServiceProvider.GetRequiredService<TestQueryTransport>();
                    });
     }
@@ -370,6 +437,7 @@ public sealed class QueryHandlerFunctionalityClientCustomInterfaceWithAsyncTrans
                    .AddConquerorQueryClient<ITestQueryHandler>(async b =>
                    {
                        await Task.Delay(1);
+                       b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                        return b.ServiceProvider.GetRequiredService<TestQueryTransport>();
                    });
     }
@@ -405,7 +473,11 @@ public sealed class QueryHandlerFunctionalityClientFromFactoryWithSyncTransportF
     protected override IQueryHandler<TestQuery, TestQueryResponse> ResolveHandler(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IQueryClientFactory>()
-                              .CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+                              .CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(b =>
+                              {
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                                  return b.ServiceProvider.GetRequiredService<TestQueryTransport>();
+                              });
     }
 }
 
@@ -415,7 +487,11 @@ public sealed class QueryHandlerFunctionalityClientWithCustomInterfaceFromFactor
     protected override IQueryHandler<TestQuery, TestQueryResponse> ResolveHandler(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IQueryClientFactory>()
-                              .CreateQueryClient<ITestQueryHandler>(b => b.ServiceProvider.GetRequiredService<TestQueryTransport>());
+                              .CreateQueryClient<ITestQueryHandler>(b =>
+                              {
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
+                                  return b.ServiceProvider.GetRequiredService<TestQueryTransport>();
+                              });
     }
 
     public interface ITestQueryHandler : IQueryHandler<TestQuery, TestQueryResponse>;
@@ -430,6 +506,7 @@ public sealed class QueryHandlerFunctionalityClientFromFactoryWithAsyncTransport
                               .CreateQueryClient<IQueryHandler<TestQuery, TestQueryResponse>>(async b =>
                               {
                                   await Task.Delay(1);
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                                   return b.ServiceProvider.GetRequiredService<TestQueryTransport>();
                               });
     }
@@ -444,6 +521,7 @@ public sealed class QueryHandlerFunctionalityClientWithCustomInterfaceFromFactor
                               .CreateQueryClient<ITestQueryHandler>(async b =>
                               {
                                   await Task.Delay(1);
+                                  b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
                                   return b.ServiceProvider.GetRequiredService<TestQueryTransport>();
                               });
     }
