@@ -1,7 +1,7 @@
 namespace Conqueror.CQS.Tests.CommandHandling;
 
 [TestFixture]
-public sealed class CommandServiceCollectionConfigurationTests
+public sealed class CommandHandlerRegistrationTests
 {
     [Test]
     public void GivenRegisteredHandlerType_AddingIdenticalHandlerDoesNotThrow()
@@ -76,6 +76,34 @@ public sealed class CommandServiceCollectionConfigurationTests
                                               .BuildServiceProvider();
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
+    }
+
+    [Test]
+    [TestCase(null, "type")]
+    [TestCase(ServiceLifetime.Transient, "type")]
+    [TestCase(ServiceLifetime.Scoped, "type")]
+    [TestCase(ServiceLifetime.Singleton, "type")]
+    [TestCase(null, "factory")]
+    [TestCase(ServiceLifetime.Transient, "factory")]
+    [TestCase(ServiceLifetime.Scoped, "factory")]
+    [TestCase(ServiceLifetime.Singleton, "factory")]
+    [TestCase(ServiceLifetime.Singleton, "instance")]
+    public void GivenHandler_WhenRegisteringHandlerWithSpecificLifetime_ItIsRegisteredWithTheCorrectLifetime(ServiceLifetime? lifetime, string registrationMethod)
+    {
+        var services = new ServiceCollection();
+
+        _ = (lifetime, registrationMethod) switch
+        {
+            (null, "type") => services.AddConquerorCommandHandler<TestCommandHandler>(),
+            (_, "type") => services.AddConquerorCommandHandler<TestCommandHandler>(lifetime.Value),
+            (null, "factory") => services.AddConquerorCommandHandler(_ => new TestCommandHandler()),
+            (_, "factory") => services.AddConquerorCommandHandler(_ => new TestCommandHandler(), lifetime.Value),
+            (ServiceLifetime.Singleton, "instance") => services.AddConquerorCommandHandler(new TestCommandHandler()),
+            _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
+        };
+
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(descriptor => descriptor.ServiceType == typeof(TestCommandHandler)
+                                                                                && descriptor.Lifetime == (lifetime ?? ServiceLifetime.Transient)));
     }
 
     private sealed record TestCommand;

@@ -17,14 +17,35 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
     public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services)
         where THandler : class, IQueryHandler
     {
-        return services.AddConquerorQueryHandler(typeof(THandler), ServiceDescriptor.Transient(typeof(THandler), typeof(THandler)));
+        return services.AddConquerorQueryHandler<THandler>(ServiceLifetime.Transient);
+    }
+
+    public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services, ServiceLifetime lifetime)
+        where THandler : class, IQueryHandler
+    {
+        return services.AddConquerorQueryHandler(typeof(THandler), ServiceDescriptor.Describe(typeof(THandler), typeof(THandler), lifetime));
     }
 
     public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services,
                                                                         Func<IServiceProvider, THandler> factory)
         where THandler : class, IQueryHandler
     {
-        return services.AddConquerorQueryHandler(typeof(THandler), ServiceDescriptor.Transient(typeof(THandler), factory));
+        return services.AddConquerorQueryHandler(factory, ServiceLifetime.Transient);
+    }
+
+    public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services,
+                                                                        Func<IServiceProvider, THandler> factory,
+                                                                        ServiceLifetime lifetime)
+        where THandler : class, IQueryHandler
+    {
+        return services.AddConquerorQueryHandler(typeof(THandler), ServiceDescriptor.Describe(typeof(THandler), factory, lifetime));
+    }
+
+    public static IServiceCollection AddConquerorQueryHandler<THandler>(this IServiceCollection services,
+                                                                        THandler instance)
+        where THandler : class, IQueryHandler
+    {
+        return services.AddConquerorQueryHandler(typeof(THandler), ServiceDescriptor.Singleton(typeof(THandler), instance));
     }
 
     public static IServiceCollection AddConquerorQueryHandlerDelegate<TQuery, TResponse>(this IServiceCollection services,

@@ -737,8 +737,8 @@ public sealed class QueryClientRegistrationTests
         public string TransportTypeName => "test";
 
         public async Task<TResponse> Send<TQuery, TResponse>(TQuery query,
-                                                                     IServiceProvider serviceProvider,
-                                                                     CancellationToken cancellationToken)
+                                                             IServiceProvider serviceProvider,
+                                                             CancellationToken cancellationToken)
             where TQuery : class
         {
             await Task.Yield();

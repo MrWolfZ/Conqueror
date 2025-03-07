@@ -1,7 +1,7 @@
 namespace Conqueror.CQS.Tests.QueryHandling;
 
 [TestFixture]
-public sealed class QueryServiceCollectionConfigurationTests
+public sealed class QueryHandlerRegistrationTests
 {
     [Test]
     public void GivenRegisteredHandlerType_AddingIdenticalHandlerDoesNotThrow()
@@ -47,6 +47,34 @@ public sealed class QueryServiceCollectionConfigurationTests
                                               .BuildServiceProvider();
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
+    }
+
+    [Test]
+    [TestCase(null, "type")]
+    [TestCase(ServiceLifetime.Transient, "type")]
+    [TestCase(ServiceLifetime.Scoped, "type")]
+    [TestCase(ServiceLifetime.Singleton, "type")]
+    [TestCase(null, "factory")]
+    [TestCase(ServiceLifetime.Transient, "factory")]
+    [TestCase(ServiceLifetime.Scoped, "factory")]
+    [TestCase(ServiceLifetime.Singleton, "factory")]
+    [TestCase(ServiceLifetime.Singleton, "instance")]
+    public void GivenHandler_WhenRegisteringHandlerWithSpecificLifetime_ItIsRegisteredWithTheCorrectLifetime(ServiceLifetime? lifetime, string registrationMethod)
+    {
+        var services = new ServiceCollection();
+
+        _ = (lifetime, registrationMethod) switch
+        {
+            (null, "type") => services.AddConquerorQueryHandler<TestQueryHandler>(),
+            (_, "type") => services.AddConquerorQueryHandler<TestQueryHandler>(lifetime.Value),
+            (null, "factory") => services.AddConquerorQueryHandler(_ => new TestQueryHandler()),
+            (_, "factory") => services.AddConquerorQueryHandler(_ => new TestQueryHandler(), lifetime.Value),
+            (ServiceLifetime.Singleton, "instance") => services.AddConquerorQueryHandler(new TestQueryHandler()),
+            _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
+        };
+
+        Assert.That(services, Has.Some.Matches<ServiceDescriptor>(descriptor => descriptor.ServiceType == typeof(TestQueryHandler)
+                                                                                && descriptor.Lifetime == (lifetime ?? ServiceLifetime.Transient)));
     }
 
     private sealed record TestQuery;

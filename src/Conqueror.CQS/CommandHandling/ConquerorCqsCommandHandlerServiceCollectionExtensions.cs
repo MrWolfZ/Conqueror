@@ -17,14 +17,35 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
     public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services)
         where THandler : class, ICommandHandler
     {
-        return services.AddConquerorCommandHandler(typeof(THandler), ServiceDescriptor.Transient(typeof(THandler), typeof(THandler)));
+        return services.AddConquerorCommandHandler<THandler>(ServiceLifetime.Transient);
+    }
+
+    public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services, ServiceLifetime serviceLifetime)
+        where THandler : class, ICommandHandler
+    {
+        return services.AddConquerorCommandHandler(typeof(THandler), ServiceDescriptor.Describe(typeof(THandler), typeof(THandler), serviceLifetime));
     }
 
     public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services,
                                                                           Func<IServiceProvider, THandler> factory)
         where THandler : class, ICommandHandler
     {
-        return services.AddConquerorCommandHandler(typeof(THandler), ServiceDescriptor.Transient(typeof(THandler), factory));
+        return services.AddConquerorCommandHandler(factory, ServiceLifetime.Transient);
+    }
+
+    public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services,
+                                                                          Func<IServiceProvider, THandler> factory,
+                                                                          ServiceLifetime serviceLifetime)
+        where THandler : class, ICommandHandler
+    {
+        return services.AddConquerorCommandHandler(typeof(THandler), ServiceDescriptor.Describe(typeof(THandler), factory, serviceLifetime));
+    }
+
+    public static IServiceCollection AddConquerorCommandHandler<THandler>(this IServiceCollection services,
+                                                                          THandler instance)
+        where THandler : class, ICommandHandler
+    {
+        return services.AddConquerorCommandHandler(typeof(THandler), ServiceDescriptor.Singleton(typeof(THandler), instance));
     }
 
     public static IServiceCollection AddConquerorCommandHandlerDelegate<TCommand, TResponse>(this IServiceCollection services,
