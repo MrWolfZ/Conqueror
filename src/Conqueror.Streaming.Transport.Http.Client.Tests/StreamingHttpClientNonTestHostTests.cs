@@ -50,7 +50,9 @@ public sealed class StreamingHttpClientNonTestHostTests
 
         var observations = app.Services.GetRequiredService<TestObservations>();
 
-        Assert.That(() => observations.CancellationWasRequested, Is.True.After(1).Seconds.PollEvery(100).MilliSeconds);
+        Assert.That(() => observations.CancellationWasRequested, Is.True
+                                                                   .After(Environment.GetEnvironmentVariable("GITHUB_ACTION") is null ? 1 : 10).Seconds
+                                                                   .PollEvery(100).MilliSeconds);
     }
 
     [Test]
