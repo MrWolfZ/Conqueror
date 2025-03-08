@@ -14,8 +14,8 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
-- [ ] add test to validate that pipeline is not called twice for handlers
 - [ ] add `.Has()` method to pipelines
+- [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] add trace logging to transports
 - [ ] allow custom method name for custom handler interfaces
   - [ ] redirect `IncrementCounter` to `Handle` in interface
@@ -27,8 +27,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
 - [ ] create benchmark app
   - [ ] add benchmarks for running with and without context items
-- [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
-- [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] write code-level documentation for all public APIs
 - [ ] add null checks to public API methods to support users that do not use nullable reference types
 - [ ] cache client factory results
