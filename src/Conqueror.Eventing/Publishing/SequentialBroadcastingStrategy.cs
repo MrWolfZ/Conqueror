@@ -7,12 +7,14 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing.Publishing;
 
-internal sealed class SequentialBroadcastingStrategy(SequentialEventBroadcastingStrategyConfiguration configuration) : IConquerorEventBroadcastingStrategy
+internal sealed class SequentialBroadcastingStrategy(SequentialEventBroadcastingStrategyConfiguration configuration) : IEventBroadcastingStrategy
 {
-    public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
-        where TEvent : class
+    public async Task BroadcastEvent(IReadOnlyCollection<EventObserverFn> eventObservers,
+                                     IServiceProvider serviceProvider,
+                                     object evt,
+                                     CancellationToken cancellationToken)
     {
-        var shouldThrowOnFirst = configuration.ExceptionHandling == SequentialEventBroadcastingStrategyExceptionHandling.ThrowOnFirstException;
+        var shouldThrowOnFirst = configuration.ExceptionHandling == SequentialEventBroadcastingStrategyConfiguration.ExceptionHandlingStrategy.ThrowOnFirstException;
         var thrownExceptions = new List<Exception>();
         var thrownCancellationExceptions = new List<Exception>();
 
@@ -20,7 +22,7 @@ internal sealed class SequentialBroadcastingStrategy(SequentialEventBroadcasting
         {
             try
             {
-                await observer.HandleEvent(evt, cancellationToken).ConfigureAwait(false);
+                await observer(evt, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException e)
             {

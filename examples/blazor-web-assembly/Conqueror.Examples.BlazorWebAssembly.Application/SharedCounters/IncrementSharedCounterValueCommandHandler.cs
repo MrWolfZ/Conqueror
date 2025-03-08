@@ -11,7 +11,7 @@ internal sealed class IncrementSharedCounterValueCommandHandler(
     public async Task<IncrementSharedCounterValueCommandResponse> Handle(IncrementSharedCounterValueCommand command, CancellationToken cancellationToken = default)
     {
         var valueAfterIncrement = counter.IncrementBy(command.IncrementBy);
-        await eventObserver.HandleEvent(new(valueAfterIncrement, command.IncrementBy), cancellationToken);
+        await eventObserver.WithDefaultPublisherPipeline().Handle(new(valueAfterIncrement, command.IncrementBy), cancellationToken);
         return new(valueAfterIncrement);
     }
 

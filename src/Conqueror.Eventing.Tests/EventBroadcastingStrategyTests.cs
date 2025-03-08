@@ -5,7 +5,7 @@ namespace Conqueror.Eventing.Tests;
 public sealed class EventBroadcastingStrategyTests
 {
     [Test]
-    public async Task GivenCustomBroadcastingStrategy_CustomStrategyIsUsedWhenPublishing()
+    public async Task GivenCustomBroadcastingStrategy_WhenPublishingEvent_CustomStrategyIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -17,37 +17,36 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         using var cts = new CancellationTokenSource();
 
         var evt = new TestEvent { Payload = 10 };
 
-        await observer.HandleEvent(evt, cts.Token);
+        await observer.Handle(evt, cts.Token);
 
-        Assert.That(observations.ObservedStrategyExecutions.Select(t => (t.StrategyType, t.Event)), Is.EqualTo(new[] { (typeof(TestBroadcastingStrategy), evt) }));
-        Assert.That(observations.ObservedStrategyExecutions.Select(t => t.StrategyInstance).Distinct().Count(), Is.EqualTo(1));
+        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[] { (typeof(TestBroadcastingStrategy), evt) }));
         Assert.That(observations.CancellationTokensFromCustomStrategy, Is.EqualTo(new[] { cts.Token }));
 
         await dispatcher.DispatchEvent(evt, cts.Token);
 
-        Assert.That(observations.ObservedStrategyExecutions.Select(t => (t.StrategyType, t.Event)), Is.EqualTo(new[]
+        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[]
         {
             (typeof(TestBroadcastingStrategy), evt),
             (typeof(TestBroadcastingStrategy), evt),
         }));
-        Assert.That(observations.ObservedStrategyExecutions.Select(t => t.StrategyInstance).Distinct().Count(), Is.EqualTo(2));
+
         Assert.That(observations.CancellationTokensFromCustomStrategy, Is.EqualTo(new[] { cts.Token, cts.Token }));
     }
 
     [Test]
-    public async Task GivenScopedCustomBroadcastingStrategy_CustomStrategyFromDispatchingScopeIsUsedWhenPublishing()
+    public async Task GivenCustomBroadcastingStrategy_WhenPublishingEvent_StrategyIsResolvedFromPublishingScope()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy>(ServiceLifetime.Scoped)
+                    .AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -56,181 +55,239 @@ public sealed class EventBroadcastingStrategyTests
         using var scope2 = provider.CreateScope();
 
         var observer1 = scope1.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher1 = scope1.ServiceProvider.GetRequiredService<IConquerorEventDispatcher>();
-        var strategyInstance1 = scope1.ServiceProvider.GetRequiredService<IConquerorEventBroadcastingStrategy>();
+        var dispatcher1 = scope1.ServiceProvider.GetRequiredService<IEventDispatcher>();
 
         var observer2 = scope2.ServiceProvider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher2 = scope2.ServiceProvider.GetRequiredService<IConquerorEventDispatcher>();
-        var strategyInstance2 = scope2.ServiceProvider.GetRequiredService<IConquerorEventBroadcastingStrategy>();
+        var dispatcher2 = scope2.ServiceProvider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        await observer1.HandleEvent(evt);
+        await observer1.Handle(evt);
 
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[] { (typeof(TestBroadcastingStrategy), strategyInstance1, evt) }));
+        Assert.That(observations.ServiceProvidersFromPublish, Is.EqualTo(new[] { scope1.ServiceProvider }));
+        Assert.That(observations.ServiceProvidersFromInstance, Is.EqualTo(new[] { scope1.ServiceProvider }));
 
-        await observer2.HandleEvent(evt);
+        await observer2.Handle(evt);
 
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[]
+        Assert.That(observations.ServiceProvidersFromPublish, Is.EqualTo(new[]
         {
-            (typeof(TestBroadcastingStrategy), strategyInstance1, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance2, evt),
+            scope1.ServiceProvider,
+            scope2.ServiceProvider,
+        }));
+
+        Assert.That(observations.ServiceProvidersFromInstance, Is.EqualTo(new[]
+        {
+            scope1.ServiceProvider,
+            scope2.ServiceProvider,
         }));
 
         await dispatcher1.DispatchEvent(evt);
 
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[]
+        Assert.That(observations.ServiceProvidersFromPublish, Is.EqualTo(new[]
         {
-            (typeof(TestBroadcastingStrategy), strategyInstance1, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance2, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance1, evt),
+            scope1.ServiceProvider,
+            scope2.ServiceProvider,
+            scope1.ServiceProvider,
+        }));
+
+        Assert.That(observations.ServiceProvidersFromInstance, Is.EqualTo(new[]
+        {
+            scope1.ServiceProvider,
+            scope2.ServiceProvider,
+            scope1.ServiceProvider,
         }));
 
         await dispatcher2.DispatchEvent(evt);
 
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[]
+        Assert.That(observations.ServiceProvidersFromPublish, Is.EqualTo(new[]
         {
-            (typeof(TestBroadcastingStrategy), strategyInstance1, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance2, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance1, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance2, evt),
+            scope1.ServiceProvider,
+            scope2.ServiceProvider,
+            scope1.ServiceProvider,
+            scope2.ServiceProvider,
+        }));
+
+        Assert.That(observations.ServiceProvidersFromInstance, Is.EqualTo(new[]
+        {
+            scope1.ServiceProvider,
+            scope2.ServiceProvider,
+            scope1.ServiceProvider,
+            scope2.ServiceProvider,
         }));
     }
 
     [Test]
-    public async Task GivenCustomBroadcastingStrategySingleton_CustomStrategyIsUsedWhenPublishing()
+    [Combinatorial]
+    public void GivenRegisteredStrategy_WhenRegisteringSameStrategyDifferently_OverwritesRegistration(
+        [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+        ServiceLifetime? initialLifetime,
+        [Values("type", "factory", "instance")]
+        string initialRegistrationMethod,
+        [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+        ServiceLifetime? overwrittenLifetime,
+        [Values("type", "factory", "instance")]
+        string overwrittenRegistrationMethod)
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        Func<IServiceProvider, TestBroadcastingStrategy> factory = p => new(observations, p);
+        var instance = new TestBroadcastingStrategy(observations, null!);
 
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-        var strategyInstance = provider.GetRequiredService<IConquerorEventBroadcastingStrategy>();
-
-        using var cts = new CancellationTokenSource();
-
-        var evt = new TestEvent { Payload = 10 };
-
-        await observer.HandleEvent(evt, cts.Token);
-
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[] { (typeof(TestBroadcastingStrategy), strategyInstance, evt) }));
-        Assert.That(observations.CancellationTokensFromCustomStrategy, Is.EqualTo(new[] { cts.Token }));
-
-        await dispatcher.DispatchEvent(evt, cts.Token);
-
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[]
+        void Register(ServiceLifetime? lifetime, string method)
         {
-            (typeof(TestBroadcastingStrategy), strategyInstance, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance, evt),
-        }));
-        Assert.That(observations.CancellationTokensFromCustomStrategy, Is.EqualTo(new[] { cts.Token, cts.Token }));
+            _ = (lifetime, method) switch
+            {
+                (null, "type") => services.AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy>(),
+                (null, "factory") => services.AddConquerorEventBroadcastingStrategy(factory),
+                (var l, "type") => services.AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy>(l.Value),
+                (var l, "factory") => services.AddConquerorEventBroadcastingStrategy(factory, l.Value),
+                (_, "instance") => services.AddConquerorEventBroadcastingStrategy(instance),
+                _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
+            };
+        }
+
+        Register(initialLifetime, initialRegistrationMethod);
+        Register(overwrittenLifetime, overwrittenRegistrationMethod);
+
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestBroadcastingStrategy)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventBroadcastingStrategy)), Is.EqualTo(1));
+
+        switch (overwrittenLifetime, overwrittenRegistrationMethod)
+        {
+            case (var l, "type"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).ImplementationType, Is.EqualTo(typeof(TestBroadcastingStrategy)));
+                Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationType, Is.EqualTo(typeof(TestBroadcastingStrategy)));
+                break;
+            case (var l, "factory"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).ImplementationFactory, Is.Not.Null);
+                Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationFactory, Is.Not.Null);
+                break;
+            case (_, "instance"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).ImplementationInstance, Is.SameAs(instance));
+                Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationInstance, Is.SameAs(instance));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null);
+        }
     }
 
     [Test]
-    public async Task GivenCustomBroadcastingStrategyRegisteredWithFactory_CustomStrategyIsUsedWhenPublishing()
+    [Combinatorial]
+    public void GivenRegisteredStrategy_WhenRegisteringDifferentStrategy_ReplacesDefaultStrategyRegistration(
+        [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+        ServiceLifetime? firstLifetime,
+        [Values("type", "factory", "instance")]
+        string firstRegistrationMethod,
+        [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+        ServiceLifetime? secondLifetime,
+        [Values("type", "factory", "instance")]
+        string secondRegistrationMethod)
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventBroadcastingStrategy(p => new TestBroadcastingStrategy(p.GetRequiredService<TestObservations>()), ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        Func<IServiceProvider, TestBroadcastingStrategy> factory = p => new(observations, p);
+        Func<IServiceProvider, TestBroadcastingStrategy2> duplicateFactory = _ => new();
+        var instance = new TestBroadcastingStrategy(observations, null!);
+        var duplicateInstance = new TestBroadcastingStrategy2();
 
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-        var strategyInstance = provider.GetRequiredService<IConquerorEventBroadcastingStrategy>();
-
-        using var cts = new CancellationTokenSource();
-
-        var evt = new TestEvent { Payload = 10 };
-
-        await observer.HandleEvent(evt, cts.Token);
-
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[] { (typeof(TestBroadcastingStrategy), strategyInstance, evt) }));
-        Assert.That(observations.CancellationTokensFromCustomStrategy, Is.EqualTo(new[] { cts.Token }));
-
-        await dispatcher.DispatchEvent(evt, cts.Token);
-
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[]
+        _ = (firstLifetime, firstRegistrationMethod) switch
         {
-            (typeof(TestBroadcastingStrategy), strategyInstance, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance, evt),
-        }));
-        Assert.That(observations.CancellationTokensFromCustomStrategy, Is.EqualTo(new[] { cts.Token, cts.Token }));
+            (null, "type") => services.AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy>(),
+            (null, "factory") => services.AddConquerorEventBroadcastingStrategy(factory),
+            (var l, "type") => services.AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy>(l.Value),
+            (var l, "factory") => services.AddConquerorEventBroadcastingStrategy(factory, l.Value),
+            (_, "instance") => services.AddConquerorEventBroadcastingStrategy(instance),
+            _ => throw new ArgumentOutOfRangeException(nameof(firstRegistrationMethod), firstRegistrationMethod, null),
+        };
+
+        _ = (secondLifetime, secondRegistrationMethod) switch
+        {
+            (null, "type") => services.AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy2>(),
+            (null, "factory") => services.AddConquerorEventBroadcastingStrategy(duplicateFactory),
+            (var l, "type") => services.AddConquerorEventBroadcastingStrategy<TestBroadcastingStrategy2>(l.Value),
+            (var l, "factory") => services.AddConquerorEventBroadcastingStrategy(duplicateFactory, l.Value),
+            (_, "instance") => services.AddConquerorEventBroadcastingStrategy(duplicateInstance),
+            _ => throw new ArgumentOutOfRangeException(nameof(secondRegistrationMethod), secondRegistrationMethod, null),
+        };
+
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestBroadcastingStrategy)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestBroadcastingStrategy2)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventBroadcastingStrategy)), Is.EqualTo(1));
+
+        switch (firstLifetime, firstRegistrationMethod)
+        {
+            case (var l, "type"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).ImplementationType, Is.EqualTo(typeof(TestBroadcastingStrategy)));
+                Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationType, Is.Not.EqualTo(typeof(TestBroadcastingStrategy)));
+                break;
+            case (var l, "factory"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).ImplementationFactory, Is.Not.Null);
+
+                if (secondRegistrationMethod != "factory")
+                {
+                    Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationFactory, Is.Null);
+                }
+
+                break;
+            case (_, "instance"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy)).ImplementationInstance, Is.SameAs(instance));
+                Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationInstance, Is.Not.SameAs(instance));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(firstRegistrationMethod), firstRegistrationMethod, null);
+        }
+
+        switch (secondLifetime, secondRegistrationMethod)
+        {
+            case (var l, "type"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy2)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy2)).ImplementationType, Is.EqualTo(typeof(TestBroadcastingStrategy2)));
+                Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationType, Is.EqualTo(typeof(TestBroadcastingStrategy2)));
+                break;
+            case (var l, "factory"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy2)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy2)).ImplementationFactory, Is.Not.Null);
+                Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationFactory, Is.Not.Null);
+                break;
+            case (_, "instance"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestBroadcastingStrategy2)).ImplementationInstance, Is.SameAs(duplicateInstance));
+                Assert.That(services.Single(s => s.ServiceType == typeof(IEventBroadcastingStrategy)).ImplementationInstance, Is.SameAs(duplicateInstance));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(secondRegistrationMethod), secondRegistrationMethod, null);
+        }
     }
 
     [Test]
-    public async Task GivenCustomBroadcastingStrategyRegisteredAsSingleton_CustomStrategyIsUsedWhenPublishing()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventBroadcastingStrategy(new TestBroadcastingStrategy(observations))
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-        var strategyInstance = provider.GetRequiredService<IConquerorEventBroadcastingStrategy>();
-
-        using var cts = new CancellationTokenSource();
-
-        var evt = new TestEvent { Payload = 10 };
-
-        await observer.HandleEvent(evt, cts.Token);
-
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[] { (typeof(TestBroadcastingStrategy), strategyInstance, evt) }));
-        Assert.That(observations.CancellationTokensFromCustomStrategy, Is.EqualTo(new[] { cts.Token }));
-
-        await dispatcher.DispatchEvent(evt, cts.Token);
-
-        Assert.That(observations.ObservedStrategyExecutions, Is.EqualTo(new[]
-        {
-            (typeof(TestBroadcastingStrategy), strategyInstance, evt),
-            (typeof(TestBroadcastingStrategy), strategyInstance, evt),
-        }));
-        Assert.That(observations.CancellationTokensFromCustomStrategy, Is.EqualTo(new[] { cts.Token, cts.Token }));
-    }
-
-    [Test]
-    public void GivenCustomBroadcastingStrategyThatThrows_SameExceptionIsRethrownFromPublishing()
+    public void GivenCustomBroadcastingStrategy_WhenStrategyThrows_SameExceptionIsRethrownFromPublishing()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
         var exception = new Exception();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventBroadcastingStrategy(new TestBroadcastingStrategy(observations, exception))
+                    .AddConquerorEventBroadcastingStrategy(p => new TestBroadcastingStrategy(observations, p, exception))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => observer.HandleEvent(evt));
-
-        Assert.That(thrownException, Is.SameAs(exception));
-
-        thrownException = Assert.ThrowsAsync<Exception>(() => dispatcher.DispatchEvent(evt));
-
-        Assert.That(thrownException, Is.SameAs(exception));
+        Assert.That(() => observer.Handle(evt), Throws.Exception.SameAs(exception));
+        Assert.That(() => dispatcher.DispatchEvent(evt), Throws.Exception.SameAs(exception));
     }
 
     [Test]
-    public async Task GivenNoExplicitBroadcastingStrategy_SequentialStrategyIsUsed()
+    public async Task GivenNoExplicitBroadcastingStrategy_WhenPublishing_SequentialStrategyIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -250,11 +307,11 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var executionTask1 = observer.HandleEvent(evt);
+        var executionTask1 = observer.Handle(evt);
 
         Assert.That(() => observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -346,22 +403,18 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => observer.HandleEvent(evt));
-
-        Assert.That(thrownException, Is.SameAs(exception));
+        Assert.That(() => observer.Handle(evt), Throws.Exception.SameAs(exception));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
             (typeof(TestEventObserver), evt, ObserverExecutionPhase.Start),
         }));
 
-        thrownException = Assert.ThrowsAsync<Exception>(() => dispatcher.DispatchEvent(evt));
-
-        Assert.That(thrownException, Is.SameAs(exception));
+        Assert.That(() => dispatcher.DispatchEvent(evt), Throws.Exception.SameAs(exception));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -380,7 +433,7 @@ public sealed class EventBroadcastingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddSequentialConquerorEventBroadcastingStrategy(c => c.ExceptionHandling = SequentialEventBroadcastingStrategyExceptionHandling.ThrowOnFirstException)
+                    .AddSequentialConquerorEventBroadcastingStrategy(c => c.WithThrowOnFirstException())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -392,22 +445,18 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => observer.HandleEvent(evt));
-
-        Assert.That(thrownException, Is.SameAs(exception));
+        Assert.That(() => observer.Handle(evt), Throws.Exception.SameAs(exception));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
             (typeof(TestEventObserver), evt, ObserverExecutionPhase.Start),
         }));
 
-        thrownException = Assert.ThrowsAsync<Exception>(() => dispatcher.DispatchEvent(evt));
-
-        Assert.That(thrownException, Is.SameAs(exception));
+        Assert.That(() => dispatcher.DispatchEvent(evt), Throws.Exception.SameAs(exception));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -426,7 +475,7 @@ public sealed class EventBroadcastingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddSequentialConquerorEventBroadcastingStrategy(c => c.ExceptionHandling = SequentialEventBroadcastingStrategyExceptionHandling.ThrowAfterAll)
+                    .AddSequentialConquerorEventBroadcastingStrategy(c => c.WithThrowAfterAll())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -438,13 +487,11 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => observer.HandleEvent(evt));
-
-        Assert.That(thrownException, Is.SameAs(exception));
+        Assert.That(() => observer.Handle(evt), Throws.Exception.SameAs(exception));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -453,9 +500,7 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.End),
         }));
 
-        thrownException = Assert.ThrowsAsync<Exception>(() => dispatcher.DispatchEvent(evt));
-
-        Assert.That(thrownException, Is.SameAs(exception));
+        Assert.That(() => dispatcher.DispatchEvent(evt), Throws.Exception.SameAs(exception));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -480,7 +525,7 @@ public sealed class EventBroadcastingStrategyTests
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
-                    .AddSequentialConquerorEventBroadcastingStrategy(c => c.ExceptionHandling = SequentialEventBroadcastingStrategyExceptionHandling.ThrowAfterAll)
+                    .AddSequentialConquerorEventBroadcastingStrategy(c => c.WithThrowAfterAll())
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Func<TestEventObserver, CancellationToken, Task>>(async (_, _) =>
@@ -498,13 +543,12 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<AggregateException>(() => observer.HandleEvent(evt));
-
-        Assert.That(thrownException?.InnerExceptions, Is.EquivalentTo(new[] { exception1, exception2 }));
+        Assert.That(() => observer.Handle(evt), Throws.InstanceOf<AggregateException>()
+                                                      .With.Property("InnerExceptions").EquivalentTo(new[] { exception1, exception2 }));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -512,9 +556,8 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.Start),
         }));
 
-        thrownException = Assert.ThrowsAsync<AggregateException>(() => dispatcher.DispatchEvent(evt));
-
-        Assert.That(thrownException?.InnerExceptions, Is.EquivalentTo(new[] { exception1, exception2 }));
+        Assert.That(() => dispatcher.DispatchEvent(evt), Throws.InstanceOf<AggregateException>()
+                                                               .With.Property("InnerExceptions").EquivalentTo(new[] { exception1, exception2 }));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -540,7 +583,7 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         // dispatch a noop event to initialize the in-memory publisher, otherwise the publisher would throw due
         // to the token being cancelled
@@ -551,7 +594,7 @@ public sealed class EventBroadcastingStrategyTests
 
         var evt = new TestEvent { Payload = 10 };
 
-        Assert.DoesNotThrowAsync(() => observer.HandleEvent(evt, cts.Token));
+        Assert.DoesNotThrowAsync(() => observer.Handle(evt, cts.Token));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -597,7 +640,7 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         // dispatch a noop event to initialize the in-memory publisher, otherwise the publisher would throw due
         // to the token being cancelled
@@ -608,7 +651,7 @@ public sealed class EventBroadcastingStrategyTests
 
         var evt = new TestEvent { Payload = 10 };
 
-        _ = Assert.ThrowsAsync<OperationCanceledException>(() => observer.HandleEvent(evt, cts.Token));
+        await Assert.ThatAsync(() => observer.Handle(evt, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -617,7 +660,7 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.End),
         }));
 
-        _ = Assert.ThrowsAsync<OperationCanceledException>(() => dispatcher.DispatchEvent(evt, cts.Token));
+        await Assert.ThatAsync(() => dispatcher.DispatchEvent(evt, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -657,7 +700,7 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         // dispatch a noop event to initialize the in-memory publisher, otherwise the publisher would throw due
         // to the token being cancelled
@@ -668,7 +711,7 @@ public sealed class EventBroadcastingStrategyTests
 
         var evt = new TestEvent { Payload = 10 };
 
-        _ = Assert.ThrowsAsync<OperationCanceledException>(() => observer.HandleEvent(evt, cts.Token));
+        await Assert.ThatAsync(() => observer.Handle(evt, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -676,7 +719,7 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.Start),
         }));
 
-        _ = Assert.ThrowsAsync<OperationCanceledException>(() => dispatcher.DispatchEvent(evt, cts.Token));
+        await Assert.ThatAsync(() => dispatcher.DispatchEvent(evt, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -716,7 +759,7 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         // dispatch a noop event to initialize the in-memory publisher, otherwise the publisher would throw due
         // to the token being cancelled
@@ -727,9 +770,9 @@ public sealed class EventBroadcastingStrategyTests
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<AggregateException>(() => observer.HandleEvent(evt, cts.Token));
-
-        Assert.That(thrownException?.InnerExceptions, Has.Exactly(1).SameAs(exception).And.Exactly(1).InstanceOf<OperationCanceledException>());
+        await Assert.ThatAsync(() => observer.Handle(evt, cts.Token), Throws.InstanceOf<AggregateException>()
+                                                                            .With.Property("InnerExceptions").Contains(exception)
+                                                                            .And.Property("InnerExceptions").Exactly(1).InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -737,9 +780,9 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.Start),
         }));
 
-        thrownException = Assert.ThrowsAsync<AggregateException>(() => dispatcher.DispatchEvent(evt, cts.Token));
-
-        Assert.That(thrownException?.InnerExceptions, Has.Exactly(1).SameAs(exception).And.Exactly(1).InstanceOf<OperationCanceledException>());
+        await Assert.ThatAsync(() => dispatcher.DispatchEvent(evt, cts.Token), Throws.InstanceOf<AggregateException>()
+                                                                                     .With.Property("InnerExceptions").Contains(exception)
+                                                                                     .And.Property("InnerExceptions").Exactly(1).InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EqualTo(new[]
         {
@@ -752,7 +795,7 @@ public sealed class EventBroadcastingStrategyTests
     }
 
     [Test]
-    public async Task GivenConfiguredParallelBroadcastingStrategy_ParallelStrategyIsUsed()
+    public async Task GivenConfiguredParallelBroadcastingStrategy_WhenPublishing_ParallelStrategyIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -773,11 +816,11 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var executionTask1 = observer.HandleEvent(evt);
+        var executionTask1 = observer.Handle(evt);
 
         Assert.That(() => observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -876,13 +919,12 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<AggregateException>(() => observer.HandleEvent(evt));
-
-        Assert.That(thrownException?.InnerExceptions, Is.EquivalentTo(new[] { exception }));
+        Assert.That(() => observer.Handle(evt), Throws.InstanceOf<AggregateException>()
+                                                      .With.Property("InnerExceptions").EquivalentTo(new[] { exception }));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -891,9 +933,8 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.End),
         }));
 
-        thrownException = Assert.ThrowsAsync<AggregateException>(() => dispatcher.DispatchEvent(evt));
-
-        Assert.That(thrownException?.InnerExceptions, Is.EquivalentTo(new[] { exception }));
+        Assert.That(() => dispatcher.DispatchEvent(evt), Throws.InstanceOf<AggregateException>()
+                                                               .With.Property("InnerExceptions").EquivalentTo(new[] { exception }));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -936,13 +977,12 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<AggregateException>(() => observer.HandleEvent(evt));
-
-        Assert.That(thrownException?.InnerExceptions, Is.EquivalentTo(new[] { exception1, exception2 }));
+        Assert.That(() => observer.Handle(evt), Throws.InstanceOf<AggregateException>()
+                                                      .With.Property("InnerExceptions").EquivalentTo(new[] { exception1, exception2 }));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -950,9 +990,8 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.Start),
         }));
 
-        thrownException = Assert.ThrowsAsync<AggregateException>(() => dispatcher.DispatchEvent(evt));
-
-        Assert.That(thrownException?.InnerExceptions, Is.EquivalentTo(new[] { exception1, exception2 }));
+        Assert.That(() => dispatcher.DispatchEvent(evt), Throws.InstanceOf<AggregateException>()
+                                                               .With.Property("InnerExceptions").EquivalentTo(new[] { exception1, exception2 }));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -978,7 +1017,7 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         // dispatch a noop event to initialize the in-memory publisher, otherwise the publisher would throw due
         // to the token being cancelled
@@ -989,7 +1028,7 @@ public sealed class EventBroadcastingStrategyTests
 
         var evt = new TestEvent { Payload = 10 };
 
-        Assert.DoesNotThrowAsync(() => observer.HandleEvent(evt, cts.Token));
+        Assert.DoesNotThrowAsync(() => observer.Handle(evt, cts.Token));
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -1035,7 +1074,7 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         // dispatch a noop event to initialize the in-memory publisher, otherwise the publisher would throw due
         // to the token being cancelled
@@ -1046,7 +1085,7 @@ public sealed class EventBroadcastingStrategyTests
 
         var evt = new TestEvent { Payload = 10 };
 
-        _ = Assert.ThrowsAsync<OperationCanceledException>(() => observer.HandleEvent(evt, cts.Token));
+        await Assert.ThatAsync(() => observer.Handle(evt, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -1055,7 +1094,7 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.End),
         }));
 
-        _ = Assert.ThrowsAsync<OperationCanceledException>(() => dispatcher.DispatchEvent(evt, cts.Token));
+        await Assert.ThatAsync(() => dispatcher.DispatchEvent(evt, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -1095,7 +1134,7 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         // dispatch a noop event to initialize the in-memory publisher, otherwise the publisher would throw due
         // to the token being cancelled
@@ -1106,7 +1145,7 @@ public sealed class EventBroadcastingStrategyTests
 
         var evt = new TestEvent { Payload = 10 };
 
-        _ = Assert.ThrowsAsync<OperationCanceledException>(() => observer.HandleEvent(evt, cts.Token));
+        await Assert.ThatAsync(() => observer.Handle(evt, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -1114,7 +1153,7 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.Start),
         }));
 
-        _ = Assert.ThrowsAsync<OperationCanceledException>(() => dispatcher.DispatchEvent(evt, cts.Token));
+        await Assert.ThatAsync(() => dispatcher.DispatchEvent(evt, cts.Token), Throws.InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -1154,7 +1193,7 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         // dispatch a noop event to initialize the in-memory publisher, otherwise the publisher would throw due
         // to the token being cancelled
@@ -1165,9 +1204,9 @@ public sealed class EventBroadcastingStrategyTests
 
         var evt = new TestEvent { Payload = 10 };
 
-        var thrownException = Assert.ThrowsAsync<AggregateException>(() => observer.HandleEvent(evt, cts.Token));
-
-        Assert.That(thrownException?.InnerExceptions, Has.Exactly(1).SameAs(exception).And.Exactly(1).InstanceOf<OperationCanceledException>());
+        await Assert.ThatAsync(() => observer.Handle(evt, cts.Token), Throws.InstanceOf<AggregateException>()
+                                                                            .With.Property("InnerExceptions").Contains(exception)
+                                                                            .And.Property("InnerExceptions").Exactly(1).InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -1175,9 +1214,9 @@ public sealed class EventBroadcastingStrategyTests
             (typeof(TestEventObserver2), evt, ObserverExecutionPhase.Start),
         }));
 
-        thrownException = Assert.ThrowsAsync<AggregateException>(() => dispatcher.DispatchEvent(evt, cts.Token));
-
-        Assert.That(thrownException?.InnerExceptions, Has.Exactly(1).SameAs(exception).And.Exactly(1).InstanceOf<OperationCanceledException>());
+        await Assert.ThatAsync(() => dispatcher.DispatchEvent(evt, cts.Token), Throws.InstanceOf<AggregateException>()
+                                                                                     .With.Property("InnerExceptions").Contains(exception)
+                                                                                     .And.Property("InnerExceptions").Exactly(1).InstanceOf<OperationCanceledException>());
 
         Assert.That(observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -1190,7 +1229,7 @@ public sealed class EventBroadcastingStrategyTests
     }
 
     [Test]
-    public async Task GivenParallelBroadcastingStrategyWithNonNegativeDegreeOfParallelism_ParallelStrategyIsUsedWithConfiguredParallelism()
+    public async Task GivenParallelBroadcastingStrategyWithNonNegativeDegreeOfParallelism_WhenPublishingEvent_ParallelStrategyIsUsedWithConfiguredParallelism()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
@@ -1202,7 +1241,7 @@ public sealed class EventBroadcastingStrategyTests
         _ = services.AddConquerorEventObserver<TestEventObserver>()
                     .AddConquerorEventObserver<TestEventObserver2>()
                     .AddConquerorEventObserver<TestEventObserver3>()
-                    .AddParallelConquerorEventBroadcastingStrategy(c => c.MaxDegreeOfParallelism = 2)
+                    .AddParallelConquerorEventBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(2))
                     .AddSingleton(observations);
 
         // ReSharper disable AccessToModifiedClosure (intentional)
@@ -1214,11 +1253,11 @@ public sealed class EventBroadcastingStrategyTests
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var evt = new TestEvent { Payload = 10 };
 
-        var executionTask1 = observer.HandleEvent(evt);
+        var executionTask1 = observer.Handle(evt);
 
         Assert.That(() => observations.ObservedObserverExecutions, Is.EquivalentTo(new[]
         {
@@ -1312,15 +1351,15 @@ public sealed class EventBroadcastingStrategyTests
     }
 
     [Test]
-    public void GivenParallelBroadcastingStrategyWithNegativeDegreeOfParallelism_ThrowsArgumentException()
+    public void GivenParallelBroadcastingStrategyWithNegativeDegreeOfParallelism_WhenRegisteringStrategy_ThrowsArgumentException()
     {
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddParallelConquerorEventBroadcastingStrategy(c => c.MaxDegreeOfParallelism = -1));
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddParallelConquerorEventBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(-1)));
     }
 
     [Test]
-    public void GivenParallelBroadcastingStrategyWithZeroDegreeOfParallelism_ThrowsArgumentException()
+    public void GivenParallelBroadcastingStrategyWithZeroDegreeOfParallelism_WhenRegisteringStrategy_ThrowsArgumentException()
     {
-        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddParallelConquerorEventBroadcastingStrategy(c => c.MaxDegreeOfParallelism = 0));
+        _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddParallelConquerorEventBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(0)));
     }
 
     private sealed record TestEvent
@@ -1339,7 +1378,7 @@ public sealed class EventBroadcastingStrategyTests
         : IEventObserver<TestEvent>,
           IEventObserver<TestEvent2>
     {
-        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
+        public async Task Handle(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
@@ -1353,7 +1392,7 @@ public sealed class EventBroadcastingStrategyTests
             observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
 
-        public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
+        public async Task Handle(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
@@ -1374,7 +1413,7 @@ public sealed class EventBroadcastingStrategyTests
         : IEventObserver<TestEvent>,
           IEventObserver<TestEvent2>
     {
-        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
+        public async Task Handle(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
@@ -1388,7 +1427,7 @@ public sealed class EventBroadcastingStrategyTests
             observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
 
-        public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
+        public async Task Handle(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
@@ -1409,7 +1448,7 @@ public sealed class EventBroadcastingStrategyTests
         : IEventObserver<TestEvent>,
           IEventObserver<TestEvent2>
     {
-        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
+        public async Task Handle(TestEvent evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
@@ -1423,7 +1462,7 @@ public sealed class EventBroadcastingStrategyTests
             observations.ObservedObserverExecutions.Enqueue((GetType(), evt, ObserverExecutionPhase.End));
         }
 
-        public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
+        public async Task Handle(TestEvent2 evt, CancellationToken cancellationToken = default)
         {
             await Task.Yield();
 
@@ -1440,18 +1479,23 @@ public sealed class EventBroadcastingStrategyTests
 
     private sealed class TestBroadcastingStrategy(
         TestObservations observations,
+        IServiceProvider serviceProviderFromInstance,
         Exception? exceptionToThrow = null)
-        : IConquerorEventBroadcastingStrategy
+        : IEventBroadcastingStrategy
     {
-        public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
-            where TEvent : class
+        public async Task BroadcastEvent(IReadOnlyCollection<EventObserverFn> eventObservers,
+                                         IServiceProvider serviceProvider,
+                                         object evt,
+                                         CancellationToken cancellationToken)
         {
-            observations.ObservedStrategyExecutions.Enqueue((GetType(), this, evt));
+            observations.ObservedStrategyExecutions.Enqueue((GetType(), evt));
             observations.CancellationTokensFromCustomStrategy.Enqueue(cancellationToken);
+            observations.ServiceProvidersFromInstance.Enqueue(serviceProviderFromInstance);
+            observations.ServiceProvidersFromPublish.Enqueue(serviceProvider);
 
             foreach (var observer in eventObservers)
             {
-                await observer.HandleEvent(evt, cancellationToken);
+                await observer(evt, cancellationToken);
             }
 
             if (exceptionToThrow is not null)
@@ -1461,11 +1505,24 @@ public sealed class EventBroadcastingStrategyTests
         }
     }
 
+    private sealed class TestBroadcastingStrategy2 : IEventBroadcastingStrategy
+    {
+        public Task BroadcastEvent(IReadOnlyCollection<EventObserverFn> eventObservers,
+                                   IServiceProvider serviceProvider,
+                                   object evt,
+                                   CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
     private sealed class TestObservations
     {
-        public ConcurrentQueue<(Type StrategyType, object StrategyInstance, object Event)> ObservedStrategyExecutions { get; } = new();
-        public ConcurrentQueue<CancellationToken> CancellationTokensFromCustomStrategy { get; } = new();
-        public ConcurrentQueue<(Type ObserverType, object Event, ObserverExecutionPhase Phase)> ObservedObserverExecutions { get; } = new();
+        public ConcurrentQueue<(Type StrategyType, object Event)> ObservedStrategyExecutions { get; } = [];
+        public ConcurrentQueue<CancellationToken> CancellationTokensFromCustomStrategy { get; } = [];
+        public ConcurrentQueue<(Type ObserverType, object Event, ObserverExecutionPhase Phase)> ObservedObserverExecutions { get; } = [];
+        public ConcurrentQueue<IServiceProvider> ServiceProvidersFromInstance { get; } = [];
+        public ConcurrentQueue<IServiceProvider> ServiceProvidersFromPublish { get; } = [];
     }
 
     private enum ObserverExecutionPhase

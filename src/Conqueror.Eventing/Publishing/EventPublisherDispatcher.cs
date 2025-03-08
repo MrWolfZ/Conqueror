@@ -4,19 +4,28 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Eventing.Publishing;
 
 internal sealed class EventPublisherDispatcher(EventPublisherRegistry publisherRegistry)
 {
-    private readonly ConcurrentDictionary<Type, IGenericDispatcher> dispatchersByPublisherType = new();
+    private readonly ConcurrentDictionary<EventTransportPublisherRegistration, IGenericDispatcher> dispatchersByRegistration = new();
 
-    public async Task DispatchEvent<TEvent>(TEvent evt, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    public async Task DispatchEvent<TEvent>(TEvent evt,
+                                            Action<IEventPipeline<TEvent>>? configurePipeline,
+                                            IServiceProvider serviceProvider,
+                                            CancellationToken cancellationToken)
         where TEvent : class
     {
-        var relevantPublishers = publisherRegistry.GetRelevantPublishersForEventType<TEvent>();
+        var relevantPublishers = publisherRegistry.GetRelevantPublishersForEventType(evt.GetType());
 
-        var potentialExceptions = await Task.WhenAll(relevantPublishers.Select(p => DispatchEvent(evt, serviceProvider, p.Registration, p.Configuration, cancellationToken)))
+        var potentialExceptions = await Task.WhenAll(relevantPublishers.Select(p => DispatchEvent(evt,
+                                                                                                  configurePipeline,
+                                                                                                  serviceProvider,
+                                                                                                  p.Registration,
+                                                                                                  p.Configuration,
+                                                                                                  cancellationToken)))
                                             .ConfigureAwait(false);
 
         var thrownExceptions = potentialExceptions.OfType<Exception>().ToList();
@@ -35,17 +44,18 @@ internal sealed class EventPublisherDispatcher(EventPublisherRegistry publisherR
     }
 
     private async Task<Exception?> DispatchEvent<TEvent>(TEvent evt,
+                                                         Action<IEventPipeline<TEvent>>? configurePipeline,
                                                          IServiceProvider serviceProvider,
-                                                         EventPublisherRegistration registration,
-                                                         object configuration,
+                                                         EventTransportPublisherRegistration registration,
+                                                         EventTransportAttribute configuration,
                                                          CancellationToken cancellationToken = default)
         where TEvent : class
     {
         try
         {
-            var genericDispatcher = dispatchersByPublisherType.GetOrAdd(registration.PublisherType, _ => CreateDispatcher(registration));
+            var genericDispatcher = dispatchersByRegistration.GetOrAdd(registration, CreateDispatcher);
 
-            await genericDispatcher.DispatchEvent(evt, serviceProvider, registration, configuration, cancellationToken).ConfigureAwait(false);
+            await genericDispatcher.DispatchEvent(evt, configurePipeline, serviceProvider, registration, configuration, cancellationToken).ConfigureAwait(false);
 
             return null;
         }
@@ -55,7 +65,7 @@ internal sealed class EventPublisherDispatcher(EventPublisherRegistry publisherR
         }
     }
 
-    private static IGenericDispatcher CreateDispatcher(EventPublisherRegistration publisherRegistration)
+    private static IGenericDispatcher CreateDispatcher(EventTransportPublisherRegistration publisherRegistration)
     {
         return (IGenericDispatcher)Activator.CreateInstance(typeof(GenericDispatcher<>).MakeGenericType(publisherRegistration.ConfigurationAttributeType))!;
     }
@@ -63,26 +73,36 @@ internal sealed class EventPublisherDispatcher(EventPublisherRegistry publisherR
     private interface IGenericDispatcher
     {
         Task DispatchEvent<TEvent>(TEvent evt,
+                                   Action<IEventPipeline<TEvent>>? configurePipeline,
                                    IServiceProvider serviceProvider,
-                                   EventPublisherRegistration publisherRegistration,
-                                   object configuration,
+                                   EventTransportPublisherRegistration publisherRegistration,
+                                   EventTransportAttribute configuration,
                                    CancellationToken cancellationToken)
             where TEvent : class;
     }
 
     private sealed class GenericDispatcher<TConfiguration> : IGenericDispatcher
-        where TConfiguration : Attribute, IConquerorEventTransportConfigurationAttribute
+        where TConfiguration : EventTransportAttribute
     {
         public Task DispatchEvent<TEvent>(TEvent evt,
+                                          Action<IEventPipeline<TEvent>>? configurePipeline,
                                           IServiceProvider serviceProvider,
-                                          EventPublisherRegistration publisherRegistration,
-                                          object configuration,
+                                          EventTransportPublisherRegistration publisherRegistration,
+                                          EventTransportAttribute configuration,
                                           CancellationToken cancellationToken)
             where TEvent : class
         {
-            var publisherProxy = new EventPublisherProxy<TConfiguration>(publisherRegistration.PublisherType, publisherRegistration.ConfigurePipeline);
-
-            return publisherProxy.PublishEvent(evt, (TConfiguration)configuration, serviceProvider, cancellationToken);
+            return EventPipelineInvoker.RunPipeline(evt,
+                                                    configurePipeline,
+                                                    (TConfiguration)configuration,
+                                                    serviceProvider,
+                                                    EventTransportRole.Publisher,
+                                                    (e, p, ct) =>
+                                                    {
+                                                        var publisher = (IEventTransportPublisher<TConfiguration>)p.GetRequiredService(publisherRegistration.PublisherType);
+                                                        return publisher.PublishEvent(e, (TConfiguration)configuration, p, ct);
+                                                    },
+                                                    cancellationToken);
         }
     }
 }

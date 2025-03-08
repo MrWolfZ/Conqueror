@@ -1,409 +1,408 @@
 using System.Collections.Concurrent;
-using Conqueror.Eventing.Publishing;
 
 namespace Conqueror.Eventing.Tests.Publishing;
 
 public sealed class EventTransportPublisherSelectionTests
 {
     [Test]
-    public async Task GivenEventWithoutCustomPublisher_InMemoryPublisherIsUsed()
+    public async Task GivenEventWithCustomTransport_WhenPublishing_CorrectTransportPublisherIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>()
-                    .AddConquerorEventPublisherMiddleware<InMemoryTestEventPublisherMiddleware>()
-                    .AddConquerorInMemoryEventPublisher(pipeline => pipeline.Use<InMemoryTestEventPublisherMiddleware>()) // use a middleware to capture the execution of the built-in publisher
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithoutCustomPublisher>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithoutCustomPublisher();
-
-        await observer.HandleEvent(testEvent);
-
-        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(InMemoryEventPublisher), testEvent) }));
-
-        await dispatcher.DispatchEvent(testEvent);
-
-        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(InMemoryEventPublisher), testEvent), (typeof(InMemoryEventPublisher), testEvent) }));
-    }
-
-    [Test]
-    public async Task GivenEventWithCustomPublisher_CorrectPublisherIsUsed()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>()
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>()
+                    .AddConquerorEventTransportPublisher<TestEventTransport2Publisher>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var testEvent = new TestEventWithCustomPublisher();
 
-        await observer.HandleEvent(testEvent);
+        await observer.Handle(testEvent);
 
-        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(TestEventTransportPublisher1), testEvent) }));
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(TestEventTransportPublisher), testEvent) }));
 
-        await dispatcher.DispatchEvent(testEvent);
-
-        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(TestEventTransportPublisher1), testEvent), (typeof(TestEventTransportPublisher1), testEvent) }));
-    }
-
-    [Test]
-    public async Task GivenEventWithMultiplePublishers_CorrectPublishersAreUsed()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>()
-                    .AddConquerorEventPublisherMiddleware<InMemoryTestEventPublisherMiddleware>()
-                    .AddConquerorInMemoryEventPublisher(pipeline => pipeline.Use<InMemoryTestEventPublisherMiddleware>()) // use a middleware to capture the execution of the built-in publisher
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultiplePublishers>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithMultiplePublishers();
-
-        await observer.HandleEvent(testEvent);
-
-        Assert.That(observations.ObservedPublishes, Is.EquivalentTo(new (Type, object)[]
-        {
-            (typeof(TestEventTransportPublisher1), testEvent),
-            (typeof(TestEventTransportPublisher2), testEvent),
-            (typeof(InMemoryEventPublisher), testEvent),
-        }));
+        // assert that in-process publisher is not used by default when a custom transport is used
+        Assert.That(observations.EventsFromObserver, Is.Empty);
 
         await dispatcher.DispatchEvent(testEvent);
 
-        Assert.That(observations.ObservedPublishes, Is.EquivalentTo(new (Type, object)[]
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
         {
-            (typeof(TestEventTransportPublisher1), testEvent),
-            (typeof(TestEventTransportPublisher2), testEvent),
-            (typeof(InMemoryEventPublisher), testEvent),
-
-            (typeof(TestEventTransportPublisher1), testEvent),
-            (typeof(TestEventTransportPublisher2), testEvent),
-            (typeof(InMemoryEventPublisher), testEvent),
+            (typeof(TestEventTransportPublisher), testEvent),
+            (typeof(TestEventTransportPublisher), testEvent),
         }));
+
+        Assert.That(observations.EventsFromObserver, Is.Empty);
     }
 
     [Test]
-    public void GivenEventWithMultiplePublishers_WhenOnePublisherThrows_PublishThrowsSameException()
+    public async Task GivenEventWithMultipleCustomTransports_WhenPublishing_CorrectTransportPublishersAreUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        var exception = new Exception();
-
         _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher(_ => new TestEventTransportPublisher1(observations, exception))
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>()
+                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher>()
+                    .AddConquerorEventTransportPublisher<TestEventTransport2Publisher>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultiplePublishers>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var testEvent = new TestEventWithMultiplePublishers();
 
-        var thrownException = Assert.ThrowsAsync<Exception>(() => observer.HandleEvent(testEvent));
+        await observer.Handle(testEvent);
 
-        Assert.That(thrownException, Is.SameAs(exception));
-
-        thrownException = Assert.ThrowsAsync<Exception>(() => dispatcher.DispatchEvent(testEvent));
-
-        Assert.That(thrownException, Is.SameAs(exception));
-    }
-
-    [Test]
-    public void GivenEventWithMultiplePublishers_WhenMultiplePublishersThrow_PublishThrowsAggregateException()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        var exception1 = new Exception();
-        var exception2 = new Exception();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher(_ => new TestEventTransportPublisher1(observations, exception1))
-                    .AddConquerorEventTransportPublisher(_ => new TestEventTransportPublisher2(observations, exception2))
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultiplePublishers>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithMultiplePublishers();
-
-        var thrownException = Assert.ThrowsAsync<AggregateException>(() => observer.HandleEvent(testEvent));
-
-        Assert.That(thrownException?.InnerExceptions, Is.EquivalentTo(new[] { exception1, exception2 }));
-
-        thrownException = Assert.ThrowsAsync<AggregateException>(() => dispatcher.DispatchEvent(testEvent));
-
-        Assert.That(thrownException?.InnerExceptions, Is.EquivalentTo(new[] { exception1, exception2 }));
-    }
-
-    [Test]
-    public void GivenEventWithMultiplePublishers_WhenOnePublisherThrows_AllPublishersAreStillExecuted()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher(_ => new TestEventTransportPublisher1(observations, new InvalidOperationException()))
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>()
-                    .AddConquerorEventPublisherMiddleware<InMemoryTestEventPublisherMiddleware>()
-                    .AddConquerorInMemoryEventPublisher(pipeline => pipeline.Use<InMemoryTestEventPublisherMiddleware>()) // use a middleware to capture the execution of the built-in publisher
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultiplePublishers>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
-
-        var testEvent = new TestEventWithMultiplePublishers();
-
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => observer.HandleEvent(testEvent));
-
-        Assert.That(observations.ObservedPublishes, Is.EquivalentTo(new (Type, object)[]
+        Assert.That(observations.ObservedPublishes, Is.EquivalentTo(new[]
         {
-            (typeof(TestEventTransportPublisher1), testEvent),
-            (typeof(TestEventTransportPublisher2), testEvent),
-            (typeof(InMemoryEventPublisher), testEvent),
+            (typeof(TestEventTransportPublisher), testEvent),
+            (typeof(TestEventTransport2Publisher), testEvent),
         }));
 
-        _ = Assert.ThrowsAsync<InvalidOperationException>(() => dispatcher.DispatchEvent(testEvent));
+        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent }));
 
-        Assert.That(observations.ObservedPublishes, Is.EquivalentTo(new (Type, object)[]
+        await dispatcher.DispatchEvent(testEvent);
+
+        Assert.That(observations.ObservedPublishes, Is.EquivalentTo(new[]
         {
-            (typeof(TestEventTransportPublisher1), testEvent),
-            (typeof(TestEventTransportPublisher2), testEvent),
-            (typeof(InMemoryEventPublisher), testEvent),
-
-            (typeof(TestEventTransportPublisher1), testEvent),
-            (typeof(TestEventTransportPublisher2), testEvent),
-            (typeof(InMemoryEventPublisher), testEvent),
+            (typeof(TestEventTransportPublisher), testEvent),
+            (typeof(TestEventTransport2Publisher), testEvent),
+            (typeof(TestEventTransportPublisher), testEvent),
+            (typeof(TestEventTransport2Publisher), testEvent),
         }));
+
+        Assert.That(observations.EventsFromObserver, Is.EqualTo(new[] { testEvent, testEvent }));
     }
 
     [Test]
-    public async Task GivenMultipleEventsWithDifferentPublishers_CorrectPublishersAreUsed()
+    public async Task GivenMultipleEventsWithDifferentCustomTransports_WhenPublishing_CorrectTransportPublishersAreUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher1>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>()
-                    .AddConquerorEventPublisherMiddleware<InMemoryTestEventPublisherMiddleware>()
-                    .AddConquerorInMemoryEventPublisher(pipeline => pipeline.Use<InMemoryTestEventPublisherMiddleware>()) // use a middleware to capture the execution of the built-in publisher
+        _ = services.AddConquerorEventTransportPublisher<TestEventTransportPublisher>()
+                    .AddConquerorEventTransportPublisher<TestEventTransport2Publisher>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
-        var observer1 = provider.GetRequiredService<IEventObserver<TestEventWithoutCustomPublisher>>();
-        var observer2 = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var observer1 = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher>>();
+        var observer2 = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher2>>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
-        var testEvent1 = new TestEventWithoutCustomPublisher();
-        var testEvent2 = new TestEventWithCustomPublisher();
-        var testEvent3 = new TestEventWithoutCustomPublisher();
+        var testEvent1 = new TestEventWithCustomPublisher();
+        var testEvent2 = new TestEventWithCustomPublisher2();
 
-        await observer1.HandleEvent(testEvent1);
-        await observer2.HandleEvent(testEvent2);
-        await observer1.HandleEvent(testEvent3);
+        await observer1.Handle(testEvent1);
 
-        Assert.That(observations.ObservedPublishes, Is.EqualTo(new (Type, object)[]
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(TestEventTransportPublisher), testEvent1) }));
+
+        await observer2.Handle(testEvent2);
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
         {
-            (typeof(InMemoryEventPublisher), testEvent1),
-            (typeof(TestEventTransportPublisher1), testEvent2),
-            (typeof(InMemoryEventPublisher), testEvent3),
+            (typeof(TestEventTransportPublisher), (object)testEvent1),
+            (typeof(TestEventTransport2Publisher), testEvent2),
         }));
 
         await dispatcher.DispatchEvent(testEvent1);
-        await dispatcher.DispatchEvent(testEvent2);
-        await dispatcher.DispatchEvent(testEvent3);
 
-        Assert.That(observations.ObservedPublishes, Is.EqualTo(new (Type, object)[]
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
         {
-            (typeof(InMemoryEventPublisher), testEvent1),
-            (typeof(TestEventTransportPublisher1), testEvent2),
-            (typeof(InMemoryEventPublisher), testEvent3),
+            (typeof(TestEventTransportPublisher), (object)testEvent1),
+            (typeof(TestEventTransport2Publisher), testEvent2),
+            (typeof(TestEventTransportPublisher), testEvent1),
+        }));
 
-            (typeof(InMemoryEventPublisher), testEvent1),
-            (typeof(TestEventTransportPublisher1), testEvent2),
-            (typeof(InMemoryEventPublisher), testEvent3),
+        await dispatcher.DispatchEvent(testEvent2);
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
+        {
+            (typeof(TestEventTransportPublisher), (object)testEvent1),
+            (typeof(TestEventTransport2Publisher), testEvent2),
+            (typeof(TestEventTransportPublisher), testEvent1),
+            (typeof(TestEventTransport2Publisher), testEvent2),
         }));
     }
 
     [Test]
-    public void GivenEventWithUnregisteredCustomPublisher_ThrowsUnknownPublisherException()
+    public void GivenEventWithMultipleCustomTransports_WhenSinglePublisherThrows_SameExceptionIsThrown()
     {
         var services = new ServiceCollection();
-        var observations = new TestObservations();
+        var exception = new Exception1();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddSingleton(observations);
+        _ = services.AddConquerorEventTransportPublisher<TestEventTransportPublisher>()
+                    .AddConquerorEventTransportPublisher<TestEventTransport2Publisher>()
+                    .AddSingleton(new TestObservations())
+                    .AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();
 
-        var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultiplePublishers>>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
-        var testEvent = new TestEventWithCustomPublisher();
+        var testEvent = new TestEventWithMultiplePublishers();
 
-        var thrownException = Assert.ThrowsAsync<ConquerorUnknownEventTransportPublisherException>(() => observer.HandleEvent(testEvent));
-
-        Assert.That(thrownException, Is.Not.Null);
-        Assert.That(thrownException?.Message, Contains.Substring("trying to publish event with unknown publisher"));
-        Assert.That(thrownException?.Message, Contains.Substring(nameof(TestEventPublisher1Attribute)));
-
-        thrownException = Assert.ThrowsAsync<ConquerorUnknownEventTransportPublisherException>(() => dispatcher.DispatchEvent(testEvent));
-
-        Assert.That(thrownException, Is.Not.Null);
-        Assert.That(thrownException?.Message, Contains.Substring("trying to publish event with unknown publisher"));
-        Assert.That(thrownException?.Message, Contains.Substring(nameof(TestEventPublisher1Attribute)));
+        Assert.That(() => observer.Handle(testEvent), Throws.Exception.SameAs(exception));
+        Assert.That(() => dispatcher.DispatchEvent(testEvent), Throws.Exception.SameAs(exception));
     }
 
     [Test]
-    public async Task GivenEventWithCustomPublisherAndWithoutObserver_CorrectPublisherIsUsed()
+    public void GivenEventWithMultipleCustomTransports_WhenMultiplePublisherThrow_AggregateExceptionIsThrown()
+    {
+        var services = new ServiceCollection();
+        var exception1 = new Exception1();
+        var exception2 = new Exception2();
+
+        _ = services.AddConquerorEventTransportPublisher<TestEventTransportPublisher>()
+                    .AddConquerorEventTransportPublisher<TestEventTransport2Publisher>()
+                    .AddSingleton(new TestObservations())
+                    .AddSingleton(exception1)
+                    .AddSingleton(exception2);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultiplePublishers>>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
+
+        var testEvent = new TestEventWithMultiplePublishers();
+
+        Assert.That(() => observer.Handle(testEvent), Throws.InstanceOf<AggregateException>()
+                                                            .With.Property("InnerExceptions").EquivalentTo(new Exception[] { exception1, exception2 }));
+
+        Assert.That(() => dispatcher.DispatchEvent(testEvent), Throws.InstanceOf<AggregateException>()
+                                                                     .With.Property("InnerExceptions").EquivalentTo(new Exception[] { exception1, exception2 }));
+    }
+
+    [Test]
+    public void GivenEventWithMultipleCustomTransports_WhenSinglePublisherThrows_OtherPublishersAreStillExecuted()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+        var exception = new Exception1();
+
+        _ = services.AddConquerorEventTransportPublisher<TestEventTransportPublisher>()
+                    .AddConquerorEventTransportPublisher<TestEventTransport2Publisher>()
+                    .AddSingleton(observations)
+                    .AddSingleton(exception);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultiplePublishers>>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
+
+        var testEvent = new TestEventWithMultiplePublishers();
+
+        Assert.That(() => observer.Handle(testEvent), Throws.InstanceOf<Exception1>());
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
+        {
+            (typeof(TestEventTransport2Publisher), testEvent),
+        }));
+
+        Assert.That(() => dispatcher.DispatchEvent(testEvent), Throws.InstanceOf<Exception1>());
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
+        {
+            (typeof(TestEventTransport2Publisher), testEvent),
+            (typeof(TestEventTransport2Publisher), testEvent),
+        }));
+    }
+
+    [Test]
+    public async Task GivenPublisherForMultipleTransports_WhenPublishingEventForEitherTransport_PublisherIsUsed()
     {
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorEventTransportPublisher<TestEventTransportPublisher1>()
-                    .AddConquerorEventTransportPublisher<TestEventTransportPublisher2>()
+        _ = services.AddConquerorEventTransportPublisher<MultiTestEventTransportPublisher>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
+        var observer1 = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher>>();
+        var observer2 = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher2>>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
+
+        var testEvent1 = new TestEventWithCustomPublisher();
+        var testEvent2 = new TestEventWithCustomPublisher2();
+
+        await observer1.Handle(testEvent1);
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(MultiTestEventTransportPublisher), testEvent1) }));
+
+        await observer2.Handle(testEvent2);
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
+        {
+            (typeof(MultiTestEventTransportPublisher), (object)testEvent1),
+            (typeof(MultiTestEventTransportPublisher), testEvent2),
+        }));
+
+        await dispatcher.DispatchEvent(testEvent1);
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
+        {
+            (typeof(MultiTestEventTransportPublisher), (object)testEvent1),
+            (typeof(MultiTestEventTransportPublisher), testEvent2),
+            (typeof(MultiTestEventTransportPublisher), testEvent1),
+        }));
+
+        await dispatcher.DispatchEvent(testEvent2);
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
+        {
+            (typeof(MultiTestEventTransportPublisher), (object)testEvent1),
+            (typeof(MultiTestEventTransportPublisher), testEvent2),
+            (typeof(MultiTestEventTransportPublisher), testEvent1),
+            (typeof(MultiTestEventTransportPublisher), testEvent2),
+        }));
+    }
+
+    [Test]
+    public void GivenEventWithMultipleCustomTransports_WhenNoPublisherForAnyTransportIsRegistered_ThrowsUnknownPublisherException()
+    {
+        var services = new ServiceCollection();
+
+        _ = services.AddConquerorEventing().AddSingleton(new TestObservations());
+
+        var provider = services.BuildServiceProvider();
+
         var observer = provider.GetRequiredService<IEventObserver<TestEventWithCustomPublisher>>();
-        var dispatcher = provider.GetRequiredService<IConquerorEventDispatcher>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
 
         var testEvent = new TestEventWithCustomPublisher();
 
-        await observer.HandleEvent(testEvent);
+        Assert.That(() => observer.Handle(testEvent), Throws.InstanceOf<UnregisteredEventTransportPublisherException>());
+        Assert.That(() => dispatcher.DispatchEvent(testEvent), Throws.InstanceOf<UnregisteredEventTransportPublisherException>());
+    }
 
-        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(TestEventTransportPublisher1), testEvent) }));
+    [Test]
+    public async Task GivenEventWithMultipleCustomTransports_WhenAtLeastOnePublisherForAnyTransportIsRegistered_PublishesToTransportWithoutException()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorEventTransportPublisher<TestEventTransportPublisher>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<IEventObserver<TestEventWithMultiplePublishers>>();
+        var dispatcher = provider.GetRequiredService<IEventDispatcher>();
+
+        var testEvent = new TestEventWithMultiplePublishers();
+
+        await observer.Handle(testEvent);
+
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
+        {
+            (typeof(TestEventTransportPublisher), testEvent),
+        }));
 
         await dispatcher.DispatchEvent(testEvent);
 
-        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[] { (typeof(TestEventTransportPublisher1), testEvent), (typeof(TestEventTransportPublisher1), testEvent) }));
+        Assert.That(observations.ObservedPublishes, Is.EqualTo(new[]
+        {
+            (typeof(TestEventTransportPublisher), testEvent),
+            (typeof(TestEventTransportPublisher), testEvent),
+        }));
     }
 
-    private sealed record TestEventWithoutCustomPublisher;
-
-    [TestEventPublisher1(Parameter = 10)]
+    [TestEventTransport]
     private sealed record TestEventWithCustomPublisher;
 
-    [TestEventPublisher1(Parameter = 10)]
-    [TestEventPublisher2(Parameter = 20)]
-    [InMemoryEvent]
+    [TestEventTransport2]
+    private sealed record TestEventWithCustomPublisher2;
+
+    [TestEventTransport]
+    [TestEventTransport2]
+    [InProcessEvent]
     private sealed record TestEventWithMultiplePublishers;
 
-    private sealed class TestEventObserver : IEventObserver<TestEventWithoutCustomPublisher>,
-                                             IEventObserver<TestEventWithCustomPublisher>,
-                                             IEventObserver<TestEventWithMultiplePublishers>
-    {
-        public async Task HandleEvent(TestEventWithoutCustomPublisher query, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-        }
-
-        public async Task HandleEvent(TestEventWithCustomPublisher evt, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-        }
-
-        public async Task HandleEvent(TestEventWithMultiplePublishers evt, CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-        }
-    }
+    [AttributeUsage(AttributeTargets.Class)]
+    private sealed class TestEventTransportAttribute() : EventTransportAttribute(nameof(TestEventTransportAttribute));
 
     [AttributeUsage(AttributeTargets.Class)]
-    private sealed class TestEventPublisher1Attribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-        public int Parameter { get; set; }
-    }
-
-    private sealed class TestEventTransportPublisher1(TestObservations observations, Exception? exception = null) : IConquerorEventTransportPublisher<TestEventPublisher1Attribute>
-    {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher1Attribute configurationAttribute, CancellationToken cancellationToken = default)
-            where TEvent : class
-        {
-            await Task.Yield();
-
-            Assert.That(configurationAttribute.Parameter, Is.EqualTo(10));
-
-            observations.ObservedPublishes.Enqueue((GetType(), evt));
-
-            if (exception is not null)
-            {
-                throw exception;
-            }
-        }
-    }
+    private sealed class TestEventTransport2Attribute() : EventTransportAttribute(nameof(TestEventTransport2Attribute));
 
     [AttributeUsage(AttributeTargets.Class)]
-    private sealed class TestEventPublisher2Attribute : Attribute, IConquerorEventTransportConfigurationAttribute
-    {
-        public int Parameter { get; set; }
-    }
+    public sealed class TestEventTransportForAssemblyScanningAttribute() : EventTransportAttribute(nameof(TestEventTransportForAssemblyScanningAttribute));
 
-    private sealed class TestEventTransportPublisher2(TestObservations observations, Exception? exception = null) : IConquerorEventTransportPublisher<TestEventPublisher2Attribute>
+    private sealed class Exception1 : Exception;
+
+    private sealed class Exception2 : Exception;
+
+    private sealed class TestEventTransportPublisher(TestObservations observations, Exception1? exceptionToThrow = null)
+        : IEventTransportPublisher<TestEventTransportAttribute>
     {
-        public async Task PublishEvent<TEvent>(TEvent evt, TestEventPublisher2Attribute configurationAttribute, CancellationToken cancellationToken = default)
-            where TEvent : class
+        public async Task PublishEvent(object evt, TestEventTransportAttribute attribute, IServiceProvider serviceProvider, CancellationToken cancellationToken)
         {
             await Task.Yield();
 
-            Assert.That(configurationAttribute.Parameter, Is.EqualTo(20));
+            if (exceptionToThrow is not null)
+            {
+                throw exceptionToThrow;
+            }
 
             observations.ObservedPublishes.Enqueue((GetType(), evt));
-
-            if (exception is not null)
-            {
-                throw exception;
-            }
         }
     }
 
-    private sealed class InMemoryTestEventPublisherMiddleware(TestObservations observations) : IEventPublisherMiddleware
+    private sealed class TestEventTransport2Publisher(TestObservations observations, Exception2? exceptionToThrow = null) : IEventTransportPublisher<TestEventTransport2Attribute>
     {
-        public async Task Execute<TEvent>(EventPublisherMiddlewareContext<TEvent> ctx)
-            where TEvent : class
+        public async Task PublishEvent(object evt, TestEventTransport2Attribute attribute, IServiceProvider serviceProvider, CancellationToken cancellationToken)
         {
             await Task.Yield();
 
-            observations.ObservedPublishes.Enqueue((typeof(InMemoryEventPublisher), ctx.Event));
+            if (exceptionToThrow is not null)
+            {
+                throw exceptionToThrow;
+            }
 
-            await ctx.Next(ctx.Event, ctx.CancellationToken);
+            observations.ObservedPublishes.Enqueue((GetType(), evt));
+        }
+    }
+
+    private sealed class MultiTestEventTransportPublisher(TestObservations observations) : IEventTransportPublisher<TestEventTransportAttribute>,
+                                                                                           IEventTransportPublisher<TestEventTransport2Attribute>
+    {
+        public async Task PublishEvent(object evt, TestEventTransportAttribute attribute, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+
+            observations.ObservedPublishes.Enqueue((GetType(), evt));
+        }
+
+        public async Task PublishEvent(object evt, TestEventTransport2Attribute attribute, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+
+            observations.ObservedPublishes.Enqueue((GetType(), evt));
+        }
+    }
+
+    private sealed class TestEventObserver(TestObservations observations) : IEventObserver<TestEventWithMultiplePublishers>
+    {
+        public async Task Handle(TestEventWithMultiplePublishers evt, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+
+            observations.EventsFromObserver.Add(evt);
         }
     }
 
     private sealed class TestObservations
     {
+        public List<object> EventsFromObserver { get; } = new();
+
         public ConcurrentQueue<(Type PublisherType, object Event)> ObservedPublishes { get; } = new();
     }
 }

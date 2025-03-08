@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing.Publishing;
 
-internal sealed class ParallelBroadcastingStrategy(ParallelEventBroadcastingStrategyConfiguration configuration) : IConquerorEventBroadcastingStrategy
+internal sealed class ParallelBroadcastingStrategy(ParallelEventBroadcastingStrategyConfiguration configuration) : IEventBroadcastingStrategy
 {
-    public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
-        where TEvent : class
+    public async Task BroadcastEvent(IReadOnlyCollection<EventObserverFn> eventObservers,
+                                     IServiceProvider serviceProvider,
+                                     object evt,
+                                     CancellationToken cancellationToken)
     {
         using var semaphore = new SemaphoreSlim(configuration.MaxDegreeOfParallelism ?? 1_000_000);
 
@@ -38,7 +40,7 @@ internal sealed class ParallelBroadcastingStrategy(ParallelEventBroadcastingStra
         throw new AggregateException(thrownExceptions);
     }
 
-    private async Task<Exception?> ExecuteObserver<TEvent>(IEventObserver<TEvent> observer,
+    private async Task<Exception?> ExecuteObserver<TEvent>(EventObserverFn observer,
                                                            SemaphoreSlim semaphore,
                                                            TEvent evt,
                                                            CancellationToken cancellationToken = default)
@@ -61,7 +63,7 @@ internal sealed class ParallelBroadcastingStrategy(ParallelEventBroadcastingStra
 
         try
         {
-            await observer.HandleEvent(evt, cancellationToken).ConfigureAwait(false);
+            await observer(evt, cancellationToken).ConfigureAwait(false);
 
             return null;
         }

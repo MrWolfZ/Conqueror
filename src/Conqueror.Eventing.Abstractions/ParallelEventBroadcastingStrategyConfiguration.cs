@@ -4,19 +4,16 @@ namespace Conqueror;
 
 public sealed record ParallelEventBroadcastingStrategyConfiguration
 {
-    private int? maxDegreeOfParallelism;
+    public int? MaxDegreeOfParallelism { get; private set; }
 
-    public int? MaxDegreeOfParallelism
+    public ParallelEventBroadcastingStrategyConfiguration WithMaxDegreeOfParallelism(int? value)
     {
-        get => maxDegreeOfParallelism;
-        set
+        if (value <= 0)
         {
-            if (value <= 0)
-            {
-                throw new ArgumentException($"maximum degree of parallelism for parallel in-memory publishing must be a positive integer, but was {value}");
-            }
-
-            maxDegreeOfParallelism = value;
+            throw new ArgumentException($"maximum degree of parallelism for parallel in-memory publishing must be a positive integer, but was {value}");
         }
+
+        MaxDegreeOfParallelism = value;
+        return this;
     }
 }

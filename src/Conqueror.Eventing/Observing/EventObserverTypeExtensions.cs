@@ -36,7 +36,7 @@ internal static class EventObserverTypeExtensions
         if (invalidInterface != null)
         {
             throw new ArgumentException(
-                $"event observer interface type '{invalidInterface.Name}' has extra methods; custom event observer interface types are not allowed to have any additional methods beside the '{nameof(IEventObserver<object>.HandleEvent)}' inherited from '{typeof(IEventObserver<>).Name}'");
+                $"event observer interface type '{invalidInterface.Name}' has extra methods; custom event observer interface types are not allowed to have any additional methods beside the '{nameof(IEventObserver<object>.Handle)}' inherited from '{typeof(IEventObserver<>).Name}'");
         }
     }
 

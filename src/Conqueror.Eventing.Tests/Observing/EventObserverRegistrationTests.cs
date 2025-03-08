@@ -1,341 +1,293 @@
-﻿namespace Conqueror.Eventing.Tests.Observing;
+﻿using Conqueror.Eventing.Observing;
 
+namespace Conqueror.Eventing.Tests.Observing;
+
+[TestFixture]
 public sealed class EventObserverRegistrationTests
 {
     [Test]
-    public void GivenAlreadyRegisteredPlainObserver_RegisteringSameObserverAsPlainDoesNothing()
+    [Combinatorial]
+    public void GivenRegisteredObservers_WhenCallingRegistry_ReturnsCorrectRegistrations(
+        [Values("type", "factory", "instance", "delegate")]
+        string registrationMethod)
     {
         var services = new ServiceCollection();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventObserver<TestEventObserver>();
+        _ = registrationMethod switch
+        {
+            "type" => services.AddConquerorEventObserver<TestEventObserver>()
+                              .AddConquerorEventObserver<TestEvent2Observer>(),
+            "factory" => services.AddConquerorEventObserver(_ => new TestEventObserver())
+                                 .AddConquerorEventObserver(_ => new TestEvent2Observer()),
+            "instance" => services.AddConquerorEventObserver(new TestEventObserver())
+                                  .AddConquerorEventObserver(new TestEvent2Observer()),
+            "delegate" => services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => throw new NotSupportedException())
+                                  .AddConquerorEventObserverDelegate<TestEvent2>((_, _, _) => throw new NotSupportedException()),
+            _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
+        };
 
-        Assert.That(services.Count(d => d.ServiceType == typeof(TestEventObserver)), Is.EqualTo(1));
+        using var provider = services.BuildServiceProvider();
+
+        var registry = provider.GetRequiredService<IEventTransportRegistry>();
+        var expectedRegistrations = new[]
+        {
+            (typeof(TestEvent), new InProcessEventAttribute()),
+            (typeof(TestEvent2), new()),
+        };
+
+        var registrations = registry.GetEventTypesForReceiver<InProcessEventAttribute>();
+
+        Assert.That(registrations, Is.EqualTo(expectedRegistrations));
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredPlainObserver_RegisteringSameObserverWithFactoryOverwritesRegistration()
+    [Combinatorial]
+    public void GivenRegisteredObserver_WhenRegisteringSameObserverDifferently_OverwritesRegistration(
+        [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+        ServiceLifetime? initialLifetime,
+        [Values("type", "factory", "instance")]
+        string initialRegistrationMethod,
+        [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+        ServiceLifetime? overwrittenLifetime,
+        [Values("type", "factory", "instance")]
+        string overwrittenRegistrationMethod)
     {
         var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var factoryWasCalled = false;
+        Func<IServiceProvider, TestEventObserver> factory = _ => new();
+        var instance = new TestEventObserver();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventObserver<TestEventObserver>(_ =>
-                    {
-                        factoryWasCalled = true;
-                        return new(observations);
-                    });
+        void Register(ServiceLifetime? lifetime, string method)
+        {
+            _ = (lifetime, method) switch
+            {
+                (null, "type") => services.AddConquerorEventObserver<TestEventObserver>(),
+                (null, "factory") => services.AddConquerorEventObserver(factory),
+                (var l, "type") => services.AddConquerorEventObserver<TestEventObserver>(l.Value),
+                (var l, "factory") => services.AddConquerorEventObserver(factory, l.Value),
+                (_, "instance") => services.AddConquerorEventObserver(instance),
+                _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
+            };
+        }
 
-        var provider = services.BuildServiceProvider();
+        Register(initialLifetime, initialRegistrationMethod);
+        Register(overwrittenLifetime, overwrittenRegistrationMethod);
 
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestEventObserver)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventObserver<TestEvent>)), Is.EqualTo(1));
 
-        await observer.HandleEvent(new());
+        switch (overwrittenLifetime, overwrittenRegistrationMethod)
+        {
+            case (var l, "type"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).ImplementationType, Is.EqualTo(typeof(TestEventObserver)));
+                break;
+            case (var l, "factory"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).ImplementationFactory, Is.SameAs(factory));
+                break;
+            case (_, "instance"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).ImplementationInstance, Is.SameAs(instance));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null);
+        }
 
-        Assert.That(factoryWasCalled, Is.True);
+        using var provider = services.BuildServiceProvider();
+
+        Assert.DoesNotThrow(() => provider.GetRequiredService<IEventObserver<TestEvent>>());
+
+        var registry = provider.GetRequiredService<IEventTransportRegistry>();
+
+        var expectedRegistrations = new[]
+        {
+            (typeof(TestEvent), new InProcessEventAttribute()),
+        };
+
+        var registrations = registry.GetEventTypesForReceiver<InProcessEventAttribute>();
+
+        Assert.That(registrations, Is.EqualTo(expectedRegistrations));
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredPlainObserver_RegisteringSameObserverAsInstanceOverwritesRegistration()
+    [Combinatorial]
+    public void GivenRegisteredObserver_WhenRegisteringDifferentObserverForSameEventType_RegistersBothObservers(
+        [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+        ServiceLifetime? firstLifetime,
+        [Values("type", "factory", "instance", "delegate")]
+        string firstRegistrationMethod,
+        [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
+        ServiceLifetime? secondLifetime,
+        [Values("type", "factory", "instance", "delegate")]
+        string secondRegistrationMethod)
     {
         var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var singleton = new TestEventObserver(observations);
+        Func<IServiceProvider, TestEventObserver> factory = _ => new();
+        Func<IServiceProvider, DuplicateTestEventObserver> duplicateFactory = _ => new();
+        var instance = new TestEventObserver();
+        var duplicateInstance = new DuplicateTestEventObserver();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventObserver(singleton);
+        _ = (firstLifetime, firstRegistrationMethod) switch
+        {
+            (null, "type") => services.AddConquerorEventObserver<TestEventObserver>(),
+            (null, "factory") => services.AddConquerorEventObserver(factory),
+            (var l, "type") => services.AddConquerorEventObserver<TestEventObserver>(l.Value),
+            (var l, "factory") => services.AddConquerorEventObserver(factory, l.Value),
+            (_, "instance") => services.AddConquerorEventObserver(instance),
+            (_, "delegate") => services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => throw new NotSupportedException()),
+            _ => throw new ArgumentOutOfRangeException(nameof(firstRegistrationMethod), firstRegistrationMethod, null),
+        };
 
-        var provider = services.BuildServiceProvider();
+        _ = (secondLifetime, secondRegistrationMethod) switch
+        {
+            (null, "type") => services.AddConquerorEventObserver<DuplicateTestEventObserver>(),
+            (null, "factory") => services.AddConquerorEventObserver(duplicateFactory),
+            (var l, "type") => services.AddConquerorEventObserver<DuplicateTestEventObserver>(l.Value),
+            (var l, "factory") => services.AddConquerorEventObserver(duplicateFactory, l.Value),
+            (_, "instance") => services.AddConquerorEventObserver(duplicateInstance),
+            (_, "delegate") => services.AddConquerorEventObserverDelegate<TestEvent>((_, _, _) => throw new NotSupportedException()),
+            _ => throw new ArgumentOutOfRangeException(nameof(secondRegistrationMethod), secondRegistrationMethod, null),
+        };
 
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+        if (firstRegistrationMethod != "delegate")
+        {
+            Assert.That(services.Count(s => s.ServiceType == typeof(TestEventObserver)), Is.EqualTo(1));
+        }
 
-        await observer.HandleEvent(new());
+        if (secondRegistrationMethod != "delegate")
+        {
+            Assert.That(services.Count(s => s.ServiceType == typeof(DuplicateTestEventObserver)), Is.EqualTo(1));
+        }
 
-        Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1 }));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventObserver<TestEvent>)), Is.EqualTo(1));
+
+        switch (firstLifetime, firstRegistrationMethod)
+        {
+            case (var l, "type"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).ImplementationType, Is.EqualTo(typeof(TestEventObserver)));
+                break;
+            case (var l, "factory"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).ImplementationFactory, Is.SameAs(factory));
+                break;
+            case (_, "instance"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserver)).ImplementationInstance, Is.SameAs(instance));
+                break;
+            case (_, "delegate"):
+                Assert.That(services.Where(s => s.ImplementationInstance is IEventObserverInvoker { ObserverType: null }).ToList(), Has.Count.EqualTo(secondRegistrationMethod == "delegate" ? 2 : 1));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(firstRegistrationMethod), firstRegistrationMethod, null);
+        }
+
+        switch (secondLifetime, secondRegistrationMethod)
+        {
+            case (var l, "type"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(DuplicateTestEventObserver)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(DuplicateTestEventObserver)).ImplementationType, Is.EqualTo(typeof(DuplicateTestEventObserver)));
+                break;
+            case (var l, "factory"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(DuplicateTestEventObserver)).Lifetime, Is.EqualTo(l ?? ServiceLifetime.Transient));
+                Assert.That(services.Single(s => s.ServiceType == typeof(DuplicateTestEventObserver)).ImplementationFactory, Is.SameAs(duplicateFactory));
+                break;
+            case (_, "instance"):
+                Assert.That(services.Single(s => s.ServiceType == typeof(DuplicateTestEventObserver)).ImplementationInstance, Is.SameAs(duplicateInstance));
+                break;
+            case (_, "delegate"):
+                Assert.That(services.Where(s => s.ImplementationInstance is IEventObserverInvoker { ObserverType: null }).ToList(), Has.Count.EqualTo(firstRegistrationMethod == "delegate" ? 2 : 1));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(secondRegistrationMethod), secondRegistrationMethod, null);
+        }
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.DoesNotThrow(() => provider.GetRequiredService<IEventObserver<TestEvent>>());
+
+        var registry = provider.GetRequiredService<IEventTransportRegistry>();
+
+        var expectedRegistrations = new[]
+        {
+            (typeof(TestEvent), new InProcessEventAttribute()),
+        };
+
+        var registrations = registry.GetEventTypesForReceiver<InProcessEventAttribute>();
+
+        Assert.That(registrations, Is.EqualTo(expectedRegistrations));
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredPlainObserver_RegisteringSameObserverWithDifferentLifetimeOverwritesRegistration()
+    public void GivenObserverTypeWithCustomInterface_WhenRegisteringObserverType_RegistersWithPlainAndCustomInterfaceTypes()
     {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
+        var services = new ServiceCollection().AddConquerorEventObserver<TestEventWithCustomInterfaceObserver>();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>()
-                    .AddConquerorEventObserver<TestEventObserver>(ServiceLifetime.Singleton)
-                    .AddSingleton(observations);
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestEventWithCustomInterfaceObserver)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(ITestEventWithCustomInterfaceObserver)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventObserver<TestEventWithCustomInterface>)), Is.EqualTo(1));
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
 
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+        var registrations = provider.GetRequiredService<IEventTransportRegistry>().GetEventTypesForReceiver<InProcessEventAttribute>();
 
-        await observer.HandleEvent(new());
-        await observer.HandleEvent(new());
-
-        Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1, 2 }));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestEventWithCustomInterface), new InProcessEventAttribute())));
     }
 
     [Test]
-    public void GivenAlreadyRegisteredPlainObserver_RegisteringViaAssemblyScanningDoesNothing()
+    public void GivenObserverTypeWithMultipleObservedEventTypes_WhenRegisteringObserverType_RegistersObserverForAllEventTypes()
     {
-        var services = new ServiceCollection();
+        var services = new ServiceCollection().AddConquerorEventObserver<MultiTestEventObserver>();
 
-        _ = services.AddConquerorEventObserver<TestEventObserverForAssemblyScanning>()
-                    .AddConquerorEventingTypesFromExecutingAssembly();
+        Assert.That(services.Count(s => s.ServiceType == typeof(MultiTestEventObserver)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventObserver<TestEvent>)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventObserver<TestEvent2>)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(ITestEventWithCustomInterfaceObserver)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventObserver<TestEventWithCustomInterface>)), Is.EqualTo(1));
 
-        Assert.That(services.Count(d => d.ServiceType == typeof(TestEventObserverForAssemblyScanning)), Is.EqualTo(1));
+        using var provider = services.BuildServiceProvider();
+
+        var registrations = provider.GetRequiredService<IEventTransportRegistry>().GetEventTypesForReceiver<InProcessEventAttribute>();
+
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestEvent), new InProcessEventAttribute())));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestEvent2), new InProcessEventAttribute())));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestEventWithCustomInterface), new InProcessEventAttribute())));
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredObserverWithFactory_RegisteringSameObserverAsPlainOverwritesRegistration()
+    public void GivenRegisteredObserverType_WhenRegisteringObserversViaAssemblyScanning_DoesNotOverwriteRegistration()
     {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var factoryWasCalled = false;
+        var services = new ServiceCollection().AddConquerorEventObserver<TestEventObserverForAssemblyScanning>(ServiceLifetime.Singleton)
+                                              .AddConquerorEventingTypesFromExecutingAssembly();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>(_ =>
-                    {
-                        factoryWasCalled = true;
-                        return new(observations);
-                    })
-                    .AddConquerorEventObserver<TestEventObserver>()
-                    .AddSingleton(observations);
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestEventObserverForAssemblyScanning)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventObserver<TestEventForAssemblyScanning>)), Is.EqualTo(1));
+        Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserverForAssemblyScanning)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
 
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+        var registrations = provider.GetRequiredService<IEventTransportRegistry>().GetEventTypesForReceiver<InProcessEventAttribute>();
 
-        await observer.HandleEvent(new());
-
-        Assert.That(factoryWasCalled, Is.False);
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestEventForAssemblyScanning), new InProcessEventAttribute())));
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredObserverWithFactory_RegisteringSameObserverWithFactoryOverwritesRegistration()
+    public void GivenServiceCollection_WhenRegisteringObserversViaAssemblyScanningMultipleTimes_DoesNotOverwriteRegistrations()
     {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var originalFactoryWasCalled = false;
-        var newFactoryWasCalled = false;
+        var services = new ServiceCollection().AddConquerorEventingTypesFromExecutingAssembly()
+                                              .AddConquerorEventingTypesFromExecutingAssembly();
 
-        _ = services.AddConquerorEventObserver<TestEventObserver>(_ =>
-                    {
-                        originalFactoryWasCalled = true;
-                        return new(observations);
-                    })
-                    .AddConquerorEventObserver<TestEventObserver>(_ =>
-                    {
-                        newFactoryWasCalled = true;
-                        return new(observations);
-                    });
+        Assert.That(services.Count(s => s.ServiceType == typeof(TestEventObserverForAssemblyScanning)), Is.EqualTo(1));
+        Assert.That(services.Count(s => s.ServiceType == typeof(IEventObserver<TestEventForAssemblyScanning>)), Is.EqualTo(1));
+        Assert.That(services.Single(s => s.ServiceType == typeof(TestEventObserverForAssemblyScanning)).Lifetime, Is.EqualTo(ServiceLifetime.Transient));
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
 
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
+        var registrations = provider.GetRequiredService<IEventTransportRegistry>().GetEventTypesForReceiver<InProcessEventAttribute>();
 
-        await observer.HandleEvent(new());
-
-        Assert.That(originalFactoryWasCalled, Is.False);
-        Assert.That(newFactoryWasCalled, Is.True);
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestEventForAssemblyScanning), new InProcessEventAttribute())));
     }
 
     [Test]
-    public async Task GivenAlreadyRegisteredObserverForMultipleEventTypesWithFactory_RegisteringSameObserverWithFactoryOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var originalFactoryWasCalled = false;
-        var newFactoryWasCalled = false;
-
-        _ = services.AddConquerorEventObserver<TestEventObserverWithMultipleInterfaces>(_ =>
-                    {
-                        originalFactoryWasCalled = true;
-                        return new(observations);
-                    })
-                    .AddConquerorEventObserver<TestEventObserverWithMultipleInterfaces>(_ =>
-                    {
-                        newFactoryWasCalled = true;
-                        return new(observations);
-                    });
-
-        var provider = services.BuildServiceProvider();
-
-        var observer1 = provider.GetRequiredService<IEventObserver<TestEvent>>();
-        var observer2 = provider.GetRequiredService<IEventObserver<TestEvent2>>();
-
-        await observer1.HandleEvent(new());
-        await observer2.HandleEvent(new());
-
-        Assert.That(originalFactoryWasCalled, Is.False);
-        Assert.That(newFactoryWasCalled, Is.True);
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredObserverWithFactory_RegisteringSameObserverAsInstanceOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-        var singleton = new TestEventObserver(observations);
-        var factoryWasCalled = false;
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>(_ =>
-                    {
-                        factoryWasCalled = true;
-                        return new(observations);
-                    })
-                    .AddConquerorEventObserver(singleton);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(factoryWasCalled, Is.False);
-        Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1 }));
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredObserverWithFactory_RegisteringSameObserverWithDifferentLifetimeOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddConquerorEventObserver<TestEventObserver>(_ => new(observations))
-                    .AddConquerorEventObserver<TestEventObserver>(_ => new(observations), ServiceLifetime.Singleton);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new());
-        await observer.HandleEvent(new());
-
-        Assert.That(observations.InvocationCounts, Is.EqualTo(new[] { 1, 2 }));
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredObserverWithFactory_RegisteringViaAssemblyScanningDoesNothing()
-    {
-        var services = new ServiceCollection();
-        var factoryWasCalled = false;
-
-        _ = services.AddConquerorEventObserver<TestEventObserverForAssemblyScanning>(_ =>
-                    {
-                        factoryWasCalled = true;
-                        return new();
-                    })
-                    .AddConquerorEventingTypesFromExecutingAssembly();
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventForAssemblyScanning>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(factoryWasCalled, Is.True);
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredObserverSingleton_RegisteringSameObserverAsPlainOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations1 = new TestObservations();
-        var observations2 = new TestObservations();
-        var singleton = new TestEventObserver(observations1);
-
-        _ = services.AddConquerorEventObserver(singleton)
-                    .AddConquerorEventObserver<TestEventObserver>()
-                    .AddSingleton(observations2);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(observations1.InvocationCounts, Is.Empty);
-        Assert.That(observations2.InvocationCounts, Is.EqualTo(new[] { 1 }));
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredObserverSingleton_RegisteringSameObserverWithFactoryOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations1 = new TestObservations();
-        var observations2 = new TestObservations();
-        var singleton = new TestEventObserver(observations1);
-        var factoryWasCalled = false;
-
-        _ = services.AddConquerorEventObserver(singleton)
-                    .AddConquerorEventObserver<TestEventObserver>(_ =>
-                    {
-                        factoryWasCalled = true;
-                        return new(observations2);
-                    });
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(observations1.InvocationCounts, Is.Empty);
-        Assert.That(observations2.InvocationCounts, Is.EqualTo(new[] { 1 }));
-        Assert.That(factoryWasCalled, Is.True);
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredObserverSingleton_RegisteringSameObserverAsInstanceOverwritesRegistration()
-    {
-        var services = new ServiceCollection();
-        var observations1 = new TestObservations();
-        var observations2 = new TestObservations();
-        var singleton1 = new TestEventObserver(observations1);
-        var singleton2 = new TestEventObserver(observations2);
-
-        _ = services.AddConquerorEventObserver(singleton1)
-                    .AddConquerorEventObserver(singleton2);
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEvent>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(observations1.InvocationCounts, Is.Empty);
-        Assert.That(observations2.InvocationCounts, Is.EqualTo(new[] { 1 }));
-    }
-
-    [Test]
-    public async Task GivenAlreadyRegisteredObserverSingleton_RegisteringViaAssemblyScanningDoesNothing()
-    {
-        var services = new ServiceCollection();
-        var singleton = new TestEventObserverForAssemblyScanning();
-
-        _ = services.AddConquerorEventObserver(singleton)
-                    .AddConquerorEventingTypesFromExecutingAssembly();
-
-        var provider = services.BuildServiceProvider();
-
-        var observer = provider.GetRequiredService<IEventObserver<TestEventForAssemblyScanning>>();
-
-        await observer.HandleEvent(new());
-
-        Assert.That(singleton.InvocationCount, Is.EqualTo(1));
-    }
-
-    [Test]
-    public void GivenValidObserverType_RegisteringAllEventingTypesViaAssemblyScanningRegistersObserver()
-    {
-        var provider = new ServiceCollection().AddConquerorEventingTypesFromExecutingAssembly()
-                                              .BuildServiceProvider();
-
-        Assert.That(() => provider.GetRequiredService<TestEventObserverForAssemblyScanning>(), Throws.Nothing);
-    }
-
-    [Test]
-    public void GivenObserverWithInvalidInterface_RegisteringObserverThrowsArgumentException()
+    public void GivenObserverWithInvalidInterface_WhenRegisteringObserver_ThrowsArgumentException()
     {
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventObserver<TestEventObserverWithoutValidInterfaces>());
         _ = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddConquerorEventObserver<TestEventObserverWithoutValidInterfaces>(_ => new()));
@@ -346,54 +298,47 @@ public sealed class EventObserverRegistrationTests
 
     private sealed record TestEvent2;
 
+    public sealed record TestEventWithCustomInterface;
+
     public sealed record TestEventForAssemblyScanning;
 
-    private sealed class TestEventObserver(TestObservations observations) : IEventObserver<TestEvent>
+    private sealed class TestEventObserver : IEventObserver<TestEvent>
     {
-        private int invocationCount;
-
-        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
-        {
-            invocationCount += 1;
-            await Task.Yield();
-            observations.InvocationCounts.Add(invocationCount);
-        }
+        public Task Handle(TestEvent evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestEventObserverWithMultipleInterfaces(TestObservations observations) : IEventObserver<TestEvent>, IEventObserver<TestEvent2>
+    private sealed class TestEvent2Observer : IEventObserver<TestEvent2>
     {
-        private int invocationCount;
-
-        public async Task HandleEvent(TestEvent evt, CancellationToken cancellationToken = default)
-        {
-            invocationCount += 1;
-            await Task.Yield();
-            observations.InvocationCounts.Add(invocationCount);
-        }
-
-        public async Task HandleEvent(TestEvent2 evt, CancellationToken cancellationToken = default)
-        {
-            invocationCount += 1;
-            await Task.Yield();
-            observations.InvocationCounts.Add(invocationCount);
-        }
+        public Task Handle(TestEvent2 evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestEventObserverWithoutValidInterfaces : IEventObserver;
+    private sealed class DuplicateTestEventObserver : IEventObserver<TestEvent>
+    {
+        public Task Handle(TestEvent evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    public interface ITestEventWithCustomInterfaceObserver : IEventObserver<TestEventWithCustomInterface>;
+
+    private sealed class TestEventWithCustomInterfaceObserver : ITestEventWithCustomInterfaceObserver
+    {
+        public Task Handle(TestEventWithCustomInterface evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class MultiTestEventObserver : IEventObserver<TestEvent>,
+                                                  IEventObserver<TestEvent2>,
+                                                  ITestEventWithCustomInterfaceObserver
+    {
+        public Task Handle(TestEvent evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task Handle(TestEvent2 evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task Handle(TestEventWithCustomInterface evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
 
     public sealed class TestEventObserverForAssemblyScanning : IEventObserver<TestEventForAssemblyScanning>
     {
-        public int InvocationCount { get; private set; }
-
-        public async Task HandleEvent(TestEventForAssemblyScanning evt, CancellationToken cancellationToken = default)
-        {
-            InvocationCount += 1;
-            await Task.Yield();
-        }
+        public Task Handle(TestEventForAssemblyScanning evt, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestObservations
-    {
-        public List<int> InvocationCounts { get; } = [];
-    }
+    private sealed class TestEventObserverWithoutValidInterfaces : IEventObserver;
 }

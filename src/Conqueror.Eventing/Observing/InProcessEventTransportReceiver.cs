@@ -4,14 +4,11 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing.Observing;
 
-internal sealed class InProcessEventTransportReceiver(IConquerorEventTypeRegistry registry, IConquerorEventTransportReceiverBroadcaster broadcaster)
+internal sealed class InProcessEventTransportReceiver(IEventTransportReceiverBroadcaster broadcaster)
 {
-    public async Task Handle<TEvent>(TEvent evt, IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    public async Task Handle<TEvent>(TEvent evt, IServiceProvider serviceProvider, CancellationToken cancellationToken)
         where TEvent : class
     {
-        if (registry.TryGetConfigurationForReceiver<InMemoryEventAttribute>(evt.GetType(), out _))
-        {
-            await broadcaster.Broadcast(evt, serviceProvider, cancellationToken).ConfigureAwait(false);
-        }
+        await broadcaster.Broadcast(evt, new InProcessEventAttribute(), serviceProvider, cancellationToken).ConfigureAwait(false);
     }
 }

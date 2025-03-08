@@ -2,11 +2,23 @@
 
 public sealed record SequentialEventBroadcastingStrategyConfiguration
 {
-    public SequentialEventBroadcastingStrategyExceptionHandling ExceptionHandling { get; set; } = SequentialEventBroadcastingStrategyExceptionHandling.ThrowOnFirstException;
-}
+    public ExceptionHandlingStrategy ExceptionHandling { get; private set; } = ExceptionHandlingStrategy.ThrowOnFirstException;
 
-public enum SequentialEventBroadcastingStrategyExceptionHandling
-{
-    ThrowOnFirstException,
-    ThrowAfterAll,
+    public SequentialEventBroadcastingStrategyConfiguration WithThrowOnFirstException()
+    {
+        ExceptionHandling = ExceptionHandlingStrategy.ThrowOnFirstException;
+        return this;
+    }
+
+    public SequentialEventBroadcastingStrategyConfiguration WithThrowAfterAll()
+    {
+        ExceptionHandling = ExceptionHandlingStrategy.ThrowAfterAll;
+        return this;
+    }
+
+    public enum ExceptionHandlingStrategy
+    {
+        ThrowOnFirstException,
+        ThrowAfterAll,
+    }
 }

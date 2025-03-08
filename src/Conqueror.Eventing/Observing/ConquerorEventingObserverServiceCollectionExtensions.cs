@@ -7,8 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Common;
-using Conqueror.Eventing;
 using Conqueror.Eventing.Observing;
+using Conqueror.Eventing.Publishing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
@@ -53,68 +53,68 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
                                                                                Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn)
         where TEvent : class
     {
-        services.AddConquerorEventing();
-
         return services.AddConquerorEventObserverDelegateRegistration(observerFn, null);
     }
 
     public static IServiceCollection AddConquerorEventObserverDelegate<TEvent>(this IServiceCollection services,
                                                                                Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
-                                                                               Action<IEventObserverPipelineBuilder> configurePipeline)
+                                                                               Action<IEventPipeline<TEvent>> configurePipeline)
         where TEvent : class
     {
-        services.AddConquerorEventing();
-
         return services.AddConquerorEventObserverDelegateRegistration(observerFn, configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorEventObserver(this IServiceCollection services,
-                                                                 Type observerType,
-                                                                 ServiceDescriptor serviceDescriptor)
+    internal static void TryAddConquerorEventObserver(this IServiceCollection services,
+                                                      Type observerType,
+                                                      ServiceDescriptor serviceDescriptor)
     {
-        services.AddConquerorEventing();
-
-        services.Replace(serviceDescriptor);
-
-        return services.AddObserverInternal(observerType, null)
-                       .AddCustomObserverInterfaces(observerType);
+        services.TryAdd(serviceDescriptor);
+        services.AddObserverInternal(observerType);
     }
 
-    internal static bool IsEventObserverRegistered(this IServiceCollection services, Type observerType)
+    private static IServiceCollection AddConquerorEventObserver(this IServiceCollection services,
+                                                                Type observerType,
+                                                                ServiceDescriptor serviceDescriptor)
     {
-        return services.Any(d => d.ImplementationInstance is EventObserverRegistration r && r.ObserverType == observerType);
+        services.Replace(serviceDescriptor);
+        return services.AddObserverInternal(observerType);
     }
 
     private static IServiceCollection AddConquerorEventObserverDelegateRegistration<TEvent>(this IServiceCollection services,
                                                                                             Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
-                                                                                            Action<IEventObserverPipelineBuilder>? configurePipeline)
+                                                                                            Action<IEventPipeline<TEvent>>? configurePipeline)
         where TEvent : class
     {
-        Task UntypedObserverFn(object evt, IServiceProvider provider, CancellationToken cancellationToken) =>
-            observerFn((TEvent)evt, provider, cancellationToken);
+        services.AddConquerorEventing();
 
-        var registration = new EventObserverDelegateRegistration(typeof(TEvent), UntypedObserverFn, configurePipeline);
-        services.AddSingleton(registration);
+        services.AddSingleton<IEventObserverInvoker>(new EventObserverInvoker<TEvent>(configurePipeline, observerFn, null));
+
+        // add the dispatcher for the event type eagerly to prevent the minor performance hit of open generic types
+        services.TryAddEnumerable(ServiceDescriptor.Transient<IEventObserver<TEvent>, EventObserverDispatcher<TEvent>>(p => new(p, p.GetRequiredService<EventPublisherDispatcher>())));
 
         return services;
     }
 
-    private static IServiceCollection AddCustomObserverInterfaces(this IServiceCollection services, Type observerType)
+    private static IServiceCollection AddObserverInternal(this IServiceCollection services, Type observerType)
     {
-        var addMethodInfo = typeof(ConquerorEventingObserverServiceCollectionExtensions).GetMethod(nameof(AddCustomObserverInterfacesGeneric), BindingFlags.NonPublic | BindingFlags.Static);
+        services.AddConquerorEventing();
 
-        if (addMethodInfo == null)
+        observerType.ValidateNoInvalidEventObserverInterface();
+
+        var method = typeof(ConquerorEventingObserverServiceCollectionExtensions).GetMethod(nameof(AddObserverInvoker), BindingFlags.NonPublic | BindingFlags.Static);
+
+        if (method == null)
         {
-            throw new InvalidOperationException($"could not find method '{nameof(AddCustomObserverInterfacesGeneric)}'");
+            throw new InvalidOperationException($"could not find method '{nameof(AddObserverInvoker)}'");
         }
 
-        foreach (var eventType in observerType.GetObservedEventTypes())
+        foreach (var observedEventType in observerType.GetObservedEventTypes())
         {
-            var method = addMethodInfo.MakeGenericMethod(observerType, eventType);
+            var genericMethod = method.MakeGenericMethod(observerType, observedEventType);
 
             try
             {
-                _ = method.Invoke(null, [services]);
+                _ = genericMethod.Invoke(null, [services]);
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
@@ -125,7 +125,46 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
         return services;
     }
 
-    private static void AddCustomObserverInterfacesGeneric<TObserver, TEvent>(this IServiceCollection services)
+    private static void AddObserverInvoker<TObserver, TEvent>(this IServiceCollection services)
+        where TObserver : class, IEventObserver<TEvent>
+        where TEvent : class
+    {
+        var existingInvokerDescriptor = services.FirstOrDefault(d => d.ImplementationInstance is EventObserverInvoker<TEvent> i
+                                                                     && i.ObserverType == typeof(TObserver)
+                                                                     && i.EventType == typeof(TEvent));
+
+        if (existingInvokerDescriptor is not null)
+        {
+            return;
+        }
+
+        services.AddCustomObserverInterfaces<TObserver, TEvent>();
+
+        var pipelineConfigurationAction = CreatePipelineConfigurationFunction(typeof(TObserver));
+
+        var invoker = new EventObserverInvoker<TEvent>(pipelineConfigurationAction,
+                                                       (evt, p, ct) => p.GetRequiredService<TObserver>().Handle(evt, ct),
+                                                       typeof(TObserver));
+
+        services.AddSingleton<IEventObserverInvoker>(invoker);
+
+        // add the dispatcher for the event type eagerly to prevent the minor performance hit of open generic types
+        services.TryAddEnumerable(ServiceDescriptor.Transient<IEventObserver<TEvent>, EventObserverDispatcher<TEvent>>(p => new(p, p.GetRequiredService<EventPublisherDispatcher>())));
+
+        return;
+
+        static Action<IEventPipeline<TEvent>> CreatePipelineConfigurationFunction(Type observerType)
+        {
+            var pipelineConfigurationMethod = observerType.GetInterfaceMap(typeof(IEventObserver<TEvent>)).TargetMethods.Single(m => m.Name == nameof(IEventObserver<TEvent>.ConfigurePipeline));
+
+            var builderParam = Expression.Parameter(typeof(IEventPipeline<TEvent>));
+            var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
+            var lambda = Expression.Lambda(body, builderParam).Compile();
+            return (Action<IEventPipeline<TEvent>>)lambda;
+        }
+    }
+
+    private static void AddCustomObserverInterfaces<TObserver, TEvent>(this IServiceCollection services)
         where TObserver : class, IEventObserver
         where TEvent : class
     {
@@ -157,71 +196,10 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
             if (customHandlerInterface.AllMethods().Count() > 1)
             {
                 throw new ArgumentException(
-                    $"event observer type '{typeof(TObserver).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom event observer interface types are not allowed to have any additional methods beside the '{nameof(IEventObserver<object>.HandleEvent)}' inherited from '{typeof(IEventObserver<>).Name}'");
+                    $"event observer type '{typeof(TObserver).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom event observer interface types are not allowed to have any additional methods beside the '{nameof(IEventObserver<object>.Handle)}' inherited from '{typeof(IEventObserver<>).Name}'");
             }
 
             return customHandlerInterface;
-        }
-    }
-
-    private static IServiceCollection AddObserverInternal(this IServiceCollection services,
-                                                          Type observerType,
-                                                          Action<IEventObserverPipelineBuilder>? configurePipeline)
-    {
-        observerType.ValidateNoInvalidEventObserverInterface();
-
-        var addObserverMethod = typeof(ConquerorEventingObserverServiceCollectionExtensions).GetMethod(nameof(AddObserver), BindingFlags.NonPublic | BindingFlags.Static);
-
-        if (addObserverMethod == null)
-        {
-            throw new InvalidOperationException($"could not find method '{nameof(AddObserver)}'");
-        }
-
-        foreach (var observedEventType in observerType.GetObservedEventTypes())
-        {
-            var genericAddMethod = addObserverMethod.MakeGenericMethod(observerType, observedEventType);
-
-            try
-            {
-                _ = genericAddMethod.Invoke(null, [services, configurePipeline]);
-            }
-            catch (TargetInvocationException ex) when (ex.InnerException != null)
-            {
-                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-            }
-        }
-
-        return services;
-    }
-
-    private static IServiceCollection AddObserver<TObserver, TEvent>(this IServiceCollection services,
-                                                                     Action<IEventObserverPipelineBuilder>? configurePipeline)
-        where TEvent : class
-    {
-        var existingObserverRegistration = services.FirstOrDefault(d => d.ImplementationInstance is EventObserverRegistration r
-                                                                        && r.ObserverType == typeof(TObserver)
-                                                                        && r.EventType == typeof(TEvent));
-
-        if (existingObserverRegistration is not null)
-        {
-            services.Remove(existingObserverRegistration);
-        }
-
-        var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(TObserver));
-
-        var registration = new EventObserverRegistration(typeof(TEvent), typeof(TObserver), pipelineConfigurationAction);
-        services.AddSingleton(registration);
-
-        return services;
-
-        static Action<IEventObserverPipelineBuilder> CreatePipelineConfigurationFunction(Type observerType)
-        {
-            var pipelineConfigurationMethod = observerType.GetInterfaceMap(typeof(IEventObserver<TEvent>)).TargetMethods.Single(m => m.Name == nameof(IEventObserver<TEvent>.ConfigurePipeline));
-
-            var builderParam = Expression.Parameter(typeof(IEventObserverPipelineBuilder));
-            var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
-            var lambda = Expression.Lambda(body, builderParam).Compile();
-            return (Action<IEventObserverPipelineBuilder>)lambda;
         }
     }
 }
