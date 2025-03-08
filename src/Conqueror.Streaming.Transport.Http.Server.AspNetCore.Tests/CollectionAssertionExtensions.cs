@@ -5,10 +5,12 @@ namespace Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests;
 
 public static class CollectionAssertionExtensions
 {
-    public static void ShouldReceiveItem<T>(this BlockingCollection<T> collection, T item, TimeSpan? timeout = null)
+    public static void ShouldReceiveItem<T>(this BlockingCollection<T> collection, T item)
         where T : notnull
     {
-        var result = collection.TryTake(out var receivedItem, Debugger.IsAttached ? TimeSpan.FromMinutes(1) : timeout ?? TimeSpan.FromSeconds(2));
+        var result = collection.TryTake(out var receivedItem, Debugger.IsAttached
+                                            ? TimeSpan.FromMinutes(1)
+                                            : Environment.GetEnvironmentVariable("GITHUB_ACTION") is not null ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(2));
 
         if (!result)
         {
