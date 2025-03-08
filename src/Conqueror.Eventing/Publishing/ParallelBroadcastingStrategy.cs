@@ -9,7 +9,10 @@ namespace Conqueror.Eventing.Publishing;
 
 internal sealed class ParallelBroadcastingStrategy(ParallelEventBroadcastingStrategyConfiguration configuration) : IConquerorEventBroadcastingStrategy
 {
-    public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
+    public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers,
+                                             IServiceProvider serviceProvider,
+                                             TEvent evt,
+                                             CancellationToken cancellationToken)
         where TEvent : class
     {
         using var semaphore = new SemaphoreSlim(configuration.MaxDegreeOfParallelism ?? 1_000_000);
@@ -61,7 +64,7 @@ internal sealed class ParallelBroadcastingStrategy(ParallelEventBroadcastingStra
 
         try
         {
-            await observer.HandleEvent(evt, cancellationToken).ConfigureAwait(false);
+            await observer.Handle(evt, cancellationToken).ConfigureAwait(false);
 
             return null;
         }

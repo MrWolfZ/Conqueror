@@ -6,37 +6,33 @@ using System.Reflection;
 
 namespace Conqueror.Eventing.Publishing;
 
-internal sealed class EventPublisherRegistry(IEnumerable<EventPublisherRegistration> registrations)
+internal sealed class EventPublisherRegistry(IEnumerable<EventTransportPublisherRegistration> registrations)
 {
-    private readonly List<EventPublisherRegistration> registrations = registrations.ToList();
-    private readonly ConcurrentDictionary<Type, List<(EventPublisherRegistration Registration, object Configuration)>> registrationsByEventType = new();
+    private readonly List<EventTransportPublisherRegistration> registrations = registrations.ToList();
+    private readonly ConcurrentDictionary<Type, List<(EventTransportPublisherRegistration Registration, ConquerorEventTransportAttribute Configuration)>> registrationsByEventType = new();
 
-    public IReadOnlyCollection<(EventPublisherRegistration Registration, object Configuration)> GetRelevantPublishersForEventType<TEvent>()
-        where TEvent : class
+    public IReadOnlyCollection<(EventTransportPublisherRegistration Registration, ConquerorEventTransportAttribute Configuration)> GetRelevantPublishersForEventType(Type eventType)
     {
-        return registrationsByEventType.GetOrAdd(typeof(TEvent), GetRelevantPublishersForEventType);
+        return registrationsByEventType.GetOrAdd(eventType, CreateRelevantPublishersForEventType);
     }
 
-    private List<(EventPublisherRegistration Registration, object Configuration)> GetRelevantPublishersForEventType(Type eventType)
+    private List<(EventTransportPublisherRegistration Registration, ConquerorEventTransportAttribute Configuration)> CreateRelevantPublishersForEventType(Type eventType)
     {
-        var result = new List<(EventPublisherRegistration Registration, object Configuration)>();
+        var result = (from customAttribute in eventType.GetCustomAttributes()
+                      where customAttribute is ConquerorEventTransportAttribute
+                      let registrations = registrations.Where(r => r.ConfigurationAttributeType == customAttribute.GetType()).ToList()
+                      select (registrations, (ConquerorEventTransportAttribute)customAttribute)).ToList();
 
-        foreach (var (registration, customAttribute) in from customAttribute in eventType.GetCustomAttributes()
-                                                        where customAttribute is IConquerorEventTransportConfigurationAttribute
-                                                        let registration = registrations.Find(r => r.ConfigurationAttributeType == customAttribute.GetType())
-                                                        select (registration, customAttribute))
+        var validResults = result.Where(r => r.registrations.Count > 0).SelectMany(t => t.registrations.Select(r => (r, t.Item2))).ToList();
+
+        if (validResults.Count == 0 && result.Count > 0)
         {
-            if (registration is null)
-            {
-                throw new ConquerorUnknownEventTransportPublisherException($"trying to publish event with unknown publisher for transport attribute type '{customAttribute.GetType().Name}'");
-            }
-
-            result.Add((registration, customAttribute));
+            throw new ConquerorUnknownEventTransportPublisherException($"trying to publish event with unknown publisher for transport attribute type '{result[0].Item2.GetType().Name}'");
         }
 
-        if (result.Count == 0)
+        if (validResults.Count == 0)
         {
-            var registration = registrations.Find(r => r.ConfigurationAttributeType == typeof(InMemoryEventAttribute));
+            var registration = registrations.Find(r => r.ConfigurationAttributeType == typeof(InProcessEventAttribute));
 
             if (registration is null)
             {
@@ -44,11 +40,11 @@ internal sealed class EventPublisherRegistry(IEnumerable<EventPublisherRegistrat
                 throw new ConquerorUnknownEventTransportPublisherException("did not find Conqueror in-memory event publisher registration");
             }
 
-            result.Add((registration, new InMemoryEventAttribute()));
+            validResults.Add((registration, new InProcessEventAttribute()));
         }
 
-        return result;
+        return validResults;
     }
 }
 
-public sealed record EventPublisherRegistration(Type PublisherType, Type ConfigurationAttributeType, Action<IEventPublisherPipelineBuilder>? ConfigurePipeline);
+internal sealed record EventTransportPublisherRegistration(Type PublisherType, Type ConfigurationAttributeType);

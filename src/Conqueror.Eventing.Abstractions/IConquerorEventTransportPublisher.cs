@@ -5,9 +5,12 @@ using System.Threading.Tasks;
 namespace Conqueror;
 
 public interface IConquerorEventTransportPublisher<in TConfigurationAttribute> : IConquerorEventTransportPublisher
-    where TConfigurationAttribute : Attribute, IConquerorEventTransportConfigurationAttribute
+    where TConfigurationAttribute : ConquerorEventTransportAttribute
 {
-    Task PublishEvent<TEvent>(TEvent evt, TConfigurationAttribute configurationAttribute, CancellationToken cancellationToken = default)
+    Task PublishEvent<TEvent>(TEvent evt,
+                              TConfigurationAttribute configurationAttribute,
+                              IServiceProvider serviceProvider,
+                              CancellationToken cancellationToken = default)
         where TEvent : class;
 }
 

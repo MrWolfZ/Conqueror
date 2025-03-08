@@ -6,5 +6,8 @@ namespace Conqueror;
 
 public interface IConquerorEventTransportReceiverBroadcaster
 {
-    Task Broadcast(object evt, IServiceProvider serviceProvider, CancellationToken cancellationToken);
+    Task Broadcast(object evt,
+                   ConquerorEventTransportAttribute configurationAttribute,
+                   IServiceProvider serviceProvider,
+                   CancellationToken cancellationToken);
 }

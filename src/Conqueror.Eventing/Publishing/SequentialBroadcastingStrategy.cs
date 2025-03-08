@@ -9,10 +9,13 @@ namespace Conqueror.Eventing.Publishing;
 
 internal sealed class SequentialBroadcastingStrategy(SequentialEventBroadcastingStrategyConfiguration configuration) : IConquerorEventBroadcastingStrategy
 {
-    public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers, TEvent evt, CancellationToken cancellationToken)
+    public async Task BroadcastEvent<TEvent>(IReadOnlyCollection<IEventObserver<TEvent>> eventObservers,
+                                             IServiceProvider serviceProvider,
+                                             TEvent evt,
+                                             CancellationToken cancellationToken)
         where TEvent : class
     {
-        var shouldThrowOnFirst = configuration.ExceptionHandling == SequentialEventBroadcastingStrategyExceptionHandling.ThrowOnFirstException;
+        var shouldThrowOnFirst = configuration.ExceptionHandling == SequentialEventBroadcastingStrategyConfiguration.ExceptionHandlingStrategy.ThrowOnFirstException;
         var thrownExceptions = new List<Exception>();
         var thrownCancellationExceptions = new List<Exception>();
 
@@ -20,7 +23,7 @@ internal sealed class SequentialBroadcastingStrategy(SequentialEventBroadcasting
         {
             try
             {
-                await observer.HandleEvent(evt, cancellationToken).ConfigureAwait(false);
+                await observer.Handle(evt, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException e)
             {

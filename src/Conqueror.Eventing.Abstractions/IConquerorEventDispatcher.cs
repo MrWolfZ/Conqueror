@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror;
@@ -10,5 +11,8 @@ namespace Conqueror;
 public interface IConquerorEventDispatcher
 {
     Task DispatchEvent<TEvent>(TEvent evt, CancellationToken cancellationToken = default)
+        where TEvent : class;
+
+    Task DispatchEvent<TEvent>(TEvent evt, Action<IEventPipeline<TEvent>> configurePipeline, CancellationToken cancellationToken = default)
         where TEvent : class;
 }

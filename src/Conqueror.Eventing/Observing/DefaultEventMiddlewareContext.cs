@@ -4,16 +4,17 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Eventing.Observing;
 
-internal delegate Task EventObserverMiddlewareNext<in TEvent>(TEvent evt, CancellationToken cancellationToken);
+internal delegate Task EventMiddlewareNext<in TEvent>(TEvent evt, CancellationToken cancellationToken);
 
-internal sealed class DefaultEventObserverMiddlewareContext<TEvent, TConfiguration>(
+internal sealed class DefaultEventMiddlewareContext<TEvent>(
     TEvent evt,
     Type observedEventType,
-    EventObserverMiddlewareNext<TEvent> next,
-    TConfiguration configuration,
+    EventMiddlewareNext<TEvent> next,
     IServiceProvider serviceProvider,
+    ConquerorContext conquerorContext,
+    EventTransportType transportType,
     CancellationToken cancellationToken)
-    : EventObserverMiddlewareContext<TEvent, TConfiguration>
+    : EventMiddlewareContext<TEvent>
     where TEvent : class
 {
     public override TEvent Event { get; } = evt;
@@ -22,11 +23,11 @@ internal sealed class DefaultEventObserverMiddlewareContext<TEvent, TConfigurati
 
     public override CancellationToken CancellationToken { get; } = cancellationToken;
 
-    public override TConfiguration Configuration { get; } = configuration;
-
     public override IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    public override ConquerorContext ConquerorContext => throw new NotImplementedException();
+    public override ConquerorContext ConquerorContext { get; } = conquerorContext;
+
+    public override EventTransportType TransportType { get; } = transportType;
 
     public override Task Next(TEvent evt, CancellationToken cancellationToken) => next(evt, cancellationToken);
 }

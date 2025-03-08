@@ -3,7 +3,7 @@
 // ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
 namespace Conqueror;
 
-public static class ConquerorEventingEventObserverMiddlewareEventTypeFilteringEventObserverPipelineBuilderExtensions
+public static class ConquerorEventTypeFilteringEventPipelineExtensions
 {
     /// <summary>
     ///     Add event type filtering functionality to an event observer pipeline. This is mainly useful for disallowing
@@ -11,9 +11,10 @@ public static class ConquerorEventingEventObserverMiddlewareEventTypeFilteringEv
     /// </summary>
     /// <param name="pipeline">The event observer pipeline to add event type filtering to</param>
     /// <returns>The event observer pipeline</returns>
-    public static IEventObserverPipelineBuilder UseEventTypeFiltering(this IEventObserverPipelineBuilder pipeline)
+    public static IEventPipeline<TEvent> UseEventTypeFiltering<TEvent>(this IEventPipeline<TEvent> pipeline)
+        where TEvent : class
     {
-        return pipeline.Use<EventTypeFilteringEventObserverMiddleware, EventTypeFilteringEventObserverMiddlewareConfiguration>(new());
+        return pipeline.Use(new EventTypeFilteringEventMiddleware<TEvent>());
     }
 
     /// <summary>
@@ -22,9 +23,10 @@ public static class ConquerorEventingEventObserverMiddlewareEventTypeFilteringEv
     /// </summary>
     /// <param name="pipeline">The event observer pipeline to configure the event type filtering middleware in</param>
     /// <returns>The event observer pipeline</returns>
-    public static IEventObserverPipelineBuilder DisallowInvocationWithSubTypes(this IEventObserverPipelineBuilder pipeline)
+    public static IEventPipeline<TEvent> DisallowInvocationWithSubTypes<TEvent>(this IEventPipeline<TEvent> pipeline)
+        where TEvent : class
     {
-        return pipeline.Configure<EventTypeFilteringEventObserverMiddleware, EventTypeFilteringEventObserverMiddlewareConfiguration>(o =>
+        return pipeline.Configure<EventTypeFilteringEventMiddleware<TEvent>>(o =>
         {
             // comment only for formatting purposes in order to prevent this line being inlined above
             o.AllowInvocationWithEventSubType = false;
@@ -36,8 +38,9 @@ public static class ConquerorEventingEventObserverMiddlewareEventTypeFilteringEv
     /// </summary>
     /// <param name="pipeline">The event observer pipeline with the event type filtering middleware to remove</param>
     /// <returns>The event observer pipeline</returns>
-    public static IEventObserverPipelineBuilder WithoutEventTypeFiltering(this IEventObserverPipelineBuilder pipeline)
+    public static IEventPipeline<TEvent> WithoutEventTypeFiltering<TEvent>(this IEventPipeline<TEvent> pipeline)
+        where TEvent : class
     {
-        return pipeline.Without<EventTypeFilteringEventObserverMiddleware, EventTypeFilteringEventObserverMiddlewareConfiguration>();
+        return pipeline.Without<EventTypeFilteringEventMiddleware<TEvent>>();
     }
 }

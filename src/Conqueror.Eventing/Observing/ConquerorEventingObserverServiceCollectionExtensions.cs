@@ -9,6 +9,7 @@ using Conqueror;
 using Conqueror.Common;
 using Conqueror.Eventing;
 using Conqueror.Eventing.Observing;
+using Conqueror.Eventing.Publishing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace (it's a convention to place service collection extensions in this namespace)
@@ -60,7 +61,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
 
     public static IServiceCollection AddConquerorEventObserverDelegate<TEvent>(this IServiceCollection services,
                                                                                Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
-                                                                               Action<IEventObserverPipelineBuilder> configurePipeline)
+                                                                               Action<IEventPipeline<TEvent>> configurePipeline)
         where TEvent : class
     {
         services.AddConquerorEventing();
@@ -68,9 +69,19 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
         return services.AddConquerorEventObserverDelegateRegistration(observerFn, configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorEventObserver(this IServiceCollection services,
-                                                                 Type observerType,
-                                                                 ServiceDescriptor serviceDescriptor)
+    internal static void TryAddConquerorEventObserver(this IServiceCollection services,
+                                                      Type observerType,
+                                                      ServiceDescriptor serviceDescriptor)
+    {
+        services.TryAdd(serviceDescriptor);
+
+        services.AddObserverInternal(observerType, null)
+                .AddCustomObserverInterfaces(observerType);
+    }
+
+    private static IServiceCollection AddConquerorEventObserver(this IServiceCollection services,
+                                                                Type observerType,
+                                                                ServiceDescriptor serviceDescriptor)
     {
         services.AddConquerorEventing();
 
@@ -80,14 +91,9 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
                        .AddCustomObserverInterfaces(observerType);
     }
 
-    internal static bool IsEventObserverRegistered(this IServiceCollection services, Type observerType)
-    {
-        return services.Any(d => d.ImplementationInstance is EventObserverRegistration r && r.ObserverType == observerType);
-    }
-
     private static IServiceCollection AddConquerorEventObserverDelegateRegistration<TEvent>(this IServiceCollection services,
                                                                                             Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
-                                                                                            Action<IEventObserverPipelineBuilder>? configurePipeline)
+                                                                                            Action<IEventPipeline<TEvent>>? configurePipeline)
         where TEvent : class
     {
         Task UntypedObserverFn(object evt, IServiceProvider provider, CancellationToken cancellationToken) =>
@@ -95,6 +101,9 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
 
         var registration = new EventObserverDelegateRegistration(typeof(TEvent), UntypedObserverFn, configurePipeline);
         services.AddSingleton(registration);
+
+        // add the dispatcher for the event type eagerly to prevent the minor performance hit of open generic types
+        services.TryAddEnumerable(ServiceDescriptor.Transient<IEventObserver<TEvent>, EventObserverDispatcher<TEvent>>(p => new(p, p.GetRequiredService<EventPublisherDispatcher>())));
 
         return services;
     }
@@ -157,7 +166,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
             if (customHandlerInterface.AllMethods().Count() > 1)
             {
                 throw new ArgumentException(
-                    $"event observer type '{typeof(TObserver).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom event observer interface types are not allowed to have any additional methods beside the '{nameof(IEventObserver<object>.HandleEvent)}' inherited from '{typeof(IEventObserver<>).Name}'");
+                    $"event observer type '{typeof(TObserver).Name}' implements custom interface '{customHandlerInterface.Name}' that has extra methods; custom event observer interface types are not allowed to have any additional methods beside the '{nameof(IEventObserver<object>.Handle)}' inherited from '{typeof(IEventObserver<>).Name}'");
             }
 
             return customHandlerInterface;
@@ -166,7 +175,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
 
     private static IServiceCollection AddObserverInternal(this IServiceCollection services,
                                                           Type observerType,
-                                                          Action<IEventObserverPipelineBuilder>? configurePipeline)
+                                                          Delegate? configurePipeline)
     {
         observerType.ValidateNoInvalidEventObserverInterface();
 
@@ -195,7 +204,7 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
     }
 
     private static IServiceCollection AddObserver<TObserver, TEvent>(this IServiceCollection services,
-                                                                     Action<IEventObserverPipelineBuilder>? configurePipeline)
+                                                                     Action<IEventPipeline<TEvent>>? configurePipeline)
         where TEvent : class
     {
         var existingObserverRegistration = services.FirstOrDefault(d => d.ImplementationInstance is EventObserverRegistration r
@@ -212,16 +221,19 @@ public static class ConquerorEventingObserverServiceCollectionExtensions
         var registration = new EventObserverRegistration(typeof(TEvent), typeof(TObserver), pipelineConfigurationAction);
         services.AddSingleton(registration);
 
+        // add the dispatcher for the event type eagerly to prevent the minor performance hit of open generic types
+        services.TryAddEnumerable(ServiceDescriptor.Transient<IEventObserver<TEvent>, EventObserverDispatcher<TEvent>>(p => new(p, p.GetRequiredService<EventPublisherDispatcher>())));
+
         return services;
 
-        static Action<IEventObserverPipelineBuilder> CreatePipelineConfigurationFunction(Type observerType)
+        static Action<IEventPipeline<TEvent>> CreatePipelineConfigurationFunction(Type observerType)
         {
             var pipelineConfigurationMethod = observerType.GetInterfaceMap(typeof(IEventObserver<TEvent>)).TargetMethods.Single(m => m.Name == nameof(IEventObserver<TEvent>.ConfigurePipeline));
 
-            var builderParam = Expression.Parameter(typeof(IEventObserverPipelineBuilder));
+            var builderParam = Expression.Parameter(typeof(IEventPipeline<TEvent>));
             var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
             var lambda = Expression.Lambda(body, builderParam).Compile();
-            return (Action<IEventObserverPipelineBuilder>)lambda;
+            return (Action<IEventPipeline<TEvent>>)lambda;
         }
     }
 }

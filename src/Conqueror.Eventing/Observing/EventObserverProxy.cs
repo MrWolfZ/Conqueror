@@ -6,23 +6,45 @@ namespace Conqueror.Eventing.Observing;
 
 internal sealed class EventObserverProxy<TEvent>(
     IServiceProvider serviceProvider,
-    Action<IEventObserverPipelineBuilder> configurePipeline,
-    Type observerType,
-    Type observedEventType)
+    Action<IEventPipeline<TEvent>>? configurePipeline,
+    Func<TEvent, IServiceProvider, CancellationToken, Task> observerFn,
+    Type observedEventType,
+    ConquerorEventTransportAttribute configurationAttribute)
     : IEventObserver<TEvent>
     where TEvent : class
 {
-    public Task HandleEvent(TEvent evt, CancellationToken cancellationToken = default)
+    public Task Handle(TEvent evt, CancellationToken cancellationToken = default)
     {
-        var pipelineBuilder = new EventObserverPipelineBuilder(serviceProvider);
+        return EventPipelineInvoker.RunPipeline(evt,
+                                                configurePipeline,
+                                                configurationAttribute,
+                                                serviceProvider,
+                                                observedEventType,
+                                                EventTransportRole.Receiver,
+                                                observerFn,
+                                                cancellationToken);
+    }
+}
 
-        configurePipeline.Invoke(pipelineBuilder);
-
-        var pipeline = pipelineBuilder.Build();
-
-        // TODO: add context support
-        // var pipeline = pipelineBuilder.Build(conquerorContext);
-
-        return pipeline.Execute(serviceProvider, observerType, evt, observedEventType, cancellationToken);
+internal sealed class EventObserverProxy<TEvent, TObservedEvent>(
+    IServiceProvider serviceProvider,
+    Action<IEventPipeline<TObservedEvent>>? configurePipeline,
+    Func<TObservedEvent, IServiceProvider, CancellationToken, Task> observerFn,
+    Type observedEventType,
+    ConquerorEventTransportAttribute configurationAttribute)
+    : IEventObserver<TEvent>
+    where TEvent : class, TObservedEvent
+    where TObservedEvent : class
+{
+    public Task Handle(TEvent evt, CancellationToken cancellationToken = default)
+    {
+        return EventPipelineInvoker.RunPipeline(evt,
+                                                configurePipeline,
+                                                configurationAttribute,
+                                                serviceProvider,
+                                                observedEventType,
+                                                EventTransportRole.Receiver,
+                                                observerFn,
+                                                cancellationToken);
     }
 }
