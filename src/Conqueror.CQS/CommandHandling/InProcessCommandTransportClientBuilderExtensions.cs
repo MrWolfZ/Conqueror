@@ -10,7 +10,7 @@ public static class InProcessCommandTransportClientBuilderExtensions
     public static ICommandTransportClient UseInProcess(this ICommandTransportClientBuilder builder)
     {
         var registration = builder.ServiceProvider
-                                  .GetRequiredService<CommandHandlerRegistry>()
+                                  .GetRequiredService<CommandTransportRegistry>()
                                   .GetCommandHandlerRegistration(builder.CommandType);
 
         if (registration is null)

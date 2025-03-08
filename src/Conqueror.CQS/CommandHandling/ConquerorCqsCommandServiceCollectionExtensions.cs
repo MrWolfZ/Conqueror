@@ -11,8 +11,8 @@ public static class ConquerorCqsCommandServiceCollectionExtensions
     {
         services.TryAddTransient<ICommandClientFactory, TransientCommandClientFactory>();
         services.TryAddSingleton<CommandClientFactory>();
-        services.TryAddSingleton<CommandHandlerRegistry>();
-        services.TryAddSingleton<ICommandHandlerRegistry>(p => p.GetRequiredService<CommandHandlerRegistry>());
+        services.TryAddSingleton<CommandTransportRegistry>();
+        services.TryAddSingleton<ICommandTransportRegistry>(p => p.GetRequiredService<CommandTransportRegistry>());
 
         services.AddConquerorContext();
     }

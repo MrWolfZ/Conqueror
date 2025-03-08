@@ -119,7 +119,7 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
         var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
 
         var existingRegistrations = services.Select(d => d.ImplementationInstance)
-                                            .OfType<QueryHandlerRegistrationInternal>()
+                                            .OfType<QueryHandlerRegistration>()
                                             .ToDictionary(r => r.QueryType);
 
         if (existingRegistrations.TryGetValue(typeof(TQuery), out var existingRegistration))
@@ -131,7 +131,7 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
         }
         else
         {
-            var registration = new QueryHandlerRegistrationInternal(typeof(TQuery), typeof(TResponse), typeof(THandler), pipelineConfigurationAction);
+            var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler), pipelineConfigurationAction);
             services.AddSingleton(registration);
         }
 

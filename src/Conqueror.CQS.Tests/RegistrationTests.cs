@@ -16,12 +16,12 @@ public sealed class RegistrationTests
 
         Assert.That(services.Count(d => d.ServiceType == typeof(CommandClientFactory)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(ICommandClientFactory)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(CommandHandlerRegistry)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandHandlerRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(CommandTransportRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(ICommandTransportRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(QueryClientFactory)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IQueryClientFactory)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(QueryHandlerRegistry)), Is.EqualTo(1));
-        Assert.That(services.Count(d => d.ServiceType == typeof(IQueryHandlerRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(QueryTransportRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IQueryTransportRegistry)), Is.EqualTo(1));
         Assert.That(services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)), Is.EqualTo(1));
     }
 

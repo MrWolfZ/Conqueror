@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 
 namespace Conqueror.CQS.Transport.Http.Server.AspNetCore;
 
 internal sealed class HttpEndpointRegistry(
-    ICommandHandlerRegistry commandHandlerRegistry,
-    IQueryHandlerRegistry queryHandlerRegistry,
+    ICommandTransportRegistry commandTransportRegistry,
+    IQueryTransportRegistry queryTransportRegistry,
     ConquerorCqsHttpTransportServerAspNetCoreOptions options)
 {
     private const string DefaultCommandControllerName = "Commands";
@@ -34,11 +33,9 @@ internal sealed class HttpEndpointRegistry(
 
     private IEnumerable<HttpEndpoint> GetCommandEndpoints()
     {
-        foreach (var command in GetHttpCommands())
+        foreach (var (commandType, responseType, attribute) in commandTransportRegistry.GetCommandTypesForTransport<HttpCommandAttribute>())
         {
-            var attribute = command.CommandType.GetCustomAttribute<HttpCommandAttribute>()!;
-
-            var path = options.CommandPathConvention?.GetCommandPath(command.CommandType, attribute) ?? DefaultHttpCommandPathConvention.Instance.GetCommandPath(command.CommandType, attribute);
+            var path = options.CommandPathConvention?.GetCommandPath(commandType, attribute) ?? DefaultHttpCommandPathConvention.Instance.GetCommandPath(commandType, attribute);
 
             var endpoint = new HttpEndpoint
             {
@@ -46,12 +43,12 @@ internal sealed class HttpEndpointRegistry(
                 Method = HttpMethod.Post,
                 Path = path,
                 Version = attribute.Version,
-                Name = command.CommandType.Name,
-                OperationId = attribute.OperationId ?? command.CommandType.FullName ?? command.CommandType.Name,
+                Name = commandType.Name,
+                OperationId = attribute.OperationId ?? commandType.FullName ?? commandType.Name,
                 ControllerName = attribute.ApiGroupName ?? DefaultCommandControllerName,
                 ApiGroupName = attribute.ApiGroupName,
-                RequestType = command.CommandType,
-                ResponseType = command.ResponseType,
+                RequestType = commandType,
+                ResponseType = responseType,
             };
 
             yield return endpoint;
@@ -60,11 +57,9 @@ internal sealed class HttpEndpointRegistry(
 
     private IEnumerable<HttpEndpoint> GetQueryEndpoints()
     {
-        foreach (var query in GetHttpQueries())
+        foreach (var (queryType, responseType, attribute) in queryTransportRegistry.GetQueryTypesForTransport<HttpQueryAttribute>())
         {
-            var attribute = query.QueryType.GetCustomAttribute<HttpQueryAttribute>()!;
-
-            var path = options.QueryPathConvention?.GetQueryPath(query.QueryType, attribute) ?? DefaultHttpQueryPathConvention.Instance.GetQueryPath(query.QueryType, attribute);
+            var path = options.QueryPathConvention?.GetQueryPath(queryType, attribute) ?? DefaultHttpQueryPathConvention.Instance.GetQueryPath(queryType, attribute);
 
             var endpoint = new HttpEndpoint
             {
@@ -72,21 +67,15 @@ internal sealed class HttpEndpointRegistry(
                 Method = attribute.UsePost ? HttpMethod.Post : HttpMethod.Get,
                 Path = path,
                 Version = attribute.Version,
-                Name = query.QueryType.Name,
-                OperationId = attribute.OperationId ?? query.QueryType.FullName ?? query.QueryType.Name,
+                Name = queryType.Name,
+                OperationId = attribute.OperationId ?? queryType.FullName ?? queryType.Name,
                 ControllerName = attribute.ApiGroupName ?? DefaultQueryControllerName,
                 ApiGroupName = attribute.ApiGroupName,
-                RequestType = query.QueryType,
-                ResponseType = query.ResponseType,
+                RequestType = queryType,
+                ResponseType = responseType,
             };
 
             yield return endpoint;
         }
     }
-
-    private IEnumerable<CommandHandlerRegistration> GetHttpCommands() => commandHandlerRegistry.GetCommandHandlerRegistrations()
-                                                                                               .Where(m => m.CommandType.GetCustomAttributes(typeof(HttpCommandAttribute), true).Any());
-
-    private IEnumerable<QueryHandlerRegistration> GetHttpQueries() => queryHandlerRegistry.GetQueryHandlerRegistrations()
-                                                                                          .Where(m => m.QueryType.GetCustomAttributes(typeof(HttpQueryAttribute), true).Any());
 }

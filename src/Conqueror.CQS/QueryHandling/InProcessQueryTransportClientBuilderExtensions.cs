@@ -10,7 +10,7 @@ public static class InProcessQueryTransportClientBuilderExtensions
     public static IQueryTransportClient UseInProcess(this IQueryTransportClientBuilder builder)
     {
         var registration = builder.ServiceProvider
-                                  .GetRequiredService<QueryHandlerRegistry>()
+                                  .GetRequiredService<QueryTransportRegistry>()
                                   .GetQueryHandlerRegistration(builder.QueryType);
 
         if (registration is null)

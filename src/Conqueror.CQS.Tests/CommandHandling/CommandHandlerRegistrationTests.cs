@@ -36,22 +36,17 @@ public sealed class CommandHandlerRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
-
-        var expectedHandlerType = registrationMethod == "delegate" ? typeof(DelegateCommandHandler<TestCommand, TestCommandResponse>) : typeof(TestCommandHandler);
-        var expectedHandlerType2 = registrationMethod == "delegate" ? typeof(DelegateCommandHandler<TestCommand2, TestCommand2Response>) : typeof(TestCommand2Handler);
-        var expectedHandlerType3 = registrationMethod == "delegate" ? typeof(DelegateCommandHandler<TestCommandWithoutResponse>) : typeof(TestCommandWithoutResponseHandler);
-        var expectedHandlerType4 = registrationMethod == "delegate" ? typeof(DelegateCommandHandler<TestCommandWithoutResponse2>) : typeof(TestCommandWithoutResponse2Handler);
+        var registry = provider.GetRequiredService<ICommandTransportRegistry>();
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), expectedHandlerType),
-            new CommandHandlerRegistration(typeof(TestCommand2), typeof(TestCommand2Response), expectedHandlerType2),
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, expectedHandlerType3),
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse2), null, expectedHandlerType4),
+            (typeof(TestCommand), typeof(TestCommandResponse), new InProcessCommandAttribute()),
+            (typeof(TestCommand2), typeof(TestCommand2Response), new()),
+            (typeof(TestCommandWithoutResponse), null, new()),
+            (typeof(TestCommandWithoutResponse2), null, new()),
         };
 
-        var registrations = registry.GetCommandHandlerRegistrations();
+        var registrations = registry.GetCommandTypesForTransport<InProcessCommandAttribute>();
 
         Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
     }
@@ -112,14 +107,14 @@ public sealed class CommandHandlerRegistrationTests
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>());
 
-        var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
+        var registry = provider.GetRequiredService<ICommandTransportRegistry>();
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommand), typeof(TestCommandResponse), typeof(TestCommandHandler)),
+            (typeof(TestCommand), typeof(TestCommandResponse), new InProcessCommandAttribute()),
         };
 
-        var registrations = registry.GetCommandHandlerRegistrations();
+        var registrations = registry.GetCommandTypesForTransport<InProcessCommandAttribute>();
 
         Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
     }
@@ -180,14 +175,14 @@ public sealed class CommandHandlerRegistrationTests
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<ICommandHandler<TestCommandWithoutResponse>>());
 
-        var registry = provider.GetRequiredService<ICommandHandlerRegistry>();
+        var registry = provider.GetRequiredService<ICommandTransportRegistry>();
 
         var expectedRegistrations = new[]
         {
-            new CommandHandlerRegistration(typeof(TestCommandWithoutResponse), null, typeof(TestCommandWithoutResponseHandler)),
+            (typeof(TestCommandWithoutResponse), (Type?)null, new InProcessCommandAttribute()),
         };
 
-        var registrations = registry.GetCommandHandlerRegistrations();
+        var registrations = registry.GetCommandTypesForTransport<InProcessCommandAttribute>();
 
         Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
     }
@@ -297,10 +292,10 @@ public sealed class CommandHandlerRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        var registrations = provider.GetRequiredService<ICommandHandlerRegistry>().GetCommandHandlerRegistrations();
+        var registrations = provider.GetRequiredService<ICommandTransportRegistry>().GetCommandTypesForTransport<InProcessCommandAttribute>();
 
-        Assert.That(registrations, Has.One.EqualTo(new CommandHandlerRegistration(typeof(TestCommandForAssemblyScanning), typeof(TestCommandResponseForAssemblyScanning), typeof(TestCommandHandlerForAssemblyScanning))));
-        Assert.That(registrations, Has.One.EqualTo(new CommandHandlerRegistration(typeof(TestCommandWithoutResponseForAssemblyScanning), null, typeof(TestCommandWithoutResponseHandlerForAssemblyScanning))));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestCommandForAssemblyScanning), typeof(TestCommandResponseForAssemblyScanning), new InProcessCommandAttribute())));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestCommandWithoutResponseForAssemblyScanning), (Type?)null, new InProcessCommandAttribute())));
     }
 
     [Test]
@@ -319,10 +314,10 @@ public sealed class CommandHandlerRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        var registrations = provider.GetRequiredService<ICommandHandlerRegistry>().GetCommandHandlerRegistrations();
+        var registrations = provider.GetRequiredService<ICommandTransportRegistry>().GetCommandTypesForTransport<InProcessCommandAttribute>();
 
-        Assert.That(registrations, Has.One.EqualTo(new CommandHandlerRegistration(typeof(TestCommandForAssemblyScanning), typeof(TestCommandResponseForAssemblyScanning), typeof(TestCommandHandlerForAssemblyScanning))));
-        Assert.That(registrations, Has.One.EqualTo(new CommandHandlerRegistration(typeof(TestCommandWithoutResponseForAssemblyScanning), null, typeof(TestCommandWithoutResponseHandlerForAssemblyScanning))));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestCommandForAssemblyScanning), typeof(TestCommandResponseForAssemblyScanning), new InProcessCommandAttribute())));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestCommandWithoutResponseForAssemblyScanning), (Type?)null, new InProcessCommandAttribute())));
     }
 
     private sealed record TestCommand;

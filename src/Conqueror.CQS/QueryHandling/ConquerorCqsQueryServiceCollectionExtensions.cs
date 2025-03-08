@@ -11,8 +11,8 @@ public static class ConquerorCqsQueryServiceCollectionExtensions
     {
         services.TryAddTransient<IQueryClientFactory, TransientQueryClientFactory>();
         services.TryAddSingleton<QueryClientFactory>();
-        services.TryAddSingleton<QueryHandlerRegistry>();
-        services.TryAddSingleton<IQueryHandlerRegistry>(p => p.GetRequiredService<QueryHandlerRegistry>());
+        services.TryAddSingleton<QueryTransportRegistry>();
+        services.TryAddSingleton<IQueryTransportRegistry>(p => p.GetRequiredService<QueryTransportRegistry>());
 
         services.AddConquerorContext();
     }

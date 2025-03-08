@@ -28,18 +28,15 @@ public sealed class QueryHandlerRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        var registry = provider.GetRequiredService<IQueryHandlerRegistry>();
-
-        var expectedHandlerType = registrationMethod == "delegate" ? typeof(DelegateQueryHandler<TestQuery, TestQueryResponse>) : typeof(TestQueryHandler);
-        var expectedHandlerType2 = registrationMethod == "delegate" ? typeof(DelegateQueryHandler<TestQuery2, TestQuery2Response>) : typeof(TestQuery2Handler);
+        var registry = provider.GetRequiredService<IQueryTransportRegistry>();
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), expectedHandlerType),
-            new QueryHandlerRegistration(typeof(TestQuery2), typeof(TestQuery2Response), expectedHandlerType2),
+            (typeof(TestQuery), typeof(TestQueryResponse), new InProcessQueryAttribute()),
+            (typeof(TestQuery2), typeof(TestQuery2Response), new()),
         };
 
-        var registrations = registry.GetQueryHandlerRegistrations();
+        var registrations = registry.GetQueryTypesForTransport<InProcessQueryAttribute>();
 
         Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
     }
@@ -100,14 +97,14 @@ public sealed class QueryHandlerRegistrationTests
 
         Assert.DoesNotThrow(() => provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>());
 
-        var registry = provider.GetRequiredService<IQueryHandlerRegistry>();
+        var registry = provider.GetRequiredService<IQueryTransportRegistry>();
 
         var expectedRegistrations = new[]
         {
-            new QueryHandlerRegistration(typeof(TestQuery), typeof(TestQueryResponse), typeof(TestQueryHandler)),
+            (typeof(TestQuery), typeof(TestQueryResponse), new InProcessQueryAttribute()),
         };
 
-        var registrations = registry.GetQueryHandlerRegistrations();
+        var registrations = registry.GetQueryTypesForTransport<InProcessQueryAttribute>();
 
         Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
     }
@@ -168,9 +165,9 @@ public sealed class QueryHandlerRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        var registrations = provider.GetRequiredService<IQueryHandlerRegistry>().GetQueryHandlerRegistrations();
+        var registrations = provider.GetRequiredService<IQueryTransportRegistry>().GetQueryTypesForTransport<InProcessQueryAttribute>();
 
-        Assert.That(registrations, Has.One.EqualTo(new QueryHandlerRegistration(typeof(TestQueryForAssemblyScanning), typeof(TestQueryResponseForAssemblyScanning), typeof(TestQueryHandlerForAssemblyScanning))));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestQueryForAssemblyScanning), typeof(TestQueryResponseForAssemblyScanning), new InProcessQueryAttribute())));
     }
 
     [Test]
@@ -185,9 +182,9 @@ public sealed class QueryHandlerRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        var registrations = provider.GetRequiredService<IQueryHandlerRegistry>().GetQueryHandlerRegistrations();
+        var registrations = provider.GetRequiredService<IQueryTransportRegistry>().GetQueryTypesForTransport<InProcessQueryAttribute>();
 
-        Assert.That(registrations, Has.One.EqualTo(new QueryHandlerRegistration(typeof(TestQueryForAssemblyScanning), typeof(TestQueryResponseForAssemblyScanning), typeof(TestQueryHandlerForAssemblyScanning))));
+        Assert.That(registrations, Has.One.EqualTo((typeof(TestQueryForAssemblyScanning), typeof(TestQueryResponseForAssemblyScanning), new InProcessQueryAttribute())));
     }
 
     private sealed record TestQuery;

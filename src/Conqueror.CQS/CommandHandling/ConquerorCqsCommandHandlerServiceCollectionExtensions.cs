@@ -158,7 +158,7 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
         }
 
         var existingRegistrations = services.Select(d => d.ImplementationInstance)
-                                            .OfType<CommandHandlerRegistrationInternal>()
+                                            .OfType<CommandHandlerRegistration>()
                                             .ToDictionary(r => r.CommandType);
 
         if (existingRegistrations.TryGetValue(typeof(TCommand), out var existingRegistration))
@@ -173,7 +173,7 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
         else
         {
             var responseType = isWithoutResponse ? null : typeof(TResponse);
-            var registration = new CommandHandlerRegistrationInternal(typeof(TCommand), responseType, typeof(THandler), pipelineConfigurationAction);
+            var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler), pipelineConfigurationAction);
             services.AddSingleton(registration);
         }
 
