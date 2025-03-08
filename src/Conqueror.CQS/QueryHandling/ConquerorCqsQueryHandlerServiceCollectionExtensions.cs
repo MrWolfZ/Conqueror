@@ -60,27 +60,25 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
                                                                                          Action<IQueryPipeline<TQuery, TResponse>> configurePipeline)
         where TQuery : class
     {
-        return services.AddConquerorQueryHandler(typeof(DelegateQueryHandler<TQuery, TResponse>),
-                                                 ServiceDescriptor.Transient(p => new DelegateQueryHandler<TQuery, TResponse>(handlerFn, p)),
-                                                 configurePipeline);
-    }
-
-    internal static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
-                                                                Type handlerType,
-                                                                ServiceDescriptor serviceDescriptor)
-    {
-        services.TryAdd(serviceDescriptor);
-        return services.AddConquerorQueryHandler(handlerType, (Delegate?)null);
-    }
-
-    private static IServiceCollection AddConquerorQueryHandler<TQuery, TResponse>(this IServiceCollection services,
-                                                                                  Type handlerType,
-                                                                                  ServiceDescriptor serviceDescriptor,
-                                                                                  Action<IQueryPipeline<TQuery, TResponse>> configurePipeline)
-        where TQuery : class
-    {
-        services.TryAdd(serviceDescriptor);
+        var handlerType = typeof(DelegateQueryHandler<TQuery, TResponse>);
+        services.Replace(ServiceDescriptor.Transient(p => new DelegateQueryHandler<TQuery, TResponse>(handlerFn, p)));
         return services.AddConquerorQueryHandler(handlerType, configurePipeline);
+    }
+
+    internal static void TryAddConquerorQueryHandler(this IServiceCollection services,
+                                                     Type handlerType,
+                                                     ServiceDescriptor serviceDescriptor)
+    {
+        services.TryAdd(serviceDescriptor);
+        services.AddConquerorQueryHandler(handlerType, (Delegate?)null);
+    }
+
+    private static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
+                                                               Type handlerType,
+                                                               ServiceDescriptor serviceDescriptor)
+    {
+        services.Replace(serviceDescriptor);
+        return services.AddConquerorQueryHandler(handlerType, (Delegate?)null);
     }
 
     private static IServiceCollection AddConquerorQueryHandler(this IServiceCollection services,
@@ -120,21 +118,20 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
     {
         var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
 
-        var existingRegistrations = services.Where(d => d.ImplementationInstance is QueryHandlerRegistration)
-                                            .ToDictionary(d => ((QueryHandlerRegistration)d.ImplementationInstance!).QueryType);
+        var existingRegistrations = services.Select(d => d.ImplementationInstance)
+                                            .OfType<QueryHandlerRegistrationInternal>()
+                                            .ToDictionary(r => r.QueryType);
 
-        if (existingRegistrations.TryGetValue(typeof(TQuery), out var existingDescriptor))
+        if (existingRegistrations.TryGetValue(typeof(TQuery), out var existingRegistration))
         {
-            if (typeof(THandler) != ((QueryHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
+            if (typeof(THandler) != existingRegistration.HandlerType || existingRegistration.HandlerType == typeof(DelegateQueryHandler<TQuery, TResponse>))
             {
-                services.Remove(existingDescriptor);
-                var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler), pipelineConfigurationAction);
-                services.AddSingleton(registration);
+                throw new InvalidOperationException($"attempted to register handler type '{typeof(THandler)}' for query type '{typeof(TQuery)}', but handler type '{existingRegistration.HandlerType}' is already registered.");
             }
         }
         else
         {
-            var registration = new QueryHandlerRegistration(typeof(TQuery), typeof(TResponse), typeof(THandler), pipelineConfigurationAction);
+            var registration = new QueryHandlerRegistrationInternal(typeof(TQuery), typeof(TResponse), typeof(THandler), pipelineConfigurationAction);
             services.AddSingleton(registration);
         }
 

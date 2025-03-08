@@ -4,15 +4,23 @@ using System.Linq;
 
 namespace Conqueror.CQS.CommandHandling;
 
-internal sealed class CommandHandlerRegistry(IEnumerable<CommandHandlerRegistration> registrations) : ICommandHandlerRegistry
+internal sealed class CommandHandlerRegistry : ICommandHandlerRegistry
 {
-    private readonly Dictionary<(Type CommandType, Type? ResponseType), CommandHandlerRegistration> registrations
-        = registrations.ToDictionary(r => (r.CommandType, r.ResponseType));
+    private readonly IReadOnlyCollection<CommandHandlerRegistration> allRegistrations;
+    private readonly Dictionary<Type, CommandHandlerRegistrationInternal> registrationByCommandType;
 
-    public IReadOnlyCollection<CommandHandlerRegistration> GetCommandHandlerRegistrations() => registrations.Values.ToList();
-
-    public CommandHandlerRegistration? GetCommandHandlerRegistration(Type commandType, Type? responseType)
+    public CommandHandlerRegistry(IEnumerable<CommandHandlerRegistrationInternal> registrations)
     {
-        return registrations.GetValueOrDefault((commandType, responseType));
+        registrationByCommandType = registrations.ToDictionary(r => r.CommandType);
+        allRegistrations = registrationByCommandType.Values.Select(r => new CommandHandlerRegistration(r.CommandType, r.ResponseType, r.HandlerType)).ToList();
+    }
+
+    public IReadOnlyCollection<CommandHandlerRegistration> GetCommandHandlerRegistrations() => allRegistrations;
+
+    public CommandHandlerRegistrationInternal? GetCommandHandlerRegistration(Type queryType)
+    {
+        return registrationByCommandType.GetValueOrDefault(queryType);
     }
 }
+
+public sealed record CommandHandlerRegistrationInternal(Type CommandType, Type? ResponseType, Type HandlerType, Delegate? ConfigurePipeline);

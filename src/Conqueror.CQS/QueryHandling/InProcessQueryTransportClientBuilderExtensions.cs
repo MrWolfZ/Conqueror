@@ -10,12 +10,12 @@ public static class InProcessQueryTransportClientBuilderExtensions
     public static IQueryTransportClient UseInProcess(this IQueryTransportClientBuilder builder)
     {
         var registration = builder.ServiceProvider
-                                  .GetRequiredService<IQueryHandlerRegistry>()
-                                  .GetQueryHandlerRegistration(builder.QueryType, builder.ResponseType);
+                                  .GetRequiredService<QueryHandlerRegistry>()
+                                  .GetQueryHandlerRegistration(builder.QueryType);
 
         if (registration is null)
         {
-            throw new InvalidOperationException($"there is no handler registered for query type {builder.QueryType} and response type {builder.ResponseType}");
+            throw new InvalidOperationException($"there is no handler registered for query type '{builder.QueryType}'");
         }
 
         return new InProcessQueryTransport(registration.HandlerType, registration.ConfigurePipeline);

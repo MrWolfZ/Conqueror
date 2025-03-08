@@ -23,12 +23,12 @@ public static class ConquerorCqsServiceCollectionExtensions
 
         foreach (var commandHandlerType in validTypes.Where(t => t.IsAssignableTo(typeof(ICommandHandler))))
         {
-            services.AddConquerorCommandHandler(commandHandlerType, ServiceDescriptor.Transient(commandHandlerType, commandHandlerType));
+            services.TryAddConquerorCommandHandler(commandHandlerType, ServiceDescriptor.Transient(commandHandlerType, commandHandlerType));
         }
 
         foreach (var queryHandlerType in validTypes.Where(t => t.IsAssignableTo(typeof(IQueryHandler))))
         {
-            services.AddConquerorQueryHandler(queryHandlerType, ServiceDescriptor.Transient(queryHandlerType, queryHandlerType));
+            services.TryAddConquerorQueryHandler(queryHandlerType, ServiceDescriptor.Transient(queryHandlerType, queryHandlerType));
         }
 
         return services;

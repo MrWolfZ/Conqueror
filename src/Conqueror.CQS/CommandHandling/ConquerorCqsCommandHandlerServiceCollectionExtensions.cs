@@ -60,9 +60,9 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
                                                                                              Action<ICommandPipeline<TCommand, TResponse>> configurePipeline)
         where TCommand : class
     {
-        return services.AddConquerorCommandHandler(typeof(DelegateCommandHandler<TCommand, TResponse>),
-                                                   ServiceDescriptor.Transient(p => new DelegateCommandHandler<TCommand, TResponse>(handlerFn, p)),
-                                                   configurePipeline);
+        var handlerType = typeof(DelegateCommandHandler<TCommand, TResponse>);
+        services.Replace(ServiceDescriptor.Transient(p => new DelegateCommandHandler<TCommand, TResponse>(handlerFn, p)));
+        return services.AddConquerorCommandHandler(handlerType, configurePipeline);
     }
 
     public static IServiceCollection AddConquerorCommandHandlerDelegate<TCommand>(this IServiceCollection services,
@@ -77,18 +77,25 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
                                                                                   Action<ICommandPipeline<TCommand>> configurePipeline)
         where TCommand : class
     {
-        return services.AddConquerorCommandHandler(typeof(DelegateCommandHandler<TCommand>),
-                                                   ServiceDescriptor.Transient(p => new DelegateCommandHandler<TCommand>(handlerFn, p)),
-                                                   configurePipeline);
+        var handlerType = typeof(DelegateCommandHandler<TCommand>);
+        services.Replace(ServiceDescriptor.Transient(p => new DelegateCommandHandler<TCommand>(handlerFn, p)));
+        return services.AddConquerorCommandHandler(handlerType, configurePipeline);
     }
 
-    internal static IServiceCollection AddConquerorCommandHandler(this IServiceCollection services,
-                                                                  Type handlerType,
-                                                                  ServiceDescriptor serviceDescriptor,
-                                                                  Delegate? configurePipeline = null)
+    internal static void TryAddConquerorCommandHandler(this IServiceCollection services,
+                                                       Type handlerType,
+                                                       ServiceDescriptor serviceDescriptor)
     {
         services.TryAdd(serviceDescriptor);
-        return services.AddConquerorCommandHandler(handlerType, configurePipeline);
+        services.AddConquerorCommandHandler(handlerType, (Delegate?)null);
+    }
+
+    private static IServiceCollection AddConquerorCommandHandler(this IServiceCollection services,
+                                                                 Type handlerType,
+                                                                 ServiceDescriptor serviceDescriptor)
+    {
+        services.Replace(serviceDescriptor);
+        return services.AddConquerorCommandHandler(handlerType, (Delegate?)null);
     }
 
     private static IServiceCollection AddConquerorCommandHandler(this IServiceCollection services,
@@ -150,23 +157,23 @@ public static class ConquerorCqsCommandHandlerServiceCollectionExtensions
                                           ?? CreatePipelineConfigurationFunction(typeof(THandler));
         }
 
-        var existingRegistrations = services.Where(d => d.ImplementationInstance is CommandHandlerRegistration)
-                                            .ToDictionary(d => ((CommandHandlerRegistration)d.ImplementationInstance!).CommandType);
+        var existingRegistrations = services.Select(d => d.ImplementationInstance)
+                                            .OfType<CommandHandlerRegistrationInternal>()
+                                            .ToDictionary(r => r.CommandType);
 
-        if (existingRegistrations.TryGetValue(typeof(TCommand), out var existingDescriptor))
+        if (existingRegistrations.TryGetValue(typeof(TCommand), out var existingRegistration))
         {
-            if (typeof(THandler) != ((CommandHandlerRegistration)existingDescriptor.ImplementationInstance!).HandlerType)
+            if (typeof(THandler) != existingRegistration.HandlerType
+                || existingRegistration.HandlerType == typeof(DelegateCommandHandler<TCommand, TResponse>)
+                || existingRegistration.HandlerType == typeof(DelegateCommandHandler<TCommand>))
             {
-                services.Remove(existingDescriptor);
-                var responseType = isWithoutResponse ? null : typeof(TResponse);
-                var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler), pipelineConfigurationAction);
-                services.AddSingleton(registration);
+                throw new InvalidOperationException($"attempted to register handler type '{typeof(THandler)}' for command type '{typeof(TCommand)}', but handler type '{existingRegistration.HandlerType}' is already registered.");
             }
         }
         else
         {
             var responseType = isWithoutResponse ? null : typeof(TResponse);
-            var registration = new CommandHandlerRegistration(typeof(TCommand), responseType, typeof(THandler), pipelineConfigurationAction);
+            var registration = new CommandHandlerRegistrationInternal(typeof(TCommand), responseType, typeof(THandler), pipelineConfigurationAction);
             services.AddSingleton(registration);
         }
 

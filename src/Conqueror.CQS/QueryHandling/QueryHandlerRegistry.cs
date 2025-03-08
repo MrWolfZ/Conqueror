@@ -4,15 +4,23 @@ using System.Linq;
 
 namespace Conqueror.CQS.QueryHandling;
 
-internal sealed class QueryHandlerRegistry(IEnumerable<QueryHandlerRegistration> registrations) : IQueryHandlerRegistry
+internal sealed class QueryHandlerRegistry : IQueryHandlerRegistry
 {
-    private readonly Dictionary<(Type QueryType, Type ResponseType), QueryHandlerRegistration> registrations
-        = registrations.ToDictionary(r => (r.QueryType, r.ResponseType));
+    private readonly IReadOnlyCollection<QueryHandlerRegistration> allRegistrations;
+    private readonly Dictionary<Type, QueryHandlerRegistrationInternal> registrationByQueryType;
 
-    public IReadOnlyCollection<QueryHandlerRegistration> GetQueryHandlerRegistrations() => registrations.Values.ToList();
-
-    public QueryHandlerRegistration? GetQueryHandlerRegistration(Type queryType, Type responseType)
+    public QueryHandlerRegistry(IEnumerable<QueryHandlerRegistrationInternal> registrations)
     {
-        return registrations.GetValueOrDefault((queryType, responseType));
+        registrationByQueryType = registrations.ToDictionary(r => r.QueryType);
+        allRegistrations = registrationByQueryType.Values.Select(r => new QueryHandlerRegistration(r.QueryType, r.ResponseType, r.HandlerType)).ToList();
+    }
+
+    public IReadOnlyCollection<QueryHandlerRegistration> GetQueryHandlerRegistrations() => allRegistrations;
+
+    public QueryHandlerRegistrationInternal? GetQueryHandlerRegistration(Type queryType)
+    {
+        return registrationByQueryType.GetValueOrDefault(queryType);
     }
 }
+
+public sealed record QueryHandlerRegistrationInternal(Type QueryType, Type ResponseType, Type HandlerType, Delegate? ConfigurePipeline);

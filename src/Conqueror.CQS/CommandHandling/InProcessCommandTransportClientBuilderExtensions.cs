@@ -10,12 +10,12 @@ public static class InProcessCommandTransportClientBuilderExtensions
     public static ICommandTransportClient UseInProcess(this ICommandTransportClientBuilder builder)
     {
         var registration = builder.ServiceProvider
-                                  .GetRequiredService<ICommandHandlerRegistry>()
-                                  .GetCommandHandlerRegistration(builder.CommandType, builder.ResponseType);
+                                  .GetRequiredService<CommandHandlerRegistry>()
+                                  .GetCommandHandlerRegistration(builder.CommandType);
 
         if (registration is null)
         {
-            throw new InvalidOperationException($"there is no handler registered for command type {builder.CommandType} and response type {builder.ResponseType}");
+            throw new InvalidOperationException($"there is no handler registered for command type '{builder.CommandType}'");
         }
 
         return new InProcessCommandTransport(registration.HandlerType, registration.ConfigurePipeline);

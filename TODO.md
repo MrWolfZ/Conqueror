@@ -14,6 +14,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ## CQS
 
+- [ ] add test to validate that pipeline is not called twice for handlers
 - [ ] add `.Has()` method to pipelines
 - [ ] add trace logging to transports
 - [ ] allow custom method name for custom handler interfaces
@@ -26,15 +27,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add recipe for dynamic pipelines (based on e.g. transport type or `IConfiguration`)
 - [ ] create benchmark app
   - [ ] add benchmarks for running with and without context items
-- [ ] add tests for middleware lifetimes when applied to different handler types
-- [ ] add tests for overwriting handler registration with a new factory and assert that new factory is called
-- [ ] add tests for overwriting handler registration with a new lifetime and assert that new lifetime is used
-- [ ] add tests for overwriting middleware registration with a new factory and assert that new factory is called
-- [ ] add tests for overwriting middleware registration with a new lifetime and assert that new lifetime is used
-- [ ] add tests for registries for multiple delegate handlers to confirm that each handler is discoverable
-- [ ] add tests that registering all types from assembly does not overwrite existing registrations
-- [ ] adjust lifetime tests to assert on multiple executions of the same handler "instance"
-- [ ] add tests that assert that service provider on pipeline builders is from correct scope
 - [ ] when configuring middlewares, apply configuration to all instances of the middleware in the pipeline
 - [ ] add pipeline builder methods to throw on duplicate middleware
 - [ ] write code-level documentation for all public APIs
@@ -49,8 +41,7 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] handler must not implement multiple custom interfaces for same command
   - [ ] middlewares must not implement more than one middleware interface of the same type (i.e. not implement interface with and without configuration)
   - [ ] error (optionally) when a handler is being injected directly instead of an interface
-- [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly)`
-- [ ] re-order all code so that command comes before query (or even better split files)
+- [ ] allow registering all custom interfaces in assembly as clients with `AddConquerorCommandClientsFromAssembly(Assembly assembly, Action configureTransport)`
 - [ ] use a source generator instead of reflection for generating proxies
 - [ ] add a quick reference handbook that showcases all capabilities in a concise fashion
 - [ ] create dedicated readme files for each package
