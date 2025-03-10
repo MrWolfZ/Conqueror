@@ -1264,6 +1264,33 @@ public sealed class EventMiddlewareFunctionalityTests
         }));
     }
 
+    [Test]
+    public async Task GivenPublishAndObserverPipelinesObserverWithCustomInterface_WhenObserverIsCalled_MiddlewaresAreCalled()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorEventObserver<TestEventObserverWithCustomInterface>()
+                    .AddSingleton(observations)
+                    .AddSingleton<Action<IEventPipeline<TestEvent>>>(pipeline =>
+                    {
+                        _ = pipeline.Use(new TestEventMiddleware<TestEvent>(pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
+                    });
+
+        var provider = services.BuildServiceProvider();
+
+        var observer = provider.GetRequiredService<ITestEventObserver>();
+
+        await observer.WithPipeline(p => p.Use(new TestEventMiddleware<TestEvent>(p.ServiceProvider.GetRequiredService<TestObservations>())))
+                      .Handle(new(10));
+
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[]
+        {
+            typeof(TestEventMiddleware<TestEvent>),
+            typeof(TestEventMiddleware<TestEvent>),
+        }));
+    }
+
     public sealed record ConquerorMiddlewareFunctionalityTestCase(
         Action<IEventPipeline<TestEvent>>? ConfigureObserver1Pipeline,
         Action<IEventPipeline<TestEvent>>? ConfigureObserver2Pipeline,
@@ -1344,6 +1371,24 @@ public sealed class EventMiddlewareFunctionalityTests
         public static void ConfigurePipeline(IEventPipeline<TestEventSub> pipeline)
         {
             pipeline.ServiceProvider.GetService<Action<IEventPipeline<TestEventSub>>>()?.Invoke(pipeline);
+        }
+    }
+
+    public interface ITestEventObserver : IEventObserver<TestEvent>;
+
+    private sealed class TestEventObserverWithCustomInterface(TestObservations observations) : ITestEventObserver
+    {
+        public async Task Handle(TestEvent evt, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            observations.EventsFromObservers.Add(evt);
+            observations.CancellationTokensFromObservers.Add(cancellationToken);
+            observations.ObserverInstances.Add(this);
+        }
+
+        public static void ConfigurePipeline(IEventPipeline<TestEvent> pipeline)
+        {
+            pipeline.ServiceProvider.GetService<Action<IEventPipeline<TestEvent>>>()?.Invoke(pipeline);
         }
     }
 
