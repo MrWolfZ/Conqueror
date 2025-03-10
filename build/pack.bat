@@ -45,6 +45,7 @@ dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Abstractions -c Release 
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Common -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Client -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
+dotnet publish %srcDir%\Conqueror.SourceGenerators -c Release --framework netstandard2.0 -o %publishDir%/Conqueror.SourceGenerators
 dotnet pack %srcDir%\Conqueror.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror -c Release -o %publishDir% --include-symbols
 

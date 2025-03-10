@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/test.targets" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Update="NUnit" Version="4.3.2" />
+        <PackageReference Include="Verify.NUnit" Version="28.14.1" />
+        <PackageReference Include="Verify.SourceGenerators" Version="2.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Snapshots\" />
+    </ItemGroup>
+
+</Project>

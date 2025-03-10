@@ -2,16 +2,19 @@
 
     <Import Project="../.targets/lib.targets" />
 
+    <PropertyGroup>
+        <IsExperimental>true</IsExperimental>
+        <IsAotCompatible>true</IsAotCompatible>
+    </PropertyGroup>
+
     <!-- for NuGet -->
     <PropertyGroup>
-        <Description>Collection package that provides a simple entry point to all basic Conqueror packages. Please note that this package does not contain any analyzer or transport packages. Those packages must be explicitly added.</Description>
+        <Description>Part of the Conqueror library set. Powercharge your application by using messages without hidden control flow.</Description>
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
         <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.CQS\Conqueror.CQS.csproj" />
-        <ProjectReference Include="..\Conqueror.Eventing\Conqueror.Eventing.csproj" />
-        <ProjectReference Include="..\Conqueror.Streaming\Conqueror.Streaming.csproj" />
     </ItemGroup>
 
 </Project>

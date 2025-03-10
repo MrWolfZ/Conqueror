@@ -2,15 +2,34 @@
 
     <Import Project="../.targets/lib.targets" />
 
+    <PropertyGroup>
+        <IsExperimental>true</IsExperimental>
+        <IsAotCompatible>true</IsAotCompatible>
+    </PropertyGroup>
+
     <!-- for NuGet -->
     <PropertyGroup>
-        <Description>Collection package that provides a simple entry point to all abstractions Conqueror packages.</Description>
+        <Description>Part of the Conqueror library set. Abstractions for all messaging packages.</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!--
+            we are intentionally violating the convention of having the root namespace
+            be the project name in order to provide a consistent experience for users
+            regardless of which Conqueror packages they include (i.e. all packages share
+            the same root namespace that only needs to be imported once via "using")
+        -->
+        <RootNamespace>Conqueror</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.CQS.Abstractions\Conqueror.CQS.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.Eventing.Abstractions\Conqueror.Eventing.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.Streaming.Abstractions\Conqueror.Streaming.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Package the generator in the analyzer directory of the nuget package -->
+        <None Remove="$(OutputPath)/Conqueror.SourceGenerators.dll" />
+        <None Include="$(MSBuildProjectDirectory)/../../build/.publish/Conqueror.SourceGenerators/Conqueror.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
 </Project>
