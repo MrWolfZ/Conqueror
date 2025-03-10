@@ -14,21 +14,47 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         _ = services.AddConquerorCommandHandler<TestCommandHandler>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline => testCase.ConfigureHandlerPipeline?.Invoke(pipeline));
+                    .AddSingleton<Action<ICommandPipeline<TestCommand, TestCommandResponse>>>(pipeline =>
+                    {
+                        if (testCase.ConfigureHandlerPipeline is null)
+                        {
+                            return;
+                        }
+
+                        var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                        obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
+
+                        testCase.ConfigureHandlerPipeline?.Invoke(pipeline);
+                    });
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        var expectedTransportTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders.Select(r => new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, r)).ToList();
+
         using var tokenSource = new CancellationTokenSource();
 
         var command = new TestCommand(10);
 
-        _ = await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).Handle(command, tokenSource.Token);
+        _ = await handler.WithPipeline(pipeline =>
+        {
+            if (testCase.ConfigureClientPipeline is null)
+            {
+                return;
+            }
+
+            var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+            obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
+
+            testCase.ConfigureClientPipeline?.Invoke(pipeline);
+        }).Handle(command, tokenSource.Token);
 
         Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
         Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, t.TransportRole))));
+        Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
     }
 
     [Test]
@@ -62,6 +88,7 @@ public sealed class CommandMiddlewareFunctionalityTests
         // no middleware
         yield return new(null,
                          null,
+                         [],
                          []);
 
         // single middleware
@@ -69,12 +96,18 @@ public sealed class CommandMiddlewareFunctionalityTests
                          null,
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         yield return new(null,
                          p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
                          ]);
 
         yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
@@ -82,6 +115,10 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Client,
+                             CommandTransportRole.Server,
                          ]);
 
         // delegate middleware
@@ -99,6 +136,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          null,
                          [
                              (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -115,6 +155,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          }),
                          [
                              (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
                          ]);
 
         yield return new(p => p.Use(async ctx =>
@@ -142,6 +185,10 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Client,
+                             CommandTransportRole.Server,
                          ]);
 
         // multiple different middlewares
@@ -151,6 +198,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -159,6 +209,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
                          ]);
 
         yield return new(p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -170,6 +223,10 @@ public sealed class CommandMiddlewareFunctionalityTests
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Client,
+                             CommandTransportRole.Server,
                          ]);
 
         // mix delegate and normal middleware
@@ -188,6 +245,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(DelegateCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         // same middleware multiple times
@@ -197,6 +257,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -205,6 +268,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
                          ]);
 
         // added, then removed
@@ -216,6 +282,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -226,6 +295,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
                          ]);
 
         // multiple times added, then removed
@@ -238,6 +310,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -249,6 +324,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
                          ]);
 
         // added on client, added and removed in handler
@@ -257,6 +335,10 @@ public sealed class CommandMiddlewareFunctionalityTests
                          p => p.Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
+                             CommandTransportRole.Server,
                          ]);
 
         // added, then removed, then added again
@@ -266,6 +348,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                          null,
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -274,6 +359,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                                .Use(new TestCommandMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
                          ]);
 
         // retry middlewares
@@ -287,6 +375,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -299,6 +390,9 @@ public sealed class CommandMiddlewareFunctionalityTests
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
                              (typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), CommandTransportRole.Client),
+                         ],
+                         [
+                             CommandTransportRole.Client,
                          ]);
 
         yield return new(p => p.Use(new TestCommandRetryMiddleware<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -315,6 +409,11 @@ public sealed class CommandMiddlewareFunctionalityTests
                              (typeof(TestCommandRetryMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
                              (typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>), CommandTransportRole.Server),
+                         ],
+                         [
+                             CommandTransportRole.Client,
+                             CommandTransportRole.Server,
+                             CommandTransportRole.Server,
                          ]);
     }
 
@@ -351,6 +450,47 @@ public sealed class CommandMiddlewareFunctionalityTests
         var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
 
         var response = await handler.Handle(new(0), tokens.CancellationTokens[0]);
+
+        var command1 = new TestCommand(0);
+        var command2 = new TestCommand(1);
+        var command3 = new TestCommand(3);
+
+        var response1 = new TestCommandResponse(0);
+        var response2 = new TestCommandResponse(1);
+        var response3 = new TestCommandResponse(3);
+
+        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command1, command2 }));
+        Assert.That(observations.CommandsFromHandlers, Is.EquivalentTo(new[] { command3 }));
+
+        Assert.That(observations.ResponsesFromMiddlewares, Is.EquivalentTo(new[] { response1, response2 }));
+        Assert.That(response, Is.EqualTo(response3));
+
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
+        Assert.That(observations.CancellationTokensFromHandlers, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
+    }
+
+    [Test]
+    public async Task GivenClientPipelineWithMutatingMiddlewares_WhenHandlerIsCalled_MiddlewaresCanChangeTheCommandAndResponseAndCancellationToken()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+        var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
+
+        _ = services.AddConquerorCommandHandler<TestCommandHandler>()
+                    .AddSingleton(observations)
+                    .AddSingleton(tokens);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<ICommandHandler<TestCommand, TestCommandResponse>>();
+
+        var response = await handler.WithPipeline(pipeline =>
+        {
+            var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+            var cancellationTokensToUse = pipeline.ServiceProvider.GetRequiredService<CancellationTokensToUse>();
+            _ = pipeline.Use(new MutatingTestCommandMiddleware<TestCommand, TestCommandResponse>(obs, cancellationTokensToUse))
+                        .Use(new MutatingTestCommandMiddleware2<TestCommand, TestCommandResponse>(obs, cancellationTokensToUse));
+        }).Handle(new(0), tokens.CancellationTokens[0]);
 
         var command1 = new TestCommand(0);
         var command2 = new TestCommand(1);
@@ -579,7 +719,8 @@ public sealed class CommandMiddlewareFunctionalityTests
     public sealed record ConquerorMiddlewareFunctionalityTestCase(
         Action<ICommandPipeline<TestCommand, TestCommandResponse>>? ConfigureHandlerPipeline,
         Action<ICommandPipeline<TestCommand, TestCommandResponse>>? ConfigureClientPipeline,
-        IReadOnlyCollection<(Type MiddlewareType, CommandTransportRole TransportRole)> ExpectedMiddlewareTypes);
+        IReadOnlyCollection<(Type MiddlewareType, CommandTransportRole TransportRole)> ExpectedMiddlewareTypes,
+        IReadOnlyCollection<CommandTransportRole> ExpectedTransportRolesFromPipelineBuilders);
 
     public sealed record ConquerorMiddlewareFunctionalityTestCaseWithoutResponse(
         Action<ICommandPipeline<TestCommand>>? ConfigureHandlerPipeline,
@@ -842,6 +983,8 @@ public sealed class CommandMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromHandlers { get; } = [];
 
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
+
+        public List<CommandTransportType> TransportTypesFromPipelineBuilders { get; } = [];
 
         public List<CommandTransportType> TransportTypesFromMiddlewares { get; } = [];
     }

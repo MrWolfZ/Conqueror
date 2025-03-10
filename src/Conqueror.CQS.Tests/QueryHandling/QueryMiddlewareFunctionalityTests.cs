@@ -13,21 +13,47 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         _ = services.AddConquerorQueryHandler<TestQueryHandler>()
                     .AddSingleton(observations)
-                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline => testCase.ConfigureHandlerPipeline?.Invoke(pipeline));
+                    .AddSingleton<Action<IQueryPipeline<TestQuery, TestQueryResponse>>>(pipeline =>
+                    {
+                        if (testCase.ConfigureHandlerPipeline is null)
+                        {
+                            return;
+                        }
+
+                        var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                        obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
+
+                        testCase.ConfigureHandlerPipeline?.Invoke(pipeline);
+                    });
 
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        var expectedTransportTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders.Select(r => new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, r)).ToList();
+
         using var tokenSource = new CancellationTokenSource();
 
         var query = new TestQuery(10);
 
-        _ = await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).Handle(query, tokenSource.Token);
+        _ = await handler.WithPipeline(pipeline =>
+        {
+            if (testCase.ConfigureClientPipeline is null)
+            {
+                return;
+            }
+
+            var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+            obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
+
+            testCase.ConfigureClientPipeline?.Invoke(pipeline);
+        }).Handle(query, tokenSource.Token);
 
         Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(query, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
         Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, t.TransportRole))));
+        Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
     }
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase> GenerateTestCases()
@@ -35,6 +61,7 @@ public sealed class QueryMiddlewareFunctionalityTests
         // no middleware
         yield return new(null,
                          null,
+                         [],
                          []);
 
         // single middleware
@@ -42,12 +69,18 @@ public sealed class QueryMiddlewareFunctionalityTests
                          null,
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         yield return new(null,
                          p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
                          ]);
 
         yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
@@ -55,6 +88,10 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Client,
+                             QueryTransportRole.Server,
                          ]);
 
         // delegate middleware
@@ -72,6 +109,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          null,
                          [
                              (typeof(DelegateQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -88,6 +128,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          }),
                          [
                              (typeof(DelegateQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
                          ]);
 
         yield return new(p => p.Use(async ctx =>
@@ -115,6 +158,10 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(DelegateQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(DelegateQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Client,
+                             QueryTransportRole.Server,
                          ]);
 
         // multiple different middlewares
@@ -124,6 +171,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -132,6 +182,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
                          ]);
 
         yield return new(p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -143,6 +196,10 @@ public sealed class QueryMiddlewareFunctionalityTests
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Client,
+                             QueryTransportRole.Server,
                          ]);
 
         // mix delegate and normal middleware
@@ -161,6 +218,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(DelegateQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         // same middleware multiple times
@@ -170,6 +230,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -178,6 +241,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
                          ]);
 
         // added, then removed
@@ -189,6 +255,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -199,6 +268,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
                          ]);
 
         // multiple times added, then removed
@@ -211,6 +283,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -222,6 +297,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
                          ]);
 
         // added on client, added and removed in handler
@@ -230,6 +308,10 @@ public sealed class QueryMiddlewareFunctionalityTests
                          p => p.Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
+                             QueryTransportRole.Server,
                          ]);
 
         // added, then removed, then added again
@@ -239,6 +321,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                          null,
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -247,6 +332,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                                .Use(new TestQueryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
                          ]);
 
         // retry middlewares
@@ -260,6 +348,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                              (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Server,
                          ]);
 
         yield return new(null,
@@ -272,6 +363,9 @@ public sealed class QueryMiddlewareFunctionalityTests
                              (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
                              (typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), QueryTransportRole.Client),
+                         ],
+                         [
+                             QueryTransportRole.Client,
                          ]);
 
         yield return new(p => p.Use(new TestQueryRetryMiddleware<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -288,6 +382,11 @@ public sealed class QueryMiddlewareFunctionalityTests
                              (typeof(TestQueryRetryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
                              (typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>), QueryTransportRole.Server),
+                         ],
+                         [
+                             QueryTransportRole.Client,
+                             QueryTransportRole.Server,
+                             QueryTransportRole.Server,
                          ]);
     }
 
@@ -314,6 +413,47 @@ public sealed class QueryMiddlewareFunctionalityTests
         var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
 
         var response = await handler.Handle(new(0), tokens.CancellationTokens[0]);
+
+        var query1 = new TestQuery(0);
+        var query2 = new TestQuery(1);
+        var query3 = new TestQuery(3);
+
+        var response1 = new TestQueryResponse(0);
+        var response2 = new TestQueryResponse(1);
+        var response3 = new TestQueryResponse(3);
+
+        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query1, query2 }));
+        Assert.That(observations.QueriesFromHandlers, Is.EquivalentTo(new[] { query3 }));
+
+        Assert.That(observations.ResponsesFromMiddlewares, Is.EquivalentTo(new[] { response1, response2 }));
+        Assert.That(response, Is.EqualTo(response3));
+
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
+        Assert.That(observations.CancellationTokensFromHandlers, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
+    }
+
+    [Test]
+    public async Task GivenClientPipelineWithMutatingMiddlewares_WhenHandlerIsCalled_MiddlewaresCanChangeTheQueryAndResponseAndCancellationToken()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+        var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
+
+        _ = services.AddConquerorQueryHandler<TestQueryHandler>()
+                    .AddSingleton(observations)
+                    .AddSingleton(tokens);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IQueryHandler<TestQuery, TestQueryResponse>>();
+
+        var response = await handler.WithPipeline(pipeline =>
+        {
+            var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+            var cancellationTokensToUse = pipeline.ServiceProvider.GetRequiredService<CancellationTokensToUse>();
+            _ = pipeline.Use(new MutatingTestQueryMiddleware<TestQuery, TestQueryResponse>(obs, cancellationTokensToUse))
+                        .Use(new MutatingTestQueryMiddleware2<TestQuery, TestQueryResponse>(obs, cancellationTokensToUse));
+        }).Handle(new(0), tokens.CancellationTokens[0]);
 
         var query1 = new TestQuery(0);
         var query2 = new TestQuery(1);
@@ -542,7 +682,8 @@ public sealed class QueryMiddlewareFunctionalityTests
     public sealed record ConquerorMiddlewareFunctionalityTestCase(
         Action<IQueryPipeline<TestQuery, TestQueryResponse>>? ConfigureHandlerPipeline,
         Action<IQueryPipeline<TestQuery, TestQueryResponse>>? ConfigureClientPipeline,
-        IReadOnlyCollection<(Type MiddlewareType, QueryTransportRole TransportRole)> ExpectedMiddlewareTypes);
+        IReadOnlyCollection<(Type MiddlewareType, QueryTransportRole TransportRole)> ExpectedMiddlewareTypes,
+        IReadOnlyCollection<QueryTransportRole> ExpectedTransportRolesFromPipelineBuilders);
 
     public sealed record TestQuery(int Payload);
 
@@ -702,6 +843,8 @@ public sealed class QueryMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromHandlers { get; } = [];
 
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
+
+        public List<QueryTransportType> TransportTypesFromPipelineBuilders { get; } = [];
 
         public List<QueryTransportType> TransportTypesFromMiddlewares { get; } = [];
     }
