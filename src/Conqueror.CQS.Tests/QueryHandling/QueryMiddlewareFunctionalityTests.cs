@@ -49,10 +49,10 @@ public sealed class QueryMiddlewareFunctionalityTests
             testCase.ConfigureClientPipeline?.Invoke(pipeline);
         }).Handle(query, tokenSource.Token);
 
-        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(query, testCase.ExpectedMiddlewareTypes.Count)));
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
-        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, t.TransportRole))));
+        Assert.That(observations.QueriesFromMiddlewares, Is.EqualTo(Enumerable.Repeat(query, testCase.ExpectedMiddlewareTypes.Count)));
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => new QueryTransportType(InProcessQueryTransportTypeExtensions.TransportName, t.TransportRole))));
         Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
     }
 
@@ -422,14 +422,14 @@ public sealed class QueryMiddlewareFunctionalityTests
         var response2 = new TestQueryResponse(1);
         var response3 = new TestQueryResponse(3);
 
-        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query1, query2 }));
-        Assert.That(observations.QueriesFromHandlers, Is.EquivalentTo(new[] { query3 }));
+        Assert.That(observations.QueriesFromMiddlewares, Is.EqualTo(new[] { query1, query2 }));
+        Assert.That(observations.QueriesFromHandlers, Is.EqualTo(new[] { query3 }));
 
-        Assert.That(observations.ResponsesFromMiddlewares, Is.EquivalentTo(new[] { response1, response2 }));
+        Assert.That(observations.ResponsesFromMiddlewares, Is.EqualTo(new[] { response1, response2 }));
         Assert.That(response, Is.EqualTo(response3));
 
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
-        Assert.That(observations.CancellationTokensFromHandlers, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(tokens.CancellationTokens.Take(2)));
+        Assert.That(observations.CancellationTokensFromHandlers, Is.EqualTo(new[] { tokens.CancellationTokens[2] }));
     }
 
     [Test]
@@ -463,14 +463,14 @@ public sealed class QueryMiddlewareFunctionalityTests
         var response2 = new TestQueryResponse(1);
         var response3 = new TestQueryResponse(3);
 
-        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query1, query2 }));
-        Assert.That(observations.QueriesFromHandlers, Is.EquivalentTo(new[] { query3 }));
+        Assert.That(observations.QueriesFromMiddlewares, Is.EqualTo(new[] { query1, query2 }));
+        Assert.That(observations.QueriesFromHandlers, Is.EqualTo(new[] { query3 }));
 
-        Assert.That(observations.ResponsesFromMiddlewares, Is.EquivalentTo(new[] { response1, response2 }));
+        Assert.That(observations.ResponsesFromMiddlewares, Is.EqualTo(new[] { response1, response2 }));
         Assert.That(response, Is.EqualTo(response3));
 
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
-        Assert.That(observations.CancellationTokensFromHandlers, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(tokens.CancellationTokens.Take(2)));
+        Assert.That(observations.CancellationTokensFromHandlers, Is.EqualTo(new[] { tokens.CancellationTokens[2] }));
     }
 
     [Test]
@@ -589,7 +589,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                          .WithPipeline(p => p.Use(new TestQueryMiddleware2<TestQuery, TestQueryResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                          .Handle(new(10));
 
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestQueryMiddleware2<TestQuery, TestQueryResponse>), typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
 
     [Test]
@@ -616,8 +616,8 @@ public sealed class QueryMiddlewareFunctionalityTests
 
         _ = await handler.Handle(query);
 
-        Assert.That(observations.QueriesFromMiddlewares, Is.EquivalentTo(new[] { query }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
+        Assert.That(observations.QueriesFromMiddlewares, Is.EqualTo(new[] { query }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestQueryMiddleware<TestQuery, TestQueryResponse>) }));
     }
 
     [Test]
@@ -658,7 +658,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                                                                                         _ = pipeline.Use(middleware1).Use(middleware2);
 
                                                                                         Assert.That(pipeline, Has.Count.EqualTo(2));
-                                                                                        Assert.That(pipeline, Is.EquivalentTo(new IQueryMiddleware<TestQuery, TestQueryResponse>[] { middleware1, middleware2 }));
+                                                                                        Assert.That(pipeline, Is.EqualTo(new IQueryMiddleware<TestQuery, TestQueryResponse>[] { middleware1, middleware2 }));
                                                                                     });
 
         var provider = services.BuildServiceProvider();
@@ -674,7 +674,7 @@ public sealed class QueryMiddlewareFunctionalityTests
                              _ = pipeline.Use(middleware1).Use(middleware2);
 
                              Assert.That(pipeline, Has.Count.EqualTo(2));
-                             Assert.That(pipeline, Is.EquivalentTo(new IQueryMiddleware<TestQuery, TestQueryResponse>[] { middleware1, middleware2 }));
+                             Assert.That(pipeline, Is.EqualTo(new IQueryMiddleware<TestQuery, TestQueryResponse>[] { middleware1, middleware2 }));
                          })
                          .Handle(query);
     }

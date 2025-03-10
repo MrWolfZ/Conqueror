@@ -676,7 +676,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(ResolveOnClient<TestObservations>().ReceivedQueryIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedQueryIds));
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedQueryIds, Is.EqualTo(Resolve<TestObservations>().ReceivedQueryIds));
     }
 
     [Test]
@@ -686,7 +686,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(ResolveOnClient<TestObservations>().ReceivedQueryIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedQueryIds));
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedQueryIds, Is.EqualTo(Resolve<TestObservations>().ReceivedQueryIds));
     }
 
     [Test]
@@ -696,7 +696,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EqualTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
 
     [Test]
@@ -706,7 +706,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EqualTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
 
     [Test]
@@ -718,7 +718,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EqualTo(Resolve<TestObservations>().ReceivedTraceIds));
         Assert.That(Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault(), Is.EqualTo(activity.TraceId));
     }
 
@@ -731,7 +731,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EqualTo(Resolve<TestObservations>().ReceivedTraceIds));
         Assert.That(Resolve<TestObservations>().ReceivedTraceIds.FirstOrDefault(), Is.EqualTo(activity.TraceId));
     }
 
@@ -744,7 +744,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EqualTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
 
     [Test]
@@ -756,7 +756,7 @@ public class ConquerorContextQueryTests : TestBase
 
         _ = await handler.Handle(new() { Payload = 10 }, CancellationToken.None);
 
-        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EquivalentTo(Resolve<TestObservations>().ReceivedTraceIds));
+        Assert.That(ResolveOnClient<TestObservations>().ReceivedTraceIds, Is.EqualTo(Resolve<TestObservations>().ReceivedTraceIds));
     }
 
     protected override void ConfigureServerServices(IServiceCollection services)

@@ -348,7 +348,7 @@ public sealed class ConquerorContextQueryTests : TestBase
 
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { traceId }));
+        Assert.That(receivedTraceIds, Is.EqualTo(new[] { traceId }));
     }
 
     [Test]
@@ -393,7 +393,7 @@ public sealed class ConquerorContextQueryTests : TestBase
 
         var receivedTraceIds = Resolve<TestObservations>().ReceivedTraceIds;
 
-        Assert.That(receivedTraceIds, Is.EquivalentTo(new[] { a.TraceId }));
+        Assert.That(receivedTraceIds, Is.EqualTo(new[] { a.TraceId }));
     }
 
     [Test]

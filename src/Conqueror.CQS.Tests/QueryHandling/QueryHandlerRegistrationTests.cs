@@ -38,7 +38,7 @@ public sealed class QueryHandlerRegistrationTests
 
         var registrations = registry.GetQueryTypesForTransport<InProcessQueryAttribute>();
 
-        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+        Assert.That(registrations, Is.EqualTo(expectedRegistrations));
     }
 
     [Test]
@@ -106,7 +106,7 @@ public sealed class QueryHandlerRegistrationTests
 
         var registrations = registry.GetQueryTypesForTransport<InProcessQueryAttribute>();
 
-        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+        Assert.That(registrations, Is.EqualTo(expectedRegistrations));
     }
 
     [Test]

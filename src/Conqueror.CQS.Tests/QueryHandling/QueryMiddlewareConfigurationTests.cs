@@ -24,7 +24,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         _ = await handler.Handle(new());
 
-        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
+        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
     }
 
     [Test]
@@ -51,7 +51,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         _ = await handler.Handle(new());
 
-        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20, 40, 60 }));
+        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20, 40, 60 }));
     }
 
     [Test]
@@ -76,7 +76,7 @@ public sealed class QueryMiddlewareConfigurationTests
 
         _ = await handler.Handle(new());
 
-        Assert.That(observations.Parameters, Is.EquivalentTo(new[] { 20 }));
+        Assert.That(observations.Parameters, Is.EqualTo(new[] { 20 }));
     }
 
     [Test]

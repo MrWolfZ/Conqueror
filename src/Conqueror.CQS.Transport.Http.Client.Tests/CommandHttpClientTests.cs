@@ -191,7 +191,7 @@ public sealed class CommandHttpClientTests : TestBase
         _ = await handler.Handle(new(10), CancellationToken.None);
 
         Assert.That(seenAuthorizationHeader, Is.EqualTo("Basic test"));
-        Assert.That(seenTestHeaderValues, Is.EquivalentTo(new[] { "value1", "value2" }));
+        Assert.That(seenTestHeaderValues, Is.EqualTo(new[] { "value1", "value2" }));
     }
 
     [Test]

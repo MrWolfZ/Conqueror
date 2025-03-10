@@ -88,7 +88,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSinglePropertyValidationAnnotation.Payload) }));
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSinglePropertyValidationAnnotation.Payload) }));
     }
 
     private sealed record TestRecordWithSinglePropertyValidationAnnotation
@@ -118,7 +118,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSinglePropertyValidationAnnotation.Payload) }));
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSinglePropertyValidationAnnotation.Payload) }));
     }
 
     private sealed record TestRecordWithSinglePropertyValidationAnnotationInConstructor([property: Required] string? Payload);
@@ -144,7 +144,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSinglePropertyValidationAnnotationInConstructor.Payload) }));
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSinglePropertyValidationAnnotationInConstructor.Payload) }));
     }
 
     private sealed class TestQueryClassWithSinglePropertyWithMultipleValidationAnnotations
@@ -177,8 +177,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
     }
 
     private sealed record TestQueryRecordWithSinglePropertyWithMultipleValidationAnnotations
@@ -211,8 +211,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryRecordWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryRecordWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryRecordWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryRecordWithSinglePropertyWithMultipleValidationAnnotations.Payload) }));
     }
 
     private sealed class TestQueryClassWithSingleConstructorValidationAnnotation([Required] string? payload)
@@ -241,7 +241,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleConstructorValidationAnnotation.Payload) }));
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleConstructorValidationAnnotation.Payload) }));
     }
 
     private sealed record TestQueryRecordWithSingleConstructorValidationAnnotation([Required] string? Payload);
@@ -267,7 +267,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryRecordWithSingleConstructorValidationAnnotation.Payload) }));
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryRecordWithSingleConstructorValidationAnnotation.Payload) }));
     }
 
     private sealed class TestQueryClassWithSingleConstructorParameterWithMultipleValidationAnnotations([MinLength(2)] [MaxLength(5)] string? payload)
@@ -298,8 +298,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleConstructorParameterWithMultipleValidationAnnotations.Payload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleConstructorParameterWithMultipleValidationAnnotations.Payload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleConstructorParameterWithMultipleValidationAnnotations.Payload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleConstructorParameterWithMultipleValidationAnnotations.Payload) }));
     }
 
     private sealed record TestQueryRecordWithSingleConstructorParameterWithMultipleValidationAnnotations([MinLength(2)] [MaxLength(5)] string? Payload);
@@ -327,8 +327,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryRecordWithSingleConstructorParameterWithMultipleValidationAnnotations.Payload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryRecordWithSingleConstructorParameterWithMultipleValidationAnnotations.Payload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryRecordWithSingleConstructorParameterWithMultipleValidationAnnotations.Payload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryRecordWithSingleConstructorParameterWithMultipleValidationAnnotations.Payload) }));
     }
 
     private sealed class TestQueryClassWithMultiplePropertyValidationAnnotations
@@ -369,7 +369,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[]
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[]
         {
             nameof(TestQueryClassWithMultiplePropertyValidationAnnotations.Payload1),
             nameof(TestQueryClassWithMultiplePropertyValidationAnnotations.Payload2),
@@ -414,7 +414,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[]
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[]
         {
             nameof(TestRecordWithMultiplePropertyValidationAnnotations.Payload1),
             nameof(TestRecordWithMultiplePropertyValidationAnnotations.Payload2),
@@ -449,7 +449,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[]
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[]
         {
             nameof(TestQueryClassWithMultipleConstructorValidationAnnotations.Payload1),
             nameof(TestQueryClassWithMultipleConstructorValidationAnnotations.Payload2),
@@ -479,7 +479,7 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
 
         var exception = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery));
 
-        Assert.That(exception?.ValidationResult.MemberNames, Is.EquivalentTo(new[]
+        Assert.That(exception?.ValidationResult.MemberNames, Is.EqualTo(new[]
         {
             nameof(TestQueryRecordWithMultipleConstructorValidationAnnotations.Payload1),
             nameof(TestQueryRecordWithMultipleConstructorValidationAnnotations.Payload2),
@@ -615,14 +615,14 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[]
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[]
         {
             nameof(TestQueryClassWithMultipleConstructorsWithValidationAnnotations.Payload1),
             nameof(TestQueryClassWithMultipleConstructorsWithValidationAnnotations.Payload2),
             nameof(TestQueryClassWithMultipleConstructorsWithValidationAnnotations.Payload3),
         }));
 
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[]
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[]
         {
             nameof(TestQueryClassWithMultipleConstructorsWithValidationAnnotations.Payload1),
             nameof(TestQueryClassWithMultipleConstructorsWithValidationAnnotations.Payload2),
@@ -777,8 +777,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestQueryClassWithSingleComplexPropertyWithValidationAnnotationProperty.InnerPayload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestQueryClassWithSingleComplexPropertyWithValidationAnnotationProperty.InnerPayload) }));
     }
 
     private sealed record TestRecordWithSingleComplexPropertyWithValidationAnnotation
@@ -822,8 +822,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexPropertyWithValidationAnnotationProperty.InnerPayload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSingleComplexPropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexPropertyWithValidationAnnotationProperty.InnerPayload) }));
     }
 
     private sealed class TestQueryClassWithSingleComplexConstructorParameterWithValidationAnnotation([Required] TestQueryClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty? outerPayload)
@@ -859,8 +859,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleComplexConstructorParameterWithValidationAnnotation.OuterPayload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleComplexConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestQueryClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleComplexConstructorParameterWithValidationAnnotation.OuterPayload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleComplexConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestQueryClassWithSingleComplexConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
     }
 
     private sealed record TestRecordWithSingleComplexConstructorParameterWithValidationAnnotation([Required] TestRecordWithSingleComplexConstructorParameterWithValidationAnnotationProperty? OuterPayload);
@@ -890,8 +890,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexConstructorParameterWithValidationAnnotation.OuterPayload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSingleComplexConstructorParameterWithValidationAnnotation.OuterPayload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSingleComplexConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
     }
 
     private sealed class TestQueryClassWithSingleComplexEnumerablePropertyWithValidationAnnotation
@@ -935,8 +935,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestQueryClassWithSingleComplexEnumerablePropertyWithValidationAnnotationProperty.InnerPayload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestQueryClassWithSingleComplexEnumerablePropertyWithValidationAnnotationProperty.InnerPayload) }));
     }
 
     private sealed record TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation
@@ -980,8 +980,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotationProperty.InnerPayload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexEnumerablePropertyWithValidationAnnotationProperty.InnerPayload) }));
     }
 
     private sealed class TestQueryClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation([Required] List<TestQueryClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty>? outerPayload)
@@ -1017,8 +1017,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestQueryClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestQueryClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestQueryClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestQueryClassWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
     }
 
     private sealed record TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation([Required] List<TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty>? OuterPayload);
@@ -1048,8 +1048,8 @@ public sealed class DataAnnotationValidationQueryMiddlewareTests
         var exception1 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery1));
         var exception2 = Assert.ThrowsAsync<ValidationException>(() => handler.Handle(testQuery2));
 
-        Assert.That(exception1?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) }));
-        Assert.That(exception2?.ValidationResult.MemberNames, Is.EquivalentTo(new[] { nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
+        Assert.That(exception1?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) }));
+        Assert.That(exception2?.ValidationResult.MemberNames, Is.EqualTo(new[] { nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotation.OuterPayload) + "." + nameof(TestRecordWithSingleComplexEnumerableConstructorParameterWithValidationAnnotationProperty.InnerPayload) }));
     }
 
     [Test]

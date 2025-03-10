@@ -28,7 +28,7 @@ public abstract class QueryHandlerFunctionalityTests
 
         _ = await handler.Handle(query);
 
-        Assert.That(observations.Queries, Is.EquivalentTo(new[] { query }));
+        Assert.That(observations.Queries, Is.EqualTo(new[] { query }));
     }
 
     [Test]
@@ -45,7 +45,7 @@ public abstract class QueryHandlerFunctionalityTests
 
         _ = await handler.Handle(CreateQuery(), tokenSource.Token);
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
+        Assert.That(observations.CancellationTokens, Is.EqualTo(new[] { tokenSource.Token }));
     }
 
     [Test]
@@ -61,7 +61,7 @@ public abstract class QueryHandlerFunctionalityTests
 
         _ = await handler.Handle(CreateQuery());
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        Assert.That(observations.CancellationTokens, Is.EqualTo(new[] { default(CancellationToken) }));
     }
 
     [Test]

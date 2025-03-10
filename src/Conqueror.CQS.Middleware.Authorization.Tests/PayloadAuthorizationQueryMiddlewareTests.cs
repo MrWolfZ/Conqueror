@@ -309,7 +309,7 @@ public sealed class PayloadAuthorizationQueryMiddlewareTests : TestBase
 
         var thrownException = Assert.ThrowsAsync<ConquerorOperationPayloadAuthorizationFailedException>(() => Handler.Handle(new()));
 
-        Assert.That(thrownException?.Result.FailureReasons, Is.EquivalentTo(result1.FailureReasons.Concat(result2.FailureReasons)));
+        Assert.That(thrownException?.Result.FailureReasons, Is.EqualTo(result1.FailureReasons.Concat(result2.FailureReasons)));
     }
 
     [Test]

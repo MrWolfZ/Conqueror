@@ -48,7 +48,7 @@ public sealed class CommandHandlerRegistrationTests
 
         var registrations = registry.GetCommandTypesForTransport<InProcessCommandAttribute>();
 
-        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+        Assert.That(registrations, Is.EqualTo(expectedRegistrations));
     }
 
     [Test]
@@ -116,7 +116,7 @@ public sealed class CommandHandlerRegistrationTests
 
         var registrations = registry.GetCommandTypesForTransport<InProcessCommandAttribute>();
 
-        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+        Assert.That(registrations, Is.EqualTo(expectedRegistrations));
     }
 
     [Test]
@@ -184,7 +184,7 @@ public sealed class CommandHandlerRegistrationTests
 
         var registrations = registry.GetCommandTypesForTransport<InProcessCommandAttribute>();
 
-        Assert.That(registrations, Is.EquivalentTo(expectedRegistrations));
+        Assert.That(registrations, Is.EqualTo(expectedRegistrations));
     }
 
     [Test]

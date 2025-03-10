@@ -37,7 +37,7 @@ public abstract class CommandHandlerFunctionalityTests
 
         _ = await handler.Handle(command);
 
-        Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
+        Assert.That(observations.Commands, Is.EqualTo(new[] { command }));
     }
 
     [Test]
@@ -55,7 +55,7 @@ public abstract class CommandHandlerFunctionalityTests
 
         await handler.Handle(command);
 
-        Assert.That(observations.Commands, Is.EquivalentTo(new[] { command }));
+        Assert.That(observations.Commands, Is.EqualTo(new[] { command }));
     }
 
     [Test]
@@ -72,7 +72,7 @@ public abstract class CommandHandlerFunctionalityTests
 
         _ = await handler.Handle(CreateCommand(), tokenSource.Token);
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
+        Assert.That(observations.CancellationTokens, Is.EqualTo(new[] { tokenSource.Token }));
     }
 
     [Test]
@@ -89,7 +89,7 @@ public abstract class CommandHandlerFunctionalityTests
 
         await handler.Handle(CreateCommandWithoutResponse(), tokenSource.Token);
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { tokenSource.Token }));
+        Assert.That(observations.CancellationTokens, Is.EqualTo(new[] { tokenSource.Token }));
     }
 
     [Test]
@@ -105,7 +105,7 @@ public abstract class CommandHandlerFunctionalityTests
 
         _ = await handler.Handle(CreateCommand());
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        Assert.That(observations.CancellationTokens, Is.EqualTo(new[] { default(CancellationToken) }));
     }
 
     [Test]
@@ -121,7 +121,7 @@ public abstract class CommandHandlerFunctionalityTests
 
         await handler.Handle(CreateCommandWithoutResponse());
 
-        Assert.That(observations.CancellationTokens, Is.EquivalentTo(new[] { default(CancellationToken) }));
+        Assert.That(observations.CancellationTokens, Is.EqualTo(new[] { default(CancellationToken) }));
     }
 
     [Test]

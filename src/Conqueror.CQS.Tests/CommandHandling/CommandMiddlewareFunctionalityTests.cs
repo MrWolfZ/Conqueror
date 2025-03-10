@@ -50,10 +50,10 @@ public sealed class CommandMiddlewareFunctionalityTests
             testCase.ConfigureClientPipeline?.Invoke(pipeline);
         }).Handle(command, tokenSource.Token);
 
-        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
-        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, t.TransportRole))));
+        Assert.That(observations.CommandsFromMiddlewares, Is.EqualTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, t.TransportRole))));
         Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
     }
 
@@ -77,10 +77,10 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         await handler.WithPipeline(pipeline => testCase.ConfigureClientPipeline?.Invoke(pipeline)).Handle(command, tokenSource.Token);
 
-        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
-        Assert.That(observations.TransportTypesFromMiddlewares, Is.EquivalentTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, t.TransportRole))));
+        Assert.That(observations.CommandsFromMiddlewares, Is.EqualTo(Enumerable.Repeat(command, testCase.ExpectedMiddlewareTypes.Count)));
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => new CommandTransportType(InProcessCommandTransportTypeExtensions.TransportName, t.TransportRole))));
     }
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase> GenerateTestCases()
@@ -459,14 +459,14 @@ public sealed class CommandMiddlewareFunctionalityTests
         var response2 = new TestCommandResponse(1);
         var response3 = new TestCommandResponse(3);
 
-        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command1, command2 }));
-        Assert.That(observations.CommandsFromHandlers, Is.EquivalentTo(new[] { command3 }));
+        Assert.That(observations.CommandsFromMiddlewares, Is.EqualTo(new[] { command1, command2 }));
+        Assert.That(observations.CommandsFromHandlers, Is.EqualTo(new[] { command3 }));
 
-        Assert.That(observations.ResponsesFromMiddlewares, Is.EquivalentTo(new[] { response1, response2 }));
+        Assert.That(observations.ResponsesFromMiddlewares, Is.EqualTo(new[] { response1, response2 }));
         Assert.That(response, Is.EqualTo(response3));
 
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
-        Assert.That(observations.CancellationTokensFromHandlers, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(tokens.CancellationTokens.Take(2)));
+        Assert.That(observations.CancellationTokensFromHandlers, Is.EqualTo(new[] { tokens.CancellationTokens[2] }));
     }
 
     [Test]
@@ -500,14 +500,14 @@ public sealed class CommandMiddlewareFunctionalityTests
         var response2 = new TestCommandResponse(1);
         var response3 = new TestCommandResponse(3);
 
-        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command1, command2 }));
-        Assert.That(observations.CommandsFromHandlers, Is.EquivalentTo(new[] { command3 }));
+        Assert.That(observations.CommandsFromMiddlewares, Is.EqualTo(new[] { command1, command2 }));
+        Assert.That(observations.CommandsFromHandlers, Is.EqualTo(new[] { command3 }));
 
-        Assert.That(observations.ResponsesFromMiddlewares, Is.EquivalentTo(new[] { response1, response2 }));
+        Assert.That(observations.ResponsesFromMiddlewares, Is.EqualTo(new[] { response1, response2 }));
         Assert.That(response, Is.EqualTo(response3));
 
-        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EquivalentTo(tokens.CancellationTokens.Take(2)));
-        Assert.That(observations.CancellationTokensFromHandlers, Is.EquivalentTo(new[] { tokens.CancellationTokens[2] }));
+        Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(tokens.CancellationTokens.Take(2)));
+        Assert.That(observations.CancellationTokensFromHandlers, Is.EqualTo(new[] { tokens.CancellationTokens[2] }));
     }
 
     [Test]
@@ -626,7 +626,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                          .WithPipeline(p => p.Use(new TestCommandMiddleware2<TestCommand, TestCommandResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                          .Handle(new(10));
 
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestCommandMiddleware2<TestCommand, TestCommandResponse>), typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
 
     [Test]
@@ -653,8 +653,8 @@ public sealed class CommandMiddlewareFunctionalityTests
 
         _ = await handler.Handle(command);
 
-        Assert.That(observations.CommandsFromMiddlewares, Is.EquivalentTo(new[] { command }));
-        Assert.That(observations.MiddlewareTypes, Is.EquivalentTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
+        Assert.That(observations.CommandsFromMiddlewares, Is.EqualTo(new[] { command }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestCommandMiddleware<TestCommand, TestCommandResponse>) }));
     }
 
     [Test]
@@ -695,7 +695,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                                                                                               _ = pipeline.Use(middleware1).Use(middleware2);
 
                                                                                               Assert.That(pipeline, Has.Count.EqualTo(2));
-                                                                                              Assert.That(pipeline, Is.EquivalentTo(new ICommandMiddleware<TestCommand, TestCommandResponse>[] { middleware1, middleware2 }));
+                                                                                              Assert.That(pipeline, Is.EqualTo(new ICommandMiddleware<TestCommand, TestCommandResponse>[] { middleware1, middleware2 }));
                                                                                           });
 
         var provider = services.BuildServiceProvider();
@@ -711,7 +711,7 @@ public sealed class CommandMiddlewareFunctionalityTests
                              _ = pipeline.Use(middleware1).Use(middleware2);
 
                              Assert.That(pipeline, Has.Count.EqualTo(2));
-                             Assert.That(pipeline, Is.EquivalentTo(new ICommandMiddleware<TestCommand, TestCommandResponse>[] { middleware1, middleware2 }));
+                             Assert.That(pipeline, Is.EqualTo(new ICommandMiddleware<TestCommand, TestCommandResponse>[] { middleware1, middleware2 }));
                          })
                          .Handle(command);
     }
