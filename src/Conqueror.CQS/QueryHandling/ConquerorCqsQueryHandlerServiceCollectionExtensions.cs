@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -113,10 +112,10 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
 
     private static IServiceCollection AddHandler<THandler, TQuery, TResponse>(this IServiceCollection services,
                                                                               Action<IQueryPipeline<TQuery, TResponse>>? configurePipeline)
-        where THandler : class, IQueryHandler
+        where THandler : class, IQueryHandler<TQuery, TResponse>
         where TQuery : class
     {
-        var pipelineConfigurationAction = configurePipeline ?? CreatePipelineConfigurationFunction(typeof(THandler));
+        var pipelineConfigurationAction = configurePipeline ?? THandler.ConfigurePipeline;
 
         var existingRegistrations = services.Select(d => d.ImplementationInstance)
                                             .OfType<QueryHandlerRegistration>()
@@ -138,23 +137,5 @@ public static class ConquerorCqsQueryHandlerServiceCollectionExtensions
         services.AddConquerorQueryClient<THandler>(new InProcessQueryTransport(typeof(THandler), pipelineConfigurationAction));
 
         return services;
-
-        static Action<IQueryPipeline<TQuery, TResponse>>? CreatePipelineConfigurationFunction(Type handlerType)
-        {
-            var pipelineConfigurationMethod = handlerType.GetInterfaceMap(typeof(IQueryHandler<TQuery, TResponse>))
-                                                         .TargetMethods
-                                                         .Where(m => m.DeclaringType == handlerType)
-                                                         .SingleOrDefault(m => m.Name == nameof(IQueryHandler<TQuery, TResponse>.ConfigurePipeline));
-
-            if (pipelineConfigurationMethod is null)
-            {
-                return null;
-            }
-
-            var builderParam = Expression.Parameter(typeof(IQueryPipeline<TQuery, TResponse>));
-            var body = Expression.Call(null, pipelineConfigurationMethod, builderParam);
-            var lambda = Expression.Lambda(body, builderParam).Compile();
-            return (Action<IQueryPipeline<TQuery, TResponse>>)lambda;
-        }
     }
 }

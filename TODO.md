@@ -52,6 +52,10 @@ This file contains all the open points for extensions and improvements to the **
 
 ### CQS middleware
 
+- [ ] overhaul auth design
+  - [ ] requiring an authenticated principal is an authorization activity
+  - [ ] allow placing authorization middleware without check
+  - [ ] allow dynamically adding authorization checks
 - [ ] in logging middleware use logging source generator with dynamic log level as seen [here]( https://andrewlock.net/exploring-dotnet-6-part-8-improving-logging-performance-with-source-generators/)
 - [ ] create projects for common middlewares, e.g.
   - [ ] `Conqueror.CQS.Middleware.FluentValidation`
@@ -71,6 +75,11 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
+- [ ] add `ConfigureTransports` optional static method to `IEventObserver`
+  - [ ] the method takes an `IEventObserverTransportBuilder<TEvent>`
+  - [ ] transport libraries define extension methods on the builder
+  - [ ] the `Eventing.Transports.Common` package has a generic host that is registered with any transport client, and the host searches for all observers with configured transports and activates them
+  - [ ] for an empty builder, the in-process transport is used
 - [ ] create transport client before pipeline execution (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/91e86f4b287e22782645b01e48f1ac1bedb96bfe))
 - [ ] improve performance by using loop instead of recursion in pipeline (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/0e7fe9634ac7ca528d44d61276afba37009150a1))
 - [ ] handling and tests for conqueror context
