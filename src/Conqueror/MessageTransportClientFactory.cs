@@ -6,11 +6,11 @@ namespace Conqueror;
 internal sealed class MessageTransportClientFactory<TMessage, TResponse>
     where TMessage : class, IMessage<TResponse>
 {
-    private readonly IMessageTransportClient? transportClient;
+    private readonly IMessageTransportClient<TMessage, TResponse>? transportClient;
     private readonly ConfigureMessageTransportClient<TMessage, TResponse>? syncTransportClientFactory;
     private readonly ConfigureMessageTransportClientAsync<TMessage, TResponse>? asyncTransportClientFactory;
 
-    public MessageTransportClientFactory(IMessageTransportClient transportClient)
+    public MessageTransportClientFactory(IMessageTransportClient<TMessage, TResponse> transportClient)
     {
         this.transportClient = transportClient;
     }
@@ -25,7 +25,7 @@ internal sealed class MessageTransportClientFactory<TMessage, TResponse>
         this.asyncTransportClientFactory = asyncTransportClientFactory;
     }
 
-    public Task<IMessageTransportClient> Create(IServiceProvider serviceProvider, ConquerorContext conquerorContext)
+    public Task<IMessageTransportClient<TMessage, TResponse>> Create(IServiceProvider serviceProvider, ConquerorContext conquerorContext)
     {
         if (transportClient is not null)
         {

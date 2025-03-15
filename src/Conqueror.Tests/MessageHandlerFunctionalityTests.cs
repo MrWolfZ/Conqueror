@@ -445,22 +445,23 @@ public abstract class MessageHandlerFunctionalityClientTests : MessageHandlerFun
 
     protected sealed override IServiceCollection RegisterHandler(IServiceCollection services)
     {
-        return services.AddConqueror().AddSingleton<TestMessageTransport>();
+        return services.AddConqueror().AddSingleton(typeof(TestMessageTransport<,>));
     }
 
     protected sealed override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
-        return services.AddConqueror().AddSingleton<TestMessageTransport>();
+        return services.AddConqueror().AddSingleton(typeof(TestMessageTransport<,>));
     }
 
-    protected sealed class TestMessageTransport(Exception? exception = null) : IMessageTransportClient
+    protected sealed class TestMessageTransport<TMessage, TResponse>(Exception? exception = null) : IMessageTransportClient<TMessage, TResponse>
+        where TMessage : class, IMessage<TResponse>
     {
         public string TransportTypeName => "test";
 
-        public async Task<TResponse> Send<TMessage, TResponse>(TMessage message,
-                                                               IServiceProvider serviceProvider,
-                                                               CancellationToken cancellationToken)
-            where TMessage : class, IMessage<TResponse>
+        public async Task<TResponse> Send(TMessage message,
+                                          IServiceProvider serviceProvider,
+                                          ConquerorContext conquerorContext,
+                                          CancellationToken cancellationToken)
         {
             await Task.Yield();
 
@@ -494,7 +495,7 @@ public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTes
                    .WithTransport(b =>
                    {
                        b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
-                       return b.ServiceProvider.GetRequiredService<TestMessageTransport>();
+                       return b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
                    });
     }
 
@@ -504,7 +505,7 @@ public sealed class MessageHandlerFunctionalityClientWithSyncTransportFactoryTes
                    .WithTransport(b =>
                    {
                        b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
-                       return b.ServiceProvider.GetRequiredService<TestMessageTransport>();
+                       return b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>>();
                    });
     }
 }
@@ -519,7 +520,7 @@ public sealed class MessageHandlerFunctionalityClientWithAsyncTransportFactoryTe
                    {
                        await Task.Delay(1);
                        b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
-                       return b.ServiceProvider.GetRequiredService<TestMessageTransport>();
+                       return b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
                    });
     }
 
@@ -530,7 +531,7 @@ public sealed class MessageHandlerFunctionalityClientWithAsyncTransportFactoryTe
                    {
                        await Task.Delay(1);
                        b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
-                       return b.ServiceProvider.GetRequiredService<TestMessageTransport>();
+                       return b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>>();
                    });
     }
 }
@@ -545,7 +546,7 @@ public sealed class MessageHandlerFunctionalityExplicitClientWithSyncTransportFa
                               .WithTransport(b =>
                               {
                                   b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
-                                  return b.ServiceProvider.GetRequiredService<TestMessageTransport>();
+                                  return b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
                               });
     }
 
@@ -556,7 +557,7 @@ public sealed class MessageHandlerFunctionalityExplicitClientWithSyncTransportFa
                               .WithTransport(b =>
                               {
                                   b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
-                                  return b.ServiceProvider.GetRequiredService<TestMessageTransport>();
+                                  return b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>>();
                               });
     }
 }
@@ -572,7 +573,7 @@ public sealed class MessageHandlerFunctionalityExplicitClientWithAsyncTransportF
                               {
                                   await Task.Delay(1);
                                   b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
-                                  return b.ServiceProvider.GetRequiredService<TestMessageTransport>();
+                                  return b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessage, TestMessageResponse>>();
                               });
     }
 
@@ -584,7 +585,7 @@ public sealed class MessageHandlerFunctionalityExplicitClientWithAsyncTransportF
                               {
                                   await Task.Delay(1);
                                   b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
-                                  return b.ServiceProvider.GetRequiredService<TestMessageTransport>();
+                                  return b.ServiceProvider.GetRequiredService<TestMessageTransport<TestMessageWithoutResponse, UnitMessageResponse>>();
                               });
     }
 }

@@ -5,6 +5,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" />
+        <ProjectReference Include="..\Conqueror.Transport.Http.Abstractions\Conqueror.Transport.Http.Abstractions.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -14,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Snapshots\" />
+      <Folder Include="Messaging\Snapshots\" />
     </ItemGroup>
 
 </Project>

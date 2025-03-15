@@ -6,7 +6,9 @@ namespace Conqueror;
 
 public static class InProcessMessageTransportClientBuilderExtensions
 {
-    public static IMessageTransportClient UseInProcess<TMessage, TResponse>(this IMessageTransportClientBuilder<TMessage, TResponse> builder)
+    public static IMessageTransportClient<TMessage, TResponse> UseInProcess<TMessage, TResponse>(
+        this IMessageTransportClientBuilder<TMessage, TResponse> builder,
+        string? transportTypeName = null)
         where TMessage : class, IMessage<TResponse>
     {
         var registration = builder.ServiceProvider
@@ -18,6 +20,6 @@ public static class InProcessMessageTransportClientBuilderExtensions
             throw new InvalidOperationException($"there is no handler registered for message type '{typeof(TMessage)}'");
         }
 
-        return new InProcessMessageTransport(registration.HandlerType, registration.ConfigurePipeline);
+        return new InProcessMessageTransport<TMessage, TResponse>(registration.HandlerType, registration.ConfigurePipeline, transportTypeName);
     }
 }

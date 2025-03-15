@@ -1,0 +1,41 @@
+using System;
+
+// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
+namespace Conqueror;
+
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class HttpMessageAttribute : Attribute
+{
+    public string? HttpMethod { get; set; }
+
+    public string? PathPrefix { get; set; }
+
+    /// <summary>
+    ///     The path for this message.
+    /// </summary>
+    public string? Path { get; set; }
+
+    /// <summary>
+    ///     A fixed full path for this message.
+    /// </summary>
+    public string? FullPath { get; set; }
+
+    /// <summary>
+    ///     The version of this message.
+    /// </summary>
+    public string? Version { get; set; }
+
+    public int SuccessStatusCode { get; set; }
+
+    /// <summary>
+    ///     The name of this message in API descriptions (which is used in e.g. OpenAPI specifications).
+    ///     Defaults to the type name of the message type.
+    /// </summary>
+    public string? Name { get; set; }
+
+    /// <summary>
+    ///     The name of the API group in which this message is contained in API descriptions
+    ///     (which is used in e.g. OpenAPI specifications).
+    /// </summary>
+    public string? ApiGroupName { get; set; }
+}

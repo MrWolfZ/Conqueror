@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror;
@@ -19,16 +18,24 @@ internal sealed class MessageHandlerProxy<TMessage, TResponse>(
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
 
-        var transportTypeName = conquerorContext.GetExecutionTransportTypeName();
-        var isInProcessClient = transportTypeName is null && transportRole == MessageTransportRole.Client;
-        if (conquerorContext.GetMessageId() is null || isInProcessClient)
+        var originalMessageId = conquerorContext.GetMessageId();
+
+        // ensure that a message ID is available for the transport client factory
+        if (originalMessageId is null)
         {
             conquerorContext.SetMessageId(ActivitySpanId.CreateRandom().ToString());
         }
 
         var transportClient = await transportClientFactory.Create(serviceProvider, conquerorContext).ConfigureAwait(false);
 
-        var transportType = new MessageTransportType(transportTypeName ?? transportClient.TransportTypeName, transportRole);
+        var transportType = new MessageTransportType(transportClient.TransportTypeName, transportRole);
+
+        // if we are an in-process client, make sure to create a new message ID for this execution if
+        // we were called from within the call context of another handler
+        if (originalMessageId is not null && transportType.IsInProcess() && transportRole == MessageTransportRole.Client)
+        {
+            conquerorContext.SetMessageId(ActivitySpanId.CreateRandom().ToString());
+        }
 
         var pipeline = new MessagePipeline<TMessage, TResponse>(serviceProvider, conquerorContext, transportType);
 

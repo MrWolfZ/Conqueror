@@ -182,6 +182,9 @@ public sealed partial class RegistrationTests
             => Task.FromResult(new TestMessageResponse());
     }
 
+    // in user code this shouldn't even compile, since CreateWithMessageTypes is internal, and the compiler
+    // will complain about a non-specific implementation, which is a nice safeguard against users trying to
+    // do this
     public sealed class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
     {
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
@@ -190,18 +193,7 @@ public sealed partial class RegistrationTests
         public Task<TestMessage2Response> Handle(TestMessage2 message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessage2Response());
 
-        public static Type MessageType()
-            => throw new NotSupportedException();
-
-        public static Type ResponseType()
-            => throw new NotSupportedException();
-
-        public static Delegate CreateConfigurePipeline<THandler>()
-            where THandler : class, IMessageHandler
-            => throw new NotSupportedException();
-
-        public static THandlerInterface Create<THandlerInterface>(IMessageHandlerProxyFactory proxyFactory)
-            where THandlerInterface : class, IGeneratedMessageHandler
+        public static TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
             => throw new NotSupportedException();
     }
 

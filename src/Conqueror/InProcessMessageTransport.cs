@@ -5,36 +5,43 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror;
 
-internal sealed class InProcessMessageTransport(Type handlerType, Delegate? configurePipeline) : IMessageTransportClient
+internal sealed class InProcessMessageTransport<TMessage, TResponse>(
+    Type handlerType,
+    Delegate? configurePipeline,
+    string? transportTypeName)
+    : IMessageTransportClient<TMessage, TResponse>
+    where TMessage : class, IMessage<TResponse>
 {
-    public const string Name = "in-process";
+    public string TransportTypeName => transportTypeName ?? InProcessMessageTransport.Name;
 
-    public string TransportTypeName => Name;
-
-    public Task<TResponse> Send<TMessage, TResponse>(TMessage message,
-                                                     IServiceProvider serviceProvider,
-                                                     CancellationToken cancellationToken)
-        where TMessage : class, IMessage<TResponse>
+    public Task<TResponse> Send(TMessage message,
+                                IServiceProvider serviceProvider,
+                                ConquerorContext conquerorContext,
+                                CancellationToken cancellationToken)
     {
         var proxy = new MessageHandlerProxy<TMessage, TResponse>(serviceProvider,
-                                                                 new(new HandlerInvoker(handlerType)),
+                                                                 new(new HandlerInvoker(handlerType, TransportTypeName)),
                                                                  (Action<IMessagePipeline<TMessage, TResponse>>?)configurePipeline,
                                                                  MessageTransportRole.Server);
 
         return proxy.Handle(message, cancellationToken);
     }
 
-    private sealed class HandlerInvoker(Type handlerType) : IMessageTransportClient
+    private sealed class HandlerInvoker(Type handlerType, string transportTypeName) : IMessageTransportClient<TMessage, TResponse>
     {
-        public string TransportTypeName => Name;
+        public string TransportTypeName => transportTypeName;
 
-        public Task<TResponse> Send<TMessage, TResponse>(TMessage message,
-                                                         IServiceProvider serviceProvider,
-                                                         CancellationToken cancellationToken)
-            where TMessage : class, IMessage<TResponse>
+        public Task<TResponse> Send(TMessage message,
+                                    IServiceProvider serviceProvider,
+                                    ConquerorContext conquerorContext,
+                                    CancellationToken cancellationToken)
         {
-            var handler = (IMessageHandler<TMessage, TResponse>)serviceProvider.GetRequiredService(handlerType);
-            return handler.Handle(message, cancellationToken);
+            return TMessage.CastAndInvokeHandler(serviceProvider.GetRequiredService(handlerType), message, cancellationToken);
         }
     }
+}
+
+internal sealed class InProcessMessageTransport
+{
+    public const string Name = "in-process";
 }

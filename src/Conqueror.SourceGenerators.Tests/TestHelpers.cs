@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using Conqueror.SourceGenerators.Messaging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -51,6 +52,7 @@ internal static class TestHelpers
                                   .Concat([
                                       ..generators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
                                       MetadataReference.CreateFromFile(typeof(IMessage).Assembly.Location),
+                                      MetadataReference.CreateFromFile(typeof(IHttpMessage).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(MessageAbstractionsGenerator).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(DisplayAttribute).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(GeneratedCodeAttribute).Assembly.Location),

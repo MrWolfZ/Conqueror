@@ -1,57 +1,23 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-#pragma warning disable CA1000 // For this particular API it makes sense to have static methods on generic types
-#pragma warning disable CA1034 // we want to explicitly nest types to hide them from intellisense
+// #pragma warning disable CA1000 // For this particular API it makes sense to have static methods on generic types
+// #pragma warning disable CA1034 // we want to explicitly nest types to hide them from intellisense
 
 namespace Conqueror;
 
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IMessageHandler
-{
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    static abstract Type MessageType();
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    static abstract Type ResponseType();
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    static abstract Delegate? CreateConfigurePipeline<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] THandler>()
-        where THandler : class, IMessageHandler;
-}
-
-public interface IMessageHandler<in TMessage, TResponse> : IMessageHandler
+public interface IMessageHandler<in TMessage, TResponse>
     where TMessage : class, IMessage<TResponse>
 {
     Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default);
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    static Type IMessageHandler.MessageType() => typeof(TMessage);
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    static Type IMessageHandler.ResponseType() => typeof(TResponse);
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    static Delegate IMessageHandler.CreateConfigurePipeline<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] THandler>()
-        => throw new NotSupportedException($"method '{nameof(IMessageHandler.CreateConfigurePipeline)}' should never be called on this type");
 }
 
-public interface IMessageHandler<in TMessage> : IMessageHandler<TMessage, UnitMessageResponse>
+public interface IMessageHandler<in TMessage>
     where TMessage : class, IMessage<UnitMessageResponse>
 {
-    new Task Handle(TMessage message, CancellationToken cancellationToken = default);
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    async Task<UnitMessageResponse> IMessageHandler<TMessage, UnitMessageResponse>.Handle(TMessage message, CancellationToken cancellationToken)
-    {
-        await Handle(message, cancellationToken).ConfigureAwait(false);
-        return UnitMessageResponse.Instance;
-    }
+    Task Handle(TMessage message, CancellationToken cancellationToken = default);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -79,109 +45,94 @@ public interface IConfigurableMessageHandler<TMessage> : IMessageHandler<TMessag
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IGeneratedMessageHandler
 {
+    /// <summary>
+    ///     Helper method to be able to access the types related to a message type as generic parameters while only
+    ///     having a generic reference to the generated handler interface type. This obviates the need for reflection.
+    /// </summary>
+    /// <param name="factory">The factory that should be called with the generic type parameters</param>
+    /// <typeparam name="TResult">The type of result the factory will return</typeparam>
+    /// <returns>The result of calling the factory</returns>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    static abstract THandlerInterface? Create<THandlerInterface>(IMessageHandlerProxyFactory proxyFactory)
-        where THandlerInterface : class, IGeneratedMessageHandler;
+    internal static abstract TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler<in TMessage, TResponse, in TPipeline> : IMessageHandler<TMessage, TResponse>, IGeneratedMessageHandler
+public interface IGeneratedMessageHandler<in TMessage, TResponse, THandlerInterface, THandlerAdapter, in TPipelineInterface, TPipelineAdapter>
+    : IMessageHandler<TMessage, TResponse>, IGeneratedMessageHandler
     where TMessage : class, IMessage<TResponse>
-    where TPipeline : IGeneratedMessagePipeline<TMessage, TResponse, TPipeline>
+    where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
+    where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
+    where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
+    where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
 {
-    static virtual void ConfigurePipeline(TPipeline pipeline)
+    static virtual void ConfigurePipeline(TPipelineInterface pipeline)
     {
         // by default, we use an empty pipeline
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    static Delegate? IMessageHandler.CreateConfigurePipeline<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] THandler>()
-    {
-        Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IGeneratedMessageHandler<TMessage, TResponse, TPipeline>)),
-                     $"handler type should implement {nameof(IGeneratedMessageHandler<TMessage, TResponse, TPipeline>)}");
-
-        var methodInfo = typeof(THandler).GetMethod(nameof(ConfigurePipeline), BindingFlags.Public | BindingFlags.Static);
-
-        if (methodInfo == null)
-        {
-            return null;
-        }
-
-        var configure = (Action<TPipeline>)Delegate.CreateDelegate(typeof(Action<TPipeline>), methodInfo);
-        return (IMessagePipeline<TMessage, TResponse> pipeline) => configure(TPipeline.Create(pipeline));
-    }
+    static TResult IGeneratedMessageHandler.CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
+        => factory.Create<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>();
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler<in TMessage, in TPipeline> : IMessageHandler<TMessage>, IGeneratedMessageHandler
+public interface IGeneratedMessageHandler<in TMessage, THandlerInterface, THandlerAdapter, in TPipelineInterface, TPipelineAdapter>
+    : IMessageHandler<TMessage>, IGeneratedMessageHandler
     where TMessage : class, IMessage<UnitMessageResponse>
-    where TPipeline : IGeneratedMessagePipeline<TMessage, UnitMessageResponse, TPipeline>
+    where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
+    where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
+    where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
+    where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
 {
-    static virtual void ConfigurePipeline(TPipeline pipeline)
+    static virtual void ConfigurePipeline(TPipelineInterface pipeline)
     {
         // by default, we use an empty pipeline
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    static Delegate? IMessageHandler.CreateConfigurePipeline<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] THandler>()
-    {
-        Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IGeneratedMessageHandler<TMessage, TPipeline>)),
-                     $"handler type should implement {nameof(IGeneratedMessageHandler<TMessage, TPipeline>)}");
-
-        var methodInfo = typeof(THandler).GetMethod(nameof(ConfigurePipeline), BindingFlags.Public | BindingFlags.Static);
-
-        if (methodInfo == null)
-        {
-            return null;
-        }
-
-        var configure = (Action<TPipeline>)Delegate.CreateDelegate(typeof(Action<TPipeline>), methodInfo);
-        return (IMessagePipeline<TMessage, UnitMessageResponse> pipeline) => configure(TPipeline.Create(pipeline));
-    }
+    static TResult IGeneratedMessageHandler.CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
+        => factory.Create<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>();
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IGeneratedMessageHandlerAdapter;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class GeneratedMessageHandlerAdapter<TMessage, TResponse>(IConfigurableMessageHandler<TMessage, TResponse> wrapped)
+public abstract class GeneratedMessageHandlerAdapter<TMessage, TResponse>
     : IConfigurableMessageHandler<TMessage, TResponse>, IGeneratedMessageHandlerAdapter
     where TMessage : class, IMessage<TResponse>
 {
+    public IConfigurableMessageHandler<TMessage, TResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
+
     public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
-        => wrapped.Handle(message, cancellationToken);
+        => Wrapped.Handle(message, cancellationToken);
 
     public IMessageHandler<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        => wrapped.WithPipeline(configurePipeline);
+        => Wrapped.WithPipeline(configurePipeline);
 
     public IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClient<TMessage, TResponse> configureTransport)
-        => wrapped.WithTransport(configureTransport);
+        => Wrapped.WithTransport(configureTransport);
 
     public IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClientAsync<TMessage, TResponse> configureTransport)
-        => wrapped.WithTransport(configureTransport);
+        => Wrapped.WithTransport(configureTransport);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public class GeneratedMessageHandlerAdapter<TMessage>(IConfigurableMessageHandler<TMessage, UnitMessageResponse> wrapped)
+public class GeneratedMessageHandlerAdapter<TMessage>
     : IConfigurableMessageHandler<TMessage>, IGeneratedMessageHandlerAdapter
     where TMessage : class, IMessage<UnitMessageResponse>
 {
+    public IConfigurableMessageHandler<TMessage> Wrapped { get; init; } = null!; // guaranteed to be set in init code
+
     public Task Handle(TMessage message, CancellationToken cancellationToken = default)
-        => wrapped.Handle(message, cancellationToken);
+        => Wrapped.Handle(message, cancellationToken);
 
     public IMessageHandler<TMessage> WithPipeline(Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
-        => new GeneratedMessageHandlerAdapter<TMessage>((IConfigurableMessageHandler<TMessage, UnitMessageResponse>)wrapped.WithPipeline(configurePipeline));
+        => Wrapped.WithPipeline(configurePipeline);
 
     public IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClient<TMessage, UnitMessageResponse> configureTransport)
-        => new GeneratedMessageHandlerAdapter<TMessage>((IConfigurableMessageHandler<TMessage, UnitMessageResponse>)wrapped.WithTransport(configureTransport));
+        => Wrapped.WithTransport(configureTransport);
 
     public IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClientAsync<TMessage, UnitMessageResponse> configureTransport)
-        => new GeneratedMessageHandlerAdapter<TMessage>((IConfigurableMessageHandler<TMessage, UnitMessageResponse>)wrapped.WithTransport(configureTransport));
-}
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IMessageHandlerProxyFactory
-{
-    IConfigurableMessageHandler<TMessage, TResponse> CreateProxy<TMessage, TResponse>()
-        where TMessage : class, IMessage<TResponse>;
+        => Wrapped.WithTransport(configureTransport);
 }
