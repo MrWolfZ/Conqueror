@@ -8,7 +8,8 @@ namespace Conqueror;
 
 internal sealed class MessageTransportRegistry : IMessageTransportRegistry
 {
-    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<(Type MessageType, Type ResponseType, object Attribute)>> messageTypesByTransportAttribute = new();
+    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<(MessageHandlerRegistration Registration, IMessageTypesInjector? TypeInjector)>> messageTypesByInterface = new();
+    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<(MessageHandlerRegistration Registration, object Attribute)>> messageTypesByTransportAttribute = new();
     private readonly Dictionary<Type, MessageHandlerRegistration> registrationByMessageType;
 
     public MessageTransportRegistry(IEnumerable<MessageHandlerRegistration> registrations)
@@ -23,9 +24,21 @@ internal sealed class MessageTransportRegistry : IMessageTransportRegistry
                                                                 _ => (from r in registrationByMessageType.Values
                                                                       let attribute = r.MessageType.GetCustomAttribute<TTransportMarkerAttribute>()
                                                                       where attribute != null || typeof(TTransportMarkerAttribute) == typeof(InProcessMessageAttribute)
-                                                                      select (r.MessageType, r.ResponseType, (object)attribute ?? new InProcessMessageAttribute())).ToList());
+                                                                      select (r, (object)attribute ?? new InProcessMessageAttribute())).ToList());
 
-        return entries.Select(e => (e.MessageType, e.ResponseType, (TTransportMarkerAttribute)e.Attribute)).ToList();
+        return entries.Select(e => (e.Registration.MessageType, e.Registration.ResponseType, (TTransportMarkerAttribute)e.Attribute)).ToList();
+    }
+
+    public IReadOnlyCollection<(Type MessageType, Type ResponseType, IMessageTypesInjector? TypeInjector)> GetMessageTypesForTransportInterface<TInterface>()
+        where TInterface : class
+    {
+        var entries = messageTypesByInterface.GetOrAdd(typeof(TInterface),
+                                                       _ => (from r in registrationByMessageType.Values
+                                                             where r.MessageType.IsAssignableTo(typeof(TInterface))
+                                                             select (r, r.TypeInjectors.FirstOrDefault(i => i.ConstraintType == typeof(TInterface))))
+                                                           .ToList());
+
+        return entries.Select(e => (e.Registration.MessageType, e.Registration.ResponseType, e.TypeInjector)).ToList();
     }
 
     public MessageHandlerRegistration? GetMessageHandlerRegistration(Type messageType)
@@ -34,4 +47,9 @@ internal sealed class MessageTransportRegistry : IMessageTransportRegistry
     }
 }
 
-public sealed record MessageHandlerRegistration(Type MessageType, Type ResponseType, Type HandlerType, Delegate? ConfigurePipeline);
+public sealed record MessageHandlerRegistration(
+    Type MessageType,
+    Type ResponseType,
+    Type HandlerType,
+    Delegate? ConfigurePipeline,
+    IReadOnlyCollection<IMessageTypesInjector> TypeInjectors);

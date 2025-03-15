@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/lib.targets" />
+
+    <PropertyGroup>
+        <IsExperimental>true</IsExperimental>
+        <IsAotCompatible>true</IsAotCompatible>
+    </PropertyGroup>
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Automatically generate HTTP endpoints for apps using ASP Core and Conqueror.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Transport.Http.Client\Conqueror.Transport.Http.Client.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+</Project>

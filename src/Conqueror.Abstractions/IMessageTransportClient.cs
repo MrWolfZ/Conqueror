@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 
 namespace Conqueror;
 
-public interface IMessageTransportClient
+public interface IMessageTransportClient<in TMessage, TResponse>
+    where TMessage : class, IMessage<TResponse>
 {
     string TransportTypeName { get; }
 
-    Task<TResponse> Send<TMessage, TResponse>(TMessage message,
-                                              IServiceProvider serviceProvider,
-                                              CancellationToken cancellationToken)
-        where TMessage : class, IMessage<TResponse>;
+    Task<TResponse> Send(TMessage message,
+                         IServiceProvider serviceProvider,
+                         ConquerorContext conquerorContext,
+                         CancellationToken cancellationToken);
 }

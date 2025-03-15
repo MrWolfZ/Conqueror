@@ -13,3 +13,13 @@ internal sealed class DelegateMessageHandler<TMessage, TResponse>(
     public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
         => handlerFn(message, serviceProvider, cancellationToken);
 }
+
+internal sealed class DelegateMessageHandler<TMessage>(
+    MessageHandlerFn<TMessage> handlerFn,
+    IServiceProvider serviceProvider)
+    : IMessageHandler<TMessage>
+    where TMessage : class, IMessage<UnitMessageResponse>
+{
+    public Task Handle(TMessage message, CancellationToken cancellationToken = default)
+        => handlerFn(message, serviceProvider, cancellationToken);
+}

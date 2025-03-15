@@ -39,40 +39,33 @@ public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMe
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessagePipeline<TMessage, TResponse, out TGenerated>
-    : IMessagePipeline<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
-    where TGenerated : IMessagePipeline<TMessage, TResponse>
-{
-    static abstract TGenerated Create(IMessagePipeline<TMessage, TResponse> wrapped);
-}
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public class GeneratedMessagePipelineAdapter<TMessage, TResponse>(IMessagePipeline<TMessage, TResponse> wrapped)
+public class GeneratedMessagePipelineAdapter<TMessage, TResponse>
     : IMessagePipeline<TMessage, TResponse>
     where TMessage : class, IMessage<TResponse>
 {
-    public int Count => wrapped.Count;
+    public IMessagePipeline<TMessage, TResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
 
-    public IServiceProvider ServiceProvider => wrapped.ServiceProvider;
+    public int Count => Wrapped.Count;
 
-    public ConquerorContext ConquerorContext => wrapped.ConquerorContext;
+    public IServiceProvider ServiceProvider => Wrapped.ServiceProvider;
 
-    public MessageTransportType TransportType => wrapped.TransportType;
+    public ConquerorContext ConquerorContext => Wrapped.ConquerorContext;
+
+    public MessageTransportType TransportType => Wrapped.TransportType;
     IEnumerator<IMessageMiddleware<TMessage, TResponse>> IEnumerable<IMessageMiddleware<TMessage, TResponse>>.GetEnumerator()
-        => wrapped.GetEnumerator();
+        => Wrapped.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)wrapped).GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Wrapped).GetEnumerator();
 
     public IMessagePipeline<TMessage, TResponse> Use<TMiddleware>(TMiddleware middleware)
-        where TMiddleware : IMessageMiddleware<TMessage, TResponse> => wrapped.Use(middleware);
+        where TMiddleware : IMessageMiddleware<TMessage, TResponse> => Wrapped.Use(middleware);
 
     public IMessagePipeline<TMessage, TResponse> Use(MessageMiddlewareFn<TMessage, TResponse> middlewareFn)
-        => wrapped.Use(middlewareFn);
+        => Wrapped.Use(middlewareFn);
 
     public IMessagePipeline<TMessage, TResponse> Without<TMiddleware>()
-        where TMiddleware : IMessageMiddleware<TMessage, TResponse> => wrapped.Without<TMiddleware>();
+        where TMiddleware : IMessageMiddleware<TMessage, TResponse> => Wrapped.Without<TMiddleware>();
 
     public IMessagePipeline<TMessage, TResponse> Configure<TMiddleware>(Action<TMiddleware> configure)
-        where TMiddleware : IMessageMiddleware<TMessage, TResponse> => wrapped.Configure(configure);
+        where TMiddleware : IMessageMiddleware<TMessage, TResponse> => Wrapped.Configure(configure);
 }

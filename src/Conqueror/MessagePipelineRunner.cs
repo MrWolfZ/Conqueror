@@ -15,11 +15,11 @@ internal sealed class MessagePipelineRunner<TMessage, TResponse>(
 
     public async Task<TResponse> Execute(IServiceProvider serviceProvider,
                                          TMessage initialMessage,
-                                         IMessageTransportClient transportClient,
+                                         IMessageTransportClient<TMessage, TResponse> transportClient,
                                          MessageTransportType transportType,
                                          CancellationToken cancellationToken)
     {
-        var next = (TMessage message, CancellationToken token) => transportClient.Send<TMessage, TResponse>(message, serviceProvider, token);
+        var next = (TMessage message, CancellationToken token) => transportClient.Send(message, serviceProvider, conquerorContext, token);
 
         foreach (var middleware in middlewares)
         {

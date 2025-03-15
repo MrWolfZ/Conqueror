@@ -2,5 +2,5 @@
 
 public static class HttpCommandTransportTypeExtensions
 {
-    public static bool IsHttp(this CommandTransportType transportClientType) => transportClientType.Name == HttpConstants.TransportName;
+    public static bool IsHttp(this CommandTransportType transportType) => transportType.Name == HttpConstants.TransportName;
 }
