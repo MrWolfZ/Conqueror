@@ -3,7 +3,7 @@ namespace Conqueror;
 public interface IMessageClients
 {
     THandler For<THandler>()
-        where THandler : class, IMessageHandler, IGeneratedMessageHandler;
+        where THandler : class, IGeneratedMessageHandler;
 
     IMessageHandler<TMessage, TResponse> ForMessageType<TMessage, TResponse>()
         where TMessage : class, IMessage<TResponse>;

@@ -120,9 +120,8 @@ public static class SourceGenerationHelper
                                   public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, {{{responseTypeName}}}, IPipeline>
                                   {
                                       [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                      static THandlerInterface? IGeneratedMessageHandler.Create<THandlerInterface>(IMessageHandlerProxyFactory proxyFactory)
-                                          where THandlerInterface : class
-                                          => new Adapter(proxyFactory) as THandlerInterface;
+                                      static IGeneratedMessageHandler IGeneratedMessageHandler.CreateAdapter(IMessageHandlerProxyFactory proxyFactory)
+                                          => new Adapter(proxyFactory);
 
                                       [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
                                       public sealed class Adapter(IMessageHandlerProxyFactory proxyFactory)
@@ -133,7 +132,7 @@ public static class SourceGenerationHelper
                                   public interface IPipeline : IGeneratedMessagePipeline<{{{messageTypeName}}}, {{{responseTypeName}}}, IPipeline>
                                   {
                                       [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                      static IPipeline IGeneratedMessagePipeline<{{{messageTypeName}}}, {{{responseTypeName}}}, IPipeline>.Create(
+                                      static IPipeline IGeneratedMessagePipeline<{{{messageTypeName}}}, {{{responseTypeName}}}, IPipeline>.CreateAdapter(
                                           IMessagePipeline<{{{messageTypeName}}}, {{{responseTypeName}}}> wrapped)
                                           => new Adapter(wrapped);
                                      
@@ -142,6 +141,10 @@ public static class SourceGenerationHelper
                                           : GeneratedMessagePipelineAdapter<{{{messageTypeName}}}, {{{responseTypeName}}}>(wrapped),
                                             IPipeline;
                                   }
+                         
+                                  [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+                                  public static TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
+                                       => factory.Create<{{{messageTypeName}}}, {{{responseTypeName}}}>();
                          """);
         }
         else
@@ -152,9 +155,8 @@ public static class SourceGenerationHelper
                                   public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, IPipeline>
                                   {
                                       [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                      static THandlerInterface? IGeneratedMessageHandler.Create<THandlerInterface>(IMessageHandlerProxyFactory proxyFactory)
-                                          where THandlerInterface : class
-                                          => new Adapter(proxyFactory) as THandlerInterface;
+                                      static IGeneratedMessageHandler IGeneratedMessageHandler.CreateAdapter(IMessageHandlerProxyFactory proxyFactory)
+                                          => new Adapter(proxyFactory);
                          
                                       [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
                                       public sealed class Adapter(IMessageHandlerProxyFactory proxyFactory)
@@ -165,7 +167,7 @@ public static class SourceGenerationHelper
                                   public interface IPipeline : IGeneratedMessagePipeline<{{{messageTypeName}}}, UnitMessageResponse, IPipeline>
                                   {
                                       [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                      static IPipeline IGeneratedMessagePipeline<{{{messageTypeName}}}, UnitMessageResponse, IPipeline>.Create(
+                                      static IPipeline IGeneratedMessagePipeline<{{{messageTypeName}}}, UnitMessageResponse, IPipeline>.CreateAdapter(
                                           IMessagePipeline<{{{messageTypeName}}}, UnitMessageResponse> wrapped)
                                           => new Adapter(wrapped);
                                      
@@ -174,6 +176,10 @@ public static class SourceGenerationHelper
                                           : GeneratedMessagePipelineAdapter<{{{messageTypeName}}}, UnitMessageResponse>(wrapped),
                                             IPipeline;
                                   }
+                         
+                                  [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+                                  public static TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
+                                       => factory.Create<{{{messageTypeName}}}, UnitMessageResponse>();
                          """);
         }
 

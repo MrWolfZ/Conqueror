@@ -7,9 +7,10 @@ namespace Conqueror;
 internal sealed class MessageClients(IServiceProvider serviceProvider) : IMessageClients
 {
     public THandler For<THandler>()
-        where THandler : class, IMessageHandler, IGeneratedMessageHandler
+        where THandler : class, IGeneratedMessageHandler
     {
-        return THandler.Create<THandler>(CreateProxyFactory()) ?? throw new InvalidOperationException($"cannot create handler for type '{typeof(THandler)}'");
+        return THandler.CreateAdapter(CreateProxyFactory()) as THandler
+               ?? throw new InvalidOperationException($"cannot create handler for type '{typeof(THandler)}'");
     }
 
     public IMessageHandler<TMessage, TResponse> ForMessageType<TMessage, TResponse>()

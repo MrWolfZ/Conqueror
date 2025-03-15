@@ -196,12 +196,14 @@ public sealed partial class RegistrationTests
         public static Type ResponseType()
             => throw new NotSupportedException();
 
-        public static Delegate CreateConfigurePipeline<THandler>()
-            where THandler : class, IMessageHandler
+        public static IGeneratedMessageHandler CreateAdapter(IMessageHandlerProxyFactory proxyFactory)
             => throw new NotSupportedException();
 
-        public static THandlerInterface Create<THandlerInterface>(IMessageHandlerProxyFactory proxyFactory)
-            where THandlerInterface : class, IGeneratedMessageHandler
+        public static Delegate CreateConfigurePipeline<THandler>()
+            where THandler : class, IGeneratedMessageHandler
+            => throw new NotSupportedException();
+
+        public static TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
             => throw new NotSupportedException();
     }
 

@@ -44,9 +44,8 @@ public sealed partial class MessageTypeGenerationTests
         public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IPipeline>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
-            static THandlerInterface? IGeneratedMessageHandler.Create<THandlerInterface>(IMessageHandlerProxyFactory proxyFactory)
-                where THandlerInterface : class
-                => new Adapter(proxyFactory) as THandlerInterface;
+            static IGeneratedMessageHandler IGeneratedMessageHandler.CreateAdapter(IMessageHandlerProxyFactory proxyFactory)
+                => new Adapter(proxyFactory);
 
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Adapter(IMessageHandlerProxyFactory proxyFactory)
@@ -57,7 +56,7 @@ public sealed partial class MessageTypeGenerationTests
         public interface IPipeline : IGeneratedMessagePipeline<TestMessage, TestMessageResponse, IPipeline>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
-            static IPipeline IGeneratedMessagePipeline<TestMessage, TestMessageResponse, IPipeline>.Create(
+            static IPipeline IGeneratedMessagePipeline<TestMessage, TestMessageResponse, IPipeline>.CreateAdapter(
                 IMessagePipeline<TestMessage, TestMessageResponse> wrapped)
                 => new Adapter(wrapped);
 
@@ -66,6 +65,10 @@ public sealed partial class MessageTypeGenerationTests
                 : GeneratedMessagePipelineAdapter<TestMessage, TestMessageResponse>(wrapped),
                   IPipeline;
         }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
+            => factory.Create<TestMessage, TestMessageResponse>();
     }
 
     private sealed class TestMessageHandler : TestMessage.IHandler
@@ -88,9 +91,8 @@ public sealed partial class MessageTypeGenerationTests
         public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IPipeline>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
-            static THandlerInterface? IGeneratedMessageHandler.Create<THandlerInterface>(IMessageHandlerProxyFactory proxyFactory)
-                where THandlerInterface : class
-                => new Adapter(proxyFactory) as THandlerInterface;
+            static IGeneratedMessageHandler IGeneratedMessageHandler.CreateAdapter(IMessageHandlerProxyFactory proxyFactory)
+                => new Adapter(proxyFactory);
 
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Adapter(IMessageHandlerProxyFactory proxyFactory)
@@ -101,7 +103,7 @@ public sealed partial class MessageTypeGenerationTests
         public interface IPipeline : IGeneratedMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse, IPipeline>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
-            static IPipeline IGeneratedMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse, IPipeline>.Create(
+            static IPipeline IGeneratedMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse, IPipeline>.CreateAdapter(
                 IMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse> wrapped)
                 => new Adapter(wrapped);
 
@@ -110,6 +112,10 @@ public sealed partial class MessageTypeGenerationTests
                 : GeneratedMessagePipelineAdapter<TestMessageWithoutResponse, UnitMessageResponse>(wrapped),
                   IPipeline;
         }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
+            => factory.Create<TestMessageWithoutResponse, UnitMessageResponse>();
     }
 
     private sealed class TestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler

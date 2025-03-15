@@ -9,6 +9,7 @@ namespace Conqueror;
 internal sealed class MessageTransportRegistry : IMessageTransportRegistry
 {
     private readonly ConcurrentDictionary<Type, IReadOnlyCollection<(Type MessageType, Type ResponseType, object Attribute)>> messageTypesByTransportAttribute = new();
+    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<(Type MessageType, Type ResponseType)>> messageTypesByInterface = new();
     private readonly Dictionary<Type, MessageHandlerRegistration> registrationByMessageType;
 
     public MessageTransportRegistry(IEnumerable<MessageHandlerRegistration> registrations)
@@ -26,6 +27,17 @@ internal sealed class MessageTransportRegistry : IMessageTransportRegistry
                                                                       select (r.MessageType, r.ResponseType, (object)attribute ?? new InProcessMessageAttribute())).ToList());
 
         return entries.Select(e => (e.MessageType, e.ResponseType, (TTransportMarkerAttribute)e.Attribute)).ToList();
+    }
+
+    public IReadOnlyCollection<(Type MessageType, Type ResponseType)> GetMessageTypesForTransportInterface<TInterface>()
+        where TInterface : class
+    {
+        var entries = messageTypesByInterface.GetOrAdd(typeof(TInterface),
+                                                       _ => (from r in registrationByMessageType.Values
+                                                             where r.MessageType.IsAssignableTo(typeof(TInterface))
+                                                             select (r.MessageType, r.ResponseType)).ToList());
+
+        return entries.Select(e => (e.MessageType, e.ResponseType)).ToList();
     }
 
     public MessageHandlerRegistration? GetMessageHandlerRegistration(Type messageType)

@@ -44,7 +44,7 @@ public interface IGeneratedMessagePipeline<TMessage, TResponse, out TGenerated>
     where TMessage : class, IMessage<TResponse>
     where TGenerated : IMessagePipeline<TMessage, TResponse>
 {
-    static abstract TGenerated Create(IMessagePipeline<TMessage, TResponse> wrapped);
+    static abstract TGenerated CreateAdapter(IMessagePipeline<TMessage, TResponse> wrapped);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
