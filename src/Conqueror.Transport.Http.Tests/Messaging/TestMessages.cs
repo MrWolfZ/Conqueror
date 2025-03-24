@@ -35,50 +35,29 @@ public static partial class TestMessages
         CustomEndpoint,
     }
 
-    public static void RegisterMessageType(this IServiceCollection services, MessageTestCase testCase)
+    public static void RegisterMessageType<TMessage, TResponse, THandler>(this IServiceCollection services, MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
         _ = services.AddSingleton<TestObservations>()
                     .AddTransient(typeof(TestMessageMiddleware<,>));
 
-        var messageType = testCase.MessageType;
+        _ = services.AddConquerorMessageHandler<THandler>();
 
-        _ = messageType switch
+        if (typeof(TMessage) == typeof(TestMessageWithCustomSerializedPayloadType))
         {
-            _ when messageType == typeof(TestMessage) => services.AddConquerorMessageHandler<TestMessageHandler>(),
-            _ when messageType == typeof(TestMessageWithoutResponse) => services.AddConquerorMessageHandler<TestMessageWithoutResponseHandler>(),
-            _ when messageType == typeof(TestMessageWithoutPayload) => services.AddConquerorMessageHandler<TestMessageWithoutPayloadHandler>(),
-            _ when messageType == typeof(TestMessageWithoutResponseWithoutPayload) => services.AddConquerorMessageHandler<TestMessageWithoutResponseWithoutPayloadHandler>(),
-            _ when messageType == typeof(TestMessageWithMethod) => services.AddConquerorMessageHandler<TestMessageWithMethodHandler>(),
-            _ when messageType == typeof(TestMessageWithPathPrefix) => services.AddConquerorMessageHandler<TestMessageWithPathPrefixHandler>(),
-            _ when messageType == typeof(TestMessageWithVersion) => services.AddConquerorMessageHandler<TestMessageWithVersionHandler>(),
-            _ when messageType == typeof(TestMessageWithPath) => services.AddConquerorMessageHandler<TestMessageWithPathHandler>(),
-            _ when messageType == typeof(TestMessageWithPathPrefixAndPathAndVersion) => services.AddConquerorMessageHandler<TestMessageWithPathPrefixAndPathAndVersionHandler>(),
-            _ when messageType == typeof(TestMessageWithFullPath) => services.AddConquerorMessageHandler<TestMessageWithFullPathHandler>(),
-            _ when messageType == typeof(TestMessageWithFullPathAndVersion) => services.AddConquerorMessageHandler<TestMessageWithFullPathAndVersionHandler>(),
-            _ when messageType == typeof(TestMessageWithSuccessStatusCode) => services.AddConquerorMessageHandler<TestMessageWithSuccessStatusCodeHandler>(),
-            _ when messageType == typeof(TestMessageWithName) => services.AddConquerorMessageHandler<TestMessageWithNameHandler>(),
-            _ when messageType == typeof(TestMessageWithApiGroupName) => services.AddConquerorMessageHandler<TestMessageWithApiGroupNameHandler>(),
-            _ when messageType == typeof(TestMessageWithGet) => services.AddConquerorMessageHandler<TestMessageWithGetHandler>(),
-            _ when messageType == typeof(TestMessageWithGetWithoutPayload) => services.AddConquerorMessageHandler<TestMessageWithGetWithoutPayloadHandler>(),
-            _ when messageType == typeof(TestMessageWithComplexGetPayload) => services.AddConquerorMessageHandler<TestMessageWithComplexGetPayloadHandler>(),
-            _ when messageType == typeof(TestMessageWithCustomSerializedPayloadType) => services.AddConquerorMessageHandler<TestMessageWithCustomSerializedPayloadTypeHandler>()
-                                                                                                .AddTransient<JsonSerializerOptions>(p => p.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions)
-                                                                                                .PostConfigure<JsonOptions>(options =>
-                                                                                                {
-                                                                                                    options.SerializerOptions.Converters
-                                                                                                           .Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
-                                                                                                })
-                                                                                                .PostConfigure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
-                                                                                                {
-                                                                                                    options.JsonSerializerOptions.Converters
-                                                                                                           .Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
-                                                                                                }),
-            _ when messageType == typeof(TestMessageWithCustomSerializer) => services.AddConquerorMessageHandler<TestMessageWithCustomSerializerHandler>(),
-            _ when messageType == typeof(TestMessageWithCustomJsonTypeInfo) => services.AddConquerorMessageHandler<TestMessageWithCustomJsonTypeInfoHandler>(),
-            _ when messageType == typeof(TestMessageWithMiddleware) => services.AddConquerorMessageHandler<TestMessageWithMiddlewareHandler>(),
-            _ when messageType == typeof(TestMessageWithMiddlewareWithoutResponse) => services.AddConquerorMessageHandler<TestMessageWithMiddlewareWithoutResponseHandler>(),
-            _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase, null),
-        };
+            _ = services.AddTransient<JsonSerializerOptions>(p => p.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions)
+                        .PostConfigure<JsonOptions>(options =>
+                        {
+                            options.SerializerOptions.Converters
+                                   .Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
+                        })
+                        .PostConfigure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+                        {
+                            options.JsonSerializerOptions.Converters
+                                   .Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
+                        });
+        }
 
         if (testCase.RegistrationMethod
             is MessageTestCaseRegistrationMethod.Endpoints
@@ -108,35 +87,11 @@ public static partial class TestMessages
             return;
         }
 
-        _ = messageType switch
-        {
-            _ when messageType == typeof(TestMessage) => mvcBuilder.AddConquerorMessageController<TestMessage>(),
-            _ when messageType == typeof(TestMessageWithoutResponse) => mvcBuilder.AddConquerorMessageController<TestMessageWithoutResponse>(),
-            _ when messageType == typeof(TestMessageWithoutPayload) => mvcBuilder.AddConquerorMessageController<TestMessageWithoutPayload>(),
-            _ when messageType == typeof(TestMessageWithoutResponseWithoutPayload) => mvcBuilder.AddConquerorMessageController<TestMessageWithoutResponseWithoutPayload>(),
-            _ when messageType == typeof(TestMessageWithMethod) => mvcBuilder.AddConquerorMessageController<TestMessageWithMethod>(),
-            _ when messageType == typeof(TestMessageWithPathPrefix) => mvcBuilder.AddConquerorMessageController<TestMessageWithPathPrefix>(),
-            _ when messageType == typeof(TestMessageWithVersion) => mvcBuilder.AddConquerorMessageController<TestMessageWithVersion>(),
-            _ when messageType == typeof(TestMessageWithPath) => mvcBuilder.AddConquerorMessageController<TestMessageWithPath>(),
-            _ when messageType == typeof(TestMessageWithPathPrefixAndPathAndVersion) => mvcBuilder.AddConquerorMessageController<TestMessageWithPathPrefixAndPathAndVersion>(),
-            _ when messageType == typeof(TestMessageWithFullPath) => mvcBuilder.AddConquerorMessageController<TestMessageWithFullPath>(),
-            _ when messageType == typeof(TestMessageWithFullPathAndVersion) => mvcBuilder.AddConquerorMessageController<TestMessageWithFullPathAndVersion>(),
-            _ when messageType == typeof(TestMessageWithSuccessStatusCode) => mvcBuilder.AddConquerorMessageController<TestMessageWithSuccessStatusCode>(),
-            _ when messageType == typeof(TestMessageWithName) => mvcBuilder.AddConquerorMessageController<TestMessageWithName>(),
-            _ when messageType == typeof(TestMessageWithApiGroupName) => mvcBuilder.AddConquerorMessageController<TestMessageWithApiGroupName>(),
-            _ when messageType == typeof(TestMessageWithGet) => mvcBuilder.AddConquerorMessageController<TestMessageWithGet>(),
-            _ when messageType == typeof(TestMessageWithGetWithoutPayload) => mvcBuilder.AddConquerorMessageController<TestMessageWithGetWithoutPayload>(),
-            _ when messageType == typeof(TestMessageWithComplexGetPayload) => mvcBuilder.AddConquerorMessageController<TestMessageWithComplexGetPayload>(),
-            _ when messageType == typeof(TestMessageWithCustomSerializedPayloadType) => mvcBuilder.AddConquerorMessageController<TestMessageWithCustomSerializedPayloadType>(),
-            _ when messageType == typeof(TestMessageWithCustomSerializer) => mvcBuilder.AddConquerorMessageController<TestMessageWithCustomSerializer>(),
-            _ when messageType == typeof(TestMessageWithCustomJsonTypeInfo) => mvcBuilder.AddConquerorMessageController<TestMessageWithCustomJsonTypeInfo>(),
-            _ when messageType == typeof(TestMessageWithMiddleware) => mvcBuilder.AddConquerorMessageController<TestMessageWithMiddleware>(),
-            _ when messageType == typeof(TestMessageWithMiddlewareWithoutResponse) => mvcBuilder.AddConquerorMessageController<TestMessageWithMiddlewareWithoutResponse>(),
-            _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase, null),
-        };
+        _ = mvcBuilder.AddConquerorMessageController<TMessage>();
     }
 
-    public static void MapMessageEndpoints(this IApplicationBuilder app, MessageTestCase testCase)
+    public static void MapMessageEndpoints<TMessage, TResponse>(this IApplicationBuilder app, MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
     {
         _ = app.UseConqueror();
         _ = app.UseRouting();
@@ -213,38 +168,19 @@ public static partial class TestMessages
                 return;
             }
 
-            var messageType = testCase.MessageType;
-
-            _ = messageType switch
-            {
-                _ when messageType == typeof(TestMessage) => endpoints.MapConquerorMessageEndpoint<TestMessage>(),
-                _ when messageType == typeof(TestMessageWithoutResponse) => endpoints.MapConquerorMessageEndpoint<TestMessageWithoutResponse>(),
-                _ when messageType == typeof(TestMessageWithoutPayload) => endpoints.MapConquerorMessageEndpoint<TestMessageWithoutPayload>(),
-                _ when messageType == typeof(TestMessageWithoutResponseWithoutPayload) => endpoints.MapConquerorMessageEndpoint<TestMessageWithoutResponseWithoutPayload>(),
-                _ when messageType == typeof(TestMessageWithMethod) => endpoints.MapConquerorMessageEndpoint<TestMessageWithMethod>(),
-                _ when messageType == typeof(TestMessageWithPathPrefix) => endpoints.MapConquerorMessageEndpoint<TestMessageWithPathPrefix>(),
-                _ when messageType == typeof(TestMessageWithVersion) => endpoints.MapConquerorMessageEndpoint<TestMessageWithVersion>(),
-                _ when messageType == typeof(TestMessageWithPath) => endpoints.MapConquerorMessageEndpoint<TestMessageWithPath>(),
-                _ when messageType == typeof(TestMessageWithPathPrefixAndPathAndVersion) => endpoints.MapConquerorMessageEndpoint<TestMessageWithPathPrefixAndPathAndVersion>(),
-                _ when messageType == typeof(TestMessageWithFullPath) => endpoints.MapConquerorMessageEndpoint<TestMessageWithFullPath>(),
-                _ when messageType == typeof(TestMessageWithFullPathAndVersion) => endpoints.MapConquerorMessageEndpoint<TestMessageWithFullPathAndVersion>(),
-                _ when messageType == typeof(TestMessageWithSuccessStatusCode) => endpoints.MapConquerorMessageEndpoint<TestMessageWithSuccessStatusCode>(),
-                _ when messageType == typeof(TestMessageWithName) => endpoints.MapConquerorMessageEndpoint<TestMessageWithName>(),
-                _ when messageType == typeof(TestMessageWithApiGroupName) => endpoints.MapConquerorMessageEndpoint<TestMessageWithApiGroupName>(),
-                _ when messageType == typeof(TestMessageWithGet) => endpoints.MapConquerorMessageEndpoint<TestMessageWithGet>(),
-                _ when messageType == typeof(TestMessageWithGetWithoutPayload) => endpoints.MapConquerorMessageEndpoint<TestMessageWithGetWithoutPayload>(),
-                _ when messageType == typeof(TestMessageWithComplexGetPayload) => endpoints.MapConquerorMessageEndpoint<TestMessageWithComplexGetPayload>(),
-                _ when messageType == typeof(TestMessageWithCustomSerializedPayloadType) => endpoints.MapConquerorMessageEndpoint<TestMessageWithCustomSerializedPayloadType>(),
-                _ when messageType == typeof(TestMessageWithCustomSerializer) => endpoints.MapConquerorMessageEndpoint<TestMessageWithCustomSerializer>(),
-                _ when messageType == typeof(TestMessageWithCustomJsonTypeInfo) => endpoints.MapConquerorMessageEndpoint<TestMessageWithCustomJsonTypeInfo>(),
-                _ when messageType == typeof(TestMessageWithMiddleware) => endpoints.MapConquerorMessageEndpoint<TestMessageWithMiddleware>(),
-                _ when messageType == typeof(TestMessageWithMiddlewareWithoutResponse) => endpoints.MapConquerorMessageEndpoint<TestMessageWithMiddlewareWithoutResponse>(),
-                _ => throw new ArgumentOutOfRangeException(nameof(testCase), testCase, null),
-            };
+            _ = endpoints.MapConquerorMessageEndpoint<TMessage>();
         });
     }
 
-    public static IEnumerable<MessageTestCase> GenerateTestCases()
+    public static IEnumerable<TestCaseData> GenerateTestCaseData()
+    {
+        return GenerateTestCases().Select(c => new TestCaseData(c)
+        {
+            TypeArgs = [c.MessageType, c.ResponseType ?? typeof(UnitMessageResponse), c.HandlerType],
+        });
+    }
+
+    private static IEnumerable<MessageTestCase> GenerateTestCases()
     {
         foreach (var registrationMethod in new[]
                  {
@@ -258,6 +194,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessage),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/test",
                 SuccessStatusCode = 200,
@@ -278,6 +215,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithoutResponse),
                 ResponseType = null,
+                HandlerType = typeof(TestMessageWithoutResponseHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithoutResponse",
                 SuccessStatusCode = 204,
@@ -298,6 +236,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithoutPayload),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithoutPayloadHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithoutPayload",
                 SuccessStatusCode = 200,
@@ -318,6 +257,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithoutResponseWithoutPayload),
                 ResponseType = null,
+                HandlerType = typeof(TestMessageWithoutResponseWithoutPayloadHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithoutResponseWithoutPayload",
                 SuccessStatusCode = 204,
@@ -338,6 +278,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithMethod),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithMethodHandler),
                 HttpMethod = MethodDelete,
                 FullPath = "/api/testMessageWithMethod",
                 SuccessStatusCode = 200,
@@ -358,6 +299,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithPathPrefix),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithPathPrefixHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/prefix/testMessageWithPathPrefix",
                 SuccessStatusCode = 200,
@@ -378,6 +320,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithVersion),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithVersionHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/v2/testMessageWithVersion",
                 SuccessStatusCode = 200,
@@ -398,6 +341,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithPath),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithPathHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/custom/path",
                 SuccessStatusCode = 200,
@@ -418,6 +362,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithPathPrefixAndPathAndVersion),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithPathPrefixAndPathAndVersionHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/prefix/v3/custom/path",
                 SuccessStatusCode = 200,
@@ -438,6 +383,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithFullPath),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithFullPathHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/full/path/for/message",
                 SuccessStatusCode = 200,
@@ -458,6 +404,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithFullPathAndVersion),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithFullPathAndVersionHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/full/path/for/message",
                 SuccessStatusCode = 200,
@@ -478,6 +425,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithSuccessStatusCode),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithSuccessStatusCodeHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithSuccessStatusCode",
                 SuccessStatusCode = 201,
@@ -498,6 +446,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithName),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithNameHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithName",
                 SuccessStatusCode = 200,
@@ -518,6 +467,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithApiGroupName),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithApiGroupNameHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithApiGroupName",
                 SuccessStatusCode = 200,
@@ -538,6 +488,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithGet),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithGetHandler),
                 HttpMethod = MethodGet,
                 FullPath = "/api/testMessageWithGet",
                 SuccessStatusCode = 200,
@@ -558,6 +509,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithGetWithoutPayload),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithGetWithoutPayloadHandler),
                 HttpMethod = MethodGet,
                 FullPath = "/api/testMessageWithGetWithoutPayload",
                 SuccessStatusCode = 200,
@@ -583,6 +535,7 @@ public static partial class TestMessages
                 {
                     MessageType = typeof(TestMessageWithComplexGetPayload),
                     ResponseType = typeof(TestMessageResponse),
+                    HandlerType = typeof(TestMessageWithComplexGetPayloadHandler),
                     HttpMethod = MethodGet,
                     FullPath = "/api/testMessageWithComplexGetPayload",
                     SuccessStatusCode = 200,
@@ -604,6 +557,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithCustomSerializedPayloadType),
                 ResponseType = typeof(TestMessageWithCustomSerializedPayloadTypeResponse),
+                HandlerType = typeof(TestMessageWithCustomSerializedPayloadTypeHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithCustomSerializedPayloadType",
                 SuccessStatusCode = 200,
@@ -629,6 +583,7 @@ public static partial class TestMessages
                 {
                     MessageType = typeof(TestMessageWithCustomSerializer),
                     ResponseType = typeof(TestMessageWithCustomSerializerResponse),
+                    HandlerType = typeof(TestMessageWithCustomSerializerHandler),
                     HttpMethod = MethodPost,
                     FullPath = "/api/custom/path/for/serializer/12",
                     Template = "/api/custom/path/for/serializer/{pathPayload:int}",
@@ -652,6 +607,7 @@ public static partial class TestMessages
                 {
                     MessageType = typeof(TestMessageWithCustomJsonTypeInfo),
                     ResponseType = typeof(TestMessageWithCustomJsonTypeInfoResponse),
+                    HandlerType = typeof(TestMessageWithCustomJsonTypeInfoHandler),
                     HttpMethod = MethodPost,
                     FullPath = "/api/testMessageWithCustomJsonTypeInfo",
                     SuccessStatusCode = 200,
@@ -673,6 +629,7 @@ public static partial class TestMessages
                 {
                     MessageType = typeof(TestMessageWithMiddleware),
                     ResponseType = typeof(TestMessageResponse),
+                    HandlerType = typeof(TestMessageWithMiddlewareHandler),
                     HttpMethod = MethodPost,
                     FullPath = "/api/testMessageWithMiddleware",
                     SuccessStatusCode = 200,
@@ -693,6 +650,7 @@ public static partial class TestMessages
                 {
                     MessageType = typeof(TestMessageWithMiddlewareWithoutResponse),
                     ResponseType = null,
+                    HandlerType = typeof(TestMessageWithMiddlewareWithoutResponseHandler),
                     HttpMethod = MethodPost,
                     FullPath = "/api/testMessageWithMiddlewareWithoutResponse",
                     SuccessStatusCode = 204,
@@ -721,6 +679,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessage),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/test",
                 SuccessStatusCode = 200,
@@ -741,6 +700,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithoutResponse),
                 ResponseType = null,
+                HandlerType = typeof(TestMessageWithoutResponseHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutResponse",
                 SuccessStatusCode = 200,
@@ -761,6 +721,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithoutPayload),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithoutPayloadHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutPayload",
                 SuccessStatusCode = 200,
@@ -781,6 +742,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithoutResponseWithoutPayload),
                 ResponseType = null,
+                HandlerType = typeof(TestMessageWithoutResponseWithoutPayloadHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutResponseWithoutPayload",
                 SuccessStatusCode = 200,
@@ -801,6 +763,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithGet),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithGetHandler),
                 HttpMethod = MethodGet,
                 FullPath = "/custom/api/testMessageWithGet",
                 SuccessStatusCode = 200,
@@ -821,6 +784,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithGetWithoutPayload),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithGetWithoutPayloadHandler),
                 HttpMethod = MethodGet,
                 FullPath = "/custom/api/testMessageWithGetWithoutPayload",
                 SuccessStatusCode = 200,
@@ -841,6 +805,7 @@ public static partial class TestMessages
             {
                 MessageType = typeof(TestMessageWithMiddleware),
                 ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithMiddlewareHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithMiddleware",
                 SuccessStatusCode = 200,
@@ -864,6 +829,8 @@ public static partial class TestMessages
         public required Type MessageType { get; init; }
 
         public required Type? ResponseType { get; init; }
+
+        public required Type HandlerType { get; init; }
 
         public required string HttpMethod { get; init; }
 

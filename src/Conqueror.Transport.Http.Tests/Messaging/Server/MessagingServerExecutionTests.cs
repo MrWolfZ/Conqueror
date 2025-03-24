@@ -11,10 +11,15 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server;
 public sealed class MessagingServerExecutionTests
 {
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
-    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse(TestMessages.MessageTestCase testCase)
+    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, THandler>(
+        TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await TestHost.Create(services => services.RegisterMessageType(testCase), app => app.MapMessageEndpoints(testCase));
+        await using var host = await TestHost.Create(
+            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         var targetUriBuilder = new UriBuilder
         {

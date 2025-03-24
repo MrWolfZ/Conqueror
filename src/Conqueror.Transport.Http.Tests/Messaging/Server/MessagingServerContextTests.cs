@@ -34,15 +34,18 @@ public sealed partial class MessagingServerContextTests
     private DisposableActivity? activity;
 
     [Test]
-    [Combinatorial]
-    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned(
-        [Values] bool hasUpstream,
-        [Values] bool hasDownstream,
-        [Values] bool hasBidirectional,
-        [ValueSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
+    [TestCaseSource(nameof(GenerateContextDataTestCases))]
+    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned<TMessage, TResponse, THandler>(
+        bool hasUpstream,
+        bool hasDownstream,
+        bool hasBidirectional,
         TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await CreateTestHost(services => services.RegisterMessageType(testCase), app => app.MapMessageEndpoints(testCase));
+        await using var host = await CreateTestHost(
+            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
 
@@ -104,11 +107,15 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
-    public async Task GivenMultipleConquerorContextRequestHeadersWithDownstreamAndBidirectionalData_WhenSendingMessage_DataIsReceivedByHandler(
+    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    public async Task GivenMultipleConquerorContextRequestHeadersWithDownstreamAndBidirectionalData_WhenSendingMessage_DataIsReceivedByHandler<TMessage, TResponse, THandler>(
         TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await CreateTestHost(services => services.RegisterMessageType(testCase), app => app.MapMessageEndpoints(testCase));
+        await using var host = await CreateTestHost(
+            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
 
@@ -146,11 +153,15 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
-    public async Task GivenInvalidConquerorContextRequestHeader_WhenSendingMessage_ReturnsBadRequest(
+    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    public async Task GivenInvalidConquerorContextRequestHeader_WhenSendingMessage_ReturnsBadRequest<TMessage, TResponse, THandler>(
         TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await CreateTestHost(services => services.RegisterMessageType(testCase), app => app.MapMessageEndpoints(testCase));
+        await using var host = await CreateTestHost(
+            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         using var request = ConstructHttpRequest(testCase);
 
@@ -161,11 +172,15 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
-    public async Task GivenMessageIdInContext_WhenSendingMessage_MessageIdIsObservedByHandler(
+    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    public async Task GivenMessageIdInContext_WhenSendingMessage_MessageIdIsObservedByHandler<TMessage, TResponse, THandler>(
         TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await CreateTestHost(services => services.RegisterMessageType(testCase), app => app.MapMessageEndpoints(testCase));
+        await using var host = await CreateTestHost(
+            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         const string messageId = "test-message";
 
@@ -185,11 +200,15 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
-    public async Task GivenNoMessageIdInContext_WhenSendingMessage_NonEmptyMessageIdIsObservedByHandler(
+    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    public async Task GivenNoMessageIdInContext_WhenSendingMessage_NonEmptyMessageIdIsObservedByHandler<TMessage, TResponse, THandler>(
         TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await CreateTestHost(services => services.RegisterMessageType(testCase), app => app.MapMessageEndpoints(testCase));
+        await using var host = await CreateTestHost(
+            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         using var request = ConstructHttpRequest(testCase);
 
@@ -203,13 +222,15 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
-    public async Task GivenTraceIdInTraceParentWithoutActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandlers(
+    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    public async Task GivenTraceIdInTraceParentWithoutActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandlers<TMessage, TResponse, THandler>(
         TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
         await using var host = await CreateTestHost(services =>
         {
-            services.RegisterMessageType(testCase);
+            services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
             _ = services.AddConquerorMessageHandler<NestedTestMessageHandler>();
 
             _ = services.Replace(ServiceDescriptor.Singleton<TestMessages.FnToCallFromHandler>(p =>
@@ -217,7 +238,7 @@ public sealed partial class MessagingServerContextTests
                 ObserveAndSetContextData(p.GetRequiredService<TestMessages.TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
                 return p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new());
             }));
-        }, app => app.MapMessageEndpoints(testCase));
+        }, app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         using var request = ConstructHttpRequest(testCase);
 
@@ -233,13 +254,15 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
-    public async Task GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler(
+    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    public async Task GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler<TMessage, TResponse, THandler>(
         TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
         await using var host = await CreateTestHost(services =>
         {
-            services.RegisterMessageType(testCase);
+            services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
             _ = services.AddConquerorMessageHandler<NestedTestMessageHandler>();
 
             _ = services.Replace(ServiceDescriptor.Singleton<TestMessages.FnToCallFromHandler>(p =>
@@ -247,7 +270,7 @@ public sealed partial class MessagingServerContextTests
                 ObserveAndSetContextData(p.GetRequiredService<TestMessages.TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
                 return p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new());
             }));
-        }, app => app.MapMessageEndpoints(testCase));
+        }, app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler));
         activity = a;
@@ -337,6 +360,18 @@ public sealed partial class MessagingServerContextTests
 
                 configure(app);
             });
+    }
+
+    private static IEnumerable<TestCaseData> GenerateContextDataTestCases()
+    {
+        return from testCaseData in TestMessages.GenerateTestCaseData()
+               from hasUpstream in new[] { true, false }
+               from hasDownstream in new[] { true, false }
+               from hasBidirectional in new[] { true, false }
+               select new TestCaseData(hasUpstream, hasDownstream, hasBidirectional, testCaseData.Arguments[0])
+               {
+                   TypeArgs = testCaseData.TypeArgs,
+               };
     }
 
     private static StringContent CreateJsonStringContent(string content)

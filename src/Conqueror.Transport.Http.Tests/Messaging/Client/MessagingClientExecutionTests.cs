@@ -18,10 +18,14 @@ public sealed class MessagingClientExecutionTests
     private IHeaderDictionary? receivedHeadersOnServer;
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
-    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse(TestMessages.MessageTestCase testCase)
+    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, THandler>(TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await CreateTestHost(services => services.RegisterMessageType(testCase), app => app.MapMessageEndpoints(testCase));
+        await using var host = await CreateTestHost(
+            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         var clientServices = new ServiceCollection().AddConqueror()
                                                     .AddSingleton<TestMessages.TestObservations>()
@@ -54,30 +58,6 @@ public sealed class MessagingClientExecutionTests
             httpClient.BaseAddress = new("http://localhost/custom/");
         }
 
-        IMessageHandler<TMessage, TResponse> WithHttpTransport<TMessage, TResponse>(IMessageHandler<TMessage, TResponse> handler)
-            where TMessage : class, IHttpMessage<TMessage, TResponse>
-        {
-            return handler.WithTransport(b => b.UseHttp(new("http://localhost"))
-                                               .WithHttpClient(httpClient)
-                                               .WithHeaders(h =>
-                                               {
-                                                   h.Authorization = new("Basic", AuthorizationHeaderValue);
-                                                   h.Add("test-header", TestHeaderValue);
-                                               }));
-        }
-
-        IMessageHandler<TMessage> WithHttpTransportWithoutResponse<TMessage>(IMessageHandler<TMessage> handler)
-            where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
-        {
-            return handler.WithTransport(b => b.UseHttp(new("http://localhost"))
-                                               .WithHttpClient(httpClient)
-                                               .WithHeaders(h =>
-                                               {
-                                                   h.Authorization = new("Basic", AuthorizationHeaderValue);
-                                                   h.Add("test-header", TestHeaderValue);
-                                               }));
-        }
-
         // the source generator does not yet support serialization of complex GET messages, and in controller mode the
         // model validation will fail (while the endpoint mode will just silently generate an empty message due to lack
         // of out-of-the-box validation
@@ -91,99 +71,35 @@ public sealed class MessagingClientExecutionTests
             return;
         }
 
+        IHttpMessageTransportClient<TM, TR> ConfigureTransport<TM, TR>(IMessageTransportClientBuilder<TM, TR> builder)
+            where TM : class, IHttpMessage<TM, TR>
+            => builder.UseHttp(new("http://localhost"))
+                      .WithHttpClient(httpClient)
+                      .WithHeaders(h =>
+                      {
+                          h.Authorization = new("Basic", AuthorizationHeaderValue);
+                          h.Add("test-header", TestHeaderValue);
+                      });
+
         switch (testCase.Message)
         {
-            case TestMessages.TestMessage m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessage.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithoutResponse m:
-                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithoutResponse.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithoutPayload m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithoutPayload.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithoutResponseWithoutPayload m:
-                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithoutResponseWithoutPayload.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithMethod m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithMethod.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithPathPrefix m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPathPrefix.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithVersion m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithVersion.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithPath m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPath.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithPathPrefixAndPathAndVersion m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPathPrefixAndPathAndVersion.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithFullPath m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithFullPath.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithFullPathAndVersion m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithFullPathAndVersion.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithSuccessStatusCode m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithSuccessStatusCode.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithName m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithName.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithApiGroupName m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithApiGroupName.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithGet m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithGet.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithGetWithoutPayload m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithGetWithoutPayload.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithComplexGetPayload m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithComplexGetPayload.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithCustomSerializedPayloadType m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomSerializedPayloadType.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithCustomSerializer m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomSerializer.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
-            case TestMessages.TestMessageWithCustomJsonTypeInfo m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomJsonTypeInfo.T)).Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
-                break;
             case TestMessages.TestMessageWithMiddleware m:
-                Assert.That(await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithMiddleware.T))
-                                  .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessages.TestMessageMiddleware<TestMessages.TestMessageWithMiddleware, TestMessages.TestMessageResponse>>()))
-                                  .Handle(m, host.TestTimeoutToken),
-                            Is.EqualTo(testCase.Response));
+                _ = await messageClients.For(TestMessages.TestMessageWithMiddleware.T)
+                                        .WithTransport(ConfigureTransport)
+                                        .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessages.TestMessageMiddleware<TestMessages.TestMessageWithMiddleware, TestMessages.TestMessageResponse>>()))
+                                        .Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithMiddlewareWithoutResponse m:
-                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithMiddlewareWithoutResponse.T))
-                      .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessages.TestMessageMiddleware<TestMessages.TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
-                      .Handle(m, host.TestTimeoutToken);
+                await messageClients.For(TestMessages.TestMessageWithMiddlewareWithoutResponse.T)
+                                    .WithTransport(ConfigureTransport)
+                                    .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessages.TestMessageMiddleware<TestMessages.TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
+                                    .Handle(m, host.TestTimeoutToken);
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(testCase), testCase, null);
+                _ = await messageClients.For<TMessage, TResponse>()
+                                        .WithTransport(ConfigureTransport)
+                                        .Handle((TMessage)testCase.Message, host.TestTimeoutToken);
+                break;
         }
 
         Assert.That(callWasReceivedOnServer, Is.True);

@@ -32,16 +32,19 @@ public sealed class MessagingClientContextTests : IDisposable
     private string? seenTraceIdOnServer;
 
     [Test]
-    [Combinatorial]
-    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned(
-        [Values] bool hasUpstream,
-        [Values] bool hasDownstream,
-        [Values] bool hasBidirectional,
-        [Values] bool hasActivity,
-        [ValueSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCases))]
+    [TestCaseSource(nameof(GenerateContextDataTestCases))]
+    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned<TMessage, TResponse, THandler>(
+        bool hasUpstream,
+        bool hasDownstream,
+        bool hasBidirectional,
+        bool hasActivity,
         TestMessages.MessageTestCase testCase)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await CreateTestHost(services => services.RegisterMessageType(testCase), app => app.MapMessageEndpoints(testCase));
+        await using var host = await CreateTestHost(
+            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         var clientServices = new ServiceCollection().AddConqueror()
                                                     .AddSingleton<TestMessages.TestObservations>()
@@ -97,28 +100,6 @@ public sealed class MessagingClientContextTests : IDisposable
         string? seenMessageIdOnClient = null;
         string? seenTraceIdOnClient = null;
 
-        IMessageHandler<TMessage, TResponse> WithHttpTransport<TMessage, TResponse>(IMessageHandler<TMessage, TResponse> handler)
-            where TMessage : class, IHttpMessage<TMessage, TResponse>
-        {
-            return handler.WithTransport(b =>
-            {
-                seenMessageIdOnClient = b.ConquerorContext.GetMessageId();
-                seenTraceIdOnClient = b.ConquerorContext.GetTraceId();
-                return b.UseHttp(new("http://localhost")).WithHttpClient(httpClient);
-            });
-        }
-
-        IMessageHandler<TMessage> WithHttpTransportWithoutResponse<TMessage>(IMessageHandler<TMessage> handler)
-            where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
-        {
-            return handler.WithTransport(b =>
-            {
-                seenMessageIdOnClient = b.ConquerorContext.GetMessageId();
-                seenTraceIdOnClient = b.ConquerorContext.GetTraceId();
-                return b.UseHttp(new("http://localhost")).WithHttpClient(httpClient);
-            });
-        }
-
         // the source generator does not yet support serialization of complex GET messages, and in controller mode the
         // model validation will fail (while the endpoint mode will just silently generate an empty message due to lack
         // of out-of-the-box validation
@@ -132,79 +113,14 @@ public sealed class MessagingClientContextTests : IDisposable
             return;
         }
 
-        switch (testCase.Message)
-        {
-            case TestMessages.TestMessage m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessage.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithoutResponse m:
-                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithoutResponse.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithoutPayload m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithoutPayload.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithoutResponseWithoutPayload m:
-                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithoutResponseWithoutPayload.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithMethod m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithMethod.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithPathPrefix m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPathPrefix.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithVersion m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithVersion.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithPath m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPath.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithPathPrefixAndPathAndVersion m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPathPrefixAndPathAndVersion.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithFullPath m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithFullPath.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithFullPathAndVersion m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithFullPathAndVersion.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithSuccessStatusCode m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithSuccessStatusCode.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithName m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithName.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithApiGroupName m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithApiGroupName.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithGet m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithGet.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithGetWithoutPayload m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithGetWithoutPayload.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithComplexGetPayload m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithComplexGetPayload.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithCustomSerializedPayloadType m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomSerializedPayloadType.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithCustomSerializer m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomSerializer.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithCustomJsonTypeInfo m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomJsonTypeInfo.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithMiddleware m:
-                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithMiddleware.T))
-                          .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessages.TestMessageMiddleware<TestMessages.TestMessageWithMiddleware, TestMessages.TestMessageResponse>>()))
-                          .Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessages.TestMessageWithMiddlewareWithoutResponse m:
-                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithMiddlewareWithoutResponse.T)).Handle(m, host.TestTimeoutToken);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(testCase), testCase, null);
-        }
+        _ = await messageClients.For<TMessage, TResponse>()
+                                .WithTransport(b =>
+                                {
+                                    seenMessageIdOnClient = b.ConquerorContext.GetMessageId();
+                                    seenTraceIdOnClient = b.ConquerorContext.GetTraceId();
+                                    return b.UseHttp(new("http://localhost")).WithHttpClient(httpClient);
+                                })
+                                .Handle((TMessage)testCase.Message, host.TestTimeoutToken);
 
         Assert.That(seenMessageIdOnServer, Is.EqualTo(seenMessageIdOnClient));
         Assert.That(seenTraceIdOnServer, Is.EqualTo(seenTraceIdOnClient));
@@ -245,6 +161,19 @@ public sealed class MessagingClientContextTests : IDisposable
     public void Dispose()
     {
         activity?.Dispose();
+    }
+
+    private static IEnumerable<TestCaseData> GenerateContextDataTestCases()
+    {
+        return from testCaseData in TestMessages.GenerateTestCaseData()
+               from hasUpstream in new[] { true, false }
+               from hasDownstream in new[] { true, false }
+               from hasBidirectional in new[] { true, false }
+               from hasActivity in new[] { true, false }
+               select new TestCaseData(hasUpstream, hasDownstream, hasBidirectional, hasActivity, testCaseData.Arguments[0])
+               {
+                   TypeArgs = testCaseData.TypeArgs,
+               };
     }
 
     private Task<TestHost> CreateTestHost(Action<IServiceCollection> configureServices,
