@@ -18,7 +18,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.Interfaces)]
         THandler>(
         this IServiceCollection services)
-        where THandler : class, IMessageHandlerWithTypeInjector
+        where THandler : class, IGeneratedMessageHandler
     {
         return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), typeof(THandler), ServiceLifetime.Transient));
     }
@@ -28,7 +28,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         THandler>(
         this IServiceCollection services,
         ServiceLifetime lifetime)
-        where THandler : class, IMessageHandlerWithTypeInjector
+        where THandler : class, IGeneratedMessageHandler
     {
         return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), typeof(THandler), lifetime));
     }
@@ -38,7 +38,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         THandler>(
         this IServiceCollection services,
         Func<IServiceProvider, THandler> factory)
-        where THandler : class, IMessageHandlerWithTypeInjector
+        where THandler : class, IGeneratedMessageHandler
     {
         return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), factory, ServiceLifetime.Transient));
     }
@@ -49,7 +49,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         this IServiceCollection services,
         Func<IServiceProvider, THandler> factory,
         ServiceLifetime lifetime)
-        where THandler : class, IMessageHandlerWithTypeInjector
+        where THandler : class, IGeneratedMessageHandler
     {
         return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), factory, lifetime));
     }
@@ -59,7 +59,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         THandler>(
         this IServiceCollection services,
         THandler instance)
-        where THandler : class, IMessageHandlerWithTypeInjector
+        where THandler : class, IGeneratedMessageHandler
     {
         return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), instance));
     }
@@ -140,7 +140,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
         var validTypes = assembly.GetTypes()
                                  .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false })
-                                 .Where(t => t.IsAssignableTo(typeof(IMessageHandlerWithTypeInjector)))
+                                 .Where(t => t.IsAssignableTo(typeof(IGeneratedMessageHandler)))
                                  .ToList();
 
         foreach (var messageHandlerType in validTypes)
@@ -204,7 +204,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         THandler>(
         this IServiceCollection services,
         ServiceDescriptor serviceDescriptor)
-        where THandler : class, IMessageHandlerWithTypeInjector
+        where THandler : class, IGeneratedMessageHandler
     {
         var messageHandlerInterfaces = typeof(THandler).GetInterfaces()
                                                        .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IMessageHandler<,>))

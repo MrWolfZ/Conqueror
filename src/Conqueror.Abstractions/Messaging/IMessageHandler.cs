@@ -56,8 +56,11 @@ public interface IMessageHandlerWithTypeInjector
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
+public interface IGeneratedMessageHandler : IMessageHandlerWithTypeInjector;
+
+[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IGeneratedMessageHandler<in TMessage, TResponse, in TPipelineInterface>
-    : IMessageHandler<TMessage, TResponse>
+    : IMessageHandler<TMessage, TResponse>, IGeneratedMessageHandler
     where TMessage : class, IMessage<TMessage, TResponse>
     where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
 {
@@ -69,7 +72,7 @@ public interface IGeneratedMessageHandler<in TMessage, TResponse, in TPipelineIn
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IGeneratedMessageHandler<in TMessage, in TPipelineInterface>
-    : IMessageHandler<TMessage>
+    : IMessageHandler<TMessage>, IGeneratedMessageHandler
     where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
 {
