@@ -25,7 +25,19 @@ public static class HttpMessageServerTransportClientBuilderExtensions
 
         public Task<TResponse> Send(TMessage message, IServiceProvider serviceProvider, ConquerorContext conquerorContext, CancellationToken cancellationToken)
         {
-            httpContext.PropagateConquerorContext(conquerorContext);
+            try
+            {
+                httpContext.PropagateConquerorContext(conquerorContext);
+            }
+            catch (FormattedConquerorContextDataInvalidException ex)
+            {
+                throw new MessageFailedException("test", ex)
+                {
+                    MessageType = typeof(TMessage),
+                    TransportType = new(ConquerorTransportHttpConstants.TransportName, MessageTransportRole.Server),
+                    Reason = MessageFailedException.WellKnownReasons.InvalidFormattedContextData,
+                };
+            }
 
             return wrapped.Send(message, serviceProvider, conquerorContext, cancellationToken);
         }

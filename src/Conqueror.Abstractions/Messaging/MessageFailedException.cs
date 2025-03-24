@@ -6,10 +6,15 @@ namespace Conqueror;
 
 [Serializable]
 [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "the standard constructors don't make sense for this class")]
-public abstract class MessageFailedException : Exception
+public class MessageFailedException : Exception
 {
-    protected MessageFailedException(string message, Exception? innerException = null)
+    public MessageFailedException(string message, Exception innerException)
         : base(message, innerException)
+    {
+    }
+
+    public MessageFailedException(string message)
+        : base(message)
     {
     }
 
@@ -30,5 +35,6 @@ public abstract class MessageFailedException : Exception
     {
         public const string UnauthenticatedPrincipal = nameof(UnauthenticatedPrincipal);
         public const string UnauthorizedPrincipal = nameof(UnauthorizedPrincipal);
+        public const string InvalidFormattedContextData = nameof(InvalidFormattedContextData);
     }
 }

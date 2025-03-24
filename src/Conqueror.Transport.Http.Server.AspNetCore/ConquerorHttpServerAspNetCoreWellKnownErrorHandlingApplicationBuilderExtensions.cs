@@ -29,7 +29,7 @@ public static class ConquerorHttpServerAspNetCoreWellKnownErrorHandlingApplicati
             {
                 await ctx.ForbidAsync().ConfigureAwait(false);
             }
-            catch (FormattedConquerorContextDataInvalidException) //// TODO: make this a well-known error
+            catch (MessageFailedException ex) when (ex.Reason == MessageFailedException.WellKnownReasons.InvalidFormattedContextData)
             {
                 // using this instead of just writing the status code directly ensures that the request is properly logged
                 await new BadRequestResult().ExecuteResultAsync(new() { HttpContext = ctx }).ConfigureAwait(false);

@@ -103,20 +103,13 @@ public static class ConquerorContextDataFormattingExtensions
 
     private static void Decode(this ConquerorContext ctx, IEnumerable<string> values)
     {
-        try
+        foreach (var value in values)
         {
-            foreach (var value in values)
+            int index = 0;
+            while (index < value.Length)
             {
-                int index = 0;
-                while (index < value.Length)
-                {
-                    index = DecodeFromTypeTag(ctx, value, index);
-                }
+                index = DecodeFromTypeTag(ctx, value, index);
             }
-        }
-        catch (Exception e)
-        {
-            throw new FormattedConquerorContextDataInvalidException("an error occurred while decoding context data", e);
         }
 
         static int DecodeFromTypeTag(ConquerorContext ctx, string encodedData, int index)

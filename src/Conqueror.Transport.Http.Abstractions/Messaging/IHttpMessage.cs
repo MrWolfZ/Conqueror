@@ -4,9 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
-// TODO: check if this can be removed
-// ReSharper disable TypeParameterCanBeVariant (false positive, causes compile errors)
-
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
