@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
+// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public interface IHttpMessageSerializer<TMessage, TResponse>

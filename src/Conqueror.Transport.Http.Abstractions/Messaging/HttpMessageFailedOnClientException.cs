@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 
-// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
+// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 [Serializable]

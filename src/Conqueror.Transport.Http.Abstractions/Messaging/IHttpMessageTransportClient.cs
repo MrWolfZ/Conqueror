@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
+// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public interface IHttpMessageTransportClient<in TMessage, TResponse> : IMessageTransportClient<TMessage, TResponse>

@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
+// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 [EditorBrowsable(EditorBrowsableState.Never)]

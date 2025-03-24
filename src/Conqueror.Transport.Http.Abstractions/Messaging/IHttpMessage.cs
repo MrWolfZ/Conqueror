@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
-// ReSharper disable once CheckNamespace (we want these extensions to be accessible from client registration code without an extra import)
+// ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
