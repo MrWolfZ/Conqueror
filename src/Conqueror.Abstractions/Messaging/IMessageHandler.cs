@@ -58,11 +58,10 @@ public interface IGeneratedMessageHandler
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler<in TMessage, TResponse, THandlerInterface, THandlerAdapter, in TPipelineInterface, TPipelineAdapter>
+public interface IGeneratedMessageHandler<in TMessage, TResponse, THandlerInterface, in TPipelineInterface, TPipelineAdapter>
     : IMessageHandler<TMessage, TResponse>, IGeneratedMessageHandler
     where TMessage : class, IMessage<TMessage, TResponse>
-    where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
-    where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
+    where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, TPipelineInterface, TPipelineAdapter>
     where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
     where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
 {
@@ -73,15 +72,14 @@ public interface IGeneratedMessageHandler<in TMessage, TResponse, THandlerInterf
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     static TResult IGeneratedMessageHandler.CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
-        => factory.Create<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>();
+        => factory.Create<TMessage, TResponse, THandlerInterface, TPipelineInterface, TPipelineAdapter>();
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler<in TMessage, THandlerInterface, THandlerAdapter, in TPipelineInterface, TPipelineAdapter>
+public interface IGeneratedMessageHandler<in TMessage, THandlerInterface, in TPipelineInterface, TPipelineAdapter>
     : IMessageHandler<TMessage>, IGeneratedMessageHandler
     where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
-    where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
+    where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, TPipelineInterface, TPipelineAdapter>
     where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
     where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
 {
@@ -92,48 +90,5 @@ public interface IGeneratedMessageHandler<in TMessage, THandlerInterface, THandl
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     static TResult IGeneratedMessageHandler.CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
-        => factory.Create<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>();
-}
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandlerAdapter;
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class GeneratedMessageHandlerAdapter<TMessage, TResponse>
-    : IConfigurableMessageHandler<TMessage, TResponse>, IGeneratedMessageHandlerAdapter
-    where TMessage : class, IMessage<TMessage, TResponse>
-{
-    public IConfigurableMessageHandler<TMessage, TResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
-
-    public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
-        => Wrapped.Handle(message, cancellationToken);
-
-    public IMessageHandler<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        => Wrapped.WithPipeline(configurePipeline);
-
-    public IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClient<TMessage, TResponse> configureTransport)
-        => Wrapped.WithTransport(configureTransport);
-
-    public IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClientAsync<TMessage, TResponse> configureTransport)
-        => Wrapped.WithTransport(configureTransport);
-}
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public class GeneratedMessageHandlerAdapter<TMessage>
-    : IConfigurableMessageHandler<TMessage>, IGeneratedMessageHandlerAdapter
-    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-{
-    public IConfigurableMessageHandler<TMessage> Wrapped { get; init; } = null!; // guaranteed to be set in init code
-
-    public Task Handle(TMessage message, CancellationToken cancellationToken = default)
-        => Wrapped.Handle(message, cancellationToken);
-
-    public IMessageHandler<TMessage> WithPipeline(Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
-        => Wrapped.WithPipeline(configurePipeline);
-
-    public IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClient<TMessage, UnitMessageResponse> configureTransport)
-        => Wrapped.WithTransport(configureTransport);
-
-    public IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClientAsync<TMessage, UnitMessageResponse> configureTransport)
-        => Wrapped.WithTransport(configureTransport);
+        => factory.Create<TMessage, THandlerInterface, TPipelineInterface, TPipelineAdapter>();
 }

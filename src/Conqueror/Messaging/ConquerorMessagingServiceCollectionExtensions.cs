@@ -140,7 +140,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
         var validTypes = assembly.GetTypes()
                                  .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false })
-                                 .Where(t => t.IsAssignableTo(typeof(IGeneratedMessageHandler)) && !t.IsAssignableTo(typeof(IGeneratedMessageHandlerAdapter)))
+                                 .Where(t => t.IsAssignableTo(typeof(IGeneratedMessageHandler)))
                                  .ToList();
 
         foreach (var messageHandlerType in validTypes)
@@ -334,10 +334,9 @@ public static class ConquerorMessagingServiceCollectionExtensions
     ) : IMessageTypesInjectionFactory<IServiceCollection>
         where THandler : class, IGeneratedMessageHandler
     {
-        public IServiceCollection Create<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
+        public IServiceCollection Create<TMessage, TResponse, THandlerInterface, TPipelineInterface, TPipelineAdapter>()
             where TMessage : class, IMessage<TMessage, TResponse>
-            where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
-            where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
+            where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, TPipelineInterface, TPipelineAdapter>
             where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
             where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
         {
@@ -368,10 +367,9 @@ public static class ConquerorMessagingServiceCollectionExtensions
             }
         }
 
-        public IServiceCollection Create<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
+        public IServiceCollection Create<TMessage, THandlerInterface, TPipelineInterface, TPipelineAdapter>()
             where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-            where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
-            where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
+            where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, TPipelineInterface, TPipelineAdapter>
             where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
             where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
         {

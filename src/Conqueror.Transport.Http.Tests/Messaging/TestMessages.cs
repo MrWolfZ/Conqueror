@@ -169,17 +169,19 @@ public static partial class TestMessages
             if (testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.CustomEndpoint)
             {
                 _ = endpoints.MapPost("/custom/api/test",
-                                      async (TestMessage message, HttpContext ctx) => TypedResults.Ok(await ctx.HandleMessage(message)))
+                                      async (TestMessage message, HttpContext ctx)
+                                          => TypedResults.Ok(await ctx.GetMessageClient(TestMessage.T).Handle(message, ctx.RequestAborted)))
                              .WithName(nameof(TestMessage));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutPayload",
-                                      (Delegate)(async (HttpContext ctx) => TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithoutPayload()))))
+                                      (Delegate)(async (HttpContext ctx)
+                                          => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithoutPayload.T).Handle(new(), ctx.RequestAborted))))
                              .WithName(nameof(TestMessageWithoutPayload));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutResponse",
                                       async (TestMessageWithoutResponse message, HttpContext ctx) =>
                                       {
-                                          await ctx.HandleMessage(message);
+                                          await ctx.GetMessageClient<TestMessageWithoutResponse>().Handle(message, ctx.RequestAborted);
                                           return TypedResults.Ok();
                                       })
                              .WithName(nameof(TestMessageWithoutResponse));
@@ -187,22 +189,25 @@ public static partial class TestMessages
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutResponseWithoutPayload",
                                       async (HttpContext ctx) =>
                                       {
-                                          await ctx.HandleMessage(new TestMessageWithoutResponseWithoutPayload());
+                                          await ctx.GetMessageClient<TestMessageWithoutResponseWithoutPayload>().Handle(new(), ctx.RequestAborted);
                                           return TypedResults.StatusCode(200);
                                       })
                              .WithName(nameof(TestMessageWithoutResponseWithoutPayload));
 
                 _ = endpoints.MapGet("/custom/api/testMessageWithGet",
-                                     async (int payload, string param, HttpContext ctx) =>
-                                         TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithGet { Payload = payload, Param = param })))
+                                     async (int payload, string param, HttpContext ctx)
+                                         => TypedResults.Ok(await ctx.GetMessageClient<TestMessageWithGet, TestMessageResponse>() // testing overload without inference
+                                                                     .Handle(new() { Payload = payload, Param = param }, ctx.RequestAborted)))
                              .WithName(nameof(TestMessageWithGet));
 
                 _ = endpoints.MapGet("/custom/api/testMessageWithGetWithoutPayload",
-                                     (Delegate)(async (HttpContext ctx) => TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithGetWithoutPayload()))))
+                                     (Delegate)(async (HttpContext ctx)
+                                         => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithGetWithoutPayload.T).Handle(new(), ctx.RequestAborted))))
                              .WithName(nameof(TestMessageWithGetWithoutPayload));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithMiddleware",
-                                      async (TestMessageWithMiddleware message, HttpContext ctx) => TypedResults.Ok(await ctx.HandleMessage(message)))
+                                      async (TestMessageWithMiddleware message, HttpContext ctx)
+                                          => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithMiddleware.T).Handle(message, ctx.RequestAborted)))
                              .WithName(nameof(TestMessageWithMiddleware));
 
                 return;
@@ -909,7 +914,8 @@ public static partial class TestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null) : TestMessage.IHandler
+    public sealed class TestMessageHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {
@@ -1560,53 +1566,53 @@ public static partial class TestMessages
         [HttpPost("/custom/api/test", Name = nameof(TestMessage))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessage(TestMessage message)
+        public Task<TestMessageResponse> ExecuteTestMessage(TestMessage message, CancellationToken cancellationToken)
         {
-            return HttpContext.HandleMessage(message);
+            return HttpContext.GetMessageClient(TestMessage.T).Handle(message, cancellationToken);
         }
 
         [HttpPost("/custom/api/testMessageWithoutPayload", Name = nameof(TestMessageWithoutPayload))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithoutPayload()
+        public Task<TestMessageResponse> ExecuteTestMessageWithoutPayload(CancellationToken cancellationToken)
         {
-            return HttpContext.HandleMessage(new TestMessageWithoutPayload());
+            return HttpContext.GetMessageClient(TestMessageWithoutPayload.T).Handle(new(), cancellationToken);
         }
 
         [HttpPost("/custom/api/testMessageWithoutResponse", Name = nameof(TestMessageWithoutResponse))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(200)]
-        public Task ExecuteTestMessageWithoutResponse(TestMessageWithoutResponse message)
+        public Task ExecuteTestMessageWithoutResponse(TestMessageWithoutResponse message, CancellationToken cancellationToken)
         {
-            return HttpContext.HandleMessage(message);
+            return HttpContext.GetMessageClient(TestMessageWithoutResponse.T).Handle(message, cancellationToken);
         }
 
         [HttpPost("/custom/api/testMessageWithoutResponseWithoutPayload", Name = nameof(TestMessageWithoutResponseWithoutPayload))]
         [ProducesResponseType(200)]
-        public Task ExecuteTestMessageWithoutPayloadWithoutResponse()
+        public Task ExecuteTestMessageWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
         {
-            return HttpContext.HandleMessage(new TestMessageWithoutResponseWithoutPayload());
+            return HttpContext.GetMessageClient(TestMessageWithoutResponseWithoutPayload.T).Handle(new(), cancellationToken);
         }
 
         [HttpGet("/custom/api/testMessageWithGet", Name = nameof(TestMessageWithGet))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithGet(int payload, string param)
+        public Task<TestMessageResponse> ExecuteTestMessageWithGet(int payload, string param, CancellationToken cancellationToken)
         {
-            return HttpContext.HandleMessage(new TestMessageWithGet { Payload = payload, Param = param });
+            return HttpContext.GetMessageClient(TestMessageWithGet.T).Handle(new() { Payload = payload, Param = param }, cancellationToken);
         }
 
         [HttpGet("/custom/api/testMessageWithGetWithoutPayload", Name = nameof(TestMessageWithGetWithoutPayload))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithGetWithoutPayload()
+        public Task<TestMessageResponse> ExecuteTestMessageWithGetWithoutPayload(CancellationToken cancellationToken)
         {
-            return HttpContext.HandleMessage(new TestMessageWithGetWithoutPayload());
+            return HttpContext.GetMessageClient(TestMessageWithGetWithoutPayload.T).Handle(new(), cancellationToken);
         }
 
         [HttpPost("/custom/api/testMessageWithMiddleware", Name = nameof(TestMessageWithMiddleware))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithMiddleware(TestMessageWithMiddleware message)
+        public Task<TestMessageResponse> ExecuteTestMessageWithMiddleware(TestMessageWithMiddleware message, CancellationToken cancellationToken)
         {
-            return HttpContext.HandleMessage(message);
+            return HttpContext.GetMessageClient(TestMessageWithMiddleware.T).Handle(message, cancellationToken);
         }
     }
 

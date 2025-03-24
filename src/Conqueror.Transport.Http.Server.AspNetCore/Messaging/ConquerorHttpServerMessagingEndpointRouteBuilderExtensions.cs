@@ -99,7 +99,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 return;
             }
 
-            var response = await context.HandleMessage(message).ConfigureAwait(false);
+            var response = await context.GetMessageClient(TMessage.T).Handle(message, context.RequestAborted).ConfigureAwait(false);
 
             context.Response.StatusCode = TMessage.SuccessStatusCode;
 

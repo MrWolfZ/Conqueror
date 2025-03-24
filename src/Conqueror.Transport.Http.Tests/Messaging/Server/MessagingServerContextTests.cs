@@ -215,7 +215,7 @@ public sealed partial class MessagingServerContextTests
             _ = services.Replace(ServiceDescriptor.Singleton<TestMessages.FnToCallFromHandler>(p =>
             {
                 ObserveAndSetContextData(p.GetRequiredService<TestMessages.TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
-                return p.GetRequiredService<IMessageClients>().For<NestedTestMessage.IHandler>().Handle(new());
+                return p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new());
             }));
         }, app => app.MapMessageEndpoints(testCase));
 
@@ -245,7 +245,7 @@ public sealed partial class MessagingServerContextTests
             _ = services.Replace(ServiceDescriptor.Singleton<TestMessages.FnToCallFromHandler>(p =>
             {
                 ObserveAndSetContextData(p.GetRequiredService<TestMessages.TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
-                return p.GetRequiredService<IMessageClients>().For<NestedTestMessage.IHandler>().Handle(new());
+                return p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new());
             }));
         }, app => app.MapMessageEndpoints(testCase));
 

@@ -29,7 +29,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
                         await Task.Yield();
                         traceIdFromMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
                         messageIdFromMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetMessageId();
-                        _ = await p.GetRequiredService<IMessageClients>().For<NestedTestMessage.IHandler>().Handle(new(), ct);
+                        _ = await p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new(), ct);
                         return new();
                     })
                     .AddConquerorMessageHandlerDelegate<NestedTestMessage, TestMessageResponse>(async (_, p, _) =>
@@ -56,7 +56,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         using var activity = hasActivity ? StartActivity(nameof(MessageContextTraceAndOperationIdTests) + testCaseIdx) : null;
 
         var handlerClient = serviceProvider.GetRequiredService<IMessageClients>()
-                                           .For<TestMessage.IHandler>()
+                                           .For(TestMessage.T)
                                            .WithTransport(b =>
                                            {
                                                traceIdFromClientTransportBuilder = b.ConquerorContext.GetTraceId();

@@ -131,6 +131,8 @@ public sealed partial class Container
         static IHttpMessageTypesInjector IHttpMessage.HttpMessageTypesInjector
             => HttpMessageTypesInjector<TestMessage, TestMessageResponse>.Default;
 
+        public static MessageTypes<TestMessage, TestMessageResponse> T => MessageTypes<TestMessage, TestMessageResponse>.Default;
+
         static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessage, TestMessageResponse>.TypeInjectors
             => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
 

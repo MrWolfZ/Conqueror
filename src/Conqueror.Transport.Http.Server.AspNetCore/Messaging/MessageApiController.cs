@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
@@ -6,9 +7,11 @@ namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 internal sealed class MessageApiController<TMessage, TResponse> : MessageApiControllerBase<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
-    public async Task<IActionResult> ExecuteMessage([FromBody] TMessage message)
+    public async Task<IActionResult> ExecuteMessage([FromBody] TMessage message, CancellationToken cancellationToken)
     {
-        var response = await HttpContext.HandleMessage(message).ConfigureAwait(false);
+        var response = await HttpContext.GetMessageClient(TMessage.T)
+                                        .Handle(message, cancellationToken)
+                                        .ConfigureAwait(false);
 
         if (typeof(TResponse) == typeof(UnitMessageResponse))
         {
@@ -22,9 +25,11 @@ internal sealed class MessageApiController<TMessage, TResponse> : MessageApiCont
 internal sealed class MessageApiControllerWithoutPayload<TMessage, TResponse> : MessageApiControllerBase<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
-    public async Task<IActionResult> ExecuteMessage()
+    public async Task<IActionResult> ExecuteMessage(CancellationToken cancellationToken)
     {
-        var response = await HttpContext.HandleMessage(TMessage.EmptyInstance!).ConfigureAwait(false);
+        var response = await HttpContext.GetMessageClient(TMessage.T)
+                                        .Handle(TMessage.EmptyInstance!, cancellationToken)
+                                        .ConfigureAwait(false);
 
         if (typeof(TResponse) == typeof(UnitMessageResponse))
         {
@@ -38,9 +43,11 @@ internal sealed class MessageApiControllerWithoutPayload<TMessage, TResponse> : 
 internal sealed class MessageApiControllerForGet<TMessage, TResponse> : MessageApiControllerBase<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
-    public async Task<IActionResult> ExecuteMessage([FromQuery] TMessage message)
+    public async Task<IActionResult> ExecuteMessage([FromQuery] TMessage message, CancellationToken cancellationToken)
     {
-        var response = await HttpContext.HandleMessage(message).ConfigureAwait(false);
+        var response = await HttpContext.GetMessageClient(TMessage.T)
+                                        .Handle(message, cancellationToken)
+                                        .ConfigureAwait(false);
 
         if (typeof(TResponse) == typeof(UnitMessageResponse))
         {

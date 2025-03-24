@@ -9,13 +9,13 @@ public abstract partial class MessageHandlerFunctionalityTests
     protected virtual IMessageHandler<TestMessage, TestMessageResponse> ResolveHandler(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
     }
 
     protected virtual IMessageHandler<TestMessageWithoutResponse> ResolveHandlerWithoutResponse(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IMessageClients>()
-                              .For<TestMessageWithoutResponse.IHandler>();
+                              .For(TestMessageWithoutResponse.T);
     }
 
     protected static TestMessage CreateMessage() => new(10);
@@ -263,27 +263,13 @@ public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunc
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         _ = await handler.Handle(CreateMessage());
 
         await provider.DisposeAsync();
 
         Assert.That(observation.WasDisposed, Is.True);
-    }
-
-    [Test]
-    public void GivenCustomHandlerInterface_WhenCreatingClient_ThrowsInvalidOperationException()
-    {
-        var services = new ServiceCollection();
-        var observation = new DisposalObservation();
-
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
-                    .AddSingleton(observation);
-
-        var provider = services.BuildServiceProvider();
-
-        Assert.That(() => provider.GetRequiredService<IMessageClients>().For<ITestMessageHandler>(), Throws.InvalidOperationException);
     }
 
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
@@ -343,8 +329,6 @@ public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunc
 
         public void Dispose() => observation.WasDisposed = true;
     }
-
-    private interface ITestMessageHandler : TestMessage.IHandler;
 
     private sealed class DisposalObservation
     {
@@ -544,7 +528,7 @@ public sealed class MessageHandlerFunctionalityExplicitClientWithSyncTransportFa
     protected override IMessageHandler<TestMessage, TestMessageResponse> ResolveHandler(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IMessageClients>()
-                              .ForMessageType<TestMessage, TestMessageResponse>()
+                              .For<TestMessage, TestMessageResponse>()
                               .WithTransport(b =>
                               {
                                   b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
@@ -555,7 +539,7 @@ public sealed class MessageHandlerFunctionalityExplicitClientWithSyncTransportFa
     protected override IMessageHandler<TestMessageWithoutResponse> ResolveHandlerWithoutResponse(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IMessageClients>()
-                              .ForMessageType<TestMessageWithoutResponse>()
+                              .For<TestMessageWithoutResponse>()
                               .WithTransport(b =>
                               {
                                   b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
@@ -570,7 +554,7 @@ public sealed class MessageHandlerFunctionalityExplicitClientWithAsyncTransportF
     protected override IMessageHandler<TestMessage, TestMessageResponse> ResolveHandler(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IMessageClients>()
-                              .ForMessageType<TestMessage, TestMessageResponse>()
+                              .For<TestMessage, TestMessageResponse>()
                               .WithTransport(async b =>
                               {
                                   await Task.Delay(1);
@@ -582,7 +566,7 @@ public sealed class MessageHandlerFunctionalityExplicitClientWithAsyncTransportF
     protected override IMessageHandler<TestMessageWithoutResponse> ResolveHandlerWithoutResponse(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IMessageClients>()
-                              .ForMessageType<TestMessageWithoutResponse>()
+                              .For<TestMessageWithoutResponse>()
                               .WithTransport(async b =>
                               {
                                   await Task.Delay(1);

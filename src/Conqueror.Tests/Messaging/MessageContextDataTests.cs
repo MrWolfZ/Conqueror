@@ -76,7 +76,7 @@ public sealed partial class MessageContextDataTests
         SetAndObserveContextData(conquerorContext, testDataInstructions, testObservations, Location.PreExecution);
 
         var handlerClient = serviceProvider.GetRequiredService<IMessageClients>()
-                                           .For<TestMessage.IHandler>()
+                                           .For(TestMessage.T)
                                            .WithTransport(b =>
                                            {
                                                SetAndObserveContextData(b.ConquerorContext, testDataInstructions, testObservations, Location.TransportBuilder);
@@ -625,7 +625,7 @@ public sealed partial class MessageContextDataTests
         {
             SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPreExecution);
 
-            _ = await messageClients.For<NestedTestMessage.IHandler>().Handle(new());
+            _ = await messageClients.For(NestedTestMessage.T).Handle(new());
 
             SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPostExecution);
         }

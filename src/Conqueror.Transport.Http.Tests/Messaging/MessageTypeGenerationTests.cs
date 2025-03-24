@@ -36,13 +36,13 @@ public sealed partial class MessageTypeGenerationTests
 
         var messageClients = host.Resolve<IMessageClients>();
 
-        var result = await messageClients.For<TestMessage.IHandler>()
+        var result = await messageClients.For(TestMessage.T)
                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(host.HttpClient))
                                          .Handle(new() { Payload = 10 });
 
         Assert.That(result, Is.Not.Null);
 
-        await messageClients.For<TestMessageWithoutResponse.IHandler>()
+        await messageClients.For(TestMessageWithoutResponse.T)
                             .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(host.HttpClient))
                             .Handle(new("test"));
     }
@@ -134,6 +134,8 @@ public sealed partial class MessageTypeGenerationTests
             => HttpMessageTypesInjector<TestMessageWithCustomInterface, TestMessageResponse>.Default;
 
         public static IReadOnlyCollection<IMessageTypesInjector> TypeInjectors => [];
+
+        public static MessageTypes<TestMessageWithCustomInterface, TestMessageResponse> T => MessageTypes<TestMessageWithCustomInterface, TestMessageResponse>.Default;
 
         public static TestMessageWithCustomInterface? EmptyInstance { get; }
     }

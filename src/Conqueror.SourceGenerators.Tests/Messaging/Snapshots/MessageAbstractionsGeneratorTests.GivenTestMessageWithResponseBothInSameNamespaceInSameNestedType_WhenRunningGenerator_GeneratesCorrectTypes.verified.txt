@@ -22,17 +22,15 @@ namespace Generator.Tests
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "0.7.0-beta.1")]
     partial record TestMessage : IMessage<TestMessage, TestMessageResponse>
     {
-         public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>
-         {
-             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-             public sealed class Adapter : GeneratedMessageHandlerAdapter<TestMessage, TestMessageResponse>, IHandler;
-         }
+         public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IHandler, IPipeline, IPipeline.Adapter>;
          
          public interface IPipeline : IMessagePipeline<TestMessage, TestMessageResponse>
          {
              [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
              public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessage, TestMessageResponse>, IPipeline;
          }
+
+        public static MessageTypes<TestMessage, TestMessageResponse> T => MessageTypes<TestMessage, TestMessageResponse>.Default;
 
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
         static TestMessage IMessage<TestMessage, TestMessageResponse>.EmptyInstance => new();

@@ -135,72 +135,72 @@ public sealed class MessagingClientContextTests : IDisposable
         switch (testCase.Message)
         {
             case TestMessages.TestMessage m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessage.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessage.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithoutResponse m:
-                await WithHttpTransportWithoutResponse(messageClients.For<TestMessages.TestMessageWithoutResponse.IHandler>()).Handle(m, host.TestTimeoutToken);
+                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithoutResponse.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithoutPayload m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithoutPayload.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithoutPayload.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithoutResponseWithoutPayload m:
-                await WithHttpTransportWithoutResponse(messageClients.For<TestMessages.TestMessageWithoutResponseWithoutPayload.IHandler>()).Handle(m, host.TestTimeoutToken);
+                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithoutResponseWithoutPayload.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithMethod m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithMethod.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithMethod.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithPathPrefix m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithPathPrefix.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPathPrefix.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithVersion m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithVersion.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithVersion.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithPath m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithPath.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPath.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithPathPrefixAndPathAndVersion m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithPathPrefixAndPathAndVersion.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithPathPrefixAndPathAndVersion.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithFullPath m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithFullPath.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithFullPath.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithFullPathAndVersion m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithFullPathAndVersion.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithFullPathAndVersion.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithSuccessStatusCode m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithSuccessStatusCode.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithSuccessStatusCode.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithName m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithName.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithName.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithApiGroupName m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithApiGroupName.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithApiGroupName.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithGet m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithGet.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithGet.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithGetWithoutPayload m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithGetWithoutPayload.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithGetWithoutPayload.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithComplexGetPayload m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithComplexGetPayload.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithComplexGetPayload.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithCustomSerializedPayloadType m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithCustomSerializedPayloadType.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomSerializedPayloadType.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithCustomSerializer m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithCustomSerializer.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomSerializer.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithCustomJsonTypeInfo m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithCustomJsonTypeInfo.IHandler>()).Handle(m, host.TestTimeoutToken);
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithCustomJsonTypeInfo.T)).Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithMiddleware m:
-                _ = await WithHttpTransport(messageClients.For<TestMessages.TestMessageWithMiddleware.IHandler>())
+                _ = await WithHttpTransport(messageClients.For(TestMessages.TestMessageWithMiddleware.T))
                           .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessages.TestMessageMiddleware<TestMessages.TestMessageWithMiddleware, TestMessages.TestMessageResponse>>()))
                           .Handle(m, host.TestTimeoutToken);
                 break;
             case TestMessages.TestMessageWithMiddlewareWithoutResponse m:
-                await WithHttpTransportWithoutResponse(messageClients.For<TestMessages.TestMessageWithMiddlewareWithoutResponse.IHandler>()).Handle(m, host.TestTimeoutToken);
+                await WithHttpTransportWithoutResponse(messageClients.For(TestMessages.TestMessageWithMiddlewareWithoutResponse.T)).Handle(m, host.TestTimeoutToken);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(testCase), testCase, null);

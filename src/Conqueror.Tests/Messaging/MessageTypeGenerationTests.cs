@@ -21,14 +21,14 @@ public sealed partial class MessageTypeGenerationTests
 
         var messageClients = provider.GetRequiredService<IMessageClients>();
 
-        var result = await messageClients.For<TestMessage.IHandler>()
+        var result = await messageClients.For(TestMessage.T)
                                          .WithPipeline(p => p.UseTest().UseTest())
                                          .WithTransport(b => b.UseInProcess())
                                          .Handle(new(10));
 
         Assert.That(result, Is.Not.Null);
 
-        await messageClients.For<TestMessageWithoutResponse.IHandler>()
+        await messageClients.For(TestMessageWithoutResponse.T)
                             .WithPipeline(p => p.UseTest().UseTest())
                             .WithTransport(b => b.UseInProcess())
                             .Handle(new());
@@ -41,17 +41,15 @@ public sealed partial class MessageTypeGenerationTests
     // generated
     public sealed partial record TestMessage : IMessage<TestMessage, TestMessageResponse>
     {
-        public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>
-        {
-            [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Adapter : GeneratedMessageHandlerAdapter<TestMessage, TestMessageResponse>, IHandler;
-        }
+        public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IHandler, IPipeline, IPipeline.Adapter>;
 
         public interface IPipeline : IMessagePipeline<TestMessage, TestMessageResponse>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessage, TestMessageResponse>, IPipeline;
         }
+
+        public static MessageTypes<TestMessage, TestMessageResponse> T => MessageTypes<TestMessage, TestMessageResponse>.Default;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestMessage? IMessage<TestMessage, TestMessageResponse>.EmptyInstance => null;
@@ -78,17 +76,15 @@ public sealed partial class MessageTypeGenerationTests
     // generated
     public sealed partial record TestMessageWithoutResponse : IMessage<TestMessageWithoutResponse, UnitMessageResponse>
     {
-        public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>
-        {
-            [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Adapter : GeneratedMessageHandlerAdapter<TestMessageWithoutResponse>, IHandler;
-        }
+        public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IHandler, IPipeline, IPipeline.Adapter>;
 
         public interface IPipeline : IMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessageWithoutResponse, UnitMessageResponse>, IPipeline;
         }
+
+        public static MessageTypes<TestMessageWithoutResponse, UnitMessageResponse> T => MessageTypes<TestMessageWithoutResponse, UnitMessageResponse>.Default;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestMessageWithoutResponse IMessage<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => new();

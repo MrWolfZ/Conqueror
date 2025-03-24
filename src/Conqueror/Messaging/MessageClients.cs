@@ -6,26 +6,19 @@ namespace Conqueror.Messaging;
 
 internal sealed class MessageClients(IServiceProvider serviceProvider) : IMessageClients
 {
-    public THandler For<THandler>()
-        where THandler : class, IGeneratedMessageHandler
-    {
-        return THandler.CreateWithMessageTypes(new ProxyTypeInjectionFactory<THandler>(serviceProvider))
-               ?? throw new InvalidOperationException($"cannot create handler for type '{typeof(THandler)}'");
-    }
-
-    public IMessageHandler<TMessage, TResponse> For<TMessage, TResponse>(IMessage<TMessage, TResponse> messageTypes)
+    public IMessageHandler<TMessage, TResponse> For<TMessage, TResponse>()
         where TMessage : class, IMessage<TMessage, TResponse>
         => CreateProxy<TMessage, TResponse>(serviceProvider);
 
-    public IMessageHandler<TMessage, UnitMessageResponse> For<TMessage>(IMessage<TMessage, UnitMessageResponse> messageTypes)
+    public IMessageHandler<TMessage, TResponse> For<TMessage, TResponse>(MessageTypes<TMessage, TResponse> messageTypes)
+        where TMessage : class, IMessage<TMessage, TResponse>
+        => CreateProxy<TMessage, TResponse>(serviceProvider);
+
+    public IMessageHandler<TMessage> For<TMessage>()
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-        => CreateProxy<TMessage, UnitMessageResponse>(serviceProvider);
+        => new MessageWithoutResponseHandlerAdapter<TMessage> { Wrapped = CreateProxy<TMessage, UnitMessageResponse>(serviceProvider) };
 
-    public IMessageHandler<TMessage, TResponse> ForMessageType<TMessage, TResponse>()
-        where TMessage : class, IMessage<TMessage, TResponse>
-        => CreateProxy<TMessage, TResponse>(serviceProvider);
-
-    public IMessageHandler<TMessage> ForMessageType<TMessage>()
+    public IMessageHandler<TMessage> For<TMessage>(MessageTypes<TMessage, UnitMessageResponse> messageTypes)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
         => new MessageWithoutResponseHandlerAdapter<TMessage> { Wrapped = CreateProxy<TMessage, UnitMessageResponse>(serviceProvider) };
 
@@ -38,37 +31,6 @@ internal sealed class MessageClients(IServiceProvider serviceProvider) : IMessag
             new(b => b.UseInProcess()),
             null,
             MessageTransportRole.Client);
-    }
-
-    private sealed class ProxyTypeInjectionFactory<THandler>(IServiceProvider serviceProvider)
-        : IMessageTypesInjectionFactory<THandler?>
-        where THandler : class, IGeneratedMessageHandler
-    {
-        public THandler? Create<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-            where TMessage : class, IMessage<TMessage, TResponse>
-            where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
-            where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
-            where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
-            where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
-            => new THandlerAdapter { Wrapped = CreateProxy<TMessage, TResponse>(serviceProvider) } as THandler;
-
-        public THandler? Create<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-            where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-            where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
-            where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
-            where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
-            where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
-        {
-            var adapter = new THandlerAdapter
-            {
-                Wrapped = new MessageWithoutResponseHandlerAdapter<TMessage>
-                {
-                    Wrapped = CreateProxy<TMessage, UnitMessageResponse>(serviceProvider)
-                },
-            };
-
-            return adapter as THandler;
-        }
     }
 
     private sealed class MessageWithoutResponseHandlerAdapter<TMessage>

@@ -30,7 +30,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var expectedTransportTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
                                                                  .Select(r => new MessageTransportType(InProcessMessageTransport.Name, r))
@@ -77,7 +77,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessageWithoutResponse.IHandler>();
+                              .For(TestMessageWithoutResponse.T);
 
         using var tokenSource = new CancellationTokenSource();
 
@@ -453,7 +453,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var response = await handler.Handle(new(0), tokens.CancellationTokens[0]);
 
@@ -489,7 +489,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var response = await handler.WithPipeline(pipeline =>
         {
@@ -530,7 +530,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10)));
 
@@ -549,7 +549,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestMessageMiddleware<TestMessage, TestMessageResponse>(exception))).Handle(new(10)));
 
@@ -585,11 +585,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var handler1 = scope1.ServiceProvider
                              .GetRequiredService<IMessageClients>()
-                             .For<TestMessage.IHandler>();
+                             .For(TestMessage.T);
 
         var handler2 = scope2.ServiceProvider
                              .GetRequiredService<IMessageClients>()
-                             .For<TestMessage.IHandler>();
+                             .For(TestMessage.T);
 
         _ = await handler1.WithPipeline(pipeline =>
         {
@@ -635,7 +635,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         _ = await handler.WithPipeline(p => p.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
                          .WithPipeline(p => p.Use(new TestMessageMiddleware2<TestMessage, TestMessageResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
@@ -667,7 +667,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var message = new TestMessage(10);
 
@@ -695,7 +695,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var message = new TestMessage(10);
 
@@ -723,7 +723,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessageWithoutResponse.IHandler>();
+                              .For(TestMessageWithoutResponse.T);
 
         var message = new TestMessageWithoutResponse(10);
 
@@ -750,7 +750,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessageWithoutResponse.IHandler>();
+                              .For(TestMessageWithoutResponse.T);
 
         var message = new TestMessageWithoutResponse(10);
 
@@ -776,7 +776,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var message = new TestMessage(10);
 
@@ -805,7 +805,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         var message = new TestMessage(10);
 

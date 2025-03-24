@@ -11,17 +11,15 @@ namespace Conqueror;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IMessageTypesInjectionFactory<out TResult>
 {
-    TResult Create<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
+    TResult Create<TMessage, TResponse, THandlerInterface, TPipelineInterface, TPipelineAdapter>()
         where TMessage : class, IMessage<TMessage, TResponse>
-        where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
-        where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
+        where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, TPipelineInterface, TPipelineAdapter>
         where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
         where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new();
 
-    TResult Create<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
+    TResult Create<TMessage, THandlerInterface, TPipelineInterface, TPipelineAdapter>()
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-        where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
-        where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
+        where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, TPipelineInterface, TPipelineAdapter>
         where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
         where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new();
 }

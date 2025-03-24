@@ -21,7 +21,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         _ = await handler.Handle(new());
 
@@ -49,7 +49,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         _ = await handler.Handle(new());
 
@@ -75,7 +75,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         _ = await handler.Handle(new());
 
@@ -96,7 +96,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var provider = services.BuildServiceProvider();
 
         var handler = provider.GetRequiredService<IMessageClients>()
-                              .For<TestMessage.IHandler>();
+                              .For(TestMessage.T);
 
         _ = await handler.Handle(new(), CancellationToken.None);
     }

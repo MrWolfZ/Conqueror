@@ -23,13 +23,13 @@ app.UseConqueror();
 app.MapPost("/api/custom", (
                     HttpContext ctx,
                     [FromBody] TopLevelTestMessage message)
-                => ctx.HandleMessage(message));
+                => ctx.GetMessageClient(TopLevelTestMessage.T).Handle(message, ctx.RequestAborted));
 
 app.MapGet("/api/customGet/{payload:int}", async (int payload, HttpContext ctx)
                =>
            {
                var message = new TopLevelTestMessage { Payload = payload, Nested = new() { NestedString = "test" } };
-               return await ctx.HandleMessage(message);
+               return await ctx.GetMessageClient(TopLevelTestMessage.T).Handle(message, ctx.RequestAborted);
            });
 
 app.MapGroup("/group").MapConquerorMessageEndpoint<TopLevelTestMessage>().WithName("TopLevelTestMessage2");

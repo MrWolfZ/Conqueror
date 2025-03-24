@@ -125,11 +125,7 @@ public static class MessageAbstractionsGenerationHelper
             // TODO: improve performance by not using templated strings
             sb.Append($$$"""
                          
-                                  public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, {{{responseTypeName}}}, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>
-                                  {
-                                      [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                      public sealed class Adapter : GeneratedMessageHandlerAdapter<{{{messageTypeName}}}, {{{responseTypeName}}}>, IHandler;
-                                  }
+                                  public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, {{{responseTypeName}}}, IHandler, IPipeline, IPipeline.Adapter>;
                                   
                                   public interface IPipeline : IMessagePipeline<{{{messageTypeName}}}, {{{responseTypeName}}}>
                                   {
@@ -143,11 +139,7 @@ public static class MessageAbstractionsGenerationHelper
             // TODO: improve performance by not using templated strings
             sb.Append($$$"""
                          
-                                  public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>
-                                  {
-                                      [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                      public sealed class Adapter : GeneratedMessageHandlerAdapter<{{{messageTypeName}}}>, IHandler;
-                                  }
+                                  public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, IHandler, IPipeline, IPipeline.Adapter>;
                                   
                                   public interface IPipeline : IMessagePipeline<{{{messageTypeName}}}, UnitMessageResponse>
                                   {
@@ -156,6 +148,12 @@ public static class MessageAbstractionsGenerationHelper
                                   }
                          """);
         }
+
+        sb.Append($$$"""
+                     
+                     
+                             public static MessageTypes<{{{messageTypeName}}}, {{{responseTypeName}}}> T => MessageTypes<{{{messageTypeName}}}, {{{responseTypeName}}}>.Default;
+                     """);
 
         if (!messageTypeDescriptor.HasProperties)
         {
