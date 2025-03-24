@@ -13,7 +13,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DependencyInjectionAbstractionsVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
     </ItemGroup>
 

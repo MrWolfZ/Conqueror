@@ -183,6 +183,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
         services.TryAddTransient<IMessageClients, MessageClients>();
         services.TryAddSingleton<MessageTransportRegistry>();
         services.TryAddSingleton<IMessageTransportRegistry>(p => p.GetRequiredService<MessageTransportRegistry>());
+
+        services.AddConquerorContext();
     }
 
     private static IServiceCollection AddConquerorMessageHandlerInternal<

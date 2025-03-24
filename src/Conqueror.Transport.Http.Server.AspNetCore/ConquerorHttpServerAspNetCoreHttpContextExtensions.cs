@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Conqueror.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
 
@@ -16,7 +16,7 @@ internal static class ConquerorHttpServerAspNetCoreHttpContextExtensions
     {
         ReadContextDataFromRequest(conquerorContext, httpContext);
 
-        ConquerorServerTransportHelper.HandleTraceParent(conquerorContext, GetTraceParent(httpContext));
+        HandleTraceParent(conquerorContext, GetTraceParent(httpContext));
 
         // ReSharper disable once AccessToDisposedClosure (accessing the disposed context is fine, since disposing it only clears it from the async local)
         httpContext.Response.OnStarting(state => SetResponseHeaders((HttpContext)state, conquerorContext), httpContext);
@@ -47,6 +47,16 @@ internal static class ConquerorHttpServerAspNetCoreHttpContextExtensions
             }
 
             return Task.CompletedTask;
+        }
+    }
+
+    private static void HandleTraceParent(ConquerorContext conquerorContext, string? traceParent)
+    {
+        if (Activity.Current is null && traceParent is not null)
+        {
+            using var a = new Activity(string.Empty);
+            var traceId = a.SetParentId(traceParent).TraceId.ToString();
+            conquerorContext.SetTraceId(traceId);
         }
     }
 }
