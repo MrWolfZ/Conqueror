@@ -133,6 +133,8 @@ public sealed partial class MessageTypeGenerationTests
         static IHttpMessageTypesInjector IHttpMessage.HttpMessageTypesInjector
             => HttpMessageTypesInjector<TestMessageWithCustomInterface, TestMessageResponse>.Default;
 
+        public static IDefaultMessageTypesInjector DefaultTypeInjector => throw new NotSupportedException();
+
         public static IReadOnlyCollection<IMessageTypesInjector> TypeInjectors => [];
 
         public static MessageTypes<TestMessageWithCustomInterface, TestMessageResponse> T => MessageTypes<TestMessageWithCustomInterface, TestMessageResponse>.Default;

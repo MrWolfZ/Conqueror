@@ -15,6 +15,9 @@ public interface IMessage<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
+    static abstract IDefaultMessageTypesInjector DefaultTypeInjector { get; }
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
     static abstract IReadOnlyCollection<IMessageTypesInjector> TypeInjectors { get; }
 
     /// <summary>

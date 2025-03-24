@@ -22,18 +22,22 @@ namespace Generator.Tests
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "0.7.0-beta.1")]
     partial record TestMessageWithoutResponse : IMessage<TestMessageWithoutResponse, UnitMessageResponse>
     {
-         public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IHandler, IPipeline, IPipeline.Adapter>;
-         
-         public interface IPipeline : IMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse>
-         {
-             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-             public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessageWithoutResponse, UnitMessageResponse>, IPipeline;
-         }
-
         public static MessageTypes<TestMessageWithoutResponse, UnitMessageResponse> T => MessageTypes<TestMessageWithoutResponse, UnitMessageResponse>.Default;
+
+        public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IPipeline>;
+         
+        public interface IPipeline : IMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse>
+        {
+            [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+             public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessageWithoutResponse, UnitMessageResponse>, IPipeline;
+        }
 
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
         static TestMessageWithoutResponse IMessage<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => new();
+
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        static global::Conqueror.IDefaultMessageTypesInjector global::Conqueror.IMessage<TestMessageWithoutResponse, UnitMessageResponse>.DefaultTypeInjector
+            => global::Conqueror.DefaultMessageTypesInjector<TestMessageWithoutResponse, IPipeline, IPipeline.Adapter>.Default;
 
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
         static global::System.Collections.Generic.IReadOnlyCollection<IMessageTypesInjector> global::Conqueror.IMessage<TestMessageWithoutResponse, UnitMessageResponse>.TypeInjectors

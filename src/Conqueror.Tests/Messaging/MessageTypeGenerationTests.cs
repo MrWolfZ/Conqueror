@@ -41,7 +41,9 @@ public sealed partial class MessageTypeGenerationTests
     // generated
     public sealed partial record TestMessage : IMessage<TestMessage, TestMessageResponse>
     {
-        public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IHandler, IPipeline, IPipeline.Adapter>;
+        public static MessageTypes<TestMessage, TestMessageResponse> T => MessageTypes<TestMessage, TestMessageResponse>.Default;
+
+        public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IPipeline>;
 
         public interface IPipeline : IMessagePipeline<TestMessage, TestMessageResponse>
         {
@@ -49,10 +51,11 @@ public sealed partial class MessageTypeGenerationTests
             public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessage, TestMessageResponse>, IPipeline;
         }
 
-        public static MessageTypes<TestMessage, TestMessageResponse> T => MessageTypes<TestMessage, TestMessageResponse>.Default;
-
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestMessage? IMessage<TestMessage, TestMessageResponse>.EmptyInstance => null;
+
+        public static IDefaultMessageTypesInjector DefaultTypeInjector
+            => DefaultMessageTypesInjector<TestMessage, TestMessageResponse, IPipeline, IPipeline.Adapter>.Default;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessage, TestMessageResponse>.TypeInjectors
@@ -76,7 +79,9 @@ public sealed partial class MessageTypeGenerationTests
     // generated
     public sealed partial record TestMessageWithoutResponse : IMessage<TestMessageWithoutResponse, UnitMessageResponse>
     {
-        public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IHandler, IPipeline, IPipeline.Adapter>;
+        public static MessageTypes<TestMessageWithoutResponse, UnitMessageResponse> T => MessageTypes<TestMessageWithoutResponse, UnitMessageResponse>.Default;
+
+        public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IPipeline>;
 
         public interface IPipeline : IMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse>
         {
@@ -84,10 +89,11 @@ public sealed partial class MessageTypeGenerationTests
             public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessageWithoutResponse, UnitMessageResponse>, IPipeline;
         }
 
-        public static MessageTypes<TestMessageWithoutResponse, UnitMessageResponse> T => MessageTypes<TestMessageWithoutResponse, UnitMessageResponse>.Default;
-
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestMessageWithoutResponse IMessage<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => new();
+
+        public static IDefaultMessageTypesInjector DefaultTypeInjector
+            => DefaultMessageTypesInjector<TestMessageWithoutResponse, IPipeline, IPipeline.Adapter>.Default;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageWithoutResponse, UnitMessageResponse>.TypeInjectors

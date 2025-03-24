@@ -9,15 +9,21 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public interface IMessageHandler<in TMessage, TResponse>
+public interface IMessageHandler<in TMessage, TResponse> : IMessageHandlerWithTypeInjector
     where TMessage : class, IMessage<TMessage, TResponse>
 {
+    static IDefaultMessageTypesInjector IMessageHandlerWithTypeInjector.DefaultTypeInjector
+        => TMessage.DefaultTypeInjector;
+
     Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default);
 }
 
-public interface IMessageHandler<in TMessage>
+public interface IMessageHandler<in TMessage> : IMessageHandlerWithTypeInjector
     where TMessage : class, IMessage<TMessage, UnitMessageResponse>
 {
+    static IDefaultMessageTypesInjector IMessageHandlerWithTypeInjector.DefaultTypeInjector
+        => TMessage.DefaultTypeInjector;
+
     Task Handle(TMessage message, CancellationToken cancellationToken = default);
 }
 
@@ -44,51 +50,31 @@ public interface IConfigurableMessageHandler<TMessage> : IMessageHandler<TMessag
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler
+public interface IMessageHandlerWithTypeInjector
 {
-    /// <summary>
-    ///     Helper method to be able to access the types related to a message type as generic parameters while only
-    ///     having a generic reference to the generated handler interface type. This obviates the need for reflection.
-    /// </summary>
-    /// <param name="factory">The factory that should be called with the generic type parameters</param>
-    /// <typeparam name="TResult">The type of result the factory will return</typeparam>
-    /// <returns>The result of calling the factory</returns>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static abstract TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory);
+    internal static abstract IDefaultMessageTypesInjector DefaultTypeInjector { get; }
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler<in TMessage, TResponse, THandlerInterface, in TPipelineInterface, TPipelineAdapter>
-    : IMessageHandler<TMessage, TResponse>, IGeneratedMessageHandler
+public interface IGeneratedMessageHandler<in TMessage, TResponse, in TPipelineInterface>
+    : IMessageHandler<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
-    where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, TPipelineInterface, TPipelineAdapter>
     where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
-    where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
 {
     static virtual void ConfigurePipeline(TPipelineInterface pipeline)
     {
         // by default, we use an empty pipeline
     }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    static TResult IGeneratedMessageHandler.CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
-        => factory.Create<TMessage, TResponse, THandlerInterface, TPipelineInterface, TPipelineAdapter>();
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler<in TMessage, THandlerInterface, in TPipelineInterface, TPipelineAdapter>
-    : IMessageHandler<TMessage>, IGeneratedMessageHandler
+public interface IGeneratedMessageHandler<in TMessage, in TPipelineInterface>
+    : IMessageHandler<TMessage>
     where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, TPipelineInterface, TPipelineAdapter>
     where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
-    where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
 {
     static virtual void ConfigurePipeline(TPipelineInterface pipeline)
     {
         // by default, we use an empty pipeline
     }
-
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    static TResult IGeneratedMessageHandler.CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
-        => factory.Create<TMessage, THandlerInterface, TPipelineInterface, TPipelineAdapter>();
 }

@@ -119,19 +119,25 @@ public static class MessageAbstractionsGenerationHelper
                       {
                   """);
 
+        sb.Append($$$"""
+                     
+                             public static MessageTypes<{{{messageTypeName}}}, {{{responseTypeName}}}> T => MessageTypes<{{{messageTypeName}}}, {{{responseTypeName}}}>.Default;
+
+                     """);
+
         // TODO: handle response type in different namespace
         if (responseTypeDescriptor is not null)
         {
             // TODO: improve performance by not using templated strings
             sb.Append($$$"""
                          
-                                  public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, {{{responseTypeName}}}, IHandler, IPipeline, IPipeline.Adapter>;
+                                 public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, {{{responseTypeName}}}, IPipeline>;
                                   
-                                  public interface IPipeline : IMessagePipeline<{{{messageTypeName}}}, {{{responseTypeName}}}>
-                                  {
-                                      [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                      public sealed class Adapter : GeneratedMessagePipelineAdapter<{{{messageTypeName}}}, {{{responseTypeName}}}>, IPipeline;
-                                  }
+                                 public interface IPipeline : IMessagePipeline<{{{messageTypeName}}}, {{{responseTypeName}}}>
+                                 {
+                                     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+                                     public sealed class Adapter : GeneratedMessagePipelineAdapter<{{{messageTypeName}}}, {{{responseTypeName}}}>, IPipeline;
+                                 }
                          """);
         }
         else
@@ -139,21 +145,15 @@ public static class MessageAbstractionsGenerationHelper
             // TODO: improve performance by not using templated strings
             sb.Append($$$"""
                          
-                                  public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, IHandler, IPipeline, IPipeline.Adapter>;
+                                 public interface IHandler : IGeneratedMessageHandler<{{{messageTypeName}}}, IPipeline>;
                                   
-                                  public interface IPipeline : IMessagePipeline<{{{messageTypeName}}}, UnitMessageResponse>
-                                  {
-                                      [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+                                 public interface IPipeline : IMessagePipeline<{{{messageTypeName}}}, UnitMessageResponse>
+                                 {
+                                     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
                                       public sealed class Adapter : GeneratedMessagePipelineAdapter<{{{messageTypeName}}}, UnitMessageResponse>, IPipeline;
-                                  }
+                                 }
                          """);
         }
-
-        sb.Append($$$"""
-                     
-                     
-                             public static MessageTypes<{{{messageTypeName}}}, {{{responseTypeName}}}> T => MessageTypes<{{{messageTypeName}}}, {{{responseTypeName}}}>.Default;
-                     """);
 
         if (!messageTypeDescriptor.HasProperties)
         {
@@ -171,6 +171,27 @@ public static class MessageAbstractionsGenerationHelper
                          
                                  [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
                                  static {{{messageTypeName}}}? IMessage<{{{messageTypeName}}}, {{{responseTypeName}}}>.EmptyInstance => null;
+                         """);
+        }
+
+        if (responseTypeDescriptor is not null)
+        {
+            sb.Append($$$"""
+                     
+                     
+                                 [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+                                 static global::Conqueror.IDefaultMessageTypesInjector global::Conqueror.IMessage<{{{messageTypeName}}}, {{{responseTypeName}}}>.DefaultTypeInjector
+                                     => global::Conqueror.DefaultMessageTypesInjector<{{{messageTypeName}}}, {{{responseTypeName}}}, IPipeline, IPipeline.Adapter>.Default;
+                         """);
+        }
+        else
+        {
+            sb.Append($$$"""
+                     
+                     
+                                 [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+                                 static global::Conqueror.IDefaultMessageTypesInjector global::Conqueror.IMessage<{{{messageTypeName}}}, {{{responseTypeName}}}>.DefaultTypeInjector
+                                     => global::Conqueror.DefaultMessageTypesInjector<{{{messageTypeName}}}, IPipeline, IPipeline.Adapter>.Default;
                          """);
         }
 

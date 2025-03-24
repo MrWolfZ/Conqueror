@@ -279,7 +279,7 @@ public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunc
 
     protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
-        return services.AddConquerorMessageHandler<TestMessageHandlerWithoutResponse>();
+        return services.AddConquerorMessageHandler<TestMessageWithoutResponseHandler>();
     }
 
     private sealed class TestMessageHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
@@ -301,7 +301,7 @@ public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunc
         }
     }
 
-    private sealed class TestMessageHandlerWithoutResponse(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
+    private sealed class TestMessageWithoutResponseHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
         : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)

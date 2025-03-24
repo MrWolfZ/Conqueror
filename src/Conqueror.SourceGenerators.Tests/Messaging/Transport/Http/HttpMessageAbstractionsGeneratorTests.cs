@@ -133,6 +133,9 @@ public sealed partial class Container
 
         public static MessageTypes<TestMessage, TestMessageResponse> T => MessageTypes<TestMessage, TestMessageResponse>.Default;
 
+        static IDefaultMessageTypesInjector IMessage<TestMessage, TestMessageResponse>.DefaultTypeInjector
+            => throw new System.NotSupportedException();
+
         static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessage, TestMessageResponse>.TypeInjectors
             => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
 

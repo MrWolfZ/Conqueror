@@ -123,6 +123,15 @@ public sealed partial class MessagingRegistrationTests
     }
 
     [Test]
+    public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_AddsExplicitHandlerImplementationsClasses()
+    {
+        var services = new ServiceCollection().AddConquerorMessageHandlersFromAssembly(typeof(MessagingRegistrationTests).Assembly);
+
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ExplicitTestMessageHandler)));
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ExplicitTestMessageWithoutResponseHandler)));
+    }
+
+    [Test]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_DoesNotAddInapplicableClasses()
     {
         var services = new ServiceCollection().AddConquerorMessageHandlersFromAssembly(typeof(MessagingRegistrationTests).Assembly);
@@ -130,8 +139,6 @@ public sealed partial class MessagingRegistrationTests
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestMessageHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestMessageHandler<,>)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestMessageHandler)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ExplicitTestMessageHandler)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ExplicitTestMessageWithoutResponseHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MultiTestMessageHandler)));
     }
 
@@ -200,7 +207,7 @@ public sealed partial class MessagingRegistrationTests
         public Task<TestMessage2Response> Handle(TestMessage2 message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessage2Response());
 
-        public static TResult CreateWithMessageTypes<TResult>(IMessageTypesInjectionFactory<TResult> factory)
+        public static IDefaultMessageTypesInjector DefaultTypeInjector
             => throw new NotSupportedException();
     }
 
