@@ -98,7 +98,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         => GenerateTestCasesGeneric<TestMessageWithoutResponse, UnitMessageResponse>();
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase<TMessage, TResponse>> GenerateTestCasesGeneric<TMessage, TResponse>()
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         // no middleware
         yield return new(null,
@@ -826,13 +826,15 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         Action<IMessagePipeline<TMessage, TResponse>>? ConfigureClientPipeline,
         IReadOnlyCollection<(Type MiddlewareType, MessageTransportRole TransportRole)> ExpectedMiddlewareTypes,
         IReadOnlyCollection<MessageTransportRole> ExpectedTransportRolesFromPipelineBuilders)
-        where TMessage : class, IMessage<TResponse>;
+        where TMessage : class, IMessage<TMessage, TResponse>;
 
-    public sealed partial record TestMessage(int Payload) : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessage(int Payload);
 
     public sealed record TestMessageResponse(int Payload);
 
-    public sealed partial record TestMessageWithoutResponse(int Payload) : IMessage;
+    [Message]
+    public sealed partial record TestMessageWithoutResponse(int Payload);
 
     private sealed class TestMessageHandler(TestObservations observations) : TestMessage.IHandler
     {
@@ -866,7 +868,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     private sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
@@ -881,7 +883,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     private sealed class TestMessageMiddleware2<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
@@ -896,7 +898,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     private sealed class TestMessageRetryMiddleware<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
@@ -913,7 +915,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
     private sealed class MutatingTestMessageMiddleware<TMessage, TResponse>(TestObservations observations, CancellationTokensToUse cancellationTokensToUse)
         : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
@@ -944,7 +946,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     private sealed class MutatingTestMessageMiddleware2<TMessage, TResponse>(TestObservations observations, CancellationTokensToUse cancellationTokensToUse) : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
@@ -975,7 +977,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     private sealed class ThrowingTestMessageMiddleware<TMessage, TResponse>(Exception exception) : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
@@ -986,7 +988,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
     // only used as a marker for pipeline type check
     private sealed class DelegateMessageMiddleware<TMessage, TResponse> : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx) => throw new NotSupportedException();
     }

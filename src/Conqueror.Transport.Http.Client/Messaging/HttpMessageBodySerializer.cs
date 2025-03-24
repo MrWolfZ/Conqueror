@@ -14,7 +14,7 @@ namespace Conqueror.Transport.Http.Client.Messaging;
 
 internal sealed class HttpMessageBodySerializer<TMessage, TResponse>
     : IHttpMessageSerializer<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public static readonly HttpMessageBodySerializer<TMessage, TResponse> Default = new();
 

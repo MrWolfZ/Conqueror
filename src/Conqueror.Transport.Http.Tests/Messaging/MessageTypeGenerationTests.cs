@@ -48,7 +48,8 @@ public sealed partial class MessageTypeGenerationTests
     }
 
     [HttpMessage]
-    private sealed partial record TestMessage : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    private sealed partial record TestMessage
     {
         public required int Payload { get; init; }
     }
@@ -99,7 +100,8 @@ public sealed partial class MessageTypeGenerationTests
     }
 
     [HttpMessage]
-    private sealed partial record TestMessageWithoutResponse(string Payload) : IMessage;
+    [Message]
+    private sealed partial record TestMessageWithoutResponse(string Payload);
 
     // generated http
     private sealed partial record TestMessageWithoutResponse : IHttpMessage<TestMessageWithoutResponse>
@@ -117,12 +119,12 @@ public sealed partial class MessageTypeGenerationTests
     }
 
     private interface ICustomHttpMessage<TMessage> : IHttpMessage<TMessage, TestMessageResponse>
-        where TMessage : class, IMessage<TestMessageResponse>, IHttpMessage<TMessage, TestMessageResponse>, IMessageTypes<TMessage, TestMessageResponse>
+        where TMessage : class, IHttpMessage<TMessage, TestMessageResponse>
     {
         static string IHttpMessage<TMessage, TestMessageResponse>.Name => "test";
     }
 
-    private sealed partial record TestMessageWithCustomInterface(string Payload) : IMessage<TestMessageResponse>, ICustomHttpMessage<TestMessageWithCustomInterface>;
+    private sealed partial record TestMessageWithCustomInterface(string Payload) : ICustomHttpMessage<TestMessageWithCustomInterface>;
 
     // generated http
     // ReSharper disable once RedundantExtendsListEntry
@@ -130,5 +132,9 @@ public sealed partial class MessageTypeGenerationTests
     {
         static IHttpMessageTypesInjector IHttpMessage.HttpMessageTypesInjector
             => HttpMessageTypesInjector<TestMessageWithCustomInterface, TestMessageResponse>.Default;
+
+        public static IReadOnlyCollection<IMessageTypesInjector> TypeInjectors => [];
+
+        public static TestMessageWithCustomInterface? EmptyInstance { get; }
     }
 }

@@ -898,7 +898,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage]
-    public sealed partial record TestMessage : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessage
     {
         public int Payload { get; init; }
     }
@@ -925,7 +926,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage]
-    public sealed partial record TestMessageWithoutPayload : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithoutPayload;
 
     public sealed class TestMessageWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithoutPayload.IHandler
@@ -945,7 +947,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage]
-    public sealed partial record TestMessageWithoutResponse : IMessage
+    [Message]
+    public sealed partial record TestMessageWithoutResponse
     {
         public int Payload { get; init; }
     }
@@ -966,7 +969,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage]
-    public sealed partial record TestMessageWithoutResponseWithoutPayload : IMessage;
+    [Message]
+    public sealed partial record TestMessageWithoutResponseWithoutPayload;
 
     public sealed class TestMessageWithoutResponseWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithoutResponseWithoutPayload.IHandler
@@ -984,7 +988,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(HttpMethod = MethodDelete)]
-    public sealed partial record TestMessageWithMethod : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithMethod
     {
         public int Payload { get; init; }
     }
@@ -1007,7 +1012,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(PathPrefix = "/custom/prefix")]
-    public sealed partial record TestMessageWithPathPrefix : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithPathPrefix
     {
         public int Payload { get; init; }
     }
@@ -1030,7 +1036,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(Version = "v2")]
-    public sealed partial record TestMessageWithVersion : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithVersion
     {
         public int Payload { get; init; }
     }
@@ -1053,7 +1060,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(Path = "/custom/path")]
-    public sealed partial record TestMessageWithPath : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithPath
     {
         public int Payload { get; init; }
     }
@@ -1076,7 +1084,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(PathPrefix = "/custom/prefix", Version = "v3", Path = "/custom/path")]
-    public sealed partial record TestMessageWithPathPrefixAndPathAndVersion : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithPathPrefixAndPathAndVersion
     {
         public int Payload { get; init; }
     }
@@ -1099,7 +1108,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(FullPath = "/custom/full/path/for/message")]
-    public sealed partial record TestMessageWithFullPath : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithFullPath
     {
         public int Payload { get; init; }
     }
@@ -1122,7 +1132,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(FullPath = "/custom/full/path/for/message", Version = "v2")]
-    public sealed partial record TestMessageWithFullPathAndVersion : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithFullPathAndVersion
     {
         public int Payload { get; init; }
     }
@@ -1145,7 +1156,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(SuccessStatusCode = 201)]
-    public sealed partial record TestMessageWithSuccessStatusCode : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithSuccessStatusCode
     {
         public int Payload { get; init; }
     }
@@ -1168,7 +1180,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(Name = "custom-message-name")]
-    public sealed partial record TestMessageWithName : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithName
     {
         public int Payload { get; init; }
     }
@@ -1191,7 +1204,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(ApiGroupName = "Custom Message Group")]
-    public sealed partial record TestMessageWithApiGroupName : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithApiGroupName
     {
         public int Payload { get; init; }
     }
@@ -1214,7 +1228,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(HttpMethod = MethodGet)]
-    public sealed partial record TestMessageWithGet : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithGet
     {
         public required int Payload { get; init; }
 
@@ -1239,7 +1254,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(HttpMethod = MethodGet)]
-    public sealed partial record TestMessageWithGetWithoutPayload : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithGetWithoutPayload;
 
     public sealed class TestMessageWithGetWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithGetWithoutPayload.IHandler
@@ -1259,7 +1275,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage(HttpMethod = MethodGet)]
-    public sealed partial record TestMessageWithComplexGetPayload : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithComplexGetPayload
     {
         [Required]
         [SuppressMessage("ReSharper", "MemberCanBePrivate.Global", Justification = "set by ASP during model binding")]
@@ -1295,7 +1312,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage]
-    public sealed partial record TestMessageWithCustomSerializedPayloadType : IMessage<TestMessageWithCustomSerializedPayloadTypeResponse>
+    [Message<TestMessageWithCustomSerializedPayloadTypeResponse>]
+    public sealed partial record TestMessageWithCustomSerializedPayloadType
     {
         public required TestMessageWithCustomSerializedPayloadTypePayload Payload { get; init; }
     }
@@ -1349,7 +1367,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage]
-    public sealed partial record TestMessageWithCustomSerializer : IMessage<TestMessageWithCustomSerializerResponse>
+    [Message<TestMessageWithCustomSerializerResponse>]
+    public sealed partial record TestMessageWithCustomSerializer
     {
         public int PathPayload { get; init; }
 
@@ -1438,7 +1457,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage]
-    public sealed partial record TestMessageWithCustomJsonTypeInfo : IMessage<TestMessageWithCustomJsonTypeInfoResponse>
+    [Message<TestMessageWithCustomJsonTypeInfoResponse>]
+    public sealed partial record TestMessageWithCustomJsonTypeInfo
     {
         public int MessagePayload { get; init; }
 
@@ -1473,7 +1493,8 @@ public static partial class TestMessages
     internal sealed partial class TestMessageWithCustomJsonTypeInfoJsonSerializerContext : JsonSerializerContext;
 
     [HttpMessage]
-    public sealed partial record TestMessageWithMiddleware : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageWithMiddleware
     {
         public int Payload { get; init; }
     }
@@ -1499,7 +1520,8 @@ public static partial class TestMessages
     }
 
     [HttpMessage]
-    public sealed partial record TestMessageWithMiddlewareWithoutResponse : IMessage
+    [Message]
+    public sealed partial record TestMessageWithMiddlewareWithoutResponse
     {
         public int Payload { get; init; }
     }
@@ -1523,7 +1545,7 @@ public static partial class TestMessages
     }
 
     public sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {

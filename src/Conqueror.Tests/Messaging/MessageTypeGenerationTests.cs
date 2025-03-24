@@ -34,12 +34,12 @@ public sealed partial class MessageTypeGenerationTests
                             .Handle(new());
     }
 
-    public sealed partial record TestMessage(int Payload) : IMessage<TestMessageResponse>;
+    public sealed partial record TestMessage(int Payload);
 
     public sealed record TestMessageResponse;
 
     // generated
-    public sealed partial record TestMessage : IMessageTypes<TestMessage, TestMessageResponse>
+    public sealed partial record TestMessage : IMessage<TestMessage, TestMessageResponse>
     {
         public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>
         {
@@ -54,10 +54,10 @@ public sealed partial class MessageTypeGenerationTests
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        static TestMessage? IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
+        static TestMessage? IMessage<TestMessage, TestMessageResponse>.EmptyInstance => null;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
+        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessage, TestMessageResponse>.TypeInjectors
             => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
     }
 
@@ -73,10 +73,10 @@ public sealed partial class MessageTypeGenerationTests
             pipeline.UseTest().UseTest();
     }
 
-    public sealed partial record TestMessageWithoutResponse : IMessage;
+    public sealed partial record TestMessageWithoutResponse;
 
     // generated
-    public sealed partial record TestMessageWithoutResponse : IMessageTypes<TestMessageWithoutResponse, UnitMessageResponse>
+    public sealed partial record TestMessageWithoutResponse : IMessage<TestMessageWithoutResponse, UnitMessageResponse>
     {
         public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>
         {
@@ -91,10 +91,10 @@ public sealed partial class MessageTypeGenerationTests
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        static TestMessageWithoutResponse IMessageTypes<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => new();
+        static TestMessageWithoutResponse IMessage<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => new();
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        static IReadOnlyCollection<IMessageTypesInjector> IMessage<UnitMessageResponse>.TypeInjectors
+        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageWithoutResponse, UnitMessageResponse>.TypeInjectors
             => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessageWithoutResponse>();
     }
 
@@ -113,7 +113,7 @@ public sealed partial class MessageTypeGenerationTests
 public static class MessageTypeGenerationTestsPipelineExtensions
 {
     public static IMessagePipeline<TMessage, TResponse> UseTest<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline)
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         return pipeline.Use(ctx => ctx.Next(ctx.Message, ctx.CancellationToken));
     }

@@ -51,5 +51,6 @@ public sealed record MessageHandlerRegistration(
     Type MessageType,
     Type ResponseType,
     Type HandlerType,
+    Type? HandlerAdapterType,
     Delegate? ConfigurePipeline,
     IReadOnlyCollection<IMessageTypesInjector> TypeInjectors);

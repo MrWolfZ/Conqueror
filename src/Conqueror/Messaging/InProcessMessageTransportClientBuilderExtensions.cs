@@ -10,7 +10,7 @@ public static class InProcessMessageTransportClientBuilderExtensions
     public static IMessageTransportClient<TMessage, TResponse> UseInProcess<TMessage, TResponse>(
         this IMessageTransportClientBuilder<TMessage, TResponse> builder,
         string? transportTypeName = null)
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         var registration = builder.ServiceProvider
                                   .GetRequiredService<MessageTransportRegistry>()
@@ -21,6 +21,8 @@ public static class InProcessMessageTransportClientBuilderExtensions
             throw new InvalidOperationException($"there is no handler registered for message type '{typeof(TMessage)}'");
         }
 
-        return new InProcessMessageTransport<TMessage, TResponse>(registration.HandlerType, registration.ConfigurePipeline, transportTypeName);
+        return new InProcessMessageTransport<TMessage, TResponse>(registration.HandlerAdapterType ?? registration.HandlerType,
+                                                                  registration.ConfigurePipeline,
+                                                                  transportTypeName);
     }
 }

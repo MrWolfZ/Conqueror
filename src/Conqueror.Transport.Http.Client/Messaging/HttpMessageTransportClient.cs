@@ -9,7 +9,7 @@ namespace Conqueror.Transport.Http.Client.Messaging;
 
 internal sealed class HttpMessageTransportClient<TMessage, TResponse>(Uri baseAddress)
     : IHttpMessageTransportClient<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     private readonly Lazy<HttpClient> defaultHttpClientSingletonLazy = new();
 

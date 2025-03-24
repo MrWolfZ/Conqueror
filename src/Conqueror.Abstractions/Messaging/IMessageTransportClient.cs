@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Conqueror;
 
 public interface IMessageTransportClient<in TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     string TransportTypeName { get; }
 

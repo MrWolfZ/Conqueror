@@ -6,7 +6,7 @@ using System.Net.Http.Headers;
 namespace Conqueror;
 
 public interface IHttpMessageTransportClient<in TMessage, TResponse> : IMessageTransportClient<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     /// <summary>
     ///     Use the provided <see cref="HttpClient" /> to send the message.<br />

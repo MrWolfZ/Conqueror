@@ -9,7 +9,7 @@ namespace Conqueror.Messaging;
 internal sealed class MessagePipelineRunner<TMessage, TResponse>(
     ConquerorContext conquerorContext,
     List<IMessageMiddleware<TMessage, TResponse>> middlewares)
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares = middlewares.AsEnumerable().Reverse().ToList();
 

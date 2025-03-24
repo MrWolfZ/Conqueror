@@ -17,7 +17,7 @@ namespace Generator.Tests
     /// Message Types for <see cref="global::Generator.Tests.TestMessage" />
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "0.7.0-beta.1")]
-    partial record TestMessage : IMessageTypes<TestMessage, TestMessageResponse>
+    partial record TestMessage : IMessage<TestMessage, TestMessageResponse>
     {
          public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>
          {
@@ -32,10 +32,10 @@ namespace Generator.Tests
          }
 
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => new();
+        static TestMessage IMessage<TestMessage, TestMessageResponse>.EmptyInstance => new();
 
         [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-        static global::System.Collections.Generic.IReadOnlyCollection<IMessageTypesInjector> global::Conqueror.IMessage<TestMessageResponse>.TypeInjectors
+        static global::System.Collections.Generic.IReadOnlyCollection<IMessageTypesInjector> global::Conqueror.IMessage<TestMessage, TestMessageResponse>.TypeInjectors
             => global::Conqueror.IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
     }
 }

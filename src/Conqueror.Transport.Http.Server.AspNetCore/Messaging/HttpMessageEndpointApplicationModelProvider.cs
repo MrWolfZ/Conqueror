@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 
 internal sealed class HttpMessageEndpointApplicationModelProvider<TMessage, TResponse>(ILoggerFactory loggerFactory) : IApplicationModelProvider
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     /// <summary>
     ///     The <see cref="Microsoft.AspNetCore.Mvc.ApiControllerAttribute" /> attribute

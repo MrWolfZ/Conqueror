@@ -91,10 +91,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         _ = services.AddConquerorMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations);
 
-        _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
-        {
-            _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10));
-        });
+        _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline => { _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10)); });
 
         var provider = services.BuildServiceProvider();
 
@@ -104,7 +101,8 @@ public sealed partial class MessageMiddlewareConfigurationTests
         _ = await handler.Handle(new(), CancellationToken.None);
     }
 
-    private sealed partial record TestMessage : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    private sealed partial record TestMessage;
 
     private sealed record TestMessageResponse;
 
@@ -123,7 +121,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
     }
 
     private sealed class TestMessageMiddleware<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public int Parameter { get; set; }
 
@@ -137,10 +135,10 @@ public sealed partial class MessageMiddlewareConfigurationTests
     }
 
     private sealed class TestMessageMiddlewareSub<TMessage, TResponse>(TestObservations observations) : TestMessageMiddlewareBase<TMessage, TResponse>(observations)
-        where TMessage : class, IMessage<TResponse>;
+        where TMessage : class, IMessage<TMessage, TResponse>;
 
     private abstract class TestMessageMiddlewareBase<TMessage, TResponse>(TestObservations observations) : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public int Parameter { get; set; }
 

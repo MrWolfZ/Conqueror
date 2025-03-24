@@ -35,36 +35,53 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
 
     private static HttpMessageTypeToGenerate? GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken ct)
     {
-        if (context.TargetSymbol is not INamedTypeSymbol namedSymbol)
+        if (context.TargetSymbol is not INamedTypeSymbol messageTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
             return null;
         }
 
-        // TODO: improve by allowing combining custom interface with properties from attribute
-        // skip message types that already declare an interface
-        if (namedSymbol.Interfaces.Any(i => i.Name == "IHttpMessage"
-                                            && i.ContainingAssembly.Name == "Conqueror.Transport.Http.Abstractions"))
-        {
-            return null;
-        }
-
-        var interfaceSymbol = namedSymbol.Interfaces.FirstOrDefault(i => i.Name == "IMessage"
-                                                                         && i.ContainingAssembly.Name == "Conqueror.Abstractions");
-
-        if (interfaceSymbol is null)
-        {
-            // no base type was one of our IMessage interfaces, so we skip this type
-            return null;
-        }
-
         ct.ThrowIfCancellationRequested();
 
-        return GenerateTypeDescriptor(namedSymbol, interfaceSymbol);
+        // TODO: improve by allowing combining custom interface with properties from attribute
+        // skip message types that already declare an interface
+        if (messageTypeSymbol.Interfaces.Any(i => i.Name == "IHttpMessage"
+                                                  && i.ContainingAssembly.Name == "Conqueror.Transport.Http.Abstractions"))
+        {
+            return null;
+        }
+
+        INamedTypeSymbol? responseTypeSymbol = null;
+
+        foreach (var attributeData in messageTypeSymbol.GetAttributes())
+        {
+            // TODO: extract into helper and reuse across generators
+            if (attributeData.AttributeClass is { Name: "MessageAttribute" } c
+                && c.ContainingAssembly.Name == "Conqueror.Abstractions")
+            {
+                if (c.TypeArguments.Length > 0)
+                {
+                    responseTypeSymbol = c.TypeArguments[0] as INamedTypeSymbol;
+                }
+
+                continue;
+            }
+
+            if (attributeData.AttributeClass is { Name: "HttpMessageAttribute" } c2
+                && c2.ContainingAssembly.Name == "Conqueror.Transport.Http.Abstractions")
+            {
+                continue;
+            }
+
+            // if no attribute matches, we skip this type
+            return null;
+        }
+
+        return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol);
     }
 
     private static HttpMessageTypeToGenerate GenerateTypeDescriptor(INamedTypeSymbol messageTypeSymbol,
-                                                                    INamedTypeSymbol interfaceSymbol)
+                                                                    INamedTypeSymbol? responseTypeSymbol)
     {
         string? httpMethod = null;
         string? pathPrefix = null;
@@ -135,7 +152,7 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
             }
         }
 
-        return new(MessageAbstractionsGeneratorHelper.GenerateMessageTypeToGenerate(messageTypeSymbol, interfaceSymbol),
+        return new(MessageAbstractionsGeneratorHelper.GenerateMessageTypeToGenerate(messageTypeSymbol, responseTypeSymbol),
                    httpMethod,
                    pathPrefix,
                    path,

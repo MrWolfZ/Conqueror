@@ -1,7 +1,8 @@
 ﻿namespace Conqueror.Transport.Http.Tests.TopLevelProgram;
 
 [HttpMessage(Path = "test")]
-public sealed partial record TopLevelTestMessage : IMessage<TopLevelTestMessageResponse>
+[Message<TopLevelTestMessageResponse>]
+public sealed partial record TopLevelTestMessage
 {
     public required int Payload { get; init; }
 

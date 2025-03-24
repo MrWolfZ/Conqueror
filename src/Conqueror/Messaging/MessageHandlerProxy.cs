@@ -12,7 +12,7 @@ internal sealed class MessageHandlerProxy<TMessage, TResponse>(
     Action<IMessagePipeline<TMessage, TResponse>>? configurePipelineField,
     MessageTransportRole transportRole)
     : IConfigurableMessageHandler<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     public async Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
     {

@@ -117,9 +117,11 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         }
     }
 
-    private sealed partial record TestMessage : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    private sealed partial record TestMessage;
 
     private sealed record TestMessageResponse;
 
-    private sealed partial record NestedTestMessage : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    private sealed partial record NestedTestMessage;
 }

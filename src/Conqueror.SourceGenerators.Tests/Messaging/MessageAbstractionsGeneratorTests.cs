@@ -10,13 +10,14 @@ public sealed class MessageAbstractionsGeneratorTests
     {
         const string input = @"using Conqueror;
 
-public partial record TestMessage : IMessage<TestMessageResponse>;
+[Message<TestMessageResponse>]
+public partial record TestMessage;
 
 public record TestMessageResponse;";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -27,13 +28,14 @@ public record TestMessageResponse;";
 
 namespace Generator.Tests;
 
-public partial record TestMessage : IMessage<TestMessageResponse>;
+[Message<TestMessageResponse>]
+public partial record TestMessage;
 
 public record TestMessageResponse;";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -44,15 +46,16 @@ public record TestMessageResponse;";
 
 namespace Generator.Tests;
 
-public partial record TestMessage(int Payload) : IMessage<TestMessageResponse>;
+[Message<TestMessageResponse>]
+public partial record TestMessage(int Payload);
 
-public partial record TestMessage : IMessageTypes<TestMessage, TestMessageResponse>;
+public partial record TestMessage : IMessage<TestMessage, TestMessageResponse>;
 
 public record TestMessageResponse;";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -65,14 +68,15 @@ namespace Generator.Tests;
 
 public sealed partial class Container
 {
-    public partial record TestMessage : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    public partial record TestMessage;
 
     public record TestMessageResponse;
 }";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -85,12 +89,13 @@ namespace Generator.Tests;
 
 public sealed partial class Container
 {
-    public partial record TestMessageWithoutResponse : IMessage;
+    [Message]
+    public partial record TestMessageWithoutResponse;
 }";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -98,18 +103,15 @@ public sealed partial class Container
     public Task GivenTestMessageWithAlreadyDefinedHandlerInterface_WhenRunningGenerator_SkipsMessageType()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 public sealed partial class Container
 {
-    public partial record TestMessage : IMessage<TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public partial record TestMessage
     {
         public interface IHandler;
-
-        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-            => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
     }
 
     public record TestMessageResponse;
@@ -117,7 +119,7 @@ public sealed partial class Container
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 

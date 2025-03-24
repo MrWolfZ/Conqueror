@@ -13,25 +13,25 @@ internal sealed class MessageClients(IServiceProvider serviceProvider) : IMessag
                ?? throw new InvalidOperationException($"cannot create handler for type '{typeof(THandler)}'");
     }
 
-    public IMessageHandler<TMessage, TResponse> For<TMessage, TResponse>(IMessageTypes<TMessage, TResponse> messageTypes)
-        where TMessage : class, IMessage<TResponse>
+    public IMessageHandler<TMessage, TResponse> For<TMessage, TResponse>(IMessage<TMessage, TResponse> messageTypes)
+        where TMessage : class, IMessage<TMessage, TResponse>
         => CreateProxy<TMessage, TResponse>(serviceProvider);
 
-    public IMessageHandler<TMessage, UnitMessageResponse> For<TMessage>(IMessageTypes<TMessage, UnitMessageResponse> messageTypes)
-        where TMessage : class, IMessage<UnitMessageResponse>
+    public IMessageHandler<TMessage, UnitMessageResponse> For<TMessage>(IMessage<TMessage, UnitMessageResponse> messageTypes)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
         => CreateProxy<TMessage, UnitMessageResponse>(serviceProvider);
 
     public IMessageHandler<TMessage, TResponse> ForMessageType<TMessage, TResponse>()
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
         => CreateProxy<TMessage, TResponse>(serviceProvider);
 
     public IMessageHandler<TMessage> ForMessageType<TMessage>()
-        where TMessage : class, IMessage<UnitMessageResponse>
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
         => new MessageWithoutResponseHandlerAdapter<TMessage> { Wrapped = CreateProxy<TMessage, UnitMessageResponse>(serviceProvider) };
 
     private static MessageHandlerProxy<TMessage, TResponse> CreateProxy<TMessage, TResponse>(
         IServiceProvider serviceProvider)
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         return new(
             serviceProvider,
@@ -45,7 +45,7 @@ internal sealed class MessageClients(IServiceProvider serviceProvider) : IMessag
         where THandler : class, IGeneratedMessageHandler
     {
         public THandler? Create<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-            where TMessage : class, IMessage<TResponse>
+            where TMessage : class, IMessage<TMessage, TResponse>
             where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
             where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
             where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
@@ -53,7 +53,7 @@ internal sealed class MessageClients(IServiceProvider serviceProvider) : IMessag
             => new THandlerAdapter { Wrapped = CreateProxy<TMessage, TResponse>(serviceProvider) } as THandler;
 
         public THandler? Create<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-            where TMessage : class, IMessage<UnitMessageResponse>
+            where TMessage : class, IMessage<TMessage, UnitMessageResponse>
             where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
             where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
             where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
@@ -73,7 +73,7 @@ internal sealed class MessageClients(IServiceProvider serviceProvider) : IMessag
 
     private sealed class MessageWithoutResponseHandlerAdapter<TMessage>
         : IConfigurableMessageHandler<TMessage>
-        where TMessage : class, IMessage<UnitMessageResponse>
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         public IConfigurableMessageHandler<TMessage, UnitMessageResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
 

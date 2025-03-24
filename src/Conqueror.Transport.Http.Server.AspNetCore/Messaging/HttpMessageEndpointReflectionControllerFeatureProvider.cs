@@ -34,7 +34,7 @@ internal sealed class HttpMessageEndpointReflectionControllerFeatureProvider(IMe
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
             TMessage,
             TResponse>()
-            where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+            where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             return (TMessage.EmptyInstance, typeof(TResponse) == typeof(UnitMessageResponse), TMessage.HttpMethod) switch
             {

@@ -12,14 +12,14 @@ namespace Conqueror;
 public interface IMessageTypesInjectionFactory<out TResult>
 {
     TResult Create<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
         where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
         where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
         where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
         where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new();
 
     TResult Create<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-        where TMessage : class, IMessage<UnitMessageResponse>
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
         where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
         where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
         where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>

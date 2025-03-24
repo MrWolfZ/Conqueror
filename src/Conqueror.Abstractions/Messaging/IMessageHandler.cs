@@ -10,20 +10,20 @@ using System.Threading.Tasks;
 namespace Conqueror;
 
 public interface IMessageHandler<in TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default);
 }
 
 public interface IMessageHandler<in TMessage>
-    where TMessage : class, IMessage<UnitMessageResponse>
+    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
 {
     Task Handle(TMessage message, CancellationToken cancellationToken = default);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IConfigurableMessageHandler<TMessage, TResponse> : IMessageHandler<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     IMessageHandler<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline);
 
@@ -34,7 +34,7 @@ public interface IConfigurableMessageHandler<TMessage, TResponse> : IMessageHand
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IConfigurableMessageHandler<TMessage> : IMessageHandler<TMessage>
-    where TMessage : class, IMessage<UnitMessageResponse>
+    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
 {
     IMessageHandler<TMessage> WithPipeline(Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline);
 
@@ -60,7 +60,7 @@ public interface IGeneratedMessageHandler
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IGeneratedMessageHandler<in TMessage, TResponse, THandlerInterface, THandlerAdapter, in TPipelineInterface, TPipelineAdapter>
     : IMessageHandler<TMessage, TResponse>, IGeneratedMessageHandler
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
     where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
     where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
     where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
@@ -79,7 +79,7 @@ public interface IGeneratedMessageHandler<in TMessage, TResponse, THandlerInterf
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IGeneratedMessageHandler<in TMessage, THandlerInterface, THandlerAdapter, in TPipelineInterface, TPipelineAdapter>
     : IMessageHandler<TMessage>, IGeneratedMessageHandler
-    where TMessage : class, IMessage<UnitMessageResponse>
+    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
     where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
     where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
@@ -101,7 +101,7 @@ public interface IGeneratedMessageHandlerAdapter;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public abstract class GeneratedMessageHandlerAdapter<TMessage, TResponse>
     : IConfigurableMessageHandler<TMessage, TResponse>, IGeneratedMessageHandlerAdapter
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     public IConfigurableMessageHandler<TMessage, TResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
 
@@ -121,7 +121,7 @@ public abstract class GeneratedMessageHandlerAdapter<TMessage, TResponse>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class GeneratedMessageHandlerAdapter<TMessage>
     : IConfigurableMessageHandler<TMessage>, IGeneratedMessageHandlerAdapter
-    where TMessage : class, IMessage<UnitMessageResponse>
+    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
 {
     public IConfigurableMessageHandler<TMessage> Wrapped { get; init; } = null!; // guaranteed to be set in init code
 

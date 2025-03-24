@@ -567,17 +567,19 @@ public sealed partial class MessageContextDataTests
 
     private sealed record TestDataEntry(int Value);
 
-    private sealed partial record TestMessage : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    private sealed partial record TestMessage;
 
     private sealed record TestMessageResponse;
 
-    private sealed partial record NestedTestMessage : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    private sealed partial record NestedTestMessage;
 
     private sealed class TestMessageMiddleware<TMessage, TResponse>(
         TestDataInstructions dataInstructions,
         TestObservations observations)
         : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {
@@ -597,7 +599,7 @@ public sealed partial class MessageContextDataTests
         TestDataInstructions dataInstructions,
         TestObservations observations)
         : IMessageMiddleware<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
         {

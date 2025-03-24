@@ -10,7 +10,7 @@ internal sealed class InProcessMessageTransport<TMessage, TResponse>(
     Delegate? configurePipeline,
     string? transportTypeName)
     : IMessageTransportClient<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     public string TransportTypeName => transportTypeName ?? InProcessMessageTransport.Name;
 
@@ -31,12 +31,13 @@ internal sealed class InProcessMessageTransport<TMessage, TResponse>(
     {
         public string TransportTypeName => transportTypeName;
 
-        public Task<TResponse> Send(TMessage message,
-                                    IServiceProvider serviceProvider,
-                                    ConquerorContext conquerorContext,
-                                    CancellationToken cancellationToken)
+        public async Task<TResponse> Send(TMessage message,
+                                          IServiceProvider serviceProvider,
+                                          ConquerorContext conquerorContext,
+                                          CancellationToken cancellationToken)
         {
-            return TMessage.CastAndInvokeHandler(serviceProvider.GetRequiredService(handlerType), message, cancellationToken);
+            var handler = serviceProvider.GetRequiredService(handlerType);
+            return await ((IMessageHandler<TMessage, TResponse>)handler).Handle(message, cancellationToken).ConfigureAwait(false);
         }
     }
 }

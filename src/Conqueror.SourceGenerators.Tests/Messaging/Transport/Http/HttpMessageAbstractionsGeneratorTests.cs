@@ -1,4 +1,5 @@
-﻿using Conqueror.SourceGenerators.Messaging.Transport.Http;
+﻿using Conqueror.SourceGenerators.Messaging;
+using Conqueror.SourceGenerators.Messaging.Transport.Http;
 
 namespace Conqueror.SourceGenerators.Tests.Messaging.Transport.Http;
 
@@ -9,24 +10,22 @@ public sealed class HttpMessageAbstractionsGeneratorTests
     public Task GivenTestMessageWithResponseBothInGlobalNamespace_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 [HttpMessage]
-public partial record TestMessage : IMessage<TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+[Message<TestMessageResponse>]
+public partial record TestMessage
 {
     public required int Payload { get; init; }
-
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
-
-    static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
 }
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -34,26 +33,24 @@ public record TestMessageResponse(int Payload);";
     public Task GivenTestMessageWithResponseBothInSameNamespace_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 [HttpMessage]
-public partial record TestMessage : IMessage<TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+[Message<TestMessageResponse>]
+public partial record TestMessage
 {
     public required int Payload { get; init; }
-
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
-
-    static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
 }
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -61,29 +58,27 @@ public record TestMessageResponse(int Payload);";
     public Task GivenTestMessageWithResponseBothInSameNamespaceInSameNestedType_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 public sealed partial class Container
 {
     [HttpMessage]
-    public partial record TestMessage : IMessage<TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public partial record TestMessage
     {
         public required int Payload { get; init; }
-
-        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-            => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
-
-        static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
     }
 
     public record TestMessageResponse(int Payload);
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -91,27 +86,25 @@ public sealed partial class Container
     public Task GivenTestMessageWithoutResponseInNamespaceInNestedType_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 public sealed partial class Container
 {
     [HttpMessage]
-    public partial record TestMessageWithoutResponse : IMessage, IMessageTypes<TestMessageWithoutResponse, UnitMessageResponse>
+    [Message]
+    public partial record TestMessageWithoutResponse
     {
         public required int Payload { get; init; }
-
-        static IReadOnlyCollection<IMessageTypesInjector> IMessage<UnitMessageResponse>.TypeInjectors
-            => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessageWithoutResponse>();
-
-        static TestMessageWithoutResponse IMessageTypes<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => null;
     }
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -126,8 +119,11 @@ namespace Generator.Tests;
 public sealed partial class Container
 {
     [HttpMessage]
-    public partial record TestMessage(int Payload) : IMessage<TestMessageResponse>, IHttpMessage<TestMessage, TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+    [Message<TestMessageResponse>]
+    public partial record TestMessage(int Payload) : IHttpMessage<TestMessage, TestMessageResponse>
     {
+        public interface IHandler;
+
         public static string ToQueryString(TestMessage message) => throw new System.NotSupportedException();
 
         public static TestMessage FromQueryString(string queryString) => throw new System.NotSupportedException();
@@ -135,18 +131,21 @@ public sealed partial class Container
         static IHttpMessageTypesInjector IHttpMessage.HttpMessageTypesInjector
             => HttpMessageTypesInjector<TestMessage, TestMessageResponse>.Default;
 
-        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
+        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessage, TestMessageResponse>.TypeInjectors
             => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
 
-        static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
+        static TestMessage IMessage<TestMessage, TestMessageResponse>.EmptyInstance => null;
     }
 
     public record TestMessageResponse(int Payload);
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -154,26 +153,24 @@ public sealed partial class Container
     public Task GivenTestMessageWithResponseWithCustomMethod_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 [HttpMessage(HttpMethod = ""DELETE"")]
-public partial record TestMessage : IMessage<TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+[Message<TestMessageResponse>]
+public partial record TestMessage
 {
     public required int Payload { get; init; }
-
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
-
-    static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
 }
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -181,26 +178,24 @@ public record TestMessageResponse(int Payload);";
     public Task GivenTestMessageWithResponseWithGETMethod_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 [HttpMessage(HttpMethod = ""GET"")]
-public partial record TestMessage : IMessage<TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+[Message<TestMessageResponse>]
+public partial record TestMessage
 {
     public required int Payload { get; init; }
-
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
-
-    static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
 }
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -208,26 +203,24 @@ public record TestMessageResponse(int Payload);";
     public Task GivenTestMessageWithResponseWithCustomPath_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 [HttpMessage(Path = ""/customPath"")]
-public partial record TestMessage : IMessage<TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+[Message<TestMessageResponse>]
+public partial record TestMessage
 {
     public required int Payload { get; init; }
-
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
-
-    static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
 }
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -235,24 +228,21 @@ public record TestMessageResponse(int Payload);";
     public Task GivenTestMessageWithResponseWithoutPayload_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 [HttpMessage]
-public partial record TestMessageWithoutPayload : IMessage<TestMessageResponse>, IMessageTypes<TestMessageWithoutPayload, TestMessageResponse>
-{
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessageWithoutPayload>();
-
-    static TestMessageWithoutPayload IMessageTypes<TestMessageWithoutPayload, TestMessageResponse>.EmptyInstance => null;
-}
+[Message<TestMessageResponse>]
+public partial record TestMessageWithoutPayload;
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -260,22 +250,19 @@ public record TestMessageResponse(int Payload);";
     public Task GivenTestMessageWithoutResponseWithoutPayload_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 
 namespace Generator.Tests;
 
 [HttpMessage]
-public partial record TestMessageWithoutPayload : IMessage, IMessageTypes<TestMessageWithoutPayload, UnitMessageResponse>
-{
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<UnitMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessageWithoutPayload>();
+[Message]
+public partial record TestMessageWithoutPayload;";
 
-    static TestMessageWithoutPayload IMessageTypes<TestMessageWithoutPayload, UnitMessageResponse>.EmptyInstance => null;
-}";
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
-
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 
@@ -288,22 +275,21 @@ using System.Collections.Generic;
 namespace Generator.Tests;
 
 [HttpMessage]
-public partial record TestMessage : IMessage<TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+[Message<TestMessageResponse>]
+public partial record TestMessage
 {
     public required int IntProp { get; init; }
     public required string StringProp { get; init; }
     public required int[] IntArrayProp { get; init; }
     public required List<decimal> DecimalListProp { get; init; }
-
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
-
-    static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
 }
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -313,27 +299,25 @@ public record TestMessageResponse(int Payload);";
     public Task GivenTestMessageWithAttributeTypeAlias_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using Conqueror;
-using System.Collections.Generic;
 using CustomHttpMessageAttribute = Conqueror.HttpMessageAttribute;
 
 namespace Generator.Tests;
 
 [CustomHttpMessageAttribute]
-public partial record TestMessage : IMessage<TestMessageResponse>, IMessageTypes<TestMessage, TestMessageResponse>
+[Message<TestMessageResponse>]
+public partial record TestMessage
 {
     public required int Payload { get; init; }
-
-    static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageResponse>.TypeInjectors
-        => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
-
-    static TestMessage IMessageTypes<TestMessage, TestMessageResponse>.EmptyInstance => null;
 }
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new HttpMessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
+            new MessageAbstractionsGenerator(),
+            new HttpMessageAbstractionsGenerator(),
+        ], new(input));
 
-        Assert.That(diagnostics, Is.Empty);
+        Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
     }
 

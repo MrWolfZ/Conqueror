@@ -6,15 +6,15 @@ public interface IMessageClients
     THandler For<THandler>()
         where THandler : class, IGeneratedMessageHandler;
 
-    IMessageHandler<TMessage, TResponse> For<TMessage, TResponse>(IMessageTypes<TMessage, TResponse> messageTypes)
-        where TMessage : class, IMessage<TResponse>;
+    public IMessageHandler<TMessage, TResponse> For<TMessage, TResponse>(IMessage<TMessage, TResponse> messageTypes)
+        where TMessage : class, IMessage<TMessage, TResponse>;
 
-    IMessageHandler<TMessage, UnitMessageResponse> For<TMessage>(IMessageTypes<TMessage, UnitMessageResponse> messageTypes)
-        where TMessage : class, IMessage<UnitMessageResponse>;
+    public IMessageHandler<TMessage, UnitMessageResponse> For<TMessage>(IMessage<TMessage, UnitMessageResponse> messageTypes)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>;
 
     IMessageHandler<TMessage, TResponse> ForMessageType<TMessage, TResponse>()
-        where TMessage : class, IMessage<TResponse>;
+        where TMessage : class, IMessage<TMessage, TResponse>;
 
     IMessageHandler<TMessage> ForMessageType<TMessage>()
-        where TMessage : class, IMessage<UnitMessageResponse>;
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>;
 }

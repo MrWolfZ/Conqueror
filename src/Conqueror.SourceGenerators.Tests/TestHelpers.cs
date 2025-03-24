@@ -51,7 +51,7 @@ internal static class TestHelpers
                                   .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
                                   .Concat([
                                       ..generators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
-                                      MetadataReference.CreateFromFile(typeof(IMessage).Assembly.Location),
+                                      MetadataReference.CreateFromFile(typeof(UnitMessageResponse).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(IHttpMessage).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(MessageAbstractionsGenerator).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(DisplayAttribute).Assembly.Location),

@@ -1,42 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
-
-[SuppressMessage("ReSharper", "UnusedTypeParameter", Justification = "The parameter is used for type checking")]
-public interface IMessage<TResponse>
-{
-    static abstract IReadOnlyCollection<IMessageTypesInjector> TypeInjectors { get; }
-
-    /// <summary>
-    ///     This helper function is used to invoke a handler if it is not known
-    ///     at the call-site whether the message has a response or not, and when
-    ///     the generic constraints don't allow for casting the handler to the
-    ///     correct type.
-    /// </summary>
-    internal static virtual Task<TResponse> CastAndInvokeHandler<TMessage>(object handler,
-                                                                           TMessage message,
-                                                                           CancellationToken cancellationToken = default)
-        where TMessage : class, IMessage<TResponse>
-    {
-        return ((IMessageHandler<TMessage, TResponse>)handler).Handle(message, cancellationToken);
-    }
-}
-
-public interface IMessage : IMessage<UnitMessageResponse>
-{
-    static async Task<UnitMessageResponse> IMessage<UnitMessageResponse>.CastAndInvokeHandler<TMessage>(object handler,
-                                                                                                        TMessage message,
-                                                                                                        CancellationToken cancellationToken)
-    {
-        await ((IMessageHandler<TMessage>)handler).Handle(message, cancellationToken).ConfigureAwait(false);
-        return UnitMessageResponse.Instance;
-    }
-}
 
 /// <summary>
 ///     This interface does not need to be added manually to user code. It is
@@ -45,10 +11,12 @@ public interface IMessage : IMessage<UnitMessageResponse>
 /// </summary>
 /// <typeparam name="TMessage">the message type</typeparam>
 /// <typeparam name="TResponse">the response type</typeparam>
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IMessageTypes<out TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+public interface IMessage<out TMessage, TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    static abstract IReadOnlyCollection<IMessageTypesInjector> TypeInjectors { get; }
+
     /// <summary>
     ///     Some transports must be able to construct an instance of this message
     ///     if it has no properties, but since this is only known to the actual

@@ -48,7 +48,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
             TMessage,
             TResponse>()
-            where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+            where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             return ConfigureRoute<TMessage, TResponse>(
                 builder.MapMethods(TMessage.FullPath, [TMessage.HttpMethod], Handle<TMessage, TResponse>),
@@ -59,7 +59,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
             TMessage,
             TResponse>(HttpContext context)
-            where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+            where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             var message = TMessage.EmptyInstance;
 
@@ -90,7 +90,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         }
 
         private static async Task Handle<TMessage, TResponse>(TMessage? message, HttpContext context)
-            where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+            where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             if (message is null)
             {
@@ -132,7 +132,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
             TMessage,
             TResponse>(IEndpointConventionBuilder builder, bool hasPayload)
-            where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+            where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             builder = builder.WithMetadata(typeof(TResponse) == typeof(UnitMessageResponse)
                                                ? new ProducesResponseTypeMetadata(TMessage.SuccessStatusCode)

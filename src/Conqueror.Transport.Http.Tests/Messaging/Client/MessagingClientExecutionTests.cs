@@ -55,7 +55,7 @@ public sealed class MessagingClientExecutionTests
         }
 
         IMessageHandler<TMessage, TResponse> WithHttpTransport<TMessage, TResponse>(IMessageHandler<TMessage, TResponse> handler)
-            where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+            where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             return handler.WithTransport(b => b.UseHttp(new("http://localhost"))
                                                .WithHttpClient(httpClient)
@@ -67,7 +67,7 @@ public sealed class MessagingClientExecutionTests
         }
 
         IMessageHandler<TMessage> WithHttpTransportWithoutResponse<TMessage>(IMessageHandler<TMessage> handler)
-            where TMessage : class, IMessage<UnitMessageResponse>, IHttpMessage<TMessage, UnitMessageResponse>, IMessageTypes<TMessage, UnitMessageResponse>
+            where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
         {
             return handler.WithTransport(b => b.UseHttp(new("http://localhost"))
                                                .WithHttpClient(httpClient)

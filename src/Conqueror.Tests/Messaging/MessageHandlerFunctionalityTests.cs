@@ -228,11 +228,13 @@ public abstract partial class MessageHandlerFunctionalityTests
         Assert.That(observations.ServiceProviders[0], Is.Not.SameAs(observations.ServiceProviders[2]));
     }
 
-    protected sealed partial record TestMessage(int Payload) : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    protected sealed partial record TestMessage(int Payload);
 
     protected sealed record TestMessageResponse(int Payload);
 
-    protected sealed partial record TestMessageWithoutResponse(int Payload) : IMessage;
+    [Message]
+    protected sealed partial record TestMessageWithoutResponse(int Payload);
 
     protected sealed class TestObservations
     {
@@ -454,7 +456,7 @@ public abstract class MessageHandlerFunctionalityClientTests : MessageHandlerFun
     }
 
     protected sealed class TestMessageTransport<TMessage, TResponse>(Exception? exception = null) : IMessageTransportClient<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public string TransportTypeName => "test";
 

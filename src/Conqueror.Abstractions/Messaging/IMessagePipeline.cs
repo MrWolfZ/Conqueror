@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 namespace Conqueror;
 
 public delegate Task<TResponse> MessageMiddlewareFn<TMessage, TResponse>(MessageMiddlewareContext<TMessage, TResponse> context)
-    where TMessage : class, IMessage<TResponse>;
+    where TMessage : class, IMessage<TMessage, TResponse>;
 
 public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMessageMiddleware<TMessage, TResponse>>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     IServiceProvider ServiceProvider { get; }
 
@@ -42,7 +42,7 @@ public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMe
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class GeneratedMessagePipelineAdapter<TMessage, TResponse>
     : IMessagePipeline<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     public IMessagePipeline<TMessage, TResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
 

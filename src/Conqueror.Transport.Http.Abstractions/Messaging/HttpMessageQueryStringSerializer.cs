@@ -12,7 +12,7 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse>(
     Func<IReadOnlyDictionary<string, IReadOnlyList<string?>>?, TMessage> fromQueryString,
     Func<TMessage, string?> toQueryString)
     : IHttpMessageSerializer<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public string? ContentType => null;
 

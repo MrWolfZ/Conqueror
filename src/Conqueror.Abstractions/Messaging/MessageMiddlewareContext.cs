@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Conqueror;
 
 public abstract class MessageMiddlewareContext<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     public abstract TMessage Message { get; }
 

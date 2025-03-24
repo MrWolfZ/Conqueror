@@ -8,18 +8,16 @@ namespace Conqueror.SourceGenerators.Messaging;
 public static class MessageAbstractionsGeneratorHelper
 {
     public static MessageTypeToGenerate GenerateMessageTypeToGenerate(INamedTypeSymbol messageTypeSymbol,
-                                                                      INamedTypeSymbol interfaceSymbol)
+                                                                      INamedTypeSymbol? responseTypeSymbol)
     {
-        var responseTypeSymbol = interfaceSymbol.TypeArguments.Length > 0 ? interfaceSymbol.TypeArguments[0] : null;
-
         var messageTypeDescriptor = GenerateTypeDescriptor(messageTypeSymbol);
 
-        if (responseTypeSymbol is not INamedTypeSymbol namedResponseTypeSymbol)
+        if (responseTypeSymbol is null)
         {
             return new(messageTypeDescriptor, null);
         }
 
-        var responseTypeDescriptor = GenerateTypeDescriptor(namedResponseTypeSymbol);
+        var responseTypeDescriptor = GenerateTypeDescriptor(responseTypeSymbol);
 
         return new(messageTypeDescriptor, responseTypeDescriptor);
     }

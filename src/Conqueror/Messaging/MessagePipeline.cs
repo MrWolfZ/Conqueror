@@ -11,7 +11,7 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     ConquerorContext conquerorContext,
     MessageTransportType transportType)
     : IMessagePipeline<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares = [];
 

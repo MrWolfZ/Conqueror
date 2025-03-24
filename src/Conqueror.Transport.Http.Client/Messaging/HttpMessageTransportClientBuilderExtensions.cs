@@ -9,7 +9,7 @@ public static class HttpMessageTransportClientBuilderExtensions
     public static IHttpMessageTransportClient<TMessage, TResponse> UseHttp<TMessage, TResponse>(
         this IMessageTransportClientBuilder<TMessage, TResponse> builder,
         Uri baseAddress)
-        where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
     {
         baseAddress = baseAddress ?? throw new ArgumentNullException(nameof(baseAddress));
 

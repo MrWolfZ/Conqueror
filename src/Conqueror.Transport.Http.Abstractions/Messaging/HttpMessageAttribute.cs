@@ -1,10 +1,12 @@
 using System;
 
+#pragma warning disable CA1813 // Avoid unsealed attributes; we don't want to have to repeat all properties for the generic attribute
+
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public sealed class HttpMessageAttribute : Attribute
+public class HttpMessageAttribute : Attribute
 {
     public string? HttpMethod { get; set; }
 
@@ -39,3 +41,7 @@ public sealed class HttpMessageAttribute : Attribute
     /// </summary>
     public string? ApiGroupName { get; set; }
 }
+
+// ReSharper disable once UnusedTypeParameter (used by source generator)
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class HttpMessageAttribute<TResponse> : HttpMessageAttribute;

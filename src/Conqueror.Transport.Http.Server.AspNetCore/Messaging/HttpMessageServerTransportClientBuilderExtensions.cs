@@ -9,7 +9,7 @@ public static class HttpMessageServerTransportClientBuilderExtensions
 {
     public static IMessageTransportClient<TMessage, TResponse> UseInProcessForHttpServer<TMessage, TResponse>(this IMessageTransportClientBuilder<TMessage, TResponse> builder,
                                                                                                               HttpContext httpContext)
-        where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
     {
         httpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
 
@@ -19,7 +19,7 @@ public static class HttpMessageServerTransportClientBuilderExtensions
     private sealed class HttpServerInProcessMessageTransport<TMessage, TResponse>(
         IMessageTransportClient<TMessage, TResponse> wrapped,
         HttpContext httpContext) : IMessageTransportClient<TMessage, TResponse>
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         public string TransportTypeName => ConquerorTransportHttpConstants.TransportName;
 

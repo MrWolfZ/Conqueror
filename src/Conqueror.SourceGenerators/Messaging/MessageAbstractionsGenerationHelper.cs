@@ -29,7 +29,7 @@ public static class MessageAbstractionsGenerationHelper
 
         var filename = sb
                        .Append(typesToGenerate.MessageTypeDescriptor.FullyQualifiedName)
-                       .Append("_MessageTypes.g.cs")
+                       .Append("_ConquerorMessageTypes.g.cs")
                        .Replace('<', '_')
                        .Replace('>', '_')
                        .Replace(',', '.')
@@ -109,7 +109,7 @@ public static class MessageAbstractionsGenerationHelper
           .Append("partial ")
           .Append(messageTypeDescriptor.IsRecord ? "record " : "class ")
           .Append(messageTypeDescriptor.Name)
-          .Append(" : IMessageTypes<")
+          .Append(" : IMessage<")
           .Append(messageTypeDescriptor.Name)
           .Append(", ")
           .Append(responseTypeDescriptor?.Name ?? "UnitMessageResponse")
@@ -163,7 +163,7 @@ public static class MessageAbstractionsGenerationHelper
                          
                          
                                  [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                 static {{{messageTypeName}}} IMessageTypes<{{{messageTypeName}}}, {{{responseTypeName}}}>.EmptyInstance => new();
+                                 static {{{messageTypeName}}} IMessage<{{{messageTypeName}}}, {{{responseTypeName}}}>.EmptyInstance => new();
                          """);
         }
         else
@@ -172,7 +172,7 @@ public static class MessageAbstractionsGenerationHelper
                          
                          
                                  [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                                 static {{{messageTypeName}}}? IMessageTypes<{{{messageTypeName}}}, {{{responseTypeName}}}>.EmptyInstance => null;
+                                 static {{{messageTypeName}}}? IMessage<{{{messageTypeName}}}, {{{responseTypeName}}}>.EmptyInstance => null;
                          """);
         }
 
@@ -180,7 +180,7 @@ public static class MessageAbstractionsGenerationHelper
                      
                      
                              [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                             static global::System.Collections.Generic.IReadOnlyCollection<IMessageTypesInjector> global::Conqueror.IMessage<{{{responseTypeName}}}>.TypeInjectors
+                             static global::System.Collections.Generic.IReadOnlyCollection<IMessageTypesInjector> global::Conqueror.IMessage<{{{messageTypeName}}}, {{{responseTypeName}}}>.TypeInjectors
                                  => global::Conqueror.IMessageTypesInjector.GetTypeInjectorsForMessageType<{{{messageTypeName}}}>();
                      """);
 

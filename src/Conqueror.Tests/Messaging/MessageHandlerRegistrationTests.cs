@@ -279,17 +279,21 @@ public sealed partial class MessageHandlerRegistrationTests
         });
     }
 
-    private sealed partial record TestMessage : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    private sealed partial record TestMessage;
 
     private sealed record TestMessageResponse;
 
-    private sealed partial record TestMessage2 : IMessage<TestMessage2Response>;
+    [Message<TestMessage2Response>]
+    private sealed partial record TestMessage2;
 
     private sealed record TestMessage2Response;
 
-    private sealed partial record TestMessageWithoutResponse : IMessage;
+    [Message]
+    private sealed partial record TestMessageWithoutResponse;
 
-    private sealed partial record TestMessageWithoutResponse2 : IMessage;
+    [Message]
+    private sealed partial record TestMessageWithoutResponse2;
 
     private sealed class TestMessageHandler : TestMessage.IHandler
     {

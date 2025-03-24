@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Conqueror;
 
 public interface IHttpMessageSerializer<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     string? ContentType { get; }
 
@@ -25,7 +25,7 @@ public interface IHttpMessageSerializer<TMessage, TResponse>
 }
 
 public interface IHttpResponseSerializer<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     string? ContentType { get; }
 

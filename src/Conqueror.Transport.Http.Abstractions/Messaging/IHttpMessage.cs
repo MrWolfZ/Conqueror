@@ -4,13 +4,16 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
+// TODO: check if this can be removed
+// ReSharper disable TypeParameterCanBeVariant (false positive, causes compile errors)
+
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
 [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty", Justification = "Members are set via code generation")]
-public interface IHttpMessage<TMessage, TResponse> : IHttpMessage
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+public interface IHttpMessage<TMessage, TResponse> : IHttpMessage, IMessage<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     static virtual string HttpMethod => ConquerorTransportHttpConstants.MethodPost;
 
@@ -56,7 +59,7 @@ public interface IHttpMessage<TMessage, TResponse> : IHttpMessage
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
 public interface IHttpMessage<TMessage> : IHttpMessage<TMessage, UnitMessageResponse>
-    where TMessage : class, IMessage<UnitMessageResponse>, IHttpMessage<TMessage, UnitMessageResponse>, IMessageTypes<TMessage, UnitMessageResponse>
+    where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
 {
     static int IHttpMessage<TMessage, UnitMessageResponse>.SuccessStatusCode => 204;
 }

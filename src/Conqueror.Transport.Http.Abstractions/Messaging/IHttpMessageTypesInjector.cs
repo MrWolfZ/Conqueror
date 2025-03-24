@@ -30,7 +30,7 @@ public interface IHttpMessageTypesInjector<out TResult>
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
         TMessage,
         TResponse>()
-        where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>;
+        where TMessage : class, IHttpMessage<TMessage, TResponse>;
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -38,7 +38,7 @@ public sealed class HttpMessageTypesInjector<
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
     TMessage,
     TResponse> : IHttpMessageTypesInjector
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public static readonly HttpMessageTypesInjector<TMessage, TResponse> Default = new();
 

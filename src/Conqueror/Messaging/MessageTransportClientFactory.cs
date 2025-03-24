@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Conqueror.Messaging;
 
 internal sealed class MessageTransportClientFactory<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     private readonly IMessageTransportClient<TMessage, TResponse>? transportClient;
     private readonly ConfigureMessageTransportClient<TMessage, TResponse>? syncTransportClientFactory;

@@ -10,8 +10,8 @@ namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 public static class ConquerorHttpServerMessagingAspNetCoreHttpContextExtensions
 {
     public static Task<TResponse> HandleMessage<TMessage, TResponse>(this HttpContext httpContext,
-                                                                     IMessageTypes<TMessage, TResponse> message)
-        where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+                                                                     IMessage<TMessage, TResponse> message)
+        where TMessage : class, IHttpMessage<TMessage, TResponse>
     {
         return httpContext.RequestServices
                           .GetRequiredService<IMessageClients>()
@@ -21,8 +21,8 @@ public static class ConquerorHttpServerMessagingAspNetCoreHttpContextExtensions
     }
 
     public static Task HandleMessage<TMessage>(this HttpContext httpContext,
-                                               IMessageTypes<TMessage, UnitMessageResponse> message)
-        where TMessage : class, IMessage<UnitMessageResponse>, IHttpMessage<TMessage, UnitMessageResponse>, IMessageTypes<TMessage, UnitMessageResponse>
+                                               IMessage<TMessage, UnitMessageResponse> message)
+        where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
     {
         return httpContext.RequestServices
                           .GetRequiredService<IMessageClients>()

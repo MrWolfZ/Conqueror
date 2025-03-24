@@ -242,17 +242,20 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         }
 
         [HttpMessage]
-        private sealed partial record TestMessage : IMessage<TestMessageResponse>;
+        [Message<TestMessageResponse>]
+        private sealed partial record TestMessage;
 
         private sealed record TestMessageResponse;
 
         [HttpMessage]
-        private sealed partial record TestMessage2 : IMessage<TestMessage2Response>;
+        [Message<TestMessage2Response>]
+        private sealed partial record TestMessage2;
 
         private sealed record TestMessage2Response;
 
         [HttpMessage(Path = "test")]
-        private sealed partial record TestMessageWithDuplicatePathFromConfig : IMessage<TestMessageResponse>;
+        [Message<TestMessageResponse>]
+        private sealed partial record TestMessageWithDuplicatePathFromConfig;
 
         private sealed class TestMessageHandler : TestMessage.IHandler
         {
@@ -280,7 +283,8 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
     namespace DuplicateMessageName
     {
         [HttpMessage]
-        public sealed partial record TestMessage : IMessage<TestMessageResponse>;
+        [Message<TestMessageResponse>]
+        public sealed partial record TestMessage;
 
         public sealed record TestMessageResponse;
 

@@ -64,26 +64,30 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), instance));
     }
 
-    public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services, MessageHandlerFn<TMessage, TResponse> fn)
-        where TMessage : class, IMessage<TResponse>
+    public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
+                                                                                             MessageHandlerFn<TMessage, TResponse> fn)
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal(fn, null);
     }
 
-    public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage>(this IServiceCollection services, MessageHandlerFn<TMessage> fn)
-        where TMessage : class, IMessage<UnitMessageResponse>
+    public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage>(this IServiceCollection services,
+                                                                                  MessageHandlerFn<TMessage> fn)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal(fn, null);
     }
 
-    public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services, MessageHandlerSyncFn<TMessage, TResponse> fn)
-        where TMessage : class, IMessage<TResponse>
+    public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
+                                                                                             MessageHandlerSyncFn<TMessage, TResponse> fn)
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal<TMessage, TResponse>((m, p, ct) => Task.FromResult(fn(m, p, ct)), null);
     }
 
-    public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage>(this IServiceCollection services, MessageHandlerSyncFn<TMessage> fn)
-        where TMessage : class, IMessage<UnitMessageResponse>
+    public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage>(this IServiceCollection services,
+                                                                                  MessageHandlerSyncFn<TMessage> fn)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal<TMessage>((m, p, ct) =>
         {
@@ -95,7 +99,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
     public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
                                                                                              MessageHandlerFn<TMessage, TResponse> fn,
                                                                                              Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal(fn, configurePipeline);
     }
@@ -103,7 +107,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
     public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage>(this IServiceCollection services,
                                                                                   MessageHandlerFn<TMessage> fn,
                                                                                   Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
-        where TMessage : class, IMessage<UnitMessageResponse>
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal(fn, configurePipeline);
     }
@@ -111,7 +115,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
     public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
                                                                                              MessageHandlerSyncFn<TMessage, TResponse> fn,
                                                                                              Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal((m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline);
     }
@@ -119,7 +123,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
     public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage>(this IServiceCollection services,
                                                                                   MessageHandlerSyncFn<TMessage> fn,
                                                                                   Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
-        where TMessage : class, IMessage<UnitMessageResponse>
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal((m, p, ct) =>
         {
@@ -129,6 +133,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
     }
 
     [RequiresUnreferencedCode("Types might be removed")]
+    [RequiresDynamicCode("Types might be removed")]
     public static IServiceCollection AddConquerorMessageHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
     {
         services.AddConquerorMessaging();
@@ -158,10 +163,16 @@ public static class ConquerorMessagingServiceCollectionExtensions
             var messageType = genericArguments[0];
             var responseType = genericArguments.Length > 1 ? genericArguments[1] : typeof(UnitMessageResponse);
 
+            var adapterType = responseType == typeof(UnitMessageResponse)
+                ? typeof(MessageHandlerWithoutResponseAdapter<>).MakeGenericType(messageType)
+                : null;
+
             // TODO: test for correct pipeline configuration
             // TODO: test for correct type injectors
+            // TODO: test for message Type without response execution
             services.AddConquerorMessageHandlerInternal(ServiceDescriptor.Transient(messageHandlerType, messageHandlerType),
                                                         messageHandlerType,
+                                                        adapterType,
                                                         messageType,
                                                         responseType,
                                                         null,
@@ -173,6 +184,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
     }
 
     [RequiresUnreferencedCode("Types might be removed")]
+    [RequiresDynamicCode("Types might be removed")]
     public static IServiceCollection AddConquerorMessageHandlersFromExecutingAssembly(this IServiceCollection services)
     {
         return services.AddConquerorMessageHandlersFromAssembly(Assembly.GetCallingAssembly());
@@ -210,6 +222,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         this IServiceCollection services,
         ServiceDescriptor serviceDescriptor,
         Type handlerType,
+        Type? handlerAdapterType,
         Type messageType,
         Type responseType,
         Delegate? configurePipeline,
@@ -238,7 +251,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         }
         else
         {
-            var registration = new MessageHandlerRegistration(messageType, responseType, handlerType, configurePipeline, typeInjectors);
+            var registration = new MessageHandlerRegistration(messageType, responseType, handlerType, handlerAdapterType, configurePipeline, typeInjectors);
             services.AddSingleton(registration);
         }
 
@@ -260,7 +273,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         this IServiceCollection services,
         MessageHandlerFn<TMessage, TResponse> fn,
         Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline)
-        where TMessage : class, IMessage<TResponse>
+        where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal(
             typeof(TMessage),
@@ -275,7 +288,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         this IServiceCollection services,
         MessageHandlerFn<TMessage> fn,
         Action<IMessagePipeline<TMessage, UnitMessageResponse>>? configurePipeline)
-        where TMessage : class, IMessage<UnitMessageResponse>
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddConquerorMessageHandlerDelegateInternal(
             typeof(TMessage),
@@ -308,7 +321,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
         services.Replace(serviceDescriptor);
 
-        services.AddSingleton(new MessageHandlerRegistration(messageType, responseType, handlerType, configurePipeline, typeInjectors));
+        services.AddSingleton(new MessageHandlerRegistration(messageType, responseType, handlerType, null, configurePipeline, typeInjectors));
 
         return services;
     }
@@ -322,7 +335,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         where THandler : class, IGeneratedMessageHandler
     {
         public IServiceCollection Create<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-            where TMessage : class, IMessage<TResponse>
+            where TMessage : class, IMessage<TMessage, TResponse>
             where THandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
             where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, THandlerInterface, new()
             where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
@@ -333,6 +346,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
             return services.AddConquerorMessageHandlerInternal(serviceDescriptor,
                                                                typeof(THandler),
+                                                               null,
                                                                typeof(TMessage),
                                                                typeof(TResponse),
                                                                MakeConfiguredPipeline(),
@@ -355,7 +369,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         }
 
         public IServiceCollection Create<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-            where TMessage : class, IMessage<UnitMessageResponse>
+            where TMessage : class, IMessage<TMessage, UnitMessageResponse>
             where THandlerInterface : class, IGeneratedMessageHandler<TMessage, THandlerInterface, THandlerAdapter, TPipelineInterface, TPipelineAdapter>
             where THandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, THandlerInterface, new()
             where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
@@ -364,8 +378,10 @@ public static class ConquerorMessagingServiceCollectionExtensions
             Debug.Assert(typeof(THandler).IsAssignableTo(typeof(THandlerInterface)),
                          $"handler type should implement {nameof(THandlerInterface)}");
 
+            services.TryAddTransient<MessageHandlerWithoutResponseAdapter<TMessage>>(p => new(typeof(THandler), p));
             return services.AddConquerorMessageHandlerInternal(serviceDescriptor,
                                                                typeof(THandler),
+                                                               typeof(MessageHandlerWithoutResponseAdapter<TMessage>),
                                                                typeof(TMessage),
                                                                typeof(UnitMessageResponse),
                                                                MakeConfiguredPipeline(),

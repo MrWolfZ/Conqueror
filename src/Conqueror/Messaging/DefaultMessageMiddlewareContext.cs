@@ -14,7 +14,7 @@ internal sealed class DefaultMessageMiddlewareContext<TMessage, TResponse>(
     MessageTransportType transportType,
     CancellationToken cancellationToken)
     : MessageMiddlewareContext<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
 {
     public override TMessage Message { get; } = message;
 

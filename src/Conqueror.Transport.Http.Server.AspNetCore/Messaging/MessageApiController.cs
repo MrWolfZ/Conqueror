@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 
 internal sealed class MessageApiController<TMessage, TResponse> : MessageApiControllerBase<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public async Task<IActionResult> ExecuteMessage([FromBody] TMessage message)
     {
@@ -20,7 +20,7 @@ internal sealed class MessageApiController<TMessage, TResponse> : MessageApiCont
 }
 
 internal sealed class MessageApiControllerWithoutPayload<TMessage, TResponse> : MessageApiControllerBase<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public async Task<IActionResult> ExecuteMessage()
     {
@@ -36,7 +36,7 @@ internal sealed class MessageApiControllerWithoutPayload<TMessage, TResponse> : 
 }
 
 internal sealed class MessageApiControllerForGet<TMessage, TResponse> : MessageApiControllerBase<TMessage, TResponse>
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+    where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public async Task<IActionResult> ExecuteMessage([FromQuery] TMessage message)
     {
@@ -53,4 +53,4 @@ internal sealed class MessageApiControllerForGet<TMessage, TResponse> : MessageA
 
 [ApiController]
 internal abstract class MessageApiControllerBase<TMessage, TResponse> : ControllerBase
-    where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>;
+    where TMessage : class, IHttpMessage<TMessage, TResponse>;

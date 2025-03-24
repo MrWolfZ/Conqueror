@@ -59,7 +59,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
             TMessage,
             TResponse>()
-            where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+            where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             if (TMessage.EmptyInstance is not null)
             {
@@ -81,7 +81,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
             TMessage,
             TResponse>()
-            where TMessage : class, IMessage<TResponse>, IHttpMessage<TMessage, TResponse>, IMessageTypes<TMessage, TResponse>
+            where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             services.TryAddEnumerable(
                 ServiceDescriptor.Transient<IApplicationModelProvider, HttpMessageEndpointApplicationModelProvider<TMessage, TResponse>>());

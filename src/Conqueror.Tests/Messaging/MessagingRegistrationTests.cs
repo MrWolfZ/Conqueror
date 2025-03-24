@@ -144,21 +144,26 @@ public sealed partial class MessagingRegistrationTests
         Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<MultiTestMessageHandler>(), Throws.InvalidOperationException);
     }
 
-    public sealed partial record TestMessage : IMessage<TestMessageResponse>;
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessage;
 
     public sealed record TestMessageResponse;
 
-    public sealed partial record ExplicitTestMessage : IMessage<ExplicitTestMessageResponse>;
+    [Message<ExplicitTestMessageResponse>]
+    public sealed partial record ExplicitTestMessage;
 
     public sealed record ExplicitTestMessageResponse;
 
-    public sealed partial record TestMessage2 : IMessage<TestMessage2Response>;
+    [Message<TestMessage2Response>]
+    public sealed partial record TestMessage2;
 
     public sealed record TestMessage2Response;
 
-    public sealed partial record TestMessageWithoutResponse : IMessage;
+    [Message]
+    public sealed partial record TestMessageWithoutResponse;
 
-    public sealed partial record ExplicitTestMessageWithoutResponse : IMessage;
+    [Message]
+    public sealed partial record ExplicitTestMessageWithoutResponse;
 
     public sealed class TestMessageHandler : TestMessage.IHandler
     {
@@ -200,7 +205,7 @@ public sealed partial class MessagingRegistrationTests
     }
 
     public sealed class GenericTestMessageHandler<TM, TR> : IMessageHandler<TM, TR>
-        where TM : class, IMessage<TR>
+        where TM : class, IMessage<TM, TR>
         where TR : new()
     {
         public Task<TR> Handle(TM message, CancellationToken cancellationToken = default)

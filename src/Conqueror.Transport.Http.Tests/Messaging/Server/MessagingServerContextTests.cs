@@ -395,7 +395,8 @@ public sealed partial class MessagingServerContextTests
         return new(a, activitySource, activityListener, a);
     }
 
-    public sealed partial record NestedTestMessage : IMessage<NestedTestMessageResponse>
+    [Message<NestedTestMessageResponse>]
+    public sealed partial record NestedTestMessage
     {
         public int Payload { get; init; }
     }
