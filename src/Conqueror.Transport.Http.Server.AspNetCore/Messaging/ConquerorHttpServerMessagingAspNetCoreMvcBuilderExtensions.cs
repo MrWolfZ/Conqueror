@@ -37,7 +37,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
     {
         _ = builder.Services.AddConqueror();
 
-        _ = builder.Services.AddSingleton(TMessage.HttpMessageTypesInjector.CreateWithMessageTypes(new ControllerRegistrationTypeInjector()));
+        _ = builder.Services.AddSingleton(TMessage.HttpMessageTypesInjector.CreateWithMessageTypes(new ControllerRegistrationTypeInjectable()));
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpMessageEndpointConfigurationStartupFilter>());
 
@@ -46,14 +46,14 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
             ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
                 p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
 
-        _ = TMessage.HttpMessageTypesInjector.CreateWithMessageTypes(new ApplicationModelProviderTypeInjectionFactory(builder.Services));
+        _ = TMessage.HttpMessageTypesInjector.CreateWithMessageTypes(new ApplicationModelProviderTypeInjectable(builder.Services));
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IApplicationModelProvider, HttpMessageDuplicatePathValidationApplicationModelProvider>());
 
         return builder;
     }
 
-    private sealed class ControllerRegistrationTypeInjector : IHttpMessageTypesInjector<HttpMessageControllerRegistration>
+    private sealed class ControllerRegistrationTypeInjectable : IHttpMessageTypesInjectable<HttpMessageControllerRegistration>
     {
         public HttpMessageControllerRegistration WithInjectedTypes<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
@@ -75,7 +75,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
         }
     }
 
-    private sealed class ApplicationModelProviderTypeInjectionFactory(IServiceCollection services) : IHttpMessageTypesInjector<IServiceCollection>
+    private sealed class ApplicationModelProviderTypeInjectable(IServiceCollection services) : IHttpMessageTypesInjectable<IServiceCollection>
     {
         public IServiceCollection WithInjectedTypes<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]

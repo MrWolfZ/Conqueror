@@ -30,7 +30,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 throw new InvalidOperationException($"could not get the message type injector for message type '{messageType}'");
             }
 
-            _ = i.CreateWithMessageTypes(new EndpointTypeInjector(builder));
+            _ = i.CreateWithMessageTypes(new EndpointTypeInjectable(builder));
         }
 
         return builder;
@@ -39,10 +39,10 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
     public static IEndpointConventionBuilder MapConquerorMessageEndpoint<TMessage>(this IEndpointRouteBuilder builder)
         where TMessage : class, IHttpMessage
     {
-        return TMessage.HttpMessageTypesInjector.CreateWithMessageTypes(new EndpointTypeInjector(builder));
+        return TMessage.HttpMessageTypesInjector.CreateWithMessageTypes(new EndpointTypeInjectable(builder));
     }
 
-    private sealed class EndpointTypeInjector(IEndpointRouteBuilder builder) : IHttpMessageTypesInjector<IEndpointConventionBuilder>
+    private sealed class EndpointTypeInjectable(IEndpointRouteBuilder builder) : IHttpMessageTypesInjectable<IEndpointConventionBuilder>
     {
         public IEndpointConventionBuilder WithInjectedTypes<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]

@@ -12,25 +12,10 @@ public interface IHttpMessageTypesInjector : IMessageTypesInjector
     ///     Helper method to be able to access the message and response types as generic parameters while only
     ///     having a generic reference to the message type. This allows bypassing reflection.
     /// </summary>
-    /// <param name="injectorWithResult">The injector that should be called with the generic type parameters</param>
+    /// <param name="injectable">The injector that should be called with the generic type parameters</param>
     /// <typeparam name="TResult">The type of result the factory will return</typeparam>
     /// <returns>The result of calling the factory</returns>
-    TResult CreateWithMessageTypes<TResult>(IHttpMessageTypesInjector<TResult> injectorWithResult);
-}
-
-/// <summary>
-///     Helper interface to be able to access the message and response types as generic parameters while only
-///     having a generic reference to the generated handler interface type. This allows bypassing reflection.
-/// </summary>
-/// <typeparam name="TResult">The type of result the factory will return</typeparam>
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IHttpMessageTypesInjector<out TResult>
-{
-    TResult WithInjectedTypes<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>()
-        where TMessage : class, IHttpMessage<TMessage, TResponse>;
+    TResult CreateWithMessageTypes<TResult>(IHttpMessageTypesInjectable<TResult> injectable);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -44,6 +29,21 @@ public sealed class HttpMessageTypesInjector<
 
     public Type ConstraintType => typeof(IHttpMessage);
 
-    public TResult CreateWithMessageTypes<TResult>(IHttpMessageTypesInjector<TResult> injectorWithResult)
-        => injectorWithResult.WithInjectedTypes<TMessage, TResponse>();
+    public TResult CreateWithMessageTypes<TResult>(IHttpMessageTypesInjectable<TResult> injectable)
+        => injectable.WithInjectedTypes<TMessage, TResponse>();
+}
+
+/// <summary>
+///     Helper interface to be able to access the message and response types as generic parameters while only
+///     having a generic reference to the generated handler interface type. This allows bypassing reflection.
+/// </summary>
+/// <typeparam name="TResult">The type of result the factory will return</typeparam>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface IHttpMessageTypesInjectable<out TResult>
+{
+    TResult WithInjectedTypes<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>()
+        where TMessage : class, IHttpMessage<TMessage, TResponse>;
 }

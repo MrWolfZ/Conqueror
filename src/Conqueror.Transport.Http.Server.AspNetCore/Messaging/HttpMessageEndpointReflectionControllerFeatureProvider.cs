@@ -19,7 +19,7 @@ internal sealed class HttpMessageEndpointReflectionControllerFeatureProvider(IMe
                 throw new InvalidOperationException($"could not get the HTTP message type injector for message type '{messageType}'");
             }
 
-            var typeInfo = i.CreateWithMessageTypes(new ControllerTypeInjector());
+            var typeInfo = i.CreateWithMessageTypes(new ControllerTypeInjectable());
 
             if (!feature.Controllers.Contains(typeInfo))
             {
@@ -28,7 +28,7 @@ internal sealed class HttpMessageEndpointReflectionControllerFeatureProvider(IMe
         }
     }
 
-    private sealed class ControllerTypeInjector : IHttpMessageTypesInjector<TypeInfo>
+    private sealed class ControllerTypeInjectable : IHttpMessageTypesInjectable<TypeInfo>
     {
         public TypeInfo WithInjectedTypes<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
