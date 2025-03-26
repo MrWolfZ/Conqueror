@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Messaging;
@@ -20,7 +21,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         this IServiceCollection services)
         where THandler : class, IGeneratedMessageHandler
     {
-        return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), typeof(THandler), ServiceLifetime.Transient));
+        return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), typeof(THandler), ServiceLifetime.Transient), shouldOverwriteRegistration: true);
     }
 
     public static IServiceCollection AddConquerorMessageHandler<
@@ -30,7 +31,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         ServiceLifetime lifetime)
         where THandler : class, IGeneratedMessageHandler
     {
-        return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), typeof(THandler), lifetime));
+        return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), typeof(THandler), lifetime), shouldOverwriteRegistration: true);
     }
 
     public static IServiceCollection AddConquerorMessageHandler<
@@ -40,7 +41,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         Func<IServiceProvider, THandler> factory)
         where THandler : class, IGeneratedMessageHandler
     {
-        return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), factory, ServiceLifetime.Transient));
+        return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), factory, ServiceLifetime.Transient), shouldOverwriteRegistration: true);
     }
 
     public static IServiceCollection AddConquerorMessageHandler<
@@ -51,7 +52,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         ServiceLifetime lifetime)
         where THandler : class, IGeneratedMessageHandler
     {
-        return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), factory, lifetime));
+        return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), factory, lifetime), shouldOverwriteRegistration: true);
     }
 
     public static IServiceCollection AddConquerorMessageHandler<
@@ -61,7 +62,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         THandler instance)
         where THandler : class, IGeneratedMessageHandler
     {
-        return services.AddConquerorMessageHandlerInternal<THandler>(new(typeof(THandler), instance));
+        return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), instance), shouldOverwriteRegistration: true);
     }
 
     public static IServiceCollection AddConquerorMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
@@ -140,6 +141,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
         var validTypes = assembly.GetTypes()
                                  .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false })
+                                 .Where(t => t is { IsPublic: true } or { IsNestedPublic: true })
                                  .Where(t => t.IsAssignableTo(typeof(IGeneratedMessageHandler)))
                                  .ToList();
 
@@ -159,25 +161,23 @@ public static class ConquerorMessagingServiceCollectionExtensions
                 continue;
             }
 
-            var genericArguments = messageHandlerInterfaces[0].GetGenericArguments();
-            var messageType = genericArguments[0];
-            var responseType = genericArguments.Length > 1 ? genericArguments[1] : typeof(UnitMessageResponse);
+            var addHandlerMethod = typeof(ConquerorMessagingServiceCollectionExtensions)
+                                   .GetMethod(nameof(AddMessageHandlerInternalGeneric), BindingFlags.NonPublic | BindingFlags.Static)
+                                   ?.MakeGenericMethod(messageHandlerType);
 
-            var adapterType = responseType == typeof(UnitMessageResponse)
-                ? typeof(MessageHandlerWithoutResponseAdapter<>).MakeGenericType(messageType)
-                : null;
+            if (addHandlerMethod is null)
+            {
+                throw new InvalidOperationException($"could not find method '{nameof(ConquerorMessagingServiceCollectionExtensions)}.{nameof(AddMessageHandlerInternalGeneric)}'");
+            }
 
-            // TODO: test for correct pipeline configuration
-            // TODO: test for correct type injectors
-            // TODO: test for message Type without response execution
-            services.AddConquerorMessageHandlerInternal(ServiceDescriptor.Transient(messageHandlerType, messageHandlerType),
-                                                        messageHandlerType,
-                                                        adapterType,
-                                                        messageType,
-                                                        responseType,
-                                                        null,
-                                                        [],
-                                                        false);
+            try
+            {
+                addHandlerMethod.Invoke(null, [services, ServiceDescriptor.Transient(messageHandlerType, messageHandlerType), false]);
+            }
+            catch (TargetInvocationException ex) when (ex.InnerException != null)
+            {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            }
         }
 
         return services;
@@ -199,11 +199,12 @@ public static class ConquerorMessagingServiceCollectionExtensions
         services.AddConquerorContext();
     }
 
-    private static IServiceCollection AddConquerorMessageHandlerInternal<
+    private static IServiceCollection AddMessageHandlerInternalGeneric<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.Interfaces)]
         THandler>(
         this IServiceCollection services,
-        ServiceDescriptor serviceDescriptor)
+        ServiceDescriptor serviceDescriptor,
+        bool shouldOverwriteRegistration)
         where THandler : class, IGeneratedMessageHandler
     {
         var messageHandlerInterfaces = typeof(THandler).GetInterfaces()
@@ -215,7 +216,9 @@ public static class ConquerorMessagingServiceCollectionExtensions
             throw new InvalidOperationException($"handler type '{typeof(THandler)}' implements multiple message handler interfaces");
         }
 
-        return THandler.DefaultTypeInjector.CreateWithMessageTypes(new MessageHandlerRegistrationTypeInjectable<THandler>(services, serviceDescriptor));
+        return THandler.DefaultTypeInjector.CreateWithMessageTypes(new MessageHandlerRegistrationTypeInjectable<THandler>(services,
+                                                                                                                          serviceDescriptor,
+                                                                                                                          shouldOverwriteRegistration));
     }
 
     private static IServiceCollection AddConquerorMessageHandlerInternal(
@@ -227,7 +230,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         Type responseType,
         Delegate? configurePipeline,
         IReadOnlyCollection<IMessageTypesInjector> typeInjectors,
-        bool shouldOverwrite)
+        bool shouldOverwriteRegistration)
     {
         if (handlerType.IsInterface || handlerType.IsAbstract)
         {
@@ -257,7 +260,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
         services.AddConquerorMessaging();
 
-        if (shouldOverwrite)
+        if (shouldOverwriteRegistration)
         {
             services.Replace(serviceDescriptor);
         }
@@ -330,7 +333,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
         THandler>(
         IServiceCollection services,
-        ServiceDescriptor serviceDescriptor
+        ServiceDescriptor serviceDescriptor,
+        bool shouldOverwriteRegistration
     ) : IDefaultMessageTypesInjectable<IServiceCollection>
         where THandler : class
     {
@@ -349,7 +353,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
                                                                typeof(TResponse),
                                                                MakeConfiguredPipeline(),
                                                                TMessage.TypeInjectors,
-                                                               true);
+                                                               shouldOverwriteRegistration);
 
             static Action<IMessagePipeline<TMessage, TResponse>>? MakeConfiguredPipeline()
             {
@@ -382,7 +386,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
                                                                typeof(UnitMessageResponse),
                                                                MakeConfiguredPipeline(),
                                                                TMessage.TypeInjectors,
-                                                               true);
+                                                               shouldOverwriteRegistration);
 
             static Action<IMessagePipeline<TMessage, UnitMessageResponse>>? MakeConfiguredPipeline()
             {

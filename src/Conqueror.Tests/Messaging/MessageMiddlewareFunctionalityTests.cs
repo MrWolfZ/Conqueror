@@ -761,6 +761,52 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     [Test]
+    public async Task GivenHandlerRegisteredViaAssemblyScanningWithSingleAppliedMiddleware_WhenHandlerIsCalled_MiddlewareIsCalledWithMessage()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorMessageHandlersFromExecutingAssembly()
+                    .AddSingleton<Action<TestMessage.IPipeline>>(pipeline => pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(observations)))
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageClients>()
+                              .For(TestMessage.T);
+
+        var message = new TestMessage(10);
+
+        _ = await handler.Handle(message);
+
+        Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(new[] { message }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestMessageMiddleware<TestMessage, TestMessageResponse>) }));
+    }
+
+    [Test]
+    public async Task GivenHandlerWithoutResponseRegisteredViaAssemblyScanningWithSingleAppliedMiddleware_WhenHandlerIsCalled_MiddlewareIsCalledWithMessage()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddConquerorMessageHandlersFromExecutingAssembly()
+                    .AddSingleton<Action<TestMessageWithoutResponse.IPipeline>>(pipeline => pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(observations)))
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageClients>()
+                              .For(TestMessageWithoutResponse.T);
+
+        var message = new TestMessageWithoutResponse(10);
+
+        await handler.Handle(message);
+
+        Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(new[] { message }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>) }));
+    }
+
+    [Test]
     public async Task GivenHandlerAndClientPipeline_WhenHandlerIsCalled_TransportTypesInPipelinesAreCorrect()
     {
         var services = new ServiceCollection();
@@ -853,6 +899,41 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     private sealed class TestMessageWithoutResponseHandler(TestObservations observations) : TestMessageWithoutResponse.IHandler
+    {
+        public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            observations.MessagesFromHandlers.Add(message);
+            observations.CancellationTokensFromHandlers.Add(cancellationToken);
+        }
+
+        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline)
+        {
+            pipeline.ServiceProvider.GetService<Action<TestMessageWithoutResponse.IPipeline>>()?.Invoke(pipeline);
+        }
+    }
+
+    // ReSharper disable once UnusedType.Global (accessed via reflection)
+    public sealed class TestMessageForAssemblyScanningHandler(TestObservations observations)
+        : TestMessage.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            observations.MessagesFromHandlers.Add(message);
+            observations.CancellationTokensFromHandlers.Add(cancellationToken);
+            return new(0);
+        }
+
+        public static void ConfigurePipeline(TestMessage.IPipeline pipeline)
+        {
+            pipeline.ServiceProvider.GetService<Action<TestMessage.IPipeline>>()?.Invoke(pipeline);
+        }
+    }
+
+    // ReSharper disable once UnusedType.Global (accessed via reflection)
+    public sealed class TestMessageWithoutResponseForAssemblyScanningHandler(TestObservations observations)
+        : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
         {
@@ -993,7 +1074,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         public Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx) => throw new NotSupportedException();
     }
 
-    private sealed class TestObservations
+    public sealed class TestObservations
     {
         public List<Type> MiddlewareTypes { get; } = [];
 

@@ -822,6 +822,55 @@ public static partial class TestMessages
                 RegistrationMethod = registrationMethod,
             };
         }
+
+        foreach (var registrationMethod in new[]
+                 {
+                     MessageTestCaseRegistrationMethod.Controllers,
+                     MessageTestCaseRegistrationMethod.Endpoints,
+                 })
+        {
+            yield return new()
+            {
+                MessageType = typeof(TestMessageForAssemblyScanning),
+                ResponseType = typeof(TestMessageForAssemblyScanningResponse),
+                HandlerType = typeof(TestMessageForAssemblyScanningHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageForAssemblyScanning",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = "{\"payload\":11}",
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageForAssemblyScanning { Payload = 10 },
+                Response = new TestMessageForAssemblyScanningResponse { Payload = 11 },
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithoutResponseForAssemblyScanning),
+                ResponseType = null,
+                HandlerType = typeof(TestMessageWithoutResponseForAssemblyScanningHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithoutResponseForAssemblyScanning",
+                SuccessStatusCode = 204,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = string.Empty,
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = null,
+                Message = new TestMessageWithoutResponseForAssemblyScanning { Payload = 10 },
+                Response = null,
+                RegistrationMethod = registrationMethod,
+            };
+        }
     }
 
     public sealed record MessageTestCase
@@ -1524,6 +1573,57 @@ public static partial class TestMessages
         {
             observations.SeenTransportTypeInMiddleware = ctx.TransportType;
             return ctx.Next(ctx.Message, ctx.CancellationToken);
+        }
+    }
+
+    [HttpMessage]
+    [Message<TestMessageForAssemblyScanningResponse>]
+    public sealed partial record TestMessageForAssemblyScanning
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed record TestMessageForAssemblyScanningResponse
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed class TestMessageForAssemblyScanningHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageForAssemblyScanning.IHandler
+    {
+        public async Task<TestMessageForAssemblyScanningResponse> Handle(TestMessageForAssemblyScanning message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return new() { Payload = message.Payload + 1 };
+        }
+    }
+
+    [HttpMessage]
+    [Message]
+    public sealed partial record TestMessageWithoutResponseForAssemblyScanning
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed class TestMessageWithoutResponseForAssemblyScanningHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithoutResponseForAssemblyScanning.IHandler
+    {
+        public async Task Handle(TestMessageWithoutResponseForAssemblyScanning message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
         }
     }
 

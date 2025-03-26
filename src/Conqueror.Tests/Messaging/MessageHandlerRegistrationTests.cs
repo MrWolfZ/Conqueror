@@ -6,6 +6,18 @@ namespace Conqueror.Tests.Messaging;
 public sealed partial class MessageHandlerRegistrationTests
 {
     [Test]
+    public void GivenServiceCollection_WhenRegisteringMultipleHandlers_DoesNotRegisterConquerorTypesMultipleTimes()
+    {
+        var services = new ServiceCollection().AddConquerorMessageHandler<TestMessageHandler>()
+                                              .AddConquerorMessageHandler<TestMessage2Handler>();
+
+        Assert.That(services.Count(d => d.ServiceType == typeof(IMessageClients)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(MessageTransportRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IMessageTransportRegistry)), Is.EqualTo(1));
+        Assert.That(services.Count(d => d.ServiceType == typeof(IConquerorContextAccessor)), Is.EqualTo(1));
+    }
+
+    [Test]
     [Combinatorial]
     public void GivenRegisteredHandlers_WhenCallingRegistry_ReturnsCorrectRegistrations(
         [Values("type", "factory", "instance", "delegate", "sync_delegate")]
@@ -279,6 +291,15 @@ public sealed partial class MessageHandlerRegistrationTests
         });
     }
 
+    [Test]
+    public void GivenServiceCollection_WhenAddingInvalidHandlerType_ThrowsInvalidOperationException()
+    {
+        Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<TestMessage.IHandler>(), Throws.InvalidOperationException);
+        Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<ITestMessageHandler>(), Throws.InvalidOperationException);
+        Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<AbstractTestMessageHandler>(), Throws.InvalidOperationException);
+        Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<MultiTestMessageHandler>(), Throws.InvalidOperationException);
+    }
+
     [Message<TestMessageResponse>]
     private sealed partial record TestMessage;
 
@@ -324,4 +345,27 @@ public sealed partial class MessageHandlerRegistrationTests
     {
         public Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
+
+    private abstract class AbstractTestMessageHandler : TestMessage.IHandler
+    {
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestMessageResponse());
+    }
+
+    // in user code this shouldn't even compile, since CreateWithMessageTypes is internal, and the compiler
+    // will complain about a non-specific implementation, which is a nice safeguard against users trying to
+    // do this
+    private sealed class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
+    {
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestMessageResponse());
+
+        public Task<TestMessage2Response> Handle(TestMessage2 message, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestMessage2Response());
+
+        public static IDefaultMessageTypesInjector DefaultTypeInjector
+            => throw new NotSupportedException();
+    }
+
+    private interface ITestMessageHandler : TestMessage.IHandler;
 }

@@ -229,14 +229,14 @@ public abstract partial class MessageHandlerFunctionalityTests
     }
 
     [Message<TestMessageResponse>]
-    protected sealed partial record TestMessage(int Payload);
+    public sealed partial record TestMessage(int Payload);
 
-    protected sealed record TestMessageResponse(int Payload);
+    public sealed record TestMessageResponse(int Payload);
 
     [Message]
-    protected sealed partial record TestMessageWithoutResponse(int Payload);
+    public sealed partial record TestMessageWithoutResponse(int Payload);
 
-    protected sealed class TestObservations
+    public sealed class TestObservations
     {
         public List<object> Messages { get; } = [];
 
@@ -376,6 +376,59 @@ public sealed class MessageHandlerFunctionalityDelegateTests : MessageHandlerFun
             obs.CancellationTokens.Add(cancellationToken);
             obs.ServiceProviders.Add(p);
         });
+    }
+}
+
+[TestFixture]
+public sealed class MessageHandlerFunctionalityAssemblyScanningTests : MessageHandlerFunctionalityTests
+{
+    protected override IServiceCollection RegisterHandler(IServiceCollection services)
+    {
+        return services.AddConquerorMessageHandlersFromExecutingAssembly();
+    }
+
+    protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
+    {
+        return services.AddConquerorMessageHandlersFromExecutingAssembly();
+    }
+
+    // ReSharper disable once UnusedType.Global (accessed via reflection)
+    public sealed class TestMessageForAssemblyScanningHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
+        : TestMessage.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+
+            if (exception is not null)
+            {
+                throw exception;
+            }
+
+            observations.Messages.Add(message);
+            observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
+            return new(message.Payload + 1);
+        }
+    }
+
+    // ReSharper disable once UnusedType.Global (accessed via reflection)
+    public sealed class TestMessageWithoutResponseForAssemblyScanningHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
+        : TestMessageWithoutResponse.IHandler
+    {
+        public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+
+            if (exception is not null)
+            {
+                throw exception;
+            }
+
+            observations.Messages.Add(message);
+            observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
+        }
     }
 }
 
