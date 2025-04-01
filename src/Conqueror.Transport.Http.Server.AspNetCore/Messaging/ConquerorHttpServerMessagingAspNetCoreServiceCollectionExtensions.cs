@@ -7,7 +7,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpServerMessagingAspNetCoreServiceCollectionExtensions
 {
-    public static IServiceCollection AddConquerorMessageEndpoints(this IServiceCollection services)
+    public static IServiceCollection AddMessageEndpoints(this IServiceCollection services)
     {
         _ = services.AddConqueror();
 

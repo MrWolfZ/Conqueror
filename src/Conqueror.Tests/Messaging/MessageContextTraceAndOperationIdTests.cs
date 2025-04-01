@@ -24,7 +24,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
 
         var services = new ServiceCollection();
 
-        _ = services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (cmd, p, ct) =>
+        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (cmd, p, ct) =>
                     {
                         await Task.Yield();
                         traceIdFromMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
@@ -32,7 +32,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
                         _ = await p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new(), ct);
                         return new();
                     })
-                    .AddConquerorMessageHandlerDelegate<NestedTestMessage, TestMessageResponse>(async (_, p, _) =>
+                    .AddMessageHandlerDelegate<NestedTestMessage, TestMessageResponse>(async (_, p, _) =>
                     {
                         await Task.Yield();
                         traceIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();

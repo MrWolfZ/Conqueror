@@ -12,9 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
        .AddControllers()
-       .AddConquerorMessageControllers();
+       .AddMessageControllers();
 
-builder.Services.AddConquerorMessageHandlersFromExecutingAssembly();
+builder.Services.AddMessageHandlersFromExecutingAssembly();
 
 var app = builder.Build();
 
@@ -32,7 +32,7 @@ app.MapGet("/api/customGet/{payload:int}", async (int payload, HttpContext ctx)
                return await ctx.GetMessageClient(TopLevelTestMessage.T).Handle(message, ctx.RequestAborted);
            });
 
-app.MapGroup("/group").MapConquerorMessageEndpoint<TopLevelTestMessage>().WithName("TopLevelTestMessage2");
+app.MapGroup("/group").MapMessageEndpoint<TopLevelTestMessage>().WithName("TopLevelTestMessage2");
 
 app.MapControllers();
 

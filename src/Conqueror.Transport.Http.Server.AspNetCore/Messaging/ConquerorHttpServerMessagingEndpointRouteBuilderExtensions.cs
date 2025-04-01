@@ -20,7 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 {
-    public static IEndpointRouteBuilder MapConquerorMessageEndpoints(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder MapMessageEndpoints(this IEndpointRouteBuilder builder)
     {
         var messageTransportRegistry = builder.ServiceProvider.GetRequiredService<IMessageTransportRegistry>();
         foreach (var (messageType, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransportInterface<IHttpMessage>())
@@ -36,7 +36,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         return builder;
     }
 
-    public static IEndpointConventionBuilder MapConquerorMessageEndpoint<TMessage>(this IEndpointRouteBuilder builder)
+    public static IEndpointConventionBuilder MapMessageEndpoint<TMessage>(this IEndpointRouteBuilder builder)
         where TMessage : class, IHttpMessage
     {
         return TMessage.HttpMessageTypesInjector.CreateWithMessageTypes(new EndpointTypeInjectable(builder));

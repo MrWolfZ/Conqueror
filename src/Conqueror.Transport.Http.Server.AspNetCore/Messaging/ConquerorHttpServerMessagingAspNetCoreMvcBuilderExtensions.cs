@@ -13,7 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
 {
-    public static IMvcBuilder AddConquerorMessageControllers(this IMvcBuilder builder)
+    public static IMvcBuilder AddMessageControllers(this IMvcBuilder builder)
     {
         _ = builder.Services.AddConqueror();
 
@@ -32,7 +32,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
         return builder;
     }
 
-    public static IMvcBuilder AddConquerorMessageController<TMessage>(this IMvcBuilder builder)
+    public static IMvcBuilder AddMessageController<TMessage>(this IMvcBuilder builder)
         where TMessage : class, IHttpMessage
     {
         _ = builder.Services.AddConqueror();

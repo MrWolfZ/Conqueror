@@ -21,10 +21,10 @@ public sealed partial class MessageTypeGenerationTests
         await using var host = await TestHost.Create(
             services =>
             {
-                _ = services.AddMvc().AddConquerorMessageControllers();
+                _ = services.AddMvc().AddMessageControllers();
 
-                _ = services.AddConquerorMessageHandler<TestMessageHandler>()
-                            .AddConquerorMessageHandler<TestMessageWithoutResponseHandler>()
+                _ = services.AddMessageHandler<TestMessageHandler>()
+                            .AddMessageHandler<TestMessageWithoutResponseHandler>()
                             .BuildServiceProvider();
             },
             app =>

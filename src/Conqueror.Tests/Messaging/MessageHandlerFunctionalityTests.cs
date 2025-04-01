@@ -257,7 +257,7 @@ public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunc
         var services = new ServiceCollection();
         var observation = new DisposalObservation();
 
-        _ = services.AddConquerorMessageHandler<DisposableMessageHandler>()
+        _ = services.AddMessageHandler<DisposableMessageHandler>()
                     .AddSingleton(observation);
 
         var provider = services.BuildServiceProvider();
@@ -274,12 +274,12 @@ public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunc
 
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
-        return services.AddConquerorMessageHandler<TestMessageHandler>();
+        return services.AddMessageHandler<TestMessageHandler>();
     }
 
     protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
-        return services.AddConquerorMessageHandler<TestMessageWithoutResponseHandler>();
+        return services.AddMessageHandler<TestMessageWithoutResponseHandler>();
     }
 
     private sealed class TestMessageHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
@@ -341,7 +341,7 @@ public sealed class MessageHandlerFunctionalityDelegateTests : MessageHandlerFun
 {
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
-        return services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (message, p, cancellationToken) =>
+        return services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (message, p, cancellationToken) =>
         {
             await Task.Yield();
 
@@ -361,7 +361,7 @@ public sealed class MessageHandlerFunctionalityDelegateTests : MessageHandlerFun
 
     protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
-        return services.AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>(async (message, p, cancellationToken) =>
+        return services.AddMessageHandlerDelegate<TestMessageWithoutResponse>(async (message, p, cancellationToken) =>
         {
             await Task.Yield();
 
@@ -384,12 +384,12 @@ public sealed class MessageHandlerFunctionalityAssemblyScanningTests : MessageHa
 {
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
-        return services.AddConquerorMessageHandlersFromExecutingAssembly();
+        return services.AddMessageHandlersFromExecutingAssembly();
     }
 
     protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
-        return services.AddConquerorMessageHandlersFromExecutingAssembly();
+        return services.AddMessageHandlersFromExecutingAssembly();
     }
 
     // ReSharper disable once UnusedType.Global (accessed via reflection)

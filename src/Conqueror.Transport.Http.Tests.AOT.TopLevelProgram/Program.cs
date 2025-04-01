@@ -10,8 +10,8 @@ using Conqueror.Transport.Http.Tests.AOT.TopLevelProgram;
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services
-       .AddConquerorMessageEndpoints()
-       .AddConquerorMessageHandler<TopLevelTestMessageHandler>();
+       .AddMessageEndpoints()
+       .AddMessageHandler<TopLevelTestMessageHandler>();
 
 var app = builder.Build();
 
@@ -54,6 +54,6 @@ app.MapGet("/api/chained/{payload:int}", async (int payload, HttpContext ctx)
                return Results.Json(topLevelTestMessageResponse, TopLevelTestMessageJsonSerializerContext.Default);
            });
 
-app.MapGroup("/group").MapConquerorMessageEndpoints();
+app.MapGroup("/group").MapMessageEndpoints();
 
 await app.RunAsync().ConfigureAwait(false);

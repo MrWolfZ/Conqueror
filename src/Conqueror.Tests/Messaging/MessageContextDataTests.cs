@@ -47,7 +47,7 @@ public sealed partial class MessageContextDataTests
         _ = services.AddSingleton(testDataInstructions)
                     .AddSingleton(testObservations)
                     .AddSingleton<NestedTestClass>()
-                    .AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (_, p, _) =>
+                    .AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (_, p, _) =>
                     {
                         SetAndObserveContextData(p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.HandlerPreNestedExecution);
 
@@ -63,7 +63,7 @@ public sealed partial class MessageContextDataTests
                         _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
                                                                                                      pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
                     })
-                    .AddConquerorMessageHandlerDelegate<NestedTestMessage, TestMessageResponse>((_, p, _) =>
+                    .AddMessageHandlerDelegate<NestedTestMessage, TestMessageResponse>((_, p, _) =>
                     {
                         SetAndObserveContextData(p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.NestedMessageHandler);
                         return Task.FromResult<TestMessageResponse>(new());

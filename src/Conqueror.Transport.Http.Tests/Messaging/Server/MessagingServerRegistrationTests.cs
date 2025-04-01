@@ -17,7 +17,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         {
             var services = new ServiceCollection();
 
-            _ = services.AddControllers().AddConquerorMessageControllers();
+            _ = services.AddControllers().AddMessageControllers();
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
@@ -58,7 +58,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         {
             var services = new ServiceCollection();
 
-            _ = services.AddControllers().AddConquerorMessageController<TestMessage>();
+            _ = services.AddControllers().AddMessageController<TestMessage>();
 
             Assert.That(services, Has.Exactly(0).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
@@ -98,7 +98,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         {
             var services = new ServiceCollection();
 
-            _ = services.AddControllers().AddConquerorMessageControllers().AddConquerorMessageController<TestMessage>();
+            _ = services.AddControllers().AddMessageControllers().AddMessageController<TestMessage>();
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
@@ -141,10 +141,10 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
             var services = new ServiceCollection();
 
             _ = services.AddControllers()
-                        .AddConquerorMessageController<TestMessage>()
-                        .AddConquerorMessageControllers()
-                        .AddConquerorMessageController<TestMessage2>()
-                        .AddConquerorMessageControllers();
+                        .AddMessageController<TestMessage>()
+                        .AddMessageControllers()
+                        .AddMessageController<TestMessage2>()
+                        .AddMessageControllers();
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
@@ -191,10 +191,10 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
             Assert.That(() => TestHost.Create(
                             services =>
                             {
-                                _ = services.AddControllers().AddConquerorMessageControllers();
+                                _ = services.AddControllers().AddMessageControllers();
 
-                                _ = services.AddConquerorMessageHandler<TestMessageHandler>()
-                                            .AddConquerorMessageHandler<DuplicateMessageName.TestMessageHandler>();
+                                _ = services.AddMessageHandler<TestMessageHandler>()
+                                            .AddMessageHandler<DuplicateMessageName.TestMessageHandler>();
                             }, app => _ = app.UseRouting().UseEndpoints(b => b.MapControllers())),
                         Throws.InvalidOperationException.With.Message.Contains("found multiple Conqueror message types with identical path!"));
         }
@@ -206,8 +206,8 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
                             services =>
                             {
                                 _ = services.AddControllers()
-                                            .AddConquerorMessageController<TestMessage>()
-                                            .AddConquerorMessageController<DuplicateMessageName.TestMessage>();
+                                            .AddMessageController<TestMessage>()
+                                            .AddMessageController<DuplicateMessageName.TestMessage>();
                             }, app => _ = app.UseRouting().UseEndpoints(b => b.MapControllers())),
                         Throws.InvalidOperationException.With.Message.Contains("found multiple Conqueror message types with identical path!"));
         }
@@ -218,10 +218,10 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
             Assert.That(() => TestHost.Create(
                             services =>
                             {
-                                _ = services.AddControllers().AddConquerorMessageControllers();
+                                _ = services.AddControllers().AddMessageControllers();
 
-                                _ = services.AddConquerorMessageHandler<TestMessageHandler>()
-                                            .AddConquerorMessageHandlerDelegate<DuplicateMessageName.TestMessage, DuplicateMessageName.TestMessageResponse>(
+                                _ = services.AddMessageHandler<TestMessageHandler>()
+                                            .AddMessageHandlerDelegate<DuplicateMessageName.TestMessage, DuplicateMessageName.TestMessageResponse>(
                                                 (_, _, _) => new());
                             }, app => _ = app.UseRouting().UseEndpoints(b => b.MapControllers())),
                         Throws.InvalidOperationException.With.Message.Contains("found multiple Conqueror message types with identical path!"));
@@ -233,10 +233,10 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
             Assert.That(() => TestHost.Create(
                             services =>
                             {
-                                _ = services.AddControllers().AddConquerorMessageControllers();
+                                _ = services.AddControllers().AddMessageControllers();
 
-                                _ = services.AddConquerorMessageHandler<TestMessageHandler>()
-                                            .AddConquerorMessageHandler<TestMessageWithDuplicatePathFromConfigHandler>();
+                                _ = services.AddMessageHandler<TestMessageHandler>()
+                                            .AddMessageHandler<TestMessageWithDuplicatePathFromConfigHandler>();
                             }, app => _ = app.UseRouting().UseEndpoints(b => b.MapControllers())),
                         Throws.InvalidOperationException.With.Message.Contains("found multiple Conqueror message types with identical path!"));
         }

@@ -8,7 +8,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
@@ -34,7 +34,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
@@ -62,7 +62,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
@@ -88,7 +88,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations);
 
         _ = services.AddSingleton<Action<TestMessage.IPipeline>>(pipeline => { _ = Assert.Throws<InvalidOperationException>(() => pipeline.Configure<TestMessageMiddleware<TestMessage, TestMessageResponse>>(c => c.Parameter += 10)); });

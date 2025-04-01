@@ -15,8 +15,8 @@ public sealed partial class MessageTypeGenerationTests
     {
         var services = new ServiceCollection();
         var provider = services.AddConqueror()
-                               .AddConquerorMessageHandler<TestMessageHandler>()
-                               .AddConquerorMessageHandler<TestMessageWithoutResponseHandler>()
+                               .AddMessageHandler<TestMessageHandler>()
+                               .AddMessageHandler<TestMessageWithoutResponseHandler>()
                                .BuildServiceProvider();
 
         var messageClients = provider.GetRequiredService<IMessageClients>();

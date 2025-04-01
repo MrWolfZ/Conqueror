@@ -12,7 +12,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations)
                     .AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
                     {
@@ -70,7 +70,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandler<TestMessageWithoutResponseHandler>()
+        _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>()
                     .AddSingleton(observations)
                     .AddSingleton<Action<TestMessageWithoutResponse.IPipeline>>(pipeline => testCase.ConfigureHandlerPipeline?.Invoke(pipeline));
 
@@ -439,7 +439,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations)
                     .AddSingleton(tokens)
                     .AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
@@ -482,7 +482,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var observations = new TestObservations();
         var tokens = new CancellationTokensToUse { CancellationTokens = { new(false), new(false), new(false), new(false), new(false) } };
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations)
                     .AddSingleton(tokens);
 
@@ -523,7 +523,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var exception = new Exception();
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(exception)
                     .AddSingleton<Action<TestMessage.IPipeline>>(pipeline => pipeline.Use(new ThrowingTestMessageMiddleware<TestMessage, TestMessageResponse>(exception)));
 
@@ -543,7 +543,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var exception = new Exception();
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(exception);
 
         var provider = services.BuildServiceProvider();
@@ -566,7 +566,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         IServiceProvider? providerFromClientPipelineBuild = null;
         IServiceProvider? providerFromClientMiddleware = null;
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddTransient<TestObservations>()
                     .AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
                     {
@@ -629,7 +629,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandler<TestMessageHandler>()
+        _ = services.AddMessageHandler<TestMessageHandler>()
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -654,7 +654,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (message, p, cancellationToken) =>
+        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (message, p, cancellationToken) =>
                     {
                         await Task.Yield();
                         var obs = p.GetRequiredService<TestObservations>();
@@ -683,7 +683,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((message, p, cancellationToken) =>
+        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((message, p, cancellationToken) =>
                     {
                         var obs = p.GetRequiredService<TestObservations>();
                         obs.MessagesFromHandlers.Add(message);
@@ -711,7 +711,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>(async (message, p, cancellationToken) =>
+        _ = services.AddMessageHandlerDelegate<TestMessageWithoutResponse>(async (message, p, cancellationToken) =>
                     {
                         await Task.Yield();
                         var obs = p.GetRequiredService<TestObservations>();
@@ -739,7 +739,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>((message, p, cancellationToken) =>
+        _ = services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((message, p, cancellationToken) =>
                     {
                         var obs = p.GetRequiredService<TestObservations>();
                         obs.MessagesFromHandlers.Add(message);
@@ -766,7 +766,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandlersFromExecutingAssembly()
+        _ = services.AddMessageHandlersFromExecutingAssembly()
                     .AddSingleton<Action<TestMessage.IPipeline>>(pipeline => pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(observations)))
                     .AddSingleton(observations);
 
@@ -789,7 +789,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddConquerorMessageHandlersFromExecutingAssembly()
+        _ = services.AddMessageHandlersFromExecutingAssembly()
                     .AddSingleton<Action<TestMessageWithoutResponse.IPipeline>>(pipeline => pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(observations)))
                     .AddSingleton(observations);
 
@@ -813,7 +813,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         MessageTransportType? transportTypeFromClient = null;
         MessageTransportType? transportTypeFromHandler = null;
 
-        _ = services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (message, _, _) =>
+        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (message, _, _) =>
         {
             await Task.Yield();
             return new(message.Payload + 1);
@@ -837,7 +837,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     {
         var services = new ServiceCollection();
 
-        _ = services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((message, _, _) => Task.FromResult<TestMessageResponse>(new(message.Payload + 1)),
+        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((message, _, _) => Task.FromResult<TestMessageResponse>(new(message.Payload + 1)),
                                                                                           pipeline =>
                                                                                           {
                                                                                               var middleware1 = new TestMessageMiddleware<TestMessage, TestMessageResponse>(new());

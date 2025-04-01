@@ -8,8 +8,8 @@ public sealed partial class MessageHandlerRegistrationTests
     [Test]
     public void GivenServiceCollection_WhenRegisteringMultipleHandlers_DoesNotRegisterConquerorTypesMultipleTimes()
     {
-        var services = new ServiceCollection().AddConquerorMessageHandler<TestMessageHandler>()
-                                              .AddConquerorMessageHandler<TestMessage2Handler>();
+        var services = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
+                                              .AddMessageHandler<TestMessage2Handler>();
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageClients)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MessageTransportRegistry)));
@@ -27,26 +27,26 @@ public sealed partial class MessageHandlerRegistrationTests
 
         _ = registrationMethod switch
         {
-            "type" => services.AddConquerorMessageHandler<TestMessageHandler>()
-                              .AddConquerorMessageHandler<TestMessage2Handler>()
-                              .AddConquerorMessageHandler<TestMessageWithoutResponseHandler>()
-                              .AddConquerorMessageHandler<TestMessageWithoutResponse2Handler>(),
-            "factory" => services.AddConquerorMessageHandler(_ => new TestMessageHandler())
-                                 .AddConquerorMessageHandler(_ => new TestMessage2Handler())
-                                 .AddConquerorMessageHandler(_ => new TestMessageWithoutResponseHandler())
-                                 .AddConquerorMessageHandler(_ => new TestMessageWithoutResponse2Handler()),
-            "instance" => services.AddConquerorMessageHandler(new TestMessageHandler())
-                                  .AddConquerorMessageHandler(new TestMessage2Handler())
-                                  .AddConquerorMessageHandler(new TestMessageWithoutResponseHandler())
-                                  .AddConquerorMessageHandler(new TestMessageWithoutResponse2Handler()),
-            "delegate" => services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse()))
-                                  .AddConquerorMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => Task.FromResult(new TestMessage2Response()))
-                                  .AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask)
-                                  .AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => Task.CompletedTask),
-            "sync_delegate" => services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
-                                       .AddConquerorMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => new())
-                                       .AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { })
-                                       .AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => { }),
+            "type" => services.AddMessageHandler<TestMessageHandler>()
+                              .AddMessageHandler<TestMessage2Handler>()
+                              .AddMessageHandler<TestMessageWithoutResponseHandler>()
+                              .AddMessageHandler<TestMessageWithoutResponse2Handler>(),
+            "factory" => services.AddMessageHandler(_ => new TestMessageHandler())
+                                 .AddMessageHandler(_ => new TestMessage2Handler())
+                                 .AddMessageHandler(_ => new TestMessageWithoutResponseHandler())
+                                 .AddMessageHandler(_ => new TestMessageWithoutResponse2Handler()),
+            "instance" => services.AddMessageHandler(new TestMessageHandler())
+                                  .AddMessageHandler(new TestMessage2Handler())
+                                  .AddMessageHandler(new TestMessageWithoutResponseHandler())
+                                  .AddMessageHandler(new TestMessageWithoutResponse2Handler()),
+            "delegate" => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse()))
+                                  .AddMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => Task.FromResult(new TestMessage2Response()))
+                                  .AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask)
+                                  .AddMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => Task.CompletedTask),
+            "sync_delegate" => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
+                                       .AddMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => new())
+                                       .AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { })
+                                       .AddMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
         };
 
@@ -90,11 +90,11 @@ public sealed partial class MessageHandlerRegistrationTests
         {
             _ = (lifetime, method) switch
             {
-                (null, "type") => services.AddConquerorMessageHandler<TestMessageHandler>(),
-                (null, "factory") => services.AddConquerorMessageHandler(factory),
-                (var l, "type") => services.AddConquerorMessageHandler<TestMessageHandler>(l.Value),
-                (var l, "factory") => services.AddConquerorMessageHandler(factory, l.Value),
-                (_, "instance") => services.AddConquerorMessageHandler(instance),
+                (null, "type") => services.AddMessageHandler<TestMessageHandler>(),
+                (null, "factory") => services.AddMessageHandler(factory),
+                (var l, "type") => services.AddMessageHandler<TestMessageHandler>(l.Value),
+                (var l, "factory") => services.AddMessageHandler(factory, l.Value),
+                (_, "instance") => services.AddMessageHandler(instance),
                 _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
             };
         }
@@ -154,11 +154,11 @@ public sealed partial class MessageHandlerRegistrationTests
         {
             _ = (lifetime, method) switch
             {
-                (null, "type") => services.AddConquerorMessageHandler<TestMessageWithoutResponseHandler>(),
-                (null, "factory") => services.AddConquerorMessageHandler(factory),
-                (var l, "type") => services.AddConquerorMessageHandler<TestMessageWithoutResponseHandler>(l.Value),
-                (var l, "factory") => services.AddConquerorMessageHandler(factory, l.Value),
-                (_, "instance") => services.AddConquerorMessageHandler(instance),
+                (null, "type") => services.AddMessageHandler<TestMessageWithoutResponseHandler>(),
+                (null, "factory") => services.AddMessageHandler(factory),
+                (var l, "type") => services.AddMessageHandler<TestMessageWithoutResponseHandler>(l.Value),
+                (var l, "factory") => services.AddMessageHandler(factory, l.Value),
+                (_, "instance") => services.AddMessageHandler(instance),
                 _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
             };
         }
@@ -218,25 +218,25 @@ public sealed partial class MessageHandlerRegistrationTests
 
         _ = (initialLifetime, initialRegistrationMethod) switch
         {
-            (null, "type") => services.AddConquerorMessageHandler<TestMessageHandler>(),
-            (null, "factory") => services.AddConquerorMessageHandler(factory),
-            (var l, "type") => services.AddConquerorMessageHandler<TestMessageHandler>(l.Value),
-            (var l, "factory") => services.AddConquerorMessageHandler(factory, l.Value),
-            (_, "instance") => services.AddConquerorMessageHandler(instance),
-            (_, "delegate") => services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse())),
-            (_, "sync_delegate") => services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new()),
+            (null, "type") => services.AddMessageHandler<TestMessageHandler>(),
+            (null, "factory") => services.AddMessageHandler(factory),
+            (var l, "type") => services.AddMessageHandler<TestMessageHandler>(l.Value),
+            (var l, "factory") => services.AddMessageHandler(factory, l.Value),
+            (_, "instance") => services.AddMessageHandler(instance),
+            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse())),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new()),
             _ => throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null),
         };
 
         _ = (overwrittenLifetime, overwrittenRegistrationMethod) switch
         {
-            (null, "type") => services.AddConquerorMessageHandler<DuplicateTestMessageHandler>(),
-            (null, "factory") => services.AddConquerorMessageHandler(duplicateFactory),
-            (var l, "type") => services.AddConquerorMessageHandler<DuplicateTestMessageHandler>(l.Value),
-            (var l, "factory") => services.AddConquerorMessageHandler(duplicateFactory, l.Value),
-            (_, "instance") => services.AddConquerorMessageHandler(duplicateInstance),
-            (_, "delegate") => services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse())),
-            (_, "sync_delegate") => services.AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new()),
+            (null, "type") => services.AddMessageHandler<DuplicateTestMessageHandler>(),
+            (null, "factory") => services.AddMessageHandler(duplicateFactory),
+            (var l, "type") => services.AddMessageHandler<DuplicateTestMessageHandler>(l.Value),
+            (var l, "factory") => services.AddMessageHandler(duplicateFactory, l.Value),
+            (_, "instance") => services.AddMessageHandler(duplicateInstance),
+            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse())),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new()),
             _ => throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null),
         };
 
@@ -293,25 +293,25 @@ public sealed partial class MessageHandlerRegistrationTests
 
         _ = (initialLifetime, initialRegistrationMethod) switch
         {
-            (null, "type") => services.AddConquerorMessageHandler<TestMessageWithoutResponseHandler>(),
-            (null, "factory") => services.AddConquerorMessageHandler(factory),
-            (var l, "type") => services.AddConquerorMessageHandler<TestMessageWithoutResponseHandler>(l.Value),
-            (var l, "factory") => services.AddConquerorMessageHandler(factory, l.Value),
-            (_, "instance") => services.AddConquerorMessageHandler(instance),
-            (_, "delegate") => services.AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { }),
+            (null, "type") => services.AddMessageHandler<TestMessageWithoutResponseHandler>(),
+            (null, "factory") => services.AddMessageHandler(factory),
+            (var l, "type") => services.AddMessageHandler<TestMessageWithoutResponseHandler>(l.Value),
+            (var l, "factory") => services.AddMessageHandler(factory, l.Value),
+            (_, "instance") => services.AddMessageHandler(instance),
+            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null),
         };
 
         _ = (overwrittenLifetime, overwrittenRegistrationMethod) switch
         {
-            (null, "type") => services.AddConquerorMessageHandler<DuplicateTestMessageWithoutResponseHandler>(),
-            (null, "factory") => services.AddConquerorMessageHandler(duplicateFactory),
-            (var l, "type") => services.AddConquerorMessageHandler<DuplicateTestMessageWithoutResponseHandler>(l.Value),
-            (var l, "factory") => services.AddConquerorMessageHandler(duplicateFactory, l.Value),
-            (_, "instance") => services.AddConquerorMessageHandler(duplicateInstance),
-            (_, "delegate") => services.AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddConquerorMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { }),
+            (null, "type") => services.AddMessageHandler<DuplicateTestMessageWithoutResponseHandler>(),
+            (null, "factory") => services.AddMessageHandler(duplicateFactory),
+            (var l, "type") => services.AddMessageHandler<DuplicateTestMessageWithoutResponseHandler>(l.Value),
+            (var l, "factory") => services.AddMessageHandler(duplicateFactory, l.Value),
+            (_, "instance") => services.AddMessageHandler(duplicateInstance),
+            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null),
         };
 
@@ -351,10 +351,10 @@ public sealed partial class MessageHandlerRegistrationTests
     [Test]
     public void GivenServiceCollection_WhenAddingInvalidHandlerType_ThrowsInvalidOperationException()
     {
-        Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<TestMessage.IHandler>(), Throws.InvalidOperationException);
-        Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<ITestMessageHandler>(), Throws.InvalidOperationException);
-        Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<AbstractTestMessageHandler>(), Throws.InvalidOperationException);
-        Assert.That(() => new ServiceCollection().AddConquerorMessageHandler<MultiTestMessageHandler>(), Throws.InvalidOperationException);
+        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessage.IHandler>(), Throws.InvalidOperationException);
+        Assert.That(() => new ServiceCollection().AddMessageHandler<ITestMessageHandler>(), Throws.InvalidOperationException);
+        Assert.That(() => new ServiceCollection().AddMessageHandler<AbstractTestMessageHandler>(), Throws.InvalidOperationException);
+        Assert.That(() => new ServiceCollection().AddMessageHandler<MultiTestMessageHandler>(), Throws.InvalidOperationException);
     }
 
     [Message<TestMessageResponse>]

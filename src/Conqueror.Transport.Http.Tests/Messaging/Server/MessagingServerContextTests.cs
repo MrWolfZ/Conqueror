@@ -231,7 +231,7 @@ public sealed partial class MessagingServerContextTests
         await using var host = await CreateTestHost(services =>
         {
             services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
-            _ = services.AddConquerorMessageHandler<NestedTestMessageHandler>();
+            _ = services.AddMessageHandler<NestedTestMessageHandler>();
 
             _ = services.Replace(ServiceDescriptor.Singleton<TestMessages.FnToCallFromHandler>(p =>
             {
@@ -263,7 +263,7 @@ public sealed partial class MessagingServerContextTests
         await using var host = await CreateTestHost(services =>
         {
             services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
-            _ = services.AddConquerorMessageHandler<NestedTestMessageHandler>();
+            _ = services.AddMessageHandler<NestedTestMessageHandler>();
 
             _ = services.Replace(ServiceDescriptor.Singleton<TestMessages.FnToCallFromHandler>(p =>
             {

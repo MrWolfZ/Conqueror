@@ -42,7 +42,7 @@ public static partial class TestMessages
         _ = services.AddSingleton<TestObservations>()
                     .AddTransient(typeof(TestMessageMiddleware<,>));
 
-        _ = services.AddConquerorMessageHandler<THandler>();
+        _ = services.AddMessageHandler<THandler>();
 
         if (typeof(TMessage) == typeof(TestMessageWithCustomSerializedPayloadType))
         {
@@ -66,7 +66,7 @@ public static partial class TestMessages
         {
             _ = services.AddRouting()
                         .AddEndpointsApiExplorer()
-                        .AddConquerorMessageEndpoints();
+                        .AddMessageEndpoints();
             return;
         }
 
@@ -74,7 +74,7 @@ public static partial class TestMessages
 
         if (testCase.RegistrationMethod == MessageTestCaseRegistrationMethod.Controllers)
         {
-            _ = mvcBuilder.AddConquerorMessageControllers();
+            _ = mvcBuilder.AddMessageControllers();
             return;
         }
 
@@ -87,7 +87,7 @@ public static partial class TestMessages
             return;
         }
 
-        _ = mvcBuilder.AddConquerorMessageController<TMessage>();
+        _ = mvcBuilder.AddMessageController<TMessage>();
     }
 
     public static void MapMessageEndpoints<TMessage, TResponse>(this IApplicationBuilder app, MessageTestCase testCase)
@@ -117,7 +117,7 @@ public static partial class TestMessages
 
             if (testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.Endpoints)
             {
-                _ = endpoints.MapConquerorMessageEndpoints();
+                _ = endpoints.MapMessageEndpoints();
                 return;
             }
 
@@ -168,7 +168,7 @@ public static partial class TestMessages
                 return;
             }
 
-            _ = endpoints.MapConquerorMessageEndpoint<TMessage>();
+            _ = endpoints.MapMessageEndpoint<TMessage>();
         });
     }
 

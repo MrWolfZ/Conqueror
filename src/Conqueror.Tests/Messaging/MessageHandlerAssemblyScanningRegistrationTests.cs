@@ -8,8 +8,8 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollection_WhenAddingAllHandlersFromExecutingAssembly_AddsSameTypesAsIfAssemblyWasSpecifiedExplicitly()
     {
-        var services1 = new ServiceCollection().AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
-        var services2 = new ServiceCollection().AddConquerorMessageHandlersFromExecutingAssembly();
+        var services1 = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+        var services2 = new ServiceCollection().AddMessageHandlersFromExecutingAssembly();
 
         Assert.That(services2, Has.Count.EqualTo(services1.Count));
         Assert.That(services1.Select(d => d.ServiceType), Is.EquivalentTo(services2.Select(d => d.ServiceType)));
@@ -20,7 +20,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [TestCase(typeof(TestMessageWithoutResponseHandler), typeof(TestMessageWithoutResponse), typeof(UnitMessageResponse))]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_AddsMessageHandlerAsTransient(Type handlerType, Type messageType, Type responseType)
     {
-        var services = new ServiceCollection().AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+        var services = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType
                                                                              && d.ServiceType == handlerType
@@ -37,8 +37,8 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [TestCase(typeof(TestMessageWithoutResponseHandler), typeof(TestMessageWithoutResponse), typeof(UnitMessageResponse))]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssemblyMultipleTimes_AddsMessageHandlerAsTransientOnce(Type handlerType, Type messageType, Type responseType)
     {
-        var services = new ServiceCollection().AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly)
-                                              .AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+        var services = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly)
+                                              .AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType
                                                                              && d.ServiceType == handlerType
@@ -53,8 +53,8 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollectionWithHandlerAlreadyRegistered_WhenAddingAllHandlersFromAssembly_DoesNotAddHandlerAgain()
     {
-        var services = new ServiceCollection().AddConquerorMessageHandler<TestMessageHandler>(ServiceLifetime.Singleton)
-                                              .AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+        var services = new ServiceCollection().AddMessageHandler<TestMessageHandler>(ServiceLifetime.Singleton)
+                                              .AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType
                                                                              && d.ServiceType == typeof(TestMessageHandler)));
@@ -70,8 +70,8 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollectionWithDelegateHandlerAlreadyRegistered_WhenAddingAllHandlersFromAssembly_DoesNotAddHandlerAgain()
     {
-        var services = new ServiceCollection().AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
-                                              .AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+        var services = new ServiceCollection().AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
+                                              .AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
                                                                              && r.MessageType == typeof(TestMessage)
@@ -82,7 +82,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_DoesNotAddInterfaces()
     {
-        var services = new ServiceCollection().AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+        var services = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services.Count(d => d.ServiceType == typeof(IMessageHandler<TestMessage, TestMessageResponse>)), Is.Zero);
         Assert.That(services.Count(d => d.ServiceType == typeof(TestMessage.IHandler)), Is.Zero);
@@ -93,7 +93,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_DoesNotAddInapplicableClasses()
     {
-        var services = new ServiceCollection().AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+        var services = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestMessageHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestMessageHandler<,>)));
