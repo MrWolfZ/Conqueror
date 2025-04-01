@@ -237,24 +237,19 @@ public static class ConquerorMessagingServiceCollectionExtensions
             throw new InvalidOperationException($"handler type '{handlerType}' must not be an interface or abstract class");
         }
 
-        var existingRegistrations = services.Select(d => d.ImplementationInstance)
-                                            .OfType<MessageHandlerRegistration>()
-                                            .ToDictionary(r => r.MessageType);
+        var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r && r.MessageType == messageType);
+        var registration = new MessageHandlerRegistration(messageType, responseType, handlerType, handlerAdapterType, configurePipeline, typeInjectors);
 
-        if (existingRegistrations.TryGetValue(messageType, out var existingRegistration))
+        if (existingRegistration is not null)
         {
-            var isSameType = handlerType == existingRegistration.HandlerType;
-            var existingIsDelegate = existingRegistration.HandlerType.IsGenericType
-                                     && existingRegistration.HandlerType.GetGenericTypeDefinition() == typeof(DelegateMessageHandler<,>);
-
-            if (!isSameType || existingIsDelegate)
+            if (shouldOverwriteRegistration)
             {
-                throw new InvalidOperationException($"attempted to register handler type '{handlerType}' for message type '{messageType}', but handler type '{existingRegistration.HandlerType}' is already registered.");
+                services.Remove(existingRegistration);
+                services.AddSingleton(registration);
             }
         }
         else
         {
-            var registration = new MessageHandlerRegistration(messageType, responseType, handlerType, handlerAdapterType, configurePipeline, typeInjectors);
             services.AddSingleton(registration);
         }
 
@@ -311,13 +306,11 @@ public static class ConquerorMessagingServiceCollectionExtensions
         Delegate? configurePipeline,
         IReadOnlyCollection<IMessageTypesInjector> typeInjectors)
     {
-        var existingRegistrations = services.Select(d => d.ImplementationInstance)
-                                            .OfType<MessageHandlerRegistration>()
-                                            .ToDictionary(r => r.MessageType);
+        var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r && r.MessageType == messageType);
 
-        if (existingRegistrations.TryGetValue(messageType, out var existingRegistration))
+        if (existingRegistration is not null)
         {
-            throw new InvalidOperationException($"attempted to register delegate handler for message type '{messageType}', but handler type '{existingRegistration.HandlerType}' is already registered.");
+            services.Remove(existingRegistration);
         }
 
         services.AddConquerorMessaging();

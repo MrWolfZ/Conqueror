@@ -26,18 +26,10 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
                                                                              && d.ServiceType == handlerType
                                                                              && d.Lifetime == ServiceLifetime.Transient));
 
-        using var provider = services.BuildServiceProvider();
-
-        var registry = provider.GetRequiredService<IMessageTransportRegistry>();
-
-        var expectedRegistrations = new[]
-        {
-            (messageType, responseType, new InProcessMessageAttribute()),
-        };
-
-        var registrations = registry.GetMessageTypesForTransport<InProcessMessageAttribute>();
-
-        Assert.That(registrations, Is.SupersetOf(expectedRegistrations));
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.MessageType == messageType
+                                                                             && r.ResponseType == responseType
+                                                                             && r.HandlerType == handlerType));
     }
 
     [Test]
@@ -52,18 +44,10 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
                                                                              && d.ServiceType == handlerType
                                                                              && d.Lifetime == ServiceLifetime.Transient));
 
-        using var provider = services.BuildServiceProvider();
-
-        var registry = provider.GetRequiredService<IMessageTransportRegistry>();
-
-        var expectedRegistrations = new[]
-        {
-            (messageType, responseType, new InProcessMessageAttribute()),
-        };
-
-        var registrations = registry.GetMessageTypesForTransport<InProcessMessageAttribute>();
-
-        Assert.That(registrations, Is.SupersetOf(expectedRegistrations));
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.MessageType == messageType
+                                                                             && r.ResponseType == responseType
+                                                                             && r.HandlerType == handlerType));
     }
 
     [Test]
@@ -77,26 +61,22 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
 
         Assert.That(services.Single(d => d.ServiceType == typeof(TestMessageHandler)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
 
-        using var provider = services.BuildServiceProvider();
-
-        var registry = provider.GetRequiredService<IMessageTransportRegistry>();
-
-        var expectedRegistrations = new[]
-        {
-            (typeof(TestMessage), typeof(TestMessageResponse), new InProcessMessageAttribute()),
-        };
-
-        var registrations = registry.GetMessageTypesForTransport<InProcessMessageAttribute>();
-
-        Assert.That(registrations, Is.SupersetOf(expectedRegistrations));
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.MessageType == typeof(TestMessage)
+                                                                             && r.ResponseType == typeof(TestMessageResponse)
+                                                                             && r.HandlerType == typeof(TestMessageHandler)));
     }
 
     [Test]
-    public void GivenServiceCollectionWithDelegateHandlerAlreadyRegistered_WhenAddingAllHandlersFromAssembly_ThrowsInvalidOperationException()
+    public void GivenServiceCollectionWithDelegateHandlerAlreadyRegistered_WhenAddingAllHandlersFromAssembly_DoesNotAddHandlerAgain()
     {
-        var services = new ServiceCollection().AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new());
+        var services = new ServiceCollection().AddConquerorMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
+                                              .AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
-        Assert.That(() => services.AddConquerorMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly), Throws.InvalidOperationException);
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.MessageType == typeof(TestMessage)
+                                                                             && r.ResponseType == typeof(TestMessageResponse)
+                                                                             && r.HandlerType == typeof(DelegateMessageHandler<TestMessage, TestMessageResponse>)));
     }
 
     [Test]
@@ -174,14 +154,14 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     // do this
     public sealed class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
     {
+        public static IDefaultMessageTypesInjector DefaultTypeInjector
+            => throw new NotSupportedException();
+
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
 
         public Task<TestMessage2Response> Handle(TestMessage2 message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessage2Response());
-
-        public static IDefaultMessageTypesInjector DefaultTypeInjector
-            => throw new NotSupportedException();
     }
 
     public sealed class GenericTestMessageHandler<TM, TR> : IMessageHandler<TM, TR>
