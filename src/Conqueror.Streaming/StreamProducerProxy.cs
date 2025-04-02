@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Streaming;

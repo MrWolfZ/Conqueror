@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Conqueror.Common;
 using Microsoft.Extensions.Logging;
 
 namespace Conqueror.CQS.Middleware.Logging.Tests;

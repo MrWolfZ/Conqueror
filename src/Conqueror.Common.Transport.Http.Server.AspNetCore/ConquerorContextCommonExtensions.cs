@@ -1,4 +1,4 @@
-﻿namespace Conqueror.Common;
+﻿namespace Conqueror.Common.Transport.Http.Server.AspNetCore;
 
 public static class ConquerorContextCommonExtensions
 {

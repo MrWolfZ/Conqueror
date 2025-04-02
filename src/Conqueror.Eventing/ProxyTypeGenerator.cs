@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Conqueror.Common;
+namespace Conqueror.Eventing;
 
 internal static class ProxyTypeGenerator
 {

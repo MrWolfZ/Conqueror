@@ -13,7 +13,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Conqueror.Eventing.Abstractions\Conqueror.Eventing.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+        <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
     </ItemGroup>
 
 </Project>

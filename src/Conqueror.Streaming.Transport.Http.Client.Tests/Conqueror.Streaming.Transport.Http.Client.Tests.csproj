@@ -7,7 +7,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Common.Abstractions\Conqueror.Common.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Streaming.Transport.Http.Abstractions\Conqueror.Streaming.Transport.Http.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Streaming.Transport.Http.Client\Conqueror.Streaming.Transport.Http.Client.csproj" />
         <ProjectReference Include="..\Conqueror.Streaming.Transport.Http.Server.AspNetCore\Conqueror.Streaming.Transport.Http.Server.AspNetCore.csproj" />

@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Common\Conqueror.Common.csproj" />
+        <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
         <ProjectReference Include="..\Conqueror.Common.Middleware.Authentication.Abstractions\Conqueror.Common.Middleware.Authentication.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Common.Middleware.Authorization.Abstractions\Conqueror.Common.Middleware.Authorization.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.Common.Transport.Http.Abstractions\Conqueror.Common.Transport.Http.Abstractions.csproj" />

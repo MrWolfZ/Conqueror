@@ -7,7 +7,6 @@ using System.Net.Http.Json;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Conqueror.Common;
 
 namespace Conqueror.CQS.Transport.Http.Client;
 

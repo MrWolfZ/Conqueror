@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Mime;
 using System.Reflection;
-using Conqueror.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;

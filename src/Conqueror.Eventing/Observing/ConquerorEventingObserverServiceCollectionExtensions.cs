@@ -6,7 +6,7 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Conqueror;
-using Conqueror.Common;
+using Conqueror.Eventing;
 using Conqueror.Eventing.Observing;
 using Conqueror.Eventing.Publishing;
 using Microsoft.Extensions.DependencyInjection.Extensions;

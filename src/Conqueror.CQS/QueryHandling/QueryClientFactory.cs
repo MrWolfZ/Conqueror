@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
-using Conqueror.Common;
 
 namespace Conqueror.CQS.QueryHandling;
 

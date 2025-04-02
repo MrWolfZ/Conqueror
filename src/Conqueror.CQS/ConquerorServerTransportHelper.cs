@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Conqueror.Common;
+namespace Conqueror.CQS;
 
 public static class ConquerorServerTransportHelper
 {

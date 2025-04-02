@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Conqueror;
-using Conqueror.Common;
+using Conqueror.CQS;
 using Conqueror.CQS.CommandHandling;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

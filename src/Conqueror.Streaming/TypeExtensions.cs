@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Conqueror.Common;
+namespace Conqueror.Streaming;
 
 internal static class TypeExtensions
 {
