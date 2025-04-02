@@ -13,7 +13,6 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add test that pipeline can be safely forked
 - [ ] add transport to context data test location
 - [ ] throw on empty context data key
-- [ ] add `UseInProcessIfAvailable()` transport builder extension
 - [ ] improve generator
   - [ ] fully qualified references
   - [ ] explicit interface implementations where props should not be shown in intellisense
