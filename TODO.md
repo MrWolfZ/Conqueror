@@ -7,10 +7,84 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] set up issues templates via yaml config
 - [ ] add code coverage reports and badge
 
-## Common
+## Core
 
-- [ ] in development environment, add problem details body to auth failures
+- [ ] add test to assert that messages support polymorphism
+- [ ] add test that pipeline can be safely forked
+- [ ] add transport to context data test location
 - [ ] throw on empty context data key
+- [ ] add `UseInProcessIfAvailable()` transport builder extension
+- [ ] improve generator
+  - [ ] fully qualified references
+  - [ ] explicit interface implementations where props should not be shown in intellisense
+  - [ ] add `CompilerGenerated` attribute where appropriate
+  - [ ] proper indentation
+  - [ ] write tests for all situations and diagnostics (using data driven tests)
+    - [ ] for every single property, assert that the property can be manually defined and the generator will skip it
+    - [ ] skip abstract classes
+    - [ ] test that the generator works even if the marker interfaces are explicitly implemented, including when through a base class
+  - [ ] ensure class visibility is adhered to
+  - [ ] improve performance by not using string interpolation
+  - [ ] generate property metadata (name, type, is-required, is-nullable, etc.)
+  - [ ] generate `IMessage` interface also if only `HttpMessage` attribute is present
+    - [ ] make `HttpMessageAttribute` generic
+  - [ ] automatically generate `HttpJsonSerializerContext` property when a type `<TMessage>JsonSerializerContext` exists in the same namespace as the message type
+  - [ ] allow (primary) constructor arguments in query string parsing
+  - [ ] emit diagnostic error when unsupported property is found during query string parsing
+  - [ ] add statement in recipe that attributes can be renamed with a global using if they cause conflicts
+
+### Core middleware
+
+- [ ] reimplement logging middleware
+  - [ ] use logging source generator with dynamic log level as seen [here]( https://andrewlock.net/exploring-dotnet-6-part-8-improving-logging-performance-with-source-generators/)
+  - [ ] log real message type in addition to generic type if they differ
+  - [ ] default to payload json serialization and allow customizing serialization logic via configuration
+- [ ] reimplement authorization middleware
+  - [ ] principal is set in context in server http transport client
+    - [ ] set based on hardcoded string or source file linking instead of common base project
+  - [ ] requiring an authenticated principal is an authorization activity
+  - [ ] allow placing authorization middleware without check
+  - [ ] allow dynamically adding authorization checks
+    - [ ] do not be too specific, but consider at least having a built-in check for requiring authenticated principal
+  - [ ] add different kinds of authorization failure types
+  - [ ] store user principal context
+- [ ] reimplement data annotation middleware
+  - [ ] mark it as requiring reflection
+- [ ] create projects for common middlewares, e.g.
+  - [ ] `Conqueror.Middleware.FluentValidation`
+  - [ ] `Conqueror.Middleware.MemoryCache`
+  - [ ] `Conqueror.Middleware.Metrics`
+  - [ ] `Conqueror.Middleware.Semaphore`
+  - [ ] `Conqueror.Middleware.RateLimiting`
+  - [ ] `Conqueror.Middleware.Tracing`
+
+### Core ASP Core
+
+- [ ] add tests for client error handling
+- [ ] add tests for duplicate path detection for all combinations of registrations methods (i.e. controllers and endpoints, explicitly and implicitly)
+- [ ] add tests that assert that arrays and lists can be used as messages and responses
+- [ ] create `HttpMessageEndpointDescriptor` and pass that around internally when registering endpoints instead of accessing `TMessage` everywhere
+  - [ ] consider allowing users to pass a filter predicate into `MapMessageEndpoints`
+- [ ] allow adding endpoints explicitly or manually and then `MapMessageEndpoints` skips those message types
+- [ ] add tests that a custom base interface can be used to specify custom conventions
+- [ ] add `FailureStatusCodes` property to `IHttpMessage` (defaults to 400, 401, and 403)
+  - [ ] generate appropriate endpoint metadata
+  - [ ] ensure that swashbuckle can be used to customize it, e.g. adding `ProblemDetails` as body schema
+- [ ] assert that authorization middleware only catches exceptions and throws if the response has already started
+- [ ] in development environment, when message fails, add exception message and stack trace to response body
+- [ ] remove authentication middleware
+- [ ] add tests that assert controllers can be added multiple times (explicitly or implicitly) idempotently
+- [ ] add recipe for customizing OpenAPI specification with Swashbuckle
+- [ ] create analyzers (including code fixes)
+  - [ ] when command or query does not have a version
+
+### Core Transports
+
+- [ ] create transport test utils package that contains a list of baseline tests that all transports must fulfill
+  - [ ] functionality
+  - [ ] context data
+  - [ ] trace ID
+  - [ ] will require converting base class approach to test case generation approach so that only a single test class needs to be subclassed
 
 ## Build
 
@@ -50,31 +124,11 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] use explicit dependency version numbers in all recipes and examples
   - [ ] add a script to bump version number across whole project
 
-### CQS middleware
-
-- [ ] overhaul auth design
-  - [ ] requiring an authenticated principal is an authorization activity
-  - [ ] allow placing authorization middleware without check
-  - [ ] allow dynamically adding authorization checks
-- [ ] in logging middleware use logging source generator with dynamic log level as seen [here]( https://andrewlock.net/exploring-dotnet-6-part-8-improving-logging-performance-with-source-generators/)
-- [ ] create projects for common middlewares, e.g.
-  - [ ] `Conqueror.CQS.Middleware.FluentValidation`
-  - [ ] `Conqueror.CQS.Middleware.MemoryCache`
-  - [ ] `Conqueror.CQS.Middleware.Metrics`
-  - [ ] `Conqueror.CQS.Middleware.Tracing`
-  - [ ] `Conqueror.CQS.Middleware.Synchronization`
-
-### CQS ASP Core
-
-- [ ] add test to ensure that adding server services multiple times adds options only once
-  - [ ] allow configuration callback to run multiple times
-- [ ] add recipe for customizing OpenAPI specification with Swashbuckle
-- [ ] create analyzers (including code fixes)
-  - [ ] when command or query does not have a version
-- [ ] provide delegating HTTP client handler that takes care of conqueror context propagation to allow custom http clients to be used
-
 ## Eventing
 
+- [ ] refactor to new source generation approach
+  - [ ] ensure it is AOT compatible
+- [ ] add tests for object pipeline
 - [ ] add `ConfigureTransports` optional static method to `IEventObserver`
   - [ ] the method takes an `IEventObserverTransportBuilder<TEvent>`
   - [ ] transport libraries define extension methods on the builder
@@ -88,6 +142,10 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] ensure that full stack trace is contained in exception logs (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/c4a9419b896fa225372ae348d76c31ef8715a78f))abbb6066826c3d710bafd5db4ff32db3f17cf50c))
 - [ ] add transport type info to log output (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/652f8610456333a9e8eba40056738c0517d160b7))
 - [ ] refactor all tests to use `Assert.That` for exceptions
+- [ ] add test for batching middleware using polymorphism
+  - [ ] e.g. create base or wrapper type `Batchable` and add middlewares constrained to this base type
+    - [ ] if using wrapper approach, use implicit casts for more ergonomics
+  - [ ] assert that batching works across transports
 - [ ] add dedicated solution
 - [ ] add `.Has()` method to pipelines
 - [ ] add pipeline builder method to throw on duplicate middleware
