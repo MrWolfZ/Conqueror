@@ -12,7 +12,7 @@ internal sealed class InProcessMessageTransport<TMessage, TResponse>(
     : IMessageTransportClient<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    public string TransportTypeName => transportTypeName ?? InProcessMessageTransport.Name;
+    public string TransportTypeName => transportTypeName ?? ConquerorConstants.InProcessTransportName;
 
     public Task<TResponse> Send(TMessage message,
                                 IServiceProvider serviceProvider,
@@ -40,9 +40,4 @@ internal sealed class InProcessMessageTransport<TMessage, TResponse>(
             return await ((IMessageHandler<TMessage, TResponse>)handler).Handle(message, cancellationToken).ConfigureAwait(false);
         }
     }
-}
-
-internal sealed class InProcessMessageTransport
-{
-    public const string Name = "in-process";
 }

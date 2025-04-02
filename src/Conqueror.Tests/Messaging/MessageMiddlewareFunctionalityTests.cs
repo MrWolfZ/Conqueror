@@ -1,5 +1,3 @@
-using Conqueror.Messaging;
-
 namespace Conqueror.Tests.Messaging;
 
 public sealed partial class MessageMiddlewareFunctionalityTests
@@ -33,7 +31,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                               .For(TestMessage.T);
 
         var expectedTransportTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
-                                                                 .Select(r => new MessageTransportType(InProcessMessageTransport.Name, r))
+                                                                 .Select(r => new MessageTransportType(ConquerorConstants.InProcessTransportName, r))
                                                                  .ToList();
 
         using var tokenSource = new CancellationTokenSource();
@@ -58,7 +56,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         Assert.That(observations.MiddlewareTypes, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
         Assert.That(observations.TransportTypesFromMiddlewares,
                     Is.EqualTo(testCase.ExpectedMiddlewareTypes
-                                       .Select(t => new MessageTransportType(InProcessMessageTransport.Name, t.TransportRole))));
+                                       .Select(t => new MessageTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
         Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
     }
 
@@ -88,7 +86,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(Enumerable.Repeat(message, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.MiddlewareTypes, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
-        Assert.That(observations.TransportTypesFromMiddlewares, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => new MessageTransportType(InProcessMessageTransport.Name, t.TransportRole))));
+        Assert.That(observations.TransportTypesFromMiddlewares, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => new MessageTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
     }
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase<TestMessage, TestMessageResponse>> GenerateTestCases()
@@ -828,8 +826,8 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).Handle(message);
 
-        Assert.That(transportTypeFromClient, Is.EqualTo(new MessageTransportType(InProcessMessageTransport.Name, MessageTransportRole.Client)));
-        Assert.That(transportTypeFromHandler, Is.EqualTo(new MessageTransportType(InProcessMessageTransport.Name, MessageTransportRole.Server)));
+        Assert.That(transportTypeFromClient, Is.EqualTo(new MessageTransportType(ConquerorConstants.InProcessTransportName, MessageTransportRole.Client)));
+        Assert.That(transportTypeFromHandler, Is.EqualTo(new MessageTransportType(ConquerorConstants.InProcessTransportName, MessageTransportRole.Server)));
     }
 
     [Test]
