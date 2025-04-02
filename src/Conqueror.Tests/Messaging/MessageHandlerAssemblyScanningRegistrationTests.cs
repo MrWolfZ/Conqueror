@@ -80,6 +80,35 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     }
 
     [Test]
+    public void GivenServiceCollectionWithHandlerWithoutResponseAlreadyRegistered_WhenAddingAllHandlersFromAssembly_DoesNotAddHandlerAgain()
+    {
+        var services = new ServiceCollection().AddMessageHandler<TestMessageWithoutResponseHandler>(ServiceLifetime.Singleton)
+                                              .AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType
+                                                                             && d.ServiceType == typeof(TestMessageWithoutResponseHandler)));
+
+        Assert.That(services.Single(d => d.ServiceType == typeof(TestMessageWithoutResponseHandler)).Lifetime, Is.EqualTo(ServiceLifetime.Singleton));
+
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.MessageType == typeof(TestMessageWithoutResponse)
+                                                                             && r.ResponseType == typeof(UnitMessageResponse)
+                                                                             && r.HandlerType == typeof(TestMessageWithoutResponseHandler)));
+    }
+
+    [Test]
+    public void GivenServiceCollectionWithDelegateHandlerWithoutResponseAlreadyRegistered_WhenAddingAllHandlersFromAssembly_DoesNotAddHandlerAgain()
+    {
+        var services = new ServiceCollection().AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask)
+                                              .AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.MessageType == typeof(TestMessageWithoutResponse)
+                                                                             && r.ResponseType == typeof(UnitMessageResponse)
+                                                                             && r.HandlerType == typeof(DelegateMessageHandler<TestMessageWithoutResponse>)));
+    }
+
+    [Test]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_DoesNotAddInterfaces()
     {
         var services = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);

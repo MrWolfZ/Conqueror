@@ -223,8 +223,8 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "type") => services.AddMessageHandler<TestMessageHandler>(l.Value),
             (var l, "factory") => services.AddMessageHandler(factory, l.Value),
             (_, "instance") => services.AddMessageHandler(instance),
-            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse())),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new()),
+            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromException<TestMessageResponse>(new NotSupportedException())),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate((MessageHandlerFn<TestMessage, TestMessageResponse>)((_, _, _) => throw new NotSupportedException())),
             _ => throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null),
         };
 
@@ -271,11 +271,18 @@ public sealed partial class MessageHandlerRegistrationTests
             default:
                 throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null);
         }
+
+        using var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageClients>().For(TestMessage.T);
+
+        // this asserts that the overwriting handler is called since the original handler would throw
+        Assert.That(() => handler.Handle(new()), Throws.Nothing);
     }
 
     [Test]
     [Combinatorial]
-    public void GivenRegisteredHandlerWithoutResponse_WhenRegisteringDifferentHandlerForSameMessageType_ThrowsInvalidOperationException(
+    public void GivenRegisteredHandlerWithoutResponse_WhenRegisteringDifferentHandlerForSameMessageType_OverwritesRegistration(
         [Values(null, ServiceLifetime.Transient, ServiceLifetime.Scoped, ServiceLifetime.Singleton)]
         ServiceLifetime? initialLifetime,
         [Values("type", "factory", "instance", "delegate", "sync_delegate")]
@@ -298,8 +305,8 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "type") => services.AddMessageHandler<TestMessageWithoutResponseHandler>(l.Value),
             (var l, "factory") => services.AddMessageHandler(factory, l.Value),
             (_, "instance") => services.AddMessageHandler(instance),
-            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { }),
+            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.FromException<TestMessageResponse>(new NotSupportedException())),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate((MessageHandlerFn<TestMessageWithoutResponse>)((_, _, _) => throw new NotSupportedException())),
             _ => throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null),
         };
 
@@ -346,6 +353,13 @@ public sealed partial class MessageHandlerRegistrationTests
             default:
                 throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null);
         }
+
+        using var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageClients>().For(TestMessageWithoutResponse.T);
+
+        // this asserts that the overwriting handler is called since the original handler would throw
+        Assert.That(() => handler.Handle(new()), Throws.Nothing);
     }
 
     [Test]
@@ -385,17 +399,17 @@ public sealed partial class MessageHandlerRegistrationTests
 
     private sealed class DuplicateTestMessageHandler : TestMessage.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => Task.FromResult(new TestMessageResponse());
     }
 
     private sealed class TestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
     {
-        public Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     private sealed class TestMessageWithoutResponse2Handler : TestMessageWithoutResponse2.IHandler
     {
-        public Task Handle(TestMessageWithoutResponse2 message, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Handle(TestMessageWithoutResponse2 message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     private sealed class DuplicateTestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler

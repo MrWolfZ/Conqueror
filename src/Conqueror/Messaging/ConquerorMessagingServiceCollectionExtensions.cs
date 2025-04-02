@@ -66,28 +66,28 @@ public static class ConquerorMessagingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                             MessageHandlerFn<TMessage, TResponse> fn)
+                                                                                    MessageHandlerFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal(fn, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                                  MessageHandlerFn<TMessage> fn)
+                                                                         MessageHandlerFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegateInternal(fn, null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                             MessageHandlerSyncFn<TMessage, TResponse> fn)
+                                                                                    MessageHandlerSyncFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal<TMessage, TResponse>((m, p, ct) => Task.FromResult(fn(m, p, ct)), null);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                                  MessageHandlerSyncFn<TMessage> fn)
+                                                                         MessageHandlerSyncFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegateInternal<TMessage>((m, p, ct) =>
@@ -98,32 +98,32 @@ public static class ConquerorMessagingServiceCollectionExtensions
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                             MessageHandlerFn<TMessage, TResponse> fn,
-                                                                                             Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+                                                                                    MessageHandlerFn<TMessage, TResponse> fn,
+                                                                                    Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal(fn, configurePipeline);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                                  MessageHandlerFn<TMessage> fn,
-                                                                                  Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+                                                                         MessageHandlerFn<TMessage> fn,
+                                                                         Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegateInternal(fn, configurePipeline);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                             MessageHandlerSyncFn<TMessage, TResponse> fn,
-                                                                                             Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+                                                                                    MessageHandlerSyncFn<TMessage, TResponse> fn,
+                                                                                    Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal((m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                                  MessageHandlerSyncFn<TMessage> fn,
-                                                                                  Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+                                                                         MessageHandlerSyncFn<TMessage> fn,
+                                                                         Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegateInternal((m, p, ct) =>
@@ -340,13 +340,13 @@ public static class ConquerorMessagingServiceCollectionExtensions
                          $"handler type '{typeof(THandler)}' should implement {typeof(IMessageHandler<TMessage, TResponse>).Name}");
 
             return services.AddMessageHandlerInternal(serviceDescriptor,
-                                                               typeof(THandler),
-                                                               null,
-                                                               typeof(TMessage),
-                                                               typeof(TResponse),
-                                                               MakeConfiguredPipeline(),
-                                                               TMessage.TypeInjectors,
-                                                               shouldOverwriteRegistration);
+                                                      typeof(THandler),
+                                                      null,
+                                                      typeof(TMessage),
+                                                      typeof(TResponse),
+                                                      MakeConfiguredPipeline(),
+                                                      TMessage.TypeInjectors,
+                                                      shouldOverwriteRegistration);
 
             static Action<IMessagePipeline<TMessage, TResponse>>? MakeConfiguredPipeline()
             {
@@ -371,15 +371,27 @@ public static class ConquerorMessagingServiceCollectionExtensions
             Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IMessageHandler<TMessage>)),
                          $"handler type '{typeof(THandler)}' should implement {typeof(IMessageHandler<TMessage>).Name}");
 
-            services.TryAddTransient<MessageHandlerWithoutResponseAdapter<TMessage>>(p => new(typeof(THandler), p));
+            var adapterDescriptor = new ServiceDescriptor(typeof(MessageHandlerWithoutResponseAdapter<TMessage>),
+                                                          p => new MessageHandlerWithoutResponseAdapter<TMessage>(typeof(THandler), p),
+                                                          ServiceLifetime.Transient);
+
+            if (shouldOverwriteRegistration)
+            {
+                services.Replace(adapterDescriptor);
+            }
+            else
+            {
+                services.TryAdd(adapterDescriptor);
+            }
+
             return services.AddMessageHandlerInternal(serviceDescriptor,
-                                                               typeof(THandler),
-                                                               typeof(MessageHandlerWithoutResponseAdapter<TMessage>),
-                                                               typeof(TMessage),
-                                                               typeof(UnitMessageResponse),
-                                                               MakeConfiguredPipeline(),
-                                                               TMessage.TypeInjectors,
-                                                               shouldOverwriteRegistration);
+                                                      typeof(THandler),
+                                                      typeof(MessageHandlerWithoutResponseAdapter<TMessage>),
+                                                      typeof(TMessage),
+                                                      typeof(UnitMessageResponse),
+                                                      MakeConfiguredPipeline(),
+                                                      TMessage.TypeInjectors,
+                                                      shouldOverwriteRegistration);
 
             static Action<IMessagePipeline<TMessage, UnitMessageResponse>>? MakeConfiguredPipeline()
             {
