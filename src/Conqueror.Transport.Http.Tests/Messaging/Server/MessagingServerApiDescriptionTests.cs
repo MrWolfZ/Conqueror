@@ -2,6 +2,7 @@ using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Routing;
 using static Conqueror.ConquerorTransportHttpConstants;
+using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Server;
 
@@ -9,9 +10,9 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server;
 public sealed class MessagingServerApiDescriptionTests
 {
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
     public async Task GivenTestHttpMessage_WhenRegisteringControllers_RegistersTheCorrectApiDescription<TMessage, TResponse, THandler>(
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -38,9 +39,9 @@ public sealed class MessagingServerApiDescriptionTests
         Assert.That(messageApiDescription.ParameterDescriptions, Has.Count.EqualTo(testCase.ParameterCount));
 
         var isController = testCase.RegistrationMethod
-            is TestMessages.MessageTestCaseRegistrationMethod.Controllers
-            or TestMessages.MessageTestCaseRegistrationMethod.ExplicitController
-            or TestMessages.MessageTestCaseRegistrationMethod.CustomController;
+            is MessageTestCaseRegistrationMethod.Controllers
+            or MessageTestCaseRegistrationMethod.ExplicitController
+            or MessageTestCaseRegistrationMethod.CustomController;
 
         var messageMediaTypes = messageApiDescription.SupportedRequestFormats.Select(f => f.MediaType);
         var expectedAcceptContentTypes = isController ? [MediaTypeNames.Application.Json, "application/*+json"] : new[] { testCase.MessageContentType };

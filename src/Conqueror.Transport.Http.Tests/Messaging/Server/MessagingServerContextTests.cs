@@ -4,6 +4,7 @@ using System.Net.Mime;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using static Conqueror.ConquerorTransportHttpConstants;
+using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Server;
@@ -39,7 +40,7 @@ public sealed partial class MessagingServerContextTests
         bool hasUpstream,
         bool hasDownstream,
         bool hasBidirectional,
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -49,7 +50,7 @@ public sealed partial class MessagingServerContextTests
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
 
-        var testObservations = host.Resolve<TestMessages.TestObservations>();
+        var testObservations = host.Resolve<TestObservations>();
 
         testObservations.ShouldAddUpstreamData = hasUpstream;
         testObservations.ShouldAddBidirectionalData = hasBidirectional;
@@ -107,9 +108,9 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
     public async Task GivenMultipleConquerorContextRequestHeadersWithDownstreamAndBidirectionalData_WhenSendingMessage_DataIsReceivedByHandler<TMessage, TResponse, THandler>(
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -143,8 +144,8 @@ public sealed partial class MessagingServerContextTests
         var response = await host.HttpClient.SendAsync(request);
         await response.AssertSuccessStatusCode();
 
-        var receivedDownstreamContextData = host.Resolve<TestMessages.TestObservations>().ReceivedDownstreamContextData;
-        var receivedBidirectionalContextData = host.Resolve<TestMessages.TestObservations>().ReceivedBidirectionalContextData;
+        var receivedDownstreamContextData = host.Resolve<TestObservations>().ReceivedDownstreamContextData;
+        var receivedBidirectionalContextData = host.Resolve<TestObservations>().ReceivedBidirectionalContextData;
 
         Assert.That(receivedDownstreamContextData, Is.Not.Null);
         Assert.That(receivedBidirectionalContextData, Is.Not.Null);
@@ -153,9 +154,9 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
     public async Task GivenInvalidConquerorContextRequestHeader_WhenSendingMessage_ReturnsBadRequest<TMessage, TResponse, THandler>(
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -172,9 +173,9 @@ public sealed partial class MessagingServerContextTests
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
     public async Task GivenMessageIdInContext_WhenSendingMessage_MessageIdIsObservedByHandler<TMessage, TResponse, THandler>(
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -194,15 +195,15 @@ public sealed partial class MessagingServerContextTests
         var response = await host.HttpClient.SendAsync(request);
         await response.AssertSuccessStatusCode();
 
-        var receivedMessageIds = host.Resolve<TestMessages.TestObservations>().ReceivedMessageIds;
+        var receivedMessageIds = host.Resolve<TestObservations>().ReceivedMessageIds;
 
         Assert.That(receivedMessageIds, Is.EqualTo(new[] { messageId }));
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
     public async Task GivenNoMessageIdInContext_WhenSendingMessage_NonEmptyMessageIdIsObservedByHandler<TMessage, TResponse, THandler>(
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -215,16 +216,16 @@ public sealed partial class MessagingServerContextTests
         var response = await host.HttpClient.SendAsync(request);
         await response.AssertSuccessStatusCode();
 
-        var receivedMessageIds = host.Resolve<TestMessages.TestObservations>().ReceivedMessageIds;
+        var receivedMessageIds = host.Resolve<TestObservations>().ReceivedMessageIds;
 
         Assert.That(receivedMessageIds, Has.Count.EqualTo(1));
         Assert.That(receivedMessageIds[0], Is.Not.Null.And.Not.Empty);
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
     public async Task GivenTraceIdInTraceParentWithoutActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandlers<TMessage, TResponse, THandler>(
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -233,9 +234,9 @@ public sealed partial class MessagingServerContextTests
             services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
             _ = services.AddMessageHandler<NestedTestMessageHandler>();
 
-            _ = services.Replace(ServiceDescriptor.Singleton<TestMessages.FnToCallFromHandler>(p =>
+            _ = services.Replace(ServiceDescriptor.Singleton<FnToCallFromHandler>(p =>
             {
-                ObserveAndSetContextData(p.GetRequiredService<TestMessages.TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
+                ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
                 return p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new());
             }));
         }, app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
@@ -248,15 +249,15 @@ public sealed partial class MessagingServerContextTests
         var response = await host.HttpClient.SendAsync(request);
         await response.AssertSuccessStatusCode();
 
-        var receivedTraceIds = host.Resolve<TestMessages.TestObservations>().ReceivedTraceIds;
+        var receivedTraceIds = host.Resolve<TestObservations>().ReceivedTraceIds;
 
         Assert.That(receivedTraceIds, Is.EqualTo(new[] { traceId, traceId }));
     }
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
     public async Task GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler<TMessage, TResponse, THandler>(
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -265,9 +266,9 @@ public sealed partial class MessagingServerContextTests
             services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
             _ = services.AddMessageHandler<NestedTestMessageHandler>();
 
-            _ = services.Replace(ServiceDescriptor.Singleton<TestMessages.FnToCallFromHandler>(p =>
+            _ = services.Replace(ServiceDescriptor.Singleton<FnToCallFromHandler>(p =>
             {
-                ObserveAndSetContextData(p.GetRequiredService<TestMessages.TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
+                ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
                 return p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new());
             }));
         }, app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
@@ -282,13 +283,13 @@ public sealed partial class MessagingServerContextTests
         var response = await host.HttpClient.SendAsync(request);
         await response.AssertSuccessStatusCode();
 
-        var receivedTraceIds = host.Resolve<TestMessages.TestObservations>().ReceivedTraceIds;
+        var receivedTraceIds = host.Resolve<TestObservations>().ReceivedTraceIds;
 
         Assert.That(receivedTraceIds, Is.EqualTo(new[] { a.TraceId, a.TraceId }));
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "content is disposed together with request outside")]
-    private static HttpRequestMessage ConstructHttpRequest(TestMessages.MessageTestCase testCase)
+    private static HttpRequestMessage ConstructHttpRequest(MessageTestCase testCase)
     {
         HttpRequestMessage? request = null;
         try
@@ -328,9 +329,9 @@ public sealed partial class MessagingServerContextTests
         return TestHost.Create(
             services =>
             {
-                _ = services.AddSingleton<TestMessages.FnToCallFromHandler>(p =>
+                _ = services.AddSingleton<FnToCallFromHandler>(p =>
                 {
-                    ObserveAndSetContextData(p.GetRequiredService<TestMessages.TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
+                    ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
                     return Task.CompletedTask;
                 });
 
@@ -364,7 +365,7 @@ public sealed partial class MessagingServerContextTests
 
     private static IEnumerable<TestCaseData> GenerateContextDataTestCases()
     {
-        return from testCaseData in TestMessages.GenerateTestCaseData()
+        return from testCaseData in GenerateTestCaseData()
                from hasUpstream in new[] { true, false }
                from hasDownstream in new[] { true, false }
                from hasBidirectional in new[] { true, false }
@@ -379,7 +380,7 @@ public sealed partial class MessagingServerContextTests
         return new(content, new MediaTypeHeaderValue(MediaTypeNames.Application.Json));
     }
 
-    private static void ObserveAndSetContextData(TestMessages.TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
+    private static void ObserveAndSetContextData(TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
     {
         testObservations.ReceivedMessageIds.Add(conquerorContextAccessor.ConquerorContext?.GetMessageId());
         testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());
@@ -442,7 +443,7 @@ public sealed partial class MessagingServerContextTests
     }
 
     public sealed class NestedTestMessageHandler(
-        TestMessages.TestObservations testObservations,
+        TestObservations testObservations,
         IConquerorContextAccessor contextAccessor)
         : NestedTestMessage.IHandler
     {

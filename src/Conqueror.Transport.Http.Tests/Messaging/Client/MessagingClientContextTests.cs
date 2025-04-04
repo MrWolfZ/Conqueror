@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
+using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Client;
 
@@ -38,7 +39,7 @@ public sealed class MessagingClientContextTests : IDisposable
         bool hasDownstream,
         bool hasBidirectional,
         bool hasActivity,
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -47,10 +48,10 @@ public sealed class MessagingClientContextTests : IDisposable
             app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         var clientServices = new ServiceCollection().AddConqueror()
-                                                    .AddSingleton<TestMessages.TestObservations>()
-                                                    .AddTransient(typeof(TestMessages.TestMessageMiddleware<,>));
+                                                    .AddSingleton<TestObservations>()
+                                                    .AddTransient(typeof(TestMessageMiddleware<,>));
 
-        if (testCase.Message is TestMessages.TestMessageWithCustomSerializedPayloadType)
+        if (testCase.Message is TestMessageWithCustomSerializedPayloadType)
         {
             var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
             {
@@ -58,7 +59,7 @@ public sealed class MessagingClientContextTests : IDisposable
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
 
-            jsonSerializerOptions.Converters.Add(new TestMessages.TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
+            jsonSerializerOptions.Converters.Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
             jsonSerializerOptions.MakeReadOnly(true);
 
             _ = clientServices.AddSingleton(jsonSerializerOptions);
@@ -68,7 +69,7 @@ public sealed class MessagingClientContextTests : IDisposable
 
         var messageClients = clientServiceProvider.GetRequiredService<IMessageClients>();
 
-        var serverTestObservations = host.Resolve<TestMessages.TestObservations>();
+        var serverTestObservations = host.Resolve<TestObservations>();
 
         serverTestObservations.ShouldAddUpstreamData = hasUpstream;
         serverTestObservations.ShouldAddBidirectionalData = hasBidirectional;
@@ -91,8 +92,8 @@ public sealed class MessagingClientContextTests : IDisposable
         var httpClient = host.HttpClient;
 
         if (testCase.RegistrationMethod
-            is TestMessages.MessageTestCaseRegistrationMethod.CustomController
-            or TestMessages.MessageTestCaseRegistrationMethod.CustomEndpoint)
+            is MessageTestCaseRegistrationMethod.CustomController
+            or MessageTestCaseRegistrationMethod.CustomEndpoint)
         {
             httpClient.BaseAddress = new("http://localhost/custom/");
         }
@@ -105,9 +106,9 @@ public sealed class MessagingClientContextTests : IDisposable
         // of out-of-the-box validation
         if (testCase is
             {
-                Message: TestMessages.TestMessageWithComplexGetPayload,
-                RegistrationMethod: TestMessages.MessageTestCaseRegistrationMethod.Controllers
-                or TestMessages.MessageTestCaseRegistrationMethod.ExplicitController,
+                Message: TestMessageWithComplexGetPayload,
+                RegistrationMethod: MessageTestCaseRegistrationMethod.Controllers
+                or MessageTestCaseRegistrationMethod.ExplicitController,
             })
         {
             return;
@@ -165,7 +166,7 @@ public sealed class MessagingClientContextTests : IDisposable
 
     private static IEnumerable<TestCaseData> GenerateContextDataTestCases()
     {
-        return from testCaseData in TestMessages.GenerateTestCaseData()
+        return from testCaseData in GenerateTestCaseData()
                from hasUpstream in new[] { true, false }
                from hasDownstream in new[] { true, false }
                from hasBidirectional in new[] { true, false }
@@ -182,12 +183,12 @@ public sealed class MessagingClientContextTests : IDisposable
         return TestHost.Create(
             services =>
             {
-                _ = services.AddSingleton<TestMessages.FnToCallFromHandler>(p =>
+                _ = services.AddSingleton<FnToCallFromHandler>(p =>
                 {
                     var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
                     seenMessageIdOnServer = conquerorContextAccessor.ConquerorContext?.GetMessageId();
                     seenTraceIdOnServer = conquerorContextAccessor.ConquerorContext?.GetTraceId();
-                    ObserveAndSetContextData(p.GetRequiredService<TestMessages.TestObservations>(), conquerorContextAccessor);
+                    ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), conquerorContextAccessor);
                     return Task.CompletedTask;
                 });
 
@@ -219,7 +220,7 @@ public sealed class MessagingClientContextTests : IDisposable
             });
     }
 
-    private static void ObserveAndSetContextData(TestMessages.TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
+    private static void ObserveAndSetContextData(TestObservations testObservations, IConquerorContextAccessor conquerorContextAccessor)
     {
         testObservations.ReceivedMessageIds.Add(conquerorContextAccessor.ConquerorContext?.GetMessageId());
         testObservations.ReceivedTraceIds.Add(conquerorContextAccessor.ConquerorContext?.GetTraceId());

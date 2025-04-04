@@ -21,7 +21,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging;
 [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Members are used by ASP.NET Core via reflection")]
 [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Members are used by ASP.NET Core via reflection")]
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "Members are used by ASP.NET Core via reflection")]
-public static partial class TestMessages
+public static partial class HttpTestMessages
 {
     public delegate Task FnToCallFromHandler(IServiceProvider serviceProvider);
 

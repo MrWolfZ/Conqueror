@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Client;
 
@@ -18,8 +19,8 @@ public sealed class MessagingClientExecutionTests
     private IHeaderDictionary? receivedHeadersOnServer;
 
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
-    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, THandler>(TestMessages.MessageTestCase testCase)
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
+    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, THandler>(MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -28,10 +29,10 @@ public sealed class MessagingClientExecutionTests
             app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 
         var clientServices = new ServiceCollection().AddConqueror()
-                                                    .AddSingleton<TestMessages.TestObservations>()
-                                                    .AddTransient(typeof(TestMessages.TestMessageMiddleware<,>));
+                                                    .AddSingleton<TestObservations>()
+                                                    .AddTransient(typeof(TestMessageMiddleware<,>));
 
-        if (testCase.Message is TestMessages.TestMessageWithCustomSerializedPayloadType)
+        if (testCase.Message is TestMessageWithCustomSerializedPayloadType)
         {
             var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
             {
@@ -39,7 +40,7 @@ public sealed class MessagingClientExecutionTests
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
 
-            jsonSerializerOptions.Converters.Add(new TestMessages.TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
+            jsonSerializerOptions.Converters.Add(new TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverterFactory());
             jsonSerializerOptions.MakeReadOnly(true);
 
             _ = clientServices.AddSingleton(jsonSerializerOptions);
@@ -52,8 +53,8 @@ public sealed class MessagingClientExecutionTests
         var httpClient = host.HttpClient;
 
         if (testCase.RegistrationMethod
-            is TestMessages.MessageTestCaseRegistrationMethod.CustomController
-            or TestMessages.MessageTestCaseRegistrationMethod.CustomEndpoint)
+            is MessageTestCaseRegistrationMethod.CustomController
+            or MessageTestCaseRegistrationMethod.CustomEndpoint)
         {
             httpClient.BaseAddress = new("http://localhost/custom/");
         }
@@ -63,9 +64,9 @@ public sealed class MessagingClientExecutionTests
         // of out-of-the-box validation
         if (testCase is
             {
-                Message: TestMessages.TestMessageWithComplexGetPayload,
-                RegistrationMethod: TestMessages.MessageTestCaseRegistrationMethod.Controllers
-                or TestMessages.MessageTestCaseRegistrationMethod.ExplicitController,
+                Message: TestMessageWithComplexGetPayload,
+                RegistrationMethod: MessageTestCaseRegistrationMethod.Controllers
+                or MessageTestCaseRegistrationMethod.ExplicitController,
             })
         {
             return;
@@ -83,16 +84,16 @@ public sealed class MessagingClientExecutionTests
 
         switch (testCase.Message)
         {
-            case TestMessages.TestMessageWithMiddleware m:
-                _ = await messageClients.For(TestMessages.TestMessageWithMiddleware.T)
+            case TestMessageWithMiddleware m:
+                _ = await messageClients.For(TestMessageWithMiddleware.T)
                                         .WithTransport(ConfigureTransport)
-                                        .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessages.TestMessageMiddleware<TestMessages.TestMessageWithMiddleware, TestMessages.TestMessageResponse>>()))
+                                        .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>()))
                                         .Handle(m, host.TestTimeoutToken);
                 break;
-            case TestMessages.TestMessageWithMiddlewareWithoutResponse m:
-                await messageClients.For(TestMessages.TestMessageWithMiddlewareWithoutResponse.T)
+            case TestMessageWithMiddlewareWithoutResponse m:
+                await messageClients.For(TestMessageWithMiddlewareWithoutResponse.T)
                                     .WithTransport(ConfigureTransport)
-                                    .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessages.TestMessageMiddleware<TestMessages.TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
+                                    .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
                                     .Handle(m, host.TestTimeoutToken);
                 break;
             default:
@@ -107,13 +108,13 @@ public sealed class MessagingClientExecutionTests
         Assert.That(receivedHeadersOnServer!.Authorization.ToString(), Is.EqualTo(AuthorizationHeader));
         Assert.That(receivedHeadersOnServer, Does.ContainKey("test-header").WithValue("test-value"));
 
-        if (testCase.Message is TestMessages.TestMessageWithMiddleware or TestMessages.TestMessageWithMiddlewareWithoutResponse)
+        if (testCase.Message is TestMessageWithMiddleware or TestMessageWithMiddlewareWithoutResponse)
         {
-            var seenTransportTypeOnServer = host.Resolve<TestMessages.TestObservations>().SeenTransportTypeInMiddleware;
+            var seenTransportTypeOnServer = host.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
             Assert.That(seenTransportTypeOnServer?.IsHttp(), Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
             Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(MessageTransportRole.Server));
 
-            var seenTransportTypeOnClient = clientServiceProvider.GetRequiredService<TestMessages.TestObservations>().SeenTransportTypeInMiddleware;
+            var seenTransportTypeOnClient = clientServiceProvider.GetRequiredService<TestObservations>().SeenTransportTypeInMiddleware;
             Assert.That(seenTransportTypeOnClient?.IsHttp(), Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
             Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(MessageTransportRole.Client));
         }
@@ -125,7 +126,7 @@ public sealed class MessagingClientExecutionTests
         return TestHost.Create(
             services =>
             {
-                _ = services.AddSingleton<TestMessages.FnToCallFromHandler>(_ =>
+                _ = services.AddSingleton<FnToCallFromHandler>(_ =>
                 {
                     callWasReceivedOnServer = true;
                     return Task.CompletedTask;

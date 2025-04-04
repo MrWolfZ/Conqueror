@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using static Conqueror.ConquerorTransportHttpConstants;
+using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Server;
 
@@ -11,9 +12,9 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server;
 public sealed class MessagingServerExecutionTests
 {
     [Test]
-    [TestCaseSource(typeof(TestMessages), nameof(TestMessages.GenerateTestCaseData))]
+    [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
     public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, THandler>(
-        TestMessages.MessageTestCase testCase)
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
@@ -68,9 +69,9 @@ public sealed class MessagingServerExecutionTests
             }
         }
 
-        if (testCase.Message is TestMessages.TestMessageWithMiddleware or TestMessages.TestMessageWithMiddlewareWithoutResponse)
+        if (testCase.Message is TestMessageWithMiddleware or TestMessageWithMiddlewareWithoutResponse)
         {
-            var seenTransportType = host.Resolve<TestMessages.TestObservations>().SeenTransportTypeInMiddleware;
+            var seenTransportType = host.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
             Assert.That(seenTransportType?.IsHttp(), Is.True, $"transport type is {seenTransportType?.Name}");
             Assert.That(seenTransportType?.Role, Is.EqualTo(MessageTransportRole.Server));
         }
