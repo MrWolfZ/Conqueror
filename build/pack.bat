@@ -43,6 +43,7 @@ dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Abstractions -c Release 
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Common -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Client -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Streaming.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Middleware.Logging -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Transport.Http.Client -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols

@@ -15,8 +15,8 @@
 
     <!-- common dependency versions -->
     <PropertyGroup>
-        <DependencyInjectionAbstractionsVersion>8.0.1</DependencyInjectionAbstractionsVersion>
-        <DependencyInjectionVersion>8.0.0</DependencyInjectionVersion>
+        <DependencyInjectionAbstractionsVersion>8.0.2</DependencyInjectionAbstractionsVersion>
+        <DependencyInjectionVersion>8.0.1</DependencyInjectionVersion>
     </PropertyGroup>
 
     <!-- when we clean the projects we want all output directories to be deleted to prevent erroneous remnants -->

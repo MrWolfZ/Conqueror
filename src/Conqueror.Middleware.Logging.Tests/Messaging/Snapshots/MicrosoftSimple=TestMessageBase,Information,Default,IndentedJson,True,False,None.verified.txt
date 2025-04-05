@@ -1,0 +1,13 @@
+﻿info: CustomCategory_TestMessageSub[711195907]
+      Handling message with payload
+      {
+        "PayloadSub": 11,
+        "PayloadBase": 10
+      }
+      (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageSub[412531951]
+      Handled message and got response
+      {
+        "Payload": 11
+      }
+      in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

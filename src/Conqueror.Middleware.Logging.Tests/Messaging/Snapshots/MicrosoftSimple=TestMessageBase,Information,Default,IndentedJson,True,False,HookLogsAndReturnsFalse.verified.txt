@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestMessageSub[0]
+      PreHook:TestMessageSub,test-message-id,test-trace-id
+info: CustomCategory_TestMessageSub[0]
+      PostHook:TestMessageResponse,test-message-id,test-trace-id

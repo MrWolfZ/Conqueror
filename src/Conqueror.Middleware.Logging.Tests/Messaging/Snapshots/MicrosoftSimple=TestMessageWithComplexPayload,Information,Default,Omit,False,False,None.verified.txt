@@ -1,0 +1,4 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[711195907]
+      Handling message (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[412531951]
+      Handled message in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

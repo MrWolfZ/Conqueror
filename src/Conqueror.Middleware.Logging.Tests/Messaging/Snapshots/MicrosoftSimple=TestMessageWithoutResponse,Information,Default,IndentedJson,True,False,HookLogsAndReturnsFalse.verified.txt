@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestMessageWithoutResponse[0]
+      PreHook:TestMessageWithoutResponse,test-message-id,test-trace-id
+info: CustomCategory_TestMessageWithoutResponse[0]
+      PostHook:UnitMessageResponse,test-message-id,test-trace-id

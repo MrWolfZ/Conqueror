@@ -1,0 +1,4 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomJsonTypeInfo[0]
+      PreHook:TestMessageWithCustomJsonTypeInfo,test-message-id,test-trace-id
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomJsonTypeInfo[0]
+      PostHook:TestMessageWithCustomJsonTypeInfoResponse,test-message-id,test-trace-id

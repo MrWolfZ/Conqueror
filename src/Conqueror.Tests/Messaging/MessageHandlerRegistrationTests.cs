@@ -12,6 +12,7 @@ public sealed partial class MessageHandlerRegistrationTests
                                               .AddMessageHandler<TestMessage2Handler>();
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageClients)));
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageIdFactory)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MessageTransportRegistry)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageTransportRegistry)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IConquerorContextAccessor)));
@@ -365,10 +366,38 @@ public sealed partial class MessageHandlerRegistrationTests
     [Test]
     public void GivenServiceCollection_WhenAddingInvalidHandlerType_ThrowsInvalidOperationException()
     {
-        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessage.IHandler>(), Throws.InvalidOperationException);
-        Assert.That(() => new ServiceCollection().AddMessageHandler<ITestMessageHandler>(), Throws.InvalidOperationException);
-        Assert.That(() => new ServiceCollection().AddMessageHandler<AbstractTestMessageHandler>(), Throws.InvalidOperationException);
-        Assert.That(() => new ServiceCollection().AddMessageHandler<MultiTestMessageHandler>(), Throws.InvalidOperationException);
+        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessage.IHandler>(),
+                    Throws.InvalidOperationException.With.Message.Match("must not be an interface or abstract class"));
+
+        Assert.That(() => new ServiceCollection().AddMessageHandler<ITestMessageHandler>(),
+                    Throws.InvalidOperationException.With.Message.Match("must not be an interface or abstract class"));
+
+        Assert.That(() => new ServiceCollection().AddMessageHandler<AbstractTestMessageHandler>(),
+                    Throws.InvalidOperationException.With.Message.Match("must not be an interface or abstract class"));
+
+        Assert.That(() => new ServiceCollection().AddMessageHandler<MultiTestMessageHandler>(),
+                    Throws.InvalidOperationException.With.Message.Match("implements multiple message handler interfaces"));
+    }
+
+    [Test]
+    public void GivenServiceCollection_WhenAddingHandlerTypeWithInvalidConfigurePipelineMethod_ThrowsInvalidOperationException()
+    {
+        var configurePipelineName = nameof(IGeneratedMessageHandler<TestMessage, TestMessageResponse, TestMessage.IPipeline>.ConfigurePipeline);
+
+        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithConfigurePipelineForOtherMessageType>(),
+                    Throws.InvalidOperationException.With.Message.Match($"does not implement the '{configurePipelineName}' method correctly"));
+
+        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithConfigurePipelineWithoutParameters>(),
+                    Throws.InvalidOperationException.With.Message.Match($"does not implement the '{configurePipelineName}' method correctly"));
+
+        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithConfigurePipelineWithMultipleParameters>(),
+                    Throws.InvalidOperationException.With.Message.Match($"does not implement the '{configurePipelineName}' method correctly"));
+
+        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithConfigurePipelineWithWrongReturnType>(),
+                    Throws.InvalidOperationException.With.Message.Match($"does not implement the '{configurePipelineName}' method correctly"));
+
+        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithMultipleConfigurePipeline>(),
+                    Throws.InvalidOperationException.With.Message.Match($"implements '{configurePipelineName}' multiple times"));
     }
 
     [Message<TestMessageResponse>]
@@ -415,6 +444,43 @@ public sealed partial class MessageHandlerRegistrationTests
     private sealed class DuplicateTestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
     {
         public Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class TestMessageHandlerWithConfigurePipelineForOtherMessageType : TestMessage.IHandler
+    {
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) => throw new NotSupportedException();
+    }
+
+    private sealed class TestMessageHandlerWithConfigurePipelineWithoutParameters : TestMessage.IHandler
+    {
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public static void ConfigurePipeline() => throw new NotSupportedException();
+    }
+
+    private sealed class TestMessageHandlerWithConfigurePipelineWithMultipleParameters : TestMessage.IHandler
+    {
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public static void ConfigurePipeline(TestMessage.IPipeline pipeline, int otherParam) => throw new NotSupportedException();
+    }
+
+    private sealed class TestMessageHandlerWithConfigurePipelineWithWrongReturnType : TestMessage.IHandler
+    {
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public static int ConfigurePipeline(TestMessage.IPipeline pipeline) => throw new NotSupportedException();
+    }
+
+    private sealed class TestMessageHandlerWithMultipleConfigurePipeline : TestMessage.IHandler
+    {
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public static void ConfigurePipeline(TestMessage.IPipeline pipeline) => throw new NotSupportedException();
+
+        public static void ConfigurePipeline(TestMessage.IPipeline pipeline, int param) => throw new NotSupportedException();
     }
 
     private abstract class AbstractTestMessageHandler : TestMessage.IHandler

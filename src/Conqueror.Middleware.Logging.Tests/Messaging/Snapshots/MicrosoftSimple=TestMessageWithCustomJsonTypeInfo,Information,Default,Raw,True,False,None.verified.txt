@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestMessageWithCustomJsonTypeInfo[711195907]
+      Handling message with payload TestMessageWithCustomJsonTypeInfo { MessagePayload = 10 } (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageWithCustomJsonTypeInfo[412531951]
+      Handled message and got response TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 } in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

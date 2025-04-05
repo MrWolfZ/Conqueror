@@ -1,0 +1,20 @@
+﻿info: CustomCategory_TestMessageWithoutPayload[0]
+      PreHook:TestMessageWithoutPayload,test-message-id,test-trace-id
+fail: CustomCategory_TestMessageWithoutPayload[0]
+      ExceptionHook:TestException,test-message-id,test-trace-id
+      Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
+         at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutPayloadHandler.Handle(TestMessageWithoutPayload message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line 696
+         at Conqueror.Messaging.InProcessMessageTransport`2.HandlerInvoker.Send(TMessage message, IServiceProvider serviceProvider, ConquerorContext conquerorContext, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Messaging/InProcessMessageTransport.cs:line 40
+         at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line 52
+         at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+         at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx)
+         at Conqueror.Messaging.MessagePipelineRunner`2.<>c__DisplayClass3_2.<Execute>b__1(TMessage message, CancellationToken token) in {SolutionDirectory}src/Conqueror/Messaging/MessagePipelineRunner.cs:line 36
+         at Conqueror.Messaging.MessagePipelineRunner`2.Execute(IServiceProvider serviceProvider, TMessage initialMessage, IMessageTransportClient`2 transportClient, MessageTransportType transportType, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Messaging/MessagePipelineRunner.cs:line 40
+         at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+         at Conqueror.Messaging.MessagePipelineRunner`2.Execute(IServiceProvider serviceProvider, TMessage initialMessage, IMessageTransportClient`2 transportClient, MessageTransportType transportType, CancellationToken cancellationToken)
+         at Conqueror.Messaging.MessageHandlerProxy`2.Handle(TMessage message, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Messaging/MessageHandlerProxy.cs:line 46
+         at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+         at Conqueror.Messaging.MessageHandlerProxy`2.Handle(TMessage message, CancellationToken cancellationToken)
+         at Conqueror.Messaging.InProcessMessageTransport`2.Send(TMessage message, IServiceProvider serviceProvider, ConquerorContext conquerorContext, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Messaging/InProcessMessageTransport.cs:line 27
+         at Conqueror.Messaging.MessagePipelineRunner`2.<>c__DisplayClass3_0.<Execute>b__0(TMessage message, CancellationToken token) in {SolutionDirectory}src/Conqueror/Messaging/MessagePipelineRunner.cs:line 22
+

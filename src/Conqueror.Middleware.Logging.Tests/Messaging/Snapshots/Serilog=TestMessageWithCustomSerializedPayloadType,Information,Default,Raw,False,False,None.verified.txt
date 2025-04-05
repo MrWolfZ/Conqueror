@@ -1,0 +1,2 @@
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling message with payload TestMessageWithCustomSerializedPayloadType { Payload = TestMessageWithCustomSerializedPayloadTypePayload { Payload = 10 } } (Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handled message and got response TestMessageWithCustomSerializedPayloadTypeResponse { Payload = TestMessageWithCustomSerializedPayloadTypePayload { Payload = 11 } } in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

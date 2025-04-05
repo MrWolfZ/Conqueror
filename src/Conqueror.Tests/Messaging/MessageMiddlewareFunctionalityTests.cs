@@ -759,6 +759,29 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     [Test]
+    public async Task GivenHandlerForMessageBaseTypeWithSingleAppliedMiddleware_WhenHandlerIsCalledWithMessageSubType_MiddlewareIsCalledWithMessage()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddMessageHandler<TestMessageBaseHandler>()
+                    .AddSingleton<Action<TestMessageBase.IPipeline>>(pipeline => pipeline.Use(new TestMessageMiddleware<TestMessageBase, TestMessageResponse>(observations)))
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageClients>()
+                              .For(TestMessageBase.T);
+
+        var message = new TestMessageSub(10, -1);
+
+        _ = await handler.Handle(message);
+
+        Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(new[] { message }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestMessageMiddleware<TestMessageBase, TestMessageResponse>) }));
+    }
+
+    [Test]
     public async Task GivenHandlerRegisteredViaAssemblyScanningWithSingleAppliedMiddleware_WhenHandlerIsCalled_MiddlewareIsCalledWithMessage()
     {
         var services = new ServiceCollection();
@@ -877,9 +900,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
     public sealed record TestMessageResponse(int Payload);
 
-    [Message]
-    public sealed partial record TestMessageWithoutResponse(int Payload);
-
     private sealed class TestMessageHandler(TestObservations observations) : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
@@ -896,6 +916,9 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         }
     }
 
+    [Message]
+    public sealed partial record TestMessageWithoutResponse(int Payload);
+
     private sealed class TestMessageWithoutResponseHandler(TestObservations observations) : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
@@ -908,6 +931,27 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline)
         {
             pipeline.ServiceProvider.GetService<Action<TestMessageWithoutResponse.IPipeline>>()?.Invoke(pipeline);
+        }
+    }
+
+    [Message<TestMessageResponse>]
+    private partial record TestMessageBase(int PayloadBase);
+
+    private sealed record TestMessageSub(int PayloadBase, int PayloadSub) : TestMessageBase(PayloadBase);
+
+    private sealed class TestMessageBaseHandler(TestObservations observations) : TestMessageBase.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageBase message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            observations.MessagesFromHandlers.Add(message);
+            observations.CancellationTokensFromHandlers.Add(cancellationToken);
+            return new(message.PayloadBase + 1);
+        }
+
+        public static void ConfigurePipeline(TestMessageBase.IPipeline pipeline)
+        {
+            pipeline.ServiceProvider.GetService<Action<TestMessageBase.IPipeline>>()?.Invoke(pipeline);
         }
     }
 

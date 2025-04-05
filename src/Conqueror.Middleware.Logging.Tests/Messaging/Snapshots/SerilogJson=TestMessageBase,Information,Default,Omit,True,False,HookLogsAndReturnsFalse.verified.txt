@@ -1,0 +1,2 @@
+﻿{"@t":"2020-01-01T00:00:00.0000000Z","@m":"PreHook:\"TestMessageSub\",\"test-message-id\",\"test-trace-id\"","@i":"hash","MessageType":"TestMessageSub","MessageId":"test-message-id","TraceId":"test-trace-id","SourceContext":"CustomCategory_TestMessageSub"}
+{"@t":"2020-01-01T00:00:00.0000000Z","@m":"PostHook:\"TestMessageResponse\",\"test-message-id\",\"test-trace-id\"","@i":"hash","ResponseType":"TestMessageResponse","MessageId":"test-message-id","TraceId":"test-trace-id","SourceContext":"CustomCategory_TestMessageSub"}
