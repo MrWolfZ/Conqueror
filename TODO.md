@@ -34,10 +34,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ### Core middleware
 
-- [ ] reimplement logging middleware
-  - [ ] use logging source generator with dynamic log level as seen [here]( https://andrewlock.net/exploring-dotnet-6-part-8-improving-logging-performance-with-source-generators/)
-  - [ ] log real message type in addition to generic type if they differ
-  - [ ] default to payload json serialization and allow customizing serialization logic via configuration
+- [ ] in logging middleware recipe explain how to use payload logging kind
 - [ ] reimplement authorization middleware
   - [ ] principal is set in context in server http transport client
     - [ ] set based on hardcoded string or source file linking instead of common base project

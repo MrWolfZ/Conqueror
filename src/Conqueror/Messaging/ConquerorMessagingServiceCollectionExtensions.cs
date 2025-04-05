@@ -193,6 +193,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
     internal static void AddConquerorMessaging(this IServiceCollection services)
     {
         services.TryAddTransient<IMessageClients, MessageClients>();
+        services.TryAddSingleton<IMessageIdFactory, DefaultMessageIdFactory>();
         services.TryAddSingleton<MessageTransportRegistry>();
         services.TryAddSingleton<IMessageTransportRegistry>(p => p.GetRequiredService<MessageTransportRegistry>());
 
@@ -350,10 +351,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
             static Action<IMessagePipeline<TMessage, TResponse>>? MakeConfiguredPipeline()
             {
-                var methodInfo = typeof(THandler).GetMethod(nameof(IGeneratedMessageHandler<TMessage, TResponse, TPipelineInterface>.ConfigurePipeline),
-                                                            BindingFlags.Public | BindingFlags.Static);
-
-                if (methodInfo == null)
+                if (GetConfigurePipelineMethod<TMessage, TResponse, TPipelineInterface>() is not { } methodInfo)
                 {
                     return null;
                 }
@@ -395,10 +393,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
             static Action<IMessagePipeline<TMessage, UnitMessageResponse>>? MakeConfiguredPipeline()
             {
-                var methodInfo = typeof(THandler).GetMethod(nameof(IGeneratedMessageHandler<TMessage, TPipelineInterface>.ConfigurePipeline),
-                                                            BindingFlags.Public | BindingFlags.Static);
-
-                if (methodInfo == null)
+                if (GetConfigurePipelineMethod<TMessage, UnitMessageResponse, TPipelineInterface>() is not { } methodInfo)
                 {
                     return null;
                 }
@@ -406,6 +401,36 @@ public static class ConquerorMessagingServiceCollectionExtensions
                 var configure = (Action<TPipelineInterface>)Delegate.CreateDelegate(typeof(Action<TPipelineInterface>), methodInfo);
                 return pipeline => configure(new TPipelineAdapter { Wrapped = pipeline });
             }
+        }
+
+        private static MethodInfo? GetConfigurePipelineMethod<TMessage, TResponse, TPipelineInterface>()
+            where TMessage : class, IMessage<TMessage, TResponse>
+            where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
+        {
+            const string configurePipelineName = nameof(IGeneratedMessageHandler<TMessage, TResponse, TPipelineInterface>.ConfigurePipeline);
+
+            var methods = typeof(THandler).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                                          .Where(m => m.Name == configurePipelineName)
+                                          .ToList();
+
+            if (methods.Count == 0)
+            {
+                return null;
+            }
+
+            if (methods.Count > 1)
+            {
+                throw new InvalidOperationException($"handler type '{typeof(THandler)}' implements '{configurePipelineName}' multiple times");
+            }
+
+            var method = methods[0];
+
+            if (method.GetParameters().Length != 1 || method.GetParameters()[0].ParameterType != typeof(TPipelineInterface) || method.ReturnType != typeof(void))
+            {
+                throw new InvalidOperationException($"handler type '{typeof(THandler)}' does not implement the '{configurePipelineName}' method correctly");
+            }
+
+            return method;
         }
     }
 }

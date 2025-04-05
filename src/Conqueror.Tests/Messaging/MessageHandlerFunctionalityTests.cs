@@ -249,7 +249,7 @@ public abstract partial class MessageHandlerFunctionalityTests
 }
 
 [TestFixture]
-public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunctionalityTests
+public sealed partial class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunctionalityTests
 {
     [Test]
     public async Task GivenDisposableHandler_WhenServiceProviderIsDisposed_ThenHandlerIsDisposed()
@@ -270,6 +270,26 @@ public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunc
         await provider.DisposeAsync();
 
         Assert.That(observation.WasDisposed, Is.True);
+    }
+
+    [Test]
+    public async Task GivenHandlerForBaseMessageType_WhenHandlerIsCalledWithMessageSubType_HandlerIsCalledCorrectly()
+    {
+        var observations = new TestObservations();
+
+        var provider = new ServiceCollection().AddMessageHandler<TestMessageBaseHandler>()
+                                              .AddSingleton(observations)
+                                              .BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageClients>()
+                              .For(TestMessageBase.T);
+
+        var message = new TestMessageSub(10, -1);
+
+        var response = await handler.Handle(message);
+
+        Assert.That(observations.Messages, Is.EqualTo(new[] { message }));
+        Assert.That(response, Is.EqualTo(new TestMessageResponse(11)));
     }
 
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
@@ -328,6 +348,30 @@ public sealed class MessageHandlerFunctionalityDefaultTests : MessageHandlerFunc
         }
 
         public void Dispose() => observation.WasDisposed = true;
+    }
+
+    [Message<TestMessageResponse>]
+    private partial record TestMessageBase(int PayloadBase);
+
+    private sealed record TestMessageSub(int PayloadBase, int PayloadSub) : TestMessageBase(PayloadBase);
+
+    private sealed class TestMessageBaseHandler(TestObservations observations, IServiceProvider serviceProvider, Exception? exception = null)
+        : TestMessageBase.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageBase message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+
+            if (exception is not null)
+            {
+                throw exception;
+            }
+
+            observations.Messages.Add(message);
+            observations.CancellationTokens.Add(cancellationToken);
+            observations.ServiceProviders.Add(serviceProvider);
+            return new(message.PayloadBase + 1);
+        }
     }
 
     private sealed class DisposalObservation

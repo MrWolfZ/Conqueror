@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,13 +16,14 @@ internal sealed class MessageHandlerProxy<TMessage, TResponse>(
     public async Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
+        var messageIdFactory = serviceProvider.GetRequiredService<IMessageIdFactory>();
 
         var originalMessageId = conquerorContext.GetMessageId();
 
         // ensure that a message ID is available for the transport client factory
         if (originalMessageId is null)
         {
-            conquerorContext.SetMessageId(ActivitySpanId.CreateRandom().ToString());
+            conquerorContext.SetMessageId(messageIdFactory.GenerateId());
         }
 
         var transportClient = await transportClientFactory.Create(serviceProvider, conquerorContext).ConfigureAwait(false);
@@ -34,7 +34,7 @@ internal sealed class MessageHandlerProxy<TMessage, TResponse>(
         // we were called from within the call context of another handler
         if (originalMessageId is not null && transportType.IsInProcess() && transportRole == MessageTransportRole.Client)
         {
-            conquerorContext.SetMessageId(ActivitySpanId.CreateRandom().ToString());
+            conquerorContext.SetMessageId(messageIdFactory.GenerateId());
         }
 
         var pipeline = new MessagePipeline<TMessage, TResponse>(serviceProvider, conquerorContext, transportType);
