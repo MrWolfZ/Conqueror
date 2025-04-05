@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text.Json.Serialization;
 
 // ReSharper disable once CheckNamespace
@@ -12,7 +14,10 @@ namespace Conqueror;
 /// </summary>
 /// <typeparam name="TMessage">the message type</typeparam>
 /// <typeparam name="TResponse">the response type</typeparam>
-public interface IMessage<TMessage, TResponse>
+public interface IMessage<
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+    TMessage,
+    TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -50,6 +55,9 @@ public interface IMessage<TMessage, TResponse>
     ///     context depending on where it is being used.
     /// </summary>
     static virtual JsonSerializerContext? JsonSerializerContext => null;
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    static virtual IEnumerable<PropertyInfo> PublicProperties => typeof(TMessage).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 }
 
 /// <summary>

@@ -9,7 +9,10 @@ namespace Conqueror;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
 [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty", Justification = "Members are set via code generation")]
-public interface IHttpMessage<TMessage, TResponse> : IHttpMessage, IMessage<TMessage, TResponse>
+public interface IHttpMessage<
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+    TMessage,
+    TResponse> : IHttpMessage, IMessage<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     static virtual string HttpMethod => ConquerorTransportHttpConstants.MethodPost;
@@ -55,7 +58,9 @@ public interface IHttpMessage<TMessage, TResponse> : IHttpMessage, IMessage<TMes
 }
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
-public interface IHttpMessage<TMessage> : IHttpMessage<TMessage, UnitMessageResponse>
+public interface IHttpMessage<
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+    TMessage> : IHttpMessage<TMessage, UnitMessageResponse>
     where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
 {
     static int IHttpMessage<TMessage, UnitMessageResponse>.SuccessStatusCode => 204;

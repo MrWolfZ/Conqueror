@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Conqueror;
 using Conqueror.Transport.Http.Server.AspNetCore;
@@ -55,10 +54,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
 
     private sealed class ControllerRegistrationTypeInjectable : IHttpMessageTypesInjectable<HttpMessageControllerRegistration>
     {
-        public HttpMessageControllerRegistration WithInjectedTypes<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TMessage,
-            TResponse>()
+        public HttpMessageControllerRegistration WithInjectedTypes<TMessage, TResponse>()
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             if (TMessage.EmptyInstance is not null)
@@ -77,10 +73,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
 
     private sealed class ApplicationModelProviderTypeInjectable(IServiceCollection services) : IHttpMessageTypesInjectable<IServiceCollection>
     {
-        public IServiceCollection WithInjectedTypes<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TMessage,
-            TResponse>()
+        public IServiceCollection WithInjectedTypes<TMessage, TResponse>()
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             services.TryAddEnumerable(

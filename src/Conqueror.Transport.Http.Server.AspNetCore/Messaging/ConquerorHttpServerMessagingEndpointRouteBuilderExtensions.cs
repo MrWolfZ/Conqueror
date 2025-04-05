@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Mime;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
@@ -44,10 +42,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
     private sealed class EndpointTypeInjectable(IEndpointRouteBuilder builder) : IHttpMessageTypesInjectable<IEndpointConventionBuilder>
     {
-        public IEndpointConventionBuilder WithInjectedTypes<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TMessage,
-            TResponse>()
+        public IEndpointConventionBuilder WithInjectedTypes<TMessage, TResponse>()
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             return ConfigureRoute<TMessage, TResponse>(
@@ -55,10 +50,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 TMessage.EmptyInstance is null);
         }
 
-        private static async Task Handle<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TMessage,
-            TResponse>(HttpContext context)
+        private static async Task Handle<TMessage, TResponse>(HttpContext context)
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             var message = TMessage.EmptyInstance;
@@ -128,10 +120,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             return (JsonTypeInfo<T>)(serializerContext?.GetTypeInfo(typeof(T)) ?? jsonSerializerOptions.GetTypeInfo(typeof(T)));
         }
 
-        private static IEndpointConventionBuilder ConfigureRoute<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TMessage,
-            TResponse>(IEndpointConventionBuilder builder, bool hasPayload)
+        private static IEndpointConventionBuilder ConfigureRoute<TMessage, TResponse>(IEndpointConventionBuilder builder, bool hasPayload)
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             builder = builder.WithMetadata(typeof(TResponse) == typeof(UnitMessageResponse)
@@ -166,11 +155,9 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             return TMessage.ApiGroupName is null ? builder : builder.WithGroupName(TMessage.ApiGroupName);
 
-            // TODO: code gen
             static IReadOnlyCollection<(string Name, Type Type)> GetQueryParams()
             {
-                var properties = typeof(TMessage).GetProperties(BindingFlags.Instance | BindingFlags.Public);
-                return properties.Select(p => (p.Name, p.PropertyType)).ToArray();
+                return TMessage.PublicProperties.Select(p => (p.Name, p.PropertyType)).ToArray();
             }
         }
     }

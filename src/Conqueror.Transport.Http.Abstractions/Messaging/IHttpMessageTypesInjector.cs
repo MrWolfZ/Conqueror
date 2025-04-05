@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -19,10 +18,7 @@ public interface IHttpMessageTypesInjector : IMessageTypesInjector
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class HttpMessageTypesInjector<
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-    TMessage,
-    TResponse> : IHttpMessageTypesInjector
+public sealed class HttpMessageTypesInjector<TMessage, TResponse> : IHttpMessageTypesInjector
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public static readonly HttpMessageTypesInjector<TMessage, TResponse> Default = new();
@@ -41,9 +37,6 @@ public sealed class HttpMessageTypesInjector<
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IHttpMessageTypesInjectable<out TResult>
 {
-    TResult WithInjectedTypes<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>()
+    TResult WithInjectedTypes<TMessage, TResponse>()
         where TMessage : class, IHttpMessage<TMessage, TResponse>;
 }

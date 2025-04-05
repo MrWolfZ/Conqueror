@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -30,10 +29,7 @@ internal sealed class HttpMessageEndpointReflectionControllerFeatureProvider(IMe
 
     private sealed class ControllerTypeInjectable : IHttpMessageTypesInjectable<TypeInfo>
     {
-        public TypeInfo WithInjectedTypes<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TMessage,
-            TResponse>()
+        public TypeInfo WithInjectedTypes<TMessage, TResponse>()
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
             return (TMessage.EmptyInstance, typeof(TResponse) == typeof(UnitMessageResponse), TMessage.HttpMethod) switch
