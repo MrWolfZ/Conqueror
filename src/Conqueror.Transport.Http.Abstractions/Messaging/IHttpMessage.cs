@@ -44,7 +44,7 @@ public interface IHttpMessage<TMessage, TResponse> : IHttpMessage, IMessage<TMes
     /// </summary>
     static virtual string? ApiGroupName { get; }
 
-    static virtual JsonSerializerContext? JsonSerializerContext => null;
+    static virtual JsonSerializerContext? HttpJsonSerializerContext => TMessage.JsonSerializerContext;
 
     static virtual IHttpMessageSerializer<TMessage, TResponse>? HttpMessageSerializer => null;
 

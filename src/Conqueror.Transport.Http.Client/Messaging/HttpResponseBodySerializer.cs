@@ -33,7 +33,7 @@ internal sealed class HttpResponseBodySerializer<TMessage, TResponse>
             return (TResponse)(object)new UnitMessageResponse();
         }
 
-        var jsonTypeInfo = (JsonTypeInfo<TResponse>?)TMessage.JsonSerializerContext?.GetTypeInfo(typeof(TResponse));
+        var jsonTypeInfo = (JsonTypeInfo<TResponse>?)TMessage.HttpJsonSerializerContext?.GetTypeInfo(typeof(TResponse));
 
         if (jsonTypeInfo == null)
         {

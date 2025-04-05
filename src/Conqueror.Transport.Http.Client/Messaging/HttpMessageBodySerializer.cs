@@ -23,7 +23,7 @@ internal sealed class HttpMessageBodySerializer<TMessage, TResponse>
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "we are returning the content, and it is disposed at the call site")]
     public Task<(HttpContent? Content, string? Path, string? QueryString)> Serialize(IServiceProvider serviceProvider, TMessage message, CancellationToken cancellationToken)
     {
-        var jsonTypeInfo = (JsonTypeInfo<TMessage>?)TMessage.JsonSerializerContext?.GetTypeInfo(typeof(TMessage));
+        var jsonTypeInfo = (JsonTypeInfo<TMessage>?)TMessage.HttpJsonSerializerContext?.GetTypeInfo(typeof(TMessage));
 
         if (jsonTypeInfo == null)
         {

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -37,6 +38,18 @@ public interface IMessage<TMessage, TResponse>
     ///     does not have any properties.
     /// </summary>
     static abstract TMessage? EmptyInstance { get; }
+
+    /// <summary>
+    ///     The <see cref="System.Text.Json.Serialization.JsonSerializerContext" />
+    ///     to use by default for any operation that needs to JSON-serialize or
+    ///     deserialize a message of type <see cref="TMessage" /> or a response of
+    ///     type <see cref="TResponse" />.<br />
+    ///     <br />
+    ///     When this is <c>null</c> and dynamic code generation is enabled (i.e.
+    ///     the app is not running with AOT) then the serialization will use a default
+    ///     context depending on where it is being used.
+    /// </summary>
+    static virtual JsonSerializerContext? JsonSerializerContext => null;
 }
 
 /// <summary>

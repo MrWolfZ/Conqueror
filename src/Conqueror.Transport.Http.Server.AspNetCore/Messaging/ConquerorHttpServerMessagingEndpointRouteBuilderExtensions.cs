@@ -82,7 +82,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
             }
             else
             {
-                var jsonTypeInfo = GetJsonTypeInfo<TMessage>(context, TMessage.JsonSerializerContext);
+                var jsonTypeInfo = GetJsonTypeInfo<TMessage>(context, TMessage.HttpJsonSerializerContext);
                 message = await context.Request.ReadFromJsonAsync(jsonTypeInfo).ConfigureAwait(false);
             }
 
@@ -114,7 +114,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 return;
             }
 
-            var jsonTypeInfo = GetJsonTypeInfo<TResponse>(context, TMessage.JsonSerializerContext);
+            var jsonTypeInfo = GetJsonTypeInfo<TResponse>(context, TMessage.HttpJsonSerializerContext);
             await context.Response.WriteAsJsonAsync(response, jsonTypeInfo).ConfigureAwait(false);
         }
 
