@@ -12,6 +12,10 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] in development environment, add problem details body to auth failures
 - [ ] throw on empty context data key
 
+## Build
+
+- [ ] run separate matrix steps for different dotnet versions and ensure that all code works if running against only dotnet 8
+
 ## CQS
 
 - [ ] add `.Has()` method to pipelines

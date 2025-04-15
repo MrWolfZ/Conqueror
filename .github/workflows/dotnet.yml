@@ -1,10 +1,19 @@
-name: Build .NET
+name: Build and test .NET
 
 on:
   push:
-    branches: ['main']
+    branches:
+      - main
+
   pull_request:
-    branches: ['main']
+    branches:
+      - main
+
+  workflow_dispatch: {}
+
+env:
+  DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: 'true'
+  TERM: xterm
 
 jobs:
   build:
@@ -14,7 +23,9 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -22,9 +33,61 @@ jobs:
             8
             9
           dotnet-quality: ga
+
       - name: Restore dependencies
         run: dotnet restore Conqueror.sln
+
       - name: Build
-        run: dotnet build Conqueror.sln --no-restore
-      - name: Test
-        run: dotnet test Conqueror.sln --no-build --verbosity normal
+        run: dotnet build Conqueror.sln --no-restore --configuration Release
+
+  get-test-projects:
+    runs-on: ubuntu-latest
+    outputs:
+      project-list: ${{ steps.set-test-projects.outputs.project-list }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Find all .Tests projects
+        id: set-test-projects
+        run: |
+          projects=""
+          projects+="$(find src -name "*.Tests.csproj")"$'\n'
+          projects+="$(find recipes -path "*/.completed/*" -name "*.Tests.csproj")"$'\n'
+          projects+="$(find examples -name "*.Tests.csproj")"
+          echo "projects:"
+          echo $projects
+          projectList="[$(echo "$projects" | sed 's/\(.*\)/"\1"/' | tr '\n' ',')]"
+          echo "project-list=$projectList"
+          echo "project-list=$projectList" >> "$GITHUB_OUTPUT"
+
+  run-tests:
+    runs-on: ubuntu-latest
+    needs: get-test-projects
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.get-test-projects.outputs.project-list) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            8
+            9
+          dotnet-quality: ga
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ matrix.project }}
+
+      - name: Build
+        run: dotnet build ${{ matrix.project }} --no-restore
+
+      - name: Run tests
+        run: dotnet test ${{ matrix.project }} --no-restore --no-build --verbosity normal
