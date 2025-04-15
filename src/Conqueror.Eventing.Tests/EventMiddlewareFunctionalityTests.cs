@@ -163,10 +163,10 @@ public sealed class EventMiddlewareFunctionalityTests
                          {
                              await Task.Yield();
                              var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateEventMiddleware<TestEvent>));
-                             observations.EventsFromMiddlewares.Add(ctx.Event);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+                             observations.MiddlewareTypes.Enqueue(typeof(DelegateEventMiddleware<TestEvent>));
+                             observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+                             observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
                              await ctx.Next(ctx.Event, ctx.CancellationToken);
                          }),
@@ -185,10 +185,10 @@ public sealed class EventMiddlewareFunctionalityTests
                          {
                              await Task.Yield();
                              var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateEventMiddleware<TestEvent>));
-                             observations.EventsFromMiddlewares.Add(ctx.Event);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+                             observations.MiddlewareTypes.Enqueue(typeof(DelegateEventMiddleware<TestEvent>));
+                             observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+                             observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
                              await ctx.Next(ctx.Event, ctx.CancellationToken);
                          }),
@@ -203,10 +203,10 @@ public sealed class EventMiddlewareFunctionalityTests
                          {
                              await Task.Yield();
                              var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateEventMiddleware<TestEvent>));
-                             observations.EventsFromMiddlewares.Add(ctx.Event);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+                             observations.MiddlewareTypes.Enqueue(typeof(DelegateEventMiddleware<TestEvent>));
+                             observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+                             observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
                              await ctx.Next(ctx.Event, ctx.CancellationToken);
                          }),
@@ -215,10 +215,10 @@ public sealed class EventMiddlewareFunctionalityTests
                          {
                              await Task.Yield();
                              var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateEventMiddleware<TestEvent>));
-                             observations.EventsFromMiddlewares.Add(ctx.Event);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+                             observations.MiddlewareTypes.Enqueue(typeof(DelegateEventMiddleware<TestEvent>));
+                             observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+                             observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
                              await ctx.Next(ctx.Event, ctx.CancellationToken);
                          }),
@@ -293,10 +293,10 @@ public sealed class EventMiddlewareFunctionalityTests
                          {
                              await Task.Yield();
                              var observations = ctx.ServiceProvider.GetRequiredService<TestObservations>();
-                             observations.MiddlewareTypes.Add(typeof(DelegateEventMiddleware<TestEvent>));
-                             observations.EventsFromMiddlewares.Add(ctx.Event);
-                             observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-                             observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+                             observations.MiddlewareTypes.Enqueue(typeof(DelegateEventMiddleware<TestEvent>));
+                             observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+                             observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+                             observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
                              await ctx.Next(ctx.Event, ctx.CancellationToken);
                          }).Use(new TestEventMiddleware<TestEvent>(p.ServiceProvider.GetRequiredService<TestObservations>())),
@@ -1398,10 +1398,10 @@ public sealed class EventMiddlewareFunctionalityTests
         public async Task Execute(EventMiddlewareContext<TEvent> ctx)
         {
             await Task.Yield();
-            observations.MiddlewareTypes.Add(GetType());
-            observations.EventsFromMiddlewares.Add(ctx.Event);
-            observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+            observations.MiddlewareTypes.Enqueue(GetType());
+            observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+            observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
             await ctx.Next(ctx.Event, ctx.CancellationToken);
         }
@@ -1413,10 +1413,10 @@ public sealed class EventMiddlewareFunctionalityTests
         public async Task Execute(EventMiddlewareContext<TEvent> ctx)
         {
             await Task.Yield();
-            observations.MiddlewareTypes.Add(GetType());
-            observations.EventsFromMiddlewares.Add(ctx.Event);
-            observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+            observations.MiddlewareTypes.Enqueue(GetType());
+            observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+            observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
             await ctx.Next(ctx.Event, ctx.CancellationToken);
         }
@@ -1428,10 +1428,10 @@ public sealed class EventMiddlewareFunctionalityTests
         public async Task Execute(EventMiddlewareContext<TEvent> ctx)
         {
             await Task.Yield();
-            observations.MiddlewareTypes.Add(GetType());
-            observations.EventsFromMiddlewares.Add(ctx.Event);
-            observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+            observations.MiddlewareTypes.Enqueue(GetType());
+            observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+            observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
             await ctx.Next(ctx.Event, ctx.CancellationToken);
             await ctx.Next(ctx.Event, ctx.CancellationToken);
@@ -1444,10 +1444,10 @@ public sealed class EventMiddlewareFunctionalityTests
         public async Task Execute(EventMiddlewareContext<TEvent> ctx)
         {
             await Task.Yield();
-            observations.MiddlewareTypes.Add(GetType());
-            observations.EventsFromMiddlewares.Add(ctx.Event);
-            observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+            observations.MiddlewareTypes.Enqueue(GetType());
+            observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+            observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
             var evt = ctx.Event;
 
@@ -1466,10 +1466,10 @@ public sealed class EventMiddlewareFunctionalityTests
         public async Task Execute(EventMiddlewareContext<TEvent> ctx)
         {
             await Task.Yield();
-            observations.MiddlewareTypes.Add(GetType());
-            observations.EventsFromMiddlewares.Add(ctx.Event);
-            observations.CancellationTokensFromMiddlewares.Add(ctx.CancellationToken);
-            observations.TransportTypesFromMiddlewares.Add(ctx.TransportType);
+            observations.MiddlewareTypes.Enqueue(GetType());
+            observations.EventsFromMiddlewares.Enqueue(ctx.Event);
+            observations.CancellationTokensFromMiddlewares.Enqueue(ctx.CancellationToken);
+            observations.TransportTypesFromMiddlewares.Enqueue(ctx.TransportType);
 
             var evt = ctx.Event;
 
@@ -1544,19 +1544,19 @@ public sealed class EventMiddlewareFunctionalityTests
 
     private sealed class TestObservations
     {
-        public List<Type> MiddlewareTypes { get; } = [];
+        public ConcurrentQueue<Type> MiddlewareTypes { get; } = [];
 
         public List<object> EventsFromObservers { get; } = [];
 
-        public List<object> EventsFromMiddlewares { get; } = [];
+        public ConcurrentQueue<object> EventsFromMiddlewares { get; } = [];
 
         public List<CancellationToken> CancellationTokensFromObservers { get; } = [];
 
-        public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
+        public ConcurrentQueue<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
 
         public List<EventTransportType> TransportTypesFromPipelineBuilders { get; } = [];
 
-        public List<EventTransportType> TransportTypesFromMiddlewares { get; } = [];
+        public ConcurrentQueue<EventTransportType> TransportTypesFromMiddlewares { get; } = [];
 
         public List<object> ObserverInstances { get; } = [];
 
