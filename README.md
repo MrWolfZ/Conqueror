@@ -2,7 +2,7 @@
 
 # Conqueror - for building scalable & maintainable .NET applications
 
-> ATTENTION: This project is currently still undergoing active development and contrary to what some of this README says, everything in here is still subject to change. Therefore please do not yet use this project for any production application.
+> ATTENTION: This project is currently undergoing an extensive API redesign that includes replacing **CQS** with a more generic **Messaging** module, reducing the number of libraries by unifying **Messaging**, **Eventing** and **Streaming** modules into a single set of libraries, using source generators instead of reflection for AOT compatibility, moving the configuration of transports to the call site for more obvious code and easier debuggability, and more (see branch [feature/messaging-lib](https://github.com/MrWolfZ/Conqueror/tree/feature/messaging-lib)). Therefore, contrary to what some of this README says, everything in here is still subject to change. Therefore please do not yet use this project for any production application.
 
 **Conqueror** is a set of libraries that helps you build .NET applications in a structured way, using patterns like [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as middlewares), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), and [data streams](https://en.wikipedia.org/wiki/Data_stream).
 
