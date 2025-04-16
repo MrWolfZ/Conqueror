@@ -188,7 +188,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         [Test]
         public void GivenServiceCollectionWithDuplicateMessageName_WhenStartingHost_ThrowsInvalidOperationException()
         {
-            Assert.That(() => TestHost.Create(
+            Assert.That(() => HttpTransportTestHost.Create(
                             services =>
                             {
                                 _ = services.AddControllers().AddMessageControllers();
@@ -202,7 +202,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         [Test]
         public void GivenServiceCollectionWithDuplicateMessageNameFromExplicitControllerRegistration_WhenStartingHost_ThrowsInvalidOperationException()
         {
-            Assert.That(() => TestHost.Create(
+            Assert.That(() => HttpTransportTestHost.Create(
                             services =>
                             {
                                 _ = services.AddControllers()
@@ -215,7 +215,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         [Test]
         public void GivenServiceCollectionWithDuplicateMessageNameFromDelegate_WhenStartingHost_ThrowsInvalidOperationException()
         {
-            Assert.That(() => TestHost.Create(
+            Assert.That(() => HttpTransportTestHost.Create(
                             services =>
                             {
                                 _ = services.AddControllers().AddMessageControllers();
@@ -230,7 +230,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         [Test]
         public void GivenServiceCollectionWithDuplicateMessagePathFromConfig_WhenStartingHost_ThrowsInvalidOperationException()
         {
-            Assert.That(() => TestHost.Create(
+            Assert.That(() => HttpTransportTestHost.Create(
                             services =>
                             {
                                 _ = services.AddControllers().AddMessageControllers();

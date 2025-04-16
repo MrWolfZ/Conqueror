@@ -18,7 +18,7 @@ public sealed partial class MessageTypeGenerationTests
     [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "the closure is evaluated before disposal")]
     public async Task GivenMessageTypeWithExplicitImplementations_WhenUsingHandler_ItWorks()
     {
-        await using var host = await TestHost.Create(
+        await using var host = await HttpTransportTestHost.Create(
             services =>
             {
                 _ = services.AddMvc().AddMessageControllers();

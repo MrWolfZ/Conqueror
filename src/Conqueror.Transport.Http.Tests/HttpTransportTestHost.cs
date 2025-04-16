@@ -9,9 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Conqueror.Transport.Http.Tests;
 
-internal sealed class TestHost : IAsyncDisposable
+internal sealed class HttpTransportTestHost : IAsyncDisposable
 {
-    private TestHost()
+    private HttpTransportTestHost()
     {
     }
 
@@ -24,7 +24,7 @@ internal sealed class TestHost : IAsyncDisposable
 
     private CancellationTokenSource TimeoutCancellationTokenSource { get; } = new();
 
-    public static async Task<TestHost> Create(
+    public static async Task<HttpTransportTestHost> Create(
         Action<IServiceCollection>? configureServices = null,
         Action<IApplicationBuilder>? configure = null,
         TimeSpan? testTimeout = null)
@@ -46,7 +46,7 @@ internal sealed class TestHost : IAsyncDisposable
         var host = await hostBuilder.StartAsync();
         var client = host.GetTestClient();
 
-        var testHost = new TestHost
+        var testHost = new HttpTransportTestHost
         {
             HttpClient = client,
             Host = host,
