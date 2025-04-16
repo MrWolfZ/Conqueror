@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text;
 using Conqueror.SourceGenerators.Util;
 
-namespace Conqueror.SourceGenerators.Messaging.Transport.Http;
+namespace Conqueror.Transport.Http.SourceGenerators.Messaging;
 
 [SuppressMessage("Style", "IDE0058:Expression value is never used", Justification = "this is common for working with string builders")]
 public static class HttpMessageAbstractionsGenerationHelper

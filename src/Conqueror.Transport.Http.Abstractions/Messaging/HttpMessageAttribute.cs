@@ -1,4 +1,5 @@
 using System;
+using Conqueror.Messaging;
 
 #pragma warning disable CA1813 // Avoid unsealed attributes; we don't want to have to repeat all properties for the generic attribute
 
@@ -6,7 +7,7 @@ using System;
 namespace Conqueror;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public class HttpMessageAttribute : Attribute
+public class HttpMessageAttribute : ConquerorMessageTransportAttribute
 {
     public string? HttpMethod { get; set; }
 

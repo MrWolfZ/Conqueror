@@ -1,15 +1,14 @@
 ﻿using System.Reflection;
-using Conqueror.SourceGenerators.Messaging;
-using Conqueror.SourceGenerators.Messaging.Transport.Http;
 using Conqueror.SourceGenerators.TestUtil;
+using Conqueror.Transport.Http.SourceGenerators.Messaging;
 using Microsoft.CodeAnalysis;
 
-namespace Conqueror.SourceGenerators.Tests.Messaging.Transport.Http;
+namespace Conqueror.Transport.Http.SourceGenerators.Tests.Messaging;
 
 [TestFixture]
 public sealed class HttpMessageAbstractionsGeneratorTests
 {
-    private readonly IReadOnlyCollection<IIncrementalGenerator> generators = [new MessageAbstractionsGenerator(), new HttpMessageAbstractionsGenerator()];
+    private readonly IReadOnlyCollection<IIncrementalGenerator> generators = [new HttpMessageAbstractionsGenerator()];
     private readonly IReadOnlyCollection<Assembly> assembliesToLoad = [typeof(UnitMessageResponse).Assembly, typeof(IHttpMessage).Assembly];
 
     [Test]
@@ -17,8 +16,7 @@ public sealed class HttpMessageAbstractionsGeneratorTests
     {
         const string input = @"using Conqueror;
 
-[HttpMessage]
-[Message<TestMessageResponse>]
+[HttpMessage<TestMessageResponse>]
 public partial record TestMessage
 {
     public required int Payload { get; init; }
@@ -39,8 +37,7 @@ public record TestMessageResponse(int Payload);";
 
 namespace Generator.Tests;
 
-[HttpMessage]
-[Message<TestMessageResponse>]
+[HttpMessage<TestMessageResponse>]
 public partial record TestMessage
 {
     public required int Payload { get; init; }
@@ -63,8 +60,7 @@ namespace Generator.Tests;
 
 public sealed partial class Container
 {
-    [HttpMessage]
-    [Message<TestMessageResponse>]
+    [HttpMessage<TestMessageResponse>]
     public partial record TestMessage
     {
         public required int Payload { get; init; }
@@ -89,7 +85,6 @@ namespace Generator.Tests;
 public sealed partial class Container
 {
     [HttpMessage]
-    [Message]
     public partial record TestMessageWithoutResponse
     {
         public required int Payload { get; init; }
@@ -112,8 +107,7 @@ namespace Generator.Tests;
 
 public sealed partial class Container
 {
-    [HttpMessage]
-    [Message<TestMessageResponse>]
+    [HttpMessage<TestMessageResponse>]
     public partial record TestMessage(int Payload) : IHttpMessage<TestMessage, TestMessageResponse>
     {
         public interface IHandler;
@@ -152,8 +146,7 @@ public sealed partial class Container
 
 namespace Generator.Tests;
 
-[HttpMessage(HttpMethod = ""DELETE"")]
-[Message<TestMessageResponse>]
+[HttpMessage<TestMessageResponse>(HttpMethod = ""DELETE"")]
 public partial record TestMessage
 {
     public required int Payload { get; init; }
@@ -174,8 +167,7 @@ public record TestMessageResponse(int Payload);";
 
 namespace Generator.Tests;
 
-[HttpMessage(HttpMethod = ""GET"")]
-[Message<TestMessageResponse>]
+[HttpMessage<TestMessageResponse>(HttpMethod = ""GET"")]
 public partial record TestMessage
 {
     public required int Payload { get; init; }
@@ -196,8 +188,7 @@ public record TestMessageResponse(int Payload);";
 
 namespace Generator.Tests;
 
-[HttpMessage(Path = ""/customPath"")]
-[Message<TestMessageResponse>]
+[HttpMessage<TestMessageResponse>(Path = ""/customPath"")]
 public partial record TestMessage
 {
     public required int Payload { get; init; }
@@ -218,8 +209,7 @@ public record TestMessageResponse(int Payload);";
 
 namespace Generator.Tests;
 
-[HttpMessage]
-[Message<TestMessageResponse>]
+[HttpMessage<TestMessageResponse>]
 public partial record TestMessageWithoutPayload;
 
 public record TestMessageResponse(int Payload);";
@@ -238,7 +228,6 @@ public record TestMessageResponse(int Payload);";
 namespace Generator.Tests;
 
 [HttpMessage]
-[Message]
 public partial record TestMessageWithoutPayload;";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
@@ -255,8 +244,7 @@ using System.Collections.Generic;
 
 namespace Generator.Tests;
 
-[HttpMessage]
-[Message<TestMessageResponse>]
+[HttpMessage<TestMessageResponse>]
 public partial record TestMessage
 {
     public required int IntProp { get; init; }
@@ -276,19 +264,57 @@ public record TestMessageResponse(int Payload);";
     [Test]
     public Task GivenTestMessageWithAttributeTypeAlias_WhenRunningGenerator_GeneratesCorrectTypes()
     {
-        const string input = @"using Conqueror;
-using CustomHttpMessageAttribute = Conqueror.HttpMessageAttribute;
+        const string input = @"using CustomHttpMessageAttribute = Conqueror.HttpMessageAttribute;
 
 namespace Generator.Tests;
 
 [CustomHttpMessageAttribute]
+public partial record TestMessage
+{
+    public required int Payload { get; init; }
+}";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenTestMessageWithHttpAndCoreAttribute_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+
+namespace Generator.Tests;
+
 [Message<TestMessageResponse>]
+[HttpMessage<TestMessageResponse>]
 public partial record TestMessage
 {
     public required int Payload { get; init; }
 }
 
 public record TestMessageResponse(int Payload);";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenTestMessageWithoutResponseWithHttpAndCoreAttribute_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+
+namespace Generator.Tests;
+
+[Message]
+[HttpMessage]
+public partial record TestMessage
+{
+    public required int Payload { get; init; }
+}";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 

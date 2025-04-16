@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 
@@ -27,12 +28,6 @@ public static class MessageAbstractionsGeneratorUtil
                                                                      string fullyQualifiedMetadataName,
                                                                      CancellationToken ct)
     {
-        // TODO: remove this once the proper deduplication logic exists
-        if (!fullyQualifiedMetadataName.StartsWith("Conqueror.MessageAttribute"))
-        {
-            return null;
-        }
-
         if (context.TargetSymbol is not INamedTypeSymbol messageTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
@@ -46,35 +41,44 @@ public static class MessageAbstractionsGeneratorUtil
             return null;
         }
 
-        INamedTypeSymbol? responseTypeSymbol = null;
+        // TODO: error if multiple attributes with conflicting response types are found
 
-        foreach (var attributeData in messageTypeSymbol.GetAttributes())
+        // find all marker attributes on the type and select the one with the lowest alphabetical
+        // order to be the one that should be processed
+        var attributeClassToProcess = messageTypeSymbol.GetAttributes()
+                                                       .Where(a => IsMarkerAttribute(a.AttributeClass))
+                                                       .Select(a => a.AttributeClass)
+                                                       .OfType<INamedTypeSymbol>()
+                                                       .OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+                                                       .FirstOrDefault();
+
+        static bool IsMarkerAttribute(INamedTypeSymbol? attributeSymbol)
         {
-            // TODO: find all attributes that inherit from the common base attribute and only
-            // process this when the lowest present ID alphabetically is equal to the ID that
-            // was passed in
-
-            // TODO: allow for transport attributes as well
-            // TODO: error if multiple attributes with conflicting response types are found
-            if (attributeData.AttributeClass is { Name: "MessageAttribute" } c
-                && c.ContainingAssembly.Name == "Conqueror.Abstractions")
+            while (attributeSymbol?.BaseType is { } baseType)
             {
-                if (c.TypeArguments.Length > 0)
+                if (baseType.ToString() == "Conqueror.Messaging.ConquerorMessageTransportAttribute")
                 {
-                    responseTypeSymbol = c.TypeArguments[0] as INamedTypeSymbol;
+                    return true;
                 }
 
-                continue;
+                attributeSymbol = baseType;
             }
 
-            if (attributeData.AttributeClass is { Name: "HttpMessageAttribute" } c2
-                && c2.ContainingAssembly.Name == "Conqueror.Transport.Http.Abstractions")
-            {
-                continue;
-            }
+            return false;
+        }
 
-            // if no attribute matches, we skip this type
+        // only process the attribute if it is the one with the lowest alphabetical order
+        var attributeClassToProcessFullyQualifiedMetadataName = $"{attributeClassToProcess?.ContainingNamespace}.{attributeClassToProcess?.MetadataName}";
+        if (fullyQualifiedMetadataName != attributeClassToProcessFullyQualifiedMetadataName)
+        {
             return null;
+        }
+
+        INamedTypeSymbol? responseTypeSymbol = null;
+
+        if (attributeClassToProcess?.TypeArguments.Length > 0)
+        {
+            responseTypeSymbol = attributeClassToProcess.TypeArguments[0] as INamedTypeSymbol;
         }
 
         ct.ThrowIfCancellationRequested();

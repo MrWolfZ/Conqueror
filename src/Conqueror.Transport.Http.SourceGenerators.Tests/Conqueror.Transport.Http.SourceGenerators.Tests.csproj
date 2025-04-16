@@ -3,19 +3,15 @@
     <Import Project="../.targets/test.targets" />
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
         <ProjectReference Include="..\Conqueror.SourceGenerators.TestUtil\Conqueror.SourceGenerators.TestUtil.csproj" />
-        <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" />
+        <ProjectReference Include="..\Conqueror.Transport.Http.Abstractions\Conqueror.Transport.Http.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror.Transport.Http.SourceGenerators\Conqueror.Transport.Http.SourceGenerators.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Update="NUnit" Version="4.3.2" />
         <PackageReference Include="Verify.NUnit" Version="28.14.1" />
         <PackageReference Include="Verify.SourceGenerators" Version="2.5.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Messaging\Snapshots\" />
     </ItemGroup>
 
 </Project>

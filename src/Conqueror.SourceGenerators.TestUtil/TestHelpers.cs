@@ -31,8 +31,7 @@ public static partial class TestHelpers
     {
         var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, opts);
 
-        // exclude generated static attribute files from the output
-        var output = trees.Select(t => t.ToString()).LastOrDefault() ?? string.Empty;
+        var output = string.Join("\n", trees.Select(t => $"{t.FilePath}:\n{t}"));
         return (diagnostics, output);
     }
 
