@@ -16,7 +16,7 @@ public sealed class MessagingServerApiDescriptionTests
         where TMessage : class, IHttpMessage<TMessage, TResponse>
         where THandler : class, IGeneratedMessageHandler
     {
-        await using var host = await TestHost.Create(
+        await using var host = await HttpTransportTestHost.Create(
             services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
             app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
 

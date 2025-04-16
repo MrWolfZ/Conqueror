@@ -120,10 +120,10 @@ public sealed class MessagingClientExecutionTests
         }
     }
 
-    private Task<TestHost> CreateTestHost(Action<IServiceCollection> configureServices,
+    private Task<HttpTransportTestHost> CreateTestHost(Action<IServiceCollection> configureServices,
                                           Action<IApplicationBuilder> configure)
     {
-        return TestHost.Create(
+        return HttpTransportTestHost.Create(
             services =>
             {
                 _ = services.AddSingleton<FnToCallFromHandler>(_ =>

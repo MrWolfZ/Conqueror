@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Logging;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Client;
@@ -177,10 +178,10 @@ public sealed class MessagingClientContextTests : IDisposable
                };
     }
 
-    private Task<TestHost> CreateTestHost(Action<IServiceCollection> configureServices,
+    private Task<HttpTransportTestHost> CreateTestHost(Action<IServiceCollection> configureServices,
                                           Action<IApplicationBuilder> configure)
     {
-        return TestHost.Create(
+        return HttpTransportTestHost.Create(
             services =>
             {
                 _ = services.AddSingleton<FnToCallFromHandler>(p =>
@@ -193,6 +194,10 @@ public sealed class MessagingClientContextTests : IDisposable
                 });
 
                 configureServices(services);
+
+                // we generate a lot of test cases, which would produce a lot of meaningless logs that cause
+                // a lot of churn on the disk as well as the CI infra, so we increase the minimal log level
+                _ = services.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Information));
             },
             app =>
             {

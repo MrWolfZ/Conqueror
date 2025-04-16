@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using static Conqueror.ConquerorTransportHttpConstants;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
@@ -323,10 +324,10 @@ public sealed partial class MessagingServerContextTests
         }
     }
 
-    private Task<TestHost> CreateTestHost(Action<IServiceCollection> configureServices,
+    private Task<HttpTransportTestHost> CreateTestHost(Action<IServiceCollection> configureServices,
                                           Action<IApplicationBuilder> configure)
     {
-        return TestHost.Create(
+        return HttpTransportTestHost.Create(
             services =>
             {
                 _ = services.AddSingleton<FnToCallFromHandler>(p =>
@@ -336,6 +337,10 @@ public sealed partial class MessagingServerContextTests
                 });
 
                 configureServices(services);
+
+                // we generate a lot of test cases, which would produce a lot of meaningless logs that cause
+                // a lot of churn on the disk as well as the CI infra, so we increase the minimal log level
+                _ = services.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Information));
             },
             app =>
             {
