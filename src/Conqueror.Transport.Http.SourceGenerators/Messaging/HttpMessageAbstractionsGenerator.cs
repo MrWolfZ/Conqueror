@@ -54,7 +54,7 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
                     responseTypeSymbol = c.TypeArguments[0] as INamedTypeSymbol;
                 }
 
-                return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol);
+                return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol, attributeData);
             }
         }
 
@@ -63,7 +63,8 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
     }
 
     private static HttpMessageTypesDescriptor GenerateTypeDescriptor(INamedTypeSymbol messageTypeSymbol,
-                                                                     INamedTypeSymbol? responseTypeSymbol)
+                                                                     INamedTypeSymbol? responseTypeSymbol,
+                                                                     AttributeData attributeData)
     {
         string? httpMethod = null;
         string? pathPrefix = null;
@@ -74,63 +75,54 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
         string? name = null;
         string? apiGroupName = null;
 
-        foreach (var attributeData in messageTypeSymbol.GetAttributes())
+        // explicit loop instead of dictionary for performance
+        foreach (var namedArgument in attributeData.NamedArguments)
         {
-            if (attributeData.AttributeClass?.Name != "HttpMessageAttribute" ||
-                attributeData.AttributeClass.ToDisplayString() != "Conqueror.HttpMessageAttribute")
+            if (namedArgument.Key == "HttpMethod" && namedArgument.Value.Value?.ToString() is { } m)
             {
+                httpMethod = m;
                 continue;
             }
 
-            // explicit loop instead of dictionary for performance
-            foreach (var namedArgument in attributeData.NamedArguments)
+            if (namedArgument.Key == "PathPrefix" && namedArgument.Value.Value?.ToString() is { } prefix)
             {
-                if (namedArgument.Key == "HttpMethod" && namedArgument.Value.Value?.ToString() is { } m)
-                {
-                    httpMethod = m;
-                    continue;
-                }
+                pathPrefix = prefix;
+                continue;
+            }
 
-                if (namedArgument.Key == "PathPrefix" && namedArgument.Value.Value?.ToString() is { } prefix)
-                {
-                    pathPrefix = prefix;
-                    continue;
-                }
+            if (namedArgument.Key == "Path" && namedArgument.Value.Value?.ToString() is { } p)
+            {
+                path = p;
+                continue;
+            }
 
-                if (namedArgument.Key == "Path" && namedArgument.Value.Value?.ToString() is { } p)
-                {
-                    path = p;
-                    continue;
-                }
+            if (namedArgument.Key == "FullPath" && namedArgument.Value.Value?.ToString() is { } fp)
+            {
+                fullPath = fp;
+                continue;
+            }
 
-                if (namedArgument.Key == "FullPath" && namedArgument.Value.Value?.ToString() is { } fp)
-                {
-                    fullPath = fp;
-                    continue;
-                }
+            if (namedArgument.Key == "Version" && namedArgument.Value.Value?.ToString() is { } v)
+            {
+                version = v;
+                continue;
+            }
 
-                if (namedArgument.Key == "Version" && namedArgument.Value.Value?.ToString() is { } v)
-                {
-                    version = v;
-                    continue;
-                }
+            if (namedArgument is { Key: "SuccessStatusCode", Value.Value: int code })
+            {
+                successStatusCode = code;
+                continue;
+            }
 
-                if (namedArgument is { Key: "SuccessStatusCode", Value.Value: int code })
-                {
-                    successStatusCode = code;
-                    continue;
-                }
+            if (namedArgument.Key == "Name" && namedArgument.Value.Value?.ToString() is { } n)
+            {
+                name = n;
+                continue;
+            }
 
-                if (namedArgument.Key == "Name" && namedArgument.Value.Value?.ToString() is { } n)
-                {
-                    name = n;
-                    continue;
-                }
-
-                if (namedArgument.Key == "ApiGroupName" && namedArgument.Value.Value?.ToString() is { } groupName)
-                {
-                    apiGroupName = groupName;
-                }
+            if (namedArgument.Key == "ApiGroupName" && namedArgument.Value.Value?.ToString() is { } groupName)
+            {
+                apiGroupName = groupName;
             }
         }
 

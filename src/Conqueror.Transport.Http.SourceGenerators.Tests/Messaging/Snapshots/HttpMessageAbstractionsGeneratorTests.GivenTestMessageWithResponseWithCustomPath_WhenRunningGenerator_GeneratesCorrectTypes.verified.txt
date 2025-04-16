@@ -64,6 +64,8 @@ namespace Generator.Tests
     /// </summary>
     partial record TestMessage : IHttpMessage<TestMessage, TestMessageResponse>
     {
+        public static string Path { get; } = "/customPath";
+
         static global::Conqueror.IHttpMessageTypesInjector global::Conqueror.IHttpMessage.HttpMessageTypesInjector
             => global::Conqueror.HttpMessageTypesInjector<TestMessage, TestMessageResponse>.Default;
     }
