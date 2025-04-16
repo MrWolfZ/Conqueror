@@ -64,7 +64,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             if (TMessage.HttpMessageSerializer is { } ms)
             {
-                var query = context.Request.Query.ToDictionary(p => p.Key, IReadOnlyList<string?> (p) => p.Value.AsReadOnly());
+                var query = context.Request.Query.ToDictionary(p => p.Key, p => (IReadOnlyList<string?>)p.Value);
                 message = await ms.Deserialize(context.RequestServices,
                                                context.Request.Body,
                                                context.Request.Path,
