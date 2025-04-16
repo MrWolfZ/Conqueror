@@ -31,7 +31,7 @@ public static partial class TestHelpers
     {
         var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, opts);
 
-        var output = string.Join("\n", trees.Select(t => $"{t.FilePath}:\n{t}"));
+        var output = string.Join("\n", trees.Select(t => $"{t.FilePath.Replace(@"\", "/")}:\n{t}"));
         return (diagnostics, output);
     }
 
