@@ -1,14 +1,15 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Conqueror.SourceGenerators.Messaging;
+namespace Conqueror.SourceGenerators.Util.Messaging;
 
 public static class MessageAbstractionsGeneratorHelper
 {
-    public static MessageTypeToGenerate GenerateMessageTypeToGenerate(INamedTypeSymbol messageTypeSymbol,
-                                                                      INamedTypeSymbol? responseTypeSymbol)
+    public static MessageTypesDescriptor GenerateMessageTypeToGenerate(INamedTypeSymbol messageTypeSymbol,
+                                                                       INamedTypeSymbol? responseTypeSymbol)
     {
         var messageTypeDescriptor = GenerateTypeDescriptor(messageTypeSymbol);
 
@@ -44,7 +45,7 @@ public static class MessageAbstractionsGeneratorHelper
             symbol.ToString(),
             symbol.IsRecord,
             symbol.GetMembers().OfType<IPropertySymbol>().Any(p => p.Name != "EqualityContract"),
-            ParentClass: GetParentClasses(typeSyntax),
+            ParentClasses: GetParentClasses(typeSyntax),
             Properties: new(properties));
     }
 
@@ -72,28 +73,30 @@ public static class MessageAbstractionsGeneratorHelper
         return null;
     }
 
-    private static ParentClass? GetParentClasses(SyntaxNode syntaxNode)
+    private static EquatableArray<ParentClass> GetParentClasses(SyntaxNode syntaxNode)
     {
         // Try and get the parent syntax. If it isn't a type like class/struct, this will be null
         var parentSyntax = syntaxNode.Parent as TypeDeclarationSyntax;
-        ParentClass? parentClassInfo = null;
+
+        var result = new List<ParentClass>();
 
         // Keep looping while we're in a supported nested type
         while (parentSyntax != null && IsAllowedKind(parentSyntax.Kind()))
         {
             // Record the parent type keyword (class/struct etc), name, and constraints
-            parentClassInfo = new(
+            var parentClassInfo = new ParentClass(
                 parentSyntax.Keyword.ValueText,
                 parentSyntax.Identifier.ToString() + parentSyntax.TypeParameterList,
-                parentSyntax.ConstraintClauses.ToString(),
-                parentClassInfo); // set the child link (null initially)
+                parentSyntax.ConstraintClauses.ToString());
+
+            result.Insert(0, parentClassInfo);
 
             // Move to the next outer type
             parentSyntax = parentSyntax.Parent as TypeDeclarationSyntax;
         }
 
         // return a link to the outermost parent type
-        return parentClassInfo;
+        return new([.. result]);
     }
 
     // We can only be nested in class/struct/record

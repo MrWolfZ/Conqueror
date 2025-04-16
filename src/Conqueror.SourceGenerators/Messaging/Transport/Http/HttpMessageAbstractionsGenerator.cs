@@ -1,9 +1,8 @@
 ﻿using System.Linq;
-using System.Text;
 using System.Threading;
+using Conqueror.SourceGenerators.Util;
+using Conqueror.SourceGenerators.Util.Messaging;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 #pragma warning disable S3267 // for performance reasons we do not want to use LINQ
 
@@ -14,26 +13,18 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var messageTypesToGenerate = context.SyntaxProvider
-                                            .ForAttributeWithMetadataName("Conqueror.HttpMessageAttribute",
-                                                                          static (s, _) => s is ClassDeclarationSyntax or RecordDeclarationSyntax,
-                                                                          GetTypeToGenerate)
-                                            .WithTrackingName(TrackingNames.InitialExtraction)
-                                            .Where(static m => m is not null) // Filter out errors that we don't care about
-                                            .Select(static (m, _) => m!.Value)
-                                            .WithTrackingName(TrackingNames.RemovingNulls);
+        context.InitializeCoreMessageAbstractionsGenerator("Conqueror.HttpMessageAttribute");
 
-        context.RegisterSourceOutput(messageTypesToGenerate,
-                                     static (spc, messageTypeToGenerate) => Execute(in messageTypeToGenerate, spc));
+        context.InitializeGeneratorForAttribute("Conqueror.HttpMessageAttribute",
+                                                GetTypeToGenerate,
+                                                HttpMessageAbstractionsGenerationHelper.GenerateMessageTypes);
+
+        context.InitializeGeneratorForAttribute("Conqueror.HttpMessageAttribute`1",
+                                                GetTypeToGenerate,
+                                                HttpMessageAbstractionsGenerationHelper.GenerateMessageTypes);
     }
 
-    private static void Execute(in HttpMessageTypeToGenerate messageTypeToGenerate, SourceProductionContext context)
-    {
-        var (result, filename) = HttpMessageAbstractionsGenerationHelper.GenerateMessageTypes(in messageTypeToGenerate);
-        context.AddSource(filename, SourceText.From(result, Encoding.UTF8));
-    }
-
-    private static HttpMessageTypeToGenerate? GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken ct)
+    private static HttpMessageTypesDescriptor? GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken ct)
     {
         if (context.TargetSymbol is not INamedTypeSymbol messageTypeSymbol)
         {
@@ -80,8 +71,8 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
         return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol);
     }
 
-    private static HttpMessageTypeToGenerate GenerateTypeDescriptor(INamedTypeSymbol messageTypeSymbol,
-                                                                    INamedTypeSymbol? responseTypeSymbol)
+    private static HttpMessageTypesDescriptor GenerateTypeDescriptor(INamedTypeSymbol messageTypeSymbol,
+                                                                     INamedTypeSymbol? responseTypeSymbol)
     {
         string? httpMethod = null;
         string? pathPrefix = null;

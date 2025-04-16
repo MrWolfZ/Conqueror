@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
+using Conqueror.SourceGenerators.Util;
 
 namespace Conqueror.SourceGenerators.Messaging.Transport.Http;
 
@@ -18,7 +19,7 @@ public static class HttpMessageAbstractionsGenerationHelper
 
 #nullable enable";
 
-    public static (string Content, string FileName) GenerateMessageTypes(in HttpMessageTypeToGenerate typesToGenerate)
+    public static (string Content, string FileName) GenerateMessageTypes(HttpMessageTypesDescriptor typesToGenerate)
     {
         var sb = new StringBuilder();
         sb.AppendLine(Header);
@@ -29,7 +30,7 @@ public static class HttpMessageAbstractionsGenerationHelper
         sb.Clear();
 
         var filename = sb
-                       .Append(typesToGenerate.MessageTypeToGenerate.MessageTypeDescriptor.FullyQualifiedName)
+                       .Append(typesToGenerate.MessageTypesDescriptor.MessageTypeDescriptor.FullyQualifiedName)
                        .Append("_HttpMessageTypes.g.cs")
                        .Replace('<', '_')
                        .Replace('>', '_')
@@ -42,10 +43,10 @@ public static class HttpMessageAbstractionsGenerationHelper
 
     [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1012:Opening braces should be spaced correctly", Justification = "false positive")]
     [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1013:Closing braces should be spaced correctly", Justification = "false positive")]
-    private static void GenerateType(StringBuilder sb, in HttpMessageTypeToGenerate typesToGenerate)
+    private static void GenerateType(StringBuilder sb, in HttpMessageTypesDescriptor typesToGenerate)
     {
-        var messageTypeDescriptor = typesToGenerate.MessageTypeToGenerate.MessageTypeDescriptor;
-        var responseTypeDescriptor = typesToGenerate.MessageTypeToGenerate.ResponseTypeDescriptor;
+        var messageTypeDescriptor = typesToGenerate.MessageTypesDescriptor.MessageTypeDescriptor;
+        var responseTypeDescriptor = typesToGenerate.MessageTypesDescriptor.ResponseTypeDescriptor;
 
         var messageTypeName = messageTypeDescriptor.Name;
         var responseTypeName = responseTypeDescriptor?.Name ?? "UnitMessageResponse";
@@ -70,10 +71,9 @@ public static class HttpMessageAbstractionsGenerationHelper
         }
 
         var parentsCount = 0;
-        var parentClass = messageTypeDescriptor.ParentClass;
 
         // TODO: proper indentation
-        while (parentClass is not null)
+        foreach (var parentClass in messageTypeDescriptor.ParentClasses)
         {
             sb.Append("\n    partial ")
               .Append(parentClass.Keyword) // e.g. class/struct/record
@@ -87,7 +87,6 @@ public static class HttpMessageAbstractionsGenerationHelper
                           """);
 
             parentsCount += 1;
-            parentClass = parentClass.Child;
         }
 
         var fullyQualifiedName = $"global::{messageTypeDescriptor.FullyQualifiedName}";

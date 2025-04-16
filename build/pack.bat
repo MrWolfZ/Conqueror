@@ -47,6 +47,8 @@ dotnet pack %srcDir%\Conqueror.Middleware.Logging -c Release -o %publishDir% --i
 dotnet pack %srcDir%\Conqueror.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Transport.Http.Client -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.SourceGenerators.Util -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.SourceGenerators.TestUtil -c Release -o %publishDir% --include-symbols
 dotnet publish %srcDir%\Conqueror.SourceGenerators -c Release --framework netstandard2.0 -o %publishDir%/Conqueror.SourceGenerators
 dotnet pack %srcDir%\Conqueror.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror -c Release -o %publishDir% --include-symbols

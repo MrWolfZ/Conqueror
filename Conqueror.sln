@@ -372,6 +372,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Loggin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging.Tests", "src\Conqueror.Middleware.Logging.Tests\Conqueror.Middleware.Logging.Tests.csproj", "{15084881-E515-4FF4-8640-AB7C08552A64}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators.Util", "src\Conqueror.SourceGenerators.Util\Conqueror.SourceGenerators.Util.csproj", "{54BFD3E5-A791-47F7-ABF0-306380978E0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators.TestUtil", "src\Conqueror.SourceGenerators.TestUtil\Conqueror.SourceGenerators.TestUtil.csproj", "{091AD74C-BC22-457E-A107-C394171CF4ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -901,6 +905,14 @@ Global
 		{15084881-E515-4FF4-8640-AB7C08552A64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15084881-E515-4FF4-8640-AB7C08552A64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15084881-E515-4FF4-8640-AB7C08552A64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54BFD3E5-A791-47F7-ABF0-306380978E0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54BFD3E5-A791-47F7-ABF0-306380978E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54BFD3E5-A791-47F7-ABF0-306380978E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54BFD3E5-A791-47F7-ABF0-306380978E0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{091AD74C-BC22-457E-A107-C394171CF4ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{091AD74C-BC22-457E-A107-C394171CF4ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{091AD74C-BC22-457E-A107-C394171CF4ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{091AD74C-BC22-457E-A107-C394171CF4ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}

@@ -1,10 +1,16 @@
-﻿using Conqueror.SourceGenerators.Messaging;
+﻿using System.Reflection;
+using Conqueror.SourceGenerators.Messaging;
+using Conqueror.SourceGenerators.TestUtil;
+using Microsoft.CodeAnalysis;
 
 namespace Conqueror.SourceGenerators.Tests.Messaging;
 
 [TestFixture]
 public sealed class MessageAbstractionsGeneratorTests
 {
+    private readonly IReadOnlyCollection<IIncrementalGenerator> generators = [new MessageAbstractionsGenerator()];
+    private readonly IReadOnlyCollection<Assembly> assembliesToLoad = [typeof(UnitMessageResponse).Assembly];
+
     [Test]
     public Task GivenTestMessageWithResponseBothInGlobalNamespace_WhenRunningGenerator_GeneratesCorrectTypes()
     {
@@ -15,7 +21,7 @@ public partial record TestMessage;
 
 public record TestMessageResponse;";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -33,7 +39,7 @@ public partial record TestMessage;
 
 public record TestMessageResponse;";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -53,7 +59,7 @@ public partial record TestMessage : IMessage<TestMessage, TestMessageResponse>;
 
 public record TestMessageResponse;";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -74,7 +80,7 @@ public sealed partial class Container
     public record TestMessageResponse;
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -93,7 +99,7 @@ public sealed partial class Container
     public partial record TestMessageWithoutResponse;
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -117,7 +123,7 @@ public sealed partial class Container
     public record TestMessageResponse;
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([new MessageAbstractionsGenerator()], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -126,7 +132,7 @@ public sealed partial class Container
     private VerifySettings Settings()
     {
         var settings = new VerifySettings();
-        settings.ScrubExpectedChanges();
+        settings.ScrubLinesWithReplace(line => line.ReplaceGeneratorVersion());
         settings.UseDirectory("Snapshots");
         settings.UseTypeName(nameof(MessageAbstractionsGeneratorTests));
         settings.DisableRequireUniquePrefix();
