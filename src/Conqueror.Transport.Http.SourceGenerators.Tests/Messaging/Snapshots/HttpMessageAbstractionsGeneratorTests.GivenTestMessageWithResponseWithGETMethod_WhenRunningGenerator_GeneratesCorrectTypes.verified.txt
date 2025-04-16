@@ -64,7 +64,35 @@ namespace Generator.Tests
     /// </summary>
     partial record TestMessage : IHttpMessage<TestMessage, TestMessageResponse>
     {
+        public static string HttpMethod { get; } = "GET";
+
         static global::Conqueror.IHttpMessageTypesInjector global::Conqueror.IHttpMessage.HttpMessageTypesInjector
             => global::Conqueror.HttpMessageTypesInjector<TestMessage, TestMessageResponse>.Default;
+
+        static global::Conqueror.IHttpMessageSerializer<TestMessage, TestMessageResponse>? global::Conqueror.IHttpMessage<TestMessage, TestMessageResponse>.HttpMessageSerializer
+            => new global::Conqueror.HttpMessageQueryStringSerializer<TestMessage, TestMessageResponse>(
+                query =>
+                {
+                    if (query is null)
+                    {
+                        throw new global::System.ArgumentException("query must not be null", nameof(query));
+                    }
+
+                    return new TestMessage
+                    {
+                        Payload = query.TryGetValue("payload", out var payloadValues) && payloadValues.Count > 0 && payloadValues[0] is { } payloadValue ? (int)global::System.Convert.ChangeType(payloadValue, typeof(int)) : default,
+                    };
+                },
+                message =>
+                {
+                    global::System.Text.StringBuilder queryBuilder = new global::System.Text.StringBuilder();
+
+                    queryBuilder.Append('?');
+                    queryBuilder.Append("payload=");
+                    queryBuilder.Append(global::System.Uri.EscapeDataString(message.Payload.ToString() ?? string.Empty));
+
+                    return queryBuilder.ToString();
+                });
+
     }
 }
