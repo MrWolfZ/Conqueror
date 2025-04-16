@@ -541,14 +541,20 @@ public static partial class HttpTestMessages
                     SuccessStatusCode = 200,
                     ApiGroupName = null,
                     Name = null,
-                    ParameterCount = 3,
-                    QueryString = "?payload=10&nestedPayload.payload=11&nestedPayload.payload2=12",
+                    ParameterCount = 5,
+                    QueryString = "?payload=10&nestedPayload.payload=11&nestedPayload.payload2=12&nestedList=13&nestedList=14&nestedArray=15&nestedArray=16",
                     Payload = null,
-                    ResponsePayload = "{\"payload\":33}",
+                    ResponsePayload = "{\"payload\":91}",
                     MessageContentType = null,
                     ResponseContentType = MediaTypeNames.Application.Json,
-                    Message = new TestMessageWithComplexGetPayload { Payload = 10, NestedPayload = new() { Payload = 11, Payload2 = 12 } },
-                    Response = new TestMessageResponse { Payload = 33 },
+                    Message = new TestMessageWithComplexGetPayload
+                    {
+                        Payload = 10,
+                        NestedPayload = new() { Payload = 11, Payload2 = 12 },
+                        NestedList = [13, 14],
+                        NestedArray = [15, 16],
+                    },
+                    Response = new TestMessageResponse { Payload = 91 },
                     RegistrationMethod = registrationMethod,
                 };
             }
@@ -1288,15 +1294,20 @@ public static partial class HttpTestMessages
         public int? Payload { get; init; }
 
         public required TestMessageWithComplexGetPayloadPayload NestedPayload { get; init; }
+
+        public required List<int> NestedList { get; init; }
+
+        [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "for testing")]
+        public required int[] NestedArray { get; init; }
     }
 
     public sealed record TestMessageWithComplexGetPayloadPayload
     {
         [Required]
-        public required int? Payload { get; init; }
+        public required int Payload { get; init; }
 
         [Required]
-        public required int? Payload2 { get; init; }
+        public required int Payload2 { get; init; }
     }
 
     public sealed class TestMessageWithComplexGetPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
@@ -1312,7 +1323,7 @@ public static partial class HttpTestMessages
                 await fnToCallFromHandler(serviceProvider);
             }
 
-            return new() { Payload = (message.Payload ?? 0) + (message.NestedPayload.Payload ?? 0) + (message.NestedPayload.Payload2 ?? 0) };
+            return new() { Payload = (message.Payload ?? 0) + message.NestedPayload.Payload + message.NestedPayload.Payload2 + message.NestedList.Sum() + message.NestedArray.Sum() };
         }
     }
 

@@ -20,10 +20,8 @@ public readonly record struct TypeDescriptor(
 
 public readonly record struct ParentClass(
     string Keyword,
-    string Name,
-    string Constraints)
+    string Name)
 {
-    public readonly string Constraints = Constraints;
     public readonly string Keyword = Keyword;
     public readonly string Name = Name;
 }

@@ -35,7 +35,7 @@ public static class MessageAbstractionsGeneratorUtil
         }
 
         // skip message types that already declare a handler member
-        // TODO: improve with adding explicit diagnostic and also detecting pipeline
+        // TODO: improve by simply skipping the generation of the property / nested type instead of ignoring the whole type
         if (messageTypeSymbol.MemberNames.Contains("IHandler"))
         {
             return null;
@@ -83,6 +83,6 @@ public static class MessageAbstractionsGeneratorUtil
 
         ct.ThrowIfCancellationRequested();
 
-        return MessageAbstractionsGeneratorHelper.GenerateMessageTypeToGenerate(messageTypeSymbol, responseTypeSymbol);
+        return MessageAbstractionsGeneratorHelper.GenerateMessageTypesDescriptor(messageTypeSymbol, responseTypeSymbol);
     }
 }

@@ -16,15 +16,15 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
         context.InitializeCoreMessageAbstractionsGenerator("Conqueror.HttpMessageAttribute");
 
         context.InitializeGeneratorForAttribute("Conqueror.HttpMessageAttribute",
-                                                GetTypeToGenerate,
-                                                HttpMessageAbstractionsGenerationHelper.GenerateMessageTypes);
+                                                CreateTypeDescriptor,
+                                                HttpMessageAbstractionsSources.GenerateHttpMessageTypes);
 
         context.InitializeGeneratorForAttribute("Conqueror.HttpMessageAttribute`1",
-                                                GetTypeToGenerate,
-                                                HttpMessageAbstractionsGenerationHelper.GenerateMessageTypes);
+                                                CreateTypeDescriptor,
+                                                HttpMessageAbstractionsSources.GenerateHttpMessageTypes);
     }
 
-    private static HttpMessageTypesDescriptor? GetTypeToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken ct)
+    private static HttpMessageTypesDescriptor? CreateTypeDescriptor(GeneratorAttributeSyntaxContext context, CancellationToken ct)
     {
         if (context.TargetSymbol is not INamedTypeSymbol messageTypeSymbol)
         {
@@ -44,22 +44,21 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
 
         INamedTypeSymbol? responseTypeSymbol = null;
 
-        foreach (var attributeData in messageTypeSymbol.GetAttributes())
-        {
-            if (attributeData.AttributeClass is { Name: "HttpMessageAttribute" } c
-                && c.ContainingAssembly.Name == "Conqueror.Transport.Http.Abstractions")
-            {
-                if (c.TypeArguments.Length > 0)
-                {
-                    responseTypeSymbol = c.TypeArguments[0] as INamedTypeSymbol;
-                }
+        var attributeData = context.Attributes.Single();
+        var attributeClass = attributeData.AttributeClass;
 
-                return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol, attributeData);
-            }
+        if (attributeClass is null)
+        {
+            // weird, this should never happen, but better be safe and ignore it
+            return null;
         }
 
-        // if no attribute matches, we skip this type
-        return null;
+        if (attributeClass.TypeArguments.Length > 0)
+        {
+            responseTypeSymbol = attributeClass.TypeArguments[0] as INamedTypeSymbol;
+        }
+
+        return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol, attributeData);
     }
 
     private static HttpMessageTypesDescriptor GenerateTypeDescriptor(INamedTypeSymbol messageTypeSymbol,
@@ -126,7 +125,7 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
             }
         }
 
-        return new(MessageAbstractionsGeneratorHelper.GenerateMessageTypeToGenerate(messageTypeSymbol, responseTypeSymbol),
+        return new(MessageAbstractionsGeneratorHelper.GenerateMessageTypesDescriptor(messageTypeSymbol, responseTypeSymbol),
                    httpMethod,
                    pathPrefix,
                    path,

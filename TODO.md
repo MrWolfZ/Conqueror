@@ -14,23 +14,20 @@ This file contains all the open points for extensions and improvements to the **
 - [ ] add transport to context data test location
 - [ ] throw on empty context data key
 - [ ] improve generator
-  - [ ] fully qualified references
-  - [ ] explicit interface implementations where props should not be shown in intellisense
-  - [ ] add `CompilerGenerated` attribute where appropriate
-  - [ ] proper indentation
   - [ ] write tests for all situations and diagnostics (using data driven tests)
     - [ ] for every single property, assert that the property can be manually defined and the generator will skip it
     - [ ] skip abstract classes
     - [ ] test that the generator works even if the marker interfaces are explicitly implemented, including when through a base class
-  - [ ] ensure class visibility is adhered to
-  - [ ] improve performance by not using string interpolation
   - [ ] generate property metadata (name, type, is-required, is-nullable, etc.)
-  - [ ] generate `IMessage` interface also if only `HttpMessage` attribute is present
-    - [ ] make `HttpMessageAttribute` generic
-  - [ ] automatically generate `HttpJsonSerializerContext` property when a type `<TMessage>JsonSerializerContext` exists in the same namespace as the message type
+  - [ ] automatically generate `JsonSerializerContext` property when a type `<TMessage>JsonSerializerContext` exists in the same namespace as the message type
   - [ ] allow (primary) constructor arguments in query string parsing
   - [ ] emit diagnostic error when unsupported property is found during query string parsing
   - [ ] add statement in recipe that attributes can be renamed with a global using if they cause conflicts
+- [ ] consider adding back the `IHandler.Adapter`
+  - [ ] extend generated handler with static factory method to generate instance of adapter
+  - [ ] add subtype `MessageTypes<TMessage, TResponse, THandlerInterface>`
+  - [ ] add extension method `.Cast(MessageTypes<...>)` to `IMessageHandler<...>`
+  - [ ] generate extension method for each message type to call the cast for its generated handler interface
 
 ### Core middleware
 
