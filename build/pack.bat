@@ -19,6 +19,7 @@ REM pack
 echo packing projects...
 
 mkdir .publish
+dotnet publish %srcDir%\Conqueror.Transport.Http.SourceGenerators -c Release --framework netstandard2.0 -o %publishDir%/Conqueror.Transport.Http.SourceGenerators
 dotnet pack %srcDir%\Conqueror.Common.Middleware.Authentication.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Common.Middleware.Authorization.Abstractions -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Common.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols

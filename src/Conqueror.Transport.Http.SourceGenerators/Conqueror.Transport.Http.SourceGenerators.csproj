@@ -29,7 +29,7 @@
 
     <!-- for NuGet -->
     <PropertyGroup>
-        <Description>Part of the Conqueror library set. Source generators for core abstractions.</Description>
+        <Description>Part of the Conqueror library set. Source generators for HTTP transport abstractions.</Description>
         <PackageTags>$(PackageTags) analyzers</PackageTags>
         <DevelopmentDependency>true</DevelopmentDependency>
         <NoPackageAnalysis>true</NoPackageAnalysis>

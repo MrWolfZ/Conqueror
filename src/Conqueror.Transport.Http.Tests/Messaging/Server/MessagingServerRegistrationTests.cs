@@ -241,20 +241,17 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
                         Throws.InvalidOperationException.With.Message.Contains("found multiple Conqueror message types with identical path!"));
         }
 
-        [HttpMessage]
-        [Message<TestMessageResponse>]
+        [HttpMessage<TestMessageResponse>]
         private sealed partial record TestMessage;
 
         private sealed record TestMessageResponse;
 
-        [HttpMessage]
-        [Message<TestMessage2Response>]
+        [HttpMessage<TestMessage2Response>]
         private sealed partial record TestMessage2;
 
         private sealed record TestMessage2Response;
 
-        [HttpMessage(Path = "test")]
-        [Message<TestMessageResponse>]
+        [HttpMessage<TestMessageResponse>(Path = "test")]
         private sealed partial record TestMessageWithDuplicatePathFromConfig;
 
         private sealed class TestMessageHandler : TestMessage.IHandler
@@ -282,8 +279,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
 
     namespace DuplicateMessageName
     {
-        [HttpMessage]
-        [Message<TestMessageResponse>]
+        [HttpMessage<TestMessageResponse>]
         public sealed partial record TestMessage;
 
         public sealed record TestMessageResponse;

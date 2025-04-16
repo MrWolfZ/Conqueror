@@ -47,8 +47,7 @@ public sealed partial class MessageTypeGenerationTests
                             .Handle(new("test"));
     }
 
-    [HttpMessage]
-    [Message<TestMessageResponse>]
+    [HttpMessage<TestMessageResponse>]
     private sealed partial record TestMessage
     {
         public required int Payload { get; init; }
@@ -100,7 +99,6 @@ public sealed partial class MessageTypeGenerationTests
     }
 
     [HttpMessage]
-    [Message]
     private sealed partial record TestMessageWithoutResponse(string Payload);
 
     // generated http

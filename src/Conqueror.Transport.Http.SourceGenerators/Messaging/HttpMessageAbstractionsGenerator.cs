@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 
 #pragma warning disable S3267 // for performance reasons we do not want to use LINQ
 
-namespace Conqueror.SourceGenerators.Messaging.Transport.Http;
+namespace Conqueror.Transport.Http.SourceGenerators.Messaging;
 
 [Generator]
 public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
@@ -46,29 +46,20 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
 
         foreach (var attributeData in messageTypeSymbol.GetAttributes())
         {
-            // TODO: extract into helper and reuse across generators
-            if (attributeData.AttributeClass is { Name: "MessageAttribute" } c
-                && c.ContainingAssembly.Name == "Conqueror.Abstractions")
+            if (attributeData.AttributeClass is { Name: "HttpMessageAttribute" } c
+                && c.ContainingAssembly.Name == "Conqueror.Transport.Http.Abstractions")
             {
                 if (c.TypeArguments.Length > 0)
                 {
                     responseTypeSymbol = c.TypeArguments[0] as INamedTypeSymbol;
                 }
 
-                continue;
+                return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol);
             }
-
-            if (attributeData.AttributeClass is { Name: "HttpMessageAttribute" } c2
-                && c2.ContainingAssembly.Name == "Conqueror.Transport.Http.Abstractions")
-            {
-                continue;
-            }
-
-            // if no attribute matches, we skip this type
-            return null;
         }
 
-        return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol);
+        // if no attribute matches, we skip this type
+        return null;
     }
 
     private static HttpMessageTypesDescriptor GenerateTypeDescriptor(INamedTypeSymbol messageTypeSymbol,

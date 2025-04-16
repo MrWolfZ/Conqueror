@@ -1,6 +1,6 @@
 ﻿using Conqueror.SourceGenerators.Util.Messaging;
 
-namespace Conqueror.SourceGenerators.Messaging.Transport.Http;
+namespace Conqueror.Transport.Http.SourceGenerators.Messaging;
 
 public readonly record struct HttpMessageTypesDescriptor(
     MessageTypesDescriptor MessageTypesDescriptor,
