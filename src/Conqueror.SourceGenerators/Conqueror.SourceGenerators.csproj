@@ -7,7 +7,9 @@
         <IsPackable>true</IsPackable>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
+        <!--suppress MsbuildTargetFrameworkTagInspection -->
         <TargetFrameworks>netstandard2.0</TargetFrameworks>
 
         <!--
@@ -27,21 +29,30 @@
 
     <!-- for NuGet -->
     <PropertyGroup>
-        <Description>Part of the Conqueror library set. Source generators for all core packages.</Description>
+        <Description>Part of the Conqueror library set. Source generators for core abstractions.</Description>
         <PackageTags>$(PackageTags) analyzers</PackageTags>
         <DevelopmentDependency>true</DevelopmentDependency>
         <NoPackageAnalysis>true</NoPackageAnalysis>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.2" />
+      <ProjectReference Include="../Conqueror.SourceGenerators.Util/Conqueror.SourceGenerators.Util.csproj" PrivateAssets="All" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+    </PropertyGroup>
+
+    <Target Name="GetDependencyTargetPaths">
+        <ItemGroup>
+            <TargetPathWithTargetPlatformMoniker Include="../Conqueror.SourceGenerators.Util/bin/$(Configuration)/netstandard2.0/Conqueror.SourceGenerators.Util.dll" IncludeRuntimeDependency="false"/>
+        </ItemGroup>
+    </Target>
 
     <Target Name="_AddAnalyzersToOutput">
         <ItemGroup>
             <TfmSpecificPackageFile Include="$(OutputPath)/Conqueror.SourceGenerators.dll" PackagePath="analyzers/dotnet/roslyn$(RoslynVersion)/cs" />
+            <TfmSpecificPackageFile Include="$(OutputPath)/Conqueror.SourceGenerators.Util.dll" PackagePath="analyzers/dotnet/roslyn$(RoslynVersion)/cs" />
         </ItemGroup>
     </Target>
 

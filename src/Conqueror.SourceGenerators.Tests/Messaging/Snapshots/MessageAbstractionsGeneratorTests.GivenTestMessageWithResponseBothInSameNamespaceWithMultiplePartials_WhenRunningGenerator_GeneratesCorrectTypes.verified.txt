@@ -16,7 +16,7 @@ namespace Generator.Tests
     /// <summary>
     /// Message Types for <see cref="global::Generator.Tests.TestMessage" />
     /// </summary>
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "0.7.0-beta.1")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
     partial record TestMessage : IMessage<TestMessage, TestMessageResponse>
     {
         public static MessageTypes<TestMessage, TestMessageResponse> T => MessageTypes<TestMessage, TestMessageResponse>.Default;

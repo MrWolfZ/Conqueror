@@ -1,11 +1,17 @@
-﻿using Conqueror.SourceGenerators.Messaging;
+﻿using System.Reflection;
+using Conqueror.SourceGenerators.Messaging;
 using Conqueror.SourceGenerators.Messaging.Transport.Http;
+using Conqueror.SourceGenerators.TestUtil;
+using Microsoft.CodeAnalysis;
 
 namespace Conqueror.SourceGenerators.Tests.Messaging.Transport.Http;
 
 [TestFixture]
 public sealed class HttpMessageAbstractionsGeneratorTests
 {
+    private readonly IReadOnlyCollection<IIncrementalGenerator> generators = [new MessageAbstractionsGenerator(), new HttpMessageAbstractionsGenerator()];
+    private readonly IReadOnlyCollection<Assembly> assembliesToLoad = [typeof(UnitMessageResponse).Assembly, typeof(IHttpMessage).Assembly];
+
     [Test]
     public Task GivenTestMessageWithResponseBothInGlobalNamespace_WhenRunningGenerator_GeneratesCorrectTypes()
     {
@@ -20,10 +26,7 @@ public partial record TestMessage
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -45,10 +48,7 @@ public partial record TestMessage
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -73,10 +73,7 @@ public sealed partial class Container
     public record TestMessageResponse(int Payload);
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -99,10 +96,7 @@ public sealed partial class Container
     }
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -145,10 +139,7 @@ public sealed partial class Container
     public record TestMessageResponse(int Payload);
 }";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -170,10 +161,7 @@ public partial record TestMessage
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -195,10 +183,7 @@ public partial record TestMessage
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -220,10 +205,7 @@ public partial record TestMessage
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -242,10 +224,7 @@ public partial record TestMessageWithoutPayload;
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -262,10 +241,7 @@ namespace Generator.Tests;
 [Message]
 public partial record TestMessageWithoutPayload;";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -291,10 +267,7 @@ public partial record TestMessage
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -317,10 +290,7 @@ public partial record TestMessage
 
 public record TestMessageResponse(int Payload);";
 
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput([
-            new MessageAbstractionsGenerator(),
-            new HttpMessageAbstractionsGenerator(),
-        ], new(input));
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());
@@ -329,7 +299,7 @@ public record TestMessageResponse(int Payload);";
     private VerifySettings Settings()
     {
         var settings = new VerifySettings();
-        settings.ScrubExpectedChanges();
+        settings.ScrubLinesWithReplace(line => line.ReplaceGeneratorVersion());
         settings.UseDirectory("Snapshots");
         settings.UseTypeName(nameof(HttpMessageAbstractionsGeneratorTests));
         settings.DisableRequireUniquePrefix();

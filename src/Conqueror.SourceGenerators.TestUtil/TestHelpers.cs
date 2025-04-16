@@ -1,42 +1,45 @@
-﻿using System.CodeDom.Compiler;
+﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
-using Conqueror.SourceGenerators.Messaging;
+using System.Text.RegularExpressions;
+using Conqueror.SourceGenerators.Util;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using NUnit.Framework;
 
-namespace Conqueror.SourceGenerators.Tests;
+namespace Conqueror.SourceGenerators.TestUtil;
 
-internal static class TestHelpers
+public static partial class TestHelpers
 {
-    public static void ScrubExpectedChanges(this VerifySettings settings)
+    public static string ReplaceGeneratorVersion(this string outputLine)
     {
-        settings.ScrubLinesWithReplace(
-            line => line.Replace(
-                $"""GeneratedCodeAttribute("Conqueror.SourceGenerators", "{Constants.Version}")""",
-                """GeneratedCodeAttribute("Conqueror.SourceGenerators", "FIXED_VERSION")"""));
+        var regex = GeneratedCodeAttributeRegex();
+        return regex.Replace(outputLine, "$1FIXED_VERSION$2");
     }
 
-    public static (ImmutableArray<Diagnostic> Diagnostics, string Output) GetGeneratedOutput(IIncrementalGenerator[] generators, Options opts)
+    public static (ImmutableArray<Diagnostic> Diagnostics, string Output) GetGeneratedOutput(
+        IReadOnlyCollection<IIncrementalGenerator> generators,
+        IReadOnlyCollection<Assembly> assembliesToLoad,
+        Options opts)
     {
-        var (diagnostics, trees) = GetGeneratedTrees(generators, opts, opts.Stages ?? GetTrackingNames<TrackingNames>());
+        var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, opts);
 
         // exclude generated static attribute files from the output
         var output = trees.Select(t => t.ToString()).LastOrDefault() ?? string.Empty;
         return (diagnostics, output);
     }
 
-    public static (ImmutableArray<Diagnostic> Diagnostics, ImmutableArray<SyntaxTree> Output) GetGeneratedTrees<TTrackingNames>(
-        IIncrementalGenerator[] generators, Options options)
-    {
-        return GetGeneratedTrees(generators, options, options.Stages ?? GetTrackingNames<TTrackingNames>());
-    }
-
     private static (ImmutableArray<Diagnostic> Diagnostics, ImmutableArray<SyntaxTree> SyntaxTrees) GetGeneratedTrees(
-        IIncrementalGenerator[] generators, Options opts, params string[] stages)
+        IReadOnlyCollection<IIncrementalGenerator> generators,
+        IReadOnlyCollection<Assembly> assembliesToLoad,
+        Options opts)
     {
         var syntaxTrees = opts.Sources
                               .Select(x =>
@@ -48,15 +51,14 @@ internal static class TestHelpers
 
         var references = AppDomain.CurrentDomain.GetAssemblies()
                                   .Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
+                                  .Concat(assembliesToLoad)
                                   .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
                                   .Concat([
                                       ..generators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
-                                      MetadataReference.CreateFromFile(typeof(UnitMessageResponse).Assembly.Location),
-                                      MetadataReference.CreateFromFile(typeof(IHttpMessage).Assembly.Location),
-                                      MetadataReference.CreateFromFile(typeof(MessageAbstractionsGenerator).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(DisplayAttribute).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(GeneratedCodeAttribute).Assembly.Location),
-                                  ]);
+                                  ])
+                                  .Distinct();
 
         var compilation = CSharpCompilation.Create(
             "generator",
@@ -64,7 +66,7 @@ internal static class TestHelpers
             references,
             new(OutputKind.DynamicallyLinkedLibrary));
 
-        var (runResult, diagnostics) = RunGeneratorAndAssertOutput(generators, opts, compilation, stages);
+        var (runResult, diagnostics) = RunGeneratorAndAssertOutput(generators, opts, compilation);
 
         var combinedDiagnostics = runResult.Diagnostics.AddRange(diagnostics);
 
@@ -72,10 +74,9 @@ internal static class TestHelpers
     }
 
     private static (GeneratorDriverRunResult RunResult, ImmutableArray<Diagnostic> Diagnostics) RunGeneratorAndAssertOutput(
-        IIncrementalGenerator[] generators,
+        IReadOnlyCollection<IIncrementalGenerator> generators,
         Options options,
         CSharpCompilation compilation,
-        string[] stages,
         bool assertOutput = true)
     {
         var opts = new GeneratorDriverOptions(
@@ -104,7 +105,7 @@ internal static class TestHelpers
                              .RunGenerators(clone)
                              .GetRunResult();
 
-            AssertRunsEqual(runResult, runResult2, stages);
+            AssertRunsEqual(runResult, runResult2, options.Stages ?? GetTrackingNames<DefaultTrackingNames>());
 
             // verify the second run only generated cached source outputs
             Assert.That(
@@ -118,7 +119,7 @@ internal static class TestHelpers
         return (runResult, outputCompilation.GetDiagnostics());
     }
 
-    private static void AssertRunsEqual(GeneratorDriverRunResult runResult1, GeneratorDriverRunResult runResult2, string[] trackingNames)
+    private static void AssertRunsEqual(GeneratorDriverRunResult runResult1, GeneratorDriverRunResult runResult2, IReadOnlyCollection<string> trackingNames)
     {
         // We're given all the tracking names, but not all the stages have necessarily executed so filter
         var trackedSteps1 = GetTrackedSteps(runResult1, trackingNames);
@@ -137,7 +138,7 @@ internal static class TestHelpers
         }
 
         static Dictionary<string, ImmutableArray<IncrementalGeneratorRunStep>> GetTrackedSteps(
-            GeneratorDriverRunResult runResult, string[] trackingNames) =>
+            GeneratorDriverRunResult runResult, IReadOnlyCollection<string> trackingNames) =>
             runResult.Results[0]
                      .TrackedSteps
                      .Where(step => trackingNames.Contains(step.Key))
@@ -228,6 +229,9 @@ internal static class TestHelpers
            .Where(x => !string.IsNullOrEmpty(x))
            .ToArray();
 
+    [GeneratedRegex("""(GeneratedCodeAttribute\("[^"]+",\s*")[^"]+("\))""")]
+    private static partial Regex GeneratedCodeAttributeRegex();
+
     private sealed class OptionsProvider(AnalyzerConfigOptions options) : AnalyzerConfigOptionsProvider
     {
         public override AnalyzerConfigOptions GlobalOptions => options;
@@ -235,7 +239,7 @@ internal static class TestHelpers
         public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => options;
     }
 
-    internal sealed class DictionaryAnalyzerOptions(Dictionary<string, string> properties) : AnalyzerConfigOptions
+    private sealed class DictionaryAnalyzerOptions(Dictionary<string, string> properties) : AnalyzerConfigOptions
     {
         public static DictionaryAnalyzerOptions Empty { get; } = new(new());
 
@@ -243,53 +247,59 @@ internal static class TestHelpers
             => properties.TryGetValue(key, out value!);
     }
 
+    [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "it makes sense for this type to be nested here")]
     public sealed record Options
     {
         public Options(params string[] sources)
-            : this(LanguageVersion.Default, null, null, sources, null)
+            : this(LanguageVersion.Default, null, (string[]?)null, sources, null)
         {
         }
 
-        public Options(Dictionary<string, string> options, params string[] sources)
-            : this(LanguageVersion.Default, options, null, sources, null)
+        public Options(string[] stages, params string[] sources)
+            : this(LanguageVersion.Default, null, stages, sources, null)
         {
         }
 
-        public Options(LanguageVersion languageVersion, Dictionary<string, string> options, params string[] sources)
-            : this(languageVersion, options, null, sources, null)
+        public Options(Dictionary<string, string> options, string[] stages, params string[] sources)
+            : this(LanguageVersion.Default, null, stages, sources, options)
         {
         }
 
-        public Options(Dictionary<string, string> options, Dictionary<string, string> features, params string[] sources)
-            : this(LanguageVersion.Default, options, features, sources, null)
+        public Options(LanguageVersion languageVersion, Dictionary<string, string> options, string[] stages, params string[] sources)
+            : this(languageVersion, null, stages, sources, options)
         {
         }
 
-        public Options(LanguageVersion languageVersion, Dictionary<string, string> options, Dictionary<string, string> features, params string[] sources)
-            : this(languageVersion, options, features, sources, null)
+        public Options(Dictionary<string, string> options, Dictionary<string, string> features, string[] stages, params string[] sources)
+            : this(LanguageVersion.Default, features, stages, sources, options)
         {
         }
 
-        private Options(LanguageVersion LanguageVersion,
-                        Dictionary<string, string>? AnalyzerOptions,
-                        Dictionary<string, string>? Features,
-                        string[] Sources,
-                        string[]? Stages)
+        public Options(LanguageVersion languageVersion, Dictionary<string, string> options, Dictionary<string, string> features, string[] stages, params string[] sources)
+            : this(languageVersion, features, stages, sources, options)
         {
-            this.LanguageVersion = LanguageVersion;
-            this.AnalyzerOptions = AnalyzerOptions;
-            this.Features = Features;
-            this.Sources = Sources;
-            this.Stages = Stages;
+        }
+
+        private Options(LanguageVersion languageVersion, Dictionary<string, string>? features, string[]? stages, string[] sources, Dictionary<string, string>? options)
+        {
+            LanguageVersion = languageVersion;
+            AnalyzerOptions = options;
+            Features = features;
+            Stages = stages;
+            Sources = sources;
         }
 
         public AnalyzerConfigOptionsProvider? OptsProvider =>
             AnalyzerOptions is not null ? new OptionsProvider(new DictionaryAnalyzerOptions(AnalyzerOptions)) : null;
 
+        public IReadOnlyCollection<string>? Stages { get; }
+
+        public IReadOnlyCollection<string> Sources { get; }
+
         public LanguageVersion LanguageVersion { get; }
-        private Dictionary<string, string>? AnalyzerOptions { get; }
+
         public Dictionary<string, string>? Features { get; }
-        public string[] Sources { get; }
-        public string[]? Stages { get; }
+
+        private Dictionary<string, string>? AnalyzerOptions { get; }
     }
 }

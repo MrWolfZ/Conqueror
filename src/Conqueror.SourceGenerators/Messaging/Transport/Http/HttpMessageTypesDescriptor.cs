@@ -1,7 +1,9 @@
-﻿namespace Conqueror.SourceGenerators.Messaging.Transport.Http;
+﻿using Conqueror.SourceGenerators.Util.Messaging;
 
-public readonly record struct HttpMessageTypeToGenerate(
-    MessageTypeToGenerate MessageTypeToGenerate,
+namespace Conqueror.SourceGenerators.Messaging.Transport.Http;
+
+public readonly record struct HttpMessageTypesDescriptor(
+    MessageTypesDescriptor MessageTypesDescriptor,
     string? HttpMethod,
     string? PathPrefix,
     string? Path,
@@ -11,7 +13,7 @@ public readonly record struct HttpMessageTypeToGenerate(
     string? Name,
     string? ApiGroupName)
 {
-    public readonly MessageTypeToGenerate MessageTypeToGenerate = MessageTypeToGenerate;
+    public readonly MessageTypesDescriptor MessageTypesDescriptor = MessageTypesDescriptor;
     public readonly string? HttpMethod = HttpMethod;
     public readonly string? PathPrefix = PathPrefix;
     public readonly string? Path = Path;
