@@ -28,28 +28,6 @@ public interface IMessageHandler<in TMessage> : IMessageHandlerWithTypeInjector
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IConfigurableMessageHandler<TMessage, TResponse> : IMessageHandler<TMessage, TResponse>
-    where TMessage : class, IMessage<TMessage, TResponse>
-{
-    IMessageHandler<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline);
-
-    IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClient<TMessage, TResponse> configureTransport);
-
-    IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClientAsync<TMessage, TResponse> configureTransport);
-}
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IConfigurableMessageHandler<TMessage> : IMessageHandler<TMessage>
-    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-{
-    IMessageHandler<TMessage> WithPipeline(Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline);
-
-    IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClient<TMessage, UnitMessageResponse> configureTransport);
-
-    IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClientAsync<TMessage, UnitMessageResponse> configureTransport);
-}
-
-[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IMessageHandlerWithTypeInjector
 {
     internal static abstract IDefaultMessageTypesInjector DefaultTypeInjector { get; }
@@ -80,4 +58,26 @@ public interface IGeneratedMessageHandler<in TMessage, in TPipelineInterface>
     {
         // by default, we use an empty pipeline
     }
+}
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+internal interface IConfigurableMessageHandler<TMessage, TResponse> : IMessageHandler<TMessage, TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
+{
+    IMessageHandler<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline);
+
+    IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClient<TMessage, TResponse> configureTransport);
+
+    IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClientAsync<TMessage, TResponse> configureTransport);
+}
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+internal interface IConfigurableMessageHandler<TMessage> : IMessageHandler<TMessage>
+    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+{
+    IMessageHandler<TMessage> WithPipeline(Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline);
+
+    IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClient<TMessage, UnitMessageResponse> configureTransport);
+
+    IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClientAsync<TMessage, UnitMessageResponse> configureTransport);
 }
