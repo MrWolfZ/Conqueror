@@ -19,7 +19,6 @@ This file contains all the open points for extensions and improvements to the **
     - [ ] skip abstract classes
     - [ ] test that the generator works even if the marker interfaces are explicitly implemented, including when through a base class
   - [ ] generate property metadata (name, type, is-required, is-nullable, etc.)
-  - [ ] automatically generate `JsonSerializerContext` property when a type `<TMessage>JsonSerializerContext` exists in the same namespace as the message type
   - [ ] allow (primary) constructor arguments in query string parsing
   - [ ] emit diagnostic error when unsupported property is found during query string parsing
   - [ ] add statement in recipe that attributes can be renamed with a global using if they cause conflicts

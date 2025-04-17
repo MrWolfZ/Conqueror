@@ -828,9 +828,6 @@ public static partial class LoggingMiddlewareTestMessages
     public sealed partial record TestMessageWithCustomJsonTypeInfo
     {
         public int MessagePayload { get; init; }
-
-        // TODO: remove once this gets discovered automatically
-        public static JsonSerializerContext JsonSerializerContext => TestMessageWithCustomJsonTypeInfoJsonSerializerContext.Default;
     }
 
     public sealed record TestMessageWithCustomJsonTypeInfoResponse

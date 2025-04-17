@@ -25,8 +25,8 @@ public static partial class TestHelpers
     }
 
     public static (ImmutableArray<Diagnostic> Diagnostics, string Output) GetGeneratedOutput(
-        IReadOnlyCollection<IIncrementalGenerator> generators,
-        IReadOnlyCollection<Assembly> assembliesToLoad,
+        IEnumerable<IIncrementalGenerator> generators,
+        IEnumerable<Assembly> assembliesToLoad,
         Options opts)
     {
         var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, opts);
@@ -36,8 +36,8 @@ public static partial class TestHelpers
     }
 
     private static (ImmutableArray<Diagnostic> Diagnostics, ImmutableArray<SyntaxTree> SyntaxTrees) GetGeneratedTrees(
-        IReadOnlyCollection<IIncrementalGenerator> generators,
-        IReadOnlyCollection<Assembly> assembliesToLoad,
+        IEnumerable<IIncrementalGenerator> generators,
+        IEnumerable<Assembly> assembliesToLoad,
         Options opts)
     {
         var syntaxTrees = opts.Sources
@@ -48,12 +48,14 @@ public static partial class TestHelpers
                                   return tree.WithRootAndOptions(tree.GetRoot(), options);
                               });
 
+        var incrementalGenerators = generators as IIncrementalGenerator[] ?? generators.ToArray();
+
         var references = AppDomain.CurrentDomain.GetAssemblies()
                                   .Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
                                   .Concat(assembliesToLoad)
                                   .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
                                   .Concat([
-                                      ..generators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
+                                      ..incrementalGenerators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
                                       MetadataReference.CreateFromFile(typeof(DisplayAttribute).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(GeneratedCodeAttribute).Assembly.Location),
                                   ])
@@ -65,7 +67,7 @@ public static partial class TestHelpers
             references,
             new(OutputKind.DynamicallyLinkedLibrary));
 
-        var (runResult, diagnostics) = RunGeneratorAndAssertOutput(generators, opts, compilation);
+        var (runResult, diagnostics) = RunGeneratorAndAssertOutput(incrementalGenerators, opts, compilation);
 
         var combinedDiagnostics = runResult.Diagnostics.AddRange(diagnostics);
 
@@ -73,7 +75,7 @@ public static partial class TestHelpers
     }
 
     private static (GeneratorDriverRunResult RunResult, ImmutableArray<Diagnostic> Diagnostics) RunGeneratorAndAssertOutput(
-        IReadOnlyCollection<IIncrementalGenerator> generators,
+        IEnumerable<IIncrementalGenerator> generators,
         Options options,
         CSharpCompilation compilation,
         bool assertOutput = true)

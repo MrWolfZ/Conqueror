@@ -13,8 +13,6 @@ public sealed partial record TopLevelTestMessage
     public required int Payload { get; init; }
 
     public required NestedObject Nested { get; init; }
-
-    public static JsonSerializerContext JsonSerializerContext => TopLevelTestMessageJsonSerializerContext.Default;
 }
 
 public sealed record NestedObject

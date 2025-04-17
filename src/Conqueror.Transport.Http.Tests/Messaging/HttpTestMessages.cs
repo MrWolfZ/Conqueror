@@ -639,11 +639,15 @@ public static partial class HttpTestMessages
                     ResponsePayload = "{\"RESPONSE_PAYLOAD\":11}",
                     MessageContentType = MediaTypeNames.Application.Json,
                     ResponseContentType = MediaTypeNames.Application.Json,
-                    JsonSerializerContext = TestMessageWithCustomJsonTypeInfo.JsonSerializerContext,
+                    JsonSerializerContext = GetJsonSerializerContext<TestMessageWithCustomJsonTypeInfo, TestMessageWithCustomJsonTypeInfoResponse>(),
                     Message = new TestMessageWithCustomJsonTypeInfo { MessagePayload = 10 },
                     Response = new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 },
                     RegistrationMethod = registrationMethod,
                 };
+
+                static JsonSerializerContext? GetJsonSerializerContext<TMessage, TResponse>()
+                    where TMessage : class, IMessage<TMessage, TResponse>
+                    => TMessage.JsonSerializerContext;
 
                 yield return new()
                 {
@@ -1551,8 +1555,6 @@ public static partial class HttpTestMessages
     public sealed partial record TestMessageWithCustomJsonTypeInfo
     {
         public int MessagePayload { get; init; }
-
-        public static JsonSerializerContext JsonSerializerContext => TestMessageWithCustomJsonTypeInfoJsonSerializerContext.Default;
     }
 
     public sealed record TestMessageWithCustomJsonTypeInfoResponse

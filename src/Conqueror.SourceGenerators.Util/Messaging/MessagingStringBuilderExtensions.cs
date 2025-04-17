@@ -119,6 +119,26 @@ internal static class MessagingStringBuilderExtensions
                  .AppendSingleIndent().Append($"=> global::Conqueror.IMessageTypesInjector.GetTypeInjectorsForMessageType<{messageTypeDescriptor.Name}>();").AppendLine();
     }
 
+    public static StringBuilder AppendJsonSerializerContext(this StringBuilder sb,
+                                                            Indentation indentation,
+                                                            in TypeDescriptor messageTypeDescriptor,
+                                                            in TypeDescriptor responseTypeDescriptor,
+                                                            bool hasJsonSerializerContext)
+    {
+        if (!hasJsonSerializerContext)
+        {
+            return sb;
+        }
+
+        return sb.AppendLine()
+                 .AppendMessageGeneratedCodeAttribute(indentation)
+                 .AppendEditorBrowsableNeverAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append($"static global::System.Text.Json.Serialization.JsonSerializerContext global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.JsonSerializerContext")
+                 .AppendLineWithIndentation(indentation)
+                 .AppendSingleIndent().Append($"=> global::{messageTypeDescriptor.FullyQualifiedName}JsonSerializerContext.Default;").AppendLine();
+    }
+
     private static StringBuilder AppendMessageGeneratedCodeAttribute(this StringBuilder sb,
                                                                      Indentation indentation)
     {

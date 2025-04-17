@@ -58,12 +58,13 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
             responseTypeSymbol = attributeClass.TypeArguments[0];
         }
 
-        return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol, attributeData);
+        return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol, attributeData, context.SemanticModel);
     }
 
     private static HttpMessageTypesDescriptor GenerateTypeDescriptor(INamedTypeSymbol messageTypeSymbol,
                                                                      ITypeSymbol? responseTypeSymbol,
-                                                                     AttributeData attributeData)
+                                                                     AttributeData attributeData,
+                                                                     SemanticModel semanticModel)
     {
         string? httpMethod = null;
         string? pathPrefix = null;
@@ -125,7 +126,7 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
             }
         }
 
-        return new(MessageAbstractionsGeneratorHelper.GenerateMessageTypesDescriptor(messageTypeSymbol, responseTypeSymbol),
+        return new(MessageAbstractionsGeneratorHelper.GenerateMessageTypesDescriptor(messageTypeSymbol, responseTypeSymbol, semanticModel),
                    httpMethod,
                    pathPrefix,
                    path,
