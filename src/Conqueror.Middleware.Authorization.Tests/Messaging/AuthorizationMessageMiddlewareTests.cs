@@ -92,9 +92,9 @@ public sealed partial class AuthorizationMessageMiddlewareTests
             : ["test failure 1", "test failure 2"];
 
         await Assert.ThatAsync(() => handler.Handle(new() { Payload = 10 }, host.TestTimeoutToken),
-                               Throws.Exception.TypeOf<MessageAuthorizationFailedException<TestMessage>>()
-                                     .With.Property(nameof(MessageAuthorizationFailedException<TestMessage>.WellKnownReason)).EqualTo(expectedFailureReason)
-                                     .And.Matches<MessageAuthorizationFailedException<TestMessage>>(e => e.Result.Details.SequenceEqual(expectedFailureDetails)));
+                               Throws.Exception.TypeOf<MessageAuthorizationFailedException>()
+                                     .With.Property(nameof(MessageAuthorizationFailedException.WellKnownReason)).EqualTo(expectedFailureReason)
+                                     .And.Matches<MessageAuthorizationFailedException>(e => e.Result.Details.SequenceEqual(expectedFailureDetails)));
     }
 
     [Test]
