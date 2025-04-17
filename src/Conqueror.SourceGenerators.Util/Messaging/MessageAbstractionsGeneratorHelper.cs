@@ -9,17 +9,15 @@ namespace Conqueror.SourceGenerators.Util.Messaging;
 public static class MessageAbstractionsGeneratorHelper
 {
     public static MessageTypesDescriptor GenerateMessageTypesDescriptor(INamedTypeSymbol messageTypeSymbol,
-                                                                        INamedTypeSymbol? responseTypeSymbol)
+                                                                        ITypeSymbol? responseTypeSymbol)
     {
         var messageTypeDescriptor = GenerateTypeDescriptor(messageTypeSymbol);
 
         return new(messageTypeDescriptor, responseTypeSymbol is not null ? GenerateTypeDescriptor(responseTypeSymbol) : GenerateUnitResponseTypeDescriptor());
     }
 
-    private static TypeDescriptor GenerateTypeDescriptor(INamedTypeSymbol symbol)
+    private static TypeDescriptor GenerateTypeDescriptor(ITypeSymbol symbol)
     {
-        var typeSyntax = symbol.DeclaringSyntaxReferences[0].GetSyntax();
-
         var properties = symbol.GetMembers()
                                .OfType<IPropertySymbol>()
                                .Where(m => m is { DeclaredAccessibility: Accessibility.Public, IsStatic: false })
@@ -28,18 +26,19 @@ public static class MessageAbstractionsGeneratorHelper
                                                                    IsPrimitive(p.Type),
                                                                    IsNullable(p.Type),
                                                                    p.Type.SpecialType == SpecialType.System_String,
-                                                                   GenerateEnumerableDescriptor(p)))
+                                                                   GenerateEnumerableDescriptor(p.Type)))
                                .ToArray();
 
         // TODO: improve the logic for finding own properties to account for fields, etc.
         return new(
             symbol.Name,
-            symbol.ContainingNamespace.IsGlobalNamespace ? string.Empty : symbol.ContainingNamespace.ToString(),
+            symbol.ContainingNamespace?.IsGlobalNamespace ?? false ? string.Empty : symbol.ContainingNamespace?.ToString() ?? string.Empty,
             symbol.ToString(),
             symbol.IsRecord,
             symbol.GetMembers().OfType<IPropertySymbol>().Any(p => p.Name != "EqualityContract"),
-            ParentClasses: GetParentClasses(typeSyntax),
-            Properties: new(properties));
+            ParentClasses: GetParentClasses(symbol),
+            Properties: new(properties),
+            Enumerable: GenerateEnumerableDescriptor(symbol));
     }
 
     private static TypeDescriptor GenerateUnitResponseTypeDescriptor()
@@ -51,25 +50,26 @@ public static class MessageAbstractionsGeneratorHelper
             true,
             false,
             ParentClasses: default,
-            Properties: default);
+            Properties: default,
+            Enumerable: null);
     }
 
-    private static EnumerableDescriptor? GenerateEnumerableDescriptor(IPropertySymbol symbol)
+    private static EnumerableDescriptor? GenerateEnumerableDescriptor(ITypeSymbol symbol)
     {
-        if (symbol.Type.SpecialType == SpecialType.System_String)
+        if (symbol.SpecialType == SpecialType.System_String)
         {
             return null;
         }
 
-        foreach (var interfaceType in symbol.Type.AllInterfaces)
+        foreach (var interfaceType in symbol.AllInterfaces)
         {
             if (interfaceType.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)
             {
                 var typeArgument = interfaceType.TypeArguments[0];
 
-                return new(symbol.Type.ToString(),
+                return new(symbol.ToString(),
                            typeArgument.ToString(),
-                           symbol.Type is IArrayTypeSymbol,
+                           symbol is IArrayTypeSymbol,
                            IsPrimitive(typeArgument),
                            typeArgument.IsReferenceType);
             }
@@ -78,8 +78,15 @@ public static class MessageAbstractionsGeneratorHelper
         return null;
     }
 
-    private static EquatableArray<ParentClass> GetParentClasses(SyntaxNode syntaxNode)
+    private static EquatableArray<ParentClass> GetParentClasses(ITypeSymbol symbol)
     {
+        if (symbol.DeclaringSyntaxReferences.Length == 0)
+        {
+            return [];
+        }
+
+        var syntaxNode = symbol.DeclaringSyntaxReferences[0].GetSyntax();
+
         var parentSyntax = syntaxNode.Parent as TypeDeclarationSyntax;
 
         var result = new List<ParentClass>();

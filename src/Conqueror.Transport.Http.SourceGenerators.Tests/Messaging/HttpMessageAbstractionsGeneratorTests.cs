@@ -322,6 +322,71 @@ public partial record TestMessage
         return Verify(output, Settings());
     }
 
+    [Test]
+    public Task GivenTestMessageWithArrayResponseBothInSameNamespace_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+
+namespace Generator.Tests;
+
+[HttpMessage<TestMessageResponse[]>]
+public partial record TestMessage
+{
+    public required int Payload { get; init; }
+}
+
+public record TestMessageResponse(int Payload);";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenTestMessageWithListResponseBothInSameNamespace_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+using System.Collections.Generic;
+
+namespace Generator.Tests;
+
+[HttpMessage<List<TestMessageResponse>>]
+public partial record TestMessage
+{
+    public required int Payload { get; init; }
+}
+
+public record TestMessageResponse(int Payload);";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenTestMessageWithEnumerableResponseBothInSameNamespace_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+using System.Collections.Generic;
+
+namespace Generator.Tests;
+
+[HttpMessage<IEnumerable<TestMessageResponse>>]
+public partial record TestMessage
+{
+    public required int Payload { get; init; }
+}
+
+public record TestMessageResponse(int Payload);";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
     private VerifySettings Settings()
     {
         var settings = new VerifySettings();

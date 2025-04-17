@@ -74,11 +74,11 @@ public static class MessageAbstractionsGeneratorUtil
             return null;
         }
 
-        INamedTypeSymbol? responseTypeSymbol = null;
+        ITypeSymbol? responseTypeSymbol = null;
 
         if (attributeClassToProcess?.TypeArguments.Length > 0)
         {
-            responseTypeSymbol = attributeClassToProcess.TypeArguments[0] as INamedTypeSymbol;
+            responseTypeSymbol = attributeClassToProcess.TypeArguments[0];
         }
 
         ct.ThrowIfCancellationRequested();

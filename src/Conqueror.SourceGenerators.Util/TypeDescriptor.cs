@@ -7,7 +7,8 @@ public readonly record struct TypeDescriptor(
     bool IsRecord,
     bool HasProperties,
     EquatableArray<PropertyDescriptor> Properties,
-    EquatableArray<ParentClass> ParentClasses)
+    EquatableArray<ParentClass> ParentClasses,
+    EnumerableDescriptor? Enumerable)
 {
     public readonly string FullyQualifiedName = FullyQualifiedName;
     public readonly bool HasProperties = HasProperties;
@@ -16,6 +17,7 @@ public readonly record struct TypeDescriptor(
     public readonly string Namespace = Namespace;
     public readonly EquatableArray<ParentClass> ParentClasses = ParentClasses;
     public readonly EquatableArray<PropertyDescriptor> Properties = Properties;
+    public readonly EnumerableDescriptor? Enumerable = Enumerable;
 }
 
 public readonly record struct ParentClass(
