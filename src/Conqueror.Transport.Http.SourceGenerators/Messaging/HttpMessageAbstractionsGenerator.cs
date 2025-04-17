@@ -42,7 +42,7 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
             return null;
         }
 
-        INamedTypeSymbol? responseTypeSymbol = null;
+        ITypeSymbol? responseTypeSymbol = null;
 
         var attributeData = context.Attributes.Single();
         var attributeClass = attributeData.AttributeClass;
@@ -55,14 +55,14 @@ public sealed class HttpMessageAbstractionsGenerator : IIncrementalGenerator
 
         if (attributeClass.TypeArguments.Length > 0)
         {
-            responseTypeSymbol = attributeClass.TypeArguments[0] as INamedTypeSymbol;
+            responseTypeSymbol = attributeClass.TypeArguments[0];
         }
 
         return GenerateTypeDescriptor(messageTypeSymbol, responseTypeSymbol, attributeData);
     }
 
     private static HttpMessageTypesDescriptor GenerateTypeDescriptor(INamedTypeSymbol messageTypeSymbol,
-                                                                     INamedTypeSymbol? responseTypeSymbol,
+                                                                     ITypeSymbol? responseTypeSymbol,
                                                                      AttributeData attributeData)
     {
         string? httpMethod = null;

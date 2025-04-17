@@ -687,6 +687,69 @@ public static partial class HttpTestMessages
                     RegistrationMethod = registrationMethod,
                 };
             }
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithArrayResponse),
+                ResponseType = typeof(TestMessageResponse[]),
+                HandlerType = typeof(TestMessageWithArrayResponseHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithArrayResponse",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = "[{\"payload\":11},{\"payload\":12}]",
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithArrayResponse { Payload = 10 },
+                Response = new TestMessageResponse[] { new() { Payload = 11 }, new() { Payload = 12 } },
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithListResponse),
+                ResponseType = typeof(List<TestMessageResponse>),
+                HandlerType = typeof(TestMessageWithListResponseHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithListResponse",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = "[{\"payload\":11},{\"payload\":12}]",
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithListResponse { Payload = 10 },
+                Response = new List<TestMessageResponse> { new() { Payload = 11 }, new() { Payload = 12 } },
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithEnumerableResponse),
+                ResponseType = typeof(IEnumerable<TestMessageResponse>),
+                HandlerType = typeof(TestMessageWithEnumerableResponseHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithEnumerableResponse",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = "[{\"payload\":11},{\"payload\":12}]",
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithEnumerableResponse { Payload = 10 },
+                Response = new List<TestMessageResponse> { new() { Payload = 11 }, new() { Payload = 12 } },
+                RegistrationMethod = registrationMethod,
+            };
         }
 
         foreach (var registrationMethod in new[]
@@ -1576,6 +1639,75 @@ public static partial class HttpTestMessages
         {
             observations.SeenTransportTypeInMiddleware = ctx.TransportType;
             return ctx.Next(ctx.Message, ctx.CancellationToken);
+        }
+    }
+
+    [HttpMessage<TestMessageResponse[]>]
+    public sealed partial record TestMessageWithArrayResponse
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed class TestMessageWithArrayResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithArrayResponse.IHandler
+    {
+        public async Task<TestMessageResponse[]> Handle(TestMessageWithArrayResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
+        }
+    }
+
+    [HttpMessage<List<TestMessageResponse>>]
+    public sealed partial record TestMessageWithListResponse
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed class TestMessageWithListResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithListResponse.IHandler
+    {
+        public async Task<List<TestMessageResponse>> Handle(TestMessageWithListResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
+        }
+    }
+
+    [HttpMessage<IEnumerable<TestMessageResponse>>]
+    public sealed partial record TestMessageWithEnumerableResponse
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed class TestMessageWithEnumerableResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithEnumerableResponse.IHandler
+    {
+        public async Task<IEnumerable<TestMessageResponse>> Handle(TestMessageWithEnumerableResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
         }
     }
 

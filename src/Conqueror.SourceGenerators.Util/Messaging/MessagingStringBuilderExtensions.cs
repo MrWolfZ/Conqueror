@@ -17,7 +17,7 @@ internal static class MessagingStringBuilderExtensions
                  .Append("/// <summary>").AppendLineWithIndentation(indentation)
                  .Append($"///     Message Types for <see cref=\"global::{messageTypeDescriptor.FullyQualifiedName}\" />.").AppendLineWithIndentation(indentation)
                  .Append("/// </summary>").AppendLineWithIndentation(indentation)
-                 .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>").AppendLine()
+                 .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
                  .AppendBlock(indentation);
     }
 
@@ -28,7 +28,7 @@ internal static class MessagingStringBuilderExtensions
     {
         return sb.AppendMessageGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"public static global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}> T => global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>.Default;").AppendLine();
+                 .Append($"public static global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}> T => global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.Default;").AppendLine();
     }
 
     public static StringBuilder AppendMessageHandlerInterface(this StringBuilder sb,
@@ -45,7 +45,7 @@ internal static class MessagingStringBuilderExtensions
             return sb.Append($"public interface IHandler : global::Conqueror.IGeneratedMessageHandler<{messageTypeDescriptor.Name}, IPipeline>;").AppendLine();
         }
 
-        return sb.Append($"public interface IHandler : global::Conqueror.IGeneratedMessageHandler<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}, IPipeline>;").AppendLine();
+        return sb.Append($"public interface IHandler : global::Conqueror.IGeneratedMessageHandler<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}, IPipeline>;").AppendLine();
     }
 
     public static StringBuilder AppendMessagePipelineInterface(this StringBuilder sb,
@@ -56,14 +56,14 @@ internal static class MessagingStringBuilderExtensions
         sb = sb.AppendLine()
                .AppendMessageGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append($"public interface IPipeline : global::Conqueror.IMessagePipeline<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>").AppendLine();
+               .Append($"public interface IPipeline : global::Conqueror.IMessagePipeline<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine();
 
         using var d = sb.AppendBlock(indentation);
 
         return sb.AppendEditorBrowsableNeverAttribute(indentation)
                  .AppendMessageGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"public sealed class Adapter : global::Conqueror.GeneratedMessagePipelineAdapter<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>, IPipeline;").AppendLine();
+                 .Append($"public sealed class Adapter : global::Conqueror.GeneratedMessagePipelineAdapter<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>, IPipeline;").AppendLine();
     }
 
     public static StringBuilder AppendMessageEmptyInstanceProperty(this StringBuilder sb,
@@ -78,10 +78,10 @@ internal static class MessagingStringBuilderExtensions
 
         if (messageTypeDescriptor.HasProperties)
         {
-            return sb.Append($"static {messageTypeDescriptor.Name}? global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>.EmptyInstance => null;").AppendLine();
+            return sb.Append($"static {messageTypeDescriptor.Name}? global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.EmptyInstance => null;").AppendLine();
         }
 
-        return sb.Append($"static {messageTypeDescriptor.Name} global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>.EmptyInstance => new();").AppendLine();
+        return sb.Append($"static {messageTypeDescriptor.Name} global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.EmptyInstance => new();").AppendLine();
     }
 
     public static StringBuilder AppendMessageDefaultTypeInjector(this StringBuilder sb,
@@ -93,7 +93,7 @@ internal static class MessagingStringBuilderExtensions
                .AppendMessageGeneratedCodeAttribute(indentation)
                .AppendEditorBrowsableNeverAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append($"static global::Conqueror.IDefaultMessageTypesInjector global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>.DefaultTypeInjector")
+               .Append($"static global::Conqueror.IDefaultMessageTypesInjector global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.DefaultTypeInjector")
                .AppendLineWithIndentation(indentation)
                .AppendSingleIndent();
 
@@ -102,7 +102,7 @@ internal static class MessagingStringBuilderExtensions
             return sb.Append($"=> global::Conqueror.DefaultMessageTypesInjector<{messageTypeDescriptor.Name}, IPipeline, IPipeline.Adapter>.Default;").AppendLine();
         }
 
-        return sb.Append($"=> global::Conqueror.DefaultMessageTypesInjector<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}, IPipeline, IPipeline.Adapter>.Default;").AppendLine();
+        return sb.Append($"=> global::Conqueror.DefaultMessageTypesInjector<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}, IPipeline, IPipeline.Adapter>.Default;").AppendLine();
     }
 
     public static StringBuilder AppendMessageTypeInjectors(this StringBuilder sb,
@@ -114,7 +114,7 @@ internal static class MessagingStringBuilderExtensions
                  .AppendMessageGeneratedCodeAttribute(indentation)
                  .AppendEditorBrowsableNeverAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"static global::System.Collections.Generic.IReadOnlyCollection<global::Conqueror.IMessageTypesInjector> global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>.TypeInjectors")
+                 .Append($"static global::System.Collections.Generic.IReadOnlyCollection<global::Conqueror.IMessageTypesInjector> global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.TypeInjectors")
                  .AppendLineWithIndentation(indentation)
                  .AppendSingleIndent().Append($"=> global::Conqueror.IMessageTypesInjector.GetTypeInjectorsForMessageType<{messageTypeDescriptor.Name}>();").AppendLine();
     }

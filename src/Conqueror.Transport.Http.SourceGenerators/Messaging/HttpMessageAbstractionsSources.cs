@@ -76,7 +76,7 @@ public static class HttpMessageAbstractionsSources
 
         if (!responseTypeDescriptor.IsUnitMessageResponse())
         {
-            sb = sb.Append($", global::{responseTypeDescriptor.FullyQualifiedName}");
+            sb = sb.Append($", global::{responseTypeDescriptor.FullyQualifiedName()}");
         }
 
         return sb.Append(">").AppendLine()
@@ -94,7 +94,7 @@ public static class HttpMessageAbstractionsSources
                  .Append("static global::Conqueror.IHttpMessageTypesInjector global::Conqueror.IHttpMessage.HttpMessageTypesInjector")
                  .AppendLineWithIndentation(indentation)
                  .AppendSingleIndent()
-                 .Append($"=> global::Conqueror.HttpMessageTypesInjector<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName}>.Default;").AppendLine();
+                 .Append($"=> global::Conqueror.HttpMessageTypesInjector<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.Default;").AppendLine();
     }
 
     private static StringBuilder AppendHttpMethodProperty(this StringBuilder sb, Indentation indentation, in HttpMessageTypesDescriptor descriptor)
