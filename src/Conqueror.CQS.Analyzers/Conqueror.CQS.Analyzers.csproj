@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <PropertyGroup>
+        <IsDeprecated>true</IsDeprecated>
+    </PropertyGroup>
+
     <Import Project="../.targets/lib.targets" />
 
     <PropertyGroup>

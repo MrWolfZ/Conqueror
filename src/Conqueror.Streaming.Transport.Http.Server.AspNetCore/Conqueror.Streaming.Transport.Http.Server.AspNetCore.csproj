@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <IsExperimental>true</IsExperimental>
+        <IsDeprecated>true</IsDeprecated>
     </PropertyGroup>
 
     <Import Project="../.targets/lib.targets" />
