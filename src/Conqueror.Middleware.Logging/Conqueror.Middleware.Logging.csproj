@@ -22,7 +22,7 @@
 
     <!-- for NuGet -->
     <PropertyGroup>
-        <Description>Part of the Conqueror library set. Logging middlewares for command-query-separation (CQS).</Description>
+        <Description>Part of the Conqueror library set. Logging middlewares.</Description>
     </PropertyGroup>
 
     <ItemGroup>
