@@ -42,19 +42,7 @@ internal sealed class HttpResponseBodySerializer<TMessage, TResponse>
             jsonTypeInfo = (JsonTypeInfo<TResponse>)jsonSerializerSettings.GetTypeInfo(typeof(TResponse));
         }
 
-        var response = await content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken).ConfigureAwait(false);
-
-        if (response is null)
-        {
-            throw new HttpMessageFailedOnClientException($"failed to deserialize HTTP message response of type '{typeof(TResponse).Name}'")
-            {
-                Response = null,
-                MessageType = typeof(TMessage),
-                TransportType = new(ConquerorTransportHttpConstants.TransportName, MessageTransportRole.Client),
-                Reason = "failed to deserialize HTTP message response",
-            };
-        }
-
-        return response;
+        return await content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken).ConfigureAwait(false)
+               ?? throw new ArgumentException($"failed to deserialize HTTP message response of type '{typeof(TResponse).Name}'", nameof(content));
     }
 }

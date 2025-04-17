@@ -380,6 +380,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.So
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.SourceGenerators.Tests", "src\Conqueror.Transport.Http.SourceGenerators.Tests\Conqueror.Transport.Http.SourceGenerators.Tests.csproj", "{7D9BF2C2-6126-47C2-849F-EDC69F108383}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization", "src\Conqueror.Middleware.Authorization\Conqueror.Middleware.Authorization.csproj", "{B251E37A-25A6-45C3-882D-C1A32B3911C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Tests", "src\Conqueror.Middleware.Authorization.Tests\Conqueror.Middleware.Authorization.Tests.csproj", "{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -925,6 +929,14 @@ Global
 		{7D9BF2C2-6126-47C2-849F-EDC69F108383}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D9BF2C2-6126-47C2-849F-EDC69F108383}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D9BF2C2-6126-47C2-849F-EDC69F108383}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B251E37A-25A6-45C3-882D-C1A32B3911C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B251E37A-25A6-45C3-882D-C1A32B3911C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B251E37A-25A6-45C3-882D-C1A32B3911C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B251E37A-25A6-45C3-882D-C1A32B3911C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
@@ -1086,5 +1098,7 @@ Global
 		{15084881-E515-4FF4-8640-AB7C08552A64} = {752A44EA-6603-47C4-9348-87B4100B7F98}
 		{46379060-EF02-4D37-BB3D-DE4C804EEBF2} = {060F13CA-55B0-4D28-9010-008B87BEA087}
 		{7D9BF2C2-6126-47C2-849F-EDC69F108383} = {060F13CA-55B0-4D28-9010-008B87BEA087}
+		{B251E37A-25A6-45C3-882D-C1A32B3911C8} = {752A44EA-6603-47C4-9348-87B4100B7F98}
+		{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2} = {752A44EA-6603-47C4-9348-87B4100B7F98}
 	EndGlobalSection
 EndGlobal

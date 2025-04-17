@@ -8,7 +8,8 @@ namespace Conqueror;
 
 [Serializable]
 [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "the standard constructors don't make sense for this class")]
-public sealed class HttpMessageFailedOnClientException : MessageFailedException
+public sealed class HttpMessageFailedOnClientException<TMessage> : MessageFailedException<TMessage>
+    where TMessage : class
 {
     public HttpMessageFailedOnClientException(string message, Exception innerException)
         : base(message, innerException)
@@ -27,4 +28,6 @@ public sealed class HttpMessageFailedOnClientException : MessageFailedException
     public required HttpResponseMessage? Response { get; init; }
 
     public HttpStatusCode? StatusCode => Response?.StatusCode;
+
+    public override string WellKnownReason => WellKnownReasons.None;
 }
