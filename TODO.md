@@ -31,15 +31,6 @@ This file contains all the open points for extensions and improvements to the **
 ### Core middleware
 
 - [ ] in logging middleware recipe explain how to use payload logging kind
-- [ ] reimplement authorization middleware
-  - [ ] principal is set in context in server http transport client
-    - [ ] set based on hardcoded string or source file linking instead of common base project
-  - [ ] requiring an authenticated principal is an authorization activity
-  - [ ] allow placing authorization middleware without check
-  - [ ] allow dynamically adding authorization checks
-    - [ ] do not be too specific, but consider at least having a built-in check for requiring authenticated principal
-  - [ ] add different kinds of authorization failure types
-  - [ ] store user principal context
 - [ ] reimplement data annotation middleware
   - [ ] mark it as requiring reflection
 - [ ] create projects for common middlewares, e.g.

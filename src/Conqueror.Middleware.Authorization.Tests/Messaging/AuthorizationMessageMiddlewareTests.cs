@@ -1,4 +1,5 @@
-﻿using Conqueror.Middleware.Authorization.Messaging;
+﻿using System.Security.Claims;
+using Conqueror.Middleware.Authorization.Messaging;
 
 namespace Conqueror.Middleware.Authorization.Tests.Messaging;
 
@@ -118,7 +119,15 @@ public sealed partial class AuthorizationMessageMiddlewareTests
 
         MessageAuthorizationContext<TestMessage, TestMessageResponse>? seenContext = null;
 
+        var claimsPrincipal = new ClaimsPrincipal();
+
         using var scope = host.Host.Services.CreateScope();
+
+        using var conquerorContext = scope.ServiceProvider.GetRequiredService<IConquerorContextAccessor>().GetOrCreate();
+
+        conquerorContext.DownstreamContextData.Set("test-key", "test-value");
+
+        using var d = conquerorContext.SetCurrentPrincipal(claimsPrincipal);
 
         var handler = scope.ServiceProvider
                            .GetRequiredService<IMessageClients>()
@@ -138,7 +147,8 @@ public sealed partial class AuthorizationMessageMiddlewareTests
         Assert.That(seenContext, Is.Not.Null);
         Assert.That(seenContext.Message, Is.SameAs(msg));
         Assert.That(seenContext.ServiceProvider, Is.SameAs(scope.ServiceProvider));
-        Assert.That(seenContext.ConquerorContext, Is.Not.Null);
+        Assert.That(seenContext.ConquerorContext.DownstreamContextData.Get<string>("test-key"), Is.EqualTo("test-value"));
+        Assert.That(seenContext.CurrentPrincipal, Is.SameAs(claimsPrincipal));
     }
 
     [Message<TestMessageResponse>]

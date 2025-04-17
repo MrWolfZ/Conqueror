@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using static Conqueror.ConquerorTransportHttpConstants;
@@ -75,6 +77,42 @@ public sealed class MessagingServerExecutionTests
             Assert.That(seenTransportType?.IsHttp(), Is.True, $"transport type is {seenTransportType?.Name}");
             Assert.That(seenTransportType?.Role, Is.EqualTo(MessageTransportRole.Server));
         }
+    }
+
+    [Test]
+    public async Task GivenTestHttpMessage_WhenExecutingMessage_ConquerorContextContainsClaimsPrincipal()
+    {
+        ClaimsPrincipal? seenClaimsPrincipal = null;
+
+        await using var host = await HttpTransportTestHost.Create(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageHandler>()
+                            .AddSingleton<FnToCallFromHandler>(p =>
+                            {
+                                seenClaimsPrincipal = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCurrentPrincipalInternal();
+                                return Task.CompletedTask;
+                            });
+
+                _ = services.AddRouting().AddMessageEndpoints();
+            },
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+
+        var targetUriBuilder = new UriBuilder
+        {
+            Host = "localhost",
+            Path = "api/test",
+        };
+
+        using var request = new HttpRequestMessage(new("POST"), targetUriBuilder.Uri);
+
+        using var content = CreateJsonStringContent("{\"payload\":10}");
+        request.Content = content;
+
+        var response = await host.HttpClient.SendAsync(request);
+        await response.AssertSuccessStatusCode();
+
+        Assert.That(seenClaimsPrincipal, Is.Not.Null);
     }
 
     private static StringContent CreateJsonStringContent(string content)
