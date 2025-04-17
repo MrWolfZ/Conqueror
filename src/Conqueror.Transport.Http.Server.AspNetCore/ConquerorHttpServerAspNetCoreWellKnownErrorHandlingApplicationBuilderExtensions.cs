@@ -21,15 +21,15 @@ public static class ConquerorHttpServerAspNetCoreWellKnownErrorHandlingApplicati
             {
                 await next().ConfigureAwait(false);
             }
-            catch (MessageFailedException ex) when (ex.Reason == MessageFailedException.WellKnownReasons.UnauthenticatedPrincipal)
+            catch (MessageFailedException ex) when (ex.WellKnownReason == MessageFailedException.WellKnownReasons.Unauthenticated)
             {
                 await ctx.ChallengeAsync().ConfigureAwait(false);
             }
-            catch (MessageFailedException ex) when (ex.Reason == MessageFailedException.WellKnownReasons.UnauthorizedPrincipal)
+            catch (MessageFailedException ex) when (ex.WellKnownReason == MessageFailedException.WellKnownReasons.Unauthorized)
             {
                 await ctx.ForbidAsync().ConfigureAwait(false);
             }
-            catch (MessageFailedException ex) when (ex.Reason == MessageFailedException.WellKnownReasons.InvalidFormattedContextData)
+            catch (MessageFailedException ex) when (ex.WellKnownReason == MessageFailedException.WellKnownReasons.InvalidFormattedContextData)
             {
                 // using this instead of just writing the status code directly ensures that the request is properly logged
                 await new BadRequestResult().ExecuteResultAsync(new() { HttpContext = ctx }).ConfigureAwait(false);

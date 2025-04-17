@@ -31,11 +31,10 @@ public static class HttpMessageServerTransportClientBuilderExtensions
             }
             catch (FormattedConquerorContextDataInvalidException ex)
             {
-                throw new MessageFailedException("test", ex)
+                throw new MessageFailedDueToInvalidFormattedConquerorContextDataException<TMessage>(null, ex)
                 {
-                    MessageType = typeof(TMessage),
-                    TransportType = new(ConquerorTransportHttpConstants.TransportName, MessageTransportRole.Server),
-                    Reason = MessageFailedException.WellKnownReasons.InvalidFormattedContextData,
+                    MessagePayload = message,
+                    TransportType = new(TransportTypeName, MessageTransportRole.Server),
                 };
             }
 

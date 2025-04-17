@@ -60,7 +60,7 @@ public static class ConquerorContextDataFormattingExtensions
         }
         catch (Exception e)
         {
-            throw new FormattedConquerorContextDataInvalidException("an error occurred while parsing formatted context data", e);
+            throw new FormattedConquerorContextDataInvalidException("an error occurred while parsing formatted Conqueror context data", e);
         }
     }
 

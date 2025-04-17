@@ -46,12 +46,11 @@ internal sealed class HttpMessageTransportClient<TMessage, TResponse>(Uri baseAd
             if (!response.IsSuccessStatusCode)
             {
                 var responseContent = await response.BufferAndReadContent().ConfigureAwait(false);
-                throw new HttpMessageFailedOnClientException($"HTTP message of type '{typeof(TMessage).Name}' failed with status code {response.StatusCode} and response content: {responseContent}")
+                throw new HttpMessageFailedOnClientException<TMessage>($"HTTP message failed with status code {response.StatusCode} and response content: {responseContent}")
                 {
                     Response = response,
-                    MessageType = typeof(TMessage),
+                    MessagePayload = message,
                     TransportType = new(TransportTypeName, MessageTransportRole.Client),
-                    Reason = $"non-success status code: {response.StatusCode}",
                 };
             }
 
@@ -61,14 +60,13 @@ internal sealed class HttpMessageTransportClient<TMessage, TResponse>(Uri baseAd
 
             return await responseSerializer.Deserialize(serviceProvider, response.Content, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is not HttpMessageFailedOnClientException)
+        catch (Exception ex) when (ex is not HttpMessageFailedOnClientException<TMessage>)
         {
-            throw new HttpMessageFailedOnClientException($"HTTP message of type '{typeof(TMessage).Name}' failed", ex)
+            throw new HttpMessageFailedOnClientException<TMessage>("HTTP message failed", ex)
             {
                 Response = null,
-                MessageType = typeof(TMessage),
+                MessagePayload = message,
                 TransportType = new(TransportTypeName, MessageTransportRole.Client),
-                Reason = "an exception occured while processing message",
             };
         }
     }
