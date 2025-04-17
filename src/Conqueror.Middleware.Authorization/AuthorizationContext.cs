@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace Conqueror.Middleware.Authorization;
 
@@ -8,6 +9,8 @@ public abstract class AuthorizationContext
     public abstract IServiceProvider ServiceProvider { get; }
 
     public abstract ConquerorContext ConquerorContext { get; }
+
+    public abstract ClaimsPrincipal? CurrentPrincipal { get; }
 
     /// <summary>
     ///     Create an authorization result that represents a successful authorization check.

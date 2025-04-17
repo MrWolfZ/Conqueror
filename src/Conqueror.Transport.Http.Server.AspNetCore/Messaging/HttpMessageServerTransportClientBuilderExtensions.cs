@@ -23,7 +23,7 @@ public static class HttpMessageServerTransportClientBuilderExtensions
     {
         public string TransportTypeName => ConquerorTransportHttpConstants.TransportName;
 
-        public Task<TResponse> Send(TMessage message, IServiceProvider serviceProvider, ConquerorContext conquerorContext, CancellationToken cancellationToken)
+        public async Task<TResponse> Send(TMessage message, IServiceProvider serviceProvider, ConquerorContext conquerorContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -38,7 +38,9 @@ public static class HttpMessageServerTransportClientBuilderExtensions
                 };
             }
 
-            return wrapped.Send(message, serviceProvider, conquerorContext, cancellationToken);
+            using var d = conquerorContext.SetCurrentPrincipalInternal(httpContext.User);
+
+            return await wrapped.Send(message, serviceProvider, conquerorContext, cancellationToken).ConfigureAwait(false);
         }
     }
 }

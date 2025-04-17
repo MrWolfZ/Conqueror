@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Security.Claims;
 
 namespace Conqueror.Middleware.Authorization.Messaging;
 
 public sealed class MessageAuthorizationContext<TMessage, TResponse>(
     TMessage message,
     IServiceProvider serviceProvider,
-    ConquerorContext conquerorContext)
+    ConquerorContext conquerorContext,
+    ClaimsPrincipal? currentPrincipal)
     : AuthorizationContext
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -14,4 +16,6 @@ public sealed class MessageAuthorizationContext<TMessage, TResponse>(
     public override IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public override ConquerorContext ConquerorContext { get; } = conquerorContext;
+
+    public override ClaimsPrincipal? CurrentPrincipal { get; } = currentPrincipal;
 }

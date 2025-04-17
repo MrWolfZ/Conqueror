@@ -16,6 +16,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="../Conqueror.Middleware.Authorization/CurrentClaimsPrincipalConquerorContextMethods.cs" Link="CurrentClaimsPrincipalConquerorContextMethods.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Conqueror.Transport.Http.Client\Conqueror.Transport.Http.Client.csproj" />
     </ItemGroup>
 

@@ -10,7 +10,10 @@ internal sealed class AuthorizationMessageMiddleware<TMessage, TResponse> : IMes
     /// <inheritdoc />
     public async Task<TResponse> Execute(MessageMiddlewareContext<TMessage, TResponse> ctx)
     {
-        var authContext = new MessageAuthorizationContext<TMessage, TResponse>(ctx.Message, ctx.ServiceProvider, ctx.ConquerorContext);
+        var authContext = new MessageAuthorizationContext<TMessage, TResponse>(ctx.Message,
+                                                                               ctx.ServiceProvider,
+                                                                               ctx.ConquerorContext,
+                                                                               ctx.ConquerorContext.GetCurrentPrincipal());
 
         foreach (var authorizationCheck in Configuration.AuthorizationChecks)
         {
