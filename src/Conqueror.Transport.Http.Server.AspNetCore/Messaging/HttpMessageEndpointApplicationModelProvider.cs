@@ -116,6 +116,9 @@ internal sealed class HttpMessageEndpointApplicationModelProvider<TMessage, TRes
                                     TMessage.ApiGroupName);
 
                     action.ApiExplorer.GroupName = TMessage.ApiGroupName;
+
+                    // Swashbuckle uses this by default to extract tags, which then result in grouping in the UI
+                    action.RouteValues["controller"] = TMessage.ApiGroupName ?? TMessage.Name;
                 }
             }
 

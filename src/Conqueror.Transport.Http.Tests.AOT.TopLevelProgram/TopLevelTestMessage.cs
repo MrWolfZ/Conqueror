@@ -2,7 +2,12 @@
 
 namespace Conqueror.Transport.Http.Tests.AOT.TopLevelProgram;
 
-[HttpMessage<TopLevelTestMessageResponse>(Path = "test")]
+[HttpMessage<TopLevelTestMessageResponse>(
+    PathPrefix = "api/prefix",
+    Version = "v1",
+    Path = "messages/test",
+    ApiGroupName = "Test Messages",
+    Name = "test-message-name")]
 public sealed partial record TopLevelTestMessage
 {
     public required int Payload { get; init; }
