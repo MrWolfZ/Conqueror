@@ -46,7 +46,7 @@ internal sealed class HttpMessageTransportClient<TMessage, TResponse>(Uri baseAd
             if (!response.IsSuccessStatusCode)
             {
                 var responseContent = await response.BufferAndReadContent().ConfigureAwait(false);
-                throw new HttpMessageFailedOnClientException<TMessage>($"HTTP message failed with status code {response.StatusCode} and response content: {responseContent}")
+                throw new HttpMessageFailedOnClientException($"HTTP message of type '{typeof(TMessage)}' failed with status code {response.StatusCode} and response content: {responseContent}")
                 {
                     Response = response,
                     MessagePayload = message,
@@ -60,9 +60,9 @@ internal sealed class HttpMessageTransportClient<TMessage, TResponse>(Uri baseAd
 
             return await responseSerializer.Deserialize(serviceProvider, response.Content, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is not HttpMessageFailedOnClientException<TMessage>)
+        catch (Exception ex) when (ex is not HttpMessageFailedOnClientException)
         {
-            throw new HttpMessageFailedOnClientException<TMessage>("HTTP message failed", ex)
+            throw new HttpMessageFailedOnClientException($"HTTP message of type '{typeof(TMessage)}' failed", ex)
             {
                 Response = null,
                 MessagePayload = message,

@@ -21,7 +21,7 @@ internal sealed class AuthorizationMessageMiddleware<TMessage, TResponse> : IMes
 
             if (authorizationResult is AuthorizationFailureResult failure)
             {
-                throw new MessageAuthorizationFailedException<TMessage>(failure)
+                throw new MessageAuthorizationFailedException(failure)
                 {
                     MessagePayload = ctx.Message,
                     TransportType = ctx.TransportType,

@@ -4,30 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public abstract class MessageFailedException<TMessage> : MessageFailedException
-    where TMessage : class
-{
-    protected MessageFailedException(string? message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
-
-    protected MessageFailedException(string? message)
-        : base(message)
-    {
-    }
-
-    protected MessageFailedException()
-    {
-    }
-
-    public override Type MessageType => typeof(TMessage);
-
-    public required TMessage MessagePayload { get; init; }
-
-    public override object MessagePayloadObject => MessagePayload;
-}
-
 public abstract class MessageFailedException : Exception
 {
     protected MessageFailedException(string? message, Exception innerException)
@@ -44,9 +20,9 @@ public abstract class MessageFailedException : Exception
     {
     }
 
-    public abstract Type MessageType { get; }
+    public Type MessageType => MessagePayload.GetType();
 
-    public abstract object MessagePayloadObject { get; }
+    public required object MessagePayload { get; init; }
 
     public abstract string WellKnownReason { get; }
 

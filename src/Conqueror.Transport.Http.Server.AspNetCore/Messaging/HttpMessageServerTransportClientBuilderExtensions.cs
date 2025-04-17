@@ -31,7 +31,7 @@ public static class HttpMessageServerTransportClientBuilderExtensions
             }
             catch (FormattedConquerorContextDataInvalidException ex)
             {
-                throw new MessageFailedDueToInvalidFormattedConquerorContextDataException<TMessage>(null, ex)
+                throw new MessageFailedDueToInvalidFormattedConquerorContextDataException($"badly formatted context data while processing HTTP message of type '{typeof(TMessage)}'", ex)
                 {
                     MessagePayload = message,
                     TransportType = new(TransportTypeName, MessageTransportRole.Server),
