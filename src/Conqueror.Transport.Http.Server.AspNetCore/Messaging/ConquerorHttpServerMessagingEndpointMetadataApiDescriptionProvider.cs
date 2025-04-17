@@ -53,7 +53,7 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
                 DisplayName = routeEndpoint.DisplayName,
                 RouteValues =
                 {
-                    ["controller"] = endpointMetadata.Name,
+                    ["controller"] = endpointMetadata.ApiGroupName ?? endpointMetadata.Name,
                 },
             },
         };
@@ -130,7 +130,7 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
                 StatusCode = endpointMetadata.SuccessStatusCode,
                 Type = typeof(void),
                 ApiResponseFormats = [],
-                IsDefaultResponse = true,
+                IsDefaultResponse = false,
             });
 
             return;
@@ -147,7 +147,7 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
                     MediaType = endpointMetadata.ResponseContentType,
                 },
             ],
-            IsDefaultResponse = true,
+            IsDefaultResponse = false,
         });
     }
 
@@ -208,7 +208,11 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
 internal sealed record ConquerorHttpMessageEndpointMetadata
 {
     public required string Name { get; init; }
+
+    public required string? ApiGroupName { get; init; }
+
     public required string HttpMethod { get; init; }
+
     public required Type MessageType { get; init; }
 
     public required bool HasPayload { get; init; }

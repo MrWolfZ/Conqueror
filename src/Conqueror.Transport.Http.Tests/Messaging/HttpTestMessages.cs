@@ -93,7 +93,7 @@ public static partial class HttpTestMessages
     public static void MapMessageEndpoints<TMessage, TResponse>(this IApplicationBuilder app, MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
     {
-        _ = app.UseConqueror();
+        _ = app.UseConquerorWellKnownErrorHandling();
         _ = app.UseRouting();
 
         if (testCase.RegistrationMethod
@@ -126,12 +126,16 @@ public static partial class HttpTestMessages
                 _ = endpoints.MapPost("/custom/api/test",
                                       async (TestMessage message, HttpContext ctx)
                                           => TypedResults.Ok(await ctx.GetMessageClient(TestMessage.T).Handle(message, ctx.RequestAborted)))
-                             .WithName(nameof(TestMessage));
+                             .WithName(nameof(TestMessage))
+                             .WithTags(nameof(TestMessage))
+                             .WithGroupName(nameof(TestMessage));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutPayload",
                                       (Delegate)(async (HttpContext ctx)
                                           => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithoutPayload.T).Handle(new(), ctx.RequestAborted))))
-                             .WithName(nameof(TestMessageWithoutPayload));
+                             .WithName(nameof(TestMessageWithoutPayload))
+                             .WithTags(nameof(TestMessageWithoutPayload))
+                             .WithGroupName(nameof(TestMessageWithoutPayload));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutResponse",
                                       async (TestMessageWithoutResponse message, HttpContext ctx) =>
@@ -139,7 +143,9 @@ public static partial class HttpTestMessages
                                           await ctx.GetMessageClient<TestMessageWithoutResponse>().Handle(message, ctx.RequestAborted);
                                           return TypedResults.Ok();
                                       })
-                             .WithName(nameof(TestMessageWithoutResponse));
+                             .WithName(nameof(TestMessageWithoutResponse))
+                             .WithTags(nameof(TestMessageWithoutResponse))
+                             .WithGroupName(nameof(TestMessageWithoutResponse));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutResponseWithoutPayload",
                                       async (HttpContext ctx) =>
@@ -147,23 +153,31 @@ public static partial class HttpTestMessages
                                           await ctx.GetMessageClient<TestMessageWithoutResponseWithoutPayload>().Handle(new(), ctx.RequestAborted);
                                           return TypedResults.StatusCode(200);
                                       })
-                             .WithName(nameof(TestMessageWithoutResponseWithoutPayload));
+                             .WithName(nameof(TestMessageWithoutResponseWithoutPayload))
+                             .WithTags(nameof(TestMessageWithoutResponseWithoutPayload))
+                             .WithGroupName(nameof(TestMessageWithoutResponseWithoutPayload));
 
                 _ = endpoints.MapGet("/custom/api/testMessageWithGet",
                                      async (int payload, string param, HttpContext ctx)
                                          => TypedResults.Ok(await ctx.GetMessageClient<TestMessageWithGet, TestMessageResponse>() // testing overload without inference
                                                                      .Handle(new() { Payload = payload, Param = param }, ctx.RequestAborted)))
-                             .WithName(nameof(TestMessageWithGet));
+                             .WithName(nameof(TestMessageWithGet))
+                             .WithTags(nameof(TestMessageWithGet))
+                             .WithGroupName(nameof(TestMessageWithGet));
 
                 _ = endpoints.MapGet("/custom/api/testMessageWithGetWithoutPayload",
                                      (Delegate)(async (HttpContext ctx)
                                          => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithGetWithoutPayload.T).Handle(new(), ctx.RequestAborted))))
-                             .WithName(nameof(TestMessageWithGetWithoutPayload));
+                             .WithName(nameof(TestMessageWithGetWithoutPayload))
+                             .WithTags(nameof(TestMessageWithGetWithoutPayload))
+                             .WithGroupName(nameof(TestMessageWithGetWithoutPayload));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithMiddleware",
                                       async (TestMessageWithMiddleware message, HttpContext ctx)
                                           => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithMiddleware.T).Handle(message, ctx.RequestAborted)))
-                             .WithName(nameof(TestMessageWithMiddleware));
+                             .WithName(nameof(TestMessageWithMiddleware))
+                             .WithTags(nameof(TestMessageWithMiddleware))
+                             .WithGroupName(nameof(TestMessageWithMiddleware));
 
                 return;
             }
@@ -689,7 +703,7 @@ public static partial class HttpTestMessages
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/test",
                 SuccessStatusCode = 200,
-                ApiGroupName = null,
+                ApiGroupName = nameof(TestMessage),
                 Name = null,
                 ParameterCount = 1,
                 QueryString = null,
@@ -710,7 +724,7 @@ public static partial class HttpTestMessages
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutResponse",
                 SuccessStatusCode = 200,
-                ApiGroupName = null,
+                ApiGroupName = nameof(TestMessageWithoutResponse),
                 Name = null,
                 ParameterCount = 1,
                 QueryString = null,
@@ -731,7 +745,7 @@ public static partial class HttpTestMessages
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutPayload",
                 SuccessStatusCode = 200,
-                ApiGroupName = null,
+                ApiGroupName = nameof(TestMessageWithoutPayload),
                 Name = null,
                 ParameterCount = 0,
                 QueryString = null,
@@ -752,7 +766,7 @@ public static partial class HttpTestMessages
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutResponseWithoutPayload",
                 SuccessStatusCode = 200,
-                ApiGroupName = null,
+                ApiGroupName = nameof(TestMessageWithoutResponseWithoutPayload),
                 Name = null,
                 ParameterCount = 0,
                 QueryString = null,
@@ -773,7 +787,7 @@ public static partial class HttpTestMessages
                 HttpMethod = MethodGet,
                 FullPath = "/custom/api/testMessageWithGet",
                 SuccessStatusCode = 200,
-                ApiGroupName = null,
+                ApiGroupName = nameof(TestMessageWithGet),
                 Name = null,
                 ParameterCount = 2,
                 QueryString = "?payload=10&param=test",
@@ -794,7 +808,7 @@ public static partial class HttpTestMessages
                 HttpMethod = MethodGet,
                 FullPath = "/custom/api/testMessageWithGetWithoutPayload",
                 SuccessStatusCode = 200,
-                ApiGroupName = null,
+                ApiGroupName = nameof(TestMessageWithGetWithoutPayload),
                 Name = null,
                 ParameterCount = 0,
                 QueryString = null,
@@ -815,7 +829,7 @@ public static partial class HttpTestMessages
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithMiddleware",
                 SuccessStatusCode = 200,
-                ApiGroupName = null,
+                ApiGroupName = nameof(TestMessageWithMiddleware),
                 Name = null,
                 ParameterCount = 1,
                 QueryString = null,
@@ -1618,6 +1632,7 @@ public static partial class HttpTestMessages
     private sealed class TestHttpMessageController : ControllerBase
     {
         [HttpPost("/custom/api/test", Name = nameof(TestMessage))]
+        [ApiExplorerSettings(GroupName = nameof(TestMessage))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
         public Task<TestMessageResponse> ExecuteTestMessage(TestMessage message, CancellationToken cancellationToken)
@@ -1626,6 +1641,7 @@ public static partial class HttpTestMessages
         }
 
         [HttpPost("/custom/api/testMessageWithoutPayload", Name = nameof(TestMessageWithoutPayload))]
+        [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutPayload))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
         public Task<TestMessageResponse> ExecuteTestMessageWithoutPayload(CancellationToken cancellationToken)
         {
@@ -1633,6 +1649,7 @@ public static partial class HttpTestMessages
         }
 
         [HttpPost("/custom/api/testMessageWithoutResponse", Name = nameof(TestMessageWithoutResponse))]
+        [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutResponse))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(200)]
         public Task ExecuteTestMessageWithoutResponse(TestMessageWithoutResponse message, CancellationToken cancellationToken)
@@ -1641,6 +1658,7 @@ public static partial class HttpTestMessages
         }
 
         [HttpPost("/custom/api/testMessageWithoutResponseWithoutPayload", Name = nameof(TestMessageWithoutResponseWithoutPayload))]
+        [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutResponseWithoutPayload))]
         [ProducesResponseType(200)]
         public Task ExecuteTestMessageWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
         {
@@ -1648,6 +1666,7 @@ public static partial class HttpTestMessages
         }
 
         [HttpGet("/custom/api/testMessageWithGet", Name = nameof(TestMessageWithGet))]
+        [ApiExplorerSettings(GroupName = nameof(TestMessageWithGet))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
         public Task<TestMessageResponse> ExecuteTestMessageWithGet(int payload, string param, CancellationToken cancellationToken)
         {
@@ -1655,6 +1674,7 @@ public static partial class HttpTestMessages
         }
 
         [HttpGet("/custom/api/testMessageWithGetWithoutPayload", Name = nameof(TestMessageWithGetWithoutPayload))]
+        [ApiExplorerSettings(GroupName = nameof(TestMessageWithGetWithoutPayload))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
         public Task<TestMessageResponse> ExecuteTestMessageWithGetWithoutPayload(CancellationToken cancellationToken)
         {
@@ -1662,6 +1682,7 @@ public static partial class HttpTestMessages
         }
 
         [HttpPost("/custom/api/testMessageWithMiddleware", Name = nameof(TestMessageWithMiddleware))]
+        [ApiExplorerSettings(GroupName = nameof(TestMessageWithMiddleware))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
         public Task<TestMessageResponse> ExecuteTestMessageWithMiddleware(TestMessageWithMiddleware message, CancellationToken cancellationToken)

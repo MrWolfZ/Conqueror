@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Conqueror;
 using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Conqueror.Transport.Http.Tests.AOT.TopLevelProgram;
+using Microsoft.AspNetCore.Routing.Constraints;
 
 [assembly: InternalsVisibleTo("Conqueror.Transport.Http.Tests")]
 [assembly: SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", Justification = "this simulates a normal user app")]
@@ -13,9 +14,24 @@ builder.Services
        .AddMessageEndpoints()
        .AddMessageHandler<TopLevelTestMessageHandler>();
 
+builder.Services
+       .AddEndpointsApiExplorer()
+       .AddSwaggerGen(c =>
+       {
+           c.DocInclusionPredicate((_, _) => true);
+       });
+
+builder.Services.Configure<RouteOptions>(options => options.SetParameterPolicy<RegexInlineRouteConstraint>("regex"));
+
 var app = builder.Build();
 
-app.UseConqueror();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseConquerorWellKnownErrorHandling();
 
 app.MapPost("/api/custom", async (HttpContext ctx)
                 =>

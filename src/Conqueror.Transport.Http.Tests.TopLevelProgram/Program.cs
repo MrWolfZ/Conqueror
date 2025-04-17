@@ -14,11 +14,24 @@ builder.Services
        .AddControllers()
        .AddMessageControllers();
 
+builder.Services
+       .AddEndpointsApiExplorer()
+       .AddSwaggerGen(c =>
+       {
+           c.DocInclusionPredicate((_, _) => true);
+       });
+
 builder.Services.AddMessageHandlersFromExecutingAssembly();
 
 var app = builder.Build();
 
-app.UseConqueror();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseConquerorWellKnownErrorHandling();
 
 app.MapPost("/api/custom", (
                     HttpContext ctx,

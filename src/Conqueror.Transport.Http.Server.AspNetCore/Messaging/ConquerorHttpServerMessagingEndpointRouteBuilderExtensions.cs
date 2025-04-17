@@ -129,6 +129,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                              .WithMetadata(new ConquerorHttpMessageEndpointMetadata
                              {
                                  Name = TMessage.Name,
+                                 ApiGroupName = TMessage.ApiGroupName,
                                  HttpMethod = TMessage.HttpMethod,
                                  MessageContentType = TMessage.HttpMessageSerializer?.ContentType ?? MediaTypeNames.Application.Json,
                                  ResponseContentType = TMessage.HttpResponseSerializer?.ContentType ?? MediaTypeNames.Application.Json,

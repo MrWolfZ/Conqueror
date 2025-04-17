@@ -30,7 +30,7 @@ public sealed partial class MessageTypeGenerationTests
             app =>
             {
                 _ = app.UseRouting();
-                _ = app.UseConqueror();
+                _ = app.UseConquerorWellKnownErrorHandling();
                 _ = app.UseEndpoints(b => b.MapControllers());
             });
 
