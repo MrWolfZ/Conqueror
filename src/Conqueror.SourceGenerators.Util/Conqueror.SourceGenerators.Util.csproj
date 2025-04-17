@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+    <PropertyGroup>
+        <IsExperimental>true</IsExperimental>
+    </PropertyGroup>
+
     <Import Project="../.targets/lib.targets" />
 
     <PropertyGroup>
