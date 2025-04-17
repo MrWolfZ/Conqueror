@@ -10,8 +10,7 @@ internal static class MessageAbstractionsGenerationHelper
     {
         var sb = new StringBuilder();
 
-        var content = sb.AppendGeneratedFile(in descriptor.MessageTypeDescriptor,
-                                             in descriptor.ResponseTypeDescriptor)
+        var content = sb.AppendGeneratedFile(in descriptor)
                         .ToString();
 
         sb.Clear();
@@ -27,10 +26,11 @@ internal static class MessageAbstractionsGenerationHelper
         return new(content, filename);
     }
 
-    private static StringBuilder AppendGeneratedFile(this StringBuilder sb,
-                                                     in TypeDescriptor messageTypeDescriptor,
-                                                     in TypeDescriptor responseTypeDescriptor)
+    private static StringBuilder AppendGeneratedFile(this StringBuilder sb, in MessageTypesDescriptor descriptor)
     {
+        var messageTypeDescriptor = descriptor.MessageTypeDescriptor;
+        var responseTypeDescriptor = descriptor.ResponseTypeDescriptor;
+
         var indentation = new Indentation();
 
         _ = sb.AppendFileHeader();
@@ -46,6 +46,7 @@ internal static class MessageAbstractionsGenerationHelper
                  .AppendMessagePipelineInterface(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
                  .AppendMessageEmptyInstanceProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
                  .AppendMessageDefaultTypeInjector(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
-                 .AppendMessageTypeInjectors(indentation, in messageTypeDescriptor, in responseTypeDescriptor);
+                 .AppendMessageTypeInjectors(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
+                 .AppendJsonSerializerContext(indentation, in messageTypeDescriptor, in responseTypeDescriptor, descriptor.HasJsonSerializerContext);
     }
 }

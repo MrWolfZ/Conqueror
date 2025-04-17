@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Text.Json.Serialization;
 using Conqueror.SourceGenerators.Messaging;
 using Conqueror.SourceGenerators.TestUtil;
 using Microsoft.CodeAnalysis;
@@ -180,6 +181,71 @@ public partial record TestMessage;
 public record TestMessageResponse;";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenTestMessageWithJsonSerializerContextInSameNamespace_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+
+namespace Generator.Tests;
+
+[Message<TestMessageResponse>]
+public partial record TestMessage;
+
+public record TestMessageResponse;
+
+internal class TestMessageJsonSerializerContext(JsonSerializerOptions options) : JsonSerializerContext(options)
+{
+    public override JsonTypeInfo GetTypeInfo(Type type) => throw new NotImplementedException();
+
+    protected override JsonSerializerOptions GeneratedSerializerOptions { get; }
+
+    public static JsonSerializerContext Default => null;
+}";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad.Concat([typeof(JsonSerializerContext).Assembly]), new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenTestMessageWithJsonSerializerContextInSameNamespaceInContainerType_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+
+namespace Generator.Tests;
+
+partial class Container
+{
+    [Message<TestMessageResponse>]
+    public partial record TestMessage;
+
+    public record TestMessageResponse;
+
+    internal class TestMessageJsonSerializerContext(JsonSerializerOptions options) : JsonSerializerContext(options)
+    {
+        public override JsonTypeInfo GetTypeInfo(Type type) => throw new NotImplementedException();
+
+        protected override JsonSerializerOptions GeneratedSerializerOptions { get; }
+
+        public static JsonSerializerContext Default => null;
+    }
+}";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad.Concat([typeof(JsonSerializerContext).Assembly]), new(input));
 
         Assert.That(diagnostics, Is.Empty, output);
         return Verify(output, Settings());

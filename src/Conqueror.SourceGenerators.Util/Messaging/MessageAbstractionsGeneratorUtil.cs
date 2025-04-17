@@ -83,6 +83,6 @@ public static class MessageAbstractionsGeneratorUtil
 
         ct.ThrowIfCancellationRequested();
 
-        return MessageAbstractionsGeneratorHelper.GenerateMessageTypesDescriptor(messageTypeSymbol, responseTypeSymbol);
+        return MessageAbstractionsGeneratorHelper.GenerateMessageTypesDescriptor(messageTypeSymbol, responseTypeSymbol, context.SemanticModel);
     }
 }

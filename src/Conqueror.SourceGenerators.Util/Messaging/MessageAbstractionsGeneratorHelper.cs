@@ -9,11 +9,17 @@ namespace Conqueror.SourceGenerators.Util.Messaging;
 public static class MessageAbstractionsGeneratorHelper
 {
     public static MessageTypesDescriptor GenerateMessageTypesDescriptor(INamedTypeSymbol messageTypeSymbol,
-                                                                        ITypeSymbol? responseTypeSymbol)
+                                                                        ITypeSymbol? responseTypeSymbol,
+                                                                        SemanticModel semanticModel)
     {
         var messageTypeDescriptor = GenerateTypeDescriptor(messageTypeSymbol);
 
-        return new(messageTypeDescriptor, responseTypeSymbol is not null ? GenerateTypeDescriptor(responseTypeSymbol) : GenerateUnitResponseTypeDescriptor());
+        var serializerContextTypeFromGlobalLookup = semanticModel.Compilation.GetTypeByMetadataName($"{messageTypeDescriptor.FullyQualifiedName}JsonSerializerContext");
+        var serializerContextTypeFromSiblingLookup = messageTypeSymbol.ContainingType?.GetTypeMembers().FirstOrDefault(m => m.Name == $"{messageTypeDescriptor.Name}JsonSerializerContext");
+
+        return new(messageTypeDescriptor,
+                   responseTypeSymbol is not null ? GenerateTypeDescriptor(responseTypeSymbol) : GenerateUnitResponseTypeDescriptor(),
+                   serializerContextTypeFromGlobalLookup is not null || serializerContextTypeFromSiblingLookup is not null);
     }
 
     private static TypeDescriptor GenerateTypeDescriptor(ITypeSymbol symbol)
