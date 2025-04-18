@@ -17,6 +17,8 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
 
     [Test]
     [TestCase(typeof(TestMessageHandler), typeof(TestMessage), typeof(TestMessageResponse))]
+    [TestCase(typeof(InternalTestMessageHandler), typeof(InternalTestMessage), typeof(TestMessageResponse))]
+    [TestCase(typeof(InternalTopLevelTestMessageHandler), typeof(InternalTopLevelTestMessage), typeof(TestMessageResponse))]
     [TestCase(typeof(TestMessageWithoutResponseHandler), typeof(TestMessageWithoutResponse), typeof(UnitMessageResponse))]
     public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_AddsMessageHandlerAsTransient(Type handlerType, Type messageType, Type responseType)
     {
@@ -154,6 +156,15 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Message]
     public sealed partial record ExplicitTestMessageWithoutResponse;
 
+    [Message<TestMessageResponse>]
+    internal sealed partial record InternalTestMessage;
+
+    [Message<TestMessageResponse>]
+    private sealed partial record PrivateTestMessage;
+
+    [Message<TestMessageResponse>]
+    protected sealed partial record ProtectedTestMessage;
+
     public sealed class TestMessageHandler : TestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
@@ -213,15 +224,30 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
             => Task.CompletedTask;
     }
 
-    protected sealed class ProtectedTestMessageHandler : TestMessage.IHandler
+    protected sealed class ProtectedTestMessageHandler : ProtectedTestMessage.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        public Task<TestMessageResponse> Handle(ProtectedTestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
     }
 
-    private sealed class PrivateTestMessageHandler : TestMessage.IHandler
+    internal sealed class InternalTestMessageHandler : InternalTestMessage.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        public Task<TestMessageResponse> Handle(InternalTestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
     }
+
+    private sealed class PrivateTestMessageHandler : PrivateTestMessage.IHandler
+    {
+        public Task<TestMessageResponse> Handle(PrivateTestMessage message, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestMessageResponse());
+    }
+}
+
+[Message<MessageHandlerAssemblyScanningRegistrationTests.TestMessageResponse>]
+internal sealed partial record InternalTopLevelTestMessage;
+
+internal sealed class InternalTopLevelTestMessageHandler : InternalTopLevelTestMessage.IHandler
+{
+    public Task<MessageHandlerAssemblyScanningRegistrationTests.TestMessageResponse> Handle(InternalTopLevelTestMessage message, CancellationToken cancellationToken = default)
+        => Task.FromResult(new MessageHandlerAssemblyScanningRegistrationTests.TestMessageResponse());
 }
