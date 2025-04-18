@@ -332,8 +332,16 @@ public static class ConquerorMessagingServiceCollectionExtensions
     ) : IDefaultMessageTypesInjectable<IServiceCollection>
         where THandler : class
     {
-        public IServiceCollection WithInjectedTypes<TMessage, TResponse, TPipelineInterface, TPipelineAdapter>()
+        public IServiceCollection WithInjectedTypes<
+            TMessage,
+            TResponse,
+            TGeneratedHandlerInterface,
+            TGeneratedHandlerAdapter,
+            TPipelineInterface,
+            TPipelineAdapter>()
             where TMessage : class, IMessage<TMessage, TResponse>
+            where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, TPipelineInterface>
+            where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, TGeneratedHandlerInterface, new()
             where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
             where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
         {
@@ -361,8 +369,15 @@ public static class ConquerorMessagingServiceCollectionExtensions
             }
         }
 
-        public IServiceCollection WithInjectedTypes<TMessage, TPipelineInterface, TPipelineAdapter>()
+        public IServiceCollection WithInjectedTypes<
+            TMessage,
+            TGeneratedHandlerInterface,
+            TGeneratedHandlerAdapter,
+            TPipelineInterface,
+            TPipelineAdapter>()
             where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+            where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TPipelineInterface>
+            where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, TGeneratedHandlerInterface, new()
             where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
             where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
         {

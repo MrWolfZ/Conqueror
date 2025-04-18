@@ -12,17 +12,17 @@ public static class MessageAbstractionsGeneratorHelper
                                                                         ITypeSymbol? responseTypeSymbol,
                                                                         SemanticModel semanticModel)
     {
-        var messageTypeDescriptor = GenerateTypeDescriptor(messageTypeSymbol);
+        var messageTypeDescriptor = GenerateTypeDescriptor(messageTypeSymbol, semanticModel);
 
         var serializerContextTypeFromGlobalLookup = semanticModel.Compilation.GetTypeByMetadataName($"{messageTypeDescriptor.FullyQualifiedName}JsonSerializerContext");
         var serializerContextTypeFromSiblingLookup = messageTypeSymbol.ContainingType?.GetTypeMembers().FirstOrDefault(m => m.Name == $"{messageTypeDescriptor.Name}JsonSerializerContext");
 
         return new(messageTypeDescriptor,
-                   responseTypeSymbol is not null ? GenerateTypeDescriptor(responseTypeSymbol) : GenerateUnitResponseTypeDescriptor(),
+                   responseTypeSymbol is not null ? GenerateTypeDescriptor(responseTypeSymbol, semanticModel) : GenerateUnitResponseTypeDescriptor(),
                    serializerContextTypeFromGlobalLookup is not null || serializerContextTypeFromSiblingLookup is not null);
     }
 
-    private static TypeDescriptor GenerateTypeDescriptor(ITypeSymbol symbol)
+    private static TypeDescriptor GenerateTypeDescriptor(ITypeSymbol symbol, SemanticModel semanticModel)
     {
         var properties = symbol.GetMembers()
                                .OfType<IPropertySymbol>()
@@ -40,9 +40,10 @@ public static class MessageAbstractionsGeneratorHelper
             symbol.Name,
             symbol.ContainingNamespace?.IsGlobalNamespace ?? false ? string.Empty : symbol.ContainingNamespace?.ToString() ?? string.Empty,
             symbol.ToString(),
+            symbol.DeclaredAccessibility,
             symbol.IsRecord,
             symbol.GetMembers().OfType<IPropertySymbol>().Any(p => p.Name != "EqualityContract"),
-            ParentClasses: GetParentClasses(symbol),
+            ParentClasses: GetParentClasses(symbol, semanticModel),
             Properties: new(properties),
             Enumerable: GenerateEnumerableDescriptor(symbol));
     }
@@ -53,6 +54,7 @@ public static class MessageAbstractionsGeneratorHelper
             "UnitMessageResponse",
             "Conqueror",
             "Conqueror.UnitMessageResponse",
+            Accessibility.Public,
             true,
             false,
             ParentClasses: default,
@@ -84,7 +86,7 @@ public static class MessageAbstractionsGeneratorHelper
         return null;
     }
 
-    private static EquatableArray<ParentClass> GetParentClasses(ITypeSymbol symbol)
+    private static EquatableArray<ParentClass> GetParentClasses(ITypeSymbol symbol, SemanticModel semanticModel)
     {
         if (symbol.DeclaringSyntaxReferences.Length == 0)
         {
@@ -99,9 +101,12 @@ public static class MessageAbstractionsGeneratorHelper
 
         while (parentSyntax != null && IsAllowedKind(parentSyntax.Kind()))
         {
+            var parentSymbol = semanticModel.GetDeclaredSymbol(parentSyntax);
+
             var parentClassInfo = new ParentClass(
                 parentSyntax.Keyword.ValueText,
-                parentSyntax.Identifier.ToString() + parentSyntax.TypeParameterList);
+                parentSyntax.Identifier.ToString() + parentSyntax.TypeParameterList,
+                parentSymbol?.DeclaredAccessibility ?? Accessibility.NotApplicable);
 
             result.Insert(0, parentClassInfo);
 

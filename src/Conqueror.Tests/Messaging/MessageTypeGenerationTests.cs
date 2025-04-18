@@ -24,6 +24,7 @@ public sealed partial class MessageTypeGenerationTests
         var result = await messageClients.For(TestMessage.T)
                                          .WithPipeline(p => p.UseTest().UseTest())
                                          .WithTransport(b => b.UseInProcess())
+                                         .AsIHandler()
                                          .Handle(new(10));
 
         Assert.That(result, Is.Not.Null);
@@ -31,6 +32,7 @@ public sealed partial class MessageTypeGenerationTests
         await messageClients.For(TestMessageWithoutResponse.T)
                             .WithPipeline(p => p.UseTest().UseTest())
                             .WithTransport(b => b.UseInProcess())
+                            .AsIHandler()
                             .Handle(new());
     }
 
@@ -43,23 +45,27 @@ public sealed partial class MessageTypeGenerationTests
     {
         public static MessageTypes<TestMessage, TestMessageResponse> T => MessageTypes<TestMessage, TestMessageResponse>.Default;
 
-        public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IPipeline>;
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        static TestMessage? IMessage<TestMessage, TestMessageResponse>.EmptyInstance => null;
+
+        public static IDefaultMessageTypesInjector DefaultTypeInjector
+            => DefaultMessageTypesInjector<TestMessage, TestMessageResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>.Default;
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessage, TestMessageResponse>.TypeInjectors
+            => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
+
+        public interface IHandler : IGeneratedMessageHandler<TestMessage, TestMessageResponse, IPipeline>
+        {
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            public sealed class Adapter : GeneratedMessageHandlerAdapter<TestMessage, TestMessageResponse>, IHandler;
+        }
 
         public interface IPipeline : IMessagePipeline<TestMessage, TestMessageResponse>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessage, TestMessageResponse>, IPipeline;
         }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        static TestMessage? IMessage<TestMessage, TestMessageResponse>.EmptyInstance => null;
-
-        public static IDefaultMessageTypesInjector DefaultTypeInjector
-            => DefaultMessageTypesInjector<TestMessage, TestMessageResponse, IPipeline, IPipeline.Adapter>.Default;
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessage, TestMessageResponse>.TypeInjectors
-            => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
     }
 
     private sealed class TestMessageHandler : TestMessage.IHandler
@@ -81,23 +87,27 @@ public sealed partial class MessageTypeGenerationTests
     {
         public static MessageTypes<TestMessageWithoutResponse, UnitMessageResponse> T => MessageTypes<TestMessageWithoutResponse, UnitMessageResponse>.Default;
 
-        public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IPipeline>;
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        static TestMessageWithoutResponse IMessage<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => new();
+
+        public static IDefaultMessageTypesInjector DefaultTypeInjector
+            => DefaultMessageTypesInjector<TestMessageWithoutResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>.Default;
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageWithoutResponse, UnitMessageResponse>.TypeInjectors
+            => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessageWithoutResponse>();
+
+        public interface IHandler : IGeneratedMessageHandler<TestMessageWithoutResponse, IPipeline>
+        {
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            public sealed class Adapter : GeneratedMessageHandlerAdapter<TestMessageWithoutResponse>, IHandler;
+        }
 
         public interface IPipeline : IMessagePipeline<TestMessageWithoutResponse, UnitMessageResponse>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Adapter : GeneratedMessagePipelineAdapter<TestMessageWithoutResponse, UnitMessageResponse>, IPipeline;
         }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        static TestMessageWithoutResponse IMessage<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => new();
-
-        public static IDefaultMessageTypesInjector DefaultTypeInjector
-            => DefaultMessageTypesInjector<TestMessageWithoutResponse, IPipeline, IPipeline.Adapter>.Default;
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        static IReadOnlyCollection<IMessageTypesInjector> IMessage<TestMessageWithoutResponse, UnitMessageResponse>.TypeInjectors
-            => IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessageWithoutResponse>();
     }
 
     private sealed class TestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
@@ -110,6 +120,18 @@ public sealed partial class MessageTypeGenerationTests
         public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) =>
             pipeline.UseTest().UseTest();
     }
+}
+
+public static class TestMessageHandlerExtensions_2440209043122230735
+{
+    public static MessageTypeGenerationTests.TestMessage.IHandler AsIHandler(this IMessageHandler<MessageTypeGenerationTests.TestMessage, MessageTypeGenerationTests.TestMessageResponse> handler)
+        => handler.AsIHandler<MessageTypeGenerationTests.TestMessage, MessageTypeGenerationTests.TestMessageResponse, MessageTypeGenerationTests.TestMessage.IHandler>();
+}
+
+public static class TestMessageWithoutResponseHandlerExtensions_2440209043122230735
+{
+    public static MessageTypeGenerationTests.TestMessageWithoutResponse.IHandler AsIHandler(this IMessageHandler<MessageTypeGenerationTests.TestMessageWithoutResponse> handler)
+        => handler.AsIHandler<MessageTypeGenerationTests.TestMessageWithoutResponse, MessageTypeGenerationTests.TestMessageWithoutResponse.IHandler>();
 }
 
 public static class MessageTypeGenerationTestsPipelineExtensions

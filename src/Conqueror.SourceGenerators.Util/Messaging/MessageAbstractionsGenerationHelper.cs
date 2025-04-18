@@ -37,16 +37,19 @@ internal static class MessageAbstractionsGenerationHelper
 
         using var ns = string.IsNullOrEmpty(messageTypeDescriptor.Namespace) ? null : sb.AppendNamespace(indentation, messageTypeDescriptor.Namespace);
 
-        using var p = sb.AppendParentClasses(indentation, messageTypeDescriptor.ParentClasses);
+        using (sb.AppendParentClasses(indentation, messageTypeDescriptor.ParentClasses))
+        {
+            using var mt = sb.AppendMessageType(indentation, in messageTypeDescriptor, in responseTypeDescriptor);
 
-        using var mt = sb.AppendMessageType(indentation, in messageTypeDescriptor, in responseTypeDescriptor);
+            _ = sb.AppendMessageTypesProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
+                  .AppendMessageHandlerInterface(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
+                  .AppendMessagePipelineInterface(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
+                  .AppendMessageEmptyInstanceProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
+                  .AppendMessageDefaultTypeInjector(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
+                  .AppendMessageTypeInjectors(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
+                  .AppendJsonSerializerContext(indentation, in messageTypeDescriptor, in responseTypeDescriptor, descriptor.HasJsonSerializerContext);
+        }
 
-        return sb.AppendMessageTypesProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
-                 .AppendMessageHandlerInterface(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
-                 .AppendMessagePipelineInterface(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
-                 .AppendMessageEmptyInstanceProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
-                 .AppendMessageDefaultTypeInjector(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
-                 .AppendMessageTypeInjectors(indentation, in messageTypeDescriptor, in responseTypeDescriptor)
-                 .AppendJsonSerializerContext(indentation, in messageTypeDescriptor, in responseTypeDescriptor, descriptor.HasJsonSerializerContext);
+        return sb.AppendExtensionsClass(indentation, in messageTypeDescriptor, in responseTypeDescriptor);
     }
 }
