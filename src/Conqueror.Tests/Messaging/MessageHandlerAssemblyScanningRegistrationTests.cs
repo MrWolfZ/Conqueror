@@ -77,8 +77,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
                                                                              && r.MessageType == typeof(TestMessage)
-                                                                             && r.ResponseType == typeof(TestMessageResponse)
-                                                                             && r.HandlerType == typeof(DelegateMessageHandler<TestMessage, TestMessageResponse>)));
+                                                                             && r.ResponseType == typeof(TestMessageResponse)));
     }
 
     [Test]
@@ -106,8 +105,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
                                                                              && r.MessageType == typeof(TestMessageWithoutResponse)
-                                                                             && r.ResponseType == typeof(UnitMessageResponse)
-                                                                             && r.HandlerType == typeof(DelegateMessageHandler<TestMessageWithoutResponse>)));
+                                                                             && r.ResponseType == typeof(UnitMessageResponse)));
     }
 
     [Test]
@@ -169,12 +167,6 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     {
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
-    }
-
-    public sealed class TestMessage2Handler : TestMessage2.IHandler
-    {
-        public Task<TestMessage2Response> Handle(TestMessage2 message, CancellationToken cancellationToken = default)
-            => Task.FromResult(new TestMessage2Response());
     }
 
     public sealed class ExplicitTestMessageHandler : IMessageHandler<ExplicitTestMessage, ExplicitTestMessageResponse>

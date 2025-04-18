@@ -21,14 +21,9 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
     public static IEndpointRouteBuilder MapMessageEndpoints(this IEndpointRouteBuilder builder)
     {
         var messageTransportRegistry = builder.ServiceProvider.GetRequiredService<IMessageTransportRegistry>();
-        foreach (var (messageType, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransportInterface<IHttpMessage>())
+        foreach (var (_, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransport<IHttpMessageTypesInjector>())
         {
-            if (typeInjector is not IHttpMessageTypesInjector i)
-            {
-                throw new InvalidOperationException($"could not get the message type injector for message type '{messageType}'");
-            }
-
-            _ = i.CreateWithMessageTypes(new EndpointTypeInjectable(builder));
+            _ = typeInjector.CreateWithMessageTypes(new EndpointTypeInjectable(builder));
         }
 
         return builder;
@@ -37,19 +32,14 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
     public static IEndpointRouteBuilder MapMessageEndpoints(this IEndpointRouteBuilder builder, Predicate<Type> messageTypePredicate)
     {
         var messageTransportRegistry = builder.ServiceProvider.GetRequiredService<IMessageTransportRegistry>();
-        foreach (var (messageType, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransportInterface<IHttpMessage>())
+        foreach (var (messageType, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransport<IHttpMessageTypesInjector>())
         {
             if (!messageTypePredicate(messageType))
             {
                 continue;
             }
 
-            if (typeInjector is not IHttpMessageTypesInjector i)
-            {
-                throw new InvalidOperationException($"could not get the message type injector for message type '{messageType}'");
-            }
-
-            _ = i.CreateWithMessageTypes(new EndpointTypeInjectable(builder));
+            _ = typeInjector.CreateWithMessageTypes(new EndpointTypeInjectable(builder));
         }
 
         return builder;
