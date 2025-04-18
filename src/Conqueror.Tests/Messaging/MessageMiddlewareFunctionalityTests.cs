@@ -652,14 +652,16 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (message, p, cancellationToken) =>
-                    {
-                        await Task.Yield();
-                        var obs = p.GetRequiredService<TestObservations>();
-                        obs.MessagesFromHandlers.Add(message);
-                        obs.CancellationTokensFromHandlers.Add(cancellationToken);
-                        return new(message.Payload + 1);
-                    }, pipeline => pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = services.AddMessageHandlerDelegate(
+                        TestMessage.T,
+                        async (message, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.MessagesFromHandlers.Add(message);
+                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
+                            return new(message.Payload + 1);
+                        }, pipeline => pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -681,13 +683,15 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((message, p, cancellationToken) =>
-                    {
-                        var obs = p.GetRequiredService<TestObservations>();
-                        obs.MessagesFromHandlers.Add(message);
-                        obs.CancellationTokensFromHandlers.Add(cancellationToken);
-                        return new(message.Payload + 1);
-                    }, pipeline => pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = services.AddMessageHandlerDelegate(
+                        TestMessage.T,
+                        (message, p, cancellationToken) =>
+                        {
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.MessagesFromHandlers.Add(message);
+                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
+                            return new(message.Payload + 1);
+                        }, pipeline => pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -709,13 +713,15 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandlerDelegate<TestMessageWithoutResponse>(async (message, p, cancellationToken) =>
-                    {
-                        await Task.Yield();
-                        var obs = p.GetRequiredService<TestObservations>();
-                        obs.MessagesFromHandlers.Add(message);
-                        obs.CancellationTokensFromHandlers.Add(cancellationToken);
-                    }, pipeline => pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = services.AddMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        async (message, p, cancellationToken) =>
+                        {
+                            await Task.Yield();
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.MessagesFromHandlers.Add(message);
+                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
+                        }, pipeline => pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -737,12 +743,14 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((message, p, cancellationToken) =>
-                    {
-                        var obs = p.GetRequiredService<TestObservations>();
-                        obs.MessagesFromHandlers.Add(message);
-                        obs.CancellationTokensFromHandlers.Add(cancellationToken);
-                    }, pipeline => pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
+        _ = services.AddMessageHandlerDelegate(
+                        TestMessageWithoutResponse.T,
+                        (message, p, cancellationToken) =>
+                        {
+                            var obs = p.GetRequiredService<TestObservations>();
+                            obs.MessagesFromHandlers.Add(message);
+                            obs.CancellationTokensFromHandlers.Add(cancellationToken);
+                        }, pipeline => pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -859,15 +867,15 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
 
         _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((message, _, _) => Task.FromResult<TestMessageResponse>(new(message.Payload + 1)),
-                                                                                          pipeline =>
-                                                                                          {
-                                                                                              var middleware1 = new TestMessageMiddleware<TestMessage, TestMessageResponse>(new());
-                                                                                              var middleware2 = new TestMessageMiddleware2<TestMessage, TestMessageResponse>(new());
-                                                                                              _ = pipeline.Use(middleware1).Use(middleware2);
+                                                                                 pipeline =>
+                                                                                 {
+                                                                                     var middleware1 = new TestMessageMiddleware<TestMessage, TestMessageResponse>(new());
+                                                                                     var middleware2 = new TestMessageMiddleware2<TestMessage, TestMessageResponse>(new());
+                                                                                     _ = pipeline.Use(middleware1).Use(middleware2);
 
-                                                                                              Assert.That(pipeline, Has.Count.EqualTo(2));
-                                                                                              Assert.That(pipeline, Is.EqualTo(new IMessageMiddleware<TestMessage, TestMessageResponse>[] { middleware1, middleware2 }));
-                                                                                          });
+                                                                                     Assert.That(pipeline, Has.Count.EqualTo(2));
+                                                                                     Assert.That(pipeline, Is.EqualTo(new IMessageMiddleware<TestMessage, TestMessageResponse>[] { middleware1, middleware2 }));
+                                                                                 });
 
         var provider = services.BuildServiceProvider();
 
