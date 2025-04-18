@@ -6,13 +6,20 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 
-internal sealed class HttpMessageEndpointReflectionControllerFeatureProvider(IMessageTransportRegistry messageTransportRegistry)
+internal sealed class HttpMessageEndpointReflectionControllerFeatureProvider(
+    IMessageTransportRegistry messageTransportRegistry,
+    Predicate<Type>? messageTypeFilter)
     : IApplicationFeatureProvider<ControllerFeature>
 {
     public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
     {
         foreach (var (messageType, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransportInterface<IHttpMessage>())
         {
+            if (messageTypeFilter is not null && !messageTypeFilter(messageType))
+            {
+                continue;
+            }
+
             if (typeInjector is not IHttpMessageTypesInjector i)
             {
                 throw new InvalidOperationException($"could not get the HTTP message type injector for message type '{messageType}'");

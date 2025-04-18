@@ -34,6 +34,27 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         return builder;
     }
 
+    public static IEndpointRouteBuilder MapMessageEndpoints(this IEndpointRouteBuilder builder, Predicate<Type> messageTypePredicate)
+    {
+        var messageTransportRegistry = builder.ServiceProvider.GetRequiredService<IMessageTransportRegistry>();
+        foreach (var (messageType, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransportInterface<IHttpMessage>())
+        {
+            if (!messageTypePredicate(messageType))
+            {
+                continue;
+            }
+
+            if (typeInjector is not IHttpMessageTypesInjector i)
+            {
+                throw new InvalidOperationException($"could not get the message type injector for message type '{messageType}'");
+            }
+
+            _ = i.CreateWithMessageTypes(new EndpointTypeInjectable(builder));
+        }
+
+        return builder;
+    }
+
     public static IEndpointConventionBuilder MapMessageEndpoint<TMessage>(this IEndpointRouteBuilder builder)
         where TMessage : class, IHttpMessage
     {

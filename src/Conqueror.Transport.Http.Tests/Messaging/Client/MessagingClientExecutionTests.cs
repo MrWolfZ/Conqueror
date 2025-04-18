@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -168,8 +169,104 @@ public sealed class MessagingClientExecutionTests
         Assert.That(callWasReceivedOnServer, Is.True);
     }
 
+    [Test]
+    public async Task GivenTestHttpMessage_WhenFilteringMessageTypeFromEndpoints_EndpointDoesNotGetRegistered()
+    {
+        await using var host = await CreateTestHost(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageHandler>();
+                _ = services.AddRouting().AddMessageEndpoints();
+            },
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints(mt => mt != typeof(TestMessage))));
+
+        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+
+        var httpClient = host.HttpClient;
+
+        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageClients>()
+                                                          .For(TestMessage.T)
+                                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                                          .Handle(new(), host.TestTimeoutToken),
+                               Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+
+        Assert.That(callWasReceivedOnServer, Is.False);
+    }
+
+    [Test]
+    public async Task GivenTestHttpMessageWithoutResponse_WhenFilteringMessageTypeFromEndpoints_EndpointDoesNotGetRegistered()
+    {
+        await using var host = await CreateTestHost(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>();
+                _ = services.AddRouting().AddMessageEndpoints();
+            },
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints(mt => mt != typeof(TestMessageWithoutResponse))));
+
+        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+
+        var httpClient = host.HttpClient;
+
+        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageClients>()
+                                                          .For(TestMessageWithoutResponse.T)
+                                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                                          .Handle(new(), host.TestTimeoutToken),
+                               Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+
+        Assert.That(callWasReceivedOnServer, Is.False);
+    }
+
+    [Test]
+    public async Task GivenTestHttpMessage_WhenFilteringMessageTypeFromControllers_EndpointDoesNotGetRegistered()
+    {
+        await using var host = await CreateTestHost(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageHandler>();
+                _ = services.AddControllers().AddMessageControllers(mt => mt != typeof(TestMessage));
+            },
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapControllers()));
+
+        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+
+        var httpClient = host.HttpClient;
+
+        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageClients>()
+                                                          .For(TestMessage.T)
+                                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                                          .Handle(new(), host.TestTimeoutToken),
+                               Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+
+        Assert.That(callWasReceivedOnServer, Is.False);
+    }
+
+    [Test]
+    public async Task GivenTestHttpMessageWithoutResponse_WhenFilteringMessageTypeFromControllers_EndpointDoesNotGetRegistered()
+    {
+        await using var host = await CreateTestHost(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>();
+                _ = services.AddControllers().AddMessageControllers(mt => mt != typeof(TestMessageWithoutResponse));
+            },
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapControllers()));
+
+        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+
+        var httpClient = host.HttpClient;
+
+        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageClients>()
+                                                          .For(TestMessageWithoutResponse.T)
+                                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                                          .Handle(new(), host.TestTimeoutToken),
+                               Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+
+        Assert.That(callWasReceivedOnServer, Is.False);
+    }
+
     private Task<HttpTransportTestHost> CreateTestHost(Action<IServiceCollection> configureServices,
-                                          Action<IApplicationBuilder> configure)
+                                                       Action<IApplicationBuilder> configure)
     {
         return HttpTransportTestHost.Create(
             services =>
