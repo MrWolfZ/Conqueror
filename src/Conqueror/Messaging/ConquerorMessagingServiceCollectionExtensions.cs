@@ -261,14 +261,14 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services.AddMessageHandlersFromAssembly(Assembly.GetCallingAssembly());
     }
 
-    internal static void AddConquerorMessaging(this IServiceCollection services)
+    internal static IServiceCollection AddConquerorMessaging(this IServiceCollection services)
     {
         services.TryAddTransient<IMessageClients, MessageClients>();
         services.TryAddSingleton<IMessageIdFactory, DefaultMessageIdFactory>();
         services.TryAddSingleton<MessageTransportRegistry>();
         services.TryAddSingleton<IMessageTransportRegistry>(p => p.GetRequiredService<MessageTransportRegistry>());
 
-        services.AddConquerorContext();
+        return services.AddConquerorContext();
     }
 
     private static IServiceCollection AddMessageHandlerInternalGeneric<

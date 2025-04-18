@@ -103,16 +103,7 @@ This file contains all the open points for extensions and improvements to the **
 
 ## Eventing
 
-- [ ] refactor to new source generation approach
-  - [ ] ensure it is AOT compatible
 - [ ] add tests for object pipeline
-- [ ] add `ConfigureTransports` optional static method to `IEventObserver`
-  - [ ] the method takes an `IEventObserverTransportBuilder<TEvent>`
-  - [ ] transport libraries define extension methods on the builder
-  - [ ] the `Eventing.Transports.Common` package has a generic host that is registered with any transport client, and the host searches for all observers with configured transports and activates them
-  - [ ] for an empty builder, the in-process transport is used
-- [ ] create transport client before pipeline execution (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/91e86f4b287e22782645b01e48f1ac1bedb96bfe))
-- [ ] improve performance by using loop instead of recursion in pipeline (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/0e7fe9634ac7ca528d44d61276afba37009150a1))
 - [ ] handling and tests for conqueror context
 - [ ] refactor context data tests to use smarter test case generation (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/db5b68d1fbfd1e408e3ad3965dd013c5b3e0fd2a))
 - [ ] properly propagate event IDs (see [CQS](https://github.com/MrWolfZ/Conqueror/commit/ea08dc4420033656ef5012079bfa63830078bd4d))

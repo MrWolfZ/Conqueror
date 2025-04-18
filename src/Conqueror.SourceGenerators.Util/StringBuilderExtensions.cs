@@ -1,10 +1,16 @@
 ﻿using System;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Conqueror.SourceGenerators.Util;
 
 public static class StringBuilderExtensions
 {
+    [ThreadStatic]
+    private static SHA256? sha256;
+
+    private static SHA256 Sha256 => sha256 ??= SHA256.Create();
+
     public static StringBuilder AppendSingleIndent(this StringBuilder sb)
     {
         return sb.Append("    ");
@@ -77,6 +83,32 @@ public static class StringBuilderExtensions
                  .AppendBlock(indentation);
     }
 
+    public static StringBuilder AppendTypeNameWithInlinedTypeArguments(this StringBuilder sb,
+                                                                       in TypeDescriptor typeDescriptor)
+    {
+        if (typeDescriptor.TypeArguments.Count == 0)
+        {
+            return sb.Append(typeDescriptor.SimpleName);
+        }
+
+        return sb.Append(typeDescriptor.SimpleName).Append("__").Append(string.Join("_", typeDescriptor.TypeArguments)).Append("__");
+    }
+
+    public static StringBuilder AppendTypeArguments(this StringBuilder sb,
+                                                    in TypeDescriptor typeDescriptor)
+    {
+        return typeDescriptor.TypeArguments.Count == 0 ? sb : sb.Append($"<{string.Join(", ", typeDescriptor.TypeArguments)}>");
+    }
+
+    public static StringBuilder AppendConstraintClauses(this StringBuilder sb,
+                                                        Indentation indentation,
+                                                        in TypeDescriptor typeDescriptor)
+    {
+        return typeDescriptor.TypeConstraints is null
+            ? sb
+            : sb.AppendLineWithIndentation(indentation).Append(typeDescriptor.TypeConstraints.Replace(Environment.NewLine, Environment.NewLine + indentation));
+    }
+
     public static StringBuilder AppendGeneratedCodeAttribute(this StringBuilder sb,
                                                              Indentation indentation,
                                                              string generatorName,
@@ -105,10 +137,20 @@ public static class StringBuilderExtensions
                               // </auto-generated>
                               //------------------------------------------------------------------------------
 
-                              #nullable enable
+                              #nullable enable annotations
+                              #nullable disable warnings
+
+                              // Suppress warnings about [Obsolete] member usage in generated code.
+                              #pragma warning disable CS0612, CS0618
 
                               """;
 
         return sb.AppendLine(header);
+    }
+
+    public static StringBuilder AppendHash(this StringBuilder sb, string text)
+    {
+        var uniqueMessageTypeId = Math.Abs(BitConverter.ToInt64(Sha256.ComputeHash(Encoding.UTF8.GetBytes(text)), 0));
+        return sb.Append(uniqueMessageTypeId);
     }
 }

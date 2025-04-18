@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
@@ -10,8 +9,6 @@ namespace Conqueror.SourceGenerators.Util.Messaging;
 
 internal static class MessagingStringBuilderExtensions
 {
-    private static readonly SHA256 Sha256 = SHA256.Create();
-
     public static IDisposable AppendMessageType(this StringBuilder sb,
                                                 Indentation indentation,
                                                 in TypeDescriptor messageTypeDescriptor,
@@ -20,15 +17,10 @@ internal static class MessagingStringBuilderExtensions
         var keyword = messageTypeDescriptor.IsRecord ? "record" : "class";
         return sb.AppendIndentation(indentation)
                  .Append("/// <summary>").AppendLineWithIndentation(indentation)
-                 .Append($"///     Message Types for <see cref=\"global::{messageTypeDescriptor.FullyQualifiedName}\" />.").AppendLineWithIndentation(indentation)
+                 .Append($"///     Message types for <see cref=\"global::{messageTypeDescriptor.FullyQualifiedName}\" />.").AppendLineWithIndentation(indentation)
                  .Append("/// </summary>").AppendLineWithIndentation(indentation)
                  .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
                  .AppendBlock(indentation);
-    }
-
-    public static StringBuilder AppendResponseTypeParameterIfNotUnitResponse(this StringBuilder sb, in TypeDescriptor responseTypeDescriptor)
-    {
-        return !responseTypeDescriptor.IsUnitMessageResponse() ? sb.Append($", global::{responseTypeDescriptor.FullyQualifiedName()}") : sb;
     }
 
     public static StringBuilder AppendMessageTypesProperty(this StringBuilder sb,
@@ -38,7 +30,7 @@ internal static class MessagingStringBuilderExtensions
     {
         return sb.AppendMessageGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"public static global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}> T => global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.Default;").AppendLine();
+                 .Append("public static ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}> T => global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.Default;").AppendLine();
     }
 
     public static StringBuilder AppendMessageHandlerInterface(this StringBuilder sb,
@@ -49,7 +41,7 @@ internal static class MessagingStringBuilderExtensions
         sb = sb.AppendLine()
                .AppendMessageGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append($"public interface IHandler : global::Conqueror.IGeneratedMessageHandler<{messageTypeDescriptor.Name}")
+               .Append("public ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"interface IHandler : global::Conqueror.IGeneratedMessageHandler<{messageTypeDescriptor.Name}")
                .AppendResponseTypeParameterIfNotUnitResponse(responseTypeDescriptor)
                .Append(", IPipeline>").AppendLine();
 
@@ -71,7 +63,7 @@ internal static class MessagingStringBuilderExtensions
         sb = sb.AppendLine()
                .AppendMessageGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append($"public interface IPipeline : global::Conqueror.IMessagePipeline<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine();
+               .Append("public ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"interface IPipeline : global::Conqueror.IMessagePipeline<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine();
 
         using var d = sb.AppendBlock(indentation);
 
@@ -91,7 +83,7 @@ internal static class MessagingStringBuilderExtensions
                .AppendEditorBrowsableNeverAttribute(indentation)
                .AppendIndentation(indentation);
 
-        if (messageTypeDescriptor.HasProperties)
+        if (messageTypeDescriptor.HasProperties())
         {
             return sb.Append($"static {messageTypeDescriptor.Name}? global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.EmptyInstance => null;").AppendLine();
         }
@@ -150,32 +142,38 @@ internal static class MessagingStringBuilderExtensions
                  .AppendSingleIndent().Append($"=> global::{messageTypeDescriptor.FullyQualifiedName}JsonSerializerContext.Default;").AppendLine();
     }
 
-    public static StringBuilder AppendExtensionsClass(this StringBuilder sb,
-                                                      Indentation indentation,
-                                                      in TypeDescriptor messageTypeDescriptor,
-                                                      in TypeDescriptor responseTypeDescriptor)
+    public static StringBuilder AppendMessageExtensionsClass(this StringBuilder sb,
+                                                             Indentation indentation,
+                                                             in TypeDescriptor messageTypeDescriptor,
+                                                             in TypeDescriptor responseTypeDescriptor)
     {
         if (messageTypeDescriptor.Accessibility != Accessibility.Public || messageTypeDescriptor.ParentClasses.Any(pc => pc.Accessibility != Accessibility.Public))
         {
             return sb;
         }
 
-        // hash in class name for uniqueness, even if multiple message types with the same name are in the same namespace (e.g. nested in other types)
-        var uniqueMessageTypeId = Math.Abs(BitConverter.ToInt64(Sha256.ComputeHash(Encoding.UTF8.GetBytes(messageTypeDescriptor.FullyQualifiedName)), 0));
-
         sb = sb.AppendLine()
                .AppendMessageGeneratedCodeAttribute(indentation)
                .AppendEditorBrowsableNeverAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append($"public static class {messageTypeDescriptor.Name}HandlerExtensions_{uniqueMessageTypeId}").AppendLine();
+               .Append("public static class ")
+               .AppendTypeNameWithInlinedTypeArguments(in messageTypeDescriptor)
+               .Append("HandlerExtensions_")
+
+               // hash in class name for uniqueness, even if multiple message types with the same name are in the same namespace (e.g. nested in other types)
+               .AppendHash(messageTypeDescriptor.FullyQualifiedName).AppendLine();
 
         using (sb.AppendBlock(indentation))
         {
             sb = sb.AppendMessageGeneratedCodeAttribute(indentation)
                    .AppendIndentation(indentation)
-                   .Append($"public static global::{messageTypeDescriptor.FullyQualifiedName}.IHandler AsIHandler(this global::Conqueror.IMessageHandler<global::{messageTypeDescriptor.FullyQualifiedName}")
+                   .Append($"public static global::{messageTypeDescriptor.FullyQualifiedName}.IHandler AsIHandler")
+                   .AppendTypeArguments(in messageTypeDescriptor)
+                   .Append($"(this global::Conqueror.IMessageHandler<global::{messageTypeDescriptor.FullyQualifiedName}")
                    .AppendResponseTypeParameterIfNotUnitResponse(responseTypeDescriptor)
-                   .Append("> handler)").AppendLineWithIndentation(indentation)
+                   .Append("> handler)")
+                   .AppendConstraintClauses(indentation, in messageTypeDescriptor)
+                   .AppendLineWithIndentation(indentation)
                    .AppendSingleIndent()
                    .Append($"=> global::Conqueror.MessageHandlerExtensions.AsIHandler<global::{messageTypeDescriptor.FullyQualifiedName}")
                    .AppendResponseTypeParameterIfNotUnitResponse(responseTypeDescriptor)
@@ -185,11 +183,22 @@ internal static class MessagingStringBuilderExtensions
         return sb;
     }
 
+    private static StringBuilder AppendResponseTypeParameterIfNotUnitResponse(this StringBuilder sb, in TypeDescriptor responseTypeDescriptor)
+    {
+        return !responseTypeDescriptor.IsUnitMessageResponse() ? sb.Append($", global::{responseTypeDescriptor.FullyQualifiedName()}") : sb;
+    }
+
+    private static StringBuilder AppendNewKeywordIfNecessary(this StringBuilder sb,
+                                                             in TypeDescriptor messageTypeDescriptor)
+    {
+        return messageTypeDescriptor.BaseTypes.Any(t => t.Attributes.Any(a => a.BaseTypes.Any(bt => bt.FullyQualifiedName == "Conqueror.Messaging.ConquerorMessageTransportAttribute"))) ? sb.Append("new ") : sb;
+    }
+
     private static StringBuilder AppendMessageGeneratedCodeAttribute(this StringBuilder sb,
                                                                      Indentation indentation)
     {
         var assemblyLocation = Assembly.GetExecutingAssembly().Location;
         var version = string.IsNullOrWhiteSpace(assemblyLocation) ? "unknown" : FileVersionInfo.GetVersionInfo(assemblyLocation).FileVersion;
-        return sb.AppendGeneratedCodeAttribute(indentation, "Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", version);
+        return sb.AppendGeneratedCodeAttribute(indentation, "Conqueror.SourceGenerators.Messaging.MessagingAbstractionsGenerator", version);
     }
 }
