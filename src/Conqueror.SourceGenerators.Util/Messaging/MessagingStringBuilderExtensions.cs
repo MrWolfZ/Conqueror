@@ -20,15 +20,10 @@ internal static class MessagingStringBuilderExtensions
         var keyword = messageTypeDescriptor.IsRecord ? "record" : "class";
         return sb.AppendIndentation(indentation)
                  .Append("/// <summary>").AppendLineWithIndentation(indentation)
-                 .Append($"///     Message Types for <see cref=\"global::{messageTypeDescriptor.FullyQualifiedName}\" />.").AppendLineWithIndentation(indentation)
+                 .Append($"///     Message types for <see cref=\"global::{messageTypeDescriptor.FullyQualifiedName}\" />.").AppendLineWithIndentation(indentation)
                  .Append("/// </summary>").AppendLineWithIndentation(indentation)
                  .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
                  .AppendBlock(indentation);
-    }
-
-    public static StringBuilder AppendResponseTypeParameterIfNotUnitResponse(this StringBuilder sb, in TypeDescriptor responseTypeDescriptor)
-    {
-        return !responseTypeDescriptor.IsUnitMessageResponse() ? sb.Append($", global::{responseTypeDescriptor.FullyQualifiedName()}") : sb;
     }
 
     public static StringBuilder AppendMessageTypesProperty(this StringBuilder sb,
@@ -150,10 +145,10 @@ internal static class MessagingStringBuilderExtensions
                  .AppendSingleIndent().Append($"=> global::{messageTypeDescriptor.FullyQualifiedName}JsonSerializerContext.Default;").AppendLine();
     }
 
-    public static StringBuilder AppendExtensionsClass(this StringBuilder sb,
-                                                      Indentation indentation,
-                                                      in TypeDescriptor messageTypeDescriptor,
-                                                      in TypeDescriptor responseTypeDescriptor)
+    public static StringBuilder AppendMessageExtensionsClass(this StringBuilder sb,
+                                                             Indentation indentation,
+                                                             in TypeDescriptor messageTypeDescriptor,
+                                                             in TypeDescriptor responseTypeDescriptor)
     {
         if (messageTypeDescriptor.Accessibility != Accessibility.Public || messageTypeDescriptor.ParentClasses.Any(pc => pc.Accessibility != Accessibility.Public))
         {
@@ -185,11 +180,16 @@ internal static class MessagingStringBuilderExtensions
         return sb;
     }
 
+    private static StringBuilder AppendResponseTypeParameterIfNotUnitResponse(this StringBuilder sb, in TypeDescriptor responseTypeDescriptor)
+    {
+        return !responseTypeDescriptor.IsUnitMessageResponse() ? sb.Append($", global::{responseTypeDescriptor.FullyQualifiedName()}") : sb;
+    }
+
     private static StringBuilder AppendMessageGeneratedCodeAttribute(this StringBuilder sb,
                                                                      Indentation indentation)
     {
         var assemblyLocation = Assembly.GetExecutingAssembly().Location;
         var version = string.IsNullOrWhiteSpace(assemblyLocation) ? "unknown" : FileVersionInfo.GetVersionInfo(assemblyLocation).FileVersion;
-        return sb.AppendGeneratedCodeAttribute(indentation, "Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", version);
+        return sb.AppendGeneratedCodeAttribute(indentation, "Conqueror.SourceGenerators.Messaging.MessagingAbstractionsGenerator", version);
     }
 }

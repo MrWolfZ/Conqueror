@@ -497,7 +497,7 @@ public sealed partial class MessageHandlerRegistrationTests
             => Task.FromResult(new TestMessageResponse());
     }
 
-    // in user code this shouldn't even compile, since CreateWithMessageTypes is internal, and the compiler
+    // in user code this shouldn't even compile, since DefaultTypeInjector is internal, and the compiler
     // will complain about a non-specific implementation, which is a nice safeguard against users trying to
     // do this
     private sealed class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler

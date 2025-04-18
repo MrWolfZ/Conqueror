@@ -13,19 +13,14 @@ internal sealed class HttpMessageEndpointReflectionControllerFeatureProvider(
 {
     public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
     {
-        foreach (var (messageType, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransportInterface<IHttpMessage>())
+        foreach (var (messageType, _, typeInjector) in messageTransportRegistry.GetMessageTypesForTransport<IHttpMessageTypesInjector>())
         {
             if (messageTypeFilter is not null && !messageTypeFilter(messageType))
             {
                 continue;
             }
 
-            if (typeInjector is not IHttpMessageTypesInjector i)
-            {
-                throw new InvalidOperationException($"could not get the HTTP message type injector for message type '{messageType}'");
-            }
-
-            var typeInfo = i.CreateWithMessageTypes(new ControllerTypeInjectable());
+            var typeInfo = typeInjector.CreateWithMessageTypes(new ControllerTypeInjectable());
 
             if (!feature.Controllers.Contains(typeInfo))
             {

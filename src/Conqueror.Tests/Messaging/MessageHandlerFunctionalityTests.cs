@@ -425,10 +425,9 @@ public sealed class MessageHandlerFunctionalityDelegateTests : MessageHandlerFun
         {
             await Task.Yield();
 
-            var exception = p.GetService<Exception>();
-            if (exception is not null)
+            if (p.GetService<Exception>() is { } e)
             {
-                throw exception;
+                throw e;
             }
 
             var obs = p.GetRequiredService<TestObservations>();
@@ -445,10 +444,9 @@ public sealed class MessageHandlerFunctionalityDelegateTests : MessageHandlerFun
         {
             await Task.Yield();
 
-            var exception = p.GetService<Exception>();
-            if (exception is not null)
+            if (p.GetService<Exception>() is { } e)
             {
-                throw exception;
+                throw e;
             }
 
             var obs = p.GetRequiredService<TestObservations>();

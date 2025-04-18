@@ -6,6 +6,6 @@ namespace Conqueror;
 
 public interface IMessageTransportRegistry
 {
-    IReadOnlyCollection<(Type MessageType, Type ResponseType, IMessageTypesInjector? TypeInjector)> GetMessageTypesForTransportInterface<TInterface>()
-        where TInterface : class;
+    IReadOnlyCollection<(Type MessageType, Type ResponseType, TTypesInjector TypesInjector)> GetMessageTypesForTransport<TTypesInjector>()
+        where TTypesInjector : class, IMessageTypesInjector;
 }
