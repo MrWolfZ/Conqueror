@@ -1,9 +1,11 @@
+using System;
 using System.Reflection;
 using Conqueror;
 using Conqueror.Transport.Http.Server.AspNetCore;
 using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -14,21 +16,12 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
 {
     public static IMvcBuilder AddMessageControllers(this IMvcBuilder builder)
     {
-        _ = builder.Services.AddConqueror();
+        return builder.AddMessageControllersInternal(messageTypePredicate: null);
+    }
 
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpMessageEndpointReflectionConfigurationStartupFilter>());
-
-        builder.Services.TryAddSingleton<HttpEndpointActionDescriptorChangeProvider>();
-        builder.Services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
-                p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
-
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IApplicationModelProvider, HttpMessageEndpointReflectionApplicationModelProvider>());
-        builder.Services.TryAddTransient(typeof(HttpMessageEndpointApplicationModelProvider<,>));
-
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IApplicationModelProvider, HttpMessageDuplicatePathValidationApplicationModelProvider>());
-
-        return builder;
+    public static IMvcBuilder AddMessageControllers(this IMvcBuilder builder, Predicate<Type> messageTypePredicate)
+    {
+        return builder.AddMessageControllersInternal(messageTypePredicate);
     }
 
     public static IMvcBuilder AddMessageController<TMessage>(this IMvcBuilder builder)
@@ -42,10 +35,31 @@ public static class ConquerorHttpServerMessagingAspNetCoreMvcBuilderExtensions
 
         builder.Services.TryAddSingleton<HttpEndpointActionDescriptorChangeProvider>();
         builder.Services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(
-                p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
+            ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
 
         _ = TMessage.HttpMessageTypesInjector.CreateWithMessageTypes(new ApplicationModelProviderTypeInjectable(builder.Services));
+
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IApplicationModelProvider, HttpMessageDuplicatePathValidationApplicationModelProvider>());
+
+        return builder;
+    }
+
+    private static IMvcBuilder AddMessageControllersInternal(this IMvcBuilder builder, Predicate<Type>? messageTypePredicate)
+    {
+        _ = builder.Services.AddConqueror();
+
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IStartupFilter, HttpMessageEndpointReflectionConfigurationStartupFilter>(p => new(
+                                                                                                                                                   p.GetRequiredService<ApplicationPartManager>(),
+                                                                                                                                                   p.GetRequiredService<IMessageTransportRegistry>(),
+                                                                                                                                                   p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>(),
+                                                                                                                                                   messageTypePredicate)));
+
+        builder.Services.TryAddSingleton<HttpEndpointActionDescriptorChangeProvider>();
+        builder.Services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IActionDescriptorChangeProvider, HttpEndpointActionDescriptorChangeProvider>(p => p.GetRequiredService<HttpEndpointActionDescriptorChangeProvider>()));
+
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IApplicationModelProvider, HttpMessageEndpointReflectionApplicationModelProvider>());
+        builder.Services.TryAddTransient(typeof(HttpMessageEndpointApplicationModelProvider<,>));
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IApplicationModelProvider, HttpMessageDuplicatePathValidationApplicationModelProvider>());
 
