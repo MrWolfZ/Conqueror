@@ -140,9 +140,9 @@ public static class ConquerorMessagingServiceCollectionExtensions
         services.AddConquerorMessaging();
 
         var validTypes = assembly.GetTypes()
-                                 .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false })
-                                 .Where(t => t is { IsPublic: true } or { IsNestedPublic: true })
                                  .Where(t => t.IsAssignableTo(typeof(IGeneratedMessageHandler)))
+                                 .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false, IsNestedFamily: false })
+                                 .Where(t => t.DeclaringType?.IsPublic ?? true)
                                  .ToList();
 
         foreach (var messageHandlerType in validTypes)
