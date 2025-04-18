@@ -61,6 +61,44 @@ public interface IGeneratedMessageHandler<in TMessage, in TPipelineInterface>
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
+public abstract class GeneratedMessageHandlerAdapter<TMessage, TResponse> : IConfigurableMessageHandler<TMessage, TResponse>
+    where TMessage : class, IMessage<TMessage, TResponse>
+{
+    internal IMessageHandler<TMessage, TResponse> Wrapped { get; init; } = null!;
+
+    public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
+        => Wrapped.Handle(message, cancellationToken);
+
+    public IMessageHandler<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+        => Wrapped.WithPipeline(configurePipeline);
+
+    public IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClient<TMessage, TResponse> configureTransport)
+        => Wrapped.WithTransport(configureTransport);
+
+    public IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClientAsync<TMessage, TResponse> configureTransport)
+        => Wrapped.WithTransport(configureTransport);
+}
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+public abstract class GeneratedMessageHandlerAdapter<TMessage> : IConfigurableMessageHandler<TMessage>
+    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+{
+    internal IMessageHandler<TMessage> Wrapped { get; init; } = null!;
+
+    public Task Handle(TMessage message, CancellationToken cancellationToken = default)
+        => Wrapped.Handle(message, cancellationToken);
+
+    public IMessageHandler<TMessage> WithPipeline(Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+        => Wrapped.WithPipeline(configurePipeline);
+
+    public IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClient<TMessage, UnitMessageResponse> configureTransport)
+        => Wrapped.WithTransport(configureTransport);
+
+    public IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClientAsync<TMessage, UnitMessageResponse> configureTransport)
+        => Wrapped.WithTransport(configureTransport);
+}
+
+[EditorBrowsable(EditorBrowsableState.Never)]
 internal interface IConfigurableMessageHandler<TMessage, TResponse> : IMessageHandler<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {

@@ -228,6 +228,42 @@ public abstract partial class MessageHandlerFunctionalityTests
         Assert.That(observations.ServiceProviders[0], Is.Not.SameAs(observations.ServiceProviders[2]));
     }
 
+    [Test]
+    public async Task GivenHandler_WhenCallingItThroughGeneratedHandlerInterface_HandlerReceivesMessage()
+    {
+        var observations = new TestObservations();
+
+        var provider = RegisterHandler(new ServiceCollection())
+                       .AddSingleton(observations)
+                       .BuildServiceProvider();
+
+        var handler = ResolveHandler(provider).AsIHandler();
+
+        var message = CreateMessage();
+
+        _ = await handler.Handle(message);
+
+        Assert.That(observations.Messages, Is.EqualTo(new[] { message }));
+    }
+
+    [Test]
+    public async Task GivenHandlerWithoutResponse_WhenCallingItThroughGeneratedHandlerInterface_HandlerReceivesMessage()
+    {
+        var observations = new TestObservations();
+
+        var provider = RegisterHandlerWithoutResponse(new ServiceCollection())
+                       .AddSingleton(observations)
+                       .BuildServiceProvider();
+
+        var handler = ResolveHandlerWithoutResponse(provider).AsIHandler();
+
+        var message = CreateMessageWithoutResponse();
+
+        await handler.Handle(message);
+
+        Assert.That(observations.Messages, Is.EqualTo(new[] { message }));
+    }
+
     [Message<TestMessageResponse>]
     public sealed partial record TestMessage(int Payload);
 

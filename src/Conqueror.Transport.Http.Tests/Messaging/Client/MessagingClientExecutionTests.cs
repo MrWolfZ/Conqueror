@@ -120,6 +120,54 @@ public sealed class MessagingClientExecutionTests
         }
     }
 
+    [Test]
+    public async Task GivenTestHttpMessage_WhenExecutingMessageThroughGeneratedInterface_ReturnsCorrectResponse()
+    {
+        await using var host = await CreateTestHost(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageHandler>();
+                _ = services.AddRouting().AddMessageEndpoints();
+            },
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+
+        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+
+        var httpClient = host.HttpClient;
+
+        _ = await clientServiceProvider.GetRequiredService<IMessageClients>()
+                                       .For(TestMessage.T)
+                                       .AsIHandler()
+                                       .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                       .Handle(new(), host.TestTimeoutToken);
+
+        Assert.That(callWasReceivedOnServer, Is.True);
+    }
+
+    [Test]
+    public async Task GivenTestHttpMessageWithoutResponse_WhenExecutingMessageThroughGeneratedInterface_ReturnsCorrectResponse()
+    {
+        await using var host = await CreateTestHost(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>();
+                _ = services.AddRouting().AddMessageEndpoints();
+            },
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+
+        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+
+        var httpClient = host.HttpClient;
+
+        await clientServiceProvider.GetRequiredService<IMessageClients>()
+                                   .For(TestMessageWithoutResponse.T)
+                                   .AsIHandler()
+                                   .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                   .Handle(new(), host.TestTimeoutToken);
+
+        Assert.That(callWasReceivedOnServer, Is.True);
+    }
+
     private Task<HttpTransportTestHost> CreateTestHost(Action<IServiceCollection> configureServices,
                                           Action<IApplicationBuilder> configure)
     {

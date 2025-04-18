@@ -34,12 +34,21 @@ public interface IDefaultMessageTypesInjector : IMessageTypesInjector
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class DefaultMessageTypesInjector<TMessage, TResponse, TPipelineInterface, TPipelineAdapter> : IDefaultMessageTypesInjector
+public sealed class DefaultMessageTypesInjector<
+    TMessage,
+    TResponse,
+    TGeneratedHandlerInterface,
+    TGeneratedHandlerAdapter,
+    TPipelineInterface,
+    TPipelineAdapter>
+    : IDefaultMessageTypesInjector
     where TMessage : class, IMessage<TMessage, TResponse>
+    where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, TPipelineInterface>
+    where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, TGeneratedHandlerInterface, new()
     where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
     where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
 {
-    public static readonly DefaultMessageTypesInjector<TMessage, TResponse, TPipelineInterface, TPipelineAdapter> Default = new();
+    public static readonly DefaultMessageTypesInjector<TMessage, TResponse, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, TPipelineInterface, TPipelineAdapter> Default = new();
 
     public Type ConstraintType => typeof(IMessage<TMessage, TResponse>);
 
@@ -51,16 +60,23 @@ public sealed class DefaultMessageTypesInjector<TMessage, TResponse, TPipelineIn
     /// <typeparam name="TResult">The type of result the factory will return</typeparam>
     /// <returns>The result of calling the factory</returns>
     public TResult CreateWithMessageTypes<TResult>(IDefaultMessageTypesInjectable<TResult> injectable)
-        => injectable.WithInjectedTypes<TMessage, TResponse, TPipelineInterface, TPipelineAdapter>();
+        => injectable.WithInjectedTypes<TMessage, TResponse, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, TPipelineInterface, TPipelineAdapter>();
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class DefaultMessageTypesInjector<TMessage, TPipelineInterface, TPipelineAdapter> : IDefaultMessageTypesInjector
+public sealed class DefaultMessageTypesInjector<
+    TMessage,
+    TGeneratedHandlerInterface,
+    TGeneratedHandlerAdapter,
+    TPipelineInterface,
+    TPipelineAdapter> : IDefaultMessageTypesInjector
     where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+    where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TPipelineInterface>
+    where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, TGeneratedHandlerInterface, new()
     where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
     where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
 {
-    public static readonly DefaultMessageTypesInjector<TMessage, TPipelineInterface, TPipelineAdapter> Default = new();
+    public static readonly DefaultMessageTypesInjector<TMessage, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, TPipelineInterface, TPipelineAdapter> Default = new();
 
     public Type ConstraintType => typeof(IMessage<TMessage, UnitMessageResponse>);
 
@@ -72,7 +88,7 @@ public sealed class DefaultMessageTypesInjector<TMessage, TPipelineInterface, TP
     /// <typeparam name="TResult">The type of result the factory will return</typeparam>
     /// <returns>The result of calling the factory</returns>
     public TResult CreateWithMessageTypes<TResult>(IDefaultMessageTypesInjectable<TResult> injectable)
-        => injectable.WithInjectedTypes<TMessage, TPipelineInterface, TPipelineAdapter>();
+        => injectable.WithInjectedTypes<TMessage, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, TPipelineInterface, TPipelineAdapter>();
 }
 
 /// <summary>
@@ -83,13 +99,28 @@ public sealed class DefaultMessageTypesInjector<TMessage, TPipelineInterface, TP
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IDefaultMessageTypesInjectable<out TResult>
 {
-    TResult WithInjectedTypes<TMessage, TResponse, TPipelineInterface, TPipelineAdapter>()
+    TResult WithInjectedTypes<
+        TMessage,
+        TResponse,
+        TGeneratedHandlerInterface,
+        TGeneratedHandlerAdapter,
+        TPipelineInterface,
+        TPipelineAdapter>()
         where TMessage : class, IMessage<TMessage, TResponse>
+        where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, TPipelineInterface>
+        where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, TGeneratedHandlerInterface, new()
         where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
         where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new();
 
-    TResult WithInjectedTypes<TMessage, TPipelineInterface, TPipelineAdapter>()
+    TResult WithInjectedTypes<
+        TMessage,
+        TGeneratedHandlerInterface,
+        TGeneratedHandlerAdapter,
+        TPipelineInterface,
+        TPipelineAdapter>()
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+        where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TPipelineInterface>
+        where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, TGeneratedHandlerInterface, new()
         where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
         where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new();
 }

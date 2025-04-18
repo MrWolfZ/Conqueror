@@ -107,6 +107,46 @@ public sealed partial class Container
     }
 
     [Test]
+    public Task GivenPrivateTestMessageWithResponseBothInSameNamespaceInSameNestedType_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+
+namespace Generator.Tests;
+
+public sealed partial class Container
+{
+    [Message<TestMessageResponse>]
+    private partial record TestMessage;
+
+    private record TestMessageResponse;
+}";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad.Concat([typeof(JsonSerializerContext).Assembly]), new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenPrivateTestMessageWithoutResponseBothInSameNamespaceInSameNestedType_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using Conqueror;
+
+namespace Generator.Tests;
+
+public sealed partial class Container
+{
+    [Message]
+    private partial record TestMessage;
+}";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad.Concat([typeof(JsonSerializerContext).Assembly]), new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
     public Task GivenTestMessageWithAlreadyDefinedHandlerInterface_WhenRunningGenerator_SkipsMessageType()
     {
         const string input = @"using Conqueror;

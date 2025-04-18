@@ -19,7 +19,12 @@ partial record TestMessage : global::Conqueror.IMessage<TestMessage, global::Tes
     public static global::Conqueror.MessageTypes<TestMessage, global::TestMessageResponse> T => global::Conqueror.MessageTypes<TestMessage, global::TestMessageResponse>.Default;
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
-    public interface IHandler : global::Conqueror.IGeneratedMessageHandler<TestMessage, global::TestMessageResponse, IPipeline>;
+    public interface IHandler : global::Conqueror.IGeneratedMessageHandler<TestMessage, global::TestMessageResponse, IPipeline>
+    {
+        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
+        public sealed class Adapter : global::Conqueror.GeneratedMessageHandlerAdapter<TestMessage, global::TestMessageResponse>, IHandler;
+    }
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
     public interface IPipeline : global::Conqueror.IMessagePipeline<TestMessage, global::TestMessageResponse>
@@ -36,12 +41,21 @@ partial record TestMessage : global::Conqueror.IMessage<TestMessage, global::Tes
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     static global::Conqueror.IDefaultMessageTypesInjector global::Conqueror.IMessage<TestMessage, global::TestMessageResponse>.DefaultTypeInjector
-        => global::Conqueror.DefaultMessageTypesInjector<TestMessage, global::TestMessageResponse, IPipeline, IPipeline.Adapter>.Default;
+        => global::Conqueror.DefaultMessageTypesInjector<TestMessage, global::TestMessageResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>.Default;
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     static global::System.Collections.Generic.IReadOnlyCollection<global::Conqueror.IMessageTypesInjector> global::Conqueror.IMessage<TestMessage, global::TestMessageResponse>.TypeInjectors
         => global::Conqueror.IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessage>();
+}
+
+[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
+[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public static class TestMessageHandlerExtensions_7881695326927164668
+{
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
+    public static global::TestMessage.IHandler AsIHandler(this global::Conqueror.IMessageHandler<global::TestMessage, global::TestMessageResponse> handler)
+        => global::Conqueror.MessageHandlerExtensions.AsIHandler<global::TestMessage, global::TestMessageResponse, global::TestMessage.IHandler>(handler);
 }
 
 Conqueror.Transport.Http.SourceGenerators/Conqueror.Transport.Http.SourceGenerators.Messaging.HttpMessageAbstractionsGenerator/TestMessage_TransportHttpMessageTypes.g.cs:

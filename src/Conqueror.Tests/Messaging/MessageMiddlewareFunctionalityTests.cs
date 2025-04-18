@@ -888,6 +888,54 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          .Handle(message);
     }
 
+    [Test]
+    public async Task GivenHandlerCastedToGeneratedInterfaceWithSingleAppliedMiddleware_WhenHandlerIsCalled_MiddlewareIsCalledWithMessage()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddMessageHandler<TestMessageHandler>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageClients>()
+                              .For(TestMessage.T)
+                              .AsIHandler()
+                              .WithPipeline(p => p.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())));
+
+        var message = new TestMessage(10);
+
+        _ = await handler.Handle(message);
+
+        Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(new[] { message }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestMessageMiddleware<TestMessage, TestMessageResponse>) }));
+    }
+
+    [Test]
+    public async Task GivenHandlerWithoutResponseCastedToGeneratedInterfaceWithSingleAppliedMiddleware_WhenHandlerIsCalled_MiddlewareIsCalledWithMessage()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IMessageClients>()
+                              .For(TestMessageWithoutResponse.T)
+                              .AsIHandler()
+                              .WithPipeline(p => p.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())));
+
+        var message = new TestMessageWithoutResponse(10);
+
+        await handler.Handle(message);
+
+        Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(new[] { message }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>) }));
+    }
+
     public sealed record ConquerorMiddlewareFunctionalityTestCase<TMessage, TResponse>(
         Action<IMessagePipeline<TMessage, TResponse>>? ConfigureHandlerPipeline,
         Action<IMessagePipeline<TMessage, TResponse>>? ConfigureClientPipeline,

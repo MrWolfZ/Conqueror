@@ -22,11 +22,6 @@ This file contains all the open points for extensions and improvements to the **
   - [ ] allow (primary) constructor arguments in query string parsing
   - [ ] emit diagnostic error when unsupported property is found during query string parsing
   - [ ] add statement in recipe that attributes can be renamed with a global using if they cause conflicts
-- [ ] consider adding back the `IHandler.Adapter`
-  - [ ] extend generated handler with static factory method to generate instance of adapter
-  - [ ] add subtype `MessageTypes<TMessage, TResponse, THandlerInterface>`
-  - [ ] add extension method `.Cast(MessageTypes<...>)` to `IMessageHandler<...>`
-  - [ ] generate extension method for each message type to call the cast for its generated handler interface
 
 ### Core middleware
 

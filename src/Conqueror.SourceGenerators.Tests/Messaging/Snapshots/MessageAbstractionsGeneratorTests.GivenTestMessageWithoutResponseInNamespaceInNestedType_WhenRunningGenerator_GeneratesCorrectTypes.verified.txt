@@ -23,7 +23,12 @@ namespace Generator.Tests
             public static global::Conqueror.MessageTypes<TestMessageWithoutResponse, global::Conqueror.UnitMessageResponse> T => global::Conqueror.MessageTypes<TestMessageWithoutResponse, global::Conqueror.UnitMessageResponse>.Default;
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
-            public interface IHandler : global::Conqueror.IGeneratedMessageHandler<TestMessageWithoutResponse, IPipeline>;
+            public interface IHandler : global::Conqueror.IGeneratedMessageHandler<TestMessageWithoutResponse, IPipeline>
+            {
+                [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
+                public sealed class Adapter : global::Conqueror.GeneratedMessageHandlerAdapter<TestMessageWithoutResponse>, IHandler;
+            }
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
             public interface IPipeline : global::Conqueror.IMessagePipeline<TestMessageWithoutResponse, global::Conqueror.UnitMessageResponse>
@@ -40,12 +45,21 @@ namespace Generator.Tests
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             static global::Conqueror.IDefaultMessageTypesInjector global::Conqueror.IMessage<TestMessageWithoutResponse, global::Conqueror.UnitMessageResponse>.DefaultTypeInjector
-                => global::Conqueror.DefaultMessageTypesInjector<TestMessageWithoutResponse, IPipeline, IPipeline.Adapter>.Default;
+                => global::Conqueror.DefaultMessageTypesInjector<TestMessageWithoutResponse, IHandler, IHandler.Adapter, IPipeline, IPipeline.Adapter>.Default;
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             static global::System.Collections.Generic.IReadOnlyCollection<global::Conqueror.IMessageTypesInjector> global::Conqueror.IMessage<TestMessageWithoutResponse, global::Conqueror.UnitMessageResponse>.TypeInjectors
                 => global::Conqueror.IMessageTypesInjector.GetTypeInjectorsForMessageType<TestMessageWithoutResponse>();
         }
+    }
+
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public static class TestMessageWithoutResponseHandlerExtensions_373510602550937315
+    {
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageAbstractionsGenerator", "FIXED_VERSION")]
+        public static global::Generator.Tests.Container.TestMessageWithoutResponse.IHandler AsIHandler(this global::Conqueror.IMessageHandler<global::Generator.Tests.Container.TestMessageWithoutResponse> handler)
+            => global::Conqueror.MessageHandlerExtensions.AsIHandler<global::Generator.Tests.Container.TestMessageWithoutResponse, global::Generator.Tests.Container.TestMessageWithoutResponse.IHandler>(handler);
     }
 }
