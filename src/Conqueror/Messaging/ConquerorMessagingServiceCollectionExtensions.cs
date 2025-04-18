@@ -72,6 +72,14 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services.AddMessageHandlerDelegateInternal(fn, null);
     }
 
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
+                                                                                    MessageTypes<TMessage, TResponse> messageTypes,
+                                                                                    MessageHandlerFn<TMessage, TResponse> fn)
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        return services.AddMessageHandlerDelegate(fn);
+    }
+
     public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
                                                                          MessageHandlerFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
@@ -79,11 +87,27 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services.AddMessageHandlerDelegateInternal(fn, null);
     }
 
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
+                                                                         MessageTypes<TMessage, UnitMessageResponse> messageTypes,
+                                                                         MessageHandlerFn<TMessage> fn)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+    {
+        return services.AddMessageHandlerDelegate(fn);
+    }
+
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
                                                                                     MessageHandlerSyncFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal<TMessage, TResponse>((m, p, ct) => Task.FromResult(fn(m, p, ct)), null);
+    }
+
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
+                                                                                    MessageTypes<TMessage, TResponse> messageTypes,
+                                                                                    MessageHandlerSyncFn<TMessage, TResponse> fn)
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        return services.AddMessageHandlerDelegate(fn);
     }
 
     public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
@@ -97,6 +121,14 @@ public static class ConquerorMessagingServiceCollectionExtensions
         }, null);
     }
 
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
+                                                                         MessageTypes<TMessage, UnitMessageResponse> messageTypes,
+                                                                         MessageHandlerSyncFn<TMessage> fn)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+    {
+        return services.AddMessageHandlerDelegate(fn);
+    }
+
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
                                                                                     MessageHandlerFn<TMessage, TResponse> fn,
                                                                                     Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
@@ -105,6 +137,16 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services.AddMessageHandlerDelegateInternal(fn, configurePipeline);
     }
 
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
+                                                                                    MessageTypes<TMessage, TResponse> messageTypes,
+                                                                                    MessageHandlerFn<TMessage, TResponse> fn,
+                                                                                    Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        return services.AddMessageHandlerDelegate(fn, configurePipeline);
+    }
+
+    // ReSharper disable once MemberCanBePrivate.Global
     public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
                                                                          MessageHandlerFn<TMessage> fn,
                                                                          Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
@@ -113,6 +155,16 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services.AddMessageHandlerDelegateInternal(fn, configurePipeline);
     }
 
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
+                                                                         MessageTypes<TMessage, UnitMessageResponse> messageTypes,
+                                                                         MessageHandlerFn<TMessage> fn,
+                                                                         Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+    {
+        return services.AddMessageHandlerDelegate(fn, configurePipeline);
+    }
+
+    // ReSharper disable once MemberCanBePrivate.Global
     public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
                                                                                     MessageHandlerSyncFn<TMessage, TResponse> fn,
                                                                                     Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
@@ -121,6 +173,16 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services.AddMessageHandlerDelegateInternal((m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline);
     }
 
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
+                                                                                    MessageTypes<TMessage, TResponse> messageTypes,
+                                                                                    MessageHandlerSyncFn<TMessage, TResponse> fn,
+                                                                                    Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+        where TMessage : class, IMessage<TMessage, TResponse>
+    {
+        return services.AddMessageHandlerDelegate(fn, configurePipeline);
+    }
+
+    // ReSharper disable once MemberCanBePrivate.Global
     public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
                                                                          MessageHandlerSyncFn<TMessage> fn,
                                                                          Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
@@ -131,6 +193,15 @@ public static class ConquerorMessagingServiceCollectionExtensions
             fn(m, p, ct);
             return Task.CompletedTask;
         }, configurePipeline);
+    }
+
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
+                                                                         MessageTypes<TMessage, UnitMessageResponse> messageTypes,
+                                                                         MessageHandlerSyncFn<TMessage> fn,
+                                                                         Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+    {
+        return services.AddMessageHandlerDelegate(fn, configurePipeline);
     }
 
     [RequiresUnreferencedCode("Types might be removed")]

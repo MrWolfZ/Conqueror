@@ -21,7 +21,7 @@ public sealed partial class MessageHandlerRegistrationTests
     [Test]
     [Combinatorial]
     public void GivenServiceCollection_WhenAddingMessageHandlers_AddsCorrectHandlerRegistrations(
-        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
+        [Values("type", "factory", "instance", "delegate", "sync_delegate", "explicit_delegate", "explicit_sync_delegate")]
         string registrationMethod)
     {
         var services = new ServiceCollection();
@@ -40,14 +40,22 @@ public sealed partial class MessageHandlerRegistrationTests
                                   .AddMessageHandler(new TestMessage2Handler())
                                   .AddMessageHandler(new TestMessageWithoutResponseHandler())
                                   .AddMessageHandler(new TestMessageWithoutResponse2Handler()),
-            "delegate" => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse()))
-                                  .AddMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => Task.FromResult(new TestMessage2Response()))
-                                  .AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask)
-                                  .AddMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => Task.CompletedTask),
-            "sync_delegate" => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
-                                       .AddMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => new())
-                                       .AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { })
-                                       .AddMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => { }),
+            "delegate" => services.AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => Task.FromResult(new TestMessageResponse()))
+                                  .AddMessageHandlerDelegate(TestMessage2.T, (_, _, _) => Task.FromResult(new TestMessage2Response()))
+                                  .AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => Task.CompletedTask)
+                                  .AddMessageHandlerDelegate(TestMessageWithoutResponse2.T, (_, _, _) => Task.CompletedTask),
+            "sync_delegate" => services.AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => new())
+                                       .AddMessageHandlerDelegate(TestMessage2.T, (_, _, _) => new())
+                                       .AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => { })
+                                       .AddMessageHandlerDelegate(TestMessageWithoutResponse2.T, (_, _, _) => { }),
+            "explicit_delegate" => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse()))
+                                           .AddMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => Task.FromResult(new TestMessage2Response()))
+                                           .AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask)
+                                           .AddMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => Task.CompletedTask),
+            "explicit_sync_delegate" => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
+                                                .AddMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => new())
+                                                .AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { })
+                                                .AddMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
         };
 
@@ -58,7 +66,7 @@ public sealed partial class MessageHandlerRegistrationTests
                                            .Select(r => (r.MessageType, r.ResponseType, r.HandlerType))
                                            .ToList();
 
-        var isDelegate = registrationMethod is "delegate" or "sync_delegate";
+        var isDelegate = registrationMethod is "delegate" or "sync_delegate" or "explicit_delegate" or "explicit_sync_delegate";
 
         var expectedRegistrations = new[]
         {
