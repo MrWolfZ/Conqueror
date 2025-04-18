@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Builder;
@@ -124,6 +125,22 @@ public sealed class MessagingServerApiDescriptionTests
         Assert.That(operation.Value.RequestBody?.Content.Keys, testCase.MessageContentType is null ? Is.Null.Or.Empty : Is.EquivalentTo(expectedAcceptContentTypes));
 
         Assert.That(responseDescriptor.Value.Content.Keys, testCase.ResponseContentType is null ? Is.Empty : Is.EquivalentTo(new[] { testCase.ResponseContentType }));
+
+        if (testCase.ResponseContentType is not null)
+        {
+            var responseMediaType = responseDescriptor.Value.Content.Values.Single();
+
+            if (testCase.Response is IEnumerable)
+            {
+                Assert.That(responseMediaType.Schema.Reference?.Id, Is.Null);
+                Assert.That(responseMediaType.Schema.Type, Is.EqualTo("array"));
+                Assert.That(responseMediaType.Schema.Items?.Reference?.Id, Is.EqualTo(testCase.ResponseType?.GetElementType()?.Name ?? testCase.ResponseType?.GetGenericArguments()[0].Name));
+            }
+            else
+            {
+                Assert.That(responseMediaType.Schema.Reference?.Id, Is.EqualTo(testCase.ResponseType?.Name));
+            }
+        }
     }
 
     private static string ToHttpMethodString(OperationType operationType) => operationType switch
