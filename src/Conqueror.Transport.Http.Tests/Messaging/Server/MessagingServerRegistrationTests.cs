@@ -21,7 +21,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
-                                 && d.ImplementationType == typeof(HttpMessageEndpointReflectionConfigurationStartupFilter)));
+                                 && d.ImplementationFactory?.GetType().GetGenericArguments()[1] == typeof(HttpMessageEndpointReflectionConfigurationStartupFilter)));
 
             Assert.That(services, Has.Exactly(0).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
@@ -62,7 +62,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
 
             Assert.That(services, Has.Exactly(0).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
-                                 && d.ImplementationType == typeof(HttpMessageEndpointReflectionConfigurationStartupFilter)));
+                                 && d.ImplementationFactory?.GetType().GetGenericArguments()[1] == typeof(HttpMessageEndpointReflectionConfigurationStartupFilter)));
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
@@ -102,7 +102,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
-                                 && d.ImplementationType == typeof(HttpMessageEndpointReflectionConfigurationStartupFilter)));
+                                 && d.ImplementationFactory?.GetType().GetGenericArguments()[1] == typeof(HttpMessageEndpointReflectionConfigurationStartupFilter)));
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
@@ -148,7 +148,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
-                                 && d.ImplementationType == typeof(HttpMessageEndpointReflectionConfigurationStartupFilter)));
+                                 && d.ImplementationFactory?.GetType().GetGenericArguments()[1] == typeof(HttpMessageEndpointReflectionConfigurationStartupFilter)));
 
             Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(
                             d => d.ServiceType == typeof(IStartupFilter)
