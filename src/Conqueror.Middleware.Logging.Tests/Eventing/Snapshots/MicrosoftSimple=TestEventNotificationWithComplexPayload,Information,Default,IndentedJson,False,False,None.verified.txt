@@ -1,0 +1,12 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationWithComplexPayload[1915233606]
+      Handling event notification with payload
+      {
+        "Payload": 10,
+        "NestedPayload": {
+          "Payload": 11,
+          "Payload2": 12
+        }
+      }
+      (Event Notification ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationWithComplexPayload[749698657]
+      Handled event notification in 123.4560ms (Event Notification ID: test-message-id, Trace ID: test-trace-id)

@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestEventNotificationWithCustomTransport[0]
+      PreHook:TestEventNotificationWithCustomTransport,test-message-id,test-trace-id
+info: CustomCategory_TestEventNotificationWithCustomTransport[0]
+      PostHook:test-message-id,test-trace-id
