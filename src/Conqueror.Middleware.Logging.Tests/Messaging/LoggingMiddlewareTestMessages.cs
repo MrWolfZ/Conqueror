@@ -7,9 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Conqueror.Middleware.Logging.Tests.Messaging;
 
-[SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "Members are used by ASP.NET Core via reflection")]
-[SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Members are used by ASP.NET Core via reflection")]
-[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "Members are used by ASP.NET Core via reflection")]
 public static partial class LoggingMiddlewareTestMessages
 {
     public enum HookTestBehavior

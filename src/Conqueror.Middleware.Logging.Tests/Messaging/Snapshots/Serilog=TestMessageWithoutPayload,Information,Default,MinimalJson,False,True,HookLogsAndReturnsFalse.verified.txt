@@ -1,7 +1,7 @@
 ﻿2020-01-01 00:00:00.000 +00:00 [Information] PreHook:"TestMessageWithoutPayload","test-message-id","test-trace-id"
 2020-01-01 00:00:00.000 +00:00 [Error] ExceptionHook:"TestException","test-message-id","test-trace-id"
 Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
-   at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutPayloadHandler.Handle(TestMessageWithoutPayload message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line 696
+   at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutPayloadHandler.Handle(TestMessageWithoutPayload message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line 693
    at Conqueror.Messaging.InProcessMessageTransport`2.HandlerInvoker.Send(TMessage message, IServiceProvider serviceProvider, ConquerorContext conquerorContext, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Messaging/InProcessMessageTransport.cs:line 40
    at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line 52
    at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
