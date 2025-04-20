@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestEventNotificationWithCustomSerializedPayloadType[0]
+      PreHook:TestEventNotificationWithCustomSerializedPayloadType,test-message-id,test-trace-id
+info: CustomCategory_TestEventNotificationWithCustomSerializedPayloadType[0]
+      PostHook:test-message-id,test-trace-id

@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestEventNotificationWithoutPayload[0]
+      PreHook:TestEventNotificationWithoutPayload,test-message-id,test-trace-id
+info: CustomCategory_TestEventNotificationWithoutPayload[0]
+      PostHook:test-message-id,test-trace-id

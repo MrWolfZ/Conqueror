@@ -142,7 +142,6 @@ This file contains all the open points for extensions and improvements to the **
 ### Eventing middleware
 
 - [ ] create projects for common middlewares, e.g.
-  - [ ] `Conqueror.Eventing.Middleware.Logging`
   - [ ] `Conqueror.Eventing.Middleware.DataAnnotationValidation` (only for publisher)
   - [ ] `Conqueror.Eventing.Middleware.FluentValidation` (only for publisher)
   - [ ] `Conqueror.Eventing.Middleware.Metrics`
