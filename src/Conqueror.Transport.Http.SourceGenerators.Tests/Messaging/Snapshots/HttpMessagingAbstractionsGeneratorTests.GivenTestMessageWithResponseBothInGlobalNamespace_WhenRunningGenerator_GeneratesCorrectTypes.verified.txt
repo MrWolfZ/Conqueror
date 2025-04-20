@@ -8,7 +8,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-#nullable enable
+#nullable enable annotations
+#nullable disable warnings
+
+// Suppress warnings about [Obsolete] member usage in generated code.
+#pragma warning disable CS0612, CS0618
 
 /// <summary>
 ///     Message types for <see cref="global::TestMessage" />.
@@ -68,7 +72,11 @@ Conqueror.Transport.Http.SourceGenerators/Conqueror.Transport.Http.SourceGenerat
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-#nullable enable
+#nullable enable annotations
+#nullable disable warnings
+
+// Suppress warnings about [Obsolete] member usage in generated code.
+#pragma warning disable CS0612, CS0618
 
 /// <summary>
 ///     HTTP message Types for <see cref="global::TestMessage" />.
