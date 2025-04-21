@@ -60,19 +60,6 @@ public sealed class MessagingClientExecutionTests
             httpClient.BaseAddress = new("http://localhost/custom/");
         }
 
-        // the source generator does not yet support serialization of complex GET messages, and in controller mode the
-        // model validation will fail (while the endpoint mode will just silently generate an empty message due to lack
-        // of out-of-the-box validation
-        if (testCase is
-            {
-                Message: TestMessageWithComplexGetPayload,
-                RegistrationMethod: MessageTestCaseRegistrationMethod.Controllers
-                or MessageTestCaseRegistrationMethod.ExplicitController,
-            })
-        {
-            return;
-        }
-
         IHttpMessageTransportClient<TM, TR> ConfigureTransport<TM, TR>(IMessageTransportClientBuilder<TM, TR> builder)
             where TM : class, IHttpMessage<TM, TR>
             => builder.UseHttp(new("http://localhost"))
@@ -203,54 +190,6 @@ public sealed class MessagingClientExecutionTests
                 _ = services.AddRouting().AddMessageEndpoints();
             },
             app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints(mt => mt != typeof(TestMessageWithoutResponse))));
-
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
-
-        var httpClient = host.HttpClient;
-
-        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageClients>()
-                                                          .For(TestMessageWithoutResponse.T)
-                                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
-                                                          .Handle(new(), host.TestTimeoutToken),
-                               Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
-
-        Assert.That(callWasReceivedOnServer, Is.False);
-    }
-
-    [Test]
-    public async Task GivenTestHttpMessage_WhenFilteringMessageTypeFromControllers_EndpointDoesNotGetRegistered()
-    {
-        await using var host = await CreateTestHost(
-            services =>
-            {
-                _ = services.AddMessageHandler<TestMessageHandler>();
-                _ = services.AddControllers().AddMessageControllers(mt => mt != typeof(TestMessage));
-            },
-            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapControllers()));
-
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
-
-        var httpClient = host.HttpClient;
-
-        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageClients>()
-                                                          .For(TestMessage.T)
-                                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
-                                                          .Handle(new(), host.TestTimeoutToken),
-                               Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
-
-        Assert.That(callWasReceivedOnServer, Is.False);
-    }
-
-    [Test]
-    public async Task GivenTestHttpMessageWithoutResponse_WhenFilteringMessageTypeFromControllers_EndpointDoesNotGetRegistered()
-    {
-        await using var host = await CreateTestHost(
-            services =>
-            {
-                _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>();
-                _ = services.AddControllers().AddMessageControllers(mt => mt != typeof(TestMessageWithoutResponse));
-            },
-            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapControllers()));
 
         await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
 

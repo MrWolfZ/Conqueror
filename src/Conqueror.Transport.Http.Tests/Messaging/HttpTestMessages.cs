@@ -27,8 +27,6 @@ public static partial class HttpTestMessages
 
     public enum MessageTestCaseRegistrationMethod
     {
-        Controllers,
-        ExplicitController,
         CustomController,
         Endpoints,
         ExplicitEndpoint,
@@ -70,24 +68,15 @@ public static partial class HttpTestMessages
             return;
         }
 
-        var mvcBuilder = services.AddControllers();
-
-        if (testCase.RegistrationMethod == MessageTestCaseRegistrationMethod.Controllers)
-        {
-            _ = mvcBuilder.AddMessageControllers();
-            return;
-        }
-
         if (testCase.RegistrationMethod == MessageTestCaseRegistrationMethod.CustomController)
         {
+            _ = services.AddControllers();
+
             var applicationPartManager = new ApplicationPartManager();
             applicationPartManager.ApplicationParts.Add(new TestControllerApplicationPart());
             applicationPartManager.FeatureProviders.Add(new TestControllerFeatureProvider());
             _ = services.AddSingleton(applicationPartManager);
-            return;
         }
-
-        _ = mvcBuilder.AddMessageController<TMessage>();
     }
 
     public static void MapMessageEndpoints<TMessage, TResponse>(this IApplicationBuilder app, MessageTestCase testCase)
@@ -96,10 +85,7 @@ public static partial class HttpTestMessages
         _ = app.UseConquerorWellKnownErrorHandling();
         _ = app.UseRouting();
 
-        if (testCase.RegistrationMethod
-            is MessageTestCaseRegistrationMethod.Controllers
-            or MessageTestCaseRegistrationMethod.ExplicitController
-            or MessageTestCaseRegistrationMethod.CustomController)
+        if (testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.CustomController)
         {
             _ = app.UseEndpoints(b => b.MapControllers());
 
@@ -198,8 +184,6 @@ public static partial class HttpTestMessages
     {
         foreach (var registrationMethod in new[]
                  {
-                     MessageTestCaseRegistrationMethod.Controllers,
-                     MessageTestCaseRegistrationMethod.ExplicitController,
                      MessageTestCaseRegistrationMethod.Endpoints,
                      MessageTestCaseRegistrationMethod.ExplicitEndpoint,
                  })
@@ -912,7 +896,6 @@ public static partial class HttpTestMessages
 
         foreach (var registrationMethod in new[]
                  {
-                     MessageTestCaseRegistrationMethod.Controllers,
                      MessageTestCaseRegistrationMethod.Endpoints,
                  })
         {

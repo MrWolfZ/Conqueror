@@ -18,7 +18,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreHttpContextExtensions
     }
 
     public static IMessageHandler<TMessage, TResponse> GetMessageClient<TMessage, TResponse>(this HttpContext httpContext,
-                                                                                             MessageTypes<TMessage, TResponse> message)
+                                                                                             MessageTypes<TMessage, TResponse> messageTypes)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
     {
         return httpContext.RequestServices
@@ -37,7 +37,7 @@ public static class ConquerorHttpServerMessagingAspNetCoreHttpContextExtensions
     }
 
     public static IMessageHandler<TMessage> GetMessageClient<TMessage>(this HttpContext httpContext,
-                                                                       MessageTypes<TMessage, UnitMessageResponse> message)
+                                                                       MessageTypes<TMessage, UnitMessageResponse> messageTypes)
         where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
     {
         return httpContext.RequestServices
