@@ -14,18 +14,12 @@ namespace Conqueror;
 /// <typeparam name="TEventNotification">the event notification type</typeparam>
 public interface IEventNotification<
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-    TEventNotification>
+    out TEventNotification>
     where TEventNotification : class, IEventNotification<TEventNotification>
 {
     static abstract IDefaultEventNotificationTypesInjector DefaultTypeInjector { get; }
 
     static abstract IReadOnlyCollection<IEventNotificationTypesInjector> TypeInjectors { get; }
-
-    /// <summary>
-    ///     This helper property can be used for type inference instead of having
-    ///     to provide the generic event notification type argument.
-    /// </summary>
-    static abstract EventNotificationTypes<TEventNotification> T { get; }
 
     /// <summary>
     ///     Some transports must be able to construct an instance of this event notification
@@ -54,10 +48,12 @@ public interface IEventNotification<
 ///     This helper class is only used for enhanced type inference.
 /// </summary>
 /// <typeparam name="TEventNotification">the event notification type</typeparam>
-public sealed class EventNotificationTypes<TEventNotification>
+/// <typeparam name="THandler">the handler type</typeparam>
+public sealed class EventNotificationTypes<TEventNotification, THandler>
     where TEventNotification : class, IEventNotification<TEventNotification>
+    where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
 {
-    public static readonly EventNotificationTypes<TEventNotification> Default = new();
+    public static readonly EventNotificationTypes<TEventNotification, THandler> Default = new();
 
     private EventNotificationTypes()
     {

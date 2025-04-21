@@ -36,18 +36,14 @@ internal static class EventingAbstractionsSources
 
         using var ns = string.IsNullOrEmpty(notificationTypeDescriptor.Namespace) ? null : sb.AppendNamespace(indentation, notificationTypeDescriptor.Namespace);
 
-        using (sb.AppendParentClasses(indentation, notificationTypeDescriptor.ParentClasses))
-        {
-            using var mt = sb.AppendEventNotificationType(indentation, in notificationTypeDescriptor);
+        using var p = sb.AppendParentClasses(indentation, notificationTypeDescriptor.ParentClasses);
+        using var mt = sb.AppendEventNotificationType(indentation, in notificationTypeDescriptor);
 
-            _ = sb.AppendEventNotificationTypesProperty(indentation, in notificationTypeDescriptor)
-                  .AppendEventNotificationHandlerInterface(indentation, in notificationTypeDescriptor)
-                  .AppendEventNotificationEmptyInstanceProperty(indentation, in notificationTypeDescriptor)
-                  .AppendEventNotificationDefaultTypeInjector(indentation, in notificationTypeDescriptor)
-                  .AppendEventNotificationTypeInjectors(indentation, in notificationTypeDescriptor)
-                  .AppendJsonSerializerContext(indentation, in notificationTypeDescriptor, descriptor.HasJsonSerializerContext);
-        }
-
-        return sb.AppendEventNotificationExtensionsClass(indentation, in notificationTypeDescriptor);
+        return sb.AppendEventNotificationTypesProperty(indentation, in notificationTypeDescriptor)
+                 .AppendEventNotificationHandlerInterface(indentation, in notificationTypeDescriptor)
+                 .AppendEventNotificationEmptyInstanceProperty(indentation, in notificationTypeDescriptor)
+                 .AppendEventNotificationDefaultTypeInjector(indentation, in notificationTypeDescriptor)
+                 .AppendEventNotificationTypeInjectors(indentation, in notificationTypeDescriptor)
+                 .AppendJsonSerializerContext(indentation, in notificationTypeDescriptor, descriptor.HasJsonSerializerContext);
     }
 }

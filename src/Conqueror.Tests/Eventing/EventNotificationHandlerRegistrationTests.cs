@@ -22,7 +22,7 @@ public sealed partial class EventNotificationHandlerRegistrationTests
     [Test]
     [Combinatorial]
     public void GivenServiceCollection_WhenAddingEventNotificationHandlers_AddsCorrectHandlerRegistrations(
-        [Values("type", "factory", "instance", "delegate", "sync_delegate", "explicit_delegate", "explicit_sync_delegate")]
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
         string registrationMethod)
     {
         var services = new ServiceCollection();
@@ -39,10 +39,6 @@ public sealed partial class EventNotificationHandlerRegistrationTests
                                   .AddEventNotificationHandlerDelegate(TestEventNotification2.T, (_, _, _) => Task.CompletedTask),
             "sync_delegate" => services.AddEventNotificationHandlerDelegate(TestEventNotification.T, (_, _, _) => { })
                                        .AddEventNotificationHandlerDelegate(TestEventNotification2.T, (_, _, _) => { }),
-            "explicit_delegate" => services.AddEventNotificationHandlerDelegate<TestEventNotification>((_, _, _) => Task.CompletedTask)
-                                           .AddEventNotificationHandlerDelegate<TestEventNotification2>((_, _, _) => Task.CompletedTask),
-            "explicit_sync_delegate" => services.AddEventNotificationHandlerDelegate<TestEventNotification>((_, _, _) => { })
-                                                .AddEventNotificationHandlerDelegate<TestEventNotification2>((_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
         };
 
@@ -53,7 +49,7 @@ public sealed partial class EventNotificationHandlerRegistrationTests
                                            .Select(r => (r.EventNotificationType, r.HandlerType, r.HandlerFn is not null))
                                            .ToList();
 
-        var isDelegate = registrationMethod is "delegate" or "sync_delegate" or "explicit_delegate" or "explicit_sync_delegate";
+        var isDelegate = registrationMethod is "delegate" or "sync_delegate";
 
         var expectedRegistrations = new[]
         {
@@ -131,7 +127,7 @@ public sealed partial class EventNotificationHandlerRegistrationTests
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(TestEventNotificationHandler)));
 
         // assert that we do not explicitly register handlers on their interface
-        Assert.That(services, Has.Exactly(0).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IEventNotificationHandler<TestEventNotification>)));
+        Assert.That(services, Has.Exactly(0).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IEventNotificationHandler<TestEventNotification, TestEventNotification.IHandler>)));
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(EventNotificationHandlerRegistration)));
 
@@ -184,8 +180,8 @@ public sealed partial class EventNotificationHandlerRegistrationTests
             (var l, "type") => services.AddEventNotificationHandler<TestEventNotificationHandler>(l.Value),
             (var l, "factory") => services.AddEventNotificationHandler(factory, l.Value),
             (_, "instance") => services.AddEventNotificationHandler(instance),
-            (_, "delegate") => services.AddEventNotificationHandlerDelegate<TestEventNotification>((_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddEventNotificationHandlerDelegate((EventNotificationHandlerFn<TestEventNotification>)((_, _, _) => Task.CompletedTask)),
+            (_, "delegate") => services.AddEventNotificationHandlerDelegate(TestEventNotification.T, (_, _, _) => Task.CompletedTask),
+            (_, "sync_delegate") => services.AddEventNotificationHandlerDelegate(TestEventNotification.T, (_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(firstRegistrationMethod), firstRegistrationMethod, null),
         };
 
@@ -196,8 +192,8 @@ public sealed partial class EventNotificationHandlerRegistrationTests
             (var l, "type") => services.AddEventNotificationHandler<DuplicateTestEventNotificationHandler>(l.Value),
             (var l, "factory") => services.AddEventNotificationHandler(duplicateFactory, l.Value),
             (_, "instance") => services.AddEventNotificationHandler(duplicateInstance),
-            (_, "delegate") => services.AddEventNotificationHandlerDelegate<TestEventNotification>((_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddEventNotificationHandlerDelegate<TestEventNotification>((_, _, _) => { }),
+            (_, "delegate") => services.AddEventNotificationHandlerDelegate(TestEventNotification.T, (_, _, _) => Task.CompletedTask),
+            (_, "sync_delegate") => services.AddEventNotificationHandlerDelegate(TestEventNotification.T, (_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(secondRegistrationMethod), secondRegistrationMethod, null),
         };
 

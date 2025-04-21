@@ -7,7 +7,7 @@
 fail: Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationWithCustomTransport[893113502]
       An exception occurred while handling event notification after 123.4560ms (Event Notification ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications+TestException: test exception
-         at Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationWithCustomTransportHandler.Handle(TestEventNotificationWithCustomTransport notification, CancellationToken cancellationToken) in {ProjectDirectory}Eventing/LoggingMiddlewareTestEventNotifications.cs:line 721
+         at Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationWithCustomTransportHandler.Handle(TestEventNotificationWithCustomTransport notification, CancellationToken cancellationToken) in {ProjectDirectory}Eventing/LoggingMiddlewareTestEventNotifications.cs:line 724
          at Conqueror.Middleware.Logging.Eventing.LoggingEventNotificationMiddleware`1.Execute(EventNotificationMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Eventing/LoggingEventNotificationMiddleware.cs:line 51
          at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
          at Conqueror.Middleware.Logging.Eventing.LoggingEventNotificationMiddleware`1.Execute(EventNotificationMiddlewareContext`1 ctx)

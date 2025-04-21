@@ -65,28 +65,26 @@ public static class ConquerorEventingServiceCollectionExtensions
 
     public static IServiceCollection AddEventNotificationHandlerDelegate<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TEventNotification>(this IServiceCollection services,
-                            EventNotificationHandlerFn<TEventNotification> fn)
+        TEventNotification,
+        THandler>(
+        this IServiceCollection services,
+        EventNotificationTypes<TEventNotification, THandler> notificationTypes,
+        EventNotificationHandlerFn<TEventNotification> fn)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
     {
         return services.AddEventNotificationHandlerDelegateInternal(fn, null);
     }
 
     public static IServiceCollection AddEventNotificationHandlerDelegate<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TEventNotification>(this IServiceCollection services,
-                            EventNotificationTypes<TEventNotification> notificationTypes,
-                            EventNotificationHandlerFn<TEventNotification> fn)
+        TEventNotification,
+        THandler>(
+        this IServiceCollection services,
+        EventNotificationTypes<TEventNotification, THandler> notificationTypes,
+        EventNotificationHandlerSyncFn<TEventNotification> fn)
         where TEventNotification : class, IEventNotification<TEventNotification>
-    {
-        return services.AddEventNotificationHandlerDelegate(fn);
-    }
-
-    public static IServiceCollection AddEventNotificationHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TEventNotification>(this IServiceCollection services,
-                            EventNotificationHandlerSyncFn<TEventNotification> fn)
-        where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
     {
         return services.AddEventNotificationHandlerDelegateInternal<TEventNotification>((m, p, ct) =>
         {
@@ -95,62 +93,38 @@ public static class ConquerorEventingServiceCollectionExtensions
         }, null);
     }
 
-    public static IServiceCollection AddEventNotificationHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TEventNotification>(this IServiceCollection services,
-                            EventNotificationTypes<TEventNotification> notificationTypes,
-                            EventNotificationHandlerSyncFn<TEventNotification> fn)
-        where TEventNotification : class, IEventNotification<TEventNotification>
-    {
-        return services.AddEventNotificationHandlerDelegate(fn);
-    }
-
     // ReSharper disable once MemberCanBePrivate.Global
     public static IServiceCollection AddEventNotificationHandlerDelegate<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TEventNotification>(this IServiceCollection services,
-                            EventNotificationHandlerFn<TEventNotification> fn,
-                            Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
+        TEventNotification,
+        THandler>(
+        this IServiceCollection services,
+        EventNotificationTypes<TEventNotification, THandler> notificationTypes,
+        EventNotificationHandlerFn<TEventNotification> fn,
+        Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
     {
         return services.AddEventNotificationHandlerDelegateInternal(fn, configurePipeline);
     }
 
-    public static IServiceCollection AddEventNotificationHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TEventNotification>(this IServiceCollection services,
-                            EventNotificationTypes<TEventNotification> notificationTypes,
-                            EventNotificationHandlerFn<TEventNotification> fn,
-                            Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
-        where TEventNotification : class, IEventNotification<TEventNotification>
-    {
-        return services.AddEventNotificationHandlerDelegate(fn, configurePipeline);
-    }
-
     // ReSharper disable once MemberCanBePrivate.Global
     public static IServiceCollection AddEventNotificationHandlerDelegate<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TEventNotification>(this IServiceCollection services,
-                            EventNotificationHandlerSyncFn<TEventNotification> fn,
-                            Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
+        TEventNotification,
+        THandler>(
+        this IServiceCollection services,
+        EventNotificationTypes<TEventNotification, THandler> notificationTypes,
+        EventNotificationHandlerSyncFn<TEventNotification> fn,
+        Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
     {
         return services.AddEventNotificationHandlerDelegateInternal((m, p, ct) =>
         {
             fn(m, p, ct);
             return Task.CompletedTask;
         }, configurePipeline);
-    }
-
-    public static IServiceCollection AddEventNotificationHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TEventNotification>(this IServiceCollection services,
-                            EventNotificationTypes<TEventNotification> notificationTypes,
-                            EventNotificationHandlerSyncFn<TEventNotification> fn,
-                            Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
-        where TEventNotification : class, IEventNotification<TEventNotification>
-    {
-        return services.AddEventNotificationHandlerDelegate(fn, configurePipeline);
     }
 
     [RequiresUnreferencedCode("Types might be removed")]
@@ -218,7 +192,7 @@ public static class ConquerorEventingServiceCollectionExtensions
         where THandler : class, IGeneratedEventNotificationHandler
     {
         var notificationHandlerInterfaces = typeof(THandler).GetInterfaces()
-                                                            .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEventNotificationHandler<>))
+                                                            .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEventNotificationHandler<,>))
                                                             .ToList();
 
         foreach (var notificationHandlerInterface in notificationHandlerInterfaces)
@@ -226,7 +200,7 @@ public static class ConquerorEventingServiceCollectionExtensions
             var notificationType = notificationHandlerInterface.GetGenericArguments()[0];
             var addHandlerMethod = typeof(ConquerorEventingServiceCollectionExtensions)
                                    .GetMethod(nameof(AddEventNotificationHandlerInternalForEventNotificationType), BindingFlags.NonPublic | BindingFlags.Static)
-                                   ?.MakeGenericMethod(typeof(THandler), notificationType);
+                                   ?.MakeGenericMethod(notificationType, typeof(THandler));
 
             if (addHandlerMethod is null)
             {
@@ -246,54 +220,17 @@ public static class ConquerorEventingServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection AddEventNotificationHandlerInternalForEventNotificationType<THandler, TEventNotification>(
+    private static IServiceCollection AddEventNotificationHandlerInternalForEventNotificationType<TEventNotification, THandler>(
         this IServiceCollection services,
         ServiceDescriptor serviceDescriptor,
         bool shouldOverwriteRegistration)
-        where THandler : class, IGeneratedEventNotificationHandler<TEventNotification>
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandler : class, IGeneratedEventNotificationHandler
     {
-        if (typeof(THandler).IsInterface || typeof(THandler).IsAbstract)
-        {
-            throw new InvalidOperationException($"handler type '{typeof(THandler)}' must not be an interface or abstract class");
-        }
-
-        var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is EventNotificationHandlerRegistration r
-                                                                 && r.EventNotificationType == typeof(TEventNotification)
-                                                                 && r.HandlerType == typeof(THandler));
-
-        var invoker = new EventNotificationHandlerInvoker<TEventNotification>(
-            THandler.ConfigurePipeline,
-            (n, p, ct) => ((IEventNotificationHandler<TEventNotification>)p.GetRequiredService(typeof(THandler))).Handle(n, ct));
-
-        var typeInjectorsWithHandlerType = TEventNotification.TypeInjectors.Select(i => i.WithHandlerType<THandler>()).ToList();
-        var registration = new EventNotificationHandlerRegistration(typeof(TEventNotification), typeof(THandler), null, invoker, typeInjectorsWithHandlerType);
-
-        if (existingRegistration is not null)
-        {
-            if (shouldOverwriteRegistration)
-            {
-                services.Remove(existingRegistration);
-                services.AddSingleton(registration);
-            }
-        }
-        else
-        {
-            services.AddSingleton(registration);
-        }
-
-        services.AddConquerorEventing();
-
-        if (shouldOverwriteRegistration)
-        {
-            services.Replace(serviceDescriptor);
-        }
-        else
-        {
-            services.TryAdd(serviceDescriptor);
-        }
-
-        return services;
+        return ((IDefaultEventNotificationTypesInjector)TEventNotification.DefaultTypeInjector.WithHandlerType<THandler>())
+            .CreateWithEventNotificationTypes(new EventNotificationHandlerRegistrationTypeInjectable(services,
+                                                                                                     serviceDescriptor,
+                                                                                                     shouldOverwriteRegistration));
     }
 
     private static IServiceCollection AddEventNotificationHandlerDelegateInternal<
@@ -313,5 +250,63 @@ public static class ConquerorEventingServiceCollectionExtensions
         services.AddSingleton(new EventNotificationHandlerRegistration(typeof(TEventNotification), null, fn, invoker, TEventNotification.TypeInjectors));
 
         return services;
+    }
+
+    private sealed class EventNotificationHandlerRegistrationTypeInjectable(
+        IServiceCollection services,
+        ServiceDescriptor serviceDescriptor,
+        bool shouldOverwriteRegistration)
+        : IDefaultEventNotificationTypesInjectable<IServiceCollection>
+    {
+        IServiceCollection IDefaultEventNotificationTypesInjectable<IServiceCollection>
+            .WithInjectedTypes<
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+                TEventNotification,
+                TGeneratedHandlerInterface,
+                TGeneratedHandlerAdapter,
+                THandler>()
+        {
+            if (typeof(THandler).IsInterface || typeof(THandler).IsAbstract)
+            {
+                throw new InvalidOperationException($"handler type '{typeof(THandler)}' must not be an interface or abstract class");
+            }
+
+            var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is EventNotificationHandlerRegistration r
+                                                                     && r.EventNotificationType == typeof(TEventNotification)
+                                                                     && r.HandlerType == typeof(THandler));
+
+            var invoker = new EventNotificationHandlerInvoker<TEventNotification>(
+                THandler.ConfigurePipeline,
+                (n, p, ct) => TGeneratedHandlerInterface.Invoke((TGeneratedHandlerInterface)p.GetRequiredService(typeof(THandler)), n, ct));
+
+            var typeInjectorsWithHandlerType = TEventNotification.TypeInjectors.Select(i => i.WithHandlerType<THandler>()).ToList();
+            var registration = new EventNotificationHandlerRegistration(typeof(TEventNotification), typeof(THandler), null, invoker, typeInjectorsWithHandlerType);
+
+            if (existingRegistration is not null)
+            {
+                if (shouldOverwriteRegistration)
+                {
+                    services.Remove(existingRegistration);
+                    services.AddSingleton(registration);
+                }
+            }
+            else
+            {
+                services.AddSingleton(registration);
+            }
+
+            services.AddConquerorEventing();
+
+            if (shouldOverwriteRegistration)
+            {
+                services.Replace(serviceDescriptor);
+            }
+            else
+            {
+                services.TryAdd(serviceDescriptor);
+            }
+
+            return services;
+        }
     }
 }

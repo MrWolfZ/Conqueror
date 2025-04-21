@@ -45,8 +45,8 @@ public sealed class DefaultEventNotificationTypesInjector<
     TGeneratedHandlerAdapter>
     : IDefaultEventNotificationTypesInjector
     where TEventNotification : class, IEventNotification<TEventNotification>
-    where TGeneratedHandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification>
-    where TGeneratedHandlerAdapter : GeneratedEventNotificationHandlerAdapter<TEventNotification>, TGeneratedHandlerInterface, new()
+    where TGeneratedHandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, TGeneratedHandlerInterface>
+    where TGeneratedHandlerAdapter : GeneratedEventNotificationHandlerAdapter<TEventNotification, TGeneratedHandlerInterface, TGeneratedHandlerAdapter>, TGeneratedHandlerInterface, new()
 {
     public static readonly DefaultEventNotificationTypesInjector<TEventNotification, TGeneratedHandlerInterface, TGeneratedHandlerAdapter> Default = new();
 
@@ -97,21 +97,22 @@ public sealed class DefaultEventNotificationTypesInjector<
 
         public static IReadOnlyCollection<IEventNotificationTypesInjector> TypeInjectors => throw new NotSupportedException();
 
-        public static EventNotificationTypes<FakeNotification> T => throw new NotSupportedException();
+        public static EventNotificationTypes<FakeNotification, IHandler> T => throw new NotSupportedException();
 
         public static FakeNotification EmptyInstance => throw new NotSupportedException();
 
-        public interface IHandler : IGeneratedEventNotificationHandler<FakeNotification>
+        public interface IHandler : IGeneratedEventNotificationHandler<FakeNotification, IHandler>
         {
+            static Task IGeneratedEventNotificationHandler<FakeNotification, IHandler>
+                .Invoke(IHandler handler, FakeNotification notification, CancellationToken cancellationToken)
+                => throw new NotSupportedException();
+
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Adapter : GeneratedEventNotificationHandlerAdapter<FakeNotification>, IHandler;
+            public sealed class Adapter : GeneratedEventNotificationHandlerAdapter<FakeNotification, IHandler, Adapter>, IHandler;
         }
     }
 
-    private sealed class FakeNotificationHandler : FakeNotification.IHandler
-    {
-        public Task Handle(FakeNotification notification, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-    }
+    private sealed class FakeNotificationHandler : FakeNotification.IHandler;
 }
 
 /// <summary>
@@ -128,8 +129,8 @@ public interface IDefaultEventNotificationTypesInjectable<out TResult>
         TGeneratedHandlerInterface,
         TGeneratedHandlerAdapter>()
         where TEventNotification : class, IEventNotification<TEventNotification>
-        where TGeneratedHandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification>
-        where TGeneratedHandlerAdapter : GeneratedEventNotificationHandlerAdapter<TEventNotification>, TGeneratedHandlerInterface, new()
+        where TGeneratedHandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, TGeneratedHandlerInterface>
+        where TGeneratedHandlerAdapter : GeneratedEventNotificationHandlerAdapter<TEventNotification, TGeneratedHandlerInterface, TGeneratedHandlerAdapter>, TGeneratedHandlerInterface, new()
     {
         Debug.Assert(false, "this method should never be called");
         throw new NotSupportedException("did you mean to call WithInjectedTypes<TEventNotification, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, THandler>?");
@@ -142,8 +143,8 @@ public interface IDefaultEventNotificationTypesInjectable<out TResult>
         TGeneratedHandlerAdapter,
         THandler>()
         where TEventNotification : class, IEventNotification<TEventNotification>
-        where TGeneratedHandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification>
-        where TGeneratedHandlerAdapter : GeneratedEventNotificationHandlerAdapter<TEventNotification>, TGeneratedHandlerInterface, new()
+        where TGeneratedHandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, TGeneratedHandlerInterface>
+        where TGeneratedHandlerAdapter : GeneratedEventNotificationHandlerAdapter<TEventNotification, TGeneratedHandlerInterface, TGeneratedHandlerAdapter>, TGeneratedHandlerInterface, new()
         where THandler : class, TGeneratedHandlerInterface
     {
         Debug.Assert(false, "this method should never be called");

@@ -24,14 +24,21 @@ namespace Generator.Tests
         partial record TestEventNotification : global::Conqueror.IEventNotification<TestEventNotification>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
-            public static global::Conqueror.EventNotificationTypes<TestEventNotification> T => global::Conqueror.EventNotificationTypes<TestEventNotification>.Default;
+            public static global::Conqueror.EventNotificationTypes<TestEventNotification, IHandler> T => global::Conqueror.EventNotificationTypes<TestEventNotification, IHandler>.Default;
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
-            public partial interface IHandler : global::Conqueror.IGeneratedEventNotificationHandler<TestEventNotification>
+            public partial interface IHandler : global::Conqueror.IGeneratedEventNotificationHandler<TestEventNotification, IHandler>
             {
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
+                global::System.Threading.Tasks.Task Handle(TestEventNotification notification, global::System.Threading.CancellationToken cancellationToken = default);
+
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
+                static global::System.Threading.Tasks.Task global::Conqueror.IGeneratedEventNotificationHandler<TestEventNotification, IHandler>.Invoke(IHandler handler, TestEventNotification notification, global::System.Threading.CancellationToken cancellationToken)
+                    => handler.Handle(notification, cancellationToken);
+
                 [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
                 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
-                public sealed class Adapter : global::Conqueror.GeneratedEventNotificationHandlerAdapter<TestEventNotification>, IHandler;
+                public sealed class Adapter : global::Conqueror.GeneratedEventNotificationHandlerAdapter<TestEventNotification, IHandler, Adapter>, IHandler;
             }
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
@@ -48,14 +55,5 @@ namespace Generator.Tests
             static global::System.Collections.Generic.IReadOnlyCollection<global::Conqueror.IEventNotificationTypesInjector> global::Conqueror.IEventNotification<TestEventNotification>.TypeInjectors
                 => global::Conqueror.IEventNotificationTypesInjector.GetTypeInjectorsForEventNotificationType<TestEventNotification>();
         }
-    }
-
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
-    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static class TestEventNotificationHandlerExtensions_6427597440618195457
-    {
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
-        public static global::Generator.Tests.Container.TestEventNotification.IHandler AsIHandler(this global::Conqueror.IEventNotificationHandler<global::Generator.Tests.Container.TestEventNotification> handler)
-            => global::Conqueror.EventNotificationHandlerExtensions.AsIHandler<global::Generator.Tests.Container.TestEventNotification, global::Generator.Tests.Container.TestEventNotification.IHandler>(handler);
     }
 }

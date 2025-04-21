@@ -3,7 +3,7 @@
 fail: CustomCategory_TestEventNotification[0]
       ExceptionHook:TestException,test-message-id,test-trace-id
       Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications+TestException: test exception
-         at Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationHandler.Handle(TestEventNotification notification, CancellationToken cancellationToken) in {ProjectDirectory}Eventing/LoggingMiddlewareTestEventNotifications.cs:line 573
+         at Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationHandler.Handle(TestEventNotification notification, CancellationToken cancellationToken) in {ProjectDirectory}Eventing/LoggingMiddlewareTestEventNotifications.cs:line 576
          at Conqueror.Middleware.Logging.Eventing.LoggingEventNotificationMiddleware`1.Execute(EventNotificationMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Eventing/LoggingEventNotificationMiddleware.cs:line 51
          at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
          at Conqueror.Middleware.Logging.Eventing.LoggingEventNotificationMiddleware`1.Execute(EventNotificationMiddlewareContext`1 ctx)

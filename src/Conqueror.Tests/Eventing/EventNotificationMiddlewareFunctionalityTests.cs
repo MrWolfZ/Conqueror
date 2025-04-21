@@ -712,10 +712,10 @@ public sealed partial class EventNotificationMiddlewareFunctionalityTests
         EventNotificationTransportType? transportTypeFromPublisher = null;
         EventNotificationTransportType? transportTypeFromHandler = null;
 
-        _ = services.AddEventNotificationHandlerDelegate<TestEventNotification>(async (_, _, _) =>
-        {
-            await Task.Yield();
-        }, pipeline => transportTypeFromHandler = pipeline.TransportType);
+        _ = services.AddEventNotificationHandlerDelegate(
+            TestEventNotification.T,
+            async (_, _, _) => { await Task.Yield(); },
+            pipeline => transportTypeFromHandler = pipeline.TransportType);
 
         var provider = services.BuildServiceProvider();
 
@@ -735,16 +735,18 @@ public sealed partial class EventNotificationMiddlewareFunctionalityTests
     {
         var services = new ServiceCollection();
 
-        _ = services.AddEventNotificationHandlerDelegate<TestEventNotification>((_, _, _) => Task.CompletedTask,
-                                                                                pipeline =>
-                                                                                {
-                                                                                    var middleware1 = new TestEventNotificationMiddleware<TestEventNotification>(new());
-                                                                                    var middleware2 = new TestEventNotificationMiddleware2<TestEventNotification>(new());
-                                                                                    _ = pipeline.Use(middleware1).Use(middleware2);
+        _ = services.AddEventNotificationHandlerDelegate(
+            TestEventNotification.T,
+            (_, _, _) => Task.CompletedTask,
+            pipeline =>
+            {
+                var middleware1 = new TestEventNotificationMiddleware<TestEventNotification>(new());
+                var middleware2 = new TestEventNotificationMiddleware2<TestEventNotification>(new());
+                _ = pipeline.Use(middleware1).Use(middleware2);
 
-                                                                                    Assert.That(pipeline, Has.Count.EqualTo(2));
-                                                                                    Assert.That(pipeline, Is.EqualTo(new IEventNotificationMiddleware<TestEventNotification>[] { middleware1, middleware2 }));
-                                                                                });
+                Assert.That(pipeline, Has.Count.EqualTo(2));
+                Assert.That(pipeline, Is.EqualTo(new IEventNotificationMiddleware<TestEventNotification>[] { middleware1, middleware2 }));
+            });
 
         var provider = services.BuildServiceProvider();
 
@@ -763,30 +765,6 @@ public sealed partial class EventNotificationMiddlewareFunctionalityTests
                          Assert.That(pipeline, Is.EqualTo(new IEventNotificationMiddleware<TestEventNotification>[] { middleware1, middleware2 }));
                      })
                      .Handle(notification);
-    }
-
-    [Test]
-    public async Task GivenHandlerCastedToGeneratedInterfaceWithSingleAppliedMiddleware_WhenHandlerIsCalled_MiddlewareIsCalledWithEventNotification()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddEventNotificationHandler<TestEventNotificationHandler>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<IEventNotificationPublishers>()
-                              .For(TestEventNotification.T)
-                              .AsIHandler()
-                              .WithPipeline(p => p.Use(new TestEventNotificationMiddleware<TestEventNotification>(p.ServiceProvider.GetRequiredService<TestObservations>())));
-
-        var notification = new TestEventNotification(10);
-
-        await handler.Handle(notification);
-
-        Assert.That(observations.EventNotificationsFromMiddlewares, Is.EqualTo(new[] { notification }));
-        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestEventNotificationMiddleware<TestEventNotification>) }));
     }
 
     [Test]

@@ -20,9 +20,10 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestEventNotifications), nameof(GenerateTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandler>(
-        EventNotificationTestCase<TEventNotification, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandlerInterface, THandler>(
+        EventNotificationTestCase<TEventNotification, THandlerInterface, THandler> testCase)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, THandlerInterface>
         where THandler : class, IGeneratedEventNotificationHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
@@ -43,8 +44,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IEventNotificationPublishers>()
-                          .For(TEventNotification.T);
+        var handler = host.Resolve<IEventNotificationPublishers>().For<TEventNotification, THandlerInterface>();
 
         if (typeof(TEventNotification) == typeof(TestEventNotificationWithCustomTransport))
         {
@@ -54,7 +54,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
         try
         {
-            await handler.Handle(testCase.EventNotification, host.TestTimeoutToken);
+            await THandlerInterface.Invoke(handler, testCase.EventNotification, host.TestTimeoutToken);
 
             if (testCase.Exception != null)
             {
@@ -85,9 +85,10 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestEventNotifications), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandler>(
-        EventNotificationTestCase<TEventNotification, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandlerInterface, THandler>(
+        EventNotificationTestCase<TEventNotification, THandlerInterface, THandler> testCase)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, THandlerInterface>
         where THandler : class, IGeneratedEventNotificationHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
@@ -112,8 +113,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IEventNotificationPublishers>()
-                          .For(TEventNotification.T);
+        var handler = host.Resolve<IEventNotificationPublishers>().For<TEventNotification, THandlerInterface>();
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -122,7 +122,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
         try
         {
-            await handler.Handle(testCase.EventNotification, host.TestTimeoutToken);
+            await THandlerInterface.Invoke(handler, testCase.EventNotification, host.TestTimeoutToken);
         }
         catch
         {
@@ -137,9 +137,10 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestEventNotifications), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandler>(
-        EventNotificationTestCase<TEventNotification, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandlerInterface, THandler>(
+        EventNotificationTestCase<TEventNotification, THandlerInterface, THandler> testCase)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, THandlerInterface>
         where THandler : class, IGeneratedEventNotificationHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
@@ -164,8 +165,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IEventNotificationPublishers>()
-                          .For(TEventNotification.T);
+        var handler = host.Resolve<IEventNotificationPublishers>().For<TEventNotification, THandlerInterface>();
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -174,7 +174,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
         try
         {
-            await handler.Handle(testCase.EventNotification, host.TestTimeoutToken);
+            await THandlerInterface.Invoke(handler, testCase.EventNotification, host.TestTimeoutToken);
         }
         catch
         {
@@ -189,9 +189,10 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestEventNotifications), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandler>(
-        EventNotificationTestCase<TEventNotification, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandlerInterface, THandler>(
+        EventNotificationTestCase<TEventNotification, THandlerInterface, THandler> testCase)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, THandlerInterface>
         where THandler : class, IGeneratedEventNotificationHandler
     {
         SelfLog.Enable(Console.Error);
@@ -224,8 +225,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
             },
             logging => logging.AddSerilog(serilogLogger));
 
-        var handler = host.Resolve<IEventNotificationPublishers>()
-                          .For(TEventNotification.T);
+        var handler = host.Resolve<IEventNotificationPublishers>().For<TEventNotification, THandlerInterface>();
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -234,7 +234,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
         try
         {
-            await handler.Handle(testCase.EventNotification, host.TestTimeoutToken);
+            await THandlerInterface.Invoke(handler, testCase.EventNotification, host.TestTimeoutToken);
         }
         catch
         {
@@ -249,9 +249,10 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestEventNotifications), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandler>(
-        EventNotificationTestCase<TEventNotification, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TEventNotification, THandlerInterface, THandler>(
+        EventNotificationTestCase<TEventNotification, THandlerInterface, THandler> testCase)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, THandlerInterface>
         where THandler : class, IGeneratedEventNotificationHandler
     {
         SelfLog.Enable(Console.Error);
@@ -285,8 +286,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
             },
             logging => logging.AddSerilog(serilogLogger));
 
-        var handler = host.Resolve<IEventNotificationPublishers>()
-                          .For(TEventNotification.T);
+        var handler = host.Resolve<IEventNotificationPublishers>().For<TEventNotification, THandlerInterface>();
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -295,7 +295,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
 
         try
         {
-            await handler.Handle(testCase.EventNotification, host.TestTimeoutToken);
+            await THandlerInterface.Invoke(handler, testCase.EventNotification, host.TestTimeoutToken);
         }
         catch
         {
@@ -321,7 +321,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
     {
         var exception = new TestException();
 
-        var testCase = new EventNotificationTestCase<TestEventNotification, TestEventNotificationHandler>
+        var testCase = new EventNotificationTestCase<TestEventNotification, TestEventNotification.IHandler, TestEventNotificationHandler>
         {
             EventNotification = new() { Payload = 10 },
             EventNotificationJson = "{\"Payload\":10}",
@@ -391,7 +391,7 @@ public sealed class LoggingEventNotificationMiddlewareTests
         var hookException = new TestException();
         var handlerException = new Exception("from handler");
 
-        var testCase = new EventNotificationTestCase<TestEventNotification, TestEventNotificationHandler>
+        var testCase = new EventNotificationTestCase<TestEventNotification, TestEventNotification.IHandler, TestEventNotificationHandler>
         {
             EventNotification = new() { Payload = 10 },
             EventNotificationJson = "{\"Payload\":10}",

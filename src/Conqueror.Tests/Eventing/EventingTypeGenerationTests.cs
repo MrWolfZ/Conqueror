@@ -23,7 +23,6 @@ public sealed partial class EventingTypeGenerationTests
         await notificationPublishers.For(TestEventNotification.T)
                                     .WithPipeline(p => p.UseTest().UseTest())
                                     .WithPublisher(b => b.UseInProcessWithSequentialBroadcastingStrategy())
-                                    .AsIHandler()
                                     .Handle(new(10));
     }
 
@@ -33,7 +32,7 @@ public sealed partial class EventingTypeGenerationTests
     // generated
     public sealed partial record TestEventNotification : IEventNotification<TestEventNotification>
     {
-        public static EventNotificationTypes<TestEventNotification> T => EventNotificationTypes<TestEventNotification>.Default;
+        public static EventNotificationTypes<TestEventNotification, IHandler> T => EventNotificationTypes<TestEventNotification, IHandler>.Default;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestEventNotification? IEventNotification<TestEventNotification>.EmptyInstance => null;
@@ -45,10 +44,15 @@ public sealed partial class EventingTypeGenerationTests
         static IReadOnlyCollection<IEventNotificationTypesInjector> IEventNotification<TestEventNotification>.TypeInjectors
             => IEventNotificationTypesInjector.GetTypeInjectorsForEventNotificationType<TestEventNotification>();
 
-        public interface IHandler : IGeneratedEventNotificationHandler<TestEventNotification>
+        public interface IHandler : IGeneratedEventNotificationHandler<TestEventNotification, IHandler>
         {
+            Task Handle(TestEventNotification notification, CancellationToken cancellationToken = default);
+
+            static Task IGeneratedEventNotificationHandler<TestEventNotification, IHandler>.Invoke(IHandler handler, TestEventNotification notification, CancellationToken cancellationToken)
+                => handler.Handle(notification, cancellationToken);
+
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Adapter : GeneratedEventNotificationHandlerAdapter<TestEventNotification>, IHandler;
+            public sealed class Adapter : GeneratedEventNotificationHandlerAdapter<TestEventNotification, IHandler, Adapter>, IHandler;
         }
     }
 
@@ -62,7 +66,7 @@ public sealed partial class EventingTypeGenerationTests
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "testing")]
     public sealed partial record GenericTestEventNotification<TPayload> : IEventNotification<GenericTestEventNotification<TPayload>>
     {
-        public static EventNotificationTypes<GenericTestEventNotification<TPayload>> T => EventNotificationTypes<GenericTestEventNotification<TPayload>>.Default;
+        public static EventNotificationTypes<GenericTestEventNotification<TPayload>, IHandler> T => EventNotificationTypes<GenericTestEventNotification<TPayload>, IHandler>.Default;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static GenericTestEventNotification<TPayload>? IEventNotification<GenericTestEventNotification<TPayload>>.EmptyInstance => null;
@@ -75,10 +79,15 @@ public sealed partial class EventingTypeGenerationTests
             => IEventNotificationTypesInjector.GetTypeInjectorsForEventNotificationType<GenericTestEventNotification<TPayload>>();
 
         [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "emulating generator output")]
-        public partial interface IHandler : IGeneratedEventNotificationHandler<GenericTestEventNotification<TPayload>>
+        public partial interface IHandler : IGeneratedEventNotificationHandler<GenericTestEventNotification<TPayload>, IHandler>
         {
+            Task Handle(GenericTestEventNotification<TPayload> notification, CancellationToken cancellationToken = default);
+
+            static Task IGeneratedEventNotificationHandler<GenericTestEventNotification<TPayload>, IHandler>.Invoke(IHandler handler, GenericTestEventNotification<TPayload> notification, CancellationToken cancellationToken)
+                => handler.Handle(notification, cancellationToken);
+
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Adapter : GeneratedEventNotificationHandlerAdapter<GenericTestEventNotification<TPayload>>, IHandler;
+            public sealed class Adapter : GeneratedEventNotificationHandlerAdapter<GenericTestEventNotification<TPayload>, IHandler, Adapter>, IHandler;
         }
     }
 
@@ -105,12 +114,6 @@ public sealed partial class EventingTypeGenerationTests
             // nothing to do
         }
     }
-}
-
-public static class TestEventNotificationHandlerExtensions_2440209043122230735
-{
-    public static EventingTypeGenerationTests.TestEventNotification.IHandler AsIHandler(this IEventNotificationHandler<EventingTypeGenerationTests.TestEventNotification> handler)
-        => handler.AsIHandler<EventingTypeGenerationTests.TestEventNotification, EventingTypeGenerationTests.TestEventNotification.IHandler>();
 }
 
 public static class EventNotificationTypeGenerationTestsPipelineExtensions
