@@ -65,53 +65,78 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), instance), shouldOverwriteRegistration: true);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                    MessageHandlerFn<TMessage, TResponse> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
+        this IServiceCollection services,
+        MessageHandlerFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal(fn, null);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                    MessageTypes<TMessage, TResponse> messageTypes,
-                                                                                    MessageHandlerFn<TMessage, TResponse> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
+        this IServiceCollection services,
+        MessageTypes<TMessage, TResponse> messageTypes,
+        MessageHandlerFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegate(fn);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                         MessageHandlerFn<TMessage> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
+        this IServiceCollection services,
+        MessageHandlerFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegateInternal(fn, null);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                         MessageTypes<TMessage, UnitMessageResponse> messageTypes,
-                                                                         MessageHandlerFn<TMessage> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
+        this IServiceCollection services,
+        MessageTypes<TMessage, UnitMessageResponse> messageTypes,
+        MessageHandlerFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegate(fn);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                    MessageHandlerSyncFn<TMessage, TResponse> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
+        this IServiceCollection services,
+        MessageHandlerSyncFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal<TMessage, TResponse>((m, p, ct) => Task.FromResult(fn(m, p, ct)), null);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                    MessageTypes<TMessage, TResponse> messageTypes,
-                                                                                    MessageHandlerSyncFn<TMessage, TResponse> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
+        this IServiceCollection services,
+        MessageTypes<TMessage, TResponse> messageTypes,
+        MessageHandlerSyncFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegate(fn);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                         MessageHandlerSyncFn<TMessage> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
+        this IServiceCollection services,
+        MessageHandlerSyncFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegateInternal<TMessage>((m, p, ct) =>
@@ -121,71 +146,99 @@ public static class ConquerorMessagingServiceCollectionExtensions
         }, null);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                         MessageTypes<TMessage, UnitMessageResponse> messageTypes,
-                                                                         MessageHandlerSyncFn<TMessage> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
+        this IServiceCollection services,
+        MessageTypes<TMessage, UnitMessageResponse> messageTypes,
+        MessageHandlerSyncFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegate(fn);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                    MessageHandlerFn<TMessage, TResponse> fn,
-                                                                                    Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
+        this IServiceCollection services,
+        MessageHandlerFn<TMessage, TResponse> fn,
+        Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal(fn, configurePipeline);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                    MessageTypes<TMessage, TResponse> messageTypes,
-                                                                                    MessageHandlerFn<TMessage, TResponse> fn,
-                                                                                    Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
+        this IServiceCollection services,
+        MessageTypes<TMessage, TResponse> messageTypes,
+        MessageHandlerFn<TMessage, TResponse> fn,
+        Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegate(fn, configurePipeline);
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                         MessageHandlerFn<TMessage> fn,
-                                                                         Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
+        this IServiceCollection services,
+        MessageHandlerFn<TMessage> fn,
+        Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegateInternal(fn, configurePipeline);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                         MessageTypes<TMessage, UnitMessageResponse> messageTypes,
-                                                                         MessageHandlerFn<TMessage> fn,
-                                                                         Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
+        this IServiceCollection services,
+        MessageTypes<TMessage, UnitMessageResponse> messageTypes,
+        MessageHandlerFn<TMessage> fn,
+        Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegate(fn, configurePipeline);
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                    MessageHandlerSyncFn<TMessage, TResponse> fn,
-                                                                                    Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
+        this IServiceCollection services,
+        MessageHandlerSyncFn<TMessage, TResponse> fn,
+        Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegateInternal((m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse>(this IServiceCollection services,
-                                                                                    MessageTypes<TMessage, TResponse> messageTypes,
-                                                                                    MessageHandlerSyncFn<TMessage, TResponse> fn,
-                                                                                    Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
+        this IServiceCollection services,
+        MessageTypes<TMessage, TResponse> messageTypes,
+        MessageHandlerSyncFn<TMessage, TResponse> fn,
+        Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return services.AddMessageHandlerDelegate(fn, configurePipeline);
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                         MessageHandlerSyncFn<TMessage> fn,
-                                                                         Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
+        this IServiceCollection services,
+        MessageHandlerSyncFn<TMessage> fn,
+        Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegateInternal((m, p, ct) =>
@@ -195,10 +248,13 @@ public static class ConquerorMessagingServiceCollectionExtensions
         }, configurePipeline);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<TMessage>(this IServiceCollection services,
-                                                                         MessageTypes<TMessage, UnitMessageResponse> messageTypes,
-                                                                         MessageHandlerSyncFn<TMessage> fn,
-                                                                         Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
+        this IServiceCollection services,
+        MessageTypes<TMessage, UnitMessageResponse> messageTypes,
+        MessageHandlerSyncFn<TMessage> fn,
+        Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
     {
         return services.AddMessageHandlerDelegate(fn, configurePipeline);
@@ -339,7 +395,10 @@ public static class ConquerorMessagingServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection AddMessageHandlerDelegateInternal<TMessage, TResponse>(
+    private static IServiceCollection AddMessageHandlerDelegateInternal<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage,
+        TResponse>(
         this IServiceCollection services,
         MessageHandlerFn<TMessage, TResponse> fn,
         Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline)
@@ -354,7 +413,9 @@ public static class ConquerorMessagingServiceCollectionExtensions
             TMessage.TypeInjectors);
     }
 
-    private static IServiceCollection AddMessageHandlerDelegateInternal<TMessage>(
+    private static IServiceCollection AddMessageHandlerDelegateInternal<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TMessage>(
         this IServiceCollection services,
         MessageHandlerFn<TMessage> fn,
         Action<IMessagePipeline<TMessage, UnitMessageResponse>>? configurePipeline)
@@ -403,18 +464,14 @@ public static class ConquerorMessagingServiceCollectionExtensions
     ) : IDefaultMessageTypesInjectable<IServiceCollection>
         where THandler : class
     {
-        public IServiceCollection WithInjectedTypes<
+        IServiceCollection IDefaultMessageTypesInjectable<IServiceCollection>.WithInjectedTypes<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
             TMessage,
             TResponse,
             TGeneratedHandlerInterface,
             TGeneratedHandlerAdapter,
             TPipelineInterface,
             TPipelineAdapter>()
-            where TMessage : class, IMessage<TMessage, TResponse>
-            where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, TPipelineInterface>
-            where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, TGeneratedHandlerInterface, new()
-            where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
-            where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
         {
             Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IMessageHandler<TMessage, TResponse>)),
                          $"handler type '{typeof(THandler)}' should implement {typeof(IMessageHandler<TMessage, TResponse>).Name}");
@@ -440,17 +497,13 @@ public static class ConquerorMessagingServiceCollectionExtensions
             }
         }
 
-        public IServiceCollection WithInjectedTypes<
+        IServiceCollection IDefaultMessageTypesInjectable<IServiceCollection>.WithInjectedTypes<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
             TMessage,
             TGeneratedHandlerInterface,
             TGeneratedHandlerAdapter,
             TPipelineInterface,
             TPipelineAdapter>()
-            where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-            where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TPipelineInterface>
-            where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, TGeneratedHandlerInterface, new()
-            where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
-            where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
         {
             Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IMessageHandler<TMessage>)),
                          $"handler type '{typeof(THandler)}' should implement {typeof(IMessageHandler<TMessage>).Name}");

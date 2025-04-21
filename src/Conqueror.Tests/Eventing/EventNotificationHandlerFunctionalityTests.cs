@@ -187,6 +187,26 @@ public sealed partial class EventNotificationHandlerFunctionalityDefaultTests : 
     }
 
     [Test]
+    public async Task GivenNotificationTypeWithHandlerWithDisabledInProcessTransport_WhenCallingHandler_LeadsToNoop()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddEventNotificationHandler<TestEventNotificationHandlerWithDisabledInProcessTransport>()
+                    .AddSingleton(observations);
+
+        var provider = services.BuildServiceProvider();
+
+        var handler = ResolveHandler(provider);
+
+        var notification = CreateEventNotification();
+
+        await handler.Handle(notification);
+
+        Assert.That(observations.EventNotifications, Is.Empty);
+    }
+
+    [Test]
     public async Task GivenHandlerForMultipleNotificationTypes_WhenCalledWithEventOfEitherType_HandlerReceivesNotification()
     {
         var services = new ServiceCollection();
@@ -404,6 +424,19 @@ public sealed partial class EventNotificationHandlerFunctionalityDefaultTests : 
             observations.CancellationTokens.Add(cancellationToken);
             observations.ServiceProviders.Add(serviceProvider);
         }
+    }
+
+    private sealed class TestEventNotificationHandlerWithDisabledInProcessTransport(TestObservations observations) : TestEventNotification.IHandler
+    {
+        public async Task Handle(TestEventNotification notification, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+
+            observations.EventNotifications.Add(notification);
+            observations.CancellationTokens.Add(cancellationToken);
+        }
+
+        static void IGeneratedEventNotificationHandler.ConfigureInProcessReceiver<T>(IInProcessEventNotificationReceiver<T> receiver) => receiver.Disable();
     }
 
     private sealed class DisposableEventNotificationHandler(DisposalObservation observation) : TestEventNotification.IHandler, IDisposable

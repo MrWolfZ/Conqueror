@@ -38,7 +38,7 @@ internal static class EventingStringBuilderExtensions
         sb = sb.AppendLine()
                .AppendEventingGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append("public ").AppendNewKeywordIfNecessary(eventNotificationTypeDescriptor).Append($"interface IHandler : global::Conqueror.IGeneratedEventNotificationHandler<{eventNotificationTypeDescriptor.Name}>").AppendLine();
+               .Append("public ").AppendNewKeywordIfNecessary(eventNotificationTypeDescriptor).Append($"partial interface IHandler : global::Conqueror.IGeneratedEventNotificationHandler<{eventNotificationTypeDescriptor.Name}>").AppendLine();
 
         using var d = sb.AppendBlock(indentation);
 

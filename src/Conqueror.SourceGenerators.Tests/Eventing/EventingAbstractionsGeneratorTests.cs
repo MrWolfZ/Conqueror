@@ -168,7 +168,7 @@ public sealed partial class Container
     [EventNotification]
     public partial record TestEventNotification
     {
-        public interface IHandler;
+        public static string T { get; } = string.Empty;
     }
 }";
 

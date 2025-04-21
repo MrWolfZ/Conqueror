@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -20,10 +19,8 @@ public interface IMessage<
     TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    [EditorBrowsable(EditorBrowsableState.Never)]
     static abstract IDefaultMessageTypesInjector DefaultTypeInjector { get; }
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
     static abstract IReadOnlyCollection<IMessageTypesInjector> TypeInjectors { get; }
 
     /// <summary>
@@ -56,7 +53,6 @@ public interface IMessage<
     /// </summary>
     static virtual JsonSerializerContext? JsonSerializerContext => null;
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
     static virtual IEnumerable<PropertyInfo> PublicProperties => typeof(TMessage).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 }
 

@@ -40,9 +40,9 @@ public static class EventingAbstractionsGeneratorUtil
             return null;
         }
 
-        // skip event notification types that already declare a handler member
+        // skip event notification types that already declare a types member
         // TODO: improve by simply skipping the generation of the property / nested type instead of ignoring the whole type
-        if (eventNotificationTypeSymbol.MemberNames.Contains("IHandler"))
+        if (eventNotificationTypeSymbol.MemberNames.Contains("T"))
         {
             return null;
         }

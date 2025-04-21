@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -42,30 +43,33 @@ public static class EventNotificationHandlerExtensions
         throw new ArgumentException($"handler type '{handler.GetType()}' is not supported in {nameof(WithPublisher)}", nameof(handler), null);
     }
 
-    public static THandler AsIHandler<TEventNotification, THandler>(this IEventNotificationHandler<TEventNotification> handler)
+    public static TGeneratedHandlerInterface AsIHandler<TEventNotification, TGeneratedHandlerInterface>(this IEventNotificationHandler<TEventNotification> handler)
         where TEventNotification : class, IEventNotification<TEventNotification>
-        where THandler : class, IEventNotificationHandler<TEventNotification>, IGeneratedEventNotificationHandler
+        where TGeneratedHandlerInterface : class, IEventNotificationHandler<TEventNotification>, IGeneratedEventNotificationHandler
     {
-        return TEventNotification.DefaultTypeInjector.CreateWithEventNotificationTypes(new HandlerCastInjectable<THandler>(handler));
+        return (TGeneratedHandlerInterface)TEventNotification.DefaultTypeInjector.CreateWithEventNotificationTypes(new HandlerCastInjectable<TEventNotification>(handler));
     }
 
-    private sealed class HandlerCastInjectable<THandler>(object handler) : IDefaultEventNotificationTypesInjectable<THandler>
-        where THandler : class
+    private sealed class HandlerCastInjectable<TEventNotificationParam>(
+        IEventNotificationHandler<TEventNotificationParam> handler)
+        : IDefaultEventNotificationTypesInjectable<IEventNotificationHandler<TEventNotificationParam>>
+        where TEventNotificationParam : class, IEventNotification<TEventNotificationParam>
     {
-        public THandler WithInjectedTypes<TEventNotification, TGeneratedHandlerInterface, TGeneratedHandlerAdapter>()
-            where TEventNotification : class, IEventNotification<TEventNotification>
-            where TGeneratedHandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification>
-            where TGeneratedHandlerAdapter : GeneratedEventNotificationHandlerAdapter<TEventNotification>, TGeneratedHandlerInterface, new()
+        IEventNotificationHandler<TEventNotificationParam> IDefaultEventNotificationTypesInjectable<IEventNotificationHandler<TEventNotificationParam>>
+            .WithInjectedTypes<
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+                TEventNotification,
+                TGeneratedHandlerInterface,
+                TGeneratedHandlerAdapter>()
         {
-            Debug.Assert(typeof(TGeneratedHandlerInterface) == typeof(THandler), "result handler type should always be equal to generated handler interface");
-            Debug.Assert(handler is IEventNotificationHandler<TEventNotification>, "handler to wrap must be of correct type");
+            Debug.Assert(typeof(TEventNotification) == typeof(TEventNotificationParam), $"expected event notification type '{typeof(TEventNotification)}', but got '{typeof(TEventNotificationParam)}')");
 
             var adapter = new TGeneratedHandlerAdapter
             {
                 Wrapped = (IEventNotificationHandler<TEventNotification>)handler,
             };
 
-            return adapter as THandler ?? throw new InvalidOperationException("could not create handler adapter");
+            return adapter as IEventNotificationHandler<TEventNotificationParam> ?? throw new InvalidOperationException("could not create handler adapter");
         }
     }
 }

@@ -27,10 +27,11 @@ public interface IGeneratedEventNotificationHandler
         // by default, we use an empty pipeline
     }
 
-    static virtual Task ConfigureReceiver(IEventNotificationReceiver receiver)
+    static virtual void ConfigureInProcessReceiver<T>(IInProcessEventNotificationReceiver<T> receiver)
+        where T : class, IEventNotification<T>
     {
-        // by default, we don't configure the receiver
-        return Task.CompletedTask;
+        // by default, we enable the in-process receiver for all event notification types
+        receiver.Enable();
     }
 }
 

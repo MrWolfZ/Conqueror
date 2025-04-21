@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,13 +13,14 @@ public interface IEventNotificationReceiverHandlerInvoker
         string transportTypeName,
         CancellationToken cancellationToken)
         where TEventNotification : class, IEventNotification<TEventNotification>;
-
-    bool AcceptsEventNotificationType(Type eventNotificationType);
 }
 
-public interface IEventNotificationReceiverHandlerInvoker<TTypesInjector, TReceiverConfiguration> : IEventNotificationReceiverHandlerInvoker
+public interface IEventNotificationReceiverHandlerInvoker<out TTypesInjector> : IEventNotificationReceiverHandlerInvoker
     where TTypesInjector : class, IEventNotificationTypesInjector
-    where TReceiverConfiguration : class, IEventNotificationReceiverConfiguration
 {
-    IReadOnlyCollection<(TTypesInjector TypesInjector, TReceiverConfiguration ReceiverConfiguration)> HandledEventNotificationTypes { get; }
+    Type EventNotificationType { get; }
+
+    Type? HandlerType { get; }
+
+    TTypesInjector TypesInjector { get; }
 }

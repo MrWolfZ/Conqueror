@@ -7,7 +7,7 @@ namespace Conqueror.Eventing;
 
 internal sealed class EventNotificationHandlerProxy<TEventNotification>(
     IServiceProvider serviceProvider,
-    EventNotificationPublisherFactory<TEventNotification> transportPublisherField,
+    EventNotificationPublisherFactory<TEventNotification> publisherFactory,
     Action<IEventNotificationPipeline<TEventNotification>>? configurePipelineField,
     EventNotificationTransportRole transportRole)
     : IConfigurableEventNotificationHandler<TEventNotification>
@@ -26,9 +26,9 @@ internal sealed class EventNotificationHandlerProxy<TEventNotification>(
             conquerorContext.SetEventNotificationId(notificationIdFactory.GenerateId());
         }
 
-        var transportClient = await transportPublisherField.Create(serviceProvider, conquerorContext).ConfigureAwait(false);
+        var publisher = await publisherFactory.Create(serviceProvider, conquerorContext).ConfigureAwait(false);
 
-        var transportType = new EventNotificationTransportType(transportClient.TransportTypeName, transportRole);
+        var transportType = new EventNotificationTransportType(publisher.TransportTypeName, transportRole);
 
         // if we are an in-process client, make sure to create a new notification ID for this execution if
         // we were called from within the call context of another handler
@@ -45,7 +45,7 @@ internal sealed class EventNotificationHandlerProxy<TEventNotification>(
 
         await pipelineRunner.Execute(serviceProvider,
                                      notification,
-                                     transportClient,
+                                     publisher,
                                      transportType,
                                      cancellationToken)
                             .ConfigureAwait(false);
@@ -54,7 +54,7 @@ internal sealed class EventNotificationHandlerProxy<TEventNotification>(
     public IEventNotificationHandler<TEventNotification> WithPipeline(Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
         => new EventNotificationHandlerProxy<TEventNotification>(
             serviceProvider,
-            transportPublisherField,
+            publisherFactory,
             pipeline =>
             {
                 configurePipelineField?.Invoke(pipeline);

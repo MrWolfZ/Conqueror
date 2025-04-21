@@ -20,7 +20,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Transport.Http.Client\Conqueror.Transport.Http.Client.csproj" />
+        <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
+        <ProjectReference Include="..\Conqueror.Transport.Http.Abstractions\Conqueror.Transport.Http.Abstractions.csproj" />
     </ItemGroup>
 
     <ItemGroup>

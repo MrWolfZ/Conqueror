@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -22,8 +21,6 @@ public sealed class HttpMessageTypesInjector<TMessage, TResponse> : IHttpMessage
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public static readonly HttpMessageTypesInjector<TMessage, TResponse> Default = new();
-
-    public Type ConstraintType => typeof(IHttpMessage);
 
     public TResult CreateWithMessageTypes<TResult>(IHttpMessageTypesInjectable<TResult> injectable)
         => injectable.WithInjectedTypes<TMessage, TResponse>();
