@@ -99,11 +99,10 @@ public sealed partial class EventingTypeGenerationTests
             where T : class, IEventNotification<T>
             => pipeline.UseTest().UseTest();
 
-        public static Task ConfigureInProcessReceiver<T>(IInProcessEventNotificationReceiver<T> receiver)
+        public static void ConfigureInProcessReceiver<T>(IInProcessEventNotificationReceiver<T> receiver)
             where T : class, IEventNotification<T>
         {
             // nothing to do
-            return Task.CompletedTask;
         }
     }
 }
