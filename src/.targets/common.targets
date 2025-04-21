@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <ConquerorBaseVersion>0.7.0</ConquerorBaseVersion>
-        <ConquerorPreReleaseVersionCount>.6</ConquerorPreReleaseVersionCount>
+        <ConquerorPreReleaseVersionCount>.7</ConquerorPreReleaseVersionCount>
         <ConquerorPreReleaseVersion>-beta</ConquerorPreReleaseVersion>
         <ConquerorPreReleaseVersion Condition="'$(IsExperimental)' == 'true'">-experimental</ConquerorPreReleaseVersion>
         <ConquerorPreReleaseVersion Condition="'$(IsDeprecated)' == 'true'">-deprecated</ConquerorPreReleaseVersion>
