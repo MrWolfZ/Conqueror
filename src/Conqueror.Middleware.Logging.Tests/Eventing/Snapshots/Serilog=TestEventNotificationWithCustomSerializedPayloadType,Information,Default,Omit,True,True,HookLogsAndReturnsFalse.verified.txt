@@ -1,7 +1,7 @@
 ﻿2020-01-01 00:00:00.000 +00:00 [Information] PreHook:"TestEventNotificationWithCustomSerializedPayloadType","test-message-id","test-trace-id"
 2020-01-01 00:00:00.000 +00:00 [Error] ExceptionHook:"TestException","test-message-id","test-trace-id"
 Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications+TestException: test exception
-   at Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationWithCustomSerializedPayloadTypeHandler.Handle(TestEventNotificationWithCustomSerializedPayloadType notification, CancellationToken cancellationToken) in {ProjectDirectory}Eventing/LoggingMiddlewareTestEventNotifications.cs:line 656
+   at Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationWithCustomSerializedPayloadTypeHandler.Handle(TestEventNotificationWithCustomSerializedPayloadType notification, CancellationToken cancellationToken) in {ProjectDirectory}Eventing/LoggingMiddlewareTestEventNotifications.cs:line 659
    at Conqueror.Middleware.Logging.Eventing.LoggingEventNotificationMiddleware`1.Execute(EventNotificationMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Eventing/LoggingEventNotificationMiddleware.cs:line 51
    at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
    at Conqueror.Middleware.Logging.Eventing.LoggingEventNotificationMiddleware`1.Execute(EventNotificationMiddlewareContext`1 ctx)

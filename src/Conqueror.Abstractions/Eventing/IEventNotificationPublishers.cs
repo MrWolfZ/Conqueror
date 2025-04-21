@@ -3,9 +3,11 @@ namespace Conqueror;
 
 public interface IEventNotificationPublishers
 {
-    IEventNotificationHandler<TEventNotification> For<TEventNotification>()
-        where TEventNotification : class, IEventNotification<TEventNotification>;
+    THandler For<TEventNotification, THandler>()
+        where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandler : class, IEventNotificationHandler<TEventNotification, THandler>;
 
-    IEventNotificationHandler<TEventNotification> For<TEventNotification>(EventNotificationTypes<TEventNotification> notificationTypes)
-        where TEventNotification : class, IEventNotification<TEventNotification>;
+    THandler For<TEventNotification, THandler>(EventNotificationTypes<TEventNotification, THandler> notificationTypes)
+        where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandler : class, IEventNotificationHandler<TEventNotification, THandler>;
 }

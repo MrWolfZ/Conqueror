@@ -5,15 +5,15 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Conqueror.Eventing;
 
-internal sealed class EventNotificationHandlerProxy<TEventNotification>(
+internal sealed class EventNotificationDispatcher<TEventNotification>(
     IServiceProvider serviceProvider,
     EventNotificationPublisherFactory<TEventNotification> publisherFactory,
     Action<IEventNotificationPipeline<TEventNotification>>? configurePipelineField,
     EventNotificationTransportRole transportRole)
-    : IConfigurableEventNotificationHandler<TEventNotification>
+    : IEventNotificationDispatcher<TEventNotification>
     where TEventNotification : class, IEventNotification<TEventNotification>
 {
-    public async Task Handle(TEventNotification notification, CancellationToken cancellationToken = default)
+    public async Task Dispatch(TEventNotification notification, CancellationToken cancellationToken)
     {
         using var conquerorContext = serviceProvider.GetRequiredService<IConquerorContextAccessor>().CloneOrCreate();
         var notificationIdFactory = serviceProvider.GetRequiredService<IEventNotificationIdFactory>();
@@ -51,8 +51,8 @@ internal sealed class EventNotificationHandlerProxy<TEventNotification>(
                             .ConfigureAwait(false);
     }
 
-    public IEventNotificationHandler<TEventNotification> WithPipeline(Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
-        => new EventNotificationHandlerProxy<TEventNotification>(
+    public IEventNotificationDispatcher<TEventNotification> WithPipeline(Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
+        => new EventNotificationDispatcher<TEventNotification>(
             serviceProvider,
             publisherFactory,
             pipeline =>
@@ -62,15 +62,15 @@ internal sealed class EventNotificationHandlerProxy<TEventNotification>(
             },
             transportRole);
 
-    public IEventNotificationHandler<TEventNotification> WithPublisher(ConfigureEventNotificationPublisher<TEventNotification> configurePublisher)
-        => new EventNotificationHandlerProxy<TEventNotification>(
+    public IEventNotificationDispatcher<TEventNotification> WithPublisher(ConfigureEventNotificationPublisher<TEventNotification> configurePublisher)
+        => new EventNotificationDispatcher<TEventNotification>(
             serviceProvider,
             new(configurePublisher),
             configurePipelineField,
             transportRole);
 
-    public IEventNotificationHandler<TEventNotification> WithPublisher(ConfigureEventNotificationPublisherAsync<TEventNotification> configurePublisher)
-        => new EventNotificationHandlerProxy<TEventNotification>(
+    public IEventNotificationDispatcher<TEventNotification> WithPublisher(ConfigureEventNotificationPublisherAsync<TEventNotification> configurePublisher)
+        => new EventNotificationDispatcher<TEventNotification>(
             serviceProvider,
             new(configurePublisher),
             configurePipelineField,

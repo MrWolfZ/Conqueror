@@ -19,9 +19,11 @@ public static partial class LoggingMiddlewareTestEventNotifications
 
     public const string TestTransportName = "test-transport";
 
-    public static void RegisterEventNotificationType<TEventNotification, THandler>(this IServiceCollection services,
-                                                                                   EventNotificationTestCase<TEventNotification, THandler> testCase)
+    public static void RegisterEventNotificationType<TEventNotification, THandlerInterface, THandler>(
+        this IServiceCollection services,
+        EventNotificationTestCase<TEventNotification, THandlerInterface, THandler> testCase)
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, THandlerInterface>
         where THandler : class, IGeneratedEventNotificationHandler
     {
         _ = services.AddEventNotificationHandler<THandler>()
@@ -113,7 +115,7 @@ public static partial class LoggingMiddlewareTestEventNotifications
         bool hasCustomCategoryFactory,
         HookTestBehavior? hookTestBehavior)
     {
-        yield return new EventNotificationTestCase<TestEventNotification, TestEventNotificationHandler>
+        yield return new EventNotificationTestCase<TestEventNotification, TestEventNotification.IHandler, TestEventNotificationHandler>
         {
             EventNotification = new() { Payload = 10 },
             EventNotificationJson = "{\"Payload\":10}",
@@ -128,7 +130,7 @@ public static partial class LoggingMiddlewareTestEventNotifications
             TransportTypeName = null,
         };
 
-        yield return new EventNotificationTestCase<TestEventNotificationWithoutPayload, TestEventNotificationWithoutPayloadHandler>
+        yield return new EventNotificationTestCase<TestEventNotificationWithoutPayload, TestEventNotificationWithoutPayload.IHandler, TestEventNotificationWithoutPayloadHandler>
         {
             EventNotification = new(),
             EventNotificationJson = null,
@@ -143,7 +145,7 @@ public static partial class LoggingMiddlewareTestEventNotifications
             TransportTypeName = null,
         };
 
-        yield return new EventNotificationTestCase<TestEventNotificationWithComplexPayload, TestEventNotificationWithComplexPayloadHandler>
+        yield return new EventNotificationTestCase<TestEventNotificationWithComplexPayload, TestEventNotificationWithComplexPayload.IHandler, TestEventNotificationWithComplexPayloadHandler>
         {
             EventNotification = new() { Payload = 10, NestedPayload = new() { Payload = 11, Payload2 = 12 } },
             EventNotificationJson = "{\"Payload\":10,\"NestedPayload\":{\"Payload\":11,\"Payload2\":12}}",
@@ -158,7 +160,7 @@ public static partial class LoggingMiddlewareTestEventNotifications
             TransportTypeName = null,
         };
 
-        yield return new EventNotificationTestCase<TestEventNotificationWithCustomSerializedPayloadType, TestEventNotificationWithCustomSerializedPayloadTypeHandler>
+        yield return new EventNotificationTestCase<TestEventNotificationWithCustomSerializedPayloadType, TestEventNotificationWithCustomSerializedPayloadType.IHandler, TestEventNotificationWithCustomSerializedPayloadTypeHandler>
         {
             EventNotification = new() { Payload = new(10) },
             EventNotificationJson = "{\"Payload\":10}",
@@ -173,7 +175,7 @@ public static partial class LoggingMiddlewareTestEventNotifications
             TransportTypeName = null,
         };
 
-        yield return new EventNotificationTestCase<TestEventNotificationWithCustomJsonTypeInfo, TestEventNotificationWithCustomJsonTypeInfoHandler>
+        yield return new EventNotificationTestCase<TestEventNotificationWithCustomJsonTypeInfo, TestEventNotificationWithCustomJsonTypeInfo.IHandler, TestEventNotificationWithCustomJsonTypeInfoHandler>
         {
             EventNotification = new() { EventNotificationPayload = 10 },
             EventNotificationJson = "{\"EVENT_NOTIFICATION_PAYLOAD\":10}",
@@ -188,7 +190,7 @@ public static partial class LoggingMiddlewareTestEventNotifications
             TransportTypeName = null,
         };
 
-        yield return new EventNotificationTestCase<TestEventNotificationWithCustomTransport, TestEventNotificationWithCustomTransportHandler>
+        yield return new EventNotificationTestCase<TestEventNotificationWithCustomTransport, TestEventNotificationWithCustomTransport.IHandler, TestEventNotificationWithCustomTransportHandler>
         {
             EventNotification = new() { Payload = 10 },
             EventNotificationJson = "{\"Payload\":10}",
@@ -203,7 +205,7 @@ public static partial class LoggingMiddlewareTestEventNotifications
             TransportTypeName = TestTransportName,
         };
 
-        yield return new EventNotificationTestCase<TestEventNotificationBase, TestEventNotificationBaseHandler>
+        yield return new EventNotificationTestCase<TestEventNotificationBase, TestEventNotificationBase.IHandler, TestEventNotificationBaseHandler>
         {
             EventNotification = new TestEventNotificationSub { PayloadBase = 10, PayloadSub = 11 },
             EventNotificationJson = "{\"PayloadSub\":11,\"PayloadBase\":10}",
@@ -307,8 +309,9 @@ public static partial class LoggingMiddlewareTestEventNotifications
         }
     }
 
-    public sealed class EventNotificationTestCase<TEventNotification, THandler> : IEventNotificationTestCasePipelineConfiguration<TEventNotification>
+    public sealed class EventNotificationTestCase<TEventNotification, THandlerInterface, THandler> : IEventNotificationTestCasePipelineConfiguration<TEventNotification>
         where TEventNotification : class, IEventNotification<TEventNotification>
+        where THandlerInterface : class, IGeneratedEventNotificationHandler<TEventNotification, THandlerInterface>
         where THandler : class, IGeneratedEventNotificationHandler
     {
         private readonly string? expectedLogCategory;
@@ -526,12 +529,12 @@ public static partial class LoggingMiddlewareTestEventNotifications
                                                        .Append($",hook:{HookBehavior?.ToString() ?? "None"}")
                                                        .ToString();
 
-        public static implicit operator TestCaseData(EventNotificationTestCase<TEventNotification, THandler> notificationTestCase)
+        public static implicit operator TestCaseData(EventNotificationTestCase<TEventNotification, THandlerInterface, THandler> notificationTestCase)
         {
             return new(notificationTestCase)
             {
                 TestName = notificationTestCase.TestLabel,
-                TypeArgs = [typeof(TEventNotification), typeof(THandler)],
+                TypeArgs = [typeof(TEventNotification), typeof(THandlerInterface), typeof(THandler)],
             };
         }
     }

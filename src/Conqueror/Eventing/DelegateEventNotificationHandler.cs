@@ -7,7 +7,7 @@ namespace Conqueror.Eventing;
 internal sealed class DelegateEventNotificationHandler<TEventNotification>(
     EventNotificationHandlerFn<TEventNotification> handlerFn,
     IServiceProvider serviceProvider)
-    : IEventNotificationHandler<TEventNotification>
+    : IEventNotificationHandler<TEventNotification, DelegateEventNotificationHandler<TEventNotification>>
     where TEventNotification : class, IEventNotification<TEventNotification>
 {
     public async Task Handle(TEventNotification notification, CancellationToken cancellationToken = default)

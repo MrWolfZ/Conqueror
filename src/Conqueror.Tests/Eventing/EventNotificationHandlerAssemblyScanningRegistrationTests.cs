@@ -68,7 +68,7 @@ public partial class EventNotificationHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollectionWithDelegateHandlerAlreadyRegistered_WhenAddingAllHandlersFromAssembly_AddsOtherHandlers()
     {
-        var services = new ServiceCollection().AddEventNotificationHandlerDelegate<TestEventNotification>((_, _, _) => { })
+        var services = new ServiceCollection().AddEventNotificationHandlerDelegate(TestEventNotification.T, (_, _, _) => { })
                                               .AddEventNotificationHandlersFromAssembly(typeof(EventNotificationHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is EventNotificationHandlerRegistration r
@@ -85,7 +85,7 @@ public partial class EventNotificationHandlerAssemblyScanningRegistrationTests
     {
         var services = new ServiceCollection().AddEventNotificationHandlersFromAssembly(typeof(EventNotificationHandlerAssemblyScanningRegistrationTests).Assembly);
 
-        Assert.That(services.Count(d => d.ServiceType == typeof(IEventNotificationHandler<TestEventNotification>)), Is.Zero);
+        Assert.That(services.Count(d => d.ServiceType == typeof(IEventNotificationHandler<TestEventNotification, TestEventNotification.IHandler>)), Is.Zero);
         Assert.That(services.Count(d => d.ServiceType == typeof(TestEventNotification.IHandler)), Is.Zero);
     }
 
@@ -125,7 +125,7 @@ public partial class EventNotificationHandlerAssemblyScanningRegistrationTests
             => Task.CompletedTask;
     }
 
-    public sealed class ExplicitTestEventNotificationHandler : IEventNotificationHandler<ExplicitTestEventNotification>
+    public sealed class ExplicitTestEventNotificationHandler : IEventNotificationHandler<ExplicitTestEventNotification, ExplicitTestEventNotificationHandler>
     {
         public Task Handle(ExplicitTestEventNotification notification, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
@@ -146,7 +146,7 @@ public partial class EventNotificationHandlerAssemblyScanningRegistrationTests
             => Task.CompletedTask;
     }
 
-    public sealed class GenericTestEventNotificationHandler<TM> : IEventNotificationHandler<TM>
+    public sealed class GenericTestEventNotificationHandler<TM> : IEventNotificationHandler<TM, GenericTestEventNotificationHandler<TM>>
         where TM : class, IEventNotification<TM>
     {
         public Task Handle(TM notification, CancellationToken cancellationToken = default)

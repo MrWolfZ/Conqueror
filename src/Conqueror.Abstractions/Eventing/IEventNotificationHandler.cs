@@ -9,14 +9,9 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public interface IEventNotificationHandler<in TEventNotification>
+public interface IEventNotificationHandler<in TEventNotification, THandler>
     where TEventNotification : class, IEventNotification<TEventNotification>
-{
-    internal static virtual IDefaultEventNotificationTypesInjector DefaultTypeInjector
-        => TEventNotification.DefaultTypeInjector;
-
-    Task Handle(TEventNotification notification, CancellationToken cancellationToken = default);
-}
+    where THandler : class, IEventNotificationHandler<TEventNotification, THandler>;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IGeneratedEventNotificationHandler
@@ -36,36 +31,44 @@ public interface IGeneratedEventNotificationHandler
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedEventNotificationHandler<in TEventNotification>
-    : IEventNotificationHandler<TEventNotification>, IGeneratedEventNotificationHandler
-    where TEventNotification : class, IEventNotification<TEventNotification>;
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class GeneratedEventNotificationHandlerAdapter<TEventNotification> : IConfigurableEventNotificationHandler<TEventNotification>
+public interface IGeneratedEventNotificationHandler<in TEventNotification, THandler>
+    : IEventNotificationHandler<TEventNotification, THandler>, IGeneratedEventNotificationHandler
     where TEventNotification : class, IEventNotification<TEventNotification>
+    where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
 {
-    internal IEventNotificationHandler<TEventNotification> Wrapped { get; init; } = null!;
-
-    public Task Handle(TEventNotification notification, CancellationToken cancellationToken = default)
-        => Wrapped.Handle(notification, cancellationToken);
-
-    public IEventNotificationHandler<TEventNotification> WithPipeline(Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
-        => Wrapped.WithPipeline(configurePipeline);
-
-    public IEventNotificationHandler<TEventNotification> WithPublisher(ConfigureEventNotificationPublisher<TEventNotification> configurePublisher)
-        => Wrapped.WithPublisher(configurePublisher);
-
-    public IEventNotificationHandler<TEventNotification> WithPublisher(ConfigureEventNotificationPublisherAsync<TEventNotification> configurePublisher)
-        => Wrapped.WithPublisher(configurePublisher);
+    static abstract Task Invoke(THandler handler, TEventNotification notification, CancellationToken cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal interface IConfigurableEventNotificationHandler<TEventNotification> : IEventNotificationHandler<TEventNotification>
+public abstract class GeneratedEventNotificationHandlerAdapter<TEventNotification, THandler, TAdapter> : IConfigurableEventNotificationHandler<TEventNotification, THandler>
     where TEventNotification : class, IEventNotification<TEventNotification>
+    where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
+    where TAdapter : GeneratedEventNotificationHandlerAdapter<TEventNotification, THandler, TAdapter>, THandler, new()
 {
-    IEventNotificationHandler<TEventNotification> WithPipeline(Action<IEventNotificationPipeline<TEventNotification>> configurePipeline);
+    internal IEventNotificationDispatcher<TEventNotification> Dispatcher { get; init; } = null!;
 
-    IEventNotificationHandler<TEventNotification> WithPublisher(ConfigureEventNotificationPublisher<TEventNotification> configurePublisher);
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public Task Handle(TEventNotification notification, CancellationToken cancellationToken = default)
+        => Dispatcher.Dispatch(notification, cancellationToken);
 
-    IEventNotificationHandler<TEventNotification> WithPublisher(ConfigureEventNotificationPublisherAsync<TEventNotification> configurePublisher);
+    public THandler WithPipeline(Action<IEventNotificationPipeline<TEventNotification>> configurePipeline)
+        => new TAdapter { Dispatcher = Dispatcher.WithPipeline(configurePipeline) };
+
+    public THandler WithPublisher(ConfigureEventNotificationPublisher<TEventNotification> configurePublisher)
+        => new TAdapter { Dispatcher = Dispatcher.WithPublisher(configurePublisher) };
+
+    public THandler WithPublisher(ConfigureEventNotificationPublisherAsync<TEventNotification> configurePublisher)
+        => new TAdapter { Dispatcher = Dispatcher.WithPublisher(configurePublisher) };
+}
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+internal interface IConfigurableEventNotificationHandler<TEventNotification, THandler> : IEventNotificationHandler<TEventNotification, THandler>
+    where TEventNotification : class, IEventNotification<TEventNotification>
+    where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
+{
+    THandler WithPipeline(Action<IEventNotificationPipeline<TEventNotification>> configurePipeline);
+
+    THandler WithPublisher(ConfigureEventNotificationPublisher<TEventNotification> configurePublisher);
+
+    THandler WithPublisher(ConfigureEventNotificationPublisherAsync<TEventNotification> configurePublisher);
 }

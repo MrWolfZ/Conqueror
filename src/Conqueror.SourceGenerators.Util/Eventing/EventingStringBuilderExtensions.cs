@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Microsoft.CodeAnalysis;
 
 namespace Conqueror.SourceGenerators.Util.Eventing;
 
@@ -28,7 +27,7 @@ internal static class EventingStringBuilderExtensions
     {
         return sb.AppendEventingGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append("public static ").AppendNewKeywordIfNecessary(eventNotificationTypeDescriptor).Append($"global::Conqueror.EventNotificationTypes<{eventNotificationTypeDescriptor.Name}> T => global::Conqueror.EventNotificationTypes<{eventNotificationTypeDescriptor.Name}>.Default;").AppendLine();
+                 .Append("public static ").AppendNewKeywordIfNecessary(eventNotificationTypeDescriptor).Append($"global::Conqueror.EventNotificationTypes<{eventNotificationTypeDescriptor.Name}, IHandler> T => global::Conqueror.EventNotificationTypes<{eventNotificationTypeDescriptor.Name}, IHandler>.Default;").AppendLine();
     }
 
     public static StringBuilder AppendEventNotificationHandlerInterface(this StringBuilder sb,
@@ -38,14 +37,24 @@ internal static class EventingStringBuilderExtensions
         sb = sb.AppendLine()
                .AppendEventingGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append("public ").AppendNewKeywordIfNecessary(eventNotificationTypeDescriptor).Append($"partial interface IHandler : global::Conqueror.IGeneratedEventNotificationHandler<{eventNotificationTypeDescriptor.Name}>").AppendLine();
+               .Append("public ").AppendNewKeywordIfNecessary(eventNotificationTypeDescriptor).Append($"partial interface IHandler : global::Conqueror.IGeneratedEventNotificationHandler<{eventNotificationTypeDescriptor.Name}, IHandler>").AppendLine();
 
         using var d = sb.AppendBlock(indentation);
 
-        return sb.AppendEditorBrowsableNeverAttribute(indentation)
+        return sb.AppendEventingGeneratedCodeAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append($"global::System.Threading.Tasks.Task Handle({eventNotificationTypeDescriptor.Name} notification, global::System.Threading.CancellationToken cancellationToken = default);").AppendLine()
+                 .AppendLine()
                  .AppendEventingGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"public sealed class Adapter : global::Conqueror.GeneratedEventNotificationHandlerAdapter<{eventNotificationTypeDescriptor.Name}>, IHandler;").AppendLine();
+                 .Append($"static global::System.Threading.Tasks.Task global::Conqueror.IGeneratedEventNotificationHandler<{eventNotificationTypeDescriptor.Name}, IHandler>.Invoke(IHandler handler, {eventNotificationTypeDescriptor.Name} notification, global::System.Threading.CancellationToken cancellationToken)").AppendLineWithIndentation(indentation)
+                 .AppendSingleIndent()
+                 .Append("=> handler.Handle(notification, cancellationToken);").AppendLine()
+                 .AppendLine()
+                 .AppendEditorBrowsableNeverAttribute(indentation)
+                 .AppendEventingGeneratedCodeAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append($"public sealed class Adapter : global::Conqueror.GeneratedEventNotificationHandlerAdapter<{eventNotificationTypeDescriptor.Name}, IHandler, Adapter>, IHandler;").AppendLine();
     }
 
     public static StringBuilder AppendEventNotificationEmptyInstanceProperty(this StringBuilder sb,
@@ -109,42 +118,6 @@ internal static class EventingStringBuilderExtensions
                  .Append($"static global::System.Text.Json.Serialization.JsonSerializerContext global::Conqueror.IEventNotification<{eventNotificationTypeDescriptor.Name}>.JsonSerializerContext")
                  .AppendLineWithIndentation(indentation)
                  .AppendSingleIndent().Append($"=> global::{eventNotificationTypeDescriptor.FullyQualifiedName}JsonSerializerContext.Default;").AppendLine();
-    }
-
-    public static StringBuilder AppendEventNotificationExtensionsClass(this StringBuilder sb,
-                                                                       Indentation indentation,
-                                                                       in TypeDescriptor eventNotificationTypeDescriptor)
-    {
-        if (eventNotificationTypeDescriptor.Accessibility != Accessibility.Public || eventNotificationTypeDescriptor.ParentClasses.Any(pc => pc.Accessibility != Accessibility.Public))
-        {
-            return sb;
-        }
-
-        sb = sb.AppendLine()
-               .AppendEventingGeneratedCodeAttribute(indentation)
-               .AppendEditorBrowsableNeverAttribute(indentation)
-               .AppendIndentation(indentation)
-               .Append("public static class ")
-               .AppendTypeNameWithInlinedTypeArguments(in eventNotificationTypeDescriptor)
-               .Append("HandlerExtensions_")
-
-               // hash in class name for uniqueness, even if multiple event notification types with the same name are in the same namespace (e.g. nested in other types)
-               .AppendHash(eventNotificationTypeDescriptor.FullyQualifiedName).AppendLine();
-
-        using (sb.AppendBlock(indentation))
-        {
-            sb = sb.AppendEventingGeneratedCodeAttribute(indentation)
-                   .AppendIndentation(indentation)
-                   .Append($"public static global::{eventNotificationTypeDescriptor.FullyQualifiedName}.IHandler AsIHandler")
-                   .AppendTypeArguments(in eventNotificationTypeDescriptor)
-                   .Append($"(this global::Conqueror.IEventNotificationHandler<global::{eventNotificationTypeDescriptor.FullyQualifiedName}> handler)")
-                   .AppendConstraintClauses(indentation, in eventNotificationTypeDescriptor)
-                   .AppendLineWithIndentation(indentation)
-                   .AppendSingleIndent()
-                   .Append($"=> global::Conqueror.EventNotificationHandlerExtensions.AsIHandler<global::{eventNotificationTypeDescriptor.FullyQualifiedName}, global::{eventNotificationTypeDescriptor.FullyQualifiedName}.IHandler>(handler);").AppendLine();
-        }
-
-        return sb;
     }
 
     private static StringBuilder AppendNewKeywordIfNecessary(this StringBuilder sb,

@@ -188,7 +188,7 @@ public sealed class EventNotificationReceiverTests
 public sealed partial record TestEventNotificationWithTestTransport : ITestTransportEventNotification<TestEventNotificationWithTestTransport>
 {
     static ITestTransportTypesInjector ITestTransportEventNotification.TestTransportTypesInjector
-        => TestTransportTypesInjector<TestEventNotificationWithTestTransport>.Default;
+        => TestTransportTypesInjector<TestEventNotificationWithTestTransport, IHandler>.Default;
 
     public partial interface IHandler : IGeneratedTestTransportEventNotificationHandler;
 }
@@ -197,7 +197,7 @@ public sealed partial record TestEventNotificationWithTestTransport : ITestTrans
 public sealed partial record TestEventNotification2WithTestTransport : ITestTransportEventNotification<TestEventNotification2WithTestTransport>
 {
     static ITestTransportTypesInjector ITestTransportEventNotification.TestTransportTypesInjector
-        => TestTransportTypesInjector<TestEventNotification2WithTestTransport>.Default;
+        => TestTransportTypesInjector<TestEventNotification2WithTestTransport, IHandler>.Default;
 
     public partial interface IHandler : IGeneratedTestTransportEventNotificationHandler;
 }
@@ -206,7 +206,7 @@ public sealed partial record TestEventNotification2WithTestTransport : ITestTran
 public sealed partial record TestEventNotificationWithTestTransport2 : ITestTransport2EventNotification<TestEventNotificationWithTestTransport2>
 {
     static ITestTransport2TypesInjector ITestTransport2EventNotification.TestTransport2TypesInjector
-        => TestTransport2TypesInjector<TestEventNotificationWithTestTransport2>.Default;
+        => TestTransport2TypesInjector<TestEventNotificationWithTestTransport2, IHandler>.Default;
 
     public partial interface IHandler : IGeneratedTestTransport2EventNotificationHandler;
 }
@@ -216,10 +216,10 @@ public sealed partial record TestEventNotificationWithMultipleTestTransports : I
                                                                                ITestTransport2EventNotification<TestEventNotificationWithMultipleTestTransports>
 {
     static ITestTransportTypesInjector ITestTransportEventNotification.TestTransportTypesInjector
-        => TestTransportTypesInjector<TestEventNotificationWithMultipleTestTransports>.Default;
+        => TestTransportTypesInjector<TestEventNotificationWithMultipleTestTransports, IHandler>.Default;
 
     static ITestTransport2TypesInjector ITestTransport2EventNotification.TestTransport2TypesInjector
-        => TestTransport2TypesInjector<TestEventNotificationWithMultipleTestTransports>.Default;
+        => TestTransport2TypesInjector<TestEventNotificationWithMultipleTestTransports, IHandler>.Default;
 
     public partial interface IHandler : IGeneratedTestTransportEventNotificationHandler;
 
@@ -333,17 +333,19 @@ public interface ITestTransportTypesInjector : IEventNotificationTypesInjector
     TResult CreateForTestTransport<TResult>(ITestTransportTypesInjectable<TResult> injectable);
 }
 
-file sealed class TestTransportTypesInjector<TEventNotification> : ITestTransportTypesInjector
+file sealed class TestTransportTypesInjector<TEventNotification, THandlerInterface> : ITestTransportTypesInjector
     where TEventNotification : class, ITestTransportEventNotification<TEventNotification>
+    where THandlerInterface : class, IEventNotificationHandler<TEventNotification, THandlerInterface>
 {
-    public static readonly TestTransportTypesInjector<TEventNotification> Default = new();
+    public static readonly TestTransportTypesInjector<TEventNotification, THandlerInterface> Default = new();
 
     IEventNotificationTypesInjector IEventNotificationTypesInjector.WithHandlerType<THandler>()
     {
-        Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IEventNotificationHandler<TEventNotification>)), $"expected handler type '{typeof(THandler)}' to be assignable to '{typeof(IEventNotificationHandler<TEventNotification>)}'");
+        Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IEventNotificationHandler<TEventNotification, THandlerInterface>)),
+                     $"expected handler type '{typeof(THandler)}' to be assignable to '{typeof(IEventNotificationHandler<TEventNotification, THandlerInterface>)}'");
 
         return Activator.CreateInstance(typeof(WithHandlerType<>)
-                                            .MakeGenericType(typeof(TEventNotification), typeof(THandler)))
+                                            .MakeGenericType(typeof(TEventNotification), typeof(THandlerInterface), typeof(THandler)))
                    as IEventNotificationTypesInjector
                ?? throw new InvalidOperationException("cannot create instance of WithHandlerType<THandler>");
     }
@@ -352,7 +354,7 @@ file sealed class TestTransportTypesInjector<TEventNotification> : ITestTranspor
         => throw new NotSupportedException($"handler type must be set via '{nameof(IEventNotificationTypesInjector.WithHandlerType)}'");
 
     private sealed class WithHandlerType<THandler> : ITestTransportTypesInjector
-        where THandler : class, IEventNotificationHandler<TEventNotification>, IGeneratedTestTransportEventNotificationHandler
+        where THandler : class, IEventNotificationHandler<TEventNotification, THandlerInterface>, IGeneratedTestTransportEventNotificationHandler
     {
         public TResult CreateForTestTransport<TResult>(ITestTransportTypesInjectable<TResult> injectable)
             => injectable.WithInjectedTypes<TEventNotification, THandler>();
@@ -366,7 +368,7 @@ public interface ITestTransportTypesInjectable<out TResult>
 {
     TResult WithInjectedTypes<TEventNotification, THandler>()
         where TEventNotification : class, ITestTransportEventNotification<TEventNotification>
-        where THandler : class, IEventNotificationHandler<TEventNotification>, IGeneratedTestTransportEventNotificationHandler;
+        where THandler : class, IGeneratedTestTransportEventNotificationHandler;
 }
 
 file sealed class TestTransportEventNotificationReceiver<T>(IServiceProvider serviceProvider, CancellationToken cancellationToken) : ITestTransportEventNotificationReceiver<T>
@@ -440,17 +442,19 @@ public interface ITestTransport2TypesInjector : IEventNotificationTypesInjector
     TResult CreateForTestTransport2<TResult>(ITestTransport2TypesInjectable<TResult> injectable);
 }
 
-file sealed class TestTransport2TypesInjector<TEventNotification> : ITestTransport2TypesInjector
+file sealed class TestTransport2TypesInjector<TEventNotification, THandlerInterface> : ITestTransport2TypesInjector
     where TEventNotification : class, ITestTransport2EventNotification<TEventNotification>
+    where THandlerInterface : class, IEventNotificationHandler<TEventNotification, THandlerInterface>
 {
-    public static readonly TestTransport2TypesInjector<TEventNotification> Default = new();
+    public static readonly TestTransport2TypesInjector<TEventNotification, THandlerInterface> Default = new();
 
     IEventNotificationTypesInjector IEventNotificationTypesInjector.WithHandlerType<THandler>()
     {
-        Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IEventNotificationHandler<TEventNotification>)), $"expected handler type '{typeof(THandler)}' to be assignable to '{typeof(IEventNotificationHandler<TEventNotification>)}'");
+        Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IEventNotificationHandler<TEventNotification, THandlerInterface>)),
+                     $"expected handler type '{typeof(THandler)}' to be assignable to '{typeof(IEventNotificationHandler<TEventNotification, THandlerInterface>)}'");
 
         return Activator.CreateInstance(typeof(WithHandlerType<>)
-                                            .MakeGenericType(typeof(TEventNotification), typeof(THandler)))
+                                            .MakeGenericType(typeof(TEventNotification), typeof(THandlerInterface), typeof(THandler)))
                    as IEventNotificationTypesInjector
                ?? throw new InvalidOperationException("cannot create instance of WithHandlerType<THandler>");
     }
@@ -459,7 +463,7 @@ file sealed class TestTransport2TypesInjector<TEventNotification> : ITestTranspo
         => throw new NotSupportedException($"handler type must be set via '{nameof(IEventNotificationTypesInjector.WithHandlerType)}'");
 
     private sealed class WithHandlerType<THandler> : ITestTransport2TypesInjector
-        where THandler : class, IEventNotificationHandler<TEventNotification>, IGeneratedTestTransport2EventNotificationHandler
+        where THandler : class, IEventNotificationHandler<TEventNotification, THandlerInterface>, IGeneratedTestTransport2EventNotificationHandler
     {
         public TResult CreateForTestTransport2<TResult>(ITestTransport2TypesInjectable<TResult> injectable)
             => injectable.WithInjectedTypes<TEventNotification, THandler>();
@@ -473,7 +477,7 @@ public interface ITestTransport2TypesInjectable<out TResult>
 {
     TResult WithInjectedTypes<TEventNotification, THandler>()
         where TEventNotification : class, ITestTransport2EventNotification<TEventNotification>
-        where THandler : class, IEventNotificationHandler<TEventNotification>, IGeneratedTestTransport2EventNotificationHandler;
+        where THandler : class, IGeneratedTestTransport2EventNotificationHandler;
 }
 
 file sealed class TestTransport2EventNotificationReceiver<T>(IServiceProvider serviceProvider, CancellationToken cancellationToken) : ITestTransport2EventNotificationReceiver<T>

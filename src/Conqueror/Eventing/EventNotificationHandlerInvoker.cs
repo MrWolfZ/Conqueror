@@ -12,12 +12,12 @@ internal sealed class EventNotificationHandlerInvoker<TEventNotification>(
 {
     public Task Invoke(IServiceProvider serviceProvider, object notification, string transportTypeName, CancellationToken cancellationToken)
     {
-        var proxy = new EventNotificationHandlerProxy<TEventNotification>(serviceProvider,
-                                                                          new(new Publisher(handlerFn, transportTypeName)),
-                                                                          configurePipeline,
-                                                                          EventNotificationTransportRole.Receiver);
+        var dispatcher = new EventNotificationDispatcher<TEventNotification>(serviceProvider,
+                                                                             new(new Publisher(handlerFn, transportTypeName)),
+                                                                             configurePipeline,
+                                                                             EventNotificationTransportRole.Receiver);
 
-        return proxy.Handle((TEventNotification)notification, cancellationToken);
+        return dispatcher.Dispatch((TEventNotification)notification, cancellationToken);
     }
 
     private sealed class Publisher(EventNotificationHandlerFn<TEventNotification> handlerFn, string transportTypeName) : IEventNotificationPublisher<TEventNotification>

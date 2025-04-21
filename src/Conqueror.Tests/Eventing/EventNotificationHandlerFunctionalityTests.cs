@@ -6,7 +6,7 @@ public abstract partial class EventNotificationHandlerFunctionalityTests
 
     protected abstract IServiceCollection RegisterHandler2(IServiceCollection services);
 
-    protected virtual IEventNotificationHandler<TestEventNotification> ResolveHandler(IServiceProvider serviceProvider)
+    protected virtual TestEventNotification.IHandler ResolveHandler(IServiceProvider serviceProvider)
     {
         return serviceProvider.GetRequiredService<IEventNotificationPublishers>()
                               .For(TestEventNotification.T);
@@ -460,38 +460,42 @@ public sealed class EventNotificationHandlerFunctionalityDelegateTests : EventNo
 {
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
-        return services.AddEventNotificationHandlerDelegate<TestEventNotification>(async (notification, p, cancellationToken) =>
-        {
-            await Task.Yield();
-
-            if (p.GetService<Exception>() is { } e)
+        return services.AddEventNotificationHandlerDelegate(
+            TestEventNotification.T,
+            async (notification, p, cancellationToken) =>
             {
-                throw e;
-            }
+                await Task.Yield();
 
-            var obs = p.GetRequiredService<TestObservations>();
-            obs.EventNotifications.Add(notification);
-            obs.CancellationTokens.Add(cancellationToken);
-            obs.ServiceProviders.Add(p);
-        });
+                if (p.GetService<Exception>() is { } e)
+                {
+                    throw e;
+                }
+
+                var obs = p.GetRequiredService<TestObservations>();
+                obs.EventNotifications.Add(notification);
+                obs.CancellationTokens.Add(cancellationToken);
+                obs.ServiceProviders.Add(p);
+            });
     }
 
     protected override IServiceCollection RegisterHandler2(IServiceCollection services)
     {
-        return services.AddEventNotificationHandlerDelegate<TestEventNotification>(async (notification, p, cancellationToken) =>
-        {
-            await Task.Yield();
-
-            if (p.GetService<Exception>() is { } e)
+        return services.AddEventNotificationHandlerDelegate(
+            TestEventNotification.T,
+            async (notification, p, cancellationToken) =>
             {
-                throw e;
-            }
+                await Task.Yield();
 
-            var obs = p.GetRequiredService<TestObservations>();
-            obs.EventNotifications.Add(notification);
-            obs.CancellationTokens.Add(cancellationToken);
-            obs.ServiceProviders.Add(p);
-        });
+                if (p.GetService<Exception>() is { } e)
+                {
+                    throw e;
+                }
+
+                var obs = p.GetRequiredService<TestObservations>();
+                obs.EventNotifications.Add(notification);
+                obs.CancellationTokens.Add(cancellationToken);
+                obs.ServiceProviders.Add(p);
+            });
     }
 }
 
@@ -579,8 +583,8 @@ public abstract class EventNotificationHandlerFunctionalityPublisherTests : Even
         Assert.That(observations.ServiceProvidersFromTransportFactory[0], Is.Not.SameAs(observations.ServiceProvidersFromTransportFactory[2]));
     }
 
-    protected abstract IEventNotificationHandler<TestEventNotification> ConfigureWithPublisher(
-        IEventNotificationHandler<TestEventNotification> builder,
+    protected abstract TestEventNotification.IHandler ConfigureWithPublisher(
+        TestEventNotification.IHandler builder,
         Func<IEventNotificationPublisherBuilder<TestEventNotification>, IEventNotificationPublisher<TestEventNotification>?>? baseConfigure = null);
 
     protected sealed override IServiceCollection RegisterHandler(IServiceCollection services)
@@ -594,7 +598,7 @@ public abstract class EventNotificationHandlerFunctionalityPublisherTests : Even
     protected sealed override IServiceCollection RegisterHandler2(IServiceCollection services)
         => RegisterHandler(services);
 
-    protected sealed override IEventNotificationHandler<TestEventNotification> ResolveHandler(IServiceProvider serviceProvider)
+    protected sealed override TestEventNotification.IHandler ResolveHandler(IServiceProvider serviceProvider)
     {
         return ConfigureWithPublisher(base.ResolveHandler(serviceProvider));
     }
@@ -634,8 +638,8 @@ public abstract class EventNotificationHandlerFunctionalityPublisherTests : Even
 [TestFixture]
 public sealed class EventNotificationHandlerFunctionalityPublisherWithSyncTransportFactoryTests : EventNotificationHandlerFunctionalityPublisherTests
 {
-    protected override IEventNotificationHandler<TestEventNotification> ConfigureWithPublisher(
-        IEventNotificationHandler<TestEventNotification> builder,
+    protected override TestEventNotification.IHandler ConfigureWithPublisher(
+        TestEventNotification.IHandler builder,
         Func<IEventNotificationPublisherBuilder<TestEventNotification>, IEventNotificationPublisher<TestEventNotification>?>? baseConfigure = null)
     {
         return builder.WithPublisher(b =>
@@ -649,8 +653,8 @@ public sealed class EventNotificationHandlerFunctionalityPublisherWithSyncTransp
 [TestFixture]
 public sealed class EventNotificationHandlerFunctionalityPublisherWithAsyncTransportFactoryTests : EventNotificationHandlerFunctionalityPublisherTests
 {
-    protected override IEventNotificationHandler<TestEventNotification> ConfigureWithPublisher(
-        IEventNotificationHandler<TestEventNotification> builder,
+    protected override TestEventNotification.IHandler ConfigureWithPublisher(
+        TestEventNotification.IHandler builder,
         Func<IEventNotificationPublisherBuilder<TestEventNotification>, IEventNotificationPublisher<TestEventNotification>?>? baseConfigure = null)
     {
         return builder.WithPublisher(async b =>
