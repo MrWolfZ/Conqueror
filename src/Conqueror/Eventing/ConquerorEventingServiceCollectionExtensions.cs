@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -254,34 +253,21 @@ public static class ConquerorEventingServiceCollectionExtensions
         where THandler : class, IGeneratedEventNotificationHandler<TEventNotification>
         where TEventNotification : class, IEventNotification<TEventNotification>
     {
-        var typeInjector = (IDefaultEventNotificationTypesInjector)THandler.DefaultTypeInjector.WithHandlerType<THandler>();
-        return typeInjector.CreateWithEventNotificationTypes(new EventNotificationHandlerRegistrationTypeInjectable(services,
-                                                                                                                    serviceDescriptor,
-                                                                                                                    shouldOverwriteRegistration));
-    }
-
-    private static IServiceCollection AddEventNotificationHandlerInternal<TEventNotification>(
-        this IServiceCollection services,
-        ServiceDescriptor serviceDescriptor,
-        Type handlerType,
-        Action<IEventNotificationPipeline<TEventNotification>>? configurePipeline,
-        IReadOnlyCollection<IEventNotificationTypesInjector> typeInjectors,
-        bool shouldOverwriteRegistration)
-        where TEventNotification : class, IEventNotification<TEventNotification>
-    {
-        if (handlerType.IsInterface || handlerType.IsAbstract)
+        if (typeof(THandler).IsInterface || typeof(THandler).IsAbstract)
         {
-            throw new InvalidOperationException($"handler type '{handlerType}' must not be an interface or abstract class");
+            throw new InvalidOperationException($"handler type '{typeof(THandler)}' must not be an interface or abstract class");
         }
 
         var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is EventNotificationHandlerRegistration r
                                                                  && r.EventNotificationType == typeof(TEventNotification)
-                                                                 && r.HandlerType == handlerType);
+                                                                 && r.HandlerType == typeof(THandler));
 
-        var invoker = new EventNotificationHandlerInvoker<TEventNotification>(configurePipeline,
-                                                                              (n, p, ct) => ((IEventNotificationHandler<TEventNotification>)p.GetRequiredService(handlerType)).Handle(n, ct));
+        var invoker = new EventNotificationHandlerInvoker<TEventNotification>(
+            THandler.ConfigurePipeline,
+            (n, p, ct) => ((IEventNotificationHandler<TEventNotification>)p.GetRequiredService(typeof(THandler))).Handle(n, ct));
 
-        var registration = new EventNotificationHandlerRegistration(typeof(TEventNotification), handlerType, null, invoker, typeInjectors);
+        var typeInjectorsWithHandlerType = TEventNotification.TypeInjectors.Select(i => i.WithHandlerType<THandler>()).ToList();
+        var registration = new EventNotificationHandlerRegistration(typeof(TEventNotification), typeof(THandler), null, invoker, typeInjectorsWithHandlerType);
 
         if (existingRegistration is not null)
         {
@@ -327,28 +313,5 @@ public static class ConquerorEventingServiceCollectionExtensions
         services.AddSingleton(new EventNotificationHandlerRegistration(typeof(TEventNotification), null, fn, invoker, TEventNotification.TypeInjectors));
 
         return services;
-    }
-
-    private sealed class EventNotificationHandlerRegistrationTypeInjectable(
-        IServiceCollection services,
-        ServiceDescriptor serviceDescriptor,
-        bool shouldOverwriteRegistration)
-        : IDefaultEventNotificationTypesInjectable<IServiceCollection>
-    {
-        IServiceCollection IDefaultEventNotificationTypesInjectable<IServiceCollection>
-            .WithInjectedTypes<
-                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-                TEventNotification,
-                TGeneratedHandlerInterface,
-                TGeneratedHandlerAdapter,
-                THandler>()
-        {
-            var typeInjectorsWithHandlerType = TEventNotification.TypeInjectors.Select(i => i.WithHandlerType<THandler>()).ToList();
-            return services.AddEventNotificationHandlerInternal<TEventNotification>(serviceDescriptor,
-                                                                                    typeof(THandler),
-                                                                                    THandler.ConfigurePipeline,
-                                                                                    typeInjectorsWithHandlerType,
-                                                                                    shouldOverwriteRegistration);
-        }
     }
 }
