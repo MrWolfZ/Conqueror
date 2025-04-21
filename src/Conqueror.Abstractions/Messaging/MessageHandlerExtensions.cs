@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
@@ -95,12 +96,14 @@ public static class MessageHandlerExtensions
     private sealed class HandlerCastInjectable<THandler>(object handler) : IDefaultMessageTypesInjectable<THandler>
         where THandler : class
     {
-        public THandler WithInjectedTypes<TMessage, TResponse, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-            where TMessage : class, IMessage<TMessage, TResponse>
-            where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TResponse, TPipelineInterface>
-            where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage, TResponse>, TGeneratedHandlerInterface, new()
-            where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
-            where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new()
+        THandler IDefaultMessageTypesInjectable<THandler>.WithInjectedTypes<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+            TMessage,
+            TResponse,
+            TGeneratedHandlerInterface,
+            TGeneratedHandlerAdapter,
+            TPipelineInterface,
+            TPipelineAdapter>()
         {
             Debug.Assert(typeof(TGeneratedHandlerInterface) == typeof(THandler), "result handler type should always be equal to generated handler interface");
             Debug.Assert(handler is IMessageHandler<TMessage, TResponse>, "handler to wrap must be of correct type");
@@ -113,12 +116,13 @@ public static class MessageHandlerExtensions
             return adapter as THandler ?? throw new InvalidOperationException("could not create handler adapter");
         }
 
-        public THandler WithInjectedTypes<TMessage, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, TPipelineInterface, TPipelineAdapter>()
-            where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-            where TGeneratedHandlerInterface : class, IGeneratedMessageHandler<TMessage, TPipelineInterface>
-            where TGeneratedHandlerAdapter : GeneratedMessageHandlerAdapter<TMessage>, TGeneratedHandlerInterface, new()
-            where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
-            where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
+        THandler IDefaultMessageTypesInjectable<THandler>.WithInjectedTypes<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+            TMessage,
+            TGeneratedHandlerInterface,
+            TGeneratedHandlerAdapter,
+            TPipelineInterface,
+            TPipelineAdapter>()
         {
             Debug.Assert(typeof(TGeneratedHandlerInterface) == typeof(THandler), "result handler type should always be equal to generated handler interface");
             Debug.Assert(handler is IMessageHandler<TMessage>, "handler to wrap must be of correct type");

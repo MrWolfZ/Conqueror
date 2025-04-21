@@ -12,7 +12,7 @@ internal sealed class TruncatedLoggingException(Exception wrapped) : Exception(w
         // we need them to be stable for snapshot testing; we observed that the instability is
         // usually after the first few lines of the stack trace, so we truncate the trace to
         // still be able to assert that something is being logged but without the unstable part
-        var numOfLinesToKeep = 15;
+        var numOfLinesToKeep = 6;
         var numOfNewLinesFound = 0;
         var currentIndex = 0;
 

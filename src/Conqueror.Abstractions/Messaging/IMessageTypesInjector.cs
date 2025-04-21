@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -14,8 +13,6 @@ namespace Conqueror;
 /// </summary>
 public interface IMessageTypesInjector
 {
-    Type ConstraintType { get; }
-
     static IReadOnlyCollection<IMessageTypesInjector> GetTypeInjectorsForMessageType<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicProperties)]
         TMessage>()
@@ -35,6 +32,7 @@ public interface IDefaultMessageTypesInjector : IMessageTypesInjector
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class DefaultMessageTypesInjector<
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
     TMessage,
     TResponse,
     TGeneratedHandlerInterface,
@@ -50,8 +48,6 @@ public sealed class DefaultMessageTypesInjector<
 {
     public static readonly DefaultMessageTypesInjector<TMessage, TResponse, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, TPipelineInterface, TPipelineAdapter> Default = new();
 
-    public Type ConstraintType => typeof(IMessage<TMessage, TResponse>);
-
     /// <summary>
     ///     Helper method to be able to access the message and response types as generic parameters while only
     ///     having a generic reference to the message type. This allows bypassing reflection.
@@ -65,6 +61,7 @@ public sealed class DefaultMessageTypesInjector<
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class DefaultMessageTypesInjector<
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
     TMessage,
     TGeneratedHandlerInterface,
     TGeneratedHandlerAdapter,
@@ -77,8 +74,6 @@ public sealed class DefaultMessageTypesInjector<
     where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, UnitMessageResponse>, TPipelineInterface, new()
 {
     public static readonly DefaultMessageTypesInjector<TMessage, TGeneratedHandlerInterface, TGeneratedHandlerAdapter, TPipelineInterface, TPipelineAdapter> Default = new();
-
-    public Type ConstraintType => typeof(IMessage<TMessage, UnitMessageResponse>);
 
     /// <summary>
     ///     Helper method to be able to access the message and response types as generic parameters while only
@@ -100,6 +95,7 @@ public sealed class DefaultMessageTypesInjector<
 public interface IDefaultMessageTypesInjectable<out TResult>
 {
     TResult WithInjectedTypes<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
         TMessage,
         TResponse,
         TGeneratedHandlerInterface,
@@ -113,6 +109,7 @@ public interface IDefaultMessageTypesInjectable<out TResult>
         where TPipelineAdapter : GeneratedMessagePipelineAdapter<TMessage, TResponse>, TPipelineInterface, new();
 
     TResult WithInjectedTypes<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
         TMessage,
         TGeneratedHandlerInterface,
         TGeneratedHandlerAdapter,

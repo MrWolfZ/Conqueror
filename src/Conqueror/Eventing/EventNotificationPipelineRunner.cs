@@ -15,11 +15,11 @@ internal sealed class EventNotificationPipelineRunner<TEventNotification>(
 
     public async Task Execute(IServiceProvider serviceProvider,
                               TEventNotification initialEventNotification,
-                              IEventNotificationPublisher<TEventNotification> transportClient,
+                              IEventNotificationPublisher<TEventNotification> publisher,
                               EventNotificationTransportType transportType,
                               CancellationToken cancellationToken)
     {
-        var next = (TEventNotification notification, CancellationToken token) => transportClient.Publish(notification, serviceProvider, conquerorContext, token);
+        var next = (TEventNotification notification, CancellationToken token) => publisher.Publish(notification, serviceProvider, conquerorContext, token);
 
         foreach (var middleware in middlewares)
         {

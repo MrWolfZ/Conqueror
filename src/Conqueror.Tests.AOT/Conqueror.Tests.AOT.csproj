@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../.targets/analyzers.targets" />
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <ServerGarbageCollection>false</ServerGarbageCollection>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <PublishAot>true</PublishAot>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Conqueror.Middleware.Authorization\Conqueror.Middleware.Authorization.csproj" />
+        <ProjectReference Include="..\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" />
+        <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\Conqueror.Transport.Http.Client\Conqueror.Transport.Http.Client.csproj" />
+        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
+        <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    </ItemGroup>
+
+</Project>

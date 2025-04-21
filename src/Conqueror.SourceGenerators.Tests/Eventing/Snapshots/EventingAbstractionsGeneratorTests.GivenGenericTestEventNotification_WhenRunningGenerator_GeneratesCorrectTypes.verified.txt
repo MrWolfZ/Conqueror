@@ -25,7 +25,7 @@ namespace Generator.Tests
         public static global::Conqueror.EventNotificationTypes<TestEventNotification<TPayload>> T => global::Conqueror.EventNotificationTypes<TestEventNotification<TPayload>>.Default;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]
-        public interface IHandler : global::Conqueror.IGeneratedEventNotificationHandler<TestEventNotification<TPayload>>
+        public partial interface IHandler : global::Conqueror.IGeneratedEventNotificationHandler<TestEventNotification<TPayload>>
         {
             [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Eventing.EventingAbstractionsGenerator", "FIXED_VERSION")]

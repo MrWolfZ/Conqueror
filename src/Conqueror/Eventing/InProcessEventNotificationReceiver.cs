@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Conqueror.Eventing;
 
-internal sealed class InProcessEventNotificationReceiver(EventNotificationTransportRegistry registry) : IDisposable
+internal sealed class InProcessEventNotificationReceiver(EventNotificationTransportRegistry registry, IServiceProvider serviceProviderField)
 {
-    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<IEventNotificationReceiverHandlerInvoker>> invokersByNotificationType = new();
-    private readonly SemaphoreSlim semaphore = new(1);
-
-    private IReadOnlyCollection<IEventNotificationReceiverHandlerInvoker>? invokers;
+    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<IEventNotificationReceiverHandlerInvoker<IDefaultEventNotificationTypesInjector>>> invokersByNotificationType = new();
 
     public async Task Broadcast<TEventNotification>(TEventNotification notification,
                                                     IServiceProvider serviceProvider,
@@ -21,51 +19,54 @@ internal sealed class InProcessEventNotificationReceiver(EventNotificationTransp
                                                     CancellationToken cancellationToken)
         where TEventNotification : class, IEventNotification<TEventNotification>
     {
-        var invokers2 = await GetInvokers(cancellationToken).ConfigureAwait(false);
-
-        var relevantInvokers = invokersByNotificationType.GetOrAdd(notification.GetType(),
-                                                                   _ => invokers2.Where(i => i.AcceptsEventNotificationType(notification.GetType())).ToList());
+        var relevantInvokers = invokersByNotificationType.GetOrAdd(notification.GetType(), GetEventNotificationInvokers);
 
         await broadcastingStrategy.BroadcastEventNotification(relevantInvokers, serviceProvider, notification, transportTypeName, cancellationToken)
                                   .ConfigureAwait(false);
     }
 
-    public void Dispose()
+    private IReadOnlyCollection<IEventNotificationReceiverHandlerInvoker<IDefaultEventNotificationTypesInjector>> GetEventNotificationInvokers(Type notificationType)
     {
-        semaphore.Dispose();
+        return registry.GetEventNotificationInvokersForReceiver<IDefaultEventNotificationTypesInjector>()
+                       .Where(i => notificationType.IsAssignableTo(i.EventNotificationType))
+                       .Where(i => i.TypesInjector.CreateWithEventNotificationTypes(new Injectable(serviceProviderField)))
+                       .ToList();
     }
 
-    // strictly speaking, this is not necessary, since the registry already caches internally, but since this is
-    // on the hot path, we want to avoid any extra calls to the registry if possible
-    private async Task<IReadOnlyCollection<IEventNotificationReceiverHandlerInvoker>> GetInvokers(CancellationToken cancellationToken)
+    private sealed class Injectable(IServiceProvider serviceProvider) : IDefaultEventNotificationTypesInjectable<bool>
     {
-        if (invokers is not null)
+        bool IDefaultEventNotificationTypesInjectable<bool>.WithInjectedTypes<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+            TEventNotification,
+            TGeneratedHandlerInterface,
+            TGeneratedHandlerAdapter>()
         {
-            return invokers;
+            // delegate handlers are always active
+            return true;
         }
 
-        await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-        try
+        bool IDefaultEventNotificationTypesInjectable<bool>.WithInjectedTypes<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+            TEventNotification,
+            TGeneratedHandlerInterface,
+            TGeneratedHandlerAdapter,
+            THandler>()
         {
-            if (invokers is not null)
-            {
-                return invokers;
-            }
-
-            invokers = await registry.GetEventNotificationInvokersForReceiver<IDefaultEventNotificationTypesInjector, InProcessEventNotificationReceiverConfiguration>(cancellationToken)
-                                     .ConfigureAwait(false);
-
-            return invokers;
-        }
-        finally
-        {
-            _ = semaphore.Release();
+            var receiver = new Receiver<TEventNotification>(serviceProvider);
+            THandler.ConfigureInProcessReceiver(receiver);
+            return receiver.IsEnabled;
         }
     }
-}
 
-internal sealed record InProcessEventNotificationReceiverConfiguration : IEventNotificationReceiverConfiguration
-{
-    public static readonly InProcessEventNotificationReceiverConfiguration Instance = new();
+    private sealed class Receiver<TEventNotification>(IServiceProvider serviceProvider) : IInProcessEventNotificationReceiver<TEventNotification>
+        where TEventNotification : class, IEventNotification<TEventNotification>
+    {
+        public IServiceProvider ServiceProvider { get; } = serviceProvider;
+
+        public bool IsEnabled { get; private set; }
+
+        public void Enable() => IsEnabled = true;
+
+        public void Disable() => IsEnabled = false;
+    }
 }

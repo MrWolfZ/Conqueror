@@ -74,7 +74,8 @@ public sealed partial class EventingTypeGenerationTests
         static IReadOnlyCollection<IEventNotificationTypesInjector> IEventNotification<GenericTestEventNotification<TPayload>>.TypeInjectors
             => IEventNotificationTypesInjector.GetTypeInjectorsForEventNotificationType<GenericTestEventNotification<TPayload>>();
 
-        public interface IHandler : IGeneratedEventNotificationHandler<GenericTestEventNotification<TPayload>>
+        [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "emulating generator output")]
+        public partial interface IHandler : IGeneratedEventNotificationHandler<GenericTestEventNotification<TPayload>>
         {
             [EditorBrowsable(EditorBrowsableState.Never)]
             public sealed class Adapter : GeneratedEventNotificationHandlerAdapter<GenericTestEventNotification<TPayload>>, IHandler;
@@ -98,7 +99,8 @@ public sealed partial class EventingTypeGenerationTests
             where T : class, IEventNotification<T>
             => pipeline.UseTest().UseTest();
 
-        public static Task ConfigureReceiver(IEventNotificationReceiver receiver)
+        public static Task ConfigureInProcessReceiver<T>(IInProcessEventNotificationReceiver<T> receiver)
+            where T : class, IEventNotification<T>
         {
             // nothing to do
             return Task.CompletedTask;

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -18,10 +17,8 @@ public interface IEventNotification<
     TEventNotification>
     where TEventNotification : class, IEventNotification<TEventNotification>
 {
-    [EditorBrowsable(EditorBrowsableState.Never)]
     static abstract IDefaultEventNotificationTypesInjector DefaultTypeInjector { get; }
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
     static abstract IReadOnlyCollection<IEventNotificationTypesInjector> TypeInjectors { get; }
 
     /// <summary>
@@ -50,7 +47,6 @@ public interface IEventNotification<
     /// </summary>
     static virtual JsonSerializerContext? JsonSerializerContext => null;
 
-    [EditorBrowsable(EditorBrowsableState.Never)]
     static virtual IEnumerable<PropertyInfo> PublicProperties => typeof(TEventNotification).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 }
 
