@@ -5,14 +5,20 @@ namespace Conqueror.Eventing;
 
 internal sealed class EventNotificationPublishers(IServiceProvider serviceProvider) : IEventNotificationPublishers
 {
-    public THandler For<TEventNotification, THandler>()
+    public THandler For<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TEventNotification,
+        THandler>()
         where TEventNotification : class, IEventNotification<TEventNotification>
         where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
     {
         return TEventNotification.DefaultTypeInjector.CreateWithEventNotificationTypes(new Injectable<THandler>(serviceProvider));
     }
 
-    public THandler For<TEventNotification, THandler>(EventNotificationTypes<TEventNotification, THandler> notificationTypes)
+    public THandler For<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TEventNotification,
+        THandler>(EventNotificationTypes<TEventNotification, THandler> notificationTypes)
         where TEventNotification : class, IEventNotification<TEventNotification>
         where THandler : class, IEventNotificationHandler<TEventNotification, THandler>
     {
