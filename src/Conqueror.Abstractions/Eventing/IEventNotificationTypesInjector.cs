@@ -28,7 +28,7 @@ public interface IEventNotificationTypesInjector
                                          .ToList();
     }
 
-    internal IEventNotificationTypesInjector WithHandlerType<THandler>()
+    IEventNotificationTypesInjector WithHandlerType<THandler>()
         where THandler : class, IGeneratedEventNotificationHandler;
 }
 

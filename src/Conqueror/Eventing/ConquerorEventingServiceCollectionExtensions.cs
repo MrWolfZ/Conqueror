@@ -183,6 +183,8 @@ public static class ConquerorEventingServiceCollectionExtensions
 
     [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
                                   Justification = "we know that both the handler and notification type are reference types and therefore can use shared code")]
+    [UnconditionalSuppressMessage("Trimming", "IL2060:Call to \'System.Reflection.MethodInfo.MakeGenericMethod\' can not be statically analyzed. It\'s not possible to guarantee the availability of requirements of the generic method.",
+                                  Justification = "we know that both the handler and notification type are reference types and therefore can use shared code")]
     private static IServiceCollection AddEventNotificationHandlerInternalGeneric<
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)]
         THandler>(
@@ -220,7 +222,10 @@ public static class ConquerorEventingServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection AddEventNotificationHandlerInternalForEventNotificationType<TEventNotification, THandler>(
+    private static IServiceCollection AddEventNotificationHandlerInternalForEventNotificationType<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+        TEventNotification,
+        THandler>(
         this IServiceCollection services,
         ServiceDescriptor serviceDescriptor,
         bool shouldOverwriteRegistration)
