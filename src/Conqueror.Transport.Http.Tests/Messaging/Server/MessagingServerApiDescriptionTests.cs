@@ -43,10 +43,7 @@ public sealed class MessagingServerApiDescriptionTests
         Assert.That(messageApiDescription.GroupName, Is.EqualTo(testCase.ApiGroupName));
         Assert.That(messageApiDescription.ParameterDescriptions, Has.Count.EqualTo(testCase.ParameterCount));
 
-        var isController = testCase.RegistrationMethod
-            is MessageTestCaseRegistrationMethod.Controllers
-            or MessageTestCaseRegistrationMethod.ExplicitController
-            or MessageTestCaseRegistrationMethod.CustomController;
+        var isController = testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.CustomController;
 
         var messageMediaTypes = messageApiDescription.SupportedRequestFormats.Select(f => f.MediaType);
         var expectedAcceptContentTypes = isController ? [MediaTypeNames.Application.Json, "application/*+json"] : new[] { testCase.MessageContentType };
@@ -117,12 +114,7 @@ public sealed class MessagingServerApiDescriptionTests
         var responseDescriptor = operation.Value.Responses.Single();
         Assert.That(responseDescriptor.Key, Is.EqualTo(testCase.SuccessStatusCode.ToString()));
 
-        var isController = testCase.RegistrationMethod
-            is MessageTestCaseRegistrationMethod.Controllers
-            or MessageTestCaseRegistrationMethod.ExplicitController;
-
-        var expectedAcceptContentTypes = isController ? [MediaTypeNames.Application.Json, "application/*+json"] : new[] { testCase.MessageContentType };
-        Assert.That(operation.Value.RequestBody?.Content.Keys, testCase.MessageContentType is null ? Is.Null.Or.Empty : Is.EquivalentTo(expectedAcceptContentTypes));
+        Assert.That(operation.Value.RequestBody?.Content.Keys, testCase.MessageContentType is null ? Is.Null.Or.Empty : Is.EquivalentTo(new[] { testCase.MessageContentType }));
 
         Assert.That(responseDescriptor.Value.Content.Keys, testCase.ResponseContentType is null ? Is.Empty : Is.EquivalentTo(new[] { testCase.ResponseContentType }));
 

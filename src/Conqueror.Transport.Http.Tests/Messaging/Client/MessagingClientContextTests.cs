@@ -102,19 +102,6 @@ public sealed class MessagingClientContextTests : IDisposable
         string? seenMessageIdOnClient = null;
         string? seenTraceIdOnClient = null;
 
-        // the source generator does not yet support serialization of complex GET messages, and in controller mode the
-        // model validation will fail (while the endpoint mode will just silently generate an empty message due to lack
-        // of out-of-the-box validation
-        if (testCase is
-            {
-                Message: TestMessageWithComplexGetPayload,
-                RegistrationMethod: MessageTestCaseRegistrationMethod.Controllers
-                or MessageTestCaseRegistrationMethod.ExplicitController,
-            })
-        {
-            return;
-        }
-
         _ = await messageClients.For<TMessage, TResponse>()
                                 .WithTransport(b =>
                                 {

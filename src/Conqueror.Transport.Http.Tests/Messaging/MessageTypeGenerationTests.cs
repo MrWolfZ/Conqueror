@@ -21,17 +21,16 @@ public sealed partial class MessageTypeGenerationTests
         await using var host = await HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddMvc().AddMessageControllers();
-
-                _ = services.AddMessageHandler<TestMessageHandler>()
-                            .AddMessageHandler<TestMessageWithoutResponseHandler>()
-                            .BuildServiceProvider();
+                _ = services.AddRoutingCore()
+                            .AddMessageEndpoints()
+                            .AddMessageHandler<TestMessageHandler>()
+                            .AddMessageHandler<TestMessageWithoutResponseHandler>();
             },
             app =>
             {
-                _ = app.UseRouting();
                 _ = app.UseConquerorWellKnownErrorHandling();
-                _ = app.UseEndpoints(b => b.MapControllers());
+                _ = app.UseRouting();
+                _ = app.UseEndpoints(b => b.MapMessageEndpoints());
             });
 
         var messageClients = host.Resolve<IMessageClients>();

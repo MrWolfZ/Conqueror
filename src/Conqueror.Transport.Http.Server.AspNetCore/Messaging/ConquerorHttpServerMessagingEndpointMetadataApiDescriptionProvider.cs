@@ -209,6 +209,8 @@ internal sealed record ConquerorHttpMessageEndpointMetadata
 {
     public required string Name { get; init; }
 
+    public required string FullPath { get; init; }
+
     public required string? ApiGroupName { get; init; }
 
     public required string HttpMethod { get; init; }

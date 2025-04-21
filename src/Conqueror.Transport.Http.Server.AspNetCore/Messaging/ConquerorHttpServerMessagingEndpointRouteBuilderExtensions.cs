@@ -56,6 +56,20 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
         public IEndpointConventionBuilder WithInjectedTypes<TMessage, TResponse>()
             where TMessage : class, IHttpMessage<TMessage, TResponse>
         {
+            var duplicates = builder.DataSources
+                                    .SelectMany(ds => ds.Endpoints)
+                                    .SelectMany(e => e.Metadata)
+                                    .OfType<ConquerorHttpMessageEndpointMetadata>()
+                                    .Where(m => m.FullPath == TMessage.FullPath && m.HttpMethod == TMessage.HttpMethod)
+                                    .ToList();
+
+            if (duplicates.Count > 0)
+            {
+                var msg = $"path: {TMessage.FullPath}, messageTypes: {string.Join(", ", duplicates.Select(d => d.MessageType))}";
+
+                throw new InvalidOperationException($"found multiple Conqueror message types with identical path!{Environment.NewLine}{msg}");
+            }
+
             return ConfigureRoute<TMessage, TResponse>(
                 builder.MapMethods(TMessage.FullPath, [TMessage.HttpMethod], Handle<TMessage, TResponse>),
                 TMessage.EmptyInstance is null);
@@ -140,6 +154,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                              .WithMetadata(new ConquerorHttpMessageEndpointMetadata
                              {
                                  Name = TMessage.Name,
+                                 FullPath = TMessage.FullPath,
                                  ApiGroupName = TMessage.ApiGroupName,
                                  HttpMethod = TMessage.HttpMethod,
                                  MessageContentType = TMessage.HttpMessageSerializer?.ContentType ?? MediaTypeNames.Application.Json,

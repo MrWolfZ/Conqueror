@@ -11,10 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-       .AddControllers()
-       .AddMessageControllers();
-
-builder.Services
        .AddEndpointsApiExplorer()
        .AddSwaggerGen(c =>
        {
@@ -46,7 +42,5 @@ app.MapGet("/api/customGet/{payload:int}", async (int payload, HttpContext ctx)
            });
 
 app.MapGroup("/group").MapMessageEndpoint<TopLevelTestMessage>().WithName("TopLevelTestMessage2");
-
-app.MapControllers();
 
 await app.RunAsync().ConfigureAwait(false);
