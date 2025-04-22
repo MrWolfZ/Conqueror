@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestSignalWithCustomTransport[0]
+      PreHook:TestSignalWithCustomTransport,test-message-id,test-trace-id
+info: CustomCategory_TestSignalWithCustomTransport[0]
+      PostHook:test-message-id,test-trace-id

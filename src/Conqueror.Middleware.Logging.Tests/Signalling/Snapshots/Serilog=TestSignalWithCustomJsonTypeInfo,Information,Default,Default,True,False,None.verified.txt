@@ -1,0 +1,2 @@
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling signal with payload {"SIGNAL_PAYLOAD":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

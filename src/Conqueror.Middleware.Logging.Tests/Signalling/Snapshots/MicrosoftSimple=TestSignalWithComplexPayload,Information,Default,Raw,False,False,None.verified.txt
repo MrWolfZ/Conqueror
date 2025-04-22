@@ -1,0 +1,4 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithComplexPayload[441733974]
+      Handling signal with payload TestSignalWithComplexPayload { Payload = 10, NestedPayload = TestSignalWithComplexPayloadPayload { Payload = 11, Payload2 = 12 } } (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithComplexPayload[1977864143]
+      Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

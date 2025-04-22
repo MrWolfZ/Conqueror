@@ -325,7 +325,7 @@ public sealed partial class MessagingServerContextTests
     }
 
     private Task<HttpTransportTestHost> CreateTestHost(Action<IServiceCollection> configureServices,
-                                          Action<IApplicationBuilder> configure)
+                                                       Action<IApplicationBuilder> configure)
     {
         return HttpTransportTestHost.Create(
             services =>

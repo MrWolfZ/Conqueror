@@ -1,0 +1,8 @@
+﻿info: CustomCategory_TestSignalWithCustomSerializedPayloadType[441733974]
+      Handling signal with payload
+      {
+        "Payload": 10
+      }
+      (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignalWithCustomSerializedPayloadType[1977864143]
+      Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

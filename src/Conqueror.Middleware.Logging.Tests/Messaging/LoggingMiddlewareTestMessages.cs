@@ -601,13 +601,13 @@ public static partial class LoggingMiddlewareTestMessages
         public JsonSerializerContext? JsonSerializerContext => TMessage.JsonSerializerContext;
 
         public string TestLabelShort => new StringBuilder().Append(typeof(TMessage).Name)
-                                                      .Append($",{ConfiguredLogLevel}")
-                                                      .Append($",{PreExecutionLogLevel?.ToString() ?? "Default"}")
-                                                      .Append($",{MessagePayloadLoggingStrategy?.ToString() ?? "Default"}")
-                                                      .Append($",{LoggerCategoryFactory is not null}")
-                                                      .Append($",{Exception is not null}")
-                                                      .Append($",{HookBehavior?.ToString() ?? "None"}")
-                                                      .ToString();
+                                                           .Append($",{ConfiguredLogLevel}")
+                                                           .Append($",{PreExecutionLogLevel?.ToString() ?? "Default"}")
+                                                           .Append($",{MessagePayloadLoggingStrategy?.ToString() ?? "Default"}")
+                                                           .Append($",{LoggerCategoryFactory is not null}")
+                                                           .Append($",{Exception is not null}")
+                                                           .Append($",{HookBehavior?.ToString() ?? "None"}")
+                                                           .ToString();
 
         private string TestLabel => new StringBuilder().Append(typeof(TMessage).Name)
                                                        .Append($",conf lvl:{ConfiguredLogLevel}")

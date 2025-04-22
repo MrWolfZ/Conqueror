@@ -53,6 +53,7 @@ public class GeneratedMessagePipelineAdapter<TMessage, TResponse>
     public ConquerorContext ConquerorContext => Wrapped.ConquerorContext;
 
     public MessageTransportType TransportType => Wrapped.TransportType;
+
     IEnumerator<IMessageMiddleware<TMessage, TResponse>> IEnumerable<IMessageMiddleware<TMessage, TResponse>>.GetEnumerator()
         => Wrapped.GetEnumerator();
 

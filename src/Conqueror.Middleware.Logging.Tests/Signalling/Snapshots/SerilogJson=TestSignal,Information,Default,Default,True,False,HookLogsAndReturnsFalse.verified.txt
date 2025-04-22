@@ -1,0 +1,2 @@
+﻿{"@t":"2020-01-01T00:00:00.0000000Z","@m":"PreHook:\"TestSignal\",\"test-message-id\",\"test-trace-id\"","@i":"hash","SignalType":"TestSignal","SignalId":"test-message-id","TraceId":"test-trace-id","SourceContext":"CustomCategory_TestSignal"}
+{"@t":"2020-01-01T00:00:00.0000000Z","@m":"PostHook:\"test-message-id\",\"test-trace-id\"","@i":"hash","SignalId":"test-message-id","TraceId":"test-trace-id","SourceContext":"CustomCategory_TestSignal"}

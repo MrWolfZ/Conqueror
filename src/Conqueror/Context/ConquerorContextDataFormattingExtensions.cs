@@ -105,7 +105,7 @@ public static class ConquerorContextDataFormattingExtensions
     {
         foreach (var value in values)
         {
-            int index = 0;
+            var index = 0;
             while (index < value.Length)
             {
                 index = DecodeFromTypeTag(ctx, value, index);

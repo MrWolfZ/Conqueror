@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestSignalWithCustomJsonTypeInfo[0]
+      PreHook:TestSignalWithCustomJsonTypeInfo,test-message-id,test-trace-id
+info: CustomCategory_TestSignalWithCustomJsonTypeInfo[0]
+      PostHook:test-message-id,test-trace-id

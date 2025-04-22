@@ -7,6 +7,6 @@ public static class ConquerorServiceCollectionExtensions
     public static IServiceCollection AddConqueror(this IServiceCollection services)
     {
         return services.AddConquerorMessaging()
-                       .AddConquerorEventing();
+                       .AddConquerorSignalling();
     }
 }

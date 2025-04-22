@@ -37,7 +37,7 @@ public static class ConquerorMiddlewareAuthorizationMessagePipelineExtensions
     /// </param>
     /// <returns>The message pipeline</returns>
     public static IMessagePipeline<TMessage, TResponse> ConfigureAuthorization<TMessage, TResponse>(this IMessagePipeline<TMessage, TResponse> pipeline,
-                                                                                              Action<AuthorizationMessageMiddlewareConfiguration<TMessage, TResponse>> configure)
+                                                                                                    Action<AuthorizationMessageMiddlewareConfiguration<TMessage, TResponse>> configure)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         return pipeline.Configure<AuthorizationMessageMiddleware<TMessage, TResponse>>(m => configure(m.Configuration));

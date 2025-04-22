@@ -1,0 +1,4 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomSerializedPayloadType[0]
+      PreHook:TestSignalWithCustomSerializedPayloadType,test-message-id,test-trace-id
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomSerializedPayloadType[0]
+      PostHook:test-message-id,test-trace-id

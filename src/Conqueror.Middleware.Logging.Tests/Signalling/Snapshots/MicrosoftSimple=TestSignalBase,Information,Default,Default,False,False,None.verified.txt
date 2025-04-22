@@ -1,0 +1,4 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[441733974]
+      Handling signal with payload {"PayloadSub":11,"PayloadBase":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[1977864143]
+      Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

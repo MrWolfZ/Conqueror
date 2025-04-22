@@ -1,4 +1,0 @@
-﻿info: CustomCategory_TestEventNotificationWithCustomJsonTypeInfo[0]
-      PreHook:TestEventNotificationWithCustomJsonTypeInfo,test-message-id,test-trace-id
-info: CustomCategory_TestEventNotificationWithCustomJsonTypeInfo[0]
-      PostHook:test-message-id,test-trace-id

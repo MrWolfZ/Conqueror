@@ -1,8 +1,0 @@
-﻿info: CustomCategory_TestEventNotification[1915233606]
-      Handling event notification with payload
-      {
-        "Payload": 10
-      }
-      (Event Notification ID: test-message-id, Trace ID: test-trace-id)
-info: CustomCategory_TestEventNotification[749698657]
-      Handled event notification in 123.4560ms (Event Notification ID: test-message-id, Trace ID: test-trace-id)

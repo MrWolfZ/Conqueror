@@ -1,0 +1,4 @@
+﻿info: CustomCategory_TestSignalWithComplexPayload[0]
+      PreHook:TestSignalWithComplexPayload,test-message-id,test-trace-id
+info: CustomCategory_TestSignalWithComplexPayload[0]
+      PostHook:test-message-id,test-trace-id

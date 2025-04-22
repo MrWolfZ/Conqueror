@@ -1,0 +1,4 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignal[0]
+      PreHook:TestSignal,test-message-id,test-trace-id
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignal[0]
+      PostHook:test-message-id,test-trace-id
