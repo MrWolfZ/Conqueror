@@ -5,7 +5,7 @@ public readonly record struct MessageTypesDescriptor(
     TypeDescriptor ResponseTypeDescriptor,
     bool HasJsonSerializerContext)
 {
+    public readonly bool HasJsonSerializerContext = HasJsonSerializerContext;
     public readonly TypeDescriptor MessageTypeDescriptor = MessageTypeDescriptor;
     public readonly TypeDescriptor ResponseTypeDescriptor = ResponseTypeDescriptor;
-    public readonly bool HasJsonSerializerContext = HasJsonSerializerContext;
 }

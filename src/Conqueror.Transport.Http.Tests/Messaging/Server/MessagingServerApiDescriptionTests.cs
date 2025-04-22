@@ -145,6 +145,6 @@ public sealed class MessagingServerApiDescriptionTests
         OperationType.Options => "OPTIONS",
         OperationType.Trace => "TRACE",
         OperationType.Patch => "PATCH",
-        _ => throw new ArgumentOutOfRangeException(nameof(operationType), operationType, null)
+        _ => throw new ArgumentOutOfRangeException(nameof(operationType), operationType, null),
     };
 }

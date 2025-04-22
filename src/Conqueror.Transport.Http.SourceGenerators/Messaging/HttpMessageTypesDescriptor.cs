@@ -13,13 +13,13 @@ public readonly record struct HttpMessageTypesDescriptor(
     string? Name,
     string? ApiGroupName)
 {
-    public readonly MessageTypesDescriptor MessageTypesDescriptor = MessageTypesDescriptor;
-    public readonly string? HttpMethod = HttpMethod;
-    public readonly string? PathPrefix = PathPrefix;
-    public readonly string? Path = Path;
-    public readonly string? FullPath = FullPath;
-    public readonly string? Version = Version;
-    public readonly int? SuccessStatusCode = SuccessStatusCode;
-    public readonly string? Name = Name;
     public readonly string? ApiGroupName = ApiGroupName;
+    public readonly string? FullPath = FullPath;
+    public readonly string? HttpMethod = HttpMethod;
+    public readonly MessageTypesDescriptor MessageTypesDescriptor = MessageTypesDescriptor;
+    public readonly string? Name = Name;
+    public readonly string? Path = Path;
+    public readonly string? PathPrefix = PathPrefix;
+    public readonly int? SuccessStatusCode = SuccessStatusCode;
+    public readonly string? Version = Version;
 }

@@ -1,2 +1,0 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling event notification (Event Notification ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Information] Handled event notification in 123.4560ms (Event Notification ID: test-message-id, Trace ID: test-trace-id)

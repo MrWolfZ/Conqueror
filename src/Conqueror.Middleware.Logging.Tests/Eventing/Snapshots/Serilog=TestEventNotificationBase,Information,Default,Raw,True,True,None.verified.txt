@@ -1,9 +1,0 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling event notification with payload TestEventNotificationSub { PayloadBase = 10, PayloadSub = 11 } (Event Notification ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Error] An exception occurred while handling event notification after 123.4560ms (Event Notification ID: test-message-id, Trace ID: test-trace-id)
-Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications+TestException: test exception
-   at Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotificationBaseHandler.Handle(TestEventNotificationBase notification, CancellationToken cancellationToken) in {ProjectDirectory}Eventing/LoggingMiddlewareTestEventNotifications.cs:line 769
-   at Conqueror.Middleware.Logging.Eventing.LoggingEventNotificationMiddleware`1.Execute(EventNotificationMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Eventing/LoggingEventNotificationMiddleware.cs:line 51
-   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
-   at Conqueror.Middleware.Logging.Eventing.LoggingEventNotificationMiddleware`1.Execute(EventNotificationMiddlewareContext`1 ctx)
-   at Conqueror.Eventing.EventNotificationPipelineRunner`1.<>c__DisplayClass3_2.<Execute>b__1(TEventNotification notification, CancellationToken token) in {SolutionDirectory}src/Conqueror/Eventing/EventNotificationPipelineRunner.cs:line 36
-

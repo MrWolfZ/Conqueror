@@ -10,11 +10,11 @@ public sealed partial record TestMessage
 
 public sealed record TestMessageResponse(int Payload);
 
-internal sealed class TestMessageHandler(IEventNotificationPublishers notificationPublishers) : TestMessage.IHandler
+internal sealed class TestMessageHandler(ISignalPublishers signalPublishers) : TestMessage.IHandler
 {
     public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
     {
-        await notificationPublishers.For(TestEventNotification.T)
+        await signalPublishers.For(TestSignal.T)
                                     .Handle(new() { Payload = message.Payload }, cancellationToken);
 
         return new(message.Payload + 1);

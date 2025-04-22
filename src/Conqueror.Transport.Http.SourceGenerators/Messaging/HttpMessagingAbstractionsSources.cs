@@ -428,7 +428,7 @@ public static class HttpMessagingAbstractionsSources
         if (unsupportedProperties.Count > 0)
         {
             return sb.AppendLineWithIndentation(indentation)
-                    .Append($"throw new global::System.NotSupportedException($\"type '{{typeof({typeDescriptor.Name})}}' contains unsupported properties: {string.Join(", ", unsupportedProperties)}\");").AppendLine();
+                     .Append($"throw new global::System.NotSupportedException($\"type '{{typeof({typeDescriptor.Name})}}' contains unsupported properties: {string.Join(", ", unsupportedProperties)}\");").AppendLine();
         }
 
         return sb.AppendLineWithIndentation(indentation)

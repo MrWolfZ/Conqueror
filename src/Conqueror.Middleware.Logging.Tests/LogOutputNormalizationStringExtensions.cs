@@ -35,7 +35,7 @@ internal static class LogOutputNormalizationStringExtensions
         return logOutput.Replace(@"src\", "src/")
                         .Replace(@"Conqueror\", "Conqueror/")
                         .Replace(@"Messaging\", "Messaging/")
-                        .Replace(@"Eventing\", "Eventing/")
+                        .Replace(@"Signalling\", "Signalling/")
                         .Replace(@"Streaming\", "Streaming/")
                         .Replace(@"Logging\", "Logging/")
                         .Replace(@"Tests\", "Tests/")

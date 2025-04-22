@@ -1,4 +1,0 @@
-﻿info: Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotification[1915233606]
-      Handling event notification (Event Notification ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Eventing.LoggingMiddlewareTestEventNotifications.TestEventNotification[749698657]
-      Handled event notification in 123.4560ms (Event Notification ID: test-message-id, Trace ID: test-trace-id)

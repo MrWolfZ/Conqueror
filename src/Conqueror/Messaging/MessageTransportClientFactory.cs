@@ -6,9 +6,9 @@ namespace Conqueror.Messaging;
 internal sealed class MessageTransportClientFactory<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    private readonly IMessageTransportClient<TMessage, TResponse>? transportClient;
-    private readonly ConfigureMessageTransportClient<TMessage, TResponse>? syncTransportClientFactory;
     private readonly ConfigureMessageTransportClientAsync<TMessage, TResponse>? asyncTransportClientFactory;
+    private readonly ConfigureMessageTransportClient<TMessage, TResponse>? syncTransportClientFactory;
+    private readonly IMessageTransportClient<TMessage, TResponse>? transportClient;
 
     public MessageTransportClientFactory(IMessageTransportClient<TMessage, TResponse> transportClient)
     {

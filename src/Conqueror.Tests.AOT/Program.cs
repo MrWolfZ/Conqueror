@@ -11,7 +11,7 @@ var builder = Host.CreateDefaultBuilder();
 builder.ConfigureServices(services =>
 {
     services.AddMessageHandler<TestMessageHandler>()
-            .AddEventNotificationHandler<TestEventNotificationHandler>();
+            .AddSignalHandler<TestSignalHandler>();
 });
 
 var host = builder.Build();

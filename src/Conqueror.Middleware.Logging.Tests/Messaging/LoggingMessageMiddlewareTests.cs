@@ -77,8 +77,7 @@ public sealed class LoggingMessageMiddlewareTests
         {
             foreach (var (cat, lvl, messagePattern) in expectedLogEntries)
             {
-                Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(
-                                e => e.Cat == cat && e.Lvl == lvl && messagePattern.IsMatch(e.Msg)),
+                Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Cat == cat && e.Lvl == lvl && messagePattern.IsMatch(e.Msg)),
                             $"expected cat={cat}, lvl={lvl}, message pattern={messagePattern}");
             }
         });
@@ -377,8 +376,7 @@ public sealed class LoggingMessageMiddlewareTests
             var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
             // three matches: server, hook on server, client
-            Assert.That(logEntries, Has.Exactly(3).Matches<(string Cat, LogLevel Lvl, string Msg)>(
-                            e => e.Lvl == LogLevel.Error && e.Msg.Contains(nameof(GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace))));
+            Assert.That(logEntries, Has.Exactly(3).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Error && e.Msg.Contains(nameof(GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace))));
 
             var numberOfTimesExceptionMessageContainsStack = thrownException.ToString()
                                                                             .Split([nameof(GivenHandlerWithLoggingMiddleware_WhenHandlerThrows_ExceptionGetsLoggedWithFullStackTrace)],
@@ -470,8 +468,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
-        Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(
-                        e => e.Lvl == LogLevel.Error && e.Msg.Contains("An exception occurred while executing logging hook")));
+        Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Error && e.Msg.Contains("An exception occurred while executing logging hook")));
     }
 
     [Test]
@@ -504,8 +501,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
-        Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(
-                        e => e.Lvl == LogLevel.Debug && e.Msg.Contains("{\"Payload\":10}")));
+        Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Lvl == LogLevel.Debug && e.Msg.Contains("{\"Payload\":10}")));
     }
 
     [Test]

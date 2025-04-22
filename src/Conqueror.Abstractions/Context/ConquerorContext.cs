@@ -4,7 +4,7 @@ using System;
 namespace Conqueror;
 
 /// <summary>
-///     Encapsulates contextual information for conqueror operations (i.e. commands, queries, and events).
+///     Encapsulates contextual information for conqueror operations (i.e. messages, streaming requests, and signals).
 /// </summary>
 public abstract class ConquerorContext : IDisposable
 {

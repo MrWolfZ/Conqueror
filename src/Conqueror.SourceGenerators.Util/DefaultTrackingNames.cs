@@ -1,7 +1,7 @@
 ﻿namespace Conqueror.SourceGenerators.Util;
 
 /// <summary>
-/// Names that are attached to incremental generator stages for tracking
+///     Names that are attached to incremental generator stages for tracking
 /// </summary>
 public class DefaultTrackingNames
 {
