@@ -16,7 +16,7 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnume
     /// <summary>
     ///     The underlying <typeparamref name="T" /> array.
     /// </summary>
-    private readonly T[]? arrayField;
+    private readonly T[] arrayField;
 
     /// <summary>
     ///     Creates a new <see cref="EquatableArray{T}" /> instance.
@@ -26,6 +26,8 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnume
     {
         arrayField = array;
     }
+
+    public T this[int i] => arrayField[i];
 
     /// <sinheritdoc />
     public bool Equals(EquatableArray<T> array)
@@ -42,7 +44,7 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnume
     /// <sinheritdoc />
     public override int GetHashCode()
     {
-        if (arrayField is not T[] array)
+        if (arrayField is not { } array)
         {
             return 0;
         }

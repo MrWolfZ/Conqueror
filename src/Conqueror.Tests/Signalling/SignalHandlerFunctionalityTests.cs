@@ -334,7 +334,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
 
     public sealed record TestSignal2Sub(int Payload) : TestSignal2(Payload);
 
-    private sealed class TestSignalHandler(
+    private sealed partial class TestSignalHandler(
         TestObservations observations,
         IServiceProvider serviceProvider,
         Exception? exceptionToThrow = null)
@@ -355,7 +355,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         }
     }
 
-    private sealed class TestSignalHandler2(
+    private sealed partial class TestSignalHandler2(
         TestObservations observations,
         IServiceProvider serviceProvider,
         Exception? exceptionToThrow = null)
@@ -376,7 +376,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         }
     }
 
-    private sealed class MultiTestSignalHandler(
+    private sealed partial class MultiTestSignalHandler(
         TestObservations observations,
         IServiceProvider serviceProvider)
         : TestSignal.IHandler,
@@ -401,7 +401,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         }
     }
 
-    private sealed class MultiHierarchyTestSignalHandler(
+    private sealed partial class MultiHierarchyTestSignalHandler(
         TestObservations observations,
         IServiceProvider serviceProvider)
         : TestSignal.IHandler,
@@ -426,7 +426,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
         }
     }
 
-    private sealed class TestSignalHandlerWithDisabledInProcessTransport(TestObservations observations) : TestSignal.IHandler
+    private sealed partial class TestSignalHandlerWithDisabledInProcessTransport(TestObservations observations) : TestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -436,10 +436,10 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
             observations.CancellationTokens.Add(cancellationToken);
         }
 
-        static void IGeneratedSignalHandler.ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver) => receiver.Disable();
+        static void ISignalHandler.ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver) => receiver.Disable();
     }
 
-    private sealed class DisposableSignalHandler(DisposalObservation observation) : TestSignal.IHandler, IDisposable
+    private sealed partial class DisposableSignalHandler(DisposalObservation observation) : TestSignal.IHandler, IDisposable
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -517,7 +517,7 @@ public sealed partial class SignalHandlerFunctionalityAssemblyScanningTests : Si
     public sealed partial record TestSignal2(int Payload);
 
     // ReSharper disable once UnusedType.Global (accessed via reflection)
-    public sealed class TestSignalForAssemblyScanningHandler(
+    public sealed partial class TestSignalForAssemblyScanningHandler(
         TestObservations observations,
         IServiceProvider serviceProvider,
         Exception? exception = null)
@@ -544,7 +544,7 @@ public sealed partial class SignalHandlerFunctionalityAssemblyScanningTests : Si
         }
     }
 
-    private sealed class TestSignalHandler(
+    private sealed partial class TestSignalHandler(
         TestObservations observations)
         : TestSignal.IHandler
     {

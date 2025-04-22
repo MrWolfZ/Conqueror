@@ -7,8 +7,8 @@ namespace Conqueror;
 public interface ISignalTransportRegistry
 {
     TTypesInjector? GetTypesInjectorForSignalType<TTypesInjector>(Type signalType)
-        where TTypesInjector : class, ISignalTypesInjector;
+        where TTypesInjector : class, ISignalHandlerTypesInjector;
 
     IReadOnlyCollection<ISignalReceiverHandlerInvoker<TTypesInjector>> GetSignalInvokersForReceiver<TTypesInjector>()
-        where TTypesInjector : class, ISignalTypesInjector;
+        where TTypesInjector : class, ISignalHandlerTypesInjector;
 }

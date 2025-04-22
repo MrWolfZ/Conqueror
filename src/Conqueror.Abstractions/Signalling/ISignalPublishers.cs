@@ -1,21 +1,13 @@
-using System.Diagnostics.CodeAnalysis;
-
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
 public interface ISignalPublishers
 {
-    THandler For<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TSignal,
-        THandler>()
+    TIHandler For<TSignal, TIHandler>()
         where TSignal : class, ISignal<TSignal>
-        where THandler : class, ISignalHandler<TSignal, THandler>;
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>;
 
-    THandler For<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TSignal,
-        THandler>(SignalTypes<TSignal, THandler> signalTypes)
+    TIHandler For<TSignal, TIHandler>(SignalTypes<TSignal, TIHandler> signalTypes)
         where TSignal : class, ISignal<TSignal>
-        where THandler : class, ISignalHandler<TSignal, THandler>;
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>;
 }

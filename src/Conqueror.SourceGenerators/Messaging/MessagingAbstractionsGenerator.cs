@@ -10,6 +10,7 @@ public sealed class MessagingAbstractionsGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.InitializeCoreMessageAbstractionsGenerator("Conqueror.MessageAttribute");
+        context.InitializeCoreMessageAbstractionsGenerator("Message", "Conqueror.MessageAttribute");
+        context.InitializeCoreMessageAbstractionsGenerator("Message", "Conqueror.MessageAttribute`1");
     }
 }

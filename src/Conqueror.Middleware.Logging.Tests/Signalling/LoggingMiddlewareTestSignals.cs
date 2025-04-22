@@ -23,8 +23,8 @@ public static partial class LoggingMiddlewareTestSignals
         this IServiceCollection services,
         SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, IGeneratedSignalHandler<TSignal, THandlerInterface>
-        where THandler : class, IGeneratedSignalHandler
+        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+        where THandler : class, ISignalHandler
     {
         _ = services.AddSignalHandler<THandler>()
                     .AddSingleton<ISignalTestCasePipelineConfiguration<TSignal>>(testCase);
@@ -311,8 +311,8 @@ public static partial class LoggingMiddlewareTestSignals
 
     public sealed class SignalTestCase<TSignal, THandlerInterface, THandler> : ISignalTestCasePipelineConfiguration<TSignal>
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, IGeneratedSignalHandler<TSignal, THandlerInterface>
-        where THandler : class, IGeneratedSignalHandler
+        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+        where THandler : class, ISignalHandler
     {
         private readonly string? expectedLogCategory;
 
@@ -564,7 +564,7 @@ public static partial class LoggingMiddlewareTestSignals
         public int Payload { get; init; }
     }
 
-    public sealed class TestSignalHandler(Exception? exception = null) : TestSignal.IHandler
+    public sealed partial class TestSignalHandler(Exception? exception = null) : TestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -585,7 +585,7 @@ public static partial class LoggingMiddlewareTestSignals
     [Signal]
     public sealed partial record TestSignalWithoutPayload;
 
-    public sealed class TestSignalWithoutPayloadHandler(Exception? exception = null) : TestSignalWithoutPayload.IHandler
+    public sealed partial class TestSignalWithoutPayloadHandler(Exception? exception = null) : TestSignalWithoutPayload.IHandler
     {
         public async Task Handle(TestSignalWithoutPayload signal, CancellationToken cancellationToken = default)
         {
@@ -620,7 +620,7 @@ public static partial class LoggingMiddlewareTestSignals
         public required int? Payload2 { get; init; }
     }
 
-    public sealed class TestSignalWithComplexPayloadHandler(Exception? exception = null) : TestSignalWithComplexPayload.IHandler
+    public sealed partial class TestSignalWithComplexPayloadHandler(Exception? exception = null) : TestSignalWithComplexPayload.IHandler
     {
         public async Task Handle(TestSignalWithComplexPayload signal, CancellationToken cancellationToken = default)
         {
@@ -647,7 +647,7 @@ public static partial class LoggingMiddlewareTestSignals
     [JsonConverter(typeof(TestSignalWithCustomSerializedPayloadTypeHandler.PayloadJsonConverter))]
     public sealed record TestSignalWithCustomSerializedPayloadTypePayload(int Payload);
 
-    public sealed class TestSignalWithCustomSerializedPayloadTypeHandler(Exception? exception = null) : TestSignalWithCustomSerializedPayloadType.IHandler
+    public sealed partial class TestSignalWithCustomSerializedPayloadTypeHandler(Exception? exception = null) : TestSignalWithCustomSerializedPayloadType.IHandler
     {
         public async Task Handle(TestSignalWithCustomSerializedPayloadType signal, CancellationToken cancellationToken = default)
         {
@@ -684,7 +684,7 @@ public static partial class LoggingMiddlewareTestSignals
         public int SignalPayload { get; init; }
     }
 
-    public sealed class TestSignalWithCustomJsonTypeInfoHandler(Exception? exception = null) : TestSignalWithCustomJsonTypeInfo.IHandler
+    public sealed partial class TestSignalWithCustomJsonTypeInfoHandler(Exception? exception = null) : TestSignalWithCustomJsonTypeInfo.IHandler
     {
         public async Task Handle(TestSignalWithCustomJsonTypeInfo signal, CancellationToken cancellationToken = default)
         {
@@ -712,7 +712,7 @@ public static partial class LoggingMiddlewareTestSignals
         public int Payload { get; init; }
     }
 
-    public sealed class TestSignalWithCustomTransportHandler(Exception? exception = null) : TestSignalWithCustomTransport.IHandler
+    public sealed partial class TestSignalWithCustomTransportHandler(Exception? exception = null) : TestSignalWithCustomTransport.IHandler
     {
         public async Task Handle(TestSignalWithCustomTransport signal, CancellationToken cancellationToken = default)
         {
@@ -757,7 +757,7 @@ public static partial class LoggingMiddlewareTestSignals
         public int PayloadSub { get; init; }
     }
 
-    public sealed class TestSignalBaseHandler(Exception? exception = null) : TestSignalBase.IHandler
+    public sealed partial class TestSignalBaseHandler(Exception? exception = null) : TestSignalBase.IHandler
     {
         public async Task Handle(TestSignalBase signal, CancellationToken cancellationToken = default)
         {

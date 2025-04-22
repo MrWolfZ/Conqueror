@@ -7,9 +7,9 @@ using Microsoft.CodeAnalysis;
 namespace Conqueror.SourceGenerators.Tests.Signalling;
 
 [TestFixture]
-public sealed class SignallingAbstractionsGeneratorTests
+public sealed class SignalTypeGeneratorTests
 {
-    private readonly IReadOnlyCollection<IIncrementalGenerator> generators = [new SignallingAbstractionsGenerator()];
+    private readonly IReadOnlyCollection<IIncrementalGenerator> generators = [new SignalTypeGenerator()];
     private readonly IReadOnlyCollection<Assembly> assembliesToLoad = [typeof(ISignalIdFactory).Assembly];
 
     [Test]
@@ -239,12 +239,133 @@ partial class Container
         return Verify(output, Settings());
     }
 
+    [Test]
+    public Task GivenTestSignalForTransport_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"#nullable enable
+
+using Conqueror;
+using Conqueror.Signalling;
+using System;
+
+namespace Generator.Tests;
+
+[SignalTransport(Prefix = ""TestTransport"", Namespace = ""Generator.Tests"")]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class TestTransportSignalAttribute : Attribute
+{
+    public string? StringProperty { get; init; }
+
+    public int IntProperty { get; init; }
+
+    public int[]? IntArrayProperty { get; init; }
+
+    public string? NullProperty { get; init; }
+
+    public string? UnsetProperty { get; init; }
+}
+
+public interface ITestTransportSignal<TSignal> : ISignal<TSignal>
+    where TSignal : class, ITestTransportSignal<TSignal>
+{
+    static virtual string StringProperty { get; set; } = ""Default"";
+
+    static virtual int IntProperty { get; set; }
+
+    static virtual int[] IntArrayProperty { get; set; } = [];
+
+    static virtual string? NullProperty { get; set; }
+
+    static virtual string? UnsetProperty { get; set; }
+}
+
+public interface ITestTransportSignalHandler<TSignal, TIHandler>
+    where TSignal : class, ITestTransportSignal<TSignal>
+    where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+{
+    static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
+        where THandler : class, TIHandler
+        => throw new NotImplementedException();
+}
+
+[TestTransportSignal(StringProperty = ""Test"", IntProperty = 1, IntArrayProperty = new[] { 1, 2, 3 }, NullProperty = null)]
+public partial record TestSignal;";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenTestSignalForMultipleTransports_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"#nullable enable
+
+using Conqueror;
+using Conqueror.Signalling;
+using System;
+
+namespace Generator.Tests;
+
+[SignalTransport(Prefix = ""TestTransport"", Namespace = ""Generator.Tests"")]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class TestTransportSignalAttribute : Attribute
+{
+    public string? StringProperty { get; init; }
+}
+
+[SignalTransport(Prefix = ""TestTransport2"", Namespace = ""Generator.Tests"")]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class TestTransport2SignalAttribute : Attribute;
+
+public interface ITestTransportSignal<TSignal> : ISignal<TSignal>
+    where TSignal : class, ITestTransportSignal<TSignal>
+{
+    static virtual string StringProperty { get; set; } = ""Default"";
+}
+
+public interface ITestTransport2Signal<TSignal> : ISignal<TSignal>
+    where TSignal : class, ITestTransport2Signal<TSignal>
+{
+    static virtual string? StringProperty { get; set; }
+}
+
+public interface ITestTransportSignalHandler<TSignal, TIHandler>
+    where TSignal : class, ITestTransportSignal<TSignal>
+    where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+{
+    static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
+        where THandler : class, TIHandler
+        => throw new NotImplementedException();
+}
+
+public interface ITestTransport2SignalHandler<TSignal, TIHandler>
+    where TSignal : class, ITestTransport2Signal<TSignal>
+    where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
+{
+    static ISignalHandlerTypesInjector CreateTestTransport2TypesInjector<THandler>()
+        where THandler : class, TIHandler
+        => throw new NotImplementedException();
+}
+
+[Signal]
+[TestTransportSignal(StringProperty = ""Test"")]
+[TestTransport2Signal]
+public partial record TestSignal;";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
     private static VerifySettings Settings()
     {
         var settings = new VerifySettings();
         settings.ScrubLinesWithReplace(line => line.ReplaceGeneratorVersion());
         settings.UseDirectory("Snapshots");
-        settings.UseTypeName(nameof(SignallingAbstractionsGeneratorTests));
+        settings.UseTypeName(nameof(SignalTypeGeneratorTests));
         settings.DisableRequireUniquePrefix();
         settings.DisableDiff();
 

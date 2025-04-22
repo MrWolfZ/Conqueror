@@ -23,8 +23,8 @@ public sealed class LoggingSignalMiddlewareTests
     public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
         SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, IGeneratedSignalHandler<TSignal, THandlerInterface>
-        where THandler : class, IGeneratedSignalHandler
+        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+        where THandler : class, ISignalHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services => services.RegisterSignalType(testCase),
@@ -88,8 +88,8 @@ public sealed class LoggingSignalMiddlewareTests
     public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
         SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, IGeneratedSignalHandler<TSignal, THandlerInterface>
-        where THandler : class, IGeneratedSignalHandler
+        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+        where THandler : class, ISignalHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -140,8 +140,8 @@ public sealed class LoggingSignalMiddlewareTests
     public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
         SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, IGeneratedSignalHandler<TSignal, THandlerInterface>
-        where THandler : class, IGeneratedSignalHandler
+        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+        where THandler : class, ISignalHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -192,8 +192,8 @@ public sealed class LoggingSignalMiddlewareTests
     public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
         SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, IGeneratedSignalHandler<TSignal, THandlerInterface>
-        where THandler : class, IGeneratedSignalHandler
+        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+        where THandler : class, ISignalHandler
     {
         SelfLog.Enable(Console.Error);
 
@@ -252,8 +252,8 @@ public sealed class LoggingSignalMiddlewareTests
     public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
         SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, IGeneratedSignalHandler<TSignal, THandlerInterface>
-        where THandler : class, IGeneratedSignalHandler
+        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+        where THandler : class, ISignalHandler
     {
         SelfLog.Enable(Console.Error);
 

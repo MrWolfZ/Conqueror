@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -12,15 +11,9 @@ namespace Conqueror;
 ///     the types.
 /// </summary>
 /// <typeparam name="TSignal">the signal type</typeparam>
-public interface ISignal<
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-    out TSignal>
+public interface ISignal<out TSignal>
     where TSignal : class, ISignal<TSignal>
 {
-    static abstract IDefaultSignalTypesInjector DefaultTypeInjector { get; }
-
-    static abstract IReadOnlyCollection<ISignalTypesInjector> TypeInjectors { get; }
-
     /// <summary>
     ///     Some transports must be able to construct an instance of this signal
     ///     if it has no properties, but since this is only known to the actual
@@ -41,21 +34,14 @@ public interface ISignal<
     /// </summary>
     static virtual JsonSerializerContext? JsonSerializerContext => null;
 
-    static virtual IEnumerable<PropertyInfo> PublicProperties => typeof(TSignal).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+    static abstract IEnumerable<PropertyInfo> PublicProperties { get; }
 }
 
 /// <summary>
 ///     This helper class is only used for enhanced type inference.
 /// </summary>
 /// <typeparam name="TSignal">the signal type</typeparam>
-/// <typeparam name="THandler">the handler type</typeparam>
-public sealed class SignalTypes<TSignal, THandler>
+/// <typeparam name="TIHandler">the handler interface type</typeparam>
+public sealed class SignalTypes<TSignal, TIHandler>
     where TSignal : class, ISignal<TSignal>
-    where THandler : class, ISignalHandler<TSignal, THandler>
-{
-    public static readonly SignalTypes<TSignal, THandler> Default = new();
-
-    private SignalTypes()
-    {
-    }
-}
+    where TIHandler : class, ISignalHandler<TSignal, TIHandler>;

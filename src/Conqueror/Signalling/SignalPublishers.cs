@@ -1,46 +1,34 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Conqueror.Signalling;
 
 internal sealed class SignalPublishers(IServiceProvider serviceProvider) : ISignalPublishers
 {
-    public THandler For<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TSignal,
-        THandler>()
+    public TIHandler For<TSignal, TIHandler>()
         where TSignal : class, ISignal<TSignal>
-        where THandler : class, ISignalHandler<TSignal, THandler>
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return TSignal.DefaultTypeInjector.CreateWithSignalTypes(new Injectable<THandler>(serviceProvider));
+        return TIHandler.CoreTypesInjector.Create(new Injectable<TIHandler>(serviceProvider));
     }
 
-    public THandler For<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TSignal,
-        THandler>(SignalTypes<TSignal, THandler> signalTypes)
+    public TIHandler For<TSignal, TIHandler>(SignalTypes<TSignal, TIHandler> signalTypes)
         where TSignal : class, ISignal<TSignal>
-        where THandler : class, ISignalHandler<TSignal, THandler>
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return TSignal.DefaultTypeInjector.CreateWithSignalTypes(new Injectable<THandler>(serviceProvider));
+        return TIHandler.CoreTypesInjector.Create(new Injectable<TIHandler>(serviceProvider));
     }
 
-    private sealed class Injectable<THandlerParam>(IServiceProvider serviceProvider) : IDefaultSignalTypesInjectable<THandlerParam>
+    private sealed class Injectable<THandlerParam>(IServiceProvider serviceProvider) : ICoreSignalHandlerTypesInjectable<THandlerParam>
         where THandlerParam : class
     {
-        THandlerParam IDefaultSignalTypesInjectable<THandlerParam>
-            .WithInjectedTypes<
-                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-                TSignal,
-                TGeneratedHandlerInterface,
-                TGeneratedHandlerAdapter>()
+        THandlerParam ICoreSignalHandlerTypesInjectable<THandlerParam>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
         {
             var dispatcher = new SignalDispatcher<TSignal>(serviceProvider,
                                                            new(b => b.UseInProcessWithSequentialBroadcastingStrategy()),
                                                            null,
                                                            SignalTransportRole.Publisher);
 
-            var adapter = new TGeneratedHandlerAdapter
+            var adapter = new TProxy
             {
                 Dispatcher = dispatcher,
             };

@@ -8,7 +8,7 @@ internal sealed class SignalReceiverHandlerInvoker<TTypesInjector>(
     SignalHandlerRegistration registration,
     TTypesInjector typesInjector)
     : ISignalReceiverHandlerInvoker<TTypesInjector>
-    where TTypesInjector : class, ISignalTypesInjector
+    where TTypesInjector : class, ISignalHandlerTypesInjector
 {
     public Type SignalType { get; } = registration.SignalType;
 

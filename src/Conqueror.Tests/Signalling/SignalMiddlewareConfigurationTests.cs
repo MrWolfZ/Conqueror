@@ -104,7 +104,7 @@ public sealed partial class SignalMiddlewareConfigurationTests
     [Signal]
     private sealed partial record TestSignal;
 
-    private sealed class TestSignalHandler : TestSignal.IHandler
+    private sealed partial class TestSignalHandler : TestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {

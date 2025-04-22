@@ -8,7 +8,7 @@ public sealed partial record TestSignal
     public required int Payload { get; init; }
 }
 
-internal sealed class TestSignalHandler : TestSignal.IHandler
+internal sealed partial class TestSignalHandler : TestSignal.IHandler
 {
     public Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
     {

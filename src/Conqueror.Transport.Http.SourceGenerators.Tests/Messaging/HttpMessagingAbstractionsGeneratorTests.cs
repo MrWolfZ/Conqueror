@@ -268,7 +268,7 @@ public record TestMessageResponse(int Payload);";
 
 namespace Generator.Tests;
 
-[CustomHttpMessageAttribute]
+[CustomHttpMessage]
 public partial record TestMessage
 {
     public required int Payload { get; init; }

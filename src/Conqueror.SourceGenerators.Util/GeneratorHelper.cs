@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -24,10 +25,34 @@ public static class GeneratorHelper
             GetTypeConstraints(symbol as INamedTypeSymbol),
             GetAttributes(symbol),
             GetProperties(symbol),
+            GetMethods(symbol),
             GetBaseTypes(symbol),
             GetInterfaces(symbol),
             GetParentClasses(symbol, semanticModel),
             Enumerable: GenerateEnumerableDescriptor(symbol));
+    }
+
+    public static EquatableArray<AttributeParameterDescriptor> GetAttributeProperties(AttributeData attributeData)
+    {
+        var result = new AttributeParameterDescriptor[attributeData.NamedArguments.Length];
+
+        for (var i = 0; i < attributeData.NamedArguments.Length; i += 1)
+        {
+            var namedArgument = attributeData.NamedArguments[i];
+            result[i] = new(namedArgument.Key,
+                            namedArgument.Value.Type?.ToString() ?? "object?",
+                            namedArgument.Value.Kind == TypedConstantKind.Array,
+                            namedArgument.Value.Kind == TypedConstantKind.Primitive,
+                            GetValue(namedArgument.Value));
+        }
+
+        return new(result);
+
+        AttributeParameterValueDescriptor GetValue(TypedConstant value)
+            => value.Kind == TypedConstantKind.Array ? GetArrayValue(value.Values) : new(value.Value, null, value.IsNull);
+
+        AttributeParameterValueDescriptor GetArrayValue(ImmutableArray<TypedConstant> values)
+            => new(null, new(values.Select(GetValue).ToArray()), false);
     }
 
     private static EnumerableDescriptor? GenerateEnumerableDescriptor(ITypeSymbol symbol)
@@ -142,30 +167,13 @@ public static class GeneratorHelper
 
     private static EquatableArray<AttributeDescriptor> GetAttributes(ITypeSymbol symbol)
     {
-        return new(symbol.GetAttributes().Where(a => a.AttributeClass is not null)
+        return new(symbol.GetAttributes()
+                         .Where(a => a.AttributeClass?.ContainingNamespace.ToString().StartsWith("Conqueror") ?? false)
                          .Select(a => new AttributeDescriptor(a.AttributeClass!.Name,
                                                               a.AttributeClass.ContainingNamespace?.ToString() ?? string.Empty,
                                                               a.AttributeClass.ToString(),
-                                                              GetAttributeBaseTypes(a.AttributeClass)))
+                                                              GetAttributes(a.AttributeClass)))
                          .ToArray());
-    }
-
-    private static EquatableArray<BaseAttributeTypeDescriptor> GetAttributeBaseTypes(ITypeSymbol symbol)
-    {
-        var baseType = symbol.BaseType;
-
-        var result = new List<BaseAttributeTypeDescriptor>();
-
-        while (baseType != null && baseType.ToString() != "object")
-        {
-            result.Add(new(baseType.Name,
-                           baseType.ContainingNamespace?.ToString() ?? string.Empty,
-                           baseType.ToString()));
-
-            baseType = baseType.BaseType;
-        }
-
-        return new([..result]);
     }
 
     private static EquatableArray<PropertyDescriptor> GetProperties(ITypeSymbol symbol)
@@ -183,6 +191,16 @@ public static class GeneratorHelper
                                .ToArray();
 
         return new(properties);
+    }
+
+    private static EquatableArray<MethodDescriptor> GetMethods(ITypeSymbol symbol)
+    {
+        var methods = symbol.GetMembers()
+                            .OfType<IMethodSymbol>()
+                            .Select(m => new MethodDescriptor(m.Name, m.ReturnType.ToString()))
+                            .ToArray();
+
+        return new(methods);
     }
 
     private static string? GetTypeConstraints(INamedTypeSymbol? symbol)

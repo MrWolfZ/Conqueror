@@ -191,7 +191,7 @@ internal static class MessagingStringBuilderExtensions
     private static StringBuilder AppendNewKeywordIfNecessary(this StringBuilder sb,
                                                              in TypeDescriptor messageTypeDescriptor)
     {
-        return messageTypeDescriptor.BaseTypes.Any(t => t.Attributes.Any(a => a.BaseTypes.Any(bt => bt.FullyQualifiedName == "Conqueror.Messaging.ConquerorMessageTransportAttribute"))) ? sb.Append("new ") : sb;
+        return messageTypeDescriptor.BaseTypes.Any(t => t.Attributes.Any(a => a.Attributes.Any(bt => bt.FullyQualifiedName == "Conqueror.Messaging.MessageTransportAttribute"))) ? sb.Append("new ") : sb;
     }
 
     private static StringBuilder AppendMessageGeneratedCodeAttribute(this StringBuilder sb,

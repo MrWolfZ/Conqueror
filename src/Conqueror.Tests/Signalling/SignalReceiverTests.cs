@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
-using System.Diagnostics;
+using Conqueror.Signalling;
 
 namespace Conqueror.Tests.Signalling;
 
-public sealed class SignalReceiverTests
+public sealed partial class SignalReceiverTests
 {
     [Test]
     public async Task GivenHandlerWithReceiverConfiguration_WhenRunningReceiver_ReceiverGetsConfiguredCorrectly()
@@ -25,7 +25,7 @@ public sealed class SignalReceiverTests
         Assert.That(configurations, Is.EquivalentTo(new[]
         {
             (typeof(TestSignalWithTestTransport), new() { Parameter = 10, Parameter2 = 1 }),
-            (typeof(TestSignal2WithTestTransport), new TestSignalTransportReceiverConfiguration { Parameter = 20, Parameter2 = 2 }),
+            (typeof(TestSignal2WithTestTransport), new TestTransportSignalReceiverConfiguration { Parameter = 20, Parameter2 = 2 }),
         }));
     }
 
@@ -51,12 +51,12 @@ public sealed class SignalReceiverTests
         Assert.That(configurations1, Is.EquivalentTo(new[]
         {
             (typeof(TestSignalWithTestTransport), new() { Parameter = 10, Parameter2 = 0 }),
-            (typeof(TestSignal2WithTestTransport), new TestSignalTransportReceiverConfiguration { Parameter = 20, Parameter2 = 0 }),
+            (typeof(TestSignal2WithTestTransport), new TestTransportSignalReceiverConfiguration { Parameter = 20, Parameter2 = 0 }),
         }));
 
         Assert.That(configurations2, Is.EquivalentTo(new[]
         {
-            (typeof(TestSignalWithTestTransport2), new TestSignalTransport2ReceiverConfiguration { Parameter = 100 }),
+            (typeof(TestSignalWithTestTransport2), new TestTransport2SignalReceiverConfiguration { Parameter = 100 }),
         }));
     }
 
@@ -81,16 +81,16 @@ public sealed class SignalReceiverTests
 
         Assert.That(configurations1, Is.EquivalentTo(new[]
         {
-            (typeof(TestSignalWithMultipleTestTransports), new TestSignalTransportReceiverConfiguration { Parameter = 10, Parameter2 = 0 }),
+            (typeof(TestSignalWithMultipleTestTransports), new TestTransportSignalReceiverConfiguration { Parameter = 10, Parameter2 = 0 }),
         }));
 
         Assert.That(configurations2, Is.EquivalentTo(new[]
         {
-            (typeof(TestSignalWithMultipleTestTransports), new TestSignalTransport2ReceiverConfiguration { Parameter = 20 }),
+            (typeof(TestSignalWithMultipleTestTransports), new TestTransport2SignalReceiverConfiguration { Parameter = 20 }),
         }));
     }
 
-    private sealed class TestSignalHandler : TestSignalWithTestTransport.IHandler, TestSignal2WithTestTransport.IHandler
+    private sealed partial class TestSignalHandler : TestSignalWithTestTransport.IHandler, TestSignal2WithTestTransport.IHandler
     {
         public Task Handle(TestSignalWithTestTransport signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
@@ -113,7 +113,7 @@ public sealed class SignalReceiverTests
         }
     }
 
-    private sealed class MixedTestSignalHandler
+    private sealed partial class MixedTestSignalHandler
         : TestSignalWithTestTransport.IHandler,
           TestSignal2WithTestTransport.IHandler,
           TestSignalWithTestTransport2.IHandler
@@ -151,7 +151,7 @@ public sealed class SignalReceiverTests
         }
     }
 
-    private sealed class TestSignalWithMultipleTransportsHandler : TestSignalWithMultipleTestTransports.IHandler
+    private sealed partial class TestSignalWithMultipleTransportsHandler : TestSignalWithMultipleTestTransports.IHandler
     {
         public Task Handle(TestSignalWithMultipleTestTransports signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
@@ -184,58 +184,29 @@ public sealed class SignalReceiverTests
     }
 }
 
-[Signal]
-public sealed partial record TestSignalWithTestTransport : ITestTransportSignal<TestSignalWithTestTransport>
-{
-    static ITestTransportTypesInjector ITestTransportSignal.TestTransportTypesInjector
-        => TestTransportTypesInjector<TestSignalWithTestTransport, IHandler>.Default;
+[TestTransportSignal]
+public sealed partial record TestSignalWithTestTransport;
 
-    public partial interface IHandler : IGeneratedTestTransportSignalHandler;
-}
+[TestTransportSignal(DefaultParameter = -2)]
+public sealed partial record TestSignal2WithTestTransport;
 
-[Signal]
-public sealed partial record TestSignal2WithTestTransport : ITestTransportSignal<TestSignal2WithTestTransport>
-{
-    static ITestTransportTypesInjector ITestTransportSignal.TestTransportTypesInjector
-        => TestTransportTypesInjector<TestSignal2WithTestTransport, IHandler>.Default;
+[TestTransport2Signal]
+public sealed partial record TestSignalWithTestTransport2;
 
-    public partial interface IHandler : IGeneratedTestTransportSignalHandler;
-}
-
-[Signal]
-public sealed partial record TestSignalWithTestTransport2 : ITestTransport2Signal<TestSignalWithTestTransport2>
-{
-    static ITestTransport2TypesInjector ITestTransport2Signal.TestTransport2TypesInjector
-        => TestTransport2TypesInjector<TestSignalWithTestTransport2, IHandler>.Default;
-
-    public partial interface IHandler : IGeneratedTestTransport2SignalHandler;
-}
-
-[Signal]
-public sealed partial record TestSignalWithMultipleTestTransports : ITestTransportSignal<TestSignalWithMultipleTestTransports>,
-                                                                    ITestTransport2Signal<TestSignalWithMultipleTestTransports>
-{
-    static ITestTransportTypesInjector ITestTransportSignal.TestTransportTypesInjector
-        => TestTransportTypesInjector<TestSignalWithMultipleTestTransports, IHandler>.Default;
-
-    static ITestTransport2TypesInjector ITestTransport2Signal.TestTransport2TypesInjector
-        => TestTransport2TypesInjector<TestSignalWithMultipleTestTransports, IHandler>.Default;
-
-    public partial interface IHandler : IGeneratedTestTransportSignalHandler;
-
-    public partial interface IHandler : IGeneratedTestTransport2SignalHandler;
-}
+[TestTransportSignal]
+[TestTransport2Signal]
+public sealed partial record TestSignalWithMultipleTestTransports;
 
 file sealed class TestSignalTransportReceiverHost(IServiceProvider serviceProvider, ISignalTransportRegistry registry)
 {
-    public async Task<IReadOnlyCollection<(Type SignalType, TestSignalTransportReceiverConfiguration Configuration)>> Run(CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<(Type SignalType, TestTransportSignalReceiverConfiguration Configuration)>> Run(CancellationToken cancellationToken)
     {
-        var invokers = registry.GetSignalInvokersForReceiver<ITestTransportTypesInjector>();
-        var result = new List<(Type SignalType, TestSignalTransportReceiverConfiguration Configuration)>();
+        var invokers = registry.GetSignalInvokersForReceiver<ITestTransportSignalHandlerTypesInjector>();
+        var result = new List<(Type SignalType, TestTransportSignalReceiverConfiguration Configuration)>();
 
         foreach (var invoker in invokers)
         {
-            var configuration = await invoker.TypesInjector.CreateForTestTransport(new Injectable(serviceProvider, cancellationToken));
+            var configuration = await invoker.TypesInjector.Create(new Injectable(serviceProvider, cancellationToken));
 
             if (configuration is not null)
             {
@@ -246,10 +217,11 @@ file sealed class TestSignalTransportReceiverHost(IServiceProvider serviceProvid
         return result;
     }
 
-    private sealed class Injectable(IServiceProvider serviceProvider, CancellationToken cancellationToken) : ITestTransportTypesInjectable<Task<TestSignalTransportReceiverConfiguration?>>
+    private sealed class Injectable(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        : ITestTransportSignalHandlerTypesInjectable<Task<TestTransportSignalReceiverConfiguration?>>
     {
-        async Task<TestSignalTransportReceiverConfiguration?> ITestTransportTypesInjectable<Task<TestSignalTransportReceiverConfiguration?>>
-            .WithInjectedTypes<TSignal, THandler>()
+        async Task<TestTransportSignalReceiverConfiguration?> ITestTransportSignalHandlerTypesInjectable<Task<TestTransportSignalReceiverConfiguration?>>
+            .WithInjectedTypes<TSignal, TIHandler, THandler>()
         {
             var receiverBuilder = new TestTransportSignalReceiver<TSignal>(serviceProvider, cancellationToken);
             await THandler.ConfigureTestTransportReceiver(receiverBuilder);
@@ -260,14 +232,14 @@ file sealed class TestSignalTransportReceiverHost(IServiceProvider serviceProvid
 
 file sealed class TestSignalTransport2ReceiverHost(IServiceProvider serviceProvider, ISignalTransportRegistry registry)
 {
-    public async Task<IReadOnlyCollection<(Type SignalType, TestSignalTransport2ReceiverConfiguration Configuration)>> Run(CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<(Type SignalType, TestTransport2SignalReceiverConfiguration Configuration)>> Run(CancellationToken cancellationToken)
     {
-        var invokers = registry.GetSignalInvokersForReceiver<ITestTransport2TypesInjector>();
-        var result = new List<(Type SignalType, TestSignalTransport2ReceiverConfiguration Configuration)>();
+        var invokers = registry.GetSignalInvokersForReceiver<ITestTransport2SignalHandlerTypesInjector>();
+        var result = new List<(Type SignalType, TestTransport2SignalReceiverConfiguration Configuration)>();
 
         foreach (var invoker in invokers)
         {
-            var configuration = await invoker.TypesInjector.CreateForTestTransport2(new Injectable(serviceProvider, cancellationToken));
+            var configuration = await invoker.TypesInjector.Create(new Injectable(serviceProvider, cancellationToken));
 
             if (configuration is not null)
             {
@@ -278,10 +250,11 @@ file sealed class TestSignalTransport2ReceiverHost(IServiceProvider serviceProvi
         return result;
     }
 
-    private sealed class Injectable(IServiceProvider serviceProvider, CancellationToken cancellationToken) : ITestTransport2TypesInjectable<Task<TestSignalTransport2ReceiverConfiguration?>>
+    private sealed class Injectable(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        : ITestTransport2TypesInjectable<Task<TestTransport2SignalReceiverConfiguration?>>
     {
-        async Task<TestSignalTransport2ReceiverConfiguration?> ITestTransport2TypesInjectable<Task<TestSignalTransport2ReceiverConfiguration?>>
-            .WithInjectedTypes<TSignal, THandler>()
+        async Task<TestTransport2SignalReceiverConfiguration?> ITestTransport2TypesInjectable<Task<TestTransport2SignalReceiverConfiguration?>>
+            .WithInjectedTypes<TSignal, TIHandler, THandler>()
         {
             var receiverBuilder = new TestTransport2SignalReceiver<TSignal>(serviceProvider, cancellationToken);
             await THandler.ConfigureTestTransport2Receiver(receiverBuilder);
@@ -290,19 +263,37 @@ file sealed class TestSignalTransport2ReceiverHost(IServiceProvider serviceProvi
     }
 }
 
-public interface ITestTransportSignal
+[SignalTransport(Prefix = "TestTransport", Namespace = "Conqueror.Tests.Signalling")]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class TestTransportSignalAttribute : Attribute
 {
-    // must be virtual instead of abstract so that it can be used as a type parameter / constraint
-    // ReSharper disable once UnusedMember.Global (used by reflection)
-    static virtual ITestTransportTypesInjector TestTransportTypesInjector
-        => throw new NotSupportedException("this method should always be implemented by the generic interface");
+    public int DefaultParameter { get; init; }
 }
 
-public interface ITestTransportSignal<T> : ISignal<T>, ITestTransportSignal
-    where T : class, ITestTransportSignal<T>
+public interface ITestTransportSignal<out TSignal> : ISignal<TSignal>
+    where TSignal : class, ITestTransportSignal<TSignal>
 {
     [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "testing")]
     static virtual int DefaultParameter { get; } = -1;
+}
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface ITestTransportSignalHandler<TSignal, TIHandler>
+    where TSignal : class, ITestTransportSignal<TSignal>
+    where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+{
+    static virtual Task ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
+        where T : class, ITestTransportSignal<T>
+    {
+        // by default, we don't configure the receiver
+        return Task.CompletedTask;
+    }
+
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
+        where THandler : class, TIHandler
+        => TestTransportSignalHandlerTypesInjector<TSignal, TIHandler, THandler>.Default;
 }
 
 public interface ITestTransportSignalReceiver<TSignal>
@@ -317,58 +308,30 @@ public interface ITestTransportSignalReceiver<TSignal>
     ITestTransportSignalReceiver<TSignal> WithParameter2(int parameter2);
 }
 
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedTestTransportSignalHandler
+internal interface ITestTransportSignalHandlerTypesInjector : ISignalHandlerTypesInjector
 {
-    static virtual Task ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
-        where T : class, ITestTransportSignal<T>
-    {
-        // by default, we don't configure the receiver
-        return Task.CompletedTask;
-    }
+    TResult Create<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable);
 }
 
-public interface ITestTransportTypesInjector : ISignalTypesInjector
-{
-    TResult CreateForTestTransport<TResult>(ITestTransportTypesInjectable<TResult> injectable);
-}
-
-file sealed class TestTransportTypesInjector<TSignal, THandlerInterface> : ITestTransportTypesInjector
+file sealed class TestTransportSignalHandlerTypesInjector<TSignal, TIHandler, THandler> : ITestTransportSignalHandlerTypesInjector
     where TSignal : class, ITestTransportSignal<TSignal>
-    where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+    where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+    where THandler : class, TIHandler
 {
-    public static readonly TestTransportTypesInjector<TSignal, THandlerInterface> Default = new();
+    public static readonly TestTransportSignalHandlerTypesInjector<TSignal, TIHandler, THandler> Default = new();
 
-    ISignalTypesInjector ISignalTypesInjector.WithHandlerType<THandler>()
-    {
-        Debug.Assert(typeof(THandler).IsAssignableTo(typeof(ISignalHandler<TSignal, THandlerInterface>)),
-                     $"expected handler type '{typeof(THandler)}' to be assignable to '{typeof(ISignalHandler<TSignal, THandlerInterface>)}'");
+    public Type SignalType { get; } = typeof(TSignal);
 
-        return Activator.CreateInstance(typeof(WithHandlerType<>)
-                                            .MakeGenericType(typeof(TSignal), typeof(THandlerInterface), typeof(THandler)))
-                   as ISignalTypesInjector
-               ?? throw new InvalidOperationException("cannot create instance of WithHandlerType<THandler>");
-    }
-
-    public TResult CreateForTestTransport<TResult>(ITestTransportTypesInjectable<TResult> injectable)
-        => throw new NotSupportedException($"handler type must be set via '{nameof(ISignalTypesInjector.WithHandlerType)}'");
-
-    private sealed class WithHandlerType<THandler> : ITestTransportTypesInjector
-        where THandler : class, ISignalHandler<TSignal, THandlerInterface>, IGeneratedTestTransportSignalHandler
-    {
-        public TResult CreateForTestTransport<TResult>(ITestTransportTypesInjectable<TResult> injectable)
-            => injectable.WithInjectedTypes<TSignal, THandler>();
-
-        ISignalTypesInjector ISignalTypesInjector.WithHandlerType<T>()
-            => throw new NotSupportedException("cannot set handler type multiple times for types injector");
-    }
+    public TResult Create<TResult>(ITestTransportSignalHandlerTypesInjectable<TResult> injectable)
+        => injectable.WithInjectedTypes<TSignal, TIHandler, THandler>();
 }
 
-public interface ITestTransportTypesInjectable<out TResult>
+public interface ITestTransportSignalHandlerTypesInjectable<out TResult>
 {
-    TResult WithInjectedTypes<TSignal, THandler>()
+    TResult WithInjectedTypes<TSignal, TIHandler, THandler>()
         where TSignal : class, ITestTransportSignal<TSignal>
-        where THandler : class, IGeneratedTestTransportSignalHandler;
+        where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler;
 }
 
 file sealed class TestTransportSignalReceiver<T>(IServiceProvider serviceProvider, CancellationToken cancellationToken) : ITestTransportSignalReceiver<T>
@@ -378,7 +341,7 @@ file sealed class TestTransportSignalReceiver<T>(IServiceProvider serviceProvide
 
     public CancellationToken CancellationToken { get; } = cancellationToken;
 
-    public TestSignalTransportReceiverConfiguration? Configuration { get; set; }
+    public TestTransportSignalReceiverConfiguration? Configuration { get; set; }
 
     public ITestTransportSignalReceiver<T> Enable(int? parameter = null)
     {
@@ -398,23 +361,38 @@ file sealed class TestTransportSignalReceiver<T>(IServiceProvider serviceProvide
     }
 }
 
-public sealed record TestSignalTransportReceiverConfiguration
+public sealed record TestTransportSignalReceiverConfiguration
 {
     public required int Parameter { get; set; }
 
     public int Parameter2 { get; set; }
 }
 
-public interface ITestTransport2Signal
-{
-    // must be virtual instead of abstract so that it can be used as a type parameter / constraint
-    // ReSharper disable once UnusedMember.Global (used by reflection)
-    static virtual ITestTransport2TypesInjector TestTransport2TypesInjector
-        => throw new NotSupportedException("this method should always be implemented by the generic interface");
-}
+[SignalTransport(Prefix = "TestTransport2", Namespace = "Conqueror.Tests.Signalling")]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class TestTransport2SignalAttribute : Attribute;
 
-public interface ITestTransport2Signal<T> : ISignal<T>, ITestTransport2Signal
-    where T : class, ITestTransport2Signal<T>;
+public interface ITestTransport2Signal<out TSignal> : ISignal<TSignal>
+    where TSignal : class, ITestTransport2Signal<TSignal>;
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface ITestTransport2SignalHandler<TSignal, TIHandler>
+    where TSignal : class, ITestTransport2Signal<TSignal>
+    where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
+{
+    static virtual Task ConfigureTestTransport2Receiver<T>(ITestTransport2SignalReceiver<T> receiver)
+        where T : class, ITestTransport2Signal<T>
+    {
+        // by default, we don't configure the receiver
+        return Task.CompletedTask;
+    }
+
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    static ISignalHandlerTypesInjector CreateTestTransport2TypesInjector<THandler>()
+        where THandler : class, TIHandler
+        => TestTransport2SignalHandlerTypesInjector<TSignal, TIHandler, THandler>.Default;
+}
 
 public interface ITestTransport2SignalReceiver<TSignal>
     where TSignal : class, ITestTransport2Signal<TSignal>
@@ -426,58 +404,30 @@ public interface ITestTransport2SignalReceiver<TSignal>
     ITestTransport2SignalReceiver<TSignal> Enable(int parameter);
 }
 
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedTestTransport2SignalHandler
+public interface ITestTransport2SignalHandlerTypesInjector : ISignalHandlerTypesInjector
 {
-    static virtual Task ConfigureTestTransport2Receiver<T>(ITestTransport2SignalReceiver<T> receiver)
-        where T : class, ITestTransport2Signal<T>
-    {
-        // by default, we don't configure the receiver
-        return Task.CompletedTask;
-    }
+    TResult Create<TResult>(ITestTransport2TypesInjectable<TResult> injectable);
 }
 
-public interface ITestTransport2TypesInjector : ISignalTypesInjector
-{
-    TResult CreateForTestTransport2<TResult>(ITestTransport2TypesInjectable<TResult> injectable);
-}
-
-file sealed class TestTransport2TypesInjector<TSignal, THandlerInterface> : ITestTransport2TypesInjector
+file sealed class TestTransport2SignalHandlerTypesInjector<TSignal, TIHandler, THandler> : ITestTransport2SignalHandlerTypesInjector
     where TSignal : class, ITestTransport2Signal<TSignal>
-    where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+    where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
+    where THandler : class, TIHandler
 {
-    public static readonly TestTransport2TypesInjector<TSignal, THandlerInterface> Default = new();
+    public static readonly TestTransport2SignalHandlerTypesInjector<TSignal, TIHandler, THandler> Default = new();
 
-    ISignalTypesInjector ISignalTypesInjector.WithHandlerType<THandler>()
-    {
-        Debug.Assert(typeof(THandler).IsAssignableTo(typeof(ISignalHandler<TSignal, THandlerInterface>)),
-                     $"expected handler type '{typeof(THandler)}' to be assignable to '{typeof(ISignalHandler<TSignal, THandlerInterface>)}'");
+    public Type SignalType { get; } = typeof(TSignal);
 
-        return Activator.CreateInstance(typeof(WithHandlerType<>)
-                                            .MakeGenericType(typeof(TSignal), typeof(THandlerInterface), typeof(THandler)))
-                   as ISignalTypesInjector
-               ?? throw new InvalidOperationException("cannot create instance of WithHandlerType<THandler>");
-    }
-
-    public TResult CreateForTestTransport2<TResult>(ITestTransport2TypesInjectable<TResult> injectable)
-        => throw new NotSupportedException($"handler type must be set via '{nameof(ISignalTypesInjector.WithHandlerType)}'");
-
-    private sealed class WithHandlerType<THandler> : ITestTransport2TypesInjector
-        where THandler : class, ISignalHandler<TSignal, THandlerInterface>, IGeneratedTestTransport2SignalHandler
-    {
-        public TResult CreateForTestTransport2<TResult>(ITestTransport2TypesInjectable<TResult> injectable)
-            => injectable.WithInjectedTypes<TSignal, THandler>();
-
-        ISignalTypesInjector ISignalTypesInjector.WithHandlerType<T>()
-            => throw new NotSupportedException("cannot set handler type multiple times for types injector");
-    }
+    public TResult Create<TResult>(ITestTransport2TypesInjectable<TResult> injectable)
+        => injectable.WithInjectedTypes<TSignal, TIHandler, THandler>();
 }
 
 public interface ITestTransport2TypesInjectable<out TResult>
 {
-    TResult WithInjectedTypes<TSignal, THandler>()
+    TResult WithInjectedTypes<TSignal, TIHandler, THandler>()
         where TSignal : class, ITestTransport2Signal<TSignal>
-        where THandler : class, IGeneratedTestTransport2SignalHandler;
+        where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler;
 }
 
 file sealed class TestTransport2SignalReceiver<T>(IServiceProvider serviceProvider, CancellationToken cancellationToken) : ITestTransport2SignalReceiver<T>
@@ -487,7 +437,7 @@ file sealed class TestTransport2SignalReceiver<T>(IServiceProvider serviceProvid
 
     public CancellationToken CancellationToken { get; } = cancellationToken;
 
-    public TestSignalTransport2ReceiverConfiguration? Configuration { get; set; }
+    public TestTransport2SignalReceiverConfiguration? Configuration { get; set; }
 
     public ITestTransport2SignalReceiver<T> Enable(int parameter)
     {
@@ -496,7 +446,7 @@ file sealed class TestTransport2SignalReceiver<T>(IServiceProvider serviceProvid
     }
 }
 
-public sealed record TestSignalTransport2ReceiverConfiguration
+public sealed record TestTransport2SignalReceiverConfiguration
 {
     public required int Parameter { get; set; }
 }
