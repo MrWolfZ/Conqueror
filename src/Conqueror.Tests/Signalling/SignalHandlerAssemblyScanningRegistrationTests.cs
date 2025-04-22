@@ -119,7 +119,7 @@ public partial class SignalHandlerAssemblyScanningRegistrationTests
     [Signal]
     protected sealed partial record ProtectedTestSignal;
 
-    public sealed class TestSignalHandler : TestSignal.IHandler
+    public sealed partial class TestSignalHandler : TestSignal.IHandler
     {
         public Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
@@ -131,13 +131,13 @@ public partial class SignalHandlerAssemblyScanningRegistrationTests
             => Task.CompletedTask;
     }
 
-    public abstract class AbstractTestSignalHandler : TestSignal.IHandler
+    public abstract partial class AbstractTestSignalHandler : TestSignal.IHandler
     {
         public Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
     }
 
-    public sealed class MultiTestSignalHandler : TestSignal.IHandler, TestSignal2.IHandler
+    public sealed partial class MultiTestSignalHandler : TestSignal.IHandler, TestSignal2.IHandler
     {
         public Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
@@ -153,19 +153,19 @@ public partial class SignalHandlerAssemblyScanningRegistrationTests
             => Task.CompletedTask;
     }
 
-    protected sealed class ProtectedTestSignalHandler : ProtectedTestSignal.IHandler
+    protected sealed partial class ProtectedTestSignalHandler : ProtectedTestSignal.IHandler
     {
         public Task Handle(ProtectedTestSignal signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
     }
 
-    internal sealed class InternalTestSignalHandler : InternalTestSignal.IHandler
+    internal sealed partial class InternalTestSignalHandler : InternalTestSignal.IHandler
     {
         public Task Handle(InternalTestSignal signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
     }
 
-    private sealed class PrivateTestSignalHandler : PrivateTestSignal.IHandler
+    private sealed partial class PrivateTestSignalHandler : PrivateTestSignal.IHandler
     {
         public Task Handle(PrivateTestSignal signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
@@ -175,7 +175,7 @@ public partial class SignalHandlerAssemblyScanningRegistrationTests
 [Signal]
 internal sealed partial record InternalTopLevelTestSignal;
 
-internal sealed class InternalTopLevelTestSignalHandler : InternalTopLevelTestSignal.IHandler
+internal sealed partial class InternalTopLevelTestSignalHandler : InternalTopLevelTestSignal.IHandler
 {
     public Task Handle(InternalTopLevelTestSignal signal, CancellationToken cancellationToken = default)
         => Task.CompletedTask;

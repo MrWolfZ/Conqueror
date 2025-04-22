@@ -875,7 +875,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         public int Payload { get; init; }
     }
 
-    private sealed class TestSignalHandler(
+    private sealed partial class TestSignalHandler(
         TestObservations observations,
         Func<TestSignalHandler, CancellationToken, Task>? onSignal = null)
         : TestSignal.IHandler,
@@ -910,7 +910,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         }
     }
 
-    private sealed class TestSignalHandler2(
+    private sealed partial class TestSignalHandler2(
         TestObservations observations,
         Func<TestSignalHandler2, CancellationToken, Task>? onSignal = null)
         : TestSignal.IHandler,
@@ -945,7 +945,7 @@ public sealed partial class SignalBroadcastingStrategyTests
         }
     }
 
-    private sealed class TestSignalHandler3(
+    private sealed partial class TestSignalHandler3(
         TestObservations observations,
         Func<TestSignalHandler3, CancellationToken, Task>? onSignal = null)
         : TestSignal.IHandler,

@@ -275,29 +275,29 @@ public sealed partial class SignalHandlerRegistrationTests
     [Signal]
     private sealed partial record TestSignal2;
 
-    private sealed class TestSignalHandler : TestSignal.IHandler
+    private sealed partial class TestSignalHandler : TestSignal.IHandler
     {
         public Task Handle(TestSignal signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestSignal2Handler : TestSignal2.IHandler
+    private sealed partial class TestSignal2Handler : TestSignal2.IHandler
     {
         public Task Handle(TestSignal2 signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class DuplicateTestSignalHandler : TestSignal.IHandler
+    private sealed partial class DuplicateTestSignalHandler : TestSignal.IHandler
     {
         public Task Handle(TestSignal signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class MultiTestSignalHandler : TestSignal.IHandler, TestSignal2.IHandler
+    private sealed partial class MultiTestSignalHandler : TestSignal.IHandler, TestSignal2.IHandler
     {
         public Task Handle(TestSignal signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
         public Task Handle(TestSignal2 signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private abstract class AbstractTestSignalHandler : TestSignal.IHandler
+    private abstract partial class AbstractTestSignalHandler : TestSignal.IHandler
     {
         public Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
             => Task.CompletedTask;

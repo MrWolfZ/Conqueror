@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,13 +11,16 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public interface ISignalHandler<in TSignal, THandler>
-    where TSignal : class, ISignal<TSignal>
-    where THandler : class, ISignalHandler<TSignal, THandler>;
-
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedSignalHandler
+public interface ISignalHandler
 {
+    /// <summary>
+    ///     Implemented by source generator for each handler type. Cannot be abstract since otherwise
+    ///     the generated <code>IHandler</code> types could not be used as generic arguments.
+    /// </summary>
+    static virtual IEnumerable<ISignalHandlerTypesInjector> GetTypeInjectors()
+        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
+
     static virtual void ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
         where T : class, ISignal<T>
     {
@@ -31,19 +36,44 @@ public interface IGeneratedSignalHandler
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedSignalHandler<in TSignal, THandler>
-    : ISignalHandler<TSignal, THandler>, IGeneratedSignalHandler
+public interface ISignalHandler<in TSignal, in TIHandler> : ISignalHandler
     where TSignal : class, ISignal<TSignal>
-    where THandler : class, ISignalHandler<TSignal, THandler>
+    where TIHandler : class, ISignalHandler<TSignal, TIHandler>
 {
-    static abstract Task Invoke(THandler handler, TSignal signal, CancellationToken cancellationToken);
+    internal static virtual ICoreSignalHandlerTypesInjector CoreTypesInjector
+        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
+
+    static virtual Task Invoke(TIHandler handler, TSignal signal, CancellationToken cancellationToken)
+        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler interface type");
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class GeneratedSignalHandlerAdapter<TSignal, THandler, TAdapter> : IConfigurableSignalHandler<TSignal, THandler>
+public interface ISignalHandler<in TSignal, in TIHandler, TProxy> : ISignalHandler<TSignal, TIHandler>
     where TSignal : class, ISignal<TSignal>
-    where THandler : class, ISignalHandler<TSignal, THandler>
-    where TAdapter : GeneratedSignalHandlerAdapter<TSignal, THandler, TAdapter>, THandler, new()
+    where TIHandler : class, ISignalHandler<TSignal, TIHandler, TProxy>
+    where TProxy : SignalHandlerProxy<TSignal, TIHandler, TProxy>, TIHandler, new()
+{
+    /// <summary>
+    ///     We are cheating a bit here by using <see cref="TIHandler" /> as the type parameter for the handler type
+    ///     of the default types injector. This is because this property here is only used to generate publishers
+    ///     with the correct interface (<see cref="ISignalPublishers" />), and we don't need the concrete handler type
+    ///     there.
+    /// </summary>
+    static ICoreSignalHandlerTypesInjector ISignalHandler<TSignal, TIHandler>.CoreTypesInjector
+        => CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy, TIHandler>.Default;
+
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    static ISignalHandlerTypesInjector CreateCoreTypesInjector<THandler>()
+        where THandler : class, TIHandler
+        => CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy, THandler>.Default;
+}
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHandlerProxy<TSignal, TIHandler>
+    where TSignal : class, ISignal<TSignal>
+    where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+    where TProxy : SignalHandlerProxy<TSignal, TIHandler, TProxy>, TIHandler, new()
 {
     internal ISignalDispatcher<TSignal> Dispatcher { get; init; } = null!;
 
@@ -51,18 +81,18 @@ public abstract class GeneratedSignalHandlerAdapter<TSignal, THandler, TAdapter>
     public Task Handle(TSignal signal, CancellationToken cancellationToken = default)
         => Dispatcher.Dispatch(signal, cancellationToken);
 
-    public THandler WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline)
-        => new TAdapter { Dispatcher = Dispatcher.WithPipeline(configurePipeline) };
+    public TIHandler WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline)
+        => new TProxy { Dispatcher = Dispatcher.WithPipeline(configurePipeline) };
 
-    public THandler WithPublisher(ConfigureSignalPublisher<TSignal> configurePublisher)
-        => new TAdapter { Dispatcher = Dispatcher.WithPublisher(configurePublisher) };
+    public TIHandler WithPublisher(ConfigureSignalPublisher<TSignal> configurePublisher)
+        => new TProxy { Dispatcher = Dispatcher.WithPublisher(configurePublisher) };
 
-    public THandler WithPublisher(ConfigureSignalPublisherAsync<TSignal> configurePublisher)
-        => new TAdapter { Dispatcher = Dispatcher.WithPublisher(configurePublisher) };
+    public TIHandler WithPublisher(ConfigureSignalPublisherAsync<TSignal> configurePublisher)
+        => new TProxy { Dispatcher = Dispatcher.WithPublisher(configurePublisher) };
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal interface IConfigurableSignalHandler<TSignal, THandler> : ISignalHandler<TSignal, THandler>
+internal interface ISignalHandlerProxy<TSignal, THandler> : ISignalHandler<TSignal, THandler>
     where TSignal : class, ISignal<TSignal>
     where THandler : class, ISignalHandler<TSignal, THandler>
 {

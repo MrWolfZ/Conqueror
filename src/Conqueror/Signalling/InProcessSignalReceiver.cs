@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +9,7 @@ namespace Conqueror.Signalling;
 
 internal sealed class InProcessSignalReceiver(SignalTransportRegistry registry, IServiceProvider serviceProviderField)
 {
-    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ISignalReceiverHandlerInvoker<IDefaultSignalTypesInjector>>> invokersBySignalType = new();
+    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ISignalReceiverHandlerInvoker<ICoreSignalHandlerTypesInjector>>> invokersBySignalType = new();
 
     public async Task Broadcast<TSignal>(TSignal signal,
                                          IServiceProvider serviceProvider,
@@ -25,32 +24,17 @@ internal sealed class InProcessSignalReceiver(SignalTransportRegistry registry, 
                                   .ConfigureAwait(false);
     }
 
-    private IReadOnlyCollection<ISignalReceiverHandlerInvoker<IDefaultSignalTypesInjector>> GetSignalInvokers(Type signalType)
+    private IReadOnlyCollection<ISignalReceiverHandlerInvoker<ICoreSignalHandlerTypesInjector>> GetSignalInvokers(Type signalType)
     {
-        return registry.GetSignalInvokersForReceiver<IDefaultSignalTypesInjector>()
+        return registry.GetSignalInvokersForReceiver<ICoreSignalHandlerTypesInjector>()
                        .Where(i => signalType.IsAssignableTo(i.SignalType))
-                       .Where(i => i.TypesInjector.CreateWithSignalTypes(new Injectable(serviceProviderField)))
+                       .Where(i => i.TypesInjector.Create(new Injectable(serviceProviderField)))
                        .ToList();
     }
 
-    private sealed class Injectable(IServiceProvider serviceProvider) : IDefaultSignalTypesInjectable<bool>
+    private sealed class Injectable(IServiceProvider serviceProvider) : ICoreSignalHandlerTypesInjectable<bool>
     {
-        bool IDefaultSignalTypesInjectable<bool>.WithInjectedTypes<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TSignal,
-            TGeneratedHandlerInterface,
-            TGeneratedHandlerAdapter>()
-        {
-            // delegate handlers are always active
-            return true;
-        }
-
-        bool IDefaultSignalTypesInjectable<bool>.WithInjectedTypes<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TSignal,
-            TGeneratedHandlerInterface,
-            TGeneratedHandlerAdapter,
-            THandler>()
+        bool ICoreSignalHandlerTypesInjectable<bool>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
         {
             var receiver = new Receiver<TSignal>(serviceProvider);
             THandler.ConfigureInProcessReceiver(receiver);

@@ -10,7 +10,7 @@ public static class SignalHandlerExtensions
         where TSignal : class, ISignal<TSignal>
         where THandler : class, ISignalHandler<TSignal, THandler>
     {
-        if (handler is IConfigurableSignalHandler<TSignal, THandler> c)
+        if (handler is ISignalHandlerProxy<TSignal, THandler> c)
         {
             return c.WithPipeline(configurePipeline);
         }
@@ -23,7 +23,7 @@ public static class SignalHandlerExtensions
         where TSignal : class, ISignal<TSignal>
         where THandler : class, ISignalHandler<TSignal, THandler>
     {
-        if (handler is IConfigurableSignalHandler<TSignal, THandler> c)
+        if (handler is ISignalHandlerProxy<TSignal, THandler> c)
         {
             return c.WithPublisher(configurePublisher);
         }
@@ -36,7 +36,7 @@ public static class SignalHandlerExtensions
         where TSignal : class, ISignal<TSignal>
         where THandler : class, ISignalHandler<TSignal, THandler>
     {
-        if (handler is IConfigurableSignalHandler<TSignal, THandler> c)
+        if (handler is ISignalHandlerProxy<TSignal, THandler> c)
         {
             return c.WithPublisher(configurePublisher);
         }

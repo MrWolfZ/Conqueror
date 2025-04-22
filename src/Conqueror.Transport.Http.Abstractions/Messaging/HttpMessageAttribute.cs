@@ -6,6 +6,7 @@ using Conqueror.Messaging;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
+[MessageTransport(Prefix = "Http", Namespace = "Conqueror")]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class HttpMessageAttribute : ConquerorMessageTransportAttribute
 {
@@ -44,5 +45,6 @@ public class HttpMessageAttribute : ConquerorMessageTransportAttribute
 }
 
 // ReSharper disable once UnusedTypeParameter (used by source generator)
+[MessageTransport(Prefix = "Http", Namespace = "Conqueror")]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class HttpMessageAttribute<TResponse> : HttpMessageAttribute;

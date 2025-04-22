@@ -13,6 +13,7 @@ public readonly record struct TypeDescriptor(
     string? TypeConstraints,
     EquatableArray<AttributeDescriptor> Attributes,
     EquatableArray<PropertyDescriptor> Properties,
+    EquatableArray<MethodDescriptor> Methods,
     EquatableArray<BaseTypeDescriptor> BaseTypes,
     EquatableArray<InterfaceDescriptor> Interfaces,
     EquatableArray<ParentClass> ParentClasses,
@@ -25,6 +26,7 @@ public readonly record struct TypeDescriptor(
     public readonly string FullyQualifiedName = FullyQualifiedName;
     public readonly EquatableArray<InterfaceDescriptor> Interfaces = Interfaces;
     public readonly bool IsRecord = IsRecord;
+    public readonly EquatableArray<MethodDescriptor> Methods = Methods;
     public readonly string Name = Name;
     public readonly string Namespace = Namespace;
     public readonly EquatableArray<ParentClass> ParentClasses = ParentClasses;

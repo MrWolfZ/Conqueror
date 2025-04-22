@@ -11,17 +11,12 @@ public static class MessagingAbstractionsGeneratorUtil
 {
     public static void InitializeCoreMessageAbstractionsGenerator(
         this IncrementalGeneratorInitializationContext context,
+        string simpleAttributeNameSuffix,
         string fullyQualifiedMetadataName)
     {
-        context.InitializeGeneratorForAttribute(fullyQualifiedMetadataName,
+        context.InitializeGeneratorForAttribute(simpleAttributeNameSuffix,
                                                 (ctx, ct) => GetMessageTypesDescriptor(ctx, fullyQualifiedMetadataName, ct),
                                                 MessagingAbstractionsSources.GenerateMessageTypes);
-
-        if (!fullyQualifiedMetadataName.EndsWith("`1"))
-        {
-            // register generic overload with response type
-            context.InitializeCoreMessageAbstractionsGenerator(fullyQualifiedMetadataName + "`1");
-        }
     }
 
     public static MessageTypesDescriptor GenerateMessageTypesDescriptor(INamedTypeSymbol messageTypeSymbol,
@@ -38,11 +33,11 @@ public static class MessagingAbstractionsGeneratorUtil
                    serializerContextTypeFromGlobalLookup is not null || serializerContextTypeFromSiblingLookup is not null);
     }
 
-    private static MessageTypesDescriptor? GetMessageTypesDescriptor(GeneratorAttributeSyntaxContext context,
+    private static MessageTypesDescriptor? GetMessageTypesDescriptor(GeneratorSyntaxContext context,
                                                                      string fullyQualifiedMetadataName,
                                                                      CancellationToken ct)
     {
-        if (context.TargetSymbol is not INamedTypeSymbol messageTypeSymbol)
+        if (context.SemanticModel.GetDeclaredSymbol(context.Node) is not INamedTypeSymbol messageTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
             return null;
@@ -116,6 +111,7 @@ public static class MessagingAbstractionsGeneratorUtil
             Interfaces: default,
             ParentClasses: default,
             Properties: default,
+            Methods: default,
             Enumerable: null);
     }
 }

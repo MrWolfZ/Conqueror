@@ -808,7 +808,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
     [Signal]
     private sealed partial record TestSignal2;
 
-    private sealed class TestSignalHandler(TestObservations observations) : TestSignal.IHandler
+    private sealed partial class TestSignalHandler(TestObservations observations) : TestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -832,7 +832,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
 
     private sealed record TestSignalSub(int PayloadBase, int PayloadSub) : TestSignalBase(PayloadBase);
 
-    private sealed class TestSignalBaseHandler(TestObservations observations) : TestSignalBase.IHandler
+    private sealed partial class TestSignalBaseHandler(TestObservations observations) : TestSignalBase.IHandler
     {
         public async Task Handle(TestSignalBase signal, CancellationToken cancellationToken = default)
         {
@@ -851,7 +851,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         }
     }
 
-    private sealed class MultiTestSignalHandler : TestSignal.IHandler, TestSignal2.IHandler
+    private sealed partial class MultiTestSignalHandler : TestSignal.IHandler, TestSignal2.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -879,7 +879,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
     }
 
     // ReSharper disable once UnusedType.Global (accessed via reflection)
-    public sealed class TestSignalForAssemblyScanningHandler(TestObservations observations)
+    public sealed partial class TestSignalForAssemblyScanningHandler(TestObservations observations)
         : TestSignal.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)

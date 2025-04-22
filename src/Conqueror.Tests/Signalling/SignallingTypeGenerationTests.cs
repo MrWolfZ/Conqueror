@@ -2,6 +2,7 @@
 // ReSharper disable InconsistentNaming
 
 using System.ComponentModel;
+using System.Reflection;
 
 #pragma warning disable SA1302
 #pragma warning disable CA1715
@@ -32,28 +33,24 @@ public sealed partial class SignallingTypeGenerationTests
     // generated
     public sealed partial record TestSignal : ISignal<TestSignal>
     {
-        public static SignalTypes<TestSignal, IHandler> T => SignalTypes<TestSignal, IHandler>.Default;
+        public static SignalTypes<TestSignal, IHandler> T => new();
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        static TestSignal? ISignal<TestSignal>.EmptyInstance => null;
-
-        public static IDefaultSignalTypesInjector DefaultTypeInjector
-            => DefaultSignalTypesInjector<TestSignal, IHandler, IHandler.Adapter>.Default;
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        static IReadOnlyCollection<ISignalTypesInjector> ISignal<TestSignal>.TypeInjectors
-            => ISignalTypesInjector.GetTypeInjectorsForSignalType<TestSignal>();
-
-        public interface IHandler : IGeneratedSignalHandler<TestSignal, IHandler>
+        [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "emulating generator output")]
+        public partial interface IHandler : ISignalHandler<TestSignal, IHandler, IHandler.Proxy>
         {
             Task Handle(TestSignal signal, CancellationToken cancellationToken = default);
 
-            static Task IGeneratedSignalHandler<TestSignal, IHandler>.Invoke(IHandler handler, TestSignal signal, CancellationToken cancellationToken)
+            static Task ISignalHandler<TestSignal, IHandler>.Invoke(IHandler handler, TestSignal signal, CancellationToken cancellationToken)
                 => handler.Handle(signal, cancellationToken);
 
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Adapter : GeneratedSignalHandlerAdapter<TestSignal, IHandler, Adapter>, IHandler;
+            public sealed class Proxy : SignalHandlerProxy<TestSignal, IHandler, Proxy>, IHandler;
         }
+
+        static TestSignal? ISignal<TestSignal>.EmptyInstance => null;
+
+        static IEnumerable<PropertyInfo> ISignal<TestSignal>.PublicProperties
+            => typeof(TestSignal).GetProperties(BindingFlags.Public | BindingFlags.Instance);
     }
 
     [Signal]
@@ -66,33 +63,28 @@ public sealed partial class SignallingTypeGenerationTests
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "testing")]
     public sealed partial record GenericTestSignal<TPayload> : ISignal<GenericTestSignal<TPayload>>
     {
-        public static SignalTypes<GenericTestSignal<TPayload>, IHandler> T => SignalTypes<GenericTestSignal<TPayload>, IHandler>.Default;
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        static GenericTestSignal<TPayload>? ISignal<GenericTestSignal<TPayload>>.EmptyInstance => null;
-
-        public static IDefaultSignalTypesInjector DefaultTypeInjector
-            => DefaultSignalTypesInjector<GenericTestSignal<TPayload>, IHandler, IHandler.Adapter>.Default;
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        static IReadOnlyCollection<ISignalTypesInjector> ISignal<GenericTestSignal<TPayload>>.TypeInjectors
-            => ISignalTypesInjector.GetTypeInjectorsForSignalType<GenericTestSignal<TPayload>>();
+        public static SignalTypes<GenericTestSignal<TPayload>, IHandler> T => new();
 
         [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "emulating generator output")]
-        public partial interface IHandler : IGeneratedSignalHandler<GenericTestSignal<TPayload>, IHandler>
+        public partial interface IHandler : ISignalHandler<GenericTestSignal<TPayload>, IHandler, IHandler.Proxy>
         {
             Task Handle(GenericTestSignal<TPayload> signal, CancellationToken cancellationToken = default);
 
-            static Task IGeneratedSignalHandler<GenericTestSignal<TPayload>, IHandler>.Invoke(IHandler handler, GenericTestSignal<TPayload> signal, CancellationToken cancellationToken)
+            static Task ISignalHandler<GenericTestSignal<TPayload>, IHandler>.Invoke(IHandler handler, GenericTestSignal<TPayload> signal, CancellationToken cancellationToken)
                 => handler.Handle(signal, cancellationToken);
 
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public sealed class Adapter : GeneratedSignalHandlerAdapter<GenericTestSignal<TPayload>, IHandler, Adapter>, IHandler;
+            public sealed class Proxy : SignalHandlerProxy<GenericTestSignal<TPayload>, IHandler, Proxy>, IHandler;
         }
+
+        static GenericTestSignal<TPayload>? ISignal<GenericTestSignal<TPayload>>.EmptyInstance => null;
+
+        static IEnumerable<PropertyInfo> ISignal<GenericTestSignal<TPayload>>.PublicProperties
+            => typeof(GenericTestSignal<TPayload>).GetProperties(BindingFlags.Public | BindingFlags.Instance);
     }
 
-    private sealed class TestSignalHandler : TestSignal.IHandler,
-                                             TestSignal2.IHandler
+    private sealed partial class TestSignalHandler : TestSignal.IHandler,
+                                                     TestSignal2.IHandler
     {
         public async Task Handle(TestSignal signal, CancellationToken cancellationToken = default)
         {
@@ -112,6 +104,17 @@ public sealed partial class SignallingTypeGenerationTests
             where T : class, ISignal<T>
         {
             // nothing to do
+        }
+    }
+
+    // generated
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "testing")]
+    private sealed partial class TestSignalHandler
+    {
+        static IEnumerable<ISignalHandlerTypesInjector> ISignalHandler.GetTypeInjectors()
+        {
+            yield return TestSignal.IHandler.CreateCoreTypesInjector<TestSignalHandler>();
+            yield return TestSignal2.IHandler.CreateCoreTypesInjector<TestSignalHandler>();
         }
     }
 }

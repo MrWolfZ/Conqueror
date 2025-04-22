@@ -16,7 +16,7 @@ public interface ISignalReceiverHandlerInvoker
 }
 
 public interface ISignalReceiverHandlerInvoker<out TTypesInjector> : ISignalReceiverHandlerInvoker
-    where TTypesInjector : class, ISignalTypesInjector
+    where TTypesInjector : class, ISignalHandlerTypesInjector
 {
     Type SignalType { get; }
 
