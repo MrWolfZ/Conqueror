@@ -378,6 +378,7 @@ namespace $NAMESPACE$
 {
   internal struct $STRUCT$ {$END$}
 }</s:String>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=conqm/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Distri/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=testee/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Transferrable/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

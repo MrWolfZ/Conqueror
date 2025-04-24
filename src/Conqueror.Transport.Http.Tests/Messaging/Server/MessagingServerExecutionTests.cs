@@ -3,6 +3,7 @@ using System.Net.Mime;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using static Conqueror.ConquerorTransportHttpConstants;
@@ -15,14 +16,15 @@ public sealed class MessagingServerExecutionTests
 {
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, THandler>(
+    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await HttpTransportTestHost.Create(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         var targetUriBuilder = new UriBuilder
         {
@@ -45,6 +47,13 @@ public sealed class MessagingServerExecutionTests
         }
 
         var response = await host.HttpClient.SendAsync(request);
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await response.AssertStatusCode(StatusCodes.Status404NotFound);
+            return;
+        }
+
         await response.AssertStatusCode(testCase.SuccessStatusCode);
         var resultString = await response.Content.ReadAsStringAsync();
 
@@ -75,7 +84,7 @@ public sealed class MessagingServerExecutionTests
         {
             var seenTransportType = host.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
             Assert.That(seenTransportType?.IsHttp(), Is.True, $"transport type is {seenTransportType?.Name}");
-            Assert.That(seenTransportType?.Role, Is.EqualTo(MessageTransportRole.Server));
+            Assert.That(seenTransportType?.Role, Is.EqualTo(MessageTransportRole.Receiver));
         }
     }
 

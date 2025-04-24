@@ -72,7 +72,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollectionWithDelegateHandlerAlreadyRegistered_WhenAddingAllHandlersFromAssembly_DoesNotAddHandlerAgain()
     {
-        var services = new ServiceCollection().AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
+        var services = new ServiceCollection().AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => new())
                                               .AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
@@ -100,7 +100,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Test]
     public void GivenServiceCollectionWithDelegateHandlerWithoutResponseAlreadyRegistered_WhenAddingAllHandlersFromAssembly_DoesNotAddHandlerAgain()
     {
-        var services = new ServiceCollection().AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask)
+        var services = new ServiceCollection().AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => Task.CompletedTask)
                                               .AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
@@ -113,9 +113,9 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     {
         var services = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
-        Assert.That(services.Count(d => d.ServiceType == typeof(IMessageHandler<TestMessage, TestMessageResponse>)), Is.Zero);
+        Assert.That(services.Count(d => d.ServiceType == typeof(IMessageHandler<TestMessage, TestMessageResponse, TestMessage.IHandler, TestMessage.IHandler.Proxy, TestMessage.IPipeline, TestMessage.IPipeline.Proxy>)), Is.Zero);
         Assert.That(services.Count(d => d.ServiceType == typeof(TestMessage.IHandler)), Is.Zero);
-        Assert.That(services.Count(d => d.ServiceType == typeof(IMessageHandler<TestMessageWithoutResponse>)), Is.Zero);
+        Assert.That(services.Count(d => d.ServiceType == typeof(IMessageHandler<TestMessageWithoutResponse, UnitMessageResponse, TestMessageWithoutResponse.IHandler, TestMessageWithoutResponse.IHandler.Proxy, TestMessageWithoutResponse.IPipeline, TestMessageWithoutResponse.IPipeline.Proxy>)), Is.Zero);
         Assert.That(services.Count(d => d.ServiceType == typeof(TestMessageWithoutResponse.IHandler)), Is.Zero);
     }
 
@@ -125,7 +125,6 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
         var services = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
 
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(AbstractTestMessageHandler)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(GenericTestMessageHandler<,>)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(PrivateTestMessageHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ProtectedTestMessageHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ExplicitTestMessageHandler)));
@@ -163,32 +162,28 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     [Message<TestMessageResponse>]
     protected sealed partial record ProtectedTestMessage;
 
-    public sealed class TestMessageHandler : TestMessage.IHandler
+    public sealed partial class TestMessageHandler : TestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
     }
 
-    public sealed class ExplicitTestMessageHandler : IMessageHandler<ExplicitTestMessage, ExplicitTestMessageResponse>
+    public sealed class ExplicitTestMessageHandler : IMessageHandler<ExplicitTestMessage, ExplicitTestMessageResponse, ExplicitTestMessage.IHandler, ExplicitTestMessage.IHandler.Proxy, ExplicitTestMessage.IPipeline, ExplicitTestMessage.IPipeline.Proxy>
     {
         public Task<ExplicitTestMessageResponse> Handle(ExplicitTestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new ExplicitTestMessageResponse());
+
+        static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors() => [];
     }
 
-    public abstract class AbstractTestMessageHandler : TestMessage.IHandler
+    public abstract partial class AbstractTestMessageHandler : TestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
     }
 
-    // in user code this shouldn't even compile, since CreateWithMessageTypes is internal, and the compiler
-    // will complain about a non-specific implementation, which is a nice safeguard against users trying to
-    // do this
-    public sealed class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
+    public sealed partial class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
     {
-        public static IDefaultMessageTypesInjector DefaultTypeInjector
-            => throw new NotSupportedException();
-
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
 
@@ -196,39 +191,33 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
             => Task.FromResult(new TestMessage2Response());
     }
 
-    public sealed class GenericTestMessageHandler<TM, TR> : IMessageHandler<TM, TR>
-        where TM : class, IMessage<TM, TR>
-        where TR : new()
-    {
-        public Task<TR> Handle(TM message, CancellationToken cancellationToken = default)
-            => Task.FromResult(new TR());
-    }
-
-    public sealed class TestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
+    public sealed partial class TestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
     {
         public Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
     }
 
-    public sealed class ExplicitTestMessageWithoutResponseHandler : IMessageHandler<ExplicitTestMessageWithoutResponse>
+    public sealed class ExplicitTestMessageWithoutResponseHandler : IMessageHandler<ExplicitTestMessageWithoutResponse, UnitMessageResponse, ExplicitTestMessageWithoutResponse.IHandler, ExplicitTestMessageWithoutResponse.IHandler.Proxy, ExplicitTestMessageWithoutResponse.IPipeline, ExplicitTestMessageWithoutResponse.IPipeline.Proxy>
     {
         public Task Handle(ExplicitTestMessageWithoutResponse message, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
+
+        static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors() => [];
     }
 
-    protected sealed class ProtectedTestMessageHandler : ProtectedTestMessage.IHandler
+    protected sealed partial class ProtectedTestMessageHandler : ProtectedTestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(ProtectedTestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
     }
 
-    internal sealed class InternalTestMessageHandler : InternalTestMessage.IHandler
+    internal sealed partial class InternalTestMessageHandler : InternalTestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(InternalTestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
     }
 
-    private sealed class PrivateTestMessageHandler : PrivateTestMessage.IHandler
+    private sealed partial class PrivateTestMessageHandler : PrivateTestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(PrivateTestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
@@ -238,7 +227,7 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
 [Message<MessageHandlerAssemblyScanningRegistrationTests.TestMessageResponse>]
 internal sealed partial record InternalTopLevelTestMessage;
 
-internal sealed class InternalTopLevelTestMessageHandler : InternalTopLevelTestMessage.IHandler
+internal sealed partial class InternalTopLevelTestMessageHandler : InternalTopLevelTestMessage.IHandler
 {
     public Task<MessageHandlerAssemblyScanningRegistrationTests.TestMessageResponse> Handle(InternalTopLevelTestMessage message, CancellationToken cancellationToken = default)
         => Task.FromResult(new MessageHandlerAssemblyScanningRegistrationTests.TestMessageResponse());

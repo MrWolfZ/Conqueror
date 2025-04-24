@@ -23,7 +23,7 @@ public sealed partial class SignallingTypeGenerationTests
 
         await signalPublishers.For(TestSignal.T)
                               .WithPipeline(p => p.UseTest().UseTest())
-                              .WithPublisher(b => b.UseInProcessWithSequentialBroadcastingStrategy())
+                              .WithTransport(b => b.UseInProcessWithSequentialBroadcastingStrategy())
                               .Handle(new(10));
     }
 
@@ -48,6 +48,9 @@ public sealed partial class SignallingTypeGenerationTests
         }
 
         static TestSignal? ISignal<TestSignal>.EmptyInstance => null;
+
+        static IEnumerable<ConstructorInfo> ISignal<TestSignal>.PublicConstructors
+            => typeof(TestSignal).GetConstructors(BindingFlags.Public);
 
         static IEnumerable<PropertyInfo> ISignal<TestSignal>.PublicProperties
             => typeof(TestSignal).GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -81,6 +84,9 @@ public sealed partial class SignallingTypeGenerationTests
 
         static IEnumerable<PropertyInfo> ISignal<GenericTestSignal<TPayload>>.PublicProperties
             => typeof(GenericTestSignal<TPayload>).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        static IEnumerable<ConstructorInfo> ISignal<GenericTestSignal<TPayload>>.PublicConstructors
+            => typeof(TestSignal).GetConstructors(BindingFlags.Public);
     }
 
     private sealed partial class TestSignalHandler : TestSignal.IHandler,
@@ -96,12 +102,10 @@ public sealed partial class SignallingTypeGenerationTests
             await Task.CompletedTask;
         }
 
-        public static void ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
-            where T : class, ISignal<T>
+        static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
             => pipeline.UseTest().UseTest();
 
-        public static void ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver)
-            where T : class, ISignal<T>
+        static void ISignalHandler.ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver)
         {
             // nothing to do
         }

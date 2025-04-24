@@ -10,7 +10,7 @@ public sealed partial class AuthorizationMessageMiddlewareTests
     {
         await using var host = await AuthorizationMiddlewareTestHost.Create(services => services.AddMessageHandler<TestMessageHandler>());
 
-        var handler = host.Resolve<IMessageClients>()
+        var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
                           .WithPipeline(p => p.UseAuthorization());
 
@@ -29,7 +29,7 @@ public sealed partial class AuthorizationMessageMiddlewareTests
     {
         await using var host = await AuthorizationMiddlewareTestHost.Create(services => services.AddMessageHandler<TestMessageHandler>());
 
-        var handler = host.Resolve<IMessageClients>()
+        var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
                           .WithPipeline(p => p.UseAuthorization(c =>
                           {
@@ -102,7 +102,7 @@ public sealed partial class AuthorizationMessageMiddlewareTests
     {
         await using var host = await AuthorizationMiddlewareTestHost.Create(services => services.AddMessageHandler<TestMessageHandler>());
 
-        var handler = host.Resolve<IMessageClients>()
+        var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
                           .WithPipeline(p => p.UseAuthorization(c => c.AddAuthorizationCheck(ctx => ctx.Unauthenticated("test")))
                                               .WithoutAuthorization());
@@ -130,7 +130,7 @@ public sealed partial class AuthorizationMessageMiddlewareTests
         using var d = conquerorContext.SetCurrentPrincipal(claimsPrincipal);
 
         var handler = scope.ServiceProvider
-                           .GetRequiredService<IMessageClients>()
+                           .GetRequiredService<IMessageSenders>()
                            .For(TestMessage.T)
                            .WithPipeline(p => p.UseAuthorization(c =>
                            {
@@ -159,7 +159,7 @@ public sealed partial class AuthorizationMessageMiddlewareTests
 
     private sealed record TestMessageResponse(int Payload);
 
-    private sealed class TestMessageHandler : TestMessage.IHandler
+    private sealed partial class TestMessageHandler : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {

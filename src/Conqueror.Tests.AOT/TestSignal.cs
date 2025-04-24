@@ -16,12 +16,10 @@ internal sealed partial class TestSignalHandler : TestSignal.IHandler
         return Task.CompletedTask;
     }
 
-    public static void ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
-        where T : class, ISignal<T>
+    static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
         => pipeline.UseLogging();
 
-    public static void ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver)
-        where T : class, ISignal<T>
+    static void ISignalHandler.ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver)
     {
         receiver.Enable();
     }

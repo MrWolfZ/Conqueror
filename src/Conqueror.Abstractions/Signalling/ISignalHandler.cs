@@ -36,10 +36,13 @@ public interface ISignalHandler
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface ISignalHandler<in TSignal, in TIHandler> : ISignalHandler
+[SuppressMessage("ReSharper", "TypeParameterCanBeVariant", Justification = "false positive")]
+public interface ISignalHandler<TSignal, TIHandler> : ISignalHandler
     where TSignal : class, ISignal<TSignal>
     where TIHandler : class, ISignalHandler<TSignal, TIHandler>
 {
+    static virtual SignalTypes<TSignal, TIHandler> SignalTypes { get; } = new();
+
     internal static virtual ICoreSignalHandlerTypesInjector CoreTypesInjector
         => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
 
@@ -48,7 +51,7 @@ public interface ISignalHandler<in TSignal, in TIHandler> : ISignalHandler
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface ISignalHandler<in TSignal, in TIHandler, TProxy> : ISignalHandler<TSignal, TIHandler>
+public interface ISignalHandler<TSignal, TIHandler, TProxy> : ISignalHandler<TSignal, TIHandler>
     where TSignal : class, ISignal<TSignal>
     where TIHandler : class, ISignalHandler<TSignal, TIHandler, TProxy>
     where TProxy : SignalHandlerProxy<TSignal, TIHandler, TProxy>, TIHandler, new()
@@ -75,6 +78,7 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
     where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     where TProxy : SignalHandlerProxy<TSignal, TIHandler, TProxy>, TIHandler, new()
 {
+    // cannot be 'required' since that would block the `new()` constraint
     internal ISignalDispatcher<TSignal> Dispatcher { get; init; } = null!;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -84,11 +88,11 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
     public TIHandler WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline)
         => new TProxy { Dispatcher = Dispatcher.WithPipeline(configurePipeline) };
 
-    public TIHandler WithPublisher(ConfigureSignalPublisher<TSignal> configurePublisher)
-        => new TProxy { Dispatcher = Dispatcher.WithPublisher(configurePublisher) };
+    public TIHandler WithTransport(ConfigureSignalPublisher<TSignal> configureTransport)
+        => new TProxy { Dispatcher = Dispatcher.WithPublisher(configureTransport) };
 
-    public TIHandler WithPublisher(ConfigureSignalPublisherAsync<TSignal> configurePublisher)
-        => new TProxy { Dispatcher = Dispatcher.WithPublisher(configurePublisher) };
+    public TIHandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configureTransport)
+        => new TProxy { Dispatcher = Dispatcher.WithPublisher(configureTransport) };
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -98,7 +102,7 @@ internal interface ISignalHandlerProxy<TSignal, THandler> : ISignalHandler<TSign
 {
     THandler WithPipeline(Action<ISignalPipeline<TSignal>> configurePipeline);
 
-    THandler WithPublisher(ConfigureSignalPublisher<TSignal> configurePublisher);
+    THandler WithTransport(ConfigureSignalPublisher<TSignal> configureTransport);
 
-    THandler WithPublisher(ConfigureSignalPublisherAsync<TSignal> configurePublisher);
+    THandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configureTransport);
 }

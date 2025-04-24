@@ -33,14 +33,27 @@ public static partial class HttpTestMessages
         CustomEndpoint,
     }
 
-    public static void RegisterMessageType<TMessage, TResponse, THandler>(this IServiceCollection services, MessageTestCase testCase)
+    public static void RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(this IServiceCollection services, MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         _ = services.AddSingleton<TestObservations>()
                     .AddTransient(typeof(TestMessageMiddleware<,>));
 
-        _ = services.AddMessageHandler<THandler>();
+        if (typeof(THandler) == typeof(TIHandler))
+        {
+            _ = services.AddMessageHandlerDelegate(new MessageTypes<TMessage, TResponse, TIHandler>(),
+                                                   async (_, _, _) =>
+                                                   {
+                                                       await Task.Yield();
+                                                       throw new NotSupportedException();
+                                                   });
+        }
+        else
+        {
+            _ = services.AddMessageHandler<THandler>();
+        }
 
         if (typeof(TMessage) == typeof(TestMessageWithCustomSerializedPayloadType))
         {
@@ -79,8 +92,9 @@ public static partial class HttpTestMessages
         }
     }
 
-    public static void MapMessageEndpoints<TMessage, TResponse>(this IApplicationBuilder app, MessageTestCase testCase)
+    public static void MapMessageEndpoints<TMessage, TResponse, TIHandler>(this IApplicationBuilder app, MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
     {
         _ = app.UseConquerorWellKnownErrorHandling();
         _ = app.UseRouting();
@@ -111,14 +125,14 @@ public static partial class HttpTestMessages
             {
                 _ = endpoints.MapPost("/custom/api/test",
                                       async (TestMessage message, HttpContext ctx)
-                                          => TypedResults.Ok(await ctx.GetMessageClient(TestMessage.T).Handle(message, ctx.RequestAborted)))
+                                          => TypedResults.Ok(await ctx.HandleMessage(message)))
                              .WithName(nameof(TestMessage))
                              .WithTags(nameof(TestMessage))
                              .WithGroupName(nameof(TestMessage));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutPayload",
                                       (Delegate)(async (HttpContext ctx)
-                                          => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithoutPayload.T).Handle(new(), ctx.RequestAborted))))
+                                          => TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithoutPayload()))))
                              .WithName(nameof(TestMessageWithoutPayload))
                              .WithTags(nameof(TestMessageWithoutPayload))
                              .WithGroupName(nameof(TestMessageWithoutPayload));
@@ -126,41 +140,42 @@ public static partial class HttpTestMessages
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutResponse",
                                       async (TestMessageWithoutResponse message, HttpContext ctx) =>
                                       {
-                                          await ctx.GetMessageClient<TestMessageWithoutResponse>().Handle(message, ctx.RequestAborted);
-                                          return TypedResults.Ok();
+                                          await ctx.HandleMessage(message);
+                                          return TypedResults.NoContent();
                                       })
                              .WithName(nameof(TestMessageWithoutResponse))
                              .WithTags(nameof(TestMessageWithoutResponse))
-                             .WithGroupName(nameof(TestMessageWithoutResponse));
+                             .WithGroupName(nameof(TestMessageWithoutResponse))
+                             .WithMetadata(new ProducesResponseTypeMetadata(204));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithoutResponseWithoutPayload",
                                       async (HttpContext ctx) =>
                                       {
-                                          await ctx.GetMessageClient<TestMessageWithoutResponseWithoutPayload>().Handle(new(), ctx.RequestAborted);
-                                          return TypedResults.StatusCode(200);
+                                          await ctx.HandleMessage(new TestMessageWithoutResponseWithoutPayload());
+                                          return TypedResults.NoContent();
                                       })
                              .WithName(nameof(TestMessageWithoutResponseWithoutPayload))
                              .WithTags(nameof(TestMessageWithoutResponseWithoutPayload))
-                             .WithGroupName(nameof(TestMessageWithoutResponseWithoutPayload));
+                             .WithGroupName(nameof(TestMessageWithoutResponseWithoutPayload))
+                             .WithMetadata(new ProducesResponseTypeMetadata(204));
 
                 _ = endpoints.MapGet("/custom/api/testMessageWithGet",
                                      async (int payload, string param, HttpContext ctx)
-                                         => TypedResults.Ok(await ctx.GetMessageClient<TestMessageWithGet, TestMessageResponse>() // testing overload without inference
-                                                                     .Handle(new() { Payload = payload, Param = param }, ctx.RequestAborted)))
+                                         => TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithGet { Payload = payload, Param = param })))
                              .WithName(nameof(TestMessageWithGet))
                              .WithTags(nameof(TestMessageWithGet))
                              .WithGroupName(nameof(TestMessageWithGet));
 
                 _ = endpoints.MapGet("/custom/api/testMessageWithGetWithoutPayload",
                                      (Delegate)(async (HttpContext ctx)
-                                         => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithGetWithoutPayload.T).Handle(new(), ctx.RequestAborted))))
+                                         => TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithGetWithoutPayload()))))
                              .WithName(nameof(TestMessageWithGetWithoutPayload))
                              .WithTags(nameof(TestMessageWithGetWithoutPayload))
                              .WithGroupName(nameof(TestMessageWithGetWithoutPayload));
 
                 _ = endpoints.MapPost("/custom/api/testMessageWithMiddleware",
                                       async (TestMessageWithMiddleware message, HttpContext ctx)
-                                          => TypedResults.Ok(await ctx.GetMessageClient(TestMessageWithMiddleware.T).Handle(message, ctx.RequestAborted)))
+                                          => TypedResults.Ok(await ctx.HandleMessage(message)))
                              .WithName(nameof(TestMessageWithMiddleware))
                              .WithTags(nameof(TestMessageWithMiddleware))
                              .WithGroupName(nameof(TestMessageWithMiddleware));
@@ -168,7 +183,13 @@ public static partial class HttpTestMessages
                 return;
             }
 
-            _ = endpoints.MapMessageEndpoint<TMessage>();
+            // delegate handlers are not supported
+            if (testCase.MessageType == typeof(TestMessageWithDelegateHandler))
+            {
+                return;
+            }
+
+            _ = endpoints.MapMessageEndpoint<TMessage, TResponse, TIHandler>();
         });
     }
 
@@ -176,7 +197,7 @@ public static partial class HttpTestMessages
     {
         return GenerateTestCases().Select(c => new TestCaseData(c)
         {
-            TypeArgs = [c.MessageType, c.ResponseType ?? typeof(UnitMessageResponse), c.HandlerType],
+            TypeArgs = [c.MessageType, c.ResponseType ?? typeof(UnitMessageResponse), c.IHandlerType, c.HandlerType ?? c.IHandlerType],
         });
     }
 
@@ -193,6 +214,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessage),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageHandler),
+                IHandlerType = typeof(TestMessage.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/test",
                 SuccessStatusCode = 200,
@@ -214,6 +236,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithoutResponse),
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseHandler),
+                IHandlerType = typeof(TestMessageWithoutResponse.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithoutResponse",
                 SuccessStatusCode = 204,
@@ -235,6 +258,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithoutPayload),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithoutPayloadHandler),
+                IHandlerType = typeof(TestMessageWithoutPayload.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithoutPayload",
                 SuccessStatusCode = 200,
@@ -256,6 +280,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithoutResponseWithoutPayload),
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseWithoutPayloadHandler),
+                IHandlerType = typeof(TestMessageWithoutResponseWithoutPayload.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithoutResponseWithoutPayload",
                 SuccessStatusCode = 204,
@@ -277,6 +302,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithMethod),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithMethodHandler),
+                IHandlerType = typeof(TestMessageWithMethod.IHandler),
                 HttpMethod = MethodDelete,
                 FullPath = "/api/testMessageWithMethod",
                 SuccessStatusCode = 200,
@@ -298,6 +324,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithPathPrefix),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithPathPrefixHandler),
+                IHandlerType = typeof(TestMessageWithPathPrefix.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/prefix/testMessageWithPathPrefix",
                 SuccessStatusCode = 200,
@@ -319,6 +346,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithVersion),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithVersionHandler),
+                IHandlerType = typeof(TestMessageWithVersion.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/v2/testMessageWithVersion",
                 SuccessStatusCode = 200,
@@ -340,6 +368,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithPath),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithPathHandler),
+                IHandlerType = typeof(TestMessageWithPath.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/custom/path",
                 SuccessStatusCode = 200,
@@ -361,6 +390,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithPathPrefixAndPathAndVersion),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithPathPrefixAndPathAndVersionHandler),
+                IHandlerType = typeof(TestMessageWithPathPrefixAndPathAndVersion.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/prefix/v3/custom/path",
                 SuccessStatusCode = 200,
@@ -382,6 +412,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithFullPath),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithFullPathHandler),
+                IHandlerType = typeof(TestMessageWithFullPath.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/full/path/for/message",
                 SuccessStatusCode = 200,
@@ -403,6 +434,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithFullPathAndVersion),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithFullPathAndVersionHandler),
+                IHandlerType = typeof(TestMessageWithFullPathAndVersion.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/full/path/for/message",
                 SuccessStatusCode = 200,
@@ -424,6 +456,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithSuccessStatusCode),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithSuccessStatusCodeHandler),
+                IHandlerType = typeof(TestMessageWithSuccessStatusCode.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithSuccessStatusCode",
                 SuccessStatusCode = 201,
@@ -445,6 +478,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithName),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithNameHandler),
+                IHandlerType = typeof(TestMessageWithName.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithName",
                 SuccessStatusCode = 200,
@@ -466,6 +500,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithApiGroupName),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithApiGroupNameHandler),
+                IHandlerType = typeof(TestMessageWithApiGroupName.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithApiGroupName",
                 SuccessStatusCode = 200,
@@ -487,6 +522,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithGet),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetHandler),
+                IHandlerType = typeof(TestMessageWithGet.IHandler),
                 HttpMethod = MethodGet,
                 FullPath = "/api/testMessageWithGet",
                 SuccessStatusCode = 200,
@@ -508,6 +544,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithGetWithoutPayload),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetWithoutPayloadHandler),
+                IHandlerType = typeof(TestMessageWithGetWithoutPayload.IHandler),
                 HttpMethod = MethodGet,
                 FullPath = "/api/testMessageWithGetWithoutPayload",
                 SuccessStatusCode = 200,
@@ -534,6 +571,7 @@ public static partial class HttpTestMessages
                     MessageType = typeof(TestMessageWithComplexGetPayload),
                     ResponseType = typeof(TestMessageResponse),
                     HandlerType = typeof(TestMessageWithComplexGetPayloadHandler),
+                    IHandlerType = typeof(TestMessageWithComplexGetPayload.IHandler),
                     HttpMethod = MethodGet,
                     FullPath = "/api/testMessageWithComplexGetPayload",
                     SuccessStatusCode = 200,
@@ -562,6 +600,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithCustomSerializedPayloadType),
                 ResponseType = typeof(TestMessageWithCustomSerializedPayloadTypeResponse),
                 HandlerType = typeof(TestMessageWithCustomSerializedPayloadTypeHandler),
+                IHandlerType = typeof(TestMessageWithCustomSerializedPayloadType.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithCustomSerializedPayloadType",
                 SuccessStatusCode = 200,
@@ -588,6 +627,7 @@ public static partial class HttpTestMessages
                     MessageType = typeof(TestMessageWithCustomSerializer),
                     ResponseType = typeof(TestMessageWithCustomSerializerResponse),
                     HandlerType = typeof(TestMessageWithCustomSerializerHandler),
+                    IHandlerType = typeof(TestMessageWithCustomSerializer.IHandler),
                     HttpMethod = MethodPost,
                     FullPath = "/api/custom/path/for/serializer/12",
                     Template = "/api/custom/path/for/serializer/{pathPayload:int}",
@@ -612,6 +652,7 @@ public static partial class HttpTestMessages
                     MessageType = typeof(TestMessageWithCustomJsonTypeInfo),
                     ResponseType = typeof(TestMessageWithCustomJsonTypeInfoResponse),
                     HandlerType = typeof(TestMessageWithCustomJsonTypeInfoHandler),
+                    IHandlerType = typeof(TestMessageWithCustomJsonTypeInfo.IHandler),
                     HttpMethod = MethodPost,
                     FullPath = "/api/testMessageWithCustomJsonTypeInfo",
                     SuccessStatusCode = 200,
@@ -638,6 +679,7 @@ public static partial class HttpTestMessages
                     MessageType = typeof(TestMessageWithMiddleware),
                     ResponseType = typeof(TestMessageResponse),
                     HandlerType = typeof(TestMessageWithMiddlewareHandler),
+                    IHandlerType = typeof(TestMessageWithMiddleware.IHandler),
                     HttpMethod = MethodPost,
                     FullPath = "/api/testMessageWithMiddleware",
                     SuccessStatusCode = 200,
@@ -659,6 +701,7 @@ public static partial class HttpTestMessages
                     MessageType = typeof(TestMessageWithMiddlewareWithoutResponse),
                     ResponseType = null,
                     HandlerType = typeof(TestMessageWithMiddlewareWithoutResponseHandler),
+                    IHandlerType = typeof(TestMessageWithMiddlewareWithoutResponse.IHandler),
                     HttpMethod = MethodPost,
                     FullPath = "/api/testMessageWithMiddlewareWithoutResponse",
                     SuccessStatusCode = 204,
@@ -681,6 +724,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithArrayResponse),
                 ResponseType = typeof(TestMessageResponse[]),
                 HandlerType = typeof(TestMessageWithArrayResponseHandler),
+                IHandlerType = typeof(TestMessageWithArrayResponse.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithArrayResponse",
                 SuccessStatusCode = 200,
@@ -702,6 +746,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithListResponse),
                 ResponseType = typeof(List<TestMessageResponse>),
                 HandlerType = typeof(TestMessageWithListResponseHandler),
+                IHandlerType = typeof(TestMessageWithListResponse.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithListResponse",
                 SuccessStatusCode = 200,
@@ -723,6 +768,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithEnumerableResponse),
                 ResponseType = typeof(IEnumerable<TestMessageResponse>),
                 HandlerType = typeof(TestMessageWithEnumerableResponseHandler),
+                IHandlerType = typeof(TestMessageWithEnumerableResponse.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithEnumerableResponse",
                 SuccessStatusCode = 200,
@@ -738,6 +784,98 @@ public static partial class HttpTestMessages
                 Response = new List<TestMessageResponse> { new() { Payload = 11 }, new() { Payload = 12 } },
                 RegistrationMethod = registrationMethod,
             };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageOmittedFromApiDescription),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageOmittedFromApiDescriptionHandler),
+                IHandlerType = typeof(TestMessageOmittedFromApiDescription.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageOmittedFromApiDescription",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = "{\"payload\":11}",
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                IsOmittedFromApiDescriptions = true,
+                Message = new TestMessageOmittedFromApiDescription { Payload = 10 },
+                Response = new TestMessageResponse { Payload = 11 },
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithDisabledHandler),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithDisabledHandlerHandler),
+                IHandlerType = typeof(TestMessageWithDisabledHandler.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithDisabledHandler",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = string.Empty,
+                ResponsePayload = string.Empty,
+                MessageContentType = null,
+                ResponseContentType = null,
+                HandlerIsEnabled = false,
+                Message = new TestMessageWithDisabledHandler { Payload = 10 },
+                Response = null,
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithoutResponseWithDisabledHandler),
+                ResponseType = null,
+                HandlerType = typeof(TestMessageWithoutResponseWithDisabledHandlerHandler),
+                IHandlerType = typeof(TestMessageWithoutResponseWithDisabledHandler.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithoutResponseWithDisabledHandler",
+                SuccessStatusCode = 204,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = string.Empty,
+                ResponsePayload = string.Empty,
+                MessageContentType = null,
+                ResponseContentType = null,
+                HandlerIsEnabled = false,
+                Message = new TestMessageWithoutResponseWithDisabledHandler { Payload = 10 },
+                Response = null,
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithDelegateHandler),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = null,
+                IHandlerType = typeof(TestMessageWithDelegateHandler.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithDelegateHandler",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = string.Empty,
+                ResponsePayload = string.Empty,
+                MessageContentType = null,
+                ResponseContentType = null,
+                HandlerIsEnabled = false,
+                Message = new TestMessageWithDelegateHandler { Payload = 10 },
+                Response = null,
+                RegistrationMethod = registrationMethod,
+            };
         }
 
         foreach (var registrationMethod in new[]
@@ -751,6 +889,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessage),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageHandler),
+                IHandlerType = typeof(TestMessage.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/test",
                 SuccessStatusCode = 200,
@@ -772,9 +911,10 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithoutResponse),
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseHandler),
+                IHandlerType = typeof(TestMessageWithoutResponse.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutResponse",
-                SuccessStatusCode = 200,
+                SuccessStatusCode = 204,
                 ApiGroupName = nameof(TestMessageWithoutResponse),
                 Name = null,
                 ParameterCount = 1,
@@ -793,6 +933,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithoutPayload),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithoutPayloadHandler),
+                IHandlerType = typeof(TestMessageWithoutPayload.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutPayload",
                 SuccessStatusCode = 200,
@@ -814,9 +955,10 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithoutResponseWithoutPayload),
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseWithoutPayloadHandler),
+                IHandlerType = typeof(TestMessageWithoutResponseWithoutPayload.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithoutResponseWithoutPayload",
-                SuccessStatusCode = 200,
+                SuccessStatusCode = 204,
                 ApiGroupName = nameof(TestMessageWithoutResponseWithoutPayload),
                 Name = null,
                 ParameterCount = 0,
@@ -835,6 +977,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithGet),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetHandler),
+                IHandlerType = typeof(TestMessageWithGet.IHandler),
                 HttpMethod = MethodGet,
                 FullPath = "/custom/api/testMessageWithGet",
                 SuccessStatusCode = 200,
@@ -856,6 +999,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithGetWithoutPayload),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetWithoutPayloadHandler),
+                IHandlerType = typeof(TestMessageWithGetWithoutPayload.IHandler),
                 HttpMethod = MethodGet,
                 FullPath = "/custom/api/testMessageWithGetWithoutPayload",
                 SuccessStatusCode = 200,
@@ -877,6 +1021,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithMiddleware),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithMiddlewareHandler),
+                IHandlerType = typeof(TestMessageWithMiddleware.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/custom/api/testMessageWithMiddleware",
                 SuccessStatusCode = 200,
@@ -904,6 +1049,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageForAssemblyScanning),
                 ResponseType = typeof(TestMessageForAssemblyScanningResponse),
                 HandlerType = typeof(TestMessageForAssemblyScanningHandler),
+                IHandlerType = typeof(TestMessageForAssemblyScanning.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageForAssemblyScanning",
                 SuccessStatusCode = 200,
@@ -925,6 +1071,7 @@ public static partial class HttpTestMessages
                 MessageType = typeof(TestMessageWithoutResponseForAssemblyScanning),
                 ResponseType = null,
                 HandlerType = typeof(TestMessageWithoutResponseForAssemblyScanningHandler),
+                IHandlerType = typeof(TestMessageWithoutResponseForAssemblyScanning.IHandler),
                 HttpMethod = MethodPost,
                 FullPath = "/api/testMessageWithoutResponseForAssemblyScanning",
                 SuccessStatusCode = 204,
@@ -949,7 +1096,9 @@ public static partial class HttpTestMessages
 
         public required Type? ResponseType { get; init; }
 
-        public required Type HandlerType { get; init; }
+        public required Type? HandlerType { get; init; }
+
+        public required Type IHandlerType { get; init; }
 
         public required string HttpMethod { get; init; }
 
@@ -977,6 +1126,10 @@ public static partial class HttpTestMessages
 
         public required string? ResponseContentType { get; init; }
 
+        public bool HandlerIsEnabled { get; init; } = true;
+
+        public bool IsOmittedFromApiDescriptions { get; init; }
+
         public JsonSerializerContext? JsonSerializerContext { get; init; }
 
         public IHttpMessageSerializer<TestMessageWithCustomSerializer, TestMessageWithCustomSerializerResponse>? MessageSerializer { get; init; }
@@ -999,7 +1152,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
@@ -1016,10 +1169,22 @@ public static partial class HttpTestMessages
         }
     }
 
+    public sealed partial class DisabledTestMessageHandler : TestMessage.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            throw new InvalidOperationException("This handler should not be called.");
+        }
+
+        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
+            => receiver.Disable();
+    }
+
     [HttpMessage<TestMessageResponse>]
     public sealed partial record TestMessageWithoutPayload;
 
-    public sealed class TestMessageWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithoutPayload.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithoutPayload message, CancellationToken cancellationToken = default)
@@ -1042,7 +1207,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithoutResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithoutResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
@@ -1057,10 +1222,22 @@ public static partial class HttpTestMessages
         }
     }
 
+    public sealed partial class DisabledTestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
+    {
+        public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            throw new InvalidOperationException("This handler should not be called.");
+        }
+
+        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
+            => receiver.Disable();
+    }
+
     [HttpMessage]
     public sealed partial record TestMessageWithoutResponseWithoutPayload;
 
-    public sealed class TestMessageWithoutResponseWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithoutResponseWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithoutResponseWithoutPayload.IHandler
     {
         public async Task Handle(TestMessageWithoutResponseWithoutPayload message, CancellationToken cancellationToken = default)
@@ -1081,7 +1258,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithMethodHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithMethodHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithMethod.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithMethod message, CancellationToken cancellationToken = default)
@@ -1104,7 +1281,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithPathPrefixHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithPathPrefixHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithPathPrefix.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithPathPrefix message, CancellationToken cancellationToken = default)
@@ -1127,7 +1304,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithVersionHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithVersionHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithVersion.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithVersion message, CancellationToken cancellationToken = default)
@@ -1150,7 +1327,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithPathHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithPathHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithPath.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithPath message, CancellationToken cancellationToken = default)
@@ -1173,7 +1350,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithPathPrefixAndPathAndVersionHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithPathPrefixAndPathAndVersionHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithPathPrefixAndPathAndVersion.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithPathPrefixAndPathAndVersion message, CancellationToken cancellationToken = default)
@@ -1196,7 +1373,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithFullPathHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithFullPathHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithFullPath.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithFullPath message, CancellationToken cancellationToken = default)
@@ -1219,7 +1396,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithFullPathAndVersionHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithFullPathAndVersionHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithFullPathAndVersion.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithFullPathAndVersion message, CancellationToken cancellationToken = default)
@@ -1242,7 +1419,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithSuccessStatusCodeHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithSuccessStatusCodeHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithSuccessStatusCode.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithSuccessStatusCode message, CancellationToken cancellationToken = default)
@@ -1265,7 +1442,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithNameHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithNameHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithName.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithName message, CancellationToken cancellationToken = default)
@@ -1288,7 +1465,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithApiGroupNameHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithApiGroupNameHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithApiGroupName.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithApiGroupName message, CancellationToken cancellationToken = default)
@@ -1313,7 +1490,7 @@ public static partial class HttpTestMessages
         public required string Param { get; init; }
     }
 
-    public sealed class TestMessageWithGetHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithGetHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithGet.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithGet message, CancellationToken cancellationToken = default)
@@ -1333,7 +1510,7 @@ public static partial class HttpTestMessages
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
     public sealed partial record TestMessageWithGetWithoutPayload;
 
-    public sealed class TestMessageWithGetWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithGetWithoutPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithGetWithoutPayload.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithGetWithoutPayload message, CancellationToken cancellationToken = default)
@@ -1374,7 +1551,7 @@ public static partial class HttpTestMessages
         public required int Payload2 { get; init; }
     }
 
-    public sealed class TestMessageWithComplexGetPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithComplexGetPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithComplexGetPayload.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithComplexGetPayload message, CancellationToken cancellationToken = default)
@@ -1404,10 +1581,10 @@ public static partial class HttpTestMessages
 
     public sealed record TestMessageWithCustomSerializedPayloadTypePayload(int Payload);
 
-    public sealed class TestMessageWithCustomSerializedPayloadTypeHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithCustomSerializedPayloadTypeHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithCustomSerializedPayloadType.IHandler
     {
-        public async Task<TestMessageWithCustomSerializedPayloadTypeResponse> Handle(TestMessageWithCustomSerializedPayloadType query,
+        public async Task<TestMessageWithCustomSerializedPayloadTypeResponse> Handle(TestMessageWithCustomSerializedPayloadType message,
                                                                                      CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -1418,7 +1595,7 @@ public static partial class HttpTestMessages
                 await fnToCallFromHandler(serviceProvider);
             }
 
-            return new() { Payload = new(query.Payload.Payload + 1) };
+            return new() { Payload = new(message.Payload.Payload + 1) };
         }
 
         internal sealed class PayloadJsonConverterFactory : JsonConverterFactory
@@ -1517,7 +1694,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    public sealed class TestMessageWithCustomSerializerHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithCustomSerializerHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithCustomSerializer.IHandler
     {
         public async Task<TestMessageWithCustomSerializerResponse> Handle(TestMessageWithCustomSerializer message, CancellationToken cancellationToken = default)
@@ -1545,7 +1722,7 @@ public static partial class HttpTestMessages
         public int ResponsePayload { get; init; }
     }
 
-    public sealed class TestMessageWithCustomJsonTypeInfoHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithCustomJsonTypeInfoHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithCustomJsonTypeInfo.IHandler
     {
         public async Task<TestMessageWithCustomJsonTypeInfoResponse> Handle(TestMessageWithCustomJsonTypeInfo message, CancellationToken cancellationToken = default)
@@ -1573,7 +1750,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithMiddlewareHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithMiddlewareHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithMiddleware.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithMiddleware message, CancellationToken cancellationToken = default)
@@ -1599,7 +1776,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithMiddlewareWithoutResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithMiddlewareWithoutResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithMiddlewareWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithMiddlewareWithoutResponse message, CancellationToken cancellationToken = default)
@@ -1633,7 +1810,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithArrayResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithArrayResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithArrayResponse.IHandler
     {
         public async Task<TestMessageResponse[]> Handle(TestMessageWithArrayResponse message, CancellationToken cancellationToken = default)
@@ -1656,7 +1833,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithListResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithListResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithListResponse.IHandler
     {
         public async Task<List<TestMessageResponse>> Handle(TestMessageWithListResponse message, CancellationToken cancellationToken = default)
@@ -1679,7 +1856,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithEnumerableResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithEnumerableResponseHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithEnumerableResponse.IHandler
     {
         public async Task<IEnumerable<TestMessageResponse>> Handle(TestMessageWithEnumerableResponse message, CancellationToken cancellationToken = default)
@@ -1707,7 +1884,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageForAssemblyScanningHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageForAssemblyScanningHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageForAssemblyScanning.IHandler
     {
         public async Task<TestMessageForAssemblyScanningResponse> Handle(TestMessageForAssemblyScanning message, CancellationToken cancellationToken = default)
@@ -1730,7 +1907,7 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithoutResponseForAssemblyScanningHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+    public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
         : TestMessageWithoutResponseForAssemblyScanning.IHandler
     {
         public async Task Handle(TestMessageWithoutResponseForAssemblyScanning message, CancellationToken cancellationToken = default)
@@ -1745,6 +1922,94 @@ public static partial class HttpTestMessages
         }
     }
 
+    [HttpMessage<TestMessageResponse>]
+    public sealed partial record TestMessageOmittedFromApiDescription
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed partial class TestMessageOmittedFromApiDescriptionHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageOmittedFromApiDescription.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageOmittedFromApiDescription message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return new() { Payload = message.Payload + 1 };
+        }
+
+        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
+        {
+            _ = receiver.OmitFromApiDescription();
+        }
+    }
+
+    [HttpMessage<TestMessageResponse>]
+    public sealed partial record TestMessageWithDisabledHandler
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed partial class TestMessageWithDisabledHandlerHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithDisabledHandler.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageWithDisabledHandler message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return new() { Payload = message.Payload + 1 };
+        }
+
+        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
+        {
+            _ = receiver.Disable();
+        }
+    }
+
+    [HttpMessage]
+    public sealed partial record TestMessageWithoutResponseWithDisabledHandler
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed partial class TestMessageWithoutResponseWithDisabledHandlerHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithoutResponseWithDisabledHandler.IHandler
+    {
+        public async Task Handle(TestMessageWithoutResponseWithDisabledHandler message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+        }
+
+        static void IHttpMessageHandler.ConfigureHttpReceiver(IHttpMessageReceiver receiver)
+        {
+            _ = receiver.Disable();
+        }
+    }
+
+    [HttpMessage<TestMessageResponse>]
+    public sealed partial record TestMessageWithDelegateHandler
+    {
+        public int Payload { get; init; }
+    }
+
     [ApiController]
     private sealed class TestHttpMessageController : ControllerBase
     {
@@ -1752,59 +2017,59 @@ public static partial class HttpTestMessages
         [ApiExplorerSettings(GroupName = nameof(TestMessage))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessage(TestMessage message, CancellationToken cancellationToken)
+        public Task<TestMessageResponse> ExecuteTestMessage(TestMessage message)
         {
-            return HttpContext.GetMessageClient(TestMessage.T).Handle(message, cancellationToken);
+            return HttpContext.HandleMessage(message);
         }
 
         [HttpPost("/custom/api/testMessageWithoutPayload", Name = nameof(TestMessageWithoutPayload))]
         [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutPayload))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithoutPayload(CancellationToken cancellationToken)
+        public Task<TestMessageResponse> ExecuteTestMessageWithoutPayload()
         {
-            return HttpContext.GetMessageClient(TestMessageWithoutPayload.T).Handle(new(), cancellationToken);
+            return HttpContext.HandleMessage(new TestMessageWithoutPayload());
         }
 
         [HttpPost("/custom/api/testMessageWithoutResponse", Name = nameof(TestMessageWithoutResponse))]
         [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutResponse))]
         [Consumes(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(200)]
-        public Task ExecuteTestMessageWithoutResponse(TestMessageWithoutResponse message, CancellationToken cancellationToken)
+        [ProducesResponseType(204)]
+        public Task ExecuteTestMessageWithoutResponse(TestMessageWithoutResponse message)
         {
-            return HttpContext.GetMessageClient(TestMessageWithoutResponse.T).Handle(message, cancellationToken);
+            return HttpContext.HandleMessage(message);
         }
 
         [HttpPost("/custom/api/testMessageWithoutResponseWithoutPayload", Name = nameof(TestMessageWithoutResponseWithoutPayload))]
         [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutResponseWithoutPayload))]
-        [ProducesResponseType(200)]
-        public Task ExecuteTestMessageWithoutPayloadWithoutResponse(CancellationToken cancellationToken)
+        [ProducesResponseType(204)]
+        public Task ExecuteTestMessageWithoutPayloadWithoutResponse()
         {
-            return HttpContext.GetMessageClient(TestMessageWithoutResponseWithoutPayload.T).Handle(new(), cancellationToken);
+            return HttpContext.HandleMessage(new TestMessageWithoutResponseWithoutPayload());
         }
 
         [HttpGet("/custom/api/testMessageWithGet", Name = nameof(TestMessageWithGet))]
         [ApiExplorerSettings(GroupName = nameof(TestMessageWithGet))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithGet(int payload, string param, CancellationToken cancellationToken)
+        public Task<TestMessageResponse> ExecuteTestMessageWithGet(int payload, string param)
         {
-            return HttpContext.GetMessageClient(TestMessageWithGet.T).Handle(new() { Payload = payload, Param = param }, cancellationToken);
+            return HttpContext.HandleMessage(new TestMessageWithGet { Payload = payload, Param = param });
         }
 
         [HttpGet("/custom/api/testMessageWithGetWithoutPayload", Name = nameof(TestMessageWithGetWithoutPayload))]
         [ApiExplorerSettings(GroupName = nameof(TestMessageWithGetWithoutPayload))]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithGetWithoutPayload(CancellationToken cancellationToken)
+        public Task<TestMessageResponse> ExecuteTestMessageWithGetWithoutPayload()
         {
-            return HttpContext.GetMessageClient(TestMessageWithGetWithoutPayload.T).Handle(new(), cancellationToken);
+            return HttpContext.HandleMessage(new TestMessageWithGetWithoutPayload());
         }
 
         [HttpPost("/custom/api/testMessageWithMiddleware", Name = nameof(TestMessageWithMiddleware))]
         [ApiExplorerSettings(GroupName = nameof(TestMessageWithMiddleware))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithMiddleware(TestMessageWithMiddleware message, CancellationToken cancellationToken)
+        public Task<TestMessageResponse> ExecuteTestMessageWithMiddleware(TestMessageWithMiddleware message)
         {
-            return HttpContext.GetMessageClient(TestMessageWithMiddleware.T).Handle(message, cancellationToken);
+            return HttpContext.HandleMessage(message);
         }
     }
 

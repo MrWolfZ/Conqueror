@@ -46,6 +46,16 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
             return null;
         }
 
+        var attribute = signalTypeSymbol.GetAttributes()
+                                        .FirstOrDefault(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
+                                        ?.AttributeClass;
+
+        // we did not find a message attribute (e.g. a false positive from "[SomeOtherSignal(...)]")
+        if (attribute is null)
+        {
+            return null;
+        }
+
         ct.ThrowIfCancellationRequested();
 
         return GetSignalTypesDescriptor(signalTypeSymbol, context.SemanticModel);

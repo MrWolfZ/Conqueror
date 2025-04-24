@@ -15,11 +15,11 @@ public sealed record NestedObject
 
 public sealed record TopLevelTestMessageResponse(int Payload);
 
-internal sealed class TopLevelTestMessageHandler : TopLevelTestMessage.IHandler
+internal sealed partial class TopLevelTestMessageHandler : TopLevelTestMessage.IHandler
 {
-    public async Task<TopLevelTestMessageResponse> Handle(TopLevelTestMessage command, CancellationToken cancellationToken = default)
+    public async Task<TopLevelTestMessageResponse> Handle(TopLevelTestMessage message, CancellationToken cancellationToken = default)
     {
         await Task.Yield();
-        return new(command.Payload + 1);
+        return new(message.Payload + 1);
     }
 }

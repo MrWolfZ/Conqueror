@@ -24,15 +24,15 @@ public sealed partial class MessageContextTraceAndOperationIdTests
 
         var services = new ServiceCollection();
 
-        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (cmd, p, ct) =>
+        _ = services.AddMessageHandlerDelegate(TestMessage.T, async (cmd, p, ct) =>
                     {
                         await Task.Yield();
                         traceIdFromMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
                         messageIdFromMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetMessageId();
-                        _ = await p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new(), ct);
+                        _ = await p.GetRequiredService<IMessageSenders>().For(NestedTestMessage.T).Handle(new(), ct);
                         return new();
                     })
-                    .AddMessageHandlerDelegate<NestedTestMessage, TestMessageResponse>(async (_, p, _) =>
+                    .AddMessageHandlerDelegate(NestedTestMessage.T, async (_, p, _) =>
                     {
                         await Task.Yield();
                         traceIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
@@ -55,7 +55,7 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         var testCaseIdx = Interlocked.Increment(ref testCaseCounter);
         using var activity = hasActivity ? StartActivity(nameof(MessageContextTraceAndOperationIdTests) + testCaseIdx) : null;
 
-        var handlerClient = serviceProvider.GetRequiredService<IMessageClients>()
+        var handlerClient = serviceProvider.GetRequiredService<IMessageSenders>()
                                            .For(TestMessage.T)
                                            .WithTransport(b =>
                                            {

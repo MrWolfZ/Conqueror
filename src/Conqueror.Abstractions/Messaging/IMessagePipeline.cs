@@ -40,12 +40,9 @@ public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMe
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public class GeneratedMessagePipelineAdapter<TMessage, TResponse>
-    : IMessagePipeline<TMessage, TResponse>
+public class MessagePipelineProxy<TMessage, TResponse> : IMessagePipeline<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    public IMessagePipeline<TMessage, TResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
-
     public int Count => Wrapped.Count;
 
     public IServiceProvider ServiceProvider => Wrapped.ServiceProvider;
@@ -53,6 +50,8 @@ public class GeneratedMessagePipelineAdapter<TMessage, TResponse>
     public ConquerorContext ConquerorContext => Wrapped.ConquerorContext;
 
     public MessageTransportType TransportType => Wrapped.TransportType;
+
+    internal IMessagePipeline<TMessage, TResponse> Wrapped { get; init; } = null!; // guaranteed to be set in init code
 
     IEnumerator<IMessageMiddleware<TMessage, TResponse>> IEnumerable<IMessageMiddleware<TMessage, TResponse>>.GetEnumerator()
         => Wrapped.GetEnumerator();

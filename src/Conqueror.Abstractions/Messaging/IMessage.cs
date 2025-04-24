@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -13,25 +13,9 @@ namespace Conqueror;
 /// </summary>
 /// <typeparam name="TMessage">the message type</typeparam>
 /// <typeparam name="TResponse">the response type</typeparam>
-public interface IMessage<
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-    TMessage,
-    TResponse>
+public interface IMessage<out TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    static abstract IDefaultMessageTypesInjector DefaultTypeInjector { get; }
-
-    static abstract IReadOnlyCollection<IMessageTypesInjector> TypeInjectors { get; }
-
-    /// <summary>
-    ///     This helper property can be used for type inference instead of having
-    ///     to provide both the generic message and response type arguments.<br />
-    ///     <br />
-    ///     For example, instead of typing <code>messageClients.For&lt;MyMessage, MyMessageResponse&gt;()</code>
-    ///     you can write <code>messageClients.For(MyMessage.T)</code>, which is markedly shorter.
-    /// </summary>
-    static abstract MessageTypes<TMessage, TResponse> T { get; }
-
     /// <summary>
     ///     Some transports must be able to construct an instance of this message
     ///     if it has no properties, but since this is only known to the actual
@@ -53,7 +37,9 @@ public interface IMessage<
     /// </summary>
     static virtual JsonSerializerContext? JsonSerializerContext => null;
 
-    static virtual IEnumerable<PropertyInfo> PublicProperties => typeof(TMessage).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+    static abstract IEnumerable<ConstructorInfo> PublicConstructors { get; }
+
+    static abstract IEnumerable<PropertyInfo> PublicProperties { get; }
 }
 
 /// <summary>
@@ -61,12 +47,16 @@ public interface IMessage<
 /// </summary>
 /// <typeparam name="TMessage">the message type</typeparam>
 /// <typeparam name="TResponse">the response type</typeparam>
-public sealed class MessageTypes<TMessage, TResponse>
+/// <typeparam name="TIHandler">the handler interface type</typeparam>
+public sealed class MessageTypes<TMessage, TResponse, TIHandler>
     where TMessage : class, IMessage<TMessage, TResponse>
+    where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
 {
-    public static readonly MessageTypes<TMessage, TResponse> Default = new();
-
-    private MessageTypes()
+    public MessageTypes()
     {
+        if (!typeof(TIHandler).IsInterface || typeof(TIHandler).Name != "IHandler")
+        {
+            throw new ArgumentException($"expected message handler interface for message type '{typeof(TMessage)}', but got '{typeof(TIHandler)}'", nameof(TIHandler));
+        }
     }
 }

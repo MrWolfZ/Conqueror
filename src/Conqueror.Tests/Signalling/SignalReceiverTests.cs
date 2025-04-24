@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using Conqueror.Signalling;
 
 namespace Conqueror.Tests.Signalling;
@@ -9,17 +10,16 @@ public sealed partial class SignalReceiverTests
     public async Task GivenHandlerWithReceiverConfiguration_WhenRunningReceiver_ReceiverGetsConfiguredCorrectly()
     {
         var services = new ServiceCollection();
-        var testObservations = new TestObservations();
+        var observations = new TestObservations();
 
         _ = services.AddSignalHandler<TestSignalHandler>()
                     .AddSingleton<TestSignalTransportReceiverHost>()
-                    .AddSingleton(testObservations);
+                    .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
         var receiver = provider.GetRequiredService<TestSignalTransportReceiverHost>();
 
-        // TODO: actually invoke the invokers and assert that signals are received
         var configurations = await receiver.Run(CancellationToken.None);
 
         Assert.That(configurations, Is.EquivalentTo(new[]
@@ -27,18 +27,24 @@ public sealed partial class SignalReceiverTests
             (typeof(TestSignalWithTestTransport), new() { Parameter = 10, Parameter2 = 1 }),
             (typeof(TestSignal2WithTestTransport), new TestTransportSignalReceiverConfiguration { Parameter = 20, Parameter2 = 2 }),
         }));
+
+        var signal = new TestSignalWithTestTransport();
+
+        await receiver.Receive<TestSignalWithTestTransport, TestSignalWithTestTransport.IHandler, TestSignalHandler>(signal, CancellationToken.None);
+
+        Assert.That(observations.ReceivedSignals, Is.EquivalentTo(new[] { signal }));
     }
 
     [Test]
     public async Task GivenHandlerWithReceiverConfigurationForMixedTransports_WhenRunningReceiver_ReceiverGetsCorrectConfigurationForTransport()
     {
         var services = new ServiceCollection();
-        var testObservations = new TestObservations();
+        var observations = new TestObservations();
 
         _ = services.AddSignalHandler<MixedTestSignalHandler>()
                     .AddSingleton<TestSignalTransportReceiverHost>()
                     .AddSingleton<TestSignalTransport2ReceiverHost>()
-                    .AddSingleton(testObservations);
+                    .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -58,18 +64,28 @@ public sealed partial class SignalReceiverTests
         {
             (typeof(TestSignalWithTestTransport2), new TestTransport2SignalReceiverConfiguration { Parameter = 100 }),
         }));
+
+        var signal1 = new TestSignalWithTestTransport();
+        var signal2 = new TestSignal2WithTestTransport();
+        var signal3 = new TestSignalWithTestTransport2();
+
+        await receiver1.Receive<TestSignalWithTestTransport, TestSignalWithTestTransport.IHandler, MixedTestSignalHandler>(signal1, CancellationToken.None);
+        await receiver1.Receive<TestSignal2WithTestTransport, TestSignal2WithTestTransport.IHandler, MixedTestSignalHandler>(signal2, CancellationToken.None);
+        await receiver2.Receive<TestSignalWithTestTransport2, TestSignalWithTestTransport2.IHandler, MixedTestSignalHandler>(signal3, CancellationToken.None);
+
+        Assert.That(observations.ReceivedSignals, Is.EquivalentTo(new object[] { signal1, signal2, signal3 }));
     }
 
     [Test]
     public async Task GivenHandlerWithReceiverConfigurationForSignalTypeWithMultipleTransports_WhenRunningReceiver_ReceiverGetsCorrectConfigurationForTransport()
     {
         var services = new ServiceCollection();
-        var testObservations = new TestObservations();
+        var observations = new TestObservations();
 
         _ = services.AddSignalHandler<TestSignalWithMultipleTransportsHandler>()
                     .AddSingleton<TestSignalTransportReceiverHost>()
                     .AddSingleton<TestSignalTransport2ReceiverHost>()
-                    .AddSingleton(testObservations);
+                    .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
 
@@ -90,17 +106,48 @@ public sealed partial class SignalReceiverTests
         }));
     }
 
-    private sealed partial class TestSignalHandler : TestSignalWithTestTransport.IHandler, TestSignal2WithTestTransport.IHandler
+    [Test]
+    public async Task GivenHandlerWithReceiverConfigurationForSignalTypeHierarchy_WhenRunningReceiver_ReceiverGetsCorrectConfigurationForTransport()
     {
-        public Task Handle(TestSignalWithTestTransport signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
 
-        public Task Handle(TestSignal2WithTestTransport signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        _ = services.AddSignalHandler<TestSignalWithTypeHierarchyHandler>()
+                    .AddSingleton<TestSignalTransportReceiverHost>()
+                    .AddSingleton(observations);
 
-        public static Task ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
-            where T : class, ITestTransportSignal<T>
+        var provider = services.BuildServiceProvider();
+
+        var receiver = provider.GetRequiredService<TestSignalTransportReceiverHost>();
+
+        var configurations = await receiver.Run(CancellationToken.None);
+
+        Assert.That(configurations, Is.EquivalentTo(new[]
         {
-            var testObservations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
-            testObservations.ConfigureReceiverCallCount += 1;
+            (typeof(TestSignalWithTestTransportBase), new TestTransportSignalReceiverConfiguration { Parameter = 10, Parameter2 = 1 }),
+            (typeof(TestSignalWithTestTransportSub), new() { Parameter = 20, Parameter2 = 2 }),
+        }));
+    }
+
+    private sealed partial class TestSignalHandler(TestObservations observations) : TestSignalWithTestTransport.IHandler,
+                                                                                    TestSignal2WithTestTransport.IHandler
+    {
+        public Task Handle(TestSignalWithTestTransport signal, CancellationToken cancellationToken = default)
+        {
+            observations.ReceivedSignals.Add(signal);
+            return Task.CompletedTask;
+        }
+
+        public Task Handle(TestSignal2WithTestTransport signal, CancellationToken cancellationToken = default)
+        {
+            observations.ReceivedSignals.Add(signal);
+            return Task.CompletedTask;
+        }
+
+        static Task ITestTransportSignalHandler.ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
+        {
+            var observations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
+            observations.ConfigureReceiverCallCount += 1;
 
             _ = receiver.Enable(10).WithParameter2(1);
 
@@ -113,22 +160,33 @@ public sealed partial class SignalReceiverTests
         }
     }
 
-    private sealed partial class MixedTestSignalHandler
+    private sealed partial class MixedTestSignalHandler(TestObservations observations)
         : TestSignalWithTestTransport.IHandler,
           TestSignal2WithTestTransport.IHandler,
           TestSignalWithTestTransport2.IHandler
     {
-        public Task Handle(TestSignalWithTestTransport signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task Handle(TestSignal2WithTestTransport signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task Handle(TestSignalWithTestTransport2 signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public static Task ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
-            where T : class, ITestTransportSignal<T>
+        public Task Handle(TestSignalWithTestTransport signal, CancellationToken cancellationToken = default)
         {
-            var testObservations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
-            testObservations.ConfigureReceiverCallCount += 1;
+            observations.ReceivedSignals.Add(signal);
+            return Task.CompletedTask;
+        }
+
+        public Task Handle(TestSignal2WithTestTransport signal, CancellationToken cancellationToken = default)
+        {
+            observations.ReceivedSignals.Add(signal);
+            return Task.CompletedTask;
+        }
+
+        public Task Handle(TestSignalWithTestTransport2 signal, CancellationToken cancellationToken = default)
+        {
+            observations.ReceivedSignals.Add(signal);
+            return Task.CompletedTask;
+        }
+
+        static Task ITestTransportSignalHandler.ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
+        {
+            var observations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
+            observations.ConfigureReceiverCallCount += 1;
 
             _ = receiver.Enable(10);
 
@@ -140,39 +198,71 @@ public sealed partial class SignalReceiverTests
             return Task.CompletedTask;
         }
 
-        public static Task ConfigureTestTransport2Receiver<T>(ITestTransport2SignalReceiver<T> receiver)
-            where T : class, ITestTransport2Signal<T>
+        static Task ITestTransport2SignalHandler.ConfigureTestTransport2Receiver<T>(ITestTransport2SignalReceiver<T> receiver)
         {
-            var testObservations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
-            testObservations.ConfigureReceiverCallCount += 1;
+            var observations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
+            observations.ConfigureReceiverCallCount += 1;
 
             _ = receiver.Enable(100);
             return Task.CompletedTask;
         }
     }
 
-    private sealed partial class TestSignalWithMultipleTransportsHandler : TestSignalWithMultipleTestTransports.IHandler
+    private sealed partial class TestSignalWithMultipleTransportsHandler(TestObservations observations) : TestSignalWithMultipleTestTransports.IHandler
     {
-        public Task Handle(TestSignalWithMultipleTestTransports signal, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public static Task ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
-            where T : class, ITestTransportSignal<T>
+        public Task Handle(TestSignalWithMultipleTestTransports signal, CancellationToken cancellationToken = default)
         {
-            var testObservations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
-            testObservations.ConfigureReceiverCallCount += 1;
+            observations.ReceivedSignals.Add(signal);
+            return Task.CompletedTask;
+        }
+
+        static Task ITestTransportSignalHandler.ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
+        {
+            var observations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
+            observations.ConfigureReceiverCallCount += 1;
 
             _ = receiver.Enable(10);
 
             return Task.CompletedTask;
         }
 
-        public static Task ConfigureTestTransport2Receiver<T>(ITestTransport2SignalReceiver<T> receiver)
-            where T : class, ITestTransport2Signal<T>
+        static Task ITestTransport2SignalHandler.ConfigureTestTransport2Receiver<T>(ITestTransport2SignalReceiver<T> receiver)
         {
-            var testObservations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
-            testObservations.ConfigureReceiverCallCount += 1;
+            var observations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
+            observations.ConfigureReceiverCallCount += 1;
 
             _ = receiver.Enable(20);
+
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed partial class TestSignalWithTypeHierarchyHandler(TestObservations observations) : TestSignalWithTestTransportBase.IHandler,
+                                                                                                     TestSignalWithTestTransportSub.IHandler
+    {
+        public Task Handle(TestSignalWithTestTransportBase signal, CancellationToken cancellationToken = default)
+        {
+            observations.ReceivedSignals.Add(signal);
+            return Task.CompletedTask;
+        }
+
+        public Task Handle(TestSignalWithTestTransportSub signal, CancellationToken cancellationToken = default)
+        {
+            observations.ReceivedSignals.Add(signal);
+            return Task.CompletedTask;
+        }
+
+        static Task ITestTransportSignalHandler.ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
+        {
+            var observations = receiver.ServiceProvider.GetRequiredService<TestObservations>();
+            observations.ConfigureReceiverCallCount += 1;
+
+            _ = receiver.Enable(10).WithParameter2(1);
+
+            if (typeof(T) == typeof(TestSignalWithTestTransportSub))
+            {
+                _ = receiver.Enable(20).WithParameter2(2);
+            }
 
             return Task.CompletedTask;
         }
@@ -181,6 +271,8 @@ public sealed partial class SignalReceiverTests
     private sealed class TestObservations
     {
         public int ConfigureReceiverCallCount { get; set; }
+
+        public List<object> ReceivedSignals { get; } = [];
     }
 }
 
@@ -197,68 +289,117 @@ public sealed partial record TestSignalWithTestTransport2;
 [TestTransport2Signal]
 public sealed partial record TestSignalWithMultipleTestTransports;
 
-file sealed class TestSignalTransportReceiverHost(IServiceProvider serviceProvider, ISignalTransportRegistry registry)
+[TestTransportSignal]
+public partial record TestSignalWithTestTransportBase;
+
+[TestTransportSignal]
+public sealed partial record TestSignalWithTestTransportSub : TestSignalWithTestTransportBase;
+
+file sealed class TestSignalTransportReceiverHost(IServiceProvider serviceProvider, ISignalHandlerRegistry registry)
 {
+    private const string TestTransportTypeName = "test-transport";
+
+    private readonly Dictionary<(Type SignalType, Type HandlerType), ITestTransportSignalReceiver> receiverBySignalAndHandlerType = new();
+
     public async Task<IReadOnlyCollection<(Type SignalType, TestTransportSignalReceiverConfiguration Configuration)>> Run(CancellationToken cancellationToken)
     {
-        var invokers = registry.GetSignalInvokersForReceiver<ITestTransportSignalHandlerTypesInjector>();
+        var typesInjectors = registry.GetReceiverHandlerInvokers<ITestTransportSignalHandlerTypesInjector>();
         var result = new List<(Type SignalType, TestTransportSignalReceiverConfiguration Configuration)>();
 
-        foreach (var invoker in invokers)
+        foreach (var invoker in typesInjectors)
         {
-            var configuration = await invoker.TypesInjector.Create(new Injectable(serviceProvider, cancellationToken));
+            var receiver = await invoker.TypesInjector.Create(new Injectable(invoker, serviceProvider, cancellationToken));
 
-            if (configuration is not null)
+            if (receiver.Configuration is not null)
             {
-                result.Add((invoker.SignalType, configuration));
+                result.Add((invoker.SignalType, receiver.Configuration));
             }
+
+            receiverBySignalAndHandlerType.Add((invoker.SignalType, invoker.HandlerType ?? throw new NotSupportedException("delegates are not supported")), receiver);
         }
 
         return result;
     }
 
-    private sealed class Injectable(IServiceProvider serviceProvider, CancellationToken cancellationToken)
-        : ITestTransportSignalHandlerTypesInjectable<Task<TestTransportSignalReceiverConfiguration?>>
+    public async Task Receive<TSignal, TIHandler, THandler>(TSignal signal, CancellationToken cancellationToken)
+        where TSignal : class, ITestTransportSignal<TSignal>
+        where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler
     {
-        async Task<TestTransportSignalReceiverConfiguration?> ITestTransportSignalHandlerTypesInjectable<Task<TestTransportSignalReceiverConfiguration?>>
+        var receiver = receiverBySignalAndHandlerType.GetValueOrDefault((typeof(TSignal), typeof(THandler))) ?? throw new InvalidOperationException($"no configuration for handler type {typeof(THandler)}");
+        await receiver.Invoke(signal, cancellationToken);
+    }
+
+    private sealed class Injectable(ISignalReceiverHandlerInvoker invoker, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        : ITestTransportSignalHandlerTypesInjectable<Task<ITestTransportSignalReceiver>>
+    {
+        async Task<ITestTransportSignalReceiver> ITestTransportSignalHandlerTypesInjectable<Task<ITestTransportSignalReceiver>>
             .WithInjectedTypes<TSignal, TIHandler, THandler>()
         {
-            var receiverBuilder = new TestTransportSignalReceiver<TSignal>(serviceProvider, cancellationToken);
+            var receiverBuilder = new TestTransportSignalReceiver<TSignal>(serviceProvider, Invoke, cancellationToken);
             await THandler.ConfigureTestTransportReceiver(receiverBuilder);
-            return receiverBuilder.Configuration;
+
+            return receiverBuilder;
+
+            Task Invoke(TSignal signal, CancellationToken ct)
+            {
+                // TODO: populate context and add context data test
+                return invoker.Invoke(signal, serviceProvider, TestTransportTypeName, null, [], ct);
+            }
         }
     }
 }
 
-file sealed class TestSignalTransport2ReceiverHost(IServiceProvider serviceProvider, ISignalTransportRegistry registry)
+file sealed class TestSignalTransport2ReceiverHost(IServiceProvider serviceProvider, ISignalHandlerRegistry registry)
 {
+    private const string TestTransportTypeName = "test-transport-2";
+
+    private readonly Dictionary<(Type SignalType, Type HandlerType), ITestTransport2SignalReceiver> receiverBySignalAndHandlerType = new();
+
     public async Task<IReadOnlyCollection<(Type SignalType, TestTransport2SignalReceiverConfiguration Configuration)>> Run(CancellationToken cancellationToken)
     {
-        var invokers = registry.GetSignalInvokersForReceiver<ITestTransport2SignalHandlerTypesInjector>();
+        var typesInjectors = registry.GetReceiverHandlerInvokers<ITestTransport2SignalHandlerTypesInjector>();
         var result = new List<(Type SignalType, TestTransport2SignalReceiverConfiguration Configuration)>();
 
-        foreach (var invoker in invokers)
+        foreach (var invoker in typesInjectors)
         {
-            var configuration = await invoker.TypesInjector.Create(new Injectable(serviceProvider, cancellationToken));
+            var receiver = await invoker.TypesInjector.Create(new Injectable(invoker, serviceProvider, cancellationToken));
 
-            if (configuration is not null)
+            if (receiver.Configuration is not null)
             {
-                result.Add((invoker.SignalType, configuration));
+                result.Add((invoker.SignalType, receiver.Configuration));
             }
+
+            receiverBySignalAndHandlerType.Add((invoker.SignalType, invoker.HandlerType ?? throw new NotSupportedException("delegates are not supported")), receiver);
         }
 
         return result;
     }
 
-    private sealed class Injectable(IServiceProvider serviceProvider, CancellationToken cancellationToken)
-        : ITestTransport2TypesInjectable<Task<TestTransport2SignalReceiverConfiguration?>>
+    public async Task Receive<TSignal, TIHandler, THandler>(TSignal signal, CancellationToken cancellationToken)
+        where TSignal : class, ITestTransport2Signal<TSignal>
+        where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler
     {
-        async Task<TestTransport2SignalReceiverConfiguration?> ITestTransport2TypesInjectable<Task<TestTransport2SignalReceiverConfiguration?>>
+        var receiver = receiverBySignalAndHandlerType.GetValueOrDefault((typeof(TSignal), typeof(THandler))) ?? throw new InvalidOperationException($"no configuration for handler type {typeof(THandler)}");
+        await receiver.Invoke(signal, cancellationToken);
+    }
+
+    private sealed class Injectable(ISignalReceiverHandlerInvoker invoker, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        : ITestTransport2TypesInjectable<Task<ITestTransport2SignalReceiver>>
+    {
+        async Task<ITestTransport2SignalReceiver> ITestTransport2TypesInjectable<Task<ITestTransport2SignalReceiver>>
             .WithInjectedTypes<TSignal, TIHandler, THandler>()
         {
-            var receiverBuilder = new TestTransport2SignalReceiver<TSignal>(serviceProvider, cancellationToken);
+            var receiverBuilder = new TestTransport2SignalReceiver<TSignal>(serviceProvider, Invoke, cancellationToken);
             await THandler.ConfigureTestTransport2Receiver(receiverBuilder);
-            return receiverBuilder.Configuration;
+            return receiverBuilder;
+
+            Task Invoke(TSignal signal, CancellationToken ct)
+            {
+                // TODO: populate context and add context data test
+                return invoker.Invoke(signal, serviceProvider, TestTransportTypeName, null, [], ct);
+            }
         }
     }
 }
@@ -278,17 +419,21 @@ public interface ITestTransportSignal<out TSignal> : ISignal<TSignal>
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface ITestTransportSignalHandler<TSignal, TIHandler>
-    where TSignal : class, ITestTransportSignal<TSignal>
-    where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+public interface ITestTransportSignalHandler
 {
-    static virtual Task ConfigureTestTransportReceiver<T>(ITestTransportSignalReceiver<T> receiver)
-        where T : class, ITestTransportSignal<T>
+    static virtual Task ConfigureTestTransportReceiver<TSignal>(ITestTransportSignalReceiver<TSignal> receiver)
+        where TSignal : class, ITestTransportSignal<TSignal>
     {
         // by default, we don't configure the receiver
         return Task.CompletedTask;
     }
+}
 
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface ITestTransportSignalHandler<TSignal, TIHandler> : ISignalHandler<TSignal, TIHandler>, ITestTransportSignalHandler
+    where TSignal : class, ITestTransportSignal<TSignal>
+    where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+{
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
     static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
@@ -296,7 +441,15 @@ public interface ITestTransportSignalHandler<TSignal, TIHandler>
         => TestTransportSignalHandlerTypesInjector<TSignal, TIHandler, THandler>.Default;
 }
 
-public interface ITestTransportSignalReceiver<TSignal>
+public interface ITestTransportSignalReceiver
+{
+    TestTransportSignalReceiverConfiguration? Configuration { get; }
+
+    internal Task Invoke<TSignal>(TSignal signal, CancellationToken cancellationToken)
+        where TSignal : class, ITestTransportSignal<TSignal>;
+}
+
+public interface ITestTransportSignalReceiver<TSignal> : ITestTransportSignalReceiver
     where TSignal : class, ITestTransportSignal<TSignal>
 {
     IServiceProvider ServiceProvider { get; }
@@ -334,14 +487,18 @@ public interface ITestTransportSignalHandlerTypesInjectable<out TResult>
         where THandler : class, TIHandler;
 }
 
-file sealed class TestTransportSignalReceiver<T>(IServiceProvider serviceProvider, CancellationToken cancellationToken) : ITestTransportSignalReceiver<T>
+file sealed class TestTransportSignalReceiver<T>(
+    IServiceProvider serviceProvider,
+    Func<T, CancellationToken, Task> invokeFn,
+    CancellationToken cancellationToken)
+    : ITestTransportSignalReceiver<T>
     where T : class, ITestTransportSignal<T>
 {
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public CancellationToken CancellationToken { get; } = cancellationToken;
 
-    public TestTransportSignalReceiverConfiguration? Configuration { get; set; }
+    public TestTransportSignalReceiverConfiguration? Configuration { get; private set; }
 
     public ITestTransportSignalReceiver<T> Enable(int? parameter = null)
     {
@@ -358,6 +515,13 @@ file sealed class TestTransportSignalReceiver<T>(IServiceProvider serviceProvide
 
         Configuration.Parameter2 = parameter2;
         return this;
+    }
+
+    public Task Invoke<TSignal>(TSignal signal, CancellationToken cancellationToken)
+        where TSignal : class, ITestTransportSignal<TSignal>
+    {
+        Debug.Assert(typeof(T) == typeof(TSignal), $"wrong signal type, expected '{typeof(T)}', got '{typeof(TSignal)}'");
+        return invokeFn((signal as T)!, cancellationToken);
     }
 }
 
@@ -376,9 +540,7 @@ public interface ITestTransport2Signal<out TSignal> : ISignal<TSignal>
     where TSignal : class, ITestTransport2Signal<TSignal>;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface ITestTransport2SignalHandler<TSignal, TIHandler>
-    where TSignal : class, ITestTransport2Signal<TSignal>
-    where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
+public interface ITestTransport2SignalHandler
 {
     static virtual Task ConfigureTestTransport2Receiver<T>(ITestTransport2SignalReceiver<T> receiver)
         where T : class, ITestTransport2Signal<T>
@@ -386,7 +548,13 @@ public interface ITestTransport2SignalHandler<TSignal, TIHandler>
         // by default, we don't configure the receiver
         return Task.CompletedTask;
     }
+}
 
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface ITestTransport2SignalHandler<TSignal, TIHandler> : ISignalHandler<TSignal, TIHandler>, ITestTransport2SignalHandler
+    where TSignal : class, ITestTransport2Signal<TSignal>
+    where TIHandler : class, ITestTransport2SignalHandler<TSignal, TIHandler>
+{
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
     static ISignalHandlerTypesInjector CreateTestTransport2TypesInjector<THandler>()
@@ -394,7 +562,15 @@ public interface ITestTransport2SignalHandler<TSignal, TIHandler>
         => TestTransport2SignalHandlerTypesInjector<TSignal, TIHandler, THandler>.Default;
 }
 
-public interface ITestTransport2SignalReceiver<TSignal>
+public interface ITestTransport2SignalReceiver
+{
+    TestTransport2SignalReceiverConfiguration? Configuration { get; }
+
+    internal Task Invoke<TSignal>(TSignal signal, CancellationToken cancellationToken)
+        where TSignal : class, ITestTransport2Signal<TSignal>;
+}
+
+public interface ITestTransport2SignalReceiver<TSignal> : ITestTransport2SignalReceiver
     where TSignal : class, ITestTransport2Signal<TSignal>
 {
     IServiceProvider ServiceProvider { get; }
@@ -430,7 +606,10 @@ public interface ITestTransport2TypesInjectable<out TResult>
         where THandler : class, TIHandler;
 }
 
-file sealed class TestTransport2SignalReceiver<T>(IServiceProvider serviceProvider, CancellationToken cancellationToken) : ITestTransport2SignalReceiver<T>
+file sealed class TestTransport2SignalReceiver<T>(
+    IServiceProvider serviceProvider,
+    Func<T, CancellationToken, Task> invokeFn,
+    CancellationToken cancellationToken) : ITestTransport2SignalReceiver<T>
     where T : class, ITestTransport2Signal<T>
 {
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
@@ -443,6 +622,13 @@ file sealed class TestTransport2SignalReceiver<T>(IServiceProvider serviceProvid
     {
         Configuration = new() { Parameter = parameter };
         return this;
+    }
+
+    public Task Invoke<TSignal>(TSignal signal, CancellationToken cancellationToken)
+        where TSignal : class, ITestTransport2Signal<TSignal>
+    {
+        Debug.Assert(typeof(T) == typeof(TSignal), $"wrong signal type, expected '{typeof(T)}', got '{typeof(TSignal)}'");
+        return invokeFn((signal as T)!, cancellationToken);
     }
 }
 

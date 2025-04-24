@@ -386,8 +386,8 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
 
     private static string GetTransportRoleName(MessageTransportRole transportRole) => transportRole switch
     {
-        MessageTransportRole.Client => "client",
-        MessageTransportRole.Server => "server",
+        MessageTransportRole.Sender => "sender",
+        MessageTransportRole.Receiver => "receiver",
         _ => throw new ArgumentOutOfRangeException(nameof(transportRole), transportRole, null),
     };
 

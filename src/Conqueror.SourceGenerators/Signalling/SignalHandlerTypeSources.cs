@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -8,7 +7,6 @@ using Conqueror.SourceGenerators.Util;
 
 namespace Conqueror.SourceGenerators.Signalling;
 
-[SuppressMessage("Style", "IDE0058:Expression value is never used", Justification = "this is common for working with string builders")]
 public static class SignalHandlerTypeSources
 {
     public static (string Content, string FileName) GenerateSignalHandlerType(SignalHandlerTypeDescriptor descriptor)
@@ -18,7 +16,7 @@ public static class SignalHandlerTypeSources
         var content = sb.AppendHandlerTypeFile(in descriptor)
                         .ToString();
 
-        sb.Clear();
+        _ = sb.Clear();
 
         var filename = sb.Append(descriptor.HandlerDescriptor.FullyQualifiedName)
                          .Append("_ConquerorSignalHandlerType.g.cs")

@@ -35,18 +35,19 @@ public sealed class MessagingClientContextTests : IDisposable
 
     [Test]
     [TestCaseSource(nameof(GenerateContextDataTestCases))]
-    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned<TMessage, TResponse, THandler>(
+    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned<TMessage, TResponse, TIHandler, THandler>(
         bool hasUpstream,
         bool hasDownstream,
         bool hasBidirectional,
         bool hasActivity,
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         var clientServices = new ServiceCollection().AddConqueror()
                                                     .AddSingleton<TestObservations>()
@@ -68,7 +69,7 @@ public sealed class MessagingClientContextTests : IDisposable
 
         var clientServiceProvider = clientServices.BuildServiceProvider();
 
-        var messageClients = clientServiceProvider.GetRequiredService<IMessageClients>();
+        var messageClients = clientServiceProvider.GetRequiredService<IMessageSenders>();
 
         var serverTestObservations = host.Resolve<TestObservations>();
 
@@ -102,14 +103,24 @@ public sealed class MessagingClientContextTests : IDisposable
         string? seenMessageIdOnClient = null;
         string? seenTraceIdOnClient = null;
 
-        _ = await messageClients.For<TMessage, TResponse>()
-                                .WithTransport(b =>
-                                {
-                                    seenMessageIdOnClient = b.ConquerorContext.GetMessageId();
-                                    seenTraceIdOnClient = b.ConquerorContext.GetTraceId();
-                                    return b.UseHttp(new("http://localhost")).WithHttpClient(httpClient);
-                                })
-                                .Handle((TMessage)testCase.Message, host.TestTimeoutToken);
+        var handler = messageClients.For(TIHandler.MessageTypes)
+                                    .WithTransport(b =>
+                                    {
+                                        seenMessageIdOnClient = b.ConquerorContext.GetMessageId();
+                                        seenTraceIdOnClient = b.ConquerorContext.GetTraceId();
+                                        return b.UseHttp(new("http://localhost")).WithHttpClient(httpClient);
+                                    });
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await Assert.ThatAsync(() => THandler.Invoke(handler, (TMessage)testCase.Message, host.TestTimeoutToken), Throws.TypeOf<HttpMessageFailedOnClientException>());
+
+            Assert.That(seenMessageIdOnServer, Is.Null);
+            Assert.That(seenTraceIdOnServer, Is.Null);
+            return;
+        }
+
+        _ = await THandler.Invoke(handler, (TMessage)testCase.Message, host.TestTimeoutToken);
 
         Assert.That(seenMessageIdOnServer, Is.EqualTo(seenMessageIdOnClient));
         Assert.That(seenTraceIdOnServer, Is.EqualTo(seenTraceIdOnClient));

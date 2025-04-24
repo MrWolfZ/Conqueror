@@ -11,17 +11,17 @@ public sealed partial class MessageHandlerRegistrationTests
         var services = new ServiceCollection().AddMessageHandler<TestMessageHandler>()
                                               .AddMessageHandler<TestMessage2Handler>();
 
-        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageClients)));
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageSenders)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageIdFactory)));
-        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MessageTransportRegistry)));
-        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageTransportRegistry)));
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MessageHandlerRegistry)));
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageHandlerRegistry)));
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IConquerorContextAccessor)));
     }
 
     [Test]
     [Combinatorial]
     public void GivenServiceCollection_WhenAddingMessageHandlers_AddsCorrectHandlerRegistrations(
-        [Values("type", "factory", "instance", "delegate", "sync_delegate", "explicit_delegate", "explicit_sync_delegate")]
+        [Values("type", "factory", "instance", "delegate", "sync_delegate")]
         string registrationMethod)
     {
         var services = new ServiceCollection();
@@ -48,14 +48,6 @@ public sealed partial class MessageHandlerRegistrationTests
                                        .AddMessageHandlerDelegate(TestMessage2.T, (_, _, _) => new())
                                        .AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => { })
                                        .AddMessageHandlerDelegate(TestMessageWithoutResponse2.T, (_, _, _) => { }),
-            "explicit_delegate" => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse()))
-                                           .AddMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => Task.FromResult(new TestMessage2Response()))
-                                           .AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask)
-                                           .AddMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => Task.CompletedTask),
-            "explicit_sync_delegate" => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new())
-                                                .AddMessageHandlerDelegate<TestMessage2, TestMessage2Response>((_, _, _) => new())
-                                                .AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { })
-                                                .AddMessageHandlerDelegate<TestMessageWithoutResponse2>((_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
         };
 
@@ -63,17 +55,49 @@ public sealed partial class MessageHandlerRegistrationTests
 
         var handlerRegistrations = services.Select(d => d.ImplementationInstance)
                                            .OfType<MessageHandlerRegistration>()
-                                           .Select(r => (r.MessageType, r.ResponseType, r.HandlerType))
+                                           .Select(r => (r.MessageType, r.ResponseType, r.HandlerType, r.HandlerFn is not null))
                                            .ToList();
 
-        var isDelegate = registrationMethod is "delegate" or "sync_delegate" or "explicit_delegate" or "explicit_sync_delegate";
+        var isDelegate = registrationMethod is "delegate" or "sync_delegate";
 
         var expectedRegistrations = new[]
         {
-            (typeof(TestMessage), typeof(TestMessageResponse), isDelegate ? typeof(DelegateMessageHandler<TestMessage, TestMessageResponse>) : typeof(TestMessageHandler)),
-            (typeof(TestMessage2), typeof(TestMessage2Response), isDelegate ? typeof(DelegateMessageHandler<TestMessage2, TestMessage2Response>) : typeof(TestMessage2Handler)),
-            (typeof(TestMessageWithoutResponse), typeof(UnitMessageResponse), isDelegate ? typeof(DelegateMessageHandler<TestMessageWithoutResponse>) : typeof(TestMessageWithoutResponseHandler)),
-            (typeof(TestMessageWithoutResponse2), typeof(UnitMessageResponse), isDelegate ? typeof(DelegateMessageHandler<TestMessageWithoutResponse2>) : typeof(TestMessageWithoutResponse2Handler)),
+            (typeof(TestMessage), typeof(TestMessageResponse), isDelegate ? null : typeof(TestMessageHandler), isDelegate),
+            (typeof(TestMessage2), typeof(TestMessage2Response), isDelegate ? null : typeof(TestMessage2Handler), isDelegate),
+            (typeof(TestMessageWithoutResponse), typeof(UnitMessageResponse), isDelegate ? null : typeof(TestMessageWithoutResponseHandler), isDelegate),
+            (typeof(TestMessageWithoutResponse2), typeof(UnitMessageResponse), isDelegate ? null : typeof(TestMessageWithoutResponse2Handler), isDelegate),
+        };
+
+        Assert.That(handlerRegistrations, Is.EquivalentTo(expectedRegistrations));
+    }
+
+    [Test]
+    [Combinatorial]
+    public void GivenServiceCollection_WhenAddingMessageHandlerForMultipleMessageTypes_AddsCorrectHandlerRegistrations(
+        [Values("type", "factory", "instance")]
+        string registrationMethod)
+    {
+        var services = new ServiceCollection();
+
+        _ = registrationMethod switch
+        {
+            "type" => services.AddMessageHandler<MultiTestMessageHandler>(),
+            "factory" => services.AddMessageHandler(_ => new MultiTestMessageHandler()),
+            "instance" => services.AddMessageHandler(new MultiTestMessageHandler()),
+            _ => throw new ArgumentOutOfRangeException(nameof(registrationMethod), registrationMethod, null),
+        };
+
+        Assert.That(services, Has.Exactly(2).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MessageHandlerRegistration)));
+
+        var handlerRegistrations = services.Select(d => d.ImplementationInstance)
+                                           .OfType<MessageHandlerRegistration>()
+                                           .Select(r => (r.MessageType, r.HandlerType))
+                                           .ToList();
+
+        var expectedRegistrations = new[]
+        {
+            (typeof(TestMessage), typeof(MultiTestMessageHandler)),
+            (typeof(TestMessage2), typeof(MultiTestMessageHandler)),
         };
 
         Assert.That(handlerRegistrations, Is.EquivalentTo(expectedRegistrations));
@@ -112,9 +136,6 @@ public sealed partial class MessageHandlerRegistrationTests
         Register(overwrittenLifetime, overwrittenRegistrationMethod);
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(TestMessageHandler)));
-
-        // assert that we do not explicitly register handlers on their interface
-        Assert.That(services, Has.Exactly(0).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageHandler<TestMessage, TestMessageResponse>)));
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MessageHandlerRegistration)));
 
@@ -177,9 +198,6 @@ public sealed partial class MessageHandlerRegistrationTests
 
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(TestMessageWithoutResponseHandler)));
 
-        // assert that we do not explicitly register handlers on their interface
-        Assert.That(services, Has.Exactly(0).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(IMessageHandler<TestMessageWithoutResponse>)));
-
         Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MessageHandlerRegistration)));
 
         var handlerServiceDescriptor = services.Single(s => s.ServiceType == typeof(TestMessageWithoutResponseHandler));
@@ -232,8 +250,8 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "type") => services.AddMessageHandler<TestMessageHandler>(l.Value),
             (var l, "factory") => services.AddMessageHandler(factory, l.Value),
             (_, "instance") => services.AddMessageHandler(instance),
-            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromException<TestMessageResponse>(new NotSupportedException())),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate((MessageHandlerFn<TestMessage, TestMessageResponse>)((_, _, _) => throw new NotSupportedException())),
+            (_, "delegate") => services.AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => Task.FromException<TestMessageResponse>(new NotSupportedException())),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessage.T, (MessageHandlerFn<TestMessage, TestMessageResponse>)((_, _, _) => throw new NotSupportedException())),
             _ => throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null),
         };
 
@@ -244,8 +262,8 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "type") => services.AddMessageHandler<DuplicateTestMessageHandler>(l.Value),
             (var l, "factory") => services.AddMessageHandler(duplicateFactory, l.Value),
             (_, "instance") => services.AddMessageHandler(duplicateInstance),
-            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => Task.FromResult(new TestMessageResponse())),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((_, _, _) => new()),
+            (_, "delegate") => services.AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => Task.FromResult(new TestMessageResponse())),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessage.T, (_, _, _) => new()),
             _ => throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null),
         };
 
@@ -272,10 +290,12 @@ public sealed partial class MessageHandlerRegistrationTests
             case "factory":
             case "instance":
                 Assert.That(handlerRegistration.HandlerType, Is.EqualTo(typeof(DuplicateTestMessageHandler)));
+                Assert.That(handlerRegistration.HandlerFn, Is.Null);
                 break;
             case "delegate":
             case "sync_delegate":
-                Assert.That(handlerRegistration.HandlerType, Is.EqualTo(typeof(DelegateMessageHandler<TestMessage, TestMessageResponse>)));
+                Assert.That(handlerRegistration.HandlerType, Is.Null);
+                Assert.That(handlerRegistration.HandlerFn, Is.Not.Null);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null);
@@ -283,7 +303,7 @@ public sealed partial class MessageHandlerRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>().For(TestMessage.T);
+        var handler = provider.GetRequiredService<IMessageSenders>().For(TestMessage.T);
 
         // this asserts that the overwriting handler is called since the original handler would throw
         Assert.That(() => handler.Handle(new()), Throws.Nothing);
@@ -314,8 +334,8 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "type") => services.AddMessageHandler<TestMessageWithoutResponseHandler>(l.Value),
             (var l, "factory") => services.AddMessageHandler(factory, l.Value),
             (_, "instance") => services.AddMessageHandler(instance),
-            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.FromException<TestMessageResponse>(new NotSupportedException())),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate((MessageHandlerFn<TestMessageWithoutResponse>)((_, _, _) => throw new NotSupportedException())),
+            (_, "delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => Task.FromException<TestMessageResponse>(new NotSupportedException())),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (MessageHandlerSyncFn<TestMessageWithoutResponse>)((_, _, _) => throw new NotSupportedException())),
             _ => throw new ArgumentOutOfRangeException(nameof(initialRegistrationMethod), initialRegistrationMethod, null),
         };
 
@@ -326,8 +346,8 @@ public sealed partial class MessageHandlerRegistrationTests
             (var l, "type") => services.AddMessageHandler<DuplicateTestMessageWithoutResponseHandler>(l.Value),
             (var l, "factory") => services.AddMessageHandler(duplicateFactory, l.Value),
             (_, "instance") => services.AddMessageHandler(duplicateInstance),
-            (_, "delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => Task.CompletedTask),
-            (_, "sync_delegate") => services.AddMessageHandlerDelegate<TestMessageWithoutResponse>((_, _, _) => { }),
+            (_, "delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => Task.CompletedTask),
+            (_, "sync_delegate") => services.AddMessageHandlerDelegate(TestMessageWithoutResponse.T, (_, _, _) => { }),
             _ => throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null),
         };
 
@@ -354,10 +374,12 @@ public sealed partial class MessageHandlerRegistrationTests
             case "factory":
             case "instance":
                 Assert.That(handlerRegistration.HandlerType, Is.EqualTo(typeof(DuplicateTestMessageWithoutResponseHandler)));
+                Assert.That(handlerRegistration.HandlerFn, Is.Null);
                 break;
             case "delegate":
             case "sync_delegate":
-                Assert.That(handlerRegistration.HandlerType, Is.EqualTo(typeof(DelegateMessageHandler<TestMessageWithoutResponse>)));
+                Assert.That(handlerRegistration.HandlerType, Is.Null);
+                Assert.That(handlerRegistration.HandlerFn, Is.Not.Null);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(overwrittenRegistrationMethod), overwrittenRegistrationMethod, null);
@@ -365,7 +387,7 @@ public sealed partial class MessageHandlerRegistrationTests
 
         using var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>().For(TestMessageWithoutResponse.T);
+        var handler = provider.GetRequiredService<IMessageSenders>().For(TestMessageWithoutResponse.T);
 
         // this asserts that the overwriting handler is called since the original handler would throw
         Assert.That(() => handler.Handle(new()), Throws.Nothing);
@@ -382,30 +404,6 @@ public sealed partial class MessageHandlerRegistrationTests
 
         Assert.That(() => new ServiceCollection().AddMessageHandler<AbstractTestMessageHandler>(),
                     Throws.InvalidOperationException.With.Message.Match("must not be an interface or abstract class"));
-
-        Assert.That(() => new ServiceCollection().AddMessageHandler<MultiTestMessageHandler>(),
-                    Throws.InvalidOperationException.With.Message.Match("implements multiple message handler interfaces"));
-    }
-
-    [Test]
-    public void GivenServiceCollection_WhenAddingHandlerTypeWithInvalidConfigurePipelineMethod_ThrowsInvalidOperationException()
-    {
-        var configurePipelineName = nameof(IGeneratedMessageHandler<TestMessage, TestMessageResponse, TestMessage.IPipeline>.ConfigurePipeline);
-
-        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithConfigurePipelineForOtherMessageType>(),
-                    Throws.InvalidOperationException.With.Message.Match($"does not implement the '{configurePipelineName}' method correctly"));
-
-        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithConfigurePipelineWithoutParameters>(),
-                    Throws.InvalidOperationException.With.Message.Match($"does not implement the '{configurePipelineName}' method correctly"));
-
-        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithConfigurePipelineWithMultipleParameters>(),
-                    Throws.InvalidOperationException.With.Message.Match($"does not implement the '{configurePipelineName}' method correctly"));
-
-        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithConfigurePipelineWithWrongReturnType>(),
-                    Throws.InvalidOperationException.With.Message.Match($"does not implement the '{configurePipelineName}' method correctly"));
-
-        Assert.That(() => new ServiceCollection().AddMessageHandler<TestMessageHandlerWithMultipleConfigurePipeline>(),
-                    Throws.InvalidOperationException.With.Message.Match($"implements '{configurePipelineName}' multiple times"));
     }
 
     [Message<TestMessageResponse>]
@@ -424,87 +422,44 @@ public sealed partial class MessageHandlerRegistrationTests
     [Message]
     private sealed partial record TestMessageWithoutResponse2;
 
-    private sealed class TestMessageHandler : TestMessage.IHandler
+    private sealed partial class TestMessageHandler : TestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestMessage2Handler : TestMessage2.IHandler
+    private sealed partial class TestMessage2Handler : TestMessage2.IHandler
     {
         public Task<TestMessage2Response> Handle(TestMessage2 message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class DuplicateTestMessageHandler : TestMessage.IHandler
+    private sealed partial class DuplicateTestMessageHandler : TestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => Task.FromResult(new TestMessageResponse());
     }
 
-    private sealed class TestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
+    private sealed partial class TestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
     {
         public Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class TestMessageWithoutResponse2Handler : TestMessageWithoutResponse2.IHandler
+    private sealed partial class TestMessageWithoutResponse2Handler : TestMessageWithoutResponse2.IHandler
     {
         public Task Handle(TestMessageWithoutResponse2 message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class DuplicateTestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
+    private sealed partial class DuplicateTestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler
     {
         public Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestMessageHandlerWithConfigurePipelineForOtherMessageType : TestMessage.IHandler
-    {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-
-        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline) => throw new NotSupportedException();
-    }
-
-    private sealed class TestMessageHandlerWithConfigurePipelineWithoutParameters : TestMessage.IHandler
-    {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-
-        public static void ConfigurePipeline() => throw new NotSupportedException();
-    }
-
-    private sealed class TestMessageHandlerWithConfigurePipelineWithMultipleParameters : TestMessage.IHandler
-    {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-
-        public static void ConfigurePipeline(TestMessage.IPipeline pipeline, int otherParam) => throw new NotSupportedException();
-    }
-
-    private sealed class TestMessageHandlerWithConfigurePipelineWithWrongReturnType : TestMessage.IHandler
-    {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-
-        public static int ConfigurePipeline(TestMessage.IPipeline pipeline) => throw new NotSupportedException();
-    }
-
-    private sealed class TestMessageHandlerWithMultipleConfigurePipeline : TestMessage.IHandler
-    {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-
-        public static void ConfigurePipeline(TestMessage.IPipeline pipeline) => throw new NotSupportedException();
-
-        public static void ConfigurePipeline(TestMessage.IPipeline pipeline, int param) => throw new NotSupportedException();
-    }
-
-    private abstract class AbstractTestMessageHandler : TestMessage.IHandler
+    private abstract partial class AbstractTestMessageHandler : TestMessage.IHandler
     {
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
     }
 
-    // in user code this shouldn't even compile, since DefaultTypeInjector is internal, and the compiler
-    // will complain about a non-specific implementation, which is a nice safeguard against users trying to
-    // do this
-    private sealed class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
+    private sealed partial class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
     {
-        public static IDefaultMessageTypesInjector DefaultTypeInjector
-            => throw new NotSupportedException();
-
         public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
 

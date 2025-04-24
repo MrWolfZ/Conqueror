@@ -16,7 +16,7 @@ builder.ConfigureServices(services =>
 
 var host = builder.Build();
 
-var messageHandler = host.Services.GetRequiredService<IMessageClients>().For(TestMessage.T);
+var messageHandler = host.Services.GetRequiredService<IMessageSenders>().For(TestMessage.T);
 var response = await messageHandler.Handle(new() { Payload = 10 });
 
 Console.WriteLine($"got response: {response}");

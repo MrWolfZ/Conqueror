@@ -7,38 +7,62 @@ using System.Threading.Tasks;
 
 namespace Conqueror.Signalling;
 
-internal sealed class InProcessSignalReceiver(SignalTransportRegistry registry, IServiceProvider serviceProviderField)
+internal sealed class InProcessSignalReceiver(SignalHandlerRegistry registry, IServiceProvider serviceProviderField)
 {
-    private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ISignalReceiverHandlerInvoker<ICoreSignalHandlerTypesInjector>>> invokersBySignalType = new();
+    private readonly ConcurrentDictionary<Type, List<IInvoker>> invokersBySignalType = new();
 
     public async Task Broadcast<TSignal>(TSignal signal,
                                          IServiceProvider serviceProvider,
                                          ISignalBroadcastingStrategy broadcastingStrategy,
-                                         string transportTypeName,
                                          CancellationToken cancellationToken)
         where TSignal : class, ISignal<TSignal>
     {
         var relevantInvokers = invokersBySignalType.GetOrAdd(signal.GetType(), GetSignalInvokers);
 
-        await broadcastingStrategy.BroadcastSignal(relevantInvokers, serviceProvider, signal, transportTypeName, cancellationToken)
+        await broadcastingStrategy.BroadcastSignal(relevantInvokers.ConvertAll<SignalHandlerFn<TSignal>>(i => i.Invoke),
+                                                   serviceProvider,
+                                                   signal,
+                                                   cancellationToken)
                                   .ConfigureAwait(false);
     }
 
-    private IReadOnlyCollection<ISignalReceiverHandlerInvoker<ICoreSignalHandlerTypesInjector>> GetSignalInvokers(Type signalType)
+    private List<IInvoker> GetSignalInvokers(Type signalType)
     {
-        return registry.GetSignalInvokersForReceiver<ICoreSignalHandlerTypesInjector>()
-                       .Where(i => signalType.IsAssignableTo(i.SignalType))
-                       .Where(i => i.TypesInjector.Create(new Injectable(serviceProviderField)))
+        return registry.GetReceiverHandlerInvokers<ICoreSignalHandlerTypesInjector>()
+                       .Where(i => signalType.IsAssignableTo(i.TypesInjector.SignalType))
+                       .Select(i => i.TypesInjector.Create(new Injectable(i, serviceProviderField)))
+                       .OfType<IInvoker>()
                        .ToList();
     }
 
-    private sealed class Injectable(IServiceProvider serviceProvider) : ICoreSignalHandlerTypesInjectable<bool>
+    private interface IInvoker
     {
-        bool ICoreSignalHandlerTypesInjectable<bool>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
+        Task Invoke(object signal, IServiceProvider serviceProvider, CancellationToken cancellationToken);
+    }
+
+    private sealed class Invoker<TSignal>(ISignalReceiverHandlerInvoker invoker) : IInvoker
+        where TSignal : class, ISignal<TSignal>
+    {
+        public Task Invoke(object signal, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+        {
+            return invoker.Invoke((TSignal)signal,
+                                  serviceProvider,
+                                  ConquerorConstants.InProcessTransportName,
+                                  null,
+
+                                  // the context data is already automatically being propagated in-memory, so me don't need to add it again
+                                  [],
+                                  cancellationToken);
+        }
+    }
+
+    private sealed class Injectable(ISignalReceiverHandlerInvoker invoker, IServiceProvider serviceProvider) : ICoreSignalHandlerTypesInjectable<IInvoker?>
+    {
+        IInvoker? ICoreSignalHandlerTypesInjectable<IInvoker?>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
         {
             var receiver = new Receiver<TSignal>(serviceProvider);
             THandler.ConfigureInProcessReceiver(receiver);
-            return receiver.IsEnabled;
+            return !receiver.IsEnabled ? null : new Invoker<TSignal>(invoker);
         }
     }
 

@@ -5,12 +5,12 @@ namespace Conqueror;
 
 public static class SignalHandlerExtensions
 {
-    public static THandler WithPipeline<TSignal, THandler>(this ISignalHandler<TSignal, THandler> handler,
-                                                           Action<ISignalPipeline<TSignal>> configurePipeline)
+    public static TIHandler WithPipeline<TSignal, TIHandler>(this ISignalHandler<TSignal, TIHandler> handler,
+                                                             Action<ISignalPipeline<TSignal>> configurePipeline)
         where TSignal : class, ISignal<TSignal>
-        where THandler : class, ISignalHandler<TSignal, THandler>
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        if (handler is ISignalHandlerProxy<TSignal, THandler> c)
+        if (handler is ISignalHandlerProxy<TSignal, TIHandler> c)
         {
             return c.WithPipeline(configurePipeline);
         }
@@ -18,29 +18,29 @@ public static class SignalHandlerExtensions
         throw new ArgumentException($"handler type '{handler.GetType()}' is not supported in {nameof(WithPipeline)}", nameof(handler), null);
     }
 
-    public static THandler WithPublisher<TSignal, THandler>(this ISignalHandler<TSignal, THandler> handler,
-                                                            ConfigureSignalPublisher<TSignal> configurePublisher)
+    public static TIHandler WithTransport<TSignal, TIHandler>(this ISignalHandler<TSignal, TIHandler> handler,
+                                                              ConfigureSignalPublisher<TSignal> configureTransport)
         where TSignal : class, ISignal<TSignal>
-        where THandler : class, ISignalHandler<TSignal, THandler>
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        if (handler is ISignalHandlerProxy<TSignal, THandler> c)
+        if (handler is ISignalHandlerProxy<TSignal, TIHandler> c)
         {
-            return c.WithPublisher(configurePublisher);
+            return c.WithTransport(configureTransport);
         }
 
-        throw new ArgumentException($"handler type '{handler.GetType()}' is not supported in {nameof(WithPublisher)}", nameof(handler), null);
+        throw new ArgumentException($"handler type '{handler.GetType()}' is not supported in {nameof(WithTransport)}", nameof(handler), null);
     }
 
-    public static THandler WithPublisher<TSignal, THandler>(this ISignalHandler<TSignal, THandler> handler,
-                                                            ConfigureSignalPublisherAsync<TSignal> configurePublisher)
+    public static TIHandler WithTransport<TSignal, TIHandler>(this ISignalHandler<TSignal, TIHandler> handler,
+                                                              ConfigureSignalPublisherAsync<TSignal> configureTransport)
         where TSignal : class, ISignal<TSignal>
-        where THandler : class, ISignalHandler<TSignal, THandler>
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        if (handler is ISignalHandlerProxy<TSignal, THandler> c)
+        if (handler is ISignalHandlerProxy<TSignal, TIHandler> c)
         {
-            return c.WithPublisher(configurePublisher);
+            return c.WithTransport(configureTransport);
         }
 
-        throw new ArgumentException($"handler type '{handler.GetType()}' is not supported in {nameof(WithPublisher)}", nameof(handler), null);
+        throw new ArgumentException($"handler type '{handler.GetType()}' is not supported in {nameof(WithTransport)}", nameof(handler), null);
     }
 }

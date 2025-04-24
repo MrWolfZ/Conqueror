@@ -30,12 +30,4 @@
         <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <!-- Package the generator in the analyzer directory of the nuget package -->
-        <None Remove="$(OutputPath)/Conqueror.Transport.Http.SourceGenerators.dll" />
-        <None Remove="$(OutputPath)/Conqueror.SourceGenerators.Util.dll" />
-        <None Include="$(MSBuildProjectDirectory)/../../build/.publish/Conqueror.Transport.Http.SourceGenerators/Conqueror.Transport.Http.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-        <None Include="$(MSBuildProjectDirectory)/../../build/.publish/Conqueror.SourceGenerators/Conqueror.SourceGenerators.Util.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    </ItemGroup>
-
 </Project>

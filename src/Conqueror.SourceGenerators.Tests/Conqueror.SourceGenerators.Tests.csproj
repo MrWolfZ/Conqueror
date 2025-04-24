@@ -4,7 +4,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror.SourceGenerators.TestUtil\Conqueror.SourceGenerators.TestUtil.csproj" />
         <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" />
     </ItemGroup>
 

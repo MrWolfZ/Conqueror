@@ -8,7 +8,7 @@ namespace Conqueror;
 
 [MessageTransport(Prefix = "Http", Namespace = "Conqueror")]
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public class HttpMessageAttribute : ConquerorMessageTransportAttribute
+public class HttpMessageAttribute : Attribute
 {
     public string? HttpMethod { get; set; }
 

@@ -2,11 +2,15 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Conqueror.Context;
 
-internal sealed class DefaultConquerorContextData : IConquerorContextData
+// TODO: move to abstractions and replace interface with concrete class
+public sealed class DefaultConquerorContextData : IConquerorContextData
 {
+    public static readonly DefaultConquerorContextData Empty = new();
+
     private readonly Lazy<ConcurrentDictionary<string, (object Value, ConquerorContextDataScope Scope)>> itemsLazy = new();
 
     public IEnumerator<(string Key, object Value, ConquerorContextDataScope Scope)> GetEnumerator()
@@ -69,5 +73,20 @@ internal sealed class DefaultConquerorContextData : IConquerorContextData
         }
 
         return (T)v.Value;
+    }
+
+    public void CopyTo(IConquerorContextData destination)
+    {
+        foreach (var (key, (value, scope)) in itemsLazy.Value)
+        {
+            if (value is string s)
+            {
+                destination.Set(key, s, scope);
+                continue;
+            }
+
+            Debug.Assert(scope is ConquerorContextDataScope.InProcess, "only in-process scoped values cannot be strings");
+            destination.Set(key, value);
+        }
     }
 }

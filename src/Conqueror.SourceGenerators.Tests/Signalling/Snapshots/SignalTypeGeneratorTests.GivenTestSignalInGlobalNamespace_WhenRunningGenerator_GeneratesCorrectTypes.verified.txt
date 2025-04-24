@@ -41,6 +41,10 @@ partial record TestSignal : global::Conqueror.ISignal<TestSignal>
     static TestSignal global::Conqueror.ISignal<TestSignal>.EmptyInstance => new();
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+    static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.ISignal<TestSignal>.PublicConstructors
+        => typeof(TestSignal).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
+
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
     static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.ISignal<TestSignal>.PublicProperties
         => typeof(TestSignal).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
 }

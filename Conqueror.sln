@@ -372,14 +372,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Loggin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging.Tests", "src\Conqueror.Middleware.Logging.Tests\Conqueror.Middleware.Logging.Tests.csproj", "{15084881-E515-4FF4-8640-AB7C08552A64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators.Util", "src\Conqueror.SourceGenerators.Util\Conqueror.SourceGenerators.Util.csproj", "{54BFD3E5-A791-47F7-ABF0-306380978E0A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators.TestUtil", "src\Conqueror.SourceGenerators.TestUtil\Conqueror.SourceGenerators.TestUtil.csproj", "{091AD74C-BC22-457E-A107-C394171CF4ED}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.SourceGenerators", "src\Conqueror.Transport.Http.SourceGenerators\Conqueror.Transport.Http.SourceGenerators.csproj", "{46379060-EF02-4D37-BB3D-DE4C804EEBF2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.SourceGenerators.Tests", "src\Conqueror.Transport.Http.SourceGenerators.Tests\Conqueror.Transport.Http.SourceGenerators.Tests.csproj", "{7D9BF2C2-6126-47C2-849F-EDC69F108383}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization", "src\Conqueror.Middleware.Authorization\Conqueror.Middleware.Authorization.csproj", "{B251E37A-25A6-45C3-882D-C1A32B3911C8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Tests", "src\Conqueror.Middleware.Authorization.Tests\Conqueror.Middleware.Authorization.Tests.csproj", "{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}"
@@ -915,22 +907,6 @@ Global
 		{15084881-E515-4FF4-8640-AB7C08552A64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15084881-E515-4FF4-8640-AB7C08552A64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15084881-E515-4FF4-8640-AB7C08552A64}.Release|Any CPU.Build.0 = Release|Any CPU
-		{54BFD3E5-A791-47F7-ABF0-306380978E0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{54BFD3E5-A791-47F7-ABF0-306380978E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{54BFD3E5-A791-47F7-ABF0-306380978E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{54BFD3E5-A791-47F7-ABF0-306380978E0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{091AD74C-BC22-457E-A107-C394171CF4ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{091AD74C-BC22-457E-A107-C394171CF4ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{091AD74C-BC22-457E-A107-C394171CF4ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{091AD74C-BC22-457E-A107-C394171CF4ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{46379060-EF02-4D37-BB3D-DE4C804EEBF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{46379060-EF02-4D37-BB3D-DE4C804EEBF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{46379060-EF02-4D37-BB3D-DE4C804EEBF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{46379060-EF02-4D37-BB3D-DE4C804EEBF2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7D9BF2C2-6126-47C2-849F-EDC69F108383}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7D9BF2C2-6126-47C2-849F-EDC69F108383}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7D9BF2C2-6126-47C2-849F-EDC69F108383}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7D9BF2C2-6126-47C2-849F-EDC69F108383}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B251E37A-25A6-45C3-882D-C1A32B3911C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B251E37A-25A6-45C3-882D-C1A32B3911C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B251E37A-25A6-45C3-882D-C1A32B3911C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -1102,8 +1078,6 @@ Global
 		{7D5209BE-BECD-451B-9864-0174F09604AB} = {060F13CA-55B0-4D28-9010-008B87BEA087}
 		{29D1F1D0-D01F-4A99-8F8F-FD5850362E64} = {752A44EA-6603-47C4-9348-87B4100B7F98}
 		{15084881-E515-4FF4-8640-AB7C08552A64} = {752A44EA-6603-47C4-9348-87B4100B7F98}
-		{46379060-EF02-4D37-BB3D-DE4C804EEBF2} = {060F13CA-55B0-4D28-9010-008B87BEA087}
-		{7D9BF2C2-6126-47C2-849F-EDC69F108383} = {060F13CA-55B0-4D28-9010-008B87BEA087}
 		{B251E37A-25A6-45C3-882D-C1A32B3911C8} = {752A44EA-6603-47C4-9348-87B4100B7F98}
 		{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2} = {752A44EA-6603-47C4-9348-87B4100B7F98}
 	EndGlobalSection

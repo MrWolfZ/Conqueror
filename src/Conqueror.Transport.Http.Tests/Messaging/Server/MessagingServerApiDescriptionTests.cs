@@ -16,14 +16,15 @@ public sealed class MessagingServerApiDescriptionTests
 {
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenTestHttpMessage_WhenRegisteringControllers_RegistersTheCorrectApiDescription<TMessage, TResponse, THandler>(
+    public async Task GivenTestHttpMessage_WhenRegisteringControllers_RegistersTheCorrectApiDescription<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await HttpTransportTestHost.Create(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         var apiDescriptionProvider = host.Resolve<IApiDescriptionGroupCollectionProvider>();
 
@@ -34,6 +35,12 @@ public sealed class MessagingServerApiDescriptionTests
                                                                                 ?? d.ActionDescriptor.EndpointMetadata.OfType<EndpointNameMetadata>()
                                                                                     .FirstOrDefault()?.EndpointName)
                                                                                == (testCase.Name ?? testCase.MessageType.Name));
+
+        if (testCase.IsOmittedFromApiDescriptions || !testCase.HandlerIsEnabled)
+        {
+            Assert.That(messageApiDescription, Is.Null);
+            return;
+        }
 
         Assert.That(messageApiDescription, Is.Not.Null);
         Assert.That(messageApiDescription.HttpMethod, Is.EqualTo(testCase.HttpMethod));
@@ -60,15 +67,16 @@ public sealed class MessagingServerApiDescriptionTests
 
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenTestHttpMessage_WhenRegisteringControllers_SwashbuckleGeneratesTheCorrectDoc<TMessage, TResponse, THandler>(
+    public async Task GivenTestHttpMessage_WhenRegisteringControllers_SwashbuckleGeneratesTheCorrectDoc<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await HttpTransportTestHost.Create(
             services =>
             {
-                services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
+                services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase);
 
                 _ = services.AddEndpointsApiExplorer()
                             .AddSwaggerGen(c =>
@@ -80,7 +88,7 @@ public sealed class MessagingServerApiDescriptionTests
             {
                 _ = app.UseSwagger();
 
-                app.MapMessageEndpoints<TMessage, TResponse>(testCase);
+                app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase);
             });
 
         var swaggerContent = await host.HttpClient.GetStringAsync("/swagger/v1/swagger.json");
@@ -94,11 +102,18 @@ public sealed class MessagingServerApiDescriptionTests
         var templateNormalizerRegex = new Regex("{([^:}]+):?[^}]*}");
 
         var expectedPath = (testCase.Template is not null ? templateNormalizerRegex.Replace(testCase.Template, "{$1}") : testCase.FullPath).TrimStart('/');
-        var path = doc.Paths.Single(p => p.Key.TrimStart('/') == expectedPath);
+        var path = doc.Paths.Where(p => p.Key.TrimStart('/') == expectedPath).Select(p => p.Value).SingleOrDefault();
 
-        Assert.That(path.Value.Operations, Has.Count.EqualTo(1));
+        if (testCase.IsOmittedFromApiDescriptions || !testCase.HandlerIsEnabled)
+        {
+            Assert.That(path, Is.Null);
+            return;
+        }
 
-        var operation = path.Value.Operations.Single();
+        Assert.That(path, Is.Not.Null);
+        Assert.That(path.Operations, Has.Count.EqualTo(1));
+
+        var operation = path.Operations.Single();
 
         Assert.That(ToHttpMethodString(operation.Key), Is.EqualTo(testCase.HttpMethod));
         Assert.That(operation.Value.OperationId, Is.EqualTo(testCase.Name ?? testCase.MessageType.Name));

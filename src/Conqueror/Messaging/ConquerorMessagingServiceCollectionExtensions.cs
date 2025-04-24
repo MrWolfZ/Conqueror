@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -15,249 +13,136 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ConquerorMessagingServiceCollectionExtensions
 {
-    public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.Interfaces)]
-        THandler>(
+    public static IServiceCollection AddMessageHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services)
-        where THandler : class, IGeneratedMessageHandler
+        where THandler : class, IMessageHandler
     {
         return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), typeof(THandler), ServiceLifetime.Transient), shouldOverwriteRegistration: true);
     }
 
-    public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.Interfaces)]
-        THandler>(
+    public static IServiceCollection AddMessageHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services,
         ServiceLifetime lifetime)
-        where THandler : class, IGeneratedMessageHandler
+        where THandler : class, IMessageHandler
     {
         return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), typeof(THandler), lifetime), shouldOverwriteRegistration: true);
     }
 
-    public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.Interfaces)]
-        THandler>(
+    public static IServiceCollection AddMessageHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services,
         Func<IServiceProvider, THandler> factory)
-        where THandler : class, IGeneratedMessageHandler
+        where THandler : class, IMessageHandler
     {
         return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), factory, ServiceLifetime.Transient), shouldOverwriteRegistration: true);
     }
 
-    public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.Interfaces)]
-        THandler>(
+    public static IServiceCollection AddMessageHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services,
         Func<IServiceProvider, THandler> factory,
         ServiceLifetime lifetime)
-        where THandler : class, IGeneratedMessageHandler
+        where THandler : class, IMessageHandler
     {
         return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), factory, lifetime), shouldOverwriteRegistration: true);
     }
 
-    public static IServiceCollection AddMessageHandler<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.Interfaces)]
-        THandler>(
+    public static IServiceCollection AddMessageHandler<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(
         this IServiceCollection services,
         THandler instance)
-        where THandler : class, IGeneratedMessageHandler
+        where THandler : class, IMessageHandler
     {
         return services.AddMessageHandlerInternalGeneric<THandler>(new(typeof(THandler), instance), shouldOverwriteRegistration: true);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
-        this IServiceCollection services,
-        MessageHandlerFn<TMessage, TResponse> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse, TIHandler>(this IServiceCollection services,
+                                                                                               MessageTypes<TMessage, TResponse, TIHandler> messageTypes,
+                                                                                               MessageHandlerFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(fn, null);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, fn, null);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
-        this IServiceCollection services,
-        MessageTypes<TMessage, TResponse> messageTypes,
-        MessageHandlerFn<TMessage, TResponse> fn)
-        where TMessage : class, IMessage<TMessage, TResponse>
-    {
-        return services.AddMessageHandlerDelegate(fn);
-    }
-
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageHandlerFn<TMessage> fn)
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
+                                                                                    MessageTypes<TMessage, UnitMessageResponse, TIHandler> messageTypes,
+                                                                                    MessageHandlerFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+        where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(fn, null);
-    }
-
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageTypes<TMessage, UnitMessageResponse> messageTypes,
-        MessageHandlerFn<TMessage> fn)
-        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    {
-        return services.AddMessageHandlerDelegate(fn);
-    }
-
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
-        this IServiceCollection services,
-        MessageHandlerSyncFn<TMessage, TResponse> fn)
-        where TMessage : class, IMessage<TMessage, TResponse>
-    {
-        return services.AddMessageHandlerDelegateInternal<TMessage, TResponse>((m, p, ct) => Task.FromResult(fn(m, p, ct)), null);
-    }
-
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
-        this IServiceCollection services,
-        MessageTypes<TMessage, TResponse> messageTypes,
-        MessageHandlerSyncFn<TMessage, TResponse> fn)
-        where TMessage : class, IMessage<TMessage, TResponse>
-    {
-        return services.AddMessageHandlerDelegate(fn);
-    }
-
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageHandlerSyncFn<TMessage> fn)
-        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    {
-        return services.AddMessageHandlerDelegateInternal<TMessage>((m, p, ct) =>
+        return services.AddMessageHandlerDelegateInternal(messageTypes, async (m, p, ct) =>
         {
-            fn(m, p, ct);
-            return Task.CompletedTask;
+            await fn(m, p, ct).ConfigureAwait(false);
+            return UnitMessageResponse.Instance;
         }, null);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageTypes<TMessage, UnitMessageResponse> messageTypes,
-        MessageHandlerSyncFn<TMessage> fn)
-        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    {
-        return services.AddMessageHandlerDelegate(fn);
-    }
-
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
-        this IServiceCollection services,
-        MessageHandlerFn<TMessage, TResponse> fn,
-        Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse, TIHandler>(this IServiceCollection services,
+                                                                                               MessageTypes<TMessage, TResponse, TIHandler> messageTypes,
+                                                                                               MessageHandlerSyncFn<TMessage, TResponse> fn)
         where TMessage : class, IMessage<TMessage, TResponse>
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(fn, configurePipeline);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), null);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
-        this IServiceCollection services,
-        MessageTypes<TMessage, TResponse> messageTypes,
-        MessageHandlerFn<TMessage, TResponse> fn,
-        Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        where TMessage : class, IMessage<TMessage, TResponse>
-    {
-        return services.AddMessageHandlerDelegate(fn, configurePipeline);
-    }
-
-    // ReSharper disable once MemberCanBePrivate.Global
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageHandlerFn<TMessage> fn,
-        Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
+                                                                                    MessageTypes<TMessage, UnitMessageResponse, TIHandler> messageTypes,
+                                                                                    MessageHandlerSyncFn<TMessage> fn)
         where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+        where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(fn, configurePipeline);
-    }
-
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageTypes<TMessage, UnitMessageResponse> messageTypes,
-        MessageHandlerFn<TMessage> fn,
-        Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
-        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    {
-        return services.AddMessageHandlerDelegate(fn, configurePipeline);
-    }
-
-    // ReSharper disable once MemberCanBePrivate.Global
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
-        this IServiceCollection services,
-        MessageHandlerSyncFn<TMessage, TResponse> fn,
-        Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        where TMessage : class, IMessage<TMessage, TResponse>
-    {
-        return services.AddMessageHandlerDelegateInternal((m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline);
-    }
-
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
-        this IServiceCollection services,
-        MessageTypes<TMessage, TResponse> messageTypes,
-        MessageHandlerSyncFn<TMessage, TResponse> fn,
-        Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        where TMessage : class, IMessage<TMessage, TResponse>
-    {
-        return services.AddMessageHandlerDelegate(fn, configurePipeline);
-    }
-
-    // ReSharper disable once MemberCanBePrivate.Global
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageHandlerSyncFn<TMessage> fn,
-        Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
-        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    {
-        return services.AddMessageHandlerDelegateInternal((m, p, ct) =>
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) =>
         {
             fn(m, p, ct);
-            return Task.CompletedTask;
+            return Task.FromResult(UnitMessageResponse.Instance);
+        }, null);
+    }
+
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse, TIHandler>(this IServiceCollection services,
+                                                                                               MessageTypes<TMessage, TResponse, TIHandler> messageTypes,
+                                                                                               MessageHandlerFn<TMessage, TResponse> fn,
+                                                                                               Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+        where TMessage : class, IMessage<TMessage, TResponse>
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+    {
+        return services.AddMessageHandlerDelegateInternal(messageTypes, fn, configurePipeline);
+    }
+
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
+                                                                                    MessageTypes<TMessage, UnitMessageResponse, TIHandler> messageTypes,
+                                                                                    MessageHandlerFn<TMessage> fn,
+                                                                                    Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+        where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
+    {
+        return services.AddMessageHandlerDelegateInternal(messageTypes, async (m, p, ct) =>
+        {
+            await fn(m, p, ct).ConfigureAwait(false);
+            return UnitMessageResponse.Instance;
         }, configurePipeline);
     }
 
-    public static IServiceCollection AddMessageHandlerDelegate<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageTypes<TMessage, UnitMessageResponse> messageTypes,
-        MessageHandlerSyncFn<TMessage> fn,
-        Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
-        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TResponse, TIHandler>(this IServiceCollection services,
+                                                                                               MessageTypes<TMessage, TResponse, TIHandler> messageTypes,
+                                                                                               MessageHandlerSyncFn<TMessage, TResponse> fn,
+                                                                                               Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+        where TMessage : class, IMessage<TMessage, TResponse>
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegate(fn, configurePipeline);
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) => Task.FromResult(fn(m, p, ct)), configurePipeline);
+    }
+
+    public static IServiceCollection AddMessageHandlerDelegate<TMessage, TIHandler>(this IServiceCollection services,
+                                                                                    MessageTypes<TMessage, UnitMessageResponse, TIHandler> messageTypes,
+                                                                                    MessageHandlerSyncFn<TMessage> fn,
+                                                                                    Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
+        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+        where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
+    {
+        return services.AddMessageHandlerDelegateInternal(messageTypes, (m, p, ct) =>
+        {
+            fn(m, p, ct);
+            return Task.FromResult(UnitMessageResponse.Instance);
+        }, configurePipeline);
     }
 
     [RequiresUnreferencedCode("Types might be removed")]
@@ -267,7 +152,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         services.AddConquerorMessaging();
 
         var validTypes = assembly.GetTypes()
-                                 .Where(t => t.IsAssignableTo(typeof(IGeneratedMessageHandler)))
+                                 .Where(t => t.IsAssignableTo(typeof(IMessageHandler)))
                                  .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false, IsNestedFamily: false })
                                  .Where(t => t.DeclaringType?.IsPublic ?? true)
                                  .ToList();
@@ -275,9 +160,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
         foreach (var messageHandlerType in validTypes)
         {
             var messageHandlerInterfaces = messageHandlerType.GetInterfaces()
-                                                             .Where(t => t.IsGenericType
-                                                                         && (t.GetGenericTypeDefinition() == typeof(IMessageHandler<,>)
-                                                                             || t.GetGenericTypeDefinition() == typeof(IMessageHandler<>)))
+                                                             .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IMessageHandler<,,>))
                                                              .ToList();
 
             if (messageHandlerInterfaces.Count > 1)
@@ -319,257 +202,101 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
     internal static IServiceCollection AddConquerorMessaging(this IServiceCollection services)
     {
-        services.TryAddTransient<IMessageClients, MessageClients>();
+        services.TryAddTransient<IMessageSenders, MessageSenders>();
         services.TryAddSingleton<IMessageIdFactory, DefaultMessageIdFactory>();
-        services.TryAddSingleton<MessageTransportRegistry>();
-        services.TryAddSingleton<IMessageTransportRegistry>(p => p.GetRequiredService<MessageTransportRegistry>());
+        services.TryAddSingleton<MessageHandlerRegistry>();
+        services.TryAddSingleton<IMessageHandlerRegistry>(p => p.GetRequiredService<MessageHandlerRegistry>());
 
         return services.AddConquerorContext();
     }
 
-    private static IServiceCollection AddMessageHandlerInternalGeneric<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.Interfaces)]
-        THandler>(
+    private static IServiceCollection AddMessageHandlerInternalGeneric<THandler>(
         this IServiceCollection services,
         ServiceDescriptor serviceDescriptor,
         bool shouldOverwriteRegistration)
-        where THandler : class, IGeneratedMessageHandler
+        where THandler : class, IMessageHandler
     {
-        var messageHandlerInterfaces = typeof(THandler).GetInterfaces()
-                                                       .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IMessageHandler<,>))
-                                                       .ToList();
-
-        if (messageHandlerInterfaces.Count > 1)
+        if (typeof(THandler).IsInterface || typeof(THandler).IsAbstract)
         {
-            throw new InvalidOperationException($"handler type '{typeof(THandler)}' implements multiple message handler interfaces");
+            throw new InvalidOperationException($"handler type '{typeof(THandler)}' must not be an interface or abstract class");
         }
 
-        return THandler.DefaultTypeInjector.CreateWithMessageTypes(new MessageHandlerRegistrationTypeInjectable<THandler>(services,
-                                                                                                                          serviceDescriptor,
-                                                                                                                          shouldOverwriteRegistration));
-    }
-
-    private static IServiceCollection AddMessageHandlerInternal(
-        this IServiceCollection services,
-        ServiceDescriptor serviceDescriptor,
-        Type handlerType,
-        Type? handlerAdapterType,
-        Type messageType,
-        Type responseType,
-        Delegate? configurePipeline,
-        IReadOnlyCollection<IMessageTypesInjector> typeInjectors,
-        bool shouldOverwriteRegistration)
-    {
-        if (handlerType.IsInterface || handlerType.IsAbstract)
+        foreach (var injector in THandler.GetTypeInjectors().OfType<ICoreMessageHandlerTypesInjector>())
         {
-            throw new InvalidOperationException($"handler type '{handlerType}' must not be an interface or abstract class");
-        }
-
-        var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r && r.MessageType == messageType);
-        var registration = new MessageHandlerRegistration(messageType, responseType, handlerType, handlerAdapterType, configurePipeline, typeInjectors);
-
-        if (existingRegistration is not null)
-        {
-            if (shouldOverwriteRegistration)
-            {
-                services.Remove(existingRegistration);
-                services.AddSingleton(registration);
-            }
-        }
-        else
-        {
-            services.AddSingleton(registration);
-        }
-
-        services.AddConquerorMessaging();
-
-        if (shouldOverwriteRegistration)
-        {
-            services.Replace(serviceDescriptor);
-        }
-        else
-        {
-            services.TryAdd(serviceDescriptor);
+            injector.Create(new MessageHandlerRegistrationTypeInjectable(services,
+                                                                         serviceDescriptor,
+                                                                         shouldOverwriteRegistration));
         }
 
         return services;
     }
 
-    private static IServiceCollection AddMessageHandlerDelegateInternal<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage,
-        TResponse>(
+    private static IServiceCollection AddMessageHandlerDelegateInternal<TMessage, TResponse, TIHandler>(
         this IServiceCollection services,
+        MessageTypes<TMessage, TResponse, TIHandler> _, // for type inference
         MessageHandlerFn<TMessage, TResponse> fn,
         Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline)
         where TMessage : class, IMessage<TMessage, TResponse>
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return services.AddMessageHandlerDelegateInternal(
-            typeof(TMessage),
-            typeof(TResponse),
-            typeof(DelegateMessageHandler<TMessage, TResponse>),
-            new(typeof(DelegateMessageHandler<TMessage, TResponse>), p => new DelegateMessageHandler<TMessage, TResponse>(fn, p), ServiceLifetime.Transient),
-            configurePipeline,
-            TMessage.TypeInjectors);
-    }
+        services.AddConquerorMessaging();
 
-    private static IServiceCollection AddMessageHandlerDelegateInternal<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        TMessage>(
-        this IServiceCollection services,
-        MessageHandlerFn<TMessage> fn,
-        Action<IMessagePipeline<TMessage, UnitMessageResponse>>? configurePipeline)
-        where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    {
-        return services.AddMessageHandlerDelegateInternal(
-            typeof(TMessage),
-            typeof(UnitMessageResponse),
-            typeof(DelegateMessageHandler<TMessage>),
-            new(typeof(DelegateMessageHandler<TMessage>), p => new DelegateMessageHandler<TMessage>(fn, p), ServiceLifetime.Transient),
-            configurePipeline,
-            TMessage.TypeInjectors);
-    }
+        var invoker = new MessageHandlerInvoker<TMessage, TResponse>(configurePipeline, fn);
 
-    private static IServiceCollection AddMessageHandlerDelegateInternal(
-        this IServiceCollection services,
-        Type messageType,
-        Type responseType,
-        Type handlerType,
-        ServiceDescriptor serviceDescriptor,
-        Delegate? configurePipeline,
-        IReadOnlyCollection<IMessageTypesInjector> typeInjectors)
-    {
-        var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r && r.MessageType == messageType);
+        // we do not support configuring the receiver for delegate handlers (yet), since they are mostly
+        // designed to support simple testing scenarios, not be used as full-fledged message handlers
+        var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), null, fn, invoker, [TIHandler.CoreTypesInjector]);
+
+        var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                 && r.MessageType == typeof(TMessage));
 
         if (existingRegistration is not null)
         {
             services.Remove(existingRegistration);
         }
 
-        services.AddConquerorMessaging();
-
-        services.Replace(serviceDescriptor);
-
-        services.AddSingleton(new MessageHandlerRegistration(messageType, responseType, handlerType, null, configurePipeline, typeInjectors));
+        services.AddSingleton(registration);
 
         return services;
     }
 
-    private sealed class MessageHandlerRegistrationTypeInjectable<
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
-        THandler>(
+    private sealed class MessageHandlerRegistrationTypeInjectable(
         IServiceCollection services,
         ServiceDescriptor serviceDescriptor,
         bool shouldOverwriteRegistration
-    ) : IDefaultMessageTypesInjectable<IServiceCollection>
-        where THandler : class
+    ) : ICoreMessageHandlerTypesInjectable<IServiceCollection>
     {
-        IServiceCollection IDefaultMessageTypesInjectable<IServiceCollection>.WithInjectedTypes<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TMessage,
-            TResponse,
-            TGeneratedHandlerInterface,
-            TGeneratedHandlerAdapter,
-            TPipelineInterface,
-            TPipelineAdapter>()
+        IServiceCollection ICoreMessageHandlerTypesInjectable<IServiceCollection>
+            .WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>()
         {
-            Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IMessageHandler<TMessage, TResponse>)),
-                         $"handler type '{typeof(THandler)}' should implement {typeof(IMessageHandler<TMessage, TResponse>).Name}");
+            var invoker = new MessageHandlerInvoker<TMessage, TResponse>(
+                p => THandler.ConfigurePipeline(new TPipelineProxy { Wrapped = p }),
+                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct));
 
-            return services.AddMessageHandlerInternal(serviceDescriptor,
-                                                      typeof(THandler),
-                                                      null,
-                                                      typeof(TMessage),
-                                                      typeof(TResponse),
-                                                      MakeConfiguredPipeline(),
-                                                      TMessage.TypeInjectors,
-                                                      shouldOverwriteRegistration);
+            var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), typeof(THandler), null, invoker, THandler.GetTypeInjectors().ToList());
 
-            static Action<IMessagePipeline<TMessage, TResponse>>? MakeConfiguredPipeline()
+            var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                     && r.MessageType == typeof(TMessage));
+
+            if (existingRegistration is not null)
             {
-                if (GetConfigurePipelineMethod<TMessage, TResponse, TPipelineInterface>() is not { } methodInfo)
-                {
-                    return null;
-                }
-
-                var configure = (Action<TPipelineInterface>)Delegate.CreateDelegate(typeof(Action<TPipelineInterface>), methodInfo);
-                return pipeline => configure(new TPipelineAdapter { Wrapped = pipeline });
+                services.Remove(existingRegistration);
             }
-        }
 
-        IServiceCollection IDefaultMessageTypesInjectable<IServiceCollection>.WithInjectedTypes<
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-            TMessage,
-            TGeneratedHandlerInterface,
-            TGeneratedHandlerAdapter,
-            TPipelineInterface,
-            TPipelineAdapter>()
-        {
-            Debug.Assert(typeof(THandler).IsAssignableTo(typeof(IMessageHandler<TMessage>)),
-                         $"handler type '{typeof(THandler)}' should implement {typeof(IMessageHandler<TMessage>).Name}");
+            services.AddSingleton(registration);
 
-            var adapterDescriptor = new ServiceDescriptor(typeof(MessageHandlerWithoutResponseAdapter<TMessage>),
-                                                          p => new MessageHandlerWithoutResponseAdapter<TMessage>(typeof(THandler), p),
-                                                          ServiceLifetime.Transient);
+            services.AddConquerorMessaging();
 
             if (shouldOverwriteRegistration)
             {
-                services.Replace(adapterDescriptor);
+                services.Replace(serviceDescriptor);
             }
             else
             {
-                services.TryAdd(adapterDescriptor);
+                services.TryAdd(serviceDescriptor);
             }
 
-            return services.AddMessageHandlerInternal(serviceDescriptor,
-                                                      typeof(THandler),
-                                                      typeof(MessageHandlerWithoutResponseAdapter<TMessage>),
-                                                      typeof(TMessage),
-                                                      typeof(UnitMessageResponse),
-                                                      MakeConfiguredPipeline(),
-                                                      TMessage.TypeInjectors,
-                                                      shouldOverwriteRegistration);
-
-            static Action<IMessagePipeline<TMessage, UnitMessageResponse>>? MakeConfiguredPipeline()
-            {
-                if (GetConfigurePipelineMethod<TMessage, UnitMessageResponse, TPipelineInterface>() is not { } methodInfo)
-                {
-                    return null;
-                }
-
-                var configure = (Action<TPipelineInterface>)Delegate.CreateDelegate(typeof(Action<TPipelineInterface>), methodInfo);
-                return pipeline => configure(new TPipelineAdapter { Wrapped = pipeline });
-            }
-        }
-
-        private static MethodInfo? GetConfigurePipelineMethod<TMessage, TResponse, TPipelineInterface>()
-            where TMessage : class, IMessage<TMessage, TResponse>
-            where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
-        {
-            const string configurePipelineName = nameof(IGeneratedMessageHandler<TMessage, TResponse, TPipelineInterface>.ConfigurePipeline);
-
-            var methods = typeof(THandler).GetMethods(BindingFlags.Public | BindingFlags.Static)
-                                          .Where(m => m.Name == configurePipelineName)
-                                          .ToList();
-
-            if (methods.Count == 0)
-            {
-                return null;
-            }
-
-            if (methods.Count > 1)
-            {
-                throw new InvalidOperationException($"handler type '{typeof(THandler)}' implements '{configurePipelineName}' multiple times");
-            }
-
-            var method = methods[0];
-
-            if (method.GetParameters().Length != 1 || method.GetParameters()[0].ParameterType != typeof(TPipelineInterface) || method.ReturnType != typeof(void))
-            {
-                throw new InvalidOperationException($"handler type '{typeof(THandler)}' does not implement the '{configurePipelineName}' method correctly");
-            }
-
-            return method;
+            return services;
         }
     }
 }

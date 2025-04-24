@@ -43,6 +43,10 @@ namespace Generator.Tests
         static TestSignal<TPayload, TPayload2>? global::Conqueror.ISignal<TestSignal<TPayload, TPayload2>>.EmptyInstance => null;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+        static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.ISignal<TestSignal<TPayload, TPayload2>>.PublicConstructors
+            => typeof(TestSignal<TPayload, TPayload2>).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.ISignal<TestSignal<TPayload, TPayload2>>.PublicProperties
             => typeof(TestSignal<TPayload, TPayload2>).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }

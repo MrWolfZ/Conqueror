@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,113 +11,109 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public interface IMessageHandler<in TMessage, TResponse> : IMessageHandlerWithTypeInjector
-    where TMessage : class, IMessage<TMessage, TResponse>
-{
-    static IDefaultMessageTypesInjector IMessageHandlerWithTypeInjector.DefaultTypeInjector
-        => TMessage.DefaultTypeInjector;
-
-    Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default);
-}
-
-public interface IMessageHandler<in TMessage> : IMessageHandlerWithTypeInjector
-    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-{
-    static IDefaultMessageTypesInjector IMessageHandlerWithTypeInjector.DefaultTypeInjector
-        => TMessage.DefaultTypeInjector;
-
-    Task Handle(TMessage message, CancellationToken cancellationToken = default);
-}
-
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IMessageHandlerWithTypeInjector
+public interface IMessageHandler
 {
-    internal static abstract IDefaultMessageTypesInjector DefaultTypeInjector { get; }
-}
+    /// <summary>
+    ///     Implemented by source generator for each handler type. Cannot be abstract since otherwise
+    ///     the generated <code>IHandler</code> types could not be used as generic arguments.
+    /// </summary>
+    static virtual IEnumerable<IMessageHandlerTypesInjector> GetTypeInjectors()
+        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
 
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler : IMessageHandlerWithTypeInjector;
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler<in TMessage, TResponse, in TPipelineInterface>
-    : IMessageHandler<TMessage, TResponse>, IGeneratedMessageHandler
-    where TMessage : class, IMessage<TMessage, TResponse>
-    where TPipelineInterface : class, IMessagePipeline<TMessage, TResponse>
-{
-    static virtual void ConfigurePipeline(TPipelineInterface pipeline)
+    static virtual void ConfigureInProcessReceiver(IInProcessMessageReceiver receiver)
     {
-        // by default, we use an empty pipeline
+        // we don't configure the receiver (by default, it is enabled for all message types)
     }
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public interface IGeneratedMessageHandler<in TMessage, in TPipelineInterface>
-    : IMessageHandler<TMessage>, IGeneratedMessageHandler
-    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-    where TPipelineInterface : class, IMessagePipeline<TMessage, UnitMessageResponse>
+[SuppressMessage("ReSharper", "TypeParameterCanBeVariant", Justification = "false positive")]
+public interface IMessageHandler<TMessage, TResponse, TIHandler> : IMessageHandler
+    where TMessage : class, IMessage<TMessage, TResponse>
+    where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
 {
-    static virtual void ConfigurePipeline(TPipelineInterface pipeline)
-    {
-        // by default, we use an empty pipeline
-    }
+    static virtual MessageTypes<TMessage, TResponse, TIHandler> MessageTypes { get; } = new();
+
+    internal static virtual ICoreMessageHandlerTypesInjector CoreTypesInjector
+        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
+
+    static virtual Task<TResponse> Invoke(TIHandler handler, TMessage message, CancellationToken cancellationToken)
+        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler interface type");
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class GeneratedMessageHandlerAdapter<TMessage, TResponse> : IConfigurableMessageHandler<TMessage, TResponse>
+public interface IMessageHandler<TMessage, TResponse, TIHandler, TProxy, in TIPipeline, TPipelineProxy>
+    : IMessageHandler<TMessage, TResponse, TIHandler>
     where TMessage : class, IMessage<TMessage, TResponse>
+    where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>
+    where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
+    where TIPipeline : class, IMessagePipeline<TMessage, TResponse>
+    where TPipelineProxy : MessagePipelineProxy<TMessage, TResponse>, TIPipeline, new()
 {
-    internal IMessageHandler<TMessage, TResponse> Wrapped { get; init; } = null!;
+    /// <summary>
+    ///     We are cheating a bit here by using <see cref="TIHandler" /> as the type parameter for the handler type
+    ///     of the default types injector. This is because this property here is only used to generate clients
+    ///     with the correct interface (<see cref="IMessageSenders" />), and we don't need the concrete handler type
+    ///     there.
+    /// </summary>
+    static ICoreMessageHandlerTypesInjector IMessageHandler<TMessage, TResponse, TIHandler>.CoreTypesInjector
+        => CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, TIHandler>.Default;
 
+    static virtual void ConfigurePipeline(TIPipeline pipeline)
+    {
+        // by default, we use an empty pipeline
+    }
+
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    static IMessageHandlerTypesInjector CreateCoreTypesInjector<THandler>()
+        where THandler : class, TIHandler
+        => CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>.Default;
+}
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy> : IMessageHandlerProxy<TMessage, TResponse, TIHandler>
+    where TMessage : class, IMessage<TMessage, TResponse>
+    where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+    where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
+{
+    // cannot be 'required' since that would block the `new()` constraint
+    internal IMessageDispatcher<TMessage, TResponse> Dispatcher { get; init; } = null!;
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public Task<TResponse> Handle(TMessage message, CancellationToken cancellationToken = default)
-        => Wrapped.Handle(message, cancellationToken);
+        => Dispatcher.Dispatch(message, cancellationToken);
 
-    public IMessageHandler<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
-        => Wrapped.WithPipeline(configurePipeline);
+    public TIHandler WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline)
+        => new TProxy { Dispatcher = Dispatcher.WithPipeline(configurePipeline) };
 
-    public IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClient<TMessage, TResponse> configureTransport)
-        => Wrapped.WithTransport(configureTransport);
+    public TIHandler WithTransport(ConfigureMessageSender<TMessage, TResponse> configureTransport)
+        => new TProxy { Dispatcher = Dispatcher.WithSender(configureTransport) };
 
-    public IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClientAsync<TMessage, TResponse> configureTransport)
-        => Wrapped.WithTransport(configureTransport);
+    public TIHandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureTransport)
+        => new TProxy { Dispatcher = Dispatcher.WithSender(configureTransport) };
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-public abstract class GeneratedMessageHandlerAdapter<TMessage> : IConfigurableMessageHandler<TMessage>
+public abstract class MessageHandlerProxy<TMessage, TIHandler, TProxy> : MessageHandlerProxy<TMessage, UnitMessageResponse, TIHandler, TProxy>
     where TMessage : class, IMessage<TMessage, UnitMessageResponse>
+    where TIHandler : class, IMessageHandler<TMessage, UnitMessageResponse, TIHandler>
+    where TProxy : MessageHandlerProxy<TMessage, UnitMessageResponse, TIHandler, TProxy>, TIHandler, new()
 {
-    internal IMessageHandler<TMessage> Wrapped { get; init; } = null!;
-
-    public Task Handle(TMessage message, CancellationToken cancellationToken = default)
-        => Wrapped.Handle(message, cancellationToken);
-
-    public IMessageHandler<TMessage> WithPipeline(Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline)
-        => Wrapped.WithPipeline(configurePipeline);
-
-    public IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClient<TMessage, UnitMessageResponse> configureTransport)
-        => Wrapped.WithTransport(configureTransport);
-
-    public IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClientAsync<TMessage, UnitMessageResponse> configureTransport)
-        => Wrapped.WithTransport(configureTransport);
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public new Task Handle(TMessage message, CancellationToken cancellationToken = default)
+        => Dispatcher.Dispatch(message, cancellationToken);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal interface IConfigurableMessageHandler<TMessage, TResponse> : IMessageHandler<TMessage, TResponse>
+internal interface IMessageHandlerProxy<TMessage, TResponse, THandler> : IMessageHandler<TMessage, TResponse, THandler>
     where TMessage : class, IMessage<TMessage, TResponse>
+    where THandler : class, IMessageHandler<TMessage, TResponse, THandler>
 {
-    IMessageHandler<TMessage, TResponse> WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline);
+    THandler WithPipeline(Action<IMessagePipeline<TMessage, TResponse>> configurePipeline);
 
-    IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClient<TMessage, TResponse> configureTransport);
+    THandler WithTransport(ConfigureMessageSender<TMessage, TResponse> configureTransport);
 
-    IMessageHandler<TMessage, TResponse> WithTransport(ConfigureMessageTransportClientAsync<TMessage, TResponse> configureTransport);
-}
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-internal interface IConfigurableMessageHandler<TMessage> : IMessageHandler<TMessage>
-    where TMessage : class, IMessage<TMessage, UnitMessageResponse>
-{
-    IMessageHandler<TMessage> WithPipeline(Action<IMessagePipeline<TMessage, UnitMessageResponse>> configurePipeline);
-
-    IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClient<TMessage, UnitMessageResponse> configureTransport);
-
-    IMessageHandler<TMessage> WithTransport(ConfigureMessageTransportClientAsync<TMessage, UnitMessageResponse> configureTransport);
+    THandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureTransport);
 }

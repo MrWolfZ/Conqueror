@@ -32,15 +32,15 @@ app.UseConquerorWellKnownErrorHandling();
 app.MapPost("/api/custom", (
                     HttpContext ctx,
                     [FromBody] TopLevelTestMessage message)
-                => ctx.GetMessageClient(TopLevelTestMessage.T).Handle(message, ctx.RequestAborted));
+                => ctx.HandleMessage(message));
 
 app.MapGet("/api/customGet/{payload:int}", async (int payload, HttpContext ctx)
                =>
            {
                var message = new TopLevelTestMessage { Payload = payload, Nested = new() { NestedString = "test" } };
-               return await ctx.GetMessageClient(TopLevelTestMessage.T).Handle(message, ctx.RequestAborted);
+               return await ctx.HandleMessage(message);
            });
 
-app.MapGroup("/group").MapMessageEndpoint<TopLevelTestMessage>().WithName("TopLevelTestMessage2");
+app.MapGroup("/group").MapMessageEndpoint(TopLevelTestMessage.T)?.WithName("TopLevelTestMessage2");
 
 await app.RunAsync().ConfigureAwait(false);

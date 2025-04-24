@@ -19,7 +19,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcess(p.ServiceProvider.GetRequiredService<TestBroadcastingStrategy>()));
+                              .WithTransport(p => p.UseInProcess(p.ServiceProvider.GetRequiredService<TestBroadcastingStrategy>()));
 
         using var cts = new CancellationTokenSource();
 
@@ -49,12 +49,12 @@ public sealed partial class SignalBroadcastingStrategyTests
         var handler1 = scope1.ServiceProvider
                              .GetRequiredService<ISignalPublishers>()
                              .For(TestSignal.T)
-                             .WithPublisher(p => p.UseInProcess(p.ServiceProvider.GetRequiredService<TestBroadcastingStrategy>()));
+                             .WithTransport(p => p.UseInProcess(p.ServiceProvider.GetRequiredService<TestBroadcastingStrategy>()));
 
         var handler2 = scope2.ServiceProvider
                              .GetRequiredService<ISignalPublishers>()
                              .For(TestSignal.T)
-                             .WithPublisher(p => p.UseInProcess(p.ServiceProvider.GetRequiredService<TestBroadcastingStrategy>()));
+                             .WithTransport(p => p.UseInProcess(p.ServiceProvider.GetRequiredService<TestBroadcastingStrategy>()));
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -86,7 +86,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcess(p.ServiceProvider.GetRequiredService<TestBroadcastingStrategy>()));
+                              .WithTransport(p => p.UseInProcess(p.ServiceProvider.GetRequiredService<TestBroadcastingStrategy>()));
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -167,7 +167,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithSequentialBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithSequentialBroadcastingStrategy());
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -201,7 +201,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithSequentialBroadcastingStrategy(c => c.WithThrowOnFirstException()));
+                              .WithTransport(p => p.UseInProcessWithSequentialBroadcastingStrategy(c => c.WithThrowOnFirstException()));
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -235,7 +235,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithSequentialBroadcastingStrategy(c => c.WithThrowAfterAll()));
+                              .WithTransport(p => p.UseInProcessWithSequentialBroadcastingStrategy(c => c.WithThrowAfterAll()));
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -278,7 +278,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithSequentialBroadcastingStrategy(c => c.WithThrowAfterAll()));
+                              .WithTransport(p => p.UseInProcessWithSequentialBroadcastingStrategy(c => c.WithThrowAfterAll()));
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -308,7 +308,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithSequentialBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithSequentialBroadcastingStrategy());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -348,7 +348,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithSequentialBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithSequentialBroadcastingStrategy());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -393,7 +393,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithSequentialBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithSequentialBroadcastingStrategy());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -439,7 +439,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithSequentialBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithSequentialBroadcastingStrategy());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -479,7 +479,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy());
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -535,7 +535,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy());
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -579,7 +579,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy());
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -609,7 +609,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -649,7 +649,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -694,7 +694,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -740,7 +740,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy());
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -783,7 +783,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(2)));
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(2)));
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -846,7 +846,7 @@ public sealed partial class SignalBroadcastingStrategyTests
 
         var handler = provider.GetRequiredService<ISignalPublishers>()
                               .For(TestSignal.T)
-                              .WithPublisher(p => p.UseInProcessWithParallelBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(-1)));
+                              .WithTransport(p => p.UseInProcessWithParallelBroadcastingStrategy(c => c.WithMaxDegreeOfParallelism(-1)));
 
         var signal = new TestSignal { Payload = 10 };
 
@@ -859,7 +859,6 @@ public sealed partial class SignalBroadcastingStrategyTests
         await provider.GetRequiredService<InProcessSignalReceiver>().Broadcast(new TestSignal { Payload = 10 },
                                                                                provider,
                                                                                new NullBroadcastingStrategy(),
-                                                                               "test",
                                                                                CancellationToken.None);
     }
 
@@ -985,10 +984,9 @@ public sealed partial class SignalBroadcastingStrategyTests
         Exception? exceptionToThrow = null)
         : ISignalBroadcastingStrategy
     {
-        public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<ISignalReceiverHandlerInvoker> signalHandlerInvokers,
+        public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
                                                    IServiceProvider serviceProvider,
                                                    TSignal signal,
-                                                   string transportTypeName,
                                                    CancellationToken cancellationToken)
             where TSignal : class, ISignal<TSignal>
         {
@@ -996,9 +994,9 @@ public sealed partial class SignalBroadcastingStrategyTests
             observations.CancellationTokensFromCustomStrategy.Enqueue(cancellationToken);
             observations.ServiceProvidersFromPublish.Enqueue(serviceProvider);
 
-            foreach (var invoker in signalHandlerInvokers)
+            foreach (var fn in signalHandlerInvocationFns)
             {
-                await invoker.Invoke(serviceProvider, signal, transportTypeName, cancellationToken);
+                await fn(signal, serviceProvider, cancellationToken);
             }
 
             if (exceptionToThrow is not null)
@@ -1010,10 +1008,9 @@ public sealed partial class SignalBroadcastingStrategyTests
 
     private sealed class NullBroadcastingStrategy : ISignalBroadcastingStrategy
     {
-        public Task BroadcastSignal<TSignal>(IReadOnlyCollection<ISignalReceiverHandlerInvoker> signalHandlerInvokers,
+        public Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
                                              IServiceProvider serviceProvider,
                                              TSignal signal,
-                                             string transportTypeName,
                                              CancellationToken cancellationToken)
             where TSignal : class, ISignal<TSignal>
         {

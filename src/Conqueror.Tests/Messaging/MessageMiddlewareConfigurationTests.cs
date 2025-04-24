@@ -20,7 +20,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         _ = await handler.Handle(new());
@@ -48,7 +48,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         _ = await handler.Handle(new());
@@ -74,7 +74,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         _ = await handler.Handle(new());
@@ -95,7 +95,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         _ = await handler.Handle(new(), CancellationToken.None);
@@ -106,7 +106,7 @@ public sealed partial class MessageMiddlewareConfigurationTests
 
     private sealed record TestMessageResponse;
 
-    private sealed class TestMessageHandler : TestMessage.IHandler
+    private sealed partial class TestMessageHandler : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {

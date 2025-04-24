@@ -60,7 +60,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return services.AddSignalHandlerDelegateInternal<TSignal, TIHandler>(fn, null);
+        return services.AddSignalHandlerDelegateInternal(signalTypes, fn, null);
     }
 
     public static IServiceCollection AddSignalHandlerDelegate<TSignal, TIHandler>(
@@ -70,7 +70,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return services.AddSignalHandlerDelegateInternal<TSignal, TIHandler>((m, p, ct) =>
+        return services.AddSignalHandlerDelegateInternal(signalTypes, (m, p, ct) =>
         {
             fn(m, p, ct);
             return Task.CompletedTask;
@@ -85,7 +85,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return services.AddSignalHandlerDelegateInternal<TSignal, TIHandler>(fn, configurePipeline);
+        return services.AddSignalHandlerDelegateInternal(signalTypes, fn, configurePipeline);
     }
 
     public static IServiceCollection AddSignalHandlerDelegate<TSignal, TIHandler>(
@@ -96,7 +96,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return services.AddSignalHandlerDelegateInternal<TSignal, TIHandler>((m, p, ct) =>
+        return services.AddSignalHandlerDelegateInternal(signalTypes, (m, p, ct) =>
         {
             fn(m, p, ct);
             return Task.CompletedTask;
@@ -152,8 +152,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
     {
         services.TryAddTransient<ISignalPublishers, SignalPublishers>();
         services.TryAddSingleton<ISignalIdFactory, DefaultSignalIdFactory>();
-        services.TryAddSingleton<SignalTransportRegistry>();
-        services.TryAddSingleton<ISignalTransportRegistry>(p => p.GetRequiredService<SignalTransportRegistry>());
+        services.TryAddSingleton<SignalHandlerRegistry>();
+        services.TryAddSingleton<ISignalHandlerRegistry>(p => p.GetRequiredService<SignalHandlerRegistry>());
         services.TryAddSingleton<InProcessSignalReceiver>();
 
         return services.AddConquerorContext();
@@ -182,6 +182,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
 
     private static IServiceCollection AddSignalHandlerDelegateInternal<TSignal, TIHandler>(
         this IServiceCollection services,
+        SignalTypes<TSignal, TIHandler> _, // for type inference
         SignalHandlerFn<TSignal> fn,
         Action<ISignalPipeline<TSignal>>? configurePipeline)
         where TSignal : class, ISignal<TSignal>

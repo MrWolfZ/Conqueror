@@ -3,7 +3,7 @@
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public interface IInProcessSignalReceiver<TSignal>
+public interface IInProcessSignalReceiver<in TSignal>
     where TSignal : class, ISignal<TSignal>
 {
     /// <summary>
