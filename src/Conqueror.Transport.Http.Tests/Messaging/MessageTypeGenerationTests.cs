@@ -1,7 +1,6 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable InconsistentNaming
 
-using System.Text;
 using Microsoft.AspNetCore.Builder;
 
 #pragma warning disable SA1302
@@ -61,31 +60,6 @@ public sealed partial class MessageTypeGenerationTests
 
         static IHttpMessageTypesInjector IHttpMessage.HttpMessageTypesInjector
             => HttpMessageTypesInjector<TestMessage, TestMessageResponse>.Default;
-
-        static IHttpMessageSerializer<TestMessage, TestMessageResponse> IHttpMessage<TestMessage, TestMessageResponse>.HttpMessageSerializer
-            => new HttpMessageQueryStringSerializer<TestMessage, TestMessageResponse>(
-                query =>
-                {
-                    if (query is null)
-                    {
-                        throw new ArgumentException("query must not be null", nameof(query));
-                    }
-
-                    return new()
-                    {
-                        Payload = query.TryGetValue("payload", out var payloadValues) && payloadValues.Count > 0 && payloadValues[0] is { } payloadValue ? (int)Convert.ChangeType(payloadValue, typeof(int)) : default,
-                    };
-                },
-                message =>
-                {
-                    var queryBuilder = new StringBuilder();
-
-                    queryBuilder.Append('?');
-                    queryBuilder.Append("payload=");
-                    queryBuilder.Append(Uri.EscapeDataString(message.Payload.ToString() ?? string.Empty));
-
-                    return queryBuilder.ToString();
-                });
     }
 
     private sealed class TestMessageHandler : TestMessage.IHandler

@@ -10,7 +10,7 @@ namespace Conqueror;
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
 [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty", Justification = "Members are set via code generation")]
 public interface IHttpMessage<
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)]
     TMessage,
     TResponse> : IHttpMessage, IMessage<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
@@ -49,7 +49,10 @@ public interface IHttpMessage<
 
     static virtual JsonSerializerContext? HttpJsonSerializerContext => TMessage.JsonSerializerContext;
 
-    static virtual IHttpMessageSerializer<TMessage, TResponse>? HttpMessageSerializer => null;
+    static virtual IHttpMessageSerializer<TMessage, TResponse>? HttpMessageSerializer
+        => TMessage.HttpMethod == ConquerorTransportHttpConstants.MethodGet
+            ? new HttpMessageQueryStringSerializer<TMessage, TResponse>()
+            : null;
 
     static virtual IHttpResponseSerializer<TMessage, TResponse>? HttpResponseSerializer => null;
 
@@ -59,7 +62,7 @@ public interface IHttpMessage<
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
 public interface IHttpMessage<
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)]
     TMessage> : IHttpMessage<TMessage, UnitMessageResponse>
     where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
 {
