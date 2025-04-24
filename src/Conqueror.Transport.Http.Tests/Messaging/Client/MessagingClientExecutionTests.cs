@@ -21,13 +21,15 @@ public sealed class MessagingClientExecutionTests
 
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, THandler>(MessageTestCase testCase)
+    public async Task GivenTestHttpMessage_WhenExecutingMessage_ReturnsCorrectResponse<TMessage, TResponse, TIHandler, THandler>(
+        MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         var clientServices = new ServiceCollection().AddConqueror()
                                                     .AddSingleton<TestObservations>()
@@ -49,7 +51,7 @@ public sealed class MessagingClientExecutionTests
 
         var clientServiceProvider = clientServices.BuildServiceProvider();
 
-        var messageClients = clientServiceProvider.GetRequiredService<IMessageClients>();
+        var messageClients = clientServiceProvider.GetRequiredService<IMessageSenders>();
 
         var httpClient = host.HttpClient;
 
@@ -60,7 +62,7 @@ public sealed class MessagingClientExecutionTests
             httpClient.BaseAddress = new("http://localhost/custom/");
         }
 
-        IHttpMessageTransportClient<TM, TR> ConfigureTransport<TM, TR>(IMessageTransportClientBuilder<TM, TR> builder)
+        IHttpMessageSender<TM, TR> ConfigureTransport<TM, TR>(IMessageSenderBuilder<TM, TR> builder)
             where TM : class, IHttpMessage<TM, TR>
             => builder.UseHttp(new("http://localhost"))
                       .WithHttpClient(httpClient)
@@ -70,26 +72,30 @@ public sealed class MessagingClientExecutionTests
                           h.Add("test-header", TestHeaderValue);
                       });
 
-        switch (testCase.Message)
+        var responseTask = testCase.Message switch
         {
-            case TestMessageWithMiddleware m:
-                _ = await messageClients.For(TestMessageWithMiddleware.T)
-                                        .WithTransport(ConfigureTransport)
-                                        .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>()))
-                                        .Handle(m, host.TestTimeoutToken);
-                break;
-            case TestMessageWithMiddlewareWithoutResponse m:
-                await messageClients.For(TestMessageWithMiddlewareWithoutResponse.T)
-                                    .WithTransport(ConfigureTransport)
-                                    .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
-                                    .Handle(m, host.TestTimeoutToken);
-                break;
-            default:
-                _ = await messageClients.For<TMessage, TResponse>()
-                                        .WithTransport(ConfigureTransport)
-                                        .Handle((TMessage)testCase.Message, host.TestTimeoutToken);
-                break;
+            TestMessageWithMiddleware m => messageClients.For(TestMessageWithMiddleware.T)
+                                                         .WithTransport(ConfigureTransport)
+                                                         .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>()))
+                                                         .Handle(m, host.TestTimeoutToken),
+
+            TestMessageWithMiddlewareWithoutResponse m => messageClients.For(TestMessageWithMiddlewareWithoutResponse.T)
+                                                                        .WithTransport(ConfigureTransport)
+                                                                        .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
+                                                                        .Handle(m, host.TestTimeoutToken),
+
+            _ => THandler.Invoke(messageClients.For(THandler.MessageTypes).WithTransport(ConfigureTransport),
+                                 (TMessage)testCase.Message,
+                                 host.TestTimeoutToken),
+        };
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await Assert.ThatAsync(() => responseTask, Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+            return;
         }
+
+        await responseTask;
 
         Assert.That(callWasReceivedOnServer, Is.True);
 
@@ -100,21 +106,21 @@ public sealed class MessagingClientExecutionTests
         {
             var seenTransportTypeOnServer = host.Resolve<TestObservations>().SeenTransportTypeInMiddleware;
             Assert.That(seenTransportTypeOnServer?.IsHttp(), Is.True, $"transport type is {seenTransportTypeOnServer?.Name}");
-            Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(MessageTransportRole.Server));
+            Assert.That(seenTransportTypeOnServer?.Role, Is.EqualTo(MessageTransportRole.Receiver));
 
             var seenTransportTypeOnClient = clientServiceProvider.GetRequiredService<TestObservations>().SeenTransportTypeInMiddleware;
             Assert.That(seenTransportTypeOnClient?.IsHttp(), Is.True, $"transport type is {seenTransportTypeOnClient?.Name}");
-            Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(MessageTransportRole.Client));
+            Assert.That(seenTransportTypeOnClient?.Role, Is.EqualTo(MessageTransportRole.Sender));
         }
     }
 
     [Test]
-    public async Task GivenTestHttpMessage_WhenExecutingMessageThroughGeneratedInterface_ReturnsCorrectResponse()
+    public async Task GivenTestHttpMessage_WhenHandlerReceiverIsDisabled_EndpointDoesNotGetRegistered()
     {
         await using var host = await CreateTestHost(
             services =>
             {
-                _ = services.AddMessageHandler<TestMessageHandler>();
+                _ = services.AddMessageHandler<DisabledTestMessageHandler>();
                 _ = services.AddRouting().AddMessageEndpoints();
             },
             app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
@@ -123,55 +129,7 @@ public sealed class MessagingClientExecutionTests
 
         var httpClient = host.HttpClient;
 
-        _ = await clientServiceProvider.GetRequiredService<IMessageClients>()
-                                       .For(TestMessage.T)
-                                       .AsIHandler()
-                                       .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
-                                       .Handle(new(), host.TestTimeoutToken);
-
-        Assert.That(callWasReceivedOnServer, Is.True);
-    }
-
-    [Test]
-    public async Task GivenTestHttpMessageWithoutResponse_WhenExecutingMessageThroughGeneratedInterface_ReturnsCorrectResponse()
-    {
-        await using var host = await CreateTestHost(
-            services =>
-            {
-                _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>();
-                _ = services.AddRouting().AddMessageEndpoints();
-            },
-            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
-
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
-
-        var httpClient = host.HttpClient;
-
-        await clientServiceProvider.GetRequiredService<IMessageClients>()
-                                   .For(TestMessageWithoutResponse.T)
-                                   .AsIHandler()
-                                   .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
-                                   .Handle(new(), host.TestTimeoutToken);
-
-        Assert.That(callWasReceivedOnServer, Is.True);
-    }
-
-    [Test]
-    public async Task GivenTestHttpMessage_WhenFilteringMessageTypeFromEndpoints_EndpointDoesNotGetRegistered()
-    {
-        await using var host = await CreateTestHost(
-            services =>
-            {
-                _ = services.AddMessageHandler<TestMessageHandler>();
-                _ = services.AddRouting().AddMessageEndpoints();
-            },
-            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints(mt => mt != typeof(TestMessage))));
-
-        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
-
-        var httpClient = host.HttpClient;
-
-        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageClients>()
+        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageSenders>()
                                                           .For(TestMessage.T)
                                                           .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
                                                           .Handle(new(), host.TestTimeoutToken),
@@ -181,21 +139,21 @@ public sealed class MessagingClientExecutionTests
     }
 
     [Test]
-    public async Task GivenTestHttpMessageWithoutResponse_WhenFilteringMessageTypeFromEndpoints_EndpointDoesNotGetRegistered()
+    public async Task GivenTestHttpMessageWithoutResponse_WhenHandlerReceiverIsDisabled_EndpointDoesNotGetRegistered()
     {
         await using var host = await CreateTestHost(
             services =>
             {
-                _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>();
+                _ = services.AddMessageHandler<DisabledTestMessageWithoutResponseHandler>();
                 _ = services.AddRouting().AddMessageEndpoints();
             },
-            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints(mt => mt != typeof(TestMessageWithoutResponse))));
+            app => app.UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
 
         await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
 
         var httpClient = host.HttpClient;
 
-        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageClients>()
+        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageSenders>()
                                                           .For(TestMessageWithoutResponse.T)
                                                           .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
                                                           .Handle(new(), host.TestTimeoutToken),

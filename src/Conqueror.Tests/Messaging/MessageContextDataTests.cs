@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 namespace Conqueror.Tests.Messaging;
@@ -47,7 +48,7 @@ public sealed partial class MessageContextDataTests
         _ = services.AddSingleton(testDataInstructions)
                     .AddSingleton(testObservations)
                     .AddSingleton<NestedTestClass>()
-                    .AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (_, p, _) =>
+                    .AddMessageHandlerDelegate(TestMessage.T, async (_, p, _) =>
                     {
                         SetAndObserveContextData(p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.HandlerPreNestedExecution);
 
@@ -63,7 +64,7 @@ public sealed partial class MessageContextDataTests
                         _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(pipeline.ServiceProvider.GetRequiredService<TestDataInstructions>(),
                                                                                                      pipeline.ServiceProvider.GetRequiredService<TestObservations>()));
                     })
-                    .AddMessageHandlerDelegate<NestedTestMessage, TestMessageResponse>((_, p, _) =>
+                    .AddMessageHandlerDelegate(NestedTestMessage.T, (_, p, _) =>
                     {
                         SetAndObserveContextData(p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!, testDataInstructions, testObservations, Location.NestedMessageHandler);
                         return Task.FromResult<TestMessageResponse>(new());
@@ -75,7 +76,7 @@ public sealed partial class MessageContextDataTests
 
         SetAndObserveContextData(conquerorContext, testDataInstructions, testObservations, Location.PreExecution);
 
-        var handlerClient = serviceProvider.GetRequiredService<IMessageClients>()
+        var handlerClient = serviceProvider.GetRequiredService<IMessageSenders>()
                                            .For(TestMessage.T)
                                            .WithTransport(b =>
                                            {
@@ -130,23 +131,23 @@ public sealed partial class MessageContextDataTests
         }
     }
 
-    private static IEnumerable<ConquerorContextDataTestCase> GenerateTestCases()
+    private static IEnumerable<TestCaseData> GenerateTestCases()
     {
         foreach (var dataType in new[] { DataType.String, DataType.Object })
         {
             foreach (var testCaseData in GenerateDownstreamTestCaseData(dataType))
             {
-                yield return new(DataDirection.Downstream, testCaseData);
+                yield return new ConquerorContextDataTestCase(DataDirection.Downstream, testCaseData);
             }
 
             foreach (var testCaseData in GenerateUpstreamTestCaseData(dataType))
             {
-                yield return new(DataDirection.Upstream, testCaseData);
+                yield return new ConquerorContextDataTestCase(DataDirection.Upstream, testCaseData);
             }
 
             foreach (var testCaseData in GenerateBidirectionalTestCaseData(dataType))
             {
-                yield return new(DataDirection.Bidirectional, testCaseData);
+                yield return new ConquerorContextDataTestCase(DataDirection.Bidirectional, testCaseData);
             }
         }
     }
@@ -502,7 +503,20 @@ public sealed partial class MessageContextDataTests
 
     [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
     [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
-    public sealed record ConquerorContextDataTestCase(string DataDirection, List<ConquerorContextDataTestCaseData> TestData);
+    public sealed record ConquerorContextDataTestCase(string DataDirection, List<ConquerorContextDataTestCaseData> TestData)
+    {
+        public static implicit operator TestCaseData(ConquerorContextDataTestCase testCase)
+        {
+            var testName = new StringBuilder().Append(testCase.DataDirection)
+                                              .Append($",data:{string.Join(",", testCase.TestData)}")
+                                              .ToString();
+
+            return new(testCase)
+            {
+                TestName = testName,
+            };
+        }
+    }
 
     [SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
     [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass", Justification = "The name makes sense and there is little risk of confusing a property and a class.")]
@@ -511,7 +525,21 @@ public sealed partial class MessageContextDataTests
         string DataSettingLocation,
         string? DataRemovalLocation,
         IReadOnlyCollection<string> LocationsWhereDataShouldBeAccessible,
-        IReadOnlyCollection<string> LocationsWhereDataShouldNotBeAccessible);
+        IReadOnlyCollection<string> LocationsWhereDataShouldNotBeAccessible)
+    {
+        public override string ToString()
+        {
+            var sb = new StringBuilder().Append(DataType)
+                                        .Append($",setLoc:{DataSettingLocation}");
+
+            if (DataRemovalLocation is not null)
+            {
+                _ = sb.Append($",remLoc:{DataRemovalLocation}");
+            }
+
+            return sb.ToString();
+        }
+    }
 
     private static class DataDirection
     {
@@ -619,13 +647,13 @@ public sealed partial class MessageContextDataTests
         IConquerorContextAccessor conquerorContextAccessor,
         TestObservations observations,
         TestDataInstructions dataInstructions,
-        IMessageClients messageClients)
+        IMessageSenders messageSenders)
     {
         public async Task Execute()
         {
             SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPreExecution);
 
-            _ = await messageClients.For(NestedTestMessage.T).Handle(new());
+            _ = await messageSenders.For(NestedTestMessage.T).Handle(new());
 
             SetAndObserveContextData(conquerorContextAccessor.ConquerorContext!, dataInstructions, observations, Location.NestedClassPostExecution);
         }

@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Conqueror.SourceGenerators.Signalling;
-using Conqueror.SourceGenerators.TestUtil;
 using Microsoft.CodeAnalysis;
 
 namespace Conqueror.SourceGenerators.Tests.Signalling;

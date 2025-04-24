@@ -10,7 +10,7 @@ public sealed partial record TestMessage
 
 public sealed record TestMessageResponse(int Payload);
 
-internal sealed class TestMessageHandler(ISignalPublishers signalPublishers) : TestMessage.IHandler
+internal sealed partial class TestMessageHandler(ISignalPublishers signalPublishers) : TestMessage.IHandler
 {
     public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
     {

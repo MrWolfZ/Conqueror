@@ -21,20 +21,6 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         }
 
         [Test]
-        public void GivenServiceCollectionWithDuplicateMessageNameFromDelegate_WhenStartingHost_ThrowsInvalidOperationException()
-        {
-            Assert.That(() => HttpTransportTestHost.Create(
-                            services =>
-                            {
-                                _ = services.AddRoutingCore()
-                                            .AddMessageEndpoints()
-                                            .AddMessageHandler<TestMessageHandler>()
-                                            .AddMessageHandlerDelegate<DuplicateMessageName.TestMessage, DuplicateMessageName.TestMessageResponse>((_, _, _) => new());
-                            }, app => _ = app.UseRouting().UseEndpoints(b => b.MapMessageEndpoints())),
-                        Throws.InvalidOperationException.With.Message.Contains("found multiple Conqueror message types with identical path!"));
-        }
-
-        [Test]
         public void GivenServiceCollectionWithDuplicateMessagePathFromConfig_WhenStartingHost_ThrowsInvalidOperationException()
         {
             Assert.That(() => HttpTransportTestHost.Create(
@@ -61,7 +47,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
         [HttpMessage<TestMessageResponse>(Path = "test")]
         private sealed partial record TestMessageWithDuplicatePathFromConfig;
 
-        private sealed class TestMessageHandler : TestMessage.IHandler
+        private sealed partial class TestMessageHandler : TestMessage.IHandler
         {
             public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             {
@@ -71,7 +57,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
             }
         }
 
-        private sealed class TestMessageWithDuplicatePathFromConfigHandler : TestMessageWithDuplicatePathFromConfig.IHandler
+        private sealed partial class TestMessageWithDuplicatePathFromConfigHandler : TestMessageWithDuplicatePathFromConfig.IHandler
         {
             public async Task<TestMessageResponse> Handle(TestMessageWithDuplicatePathFromConfig message, CancellationToken cancellationToken = default)
             {
@@ -91,7 +77,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
 
         public sealed record TestMessageResponse;
 
-        public sealed class TestMessageHandler : TestMessage.IHandler
+        public sealed partial class TestMessageHandler : TestMessage.IHandler
         {
             public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             {

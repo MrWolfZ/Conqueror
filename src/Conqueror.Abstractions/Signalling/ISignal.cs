@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -34,6 +35,8 @@ public interface ISignal<out TSignal>
     /// </summary>
     static virtual JsonSerializerContext? JsonSerializerContext => null;
 
+    static abstract IEnumerable<ConstructorInfo> PublicConstructors { get; }
+
     static abstract IEnumerable<PropertyInfo> PublicProperties { get; }
 }
 
@@ -44,4 +47,13 @@ public interface ISignal<out TSignal>
 /// <typeparam name="TIHandler">the handler interface type</typeparam>
 public sealed class SignalTypes<TSignal, TIHandler>
     where TSignal : class, ISignal<TSignal>
-    where TIHandler : class, ISignalHandler<TSignal, TIHandler>;
+    where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+{
+    public SignalTypes()
+    {
+        if (!typeof(TIHandler).IsInterface || typeof(TIHandler).Name != "IHandler")
+        {
+            throw new ArgumentException($"expected signal handler interface for signal type '{typeof(TSignal)}', but got '{typeof(TIHandler)}'", nameof(TIHandler));
+        }
+    }
+}

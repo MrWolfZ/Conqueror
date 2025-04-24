@@ -46,6 +46,7 @@ public static class SignalTypeSources
                   .AppendSignalHandlerInterface(indentation, in signalTypeDescriptor)
                   .AppendSignalEmptyInstanceProperty(indentation, in signalTypeDescriptor)
                   .AppendJsonSerializerContext(indentation, in signalTypeDescriptor, descriptor.HasJsonSerializerContext)
+                  .AppendPublicConstructorsProperty(indentation, in signalTypeDescriptor)
                   .AppendPublicPropertiesProperty(indentation, in signalTypeDescriptor);
         }
 
@@ -60,7 +61,7 @@ public static class SignalTypeSources
             using (sb.AppendLine().AppendTransportSignalType(indentation, in signalTypeDescriptor, in attribute))
             {
                 _ = sb.AppendTransportSignalHandlerInterface(indentation, in signalTypeDescriptor, in attribute)
-                      .AppendTransportSignalTypesProperties(indentation, in signalTypeDescriptor, in attribute);
+                      .AppendTransportSignalTypesProperties(indentation, in attribute);
             }
         }
 
@@ -182,6 +183,18 @@ public static class SignalTypeSources
                  .AppendSingleIndent().Append($"=> global::{signalTypeDescriptor.FullyQualifiedName}JsonSerializerContext.Default;").AppendLine();
     }
 
+    private static StringBuilder AppendPublicConstructorsProperty(this StringBuilder sb,
+                                                                  Indentation indentation,
+                                                                  in TypeDescriptor signalTypeDescriptor)
+    {
+        return sb.AppendLine()
+                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append($"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.PublicConstructors")
+                 .AppendLineWithIndentation(indentation)
+                 .AppendSingleIndent().Append($"=> typeof({signalTypeDescriptor.Name}).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);").AppendLine();
+    }
+
     private static StringBuilder AppendPublicPropertiesProperty(this StringBuilder sb,
                                                                 Indentation indentation,
                                                                 in TypeDescriptor signalTypeDescriptor)
@@ -202,7 +215,6 @@ public static class SignalTypeSources
 
     private static StringBuilder AppendTransportSignalTypesProperties(this StringBuilder sb,
                                                                       Indentation indentation,
-                                                                      in TypeDescriptor signalTypeDescriptor,
                                                                       in SignalAttributeDescriptor attributeDescriptor)
     {
         foreach (var property in attributeDescriptor.Properties)

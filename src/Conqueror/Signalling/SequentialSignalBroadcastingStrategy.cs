@@ -14,10 +14,9 @@ internal sealed class SequentialSignalBroadcastingStrategy(
 {
     public static readonly SequentialSignalBroadcastingStrategy Default = new(new());
 
-    public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<ISignalReceiverHandlerInvoker> signalHandlerInvokers,
+    public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
                                                IServiceProvider serviceProvider,
                                                TSignal signal,
-                                               string transportTypeName,
                                                CancellationToken cancellationToken)
         where TSignal : class, ISignal<TSignal>
     {
@@ -25,11 +24,11 @@ internal sealed class SequentialSignalBroadcastingStrategy(
         var thrownExceptions = new List<Exception>();
         var thrownCancellationExceptions = new List<Exception>();
 
-        foreach (var invoker in signalHandlerInvokers)
+        foreach (var invocationFn in signalHandlerInvocationFns)
         {
             try
             {
-                await invoker.Invoke(serviceProvider, signal, transportTypeName, cancellationToken).ConfigureAwait(false);
+                await invocationFn(signal, serviceProvider, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException e)
             {

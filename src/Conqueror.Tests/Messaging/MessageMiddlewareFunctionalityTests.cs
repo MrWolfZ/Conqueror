@@ -27,7 +27,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var expectedTransportTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
@@ -74,7 +74,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessageWithoutResponse.T);
 
         using var tokenSource = new CancellationTokenSource();
@@ -87,6 +87,63 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         Assert.That(observations.CancellationTokensFromMiddlewares, Is.EqualTo(Enumerable.Repeat(tokenSource.Token, testCase.ExpectedMiddlewareTypes.Count)));
         Assert.That(observations.MiddlewareTypes, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => t.MiddlewareType)));
         Assert.That(observations.TransportTypesFromMiddlewares, Is.EqualTo(testCase.ExpectedMiddlewareTypes.Select(t => new MessageTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
+    }
+
+    [Test]
+    public async Task GivenClientAndHandlerPipelinesForMultipleMessageTypes_WhenHandlerIsCalled_MiddlewaresAreCalledWithMessage()
+    {
+        var services = new ServiceCollection();
+        var observations = new TestObservations();
+
+        _ = services.AddMessageHandler<MultiTestMessageHandler>()
+                    .AddSingleton(observations)
+                    .AddSingleton<Action<TestMessage.IPipeline>>(pipeline =>
+                    {
+                        var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                        _ = pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(obs));
+                    })
+                    .AddSingleton<Action<TestMessageWithoutResponse.IPipeline>>(pipeline =>
+                    {
+                        var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                        _ = pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(obs));
+                    });
+
+        var provider = services.BuildServiceProvider();
+
+        var handler1 = provider.GetRequiredService<IMessageSenders>()
+                               .For(TestMessage.T)
+                               .WithPipeline(pipeline =>
+                               {
+                                   var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                                   _ = pipeline.Use(new TestMessageMiddleware2<TestMessage, TestMessageResponse>(obs));
+                               });
+
+        var handler2 = provider.GetRequiredService<IMessageSenders>()
+                               .For(TestMessageWithoutResponse.T)
+                               .WithPipeline(pipeline =>
+                               {
+                                   var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                                   _ = pipeline.Use(new TestMessageMiddleware2<TestMessageWithoutResponse, UnitMessageResponse>(obs));
+                               });
+
+        using var tokenSource = new CancellationTokenSource();
+
+        var message1 = new TestMessage(10);
+        var message2 = new TestMessageWithoutResponse(10);
+
+        _ = await handler1.Handle(message1, tokenSource.Token);
+
+        await handler2.Handle(message2, tokenSource.Token);
+
+        Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(new object[] { message1, message1, message2, message2 }));
+        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[]
+        {
+            typeof(TestMessageMiddleware2<TestMessage, TestMessageResponse>),
+            typeof(TestMessageMiddleware<TestMessage, TestMessageResponse>),
+
+            typeof(TestMessageMiddleware2<TestMessageWithoutResponse, UnitMessageResponse>),
+            typeof(TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>),
+        }));
     }
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase<TestMessage, TestMessageResponse>> GenerateTestCases()
@@ -108,30 +165,30 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         yield return new(null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
+                             MessageTransportRole.Sender,
                          ]);
 
         yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          p => p.Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Client,
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
                          ]);
 
         // delegate middleware
@@ -148,10 +205,10 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          }),
                          null,
                          [
-                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         yield return new(null,
@@ -167,10 +224,10 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              return await ctx.Next(ctx.Message, ctx.CancellationToken);
                          }),
                          [
-                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
+                             MessageTransportRole.Sender,
                          ]);
 
         yield return new(p => p.Use(async ctx =>
@@ -196,12 +253,12 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                              return await ctx.Next(ctx.Message, ctx.CancellationToken);
                          }),
                          [
-                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Client,
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
                          ]);
 
         // multiple different middlewares
@@ -209,22 +266,22 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         yield return new(null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
+                             MessageTransportRole.Sender,
                          ]);
 
         yield return new(p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -232,14 +289,14 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          p => p.Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Client,
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
                          ]);
 
         // mix delegate and normal middleware
@@ -256,11 +313,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          }).Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(DelegateMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         // same middleware multiple times
@@ -268,22 +325,22 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         yield return new(null,
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
+                             MessageTransportRole.Sender,
                          ]);
 
         // added, then removed
@@ -293,11 +350,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Without<TestMessageMiddleware2<TMessage, TResponse>>(),
                          null,
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         yield return new(null,
@@ -306,11 +363,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Without<TestMessageMiddleware2<TMessage, TResponse>>(),
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
+                             MessageTransportRole.Sender,
                          ]);
 
         // multiple times added, then removed
@@ -321,11 +378,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Without<TestMessageMiddleware2<TMessage, TResponse>>(),
                          null,
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         yield return new(null,
@@ -335,11 +392,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Without<TestMessageMiddleware2<TMessage, TResponse>>(),
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
+                             MessageTransportRole.Sender,
                          ]);
 
         // added on client, added and removed in handler
@@ -347,11 +404,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Without<TestMessageMiddleware<TMessage, TResponse>>(),
                          p => p.Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
                          ]);
 
         // added, then removed, then added again
@@ -360,10 +417,10 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         yield return new(null,
@@ -371,10 +428,10 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Without<TestMessageMiddleware<TMessage, TResponse>>()
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
+                             MessageTransportRole.Sender,
                          ]);
 
         // retry middlewares
@@ -383,14 +440,14 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          null,
                          [
-                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Receiver,
                          ]);
 
         yield return new(null,
@@ -398,14 +455,14 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                                .Use(new TestMessageMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Client),
+                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
                          ],
                          [
-                             MessageTransportRole.Client,
+                             MessageTransportRole.Sender,
                          ]);
 
         yield return new(p => p.Use(new TestMessageRetryMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
@@ -413,20 +470,20 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          p => p.Use(new TestMessageRetryMiddleware<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>()))
                                .Use(new TestMessageMiddleware2<TMessage, TResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())),
                          [
-                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Client),
-                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
-                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Server),
+                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware2<TMessage, TResponse>), MessageTransportRole.Sender),
+                             (typeof(TestMessageRetryMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
+                             (typeof(TestMessageMiddleware<TMessage, TResponse>), MessageTransportRole.Receiver),
                          ],
                          [
-                             MessageTransportRole.Client,
-                             MessageTransportRole.Server,
-                             MessageTransportRole.Server,
+                             MessageTransportRole.Sender,
+                             MessageTransportRole.Receiver,
+                             MessageTransportRole.Receiver,
                          ]);
     }
 
@@ -450,7 +507,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var response = await handler.Handle(new(0), tokens.CancellationTokens[0]);
@@ -486,7 +543,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var response = await handler.WithPipeline(pipeline =>
@@ -527,7 +584,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.Handle(new(10)));
@@ -546,7 +603,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var thrownException = Assert.ThrowsAsync<Exception>(() => handler.WithPipeline(p => p.Use(new ThrowingTestMessageMiddleware<TestMessage, TestMessageResponse>(exception))).Handle(new(10)));
@@ -582,11 +639,11 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         using var scope2 = provider.CreateScope();
 
         var handler1 = scope1.ServiceProvider
-                             .GetRequiredService<IMessageClients>()
+                             .GetRequiredService<IMessageSenders>()
                              .For(TestMessage.T);
 
         var handler2 = scope2.ServiceProvider
-                             .GetRequiredService<IMessageClients>()
+                             .GetRequiredService<IMessageSenders>()
                              .For(TestMessage.T);
 
         _ = await handler1.WithPipeline(pipeline =>
@@ -632,7 +689,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         _ = await handler.WithPipeline(p => p.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())))
@@ -666,7 +723,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var message = new TestMessage(10);
@@ -696,7 +753,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var message = new TestMessage(10);
@@ -726,7 +783,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessageWithoutResponse.T);
 
         var message = new TestMessageWithoutResponse(10);
@@ -755,7 +812,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessageWithoutResponse.T);
 
         var message = new TestMessageWithoutResponse(10);
@@ -778,7 +835,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessageBase.T);
 
         var message = new TestMessageSub(10, -1);
@@ -801,7 +858,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var message = new TestMessage(10);
@@ -824,7 +881,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessageWithoutResponse.T);
 
         var message = new TestMessageWithoutResponse(10);
@@ -842,7 +899,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         MessageTransportType? transportTypeFromClient = null;
         MessageTransportType? transportTypeFromHandler = null;
 
-        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>(async (message, _, _) =>
+        _ = services.AddMessageHandlerDelegate(TestMessage.T, async (message, _, _) =>
         {
             await Task.Yield();
             return new(message.Payload + 1);
@@ -850,15 +907,15 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var message = new TestMessage(10);
 
         _ = await handler.WithPipeline(pipeline => transportTypeFromClient = pipeline.TransportType).Handle(message);
 
-        Assert.That(transportTypeFromClient, Is.EqualTo(new MessageTransportType(ConquerorConstants.InProcessTransportName, MessageTransportRole.Client)));
-        Assert.That(transportTypeFromHandler, Is.EqualTo(new MessageTransportType(ConquerorConstants.InProcessTransportName, MessageTransportRole.Server)));
+        Assert.That(transportTypeFromClient, Is.EqualTo(new MessageTransportType(ConquerorConstants.InProcessTransportName, MessageTransportRole.Sender)));
+        Assert.That(transportTypeFromHandler, Is.EqualTo(new MessageTransportType(ConquerorConstants.InProcessTransportName, MessageTransportRole.Receiver)));
     }
 
     [Test]
@@ -866,20 +923,21 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     {
         var services = new ServiceCollection();
 
-        _ = services.AddMessageHandlerDelegate<TestMessage, TestMessageResponse>((message, _, _) => Task.FromResult<TestMessageResponse>(new(message.Payload + 1)),
-                                                                                 pipeline =>
-                                                                                 {
-                                                                                     var middleware1 = new TestMessageMiddleware<TestMessage, TestMessageResponse>(new());
-                                                                                     var middleware2 = new TestMessageMiddleware2<TestMessage, TestMessageResponse>(new());
-                                                                                     _ = pipeline.Use(middleware1).Use(middleware2);
+        _ = services.AddMessageHandlerDelegate(TestMessage.T,
+                                               (message, _, _) => Task.FromResult<TestMessageResponse>(new(message.Payload + 1)),
+                                               pipeline =>
+                                               {
+                                                   var middleware1 = new TestMessageMiddleware<TestMessage, TestMessageResponse>(new());
+                                                   var middleware2 = new TestMessageMiddleware2<TestMessage, TestMessageResponse>(new());
+                                                   _ = pipeline.Use(middleware1).Use(middleware2);
 
-                                                                                     Assert.That(pipeline, Has.Count.EqualTo(2));
-                                                                                     Assert.That(pipeline, Is.EqualTo(new IMessageMiddleware<TestMessage, TestMessageResponse>[] { middleware1, middleware2 }));
-                                                                                 });
+                                                   Assert.That(pipeline, Has.Count.EqualTo(2));
+                                                   Assert.That(pipeline, Is.EqualTo(new IMessageMiddleware<TestMessage, TestMessageResponse>[] { middleware1, middleware2 }));
+                                               });
 
         var provider = services.BuildServiceProvider();
 
-        var handler = provider.GetRequiredService<IMessageClients>()
+        var handler = provider.GetRequiredService<IMessageSenders>()
                               .For(TestMessage.T);
 
         var message = new TestMessage(10);
@@ -896,54 +954,6 @@ public sealed partial class MessageMiddlewareFunctionalityTests
                          .Handle(message);
     }
 
-    [Test]
-    public async Task GivenHandlerCastedToGeneratedInterfaceWithSingleAppliedMiddleware_WhenHandlerIsCalled_MiddlewareIsCalledWithMessage()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddMessageHandler<TestMessageHandler>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<IMessageClients>()
-                              .For(TestMessage.T)
-                              .AsIHandler()
-                              .WithPipeline(p => p.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())));
-
-        var message = new TestMessage(10);
-
-        _ = await handler.Handle(message);
-
-        Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(new[] { message }));
-        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestMessageMiddleware<TestMessage, TestMessageResponse>) }));
-    }
-
-    [Test]
-    public async Task GivenHandlerWithoutResponseCastedToGeneratedInterfaceWithSingleAppliedMiddleware_WhenHandlerIsCalled_MiddlewareIsCalledWithMessage()
-    {
-        var services = new ServiceCollection();
-        var observations = new TestObservations();
-
-        _ = services.AddMessageHandler<TestMessageWithoutResponseHandler>()
-                    .AddSingleton(observations);
-
-        var provider = services.BuildServiceProvider();
-
-        var handler = provider.GetRequiredService<IMessageClients>()
-                              .For(TestMessageWithoutResponse.T)
-                              .AsIHandler()
-                              .WithPipeline(p => p.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(p.ServiceProvider.GetRequiredService<TestObservations>())));
-
-        var message = new TestMessageWithoutResponse(10);
-
-        await handler.Handle(message);
-
-        Assert.That(observations.MessagesFromMiddlewares, Is.EqualTo(new[] { message }));
-        Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>) }));
-    }
-
     public sealed record ConquerorMiddlewareFunctionalityTestCase<TMessage, TResponse>(
         Action<IMessagePipeline<TMessage, TResponse>>? ConfigureHandlerPipeline,
         Action<IMessagePipeline<TMessage, TResponse>>? ConfigureClientPipeline,
@@ -956,7 +966,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
 
     public sealed record TestMessageResponse(int Payload);
 
-    private sealed class TestMessageHandler(TestObservations observations) : TestMessage.IHandler
+    private sealed partial class TestMessageHandler(TestObservations observations) : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {
@@ -975,7 +985,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     [Message]
     public sealed partial record TestMessageWithoutResponse(int Payload);
 
-    private sealed class TestMessageWithoutResponseHandler(TestObservations observations) : TestMessageWithoutResponse.IHandler
+    private sealed partial class TestMessageWithoutResponseHandler(TestObservations observations) : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
         {
@@ -990,12 +1000,41 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         }
     }
 
+    private sealed partial class MultiTestMessageHandler(TestObservations observations) : TestMessage.IHandler,
+                                                                                          TestMessageWithoutResponse.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            observations.MessagesFromHandlers.Add(message);
+            observations.CancellationTokensFromHandlers.Add(cancellationToken);
+            return new(0);
+        }
+
+        public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            observations.MessagesFromHandlers.Add(message);
+            observations.CancellationTokensFromHandlers.Add(cancellationToken);
+        }
+
+        public static void ConfigurePipeline(TestMessage.IPipeline pipeline)
+        {
+            pipeline.ServiceProvider.GetService<Action<TestMessage.IPipeline>>()?.Invoke(pipeline);
+        }
+
+        public static void ConfigurePipeline(TestMessageWithoutResponse.IPipeline pipeline)
+        {
+            pipeline.ServiceProvider.GetService<Action<TestMessageWithoutResponse.IPipeline>>()?.Invoke(pipeline);
+        }
+    }
+
     [Message<TestMessageResponse>]
     private partial record TestMessageBase(int PayloadBase);
 
     private sealed record TestMessageSub(int PayloadBase, int PayloadSub) : TestMessageBase(PayloadBase);
 
-    private sealed class TestMessageBaseHandler(TestObservations observations) : TestMessageBase.IHandler
+    private sealed partial class TestMessageBaseHandler(TestObservations observations) : TestMessageBase.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageBase message, CancellationToken cancellationToken = default)
         {
@@ -1012,7 +1051,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     // ReSharper disable once UnusedType.Global (accessed via reflection)
-    public sealed class TestMessageForAssemblyScanningHandler(TestObservations observations)
+    public sealed partial class TestMessageForAssemblyScanningHandler(TestObservations observations)
         : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
@@ -1030,7 +1069,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
     }
 
     // ReSharper disable once UnusedType.Global (accessed via reflection)
-    public sealed class TestMessageWithoutResponseForAssemblyScanningHandler(TestObservations observations)
+    public sealed partial class TestMessageWithoutResponseForAssemblyScanningHandler(TestObservations observations)
         : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)

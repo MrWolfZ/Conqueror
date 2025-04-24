@@ -19,12 +19,12 @@ public static partial class LoggingMiddlewareTestSignals
 
     public const string TestTransportName = "test-transport";
 
-    public static void RegisterSignalType<TSignal, THandlerInterface, THandler>(
+    public static void RegisterSignalType<TSignal, TIHandler, THandler>(
         this IServiceCollection services,
-        SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
+        SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
-        where THandler : class, ISignalHandler
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler
     {
         _ = services.AddSignalHandler<THandler>()
                     .AddSingleton<ISignalTestCasePipelineConfiguration<TSignal>>(testCase);
@@ -309,9 +309,9 @@ public static partial class LoggingMiddlewareTestSignals
         }
     }
 
-    public sealed class SignalTestCase<TSignal, THandlerInterface, THandler> : ISignalTestCasePipelineConfiguration<TSignal>
+    public sealed class SignalTestCase<TSignal, TIHandler, THandler> : ISignalTestCasePipelineConfiguration<TSignal>
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
         where THandler : class, ISignalHandler
     {
         private readonly string? expectedLogCategory;
@@ -529,12 +529,12 @@ public static partial class LoggingMiddlewareTestSignals
                                                        .Append($",hook:{HookBehavior?.ToString() ?? "None"}")
                                                        .ToString();
 
-        public static implicit operator TestCaseData(SignalTestCase<TSignal, THandlerInterface, THandler> signalTestCase)
+        public static implicit operator TestCaseData(SignalTestCase<TSignal, TIHandler, THandler> signalTestCase)
         {
             return new(signalTestCase)
             {
                 TestName = signalTestCase.TestLabel,
-                TypeArgs = [typeof(TSignal), typeof(THandlerInterface), typeof(THandler)],
+                TypeArgs = [typeof(TSignal), typeof(TIHandler), typeof(THandler)],
             };
         }
     }
@@ -777,20 +777,19 @@ public static partial class LoggingMiddlewareTestSignals
 
     public sealed class TestException() : Exception("test exception");
 
-    public sealed class TestSignalBroadcastingStrategy(string transportTypeNameOverride) : ISignalBroadcastingStrategy
+    public sealed class TestSignalBroadcastingStrategy : ISignalBroadcastingStrategy
     {
-        public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<ISignalReceiverHandlerInvoker> signalHandlerInvokers,
+        public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
                                                    IServiceProvider serviceProvider,
                                                    TSignal signal,
-                                                   string transportTypeName,
                                                    CancellationToken cancellationToken)
             where TSignal : class, ISignal<TSignal>
         {
             await Task.Yield();
 
-            foreach (var invoker in signalHandlerInvokers)
+            foreach (var invoker in signalHandlerInvocationFns)
             {
-                await invoker.Invoke(serviceProvider, signal, transportTypeNameOverride, cancellationToken);
+                await invoker.Invoke(signal, serviceProvider, cancellationToken);
             }
         }
     }

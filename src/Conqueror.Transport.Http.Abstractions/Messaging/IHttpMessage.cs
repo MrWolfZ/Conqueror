@@ -1,6 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
@@ -9,10 +7,8 @@ namespace Conqueror;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
 [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty", Justification = "Members are set via code generation")]
-public interface IHttpMessage<
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)]
-    TMessage,
-    TResponse> : IHttpMessage, IMessage<TMessage, TResponse>
+[SuppressMessage("ReSharper", "TypeParameterCanBeVariant", Justification = "false positive")]
+public interface IHttpMessage<TMessage, TResponse> : IMessage<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     static virtual string HttpMethod => ConquerorTransportHttpConstants.MethodPost;
@@ -33,7 +29,7 @@ public interface IHttpMessage<
     /// </summary>
     static virtual string? Version { get; }
 
-    static virtual int SuccessStatusCode => 200;
+    static virtual int SuccessStatusCode => typeof(TResponse) == typeof(UnitMessageResponse) ? 204 : 200;
 
     /// <summary>
     ///     The name of this message in API descriptions (which is used in e.g. OpenAPI specifications).
@@ -58,21 +54,4 @@ public interface IHttpMessage<
 
     private static string Uncapitalize(string str)
         => char.ToLower(str[0], CultureInfo.InvariantCulture) + str[1..];
-}
-
-[SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
-public interface IHttpMessage<
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)]
-    TMessage> : IHttpMessage<TMessage, UnitMessageResponse>
-    where TMessage : class, IHttpMessage<TMessage, UnitMessageResponse>
-{
-    static int IHttpMessage<TMessage, UnitMessageResponse>.SuccessStatusCode => 204;
-}
-
-[EditorBrowsable(EditorBrowsableState.Never)]
-public interface IHttpMessage
-{
-    // must be virtual instead of abstract so that it can be used as a type parameter / constraint
-    static virtual IHttpMessageTypesInjector HttpMessageTypesInjector
-        => throw new NotSupportedException("this method should always be implemented by the generic interface");
 }

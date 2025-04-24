@@ -13,16 +13,15 @@ internal sealed class ParallelSignalBroadcastingStrategy(
 {
     public static readonly ParallelSignalBroadcastingStrategy Default = new(new());
 
-    public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<ISignalReceiverHandlerInvoker> signalHandlerInvokers,
+    public async Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
                                                IServiceProvider serviceProvider,
                                                TSignal signal,
-                                               string transportTypeName,
                                                CancellationToken cancellationToken)
         where TSignal : class, ISignal<TSignal>
     {
         using var semaphore = new SemaphoreSlim(configuration.MaxDegreeOfParallelism ?? 1_000_000);
 
-        var potentialExceptions = await Task.WhenAll(signalHandlerInvokers.Select(ExecuteInvoker)).ConfigureAwait(false);
+        var potentialExceptions = await Task.WhenAll(signalHandlerInvocationFns.Select(ExecuteInvoker)).ConfigureAwait(false);
 
         var thrownExceptions = potentialExceptions.OfType<Exception>().ToList();
 
@@ -44,7 +43,7 @@ internal sealed class ParallelSignalBroadcastingStrategy(
 
         throw new AggregateException(thrownExceptions);
 
-        async Task<Exception?> ExecuteInvoker(ISignalReceiverHandlerInvoker invoker)
+        async Task<Exception?> ExecuteInvoker(SignalHandlerFn<TSignal> invocationFn)
         {
             try
             {
@@ -64,7 +63,7 @@ internal sealed class ParallelSignalBroadcastingStrategy(
 
             try
             {
-                await invoker.Invoke(serviceProvider, signal, transportTypeName, cancellationToken).ConfigureAwait(false);
+                await invocationFn(signal, serviceProvider, cancellationToken).ConfigureAwait(false);
 
                 return null;
             }

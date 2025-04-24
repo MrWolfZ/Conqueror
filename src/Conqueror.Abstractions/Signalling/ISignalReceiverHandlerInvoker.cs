@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,11 +8,12 @@ namespace Conqueror;
 
 public interface ISignalReceiverHandlerInvoker
 {
-    Task Invoke<TSignal>(
-        IServiceProvider serviceProvider,
-        TSignal signal,
-        string transportTypeName,
-        CancellationToken cancellationToken)
+    Task Invoke<TSignal>(TSignal signal,
+                         IServiceProvider serviceProvider,
+                         string transportTypeName,
+                         string? traceId,
+                         IEnumerable<string> encodedContextData,
+                         CancellationToken cancellationToken)
         where TSignal : class, ISignal<TSignal>;
 }
 

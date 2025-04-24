@@ -37,17 +37,18 @@ public sealed partial class MessagingServerContextTests
 
     [Test]
     [TestCaseSource(nameof(GenerateContextDataTestCases))]
-    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned<TMessage, TResponse, THandler>(
+    public async Task GivenContextData_WhenSendingMessage_DataIsCorrectlySentAndReturned<TMessage, TResponse, TIHandler, THandler>(
         bool hasUpstream,
         bool hasDownstream,
         bool hasBidirectional,
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
 
@@ -69,6 +70,14 @@ public sealed partial class MessagingServerContextTests
         }
 
         var response = await host.HttpClient.SendAsync(request);
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await response.AssertStatusCode(StatusCodes.Status404NotFound);
+            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            return;
+        }
+
         await response.AssertSuccessStatusCode();
 
         var exists = response.Headers.TryGetValues(ConquerorContextHeaderName, out var values);
@@ -110,14 +119,15 @@ public sealed partial class MessagingServerContextTests
 
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenMultipleConquerorContextRequestHeadersWithDownstreamAndBidirectionalData_WhenSendingMessage_DataIsReceivedByHandler<TMessage, TResponse, THandler>(
+    public async Task GivenMultipleConquerorContextRequestHeadersWithDownstreamAndBidirectionalData_WhenSendingMessage_DataIsReceivedByHandler<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         using var conquerorContext = host.Resolve<IConquerorContextAccessor>().GetOrCreate();
 
@@ -143,6 +153,14 @@ public sealed partial class MessagingServerContextTests
         ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(ConquerorContextHeaderName, encodedData2);
 
         var response = await host.HttpClient.SendAsync(request);
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await response.AssertStatusCode(StatusCodes.Status404NotFound);
+            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            return;
+        }
+
         await response.AssertSuccessStatusCode();
 
         var receivedDownstreamContextData = host.Resolve<TestObservations>().ReceivedDownstreamContextData;
@@ -156,33 +174,36 @@ public sealed partial class MessagingServerContextTests
 
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenInvalidConquerorContextRequestHeader_WhenSendingMessage_ReturnsBadRequest<TMessage, TResponse, THandler>(
+    public async Task GivenInvalidConquerorContextRequestHeader_WhenSendingMessage_ReturnsBadRequest<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         using var request = ConstructHttpRequest(testCase);
 
         ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(ConquerorContextHeaderName, "foo=bar");
 
         var response = await host.HttpClient.SendAsync(request);
-        await response.AssertStatusCode(StatusCodes.Status400BadRequest);
+        await response.AssertStatusCode(testCase.HandlerIsEnabled ? StatusCodes.Status400BadRequest : StatusCodes.Status404NotFound);
+        Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
     }
 
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenMessageIdInContext_WhenSendingMessage_MessageIdIsObservedByHandler<TMessage, TResponse, THandler>(
+    public async Task GivenMessageIdInContext_WhenSendingMessage_MessageIdIsObservedByHandler<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         const string messageId = "test-message";
 
@@ -194,6 +215,14 @@ public sealed partial class MessagingServerContextTests
         ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(ConquerorContextHeaderName, conquerorContext.EncodeDownstreamContextData());
 
         var response = await host.HttpClient.SendAsync(request);
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await response.AssertStatusCode(StatusCodes.Status404NotFound);
+            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            return;
+        }
+
         await response.AssertSuccessStatusCode();
 
         var receivedMessageIds = host.Resolve<TestObservations>().ReceivedMessageIds;
@@ -203,18 +232,27 @@ public sealed partial class MessagingServerContextTests
 
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenNoMessageIdInContext_WhenSendingMessage_NonEmptyMessageIdIsObservedByHandler<TMessage, TResponse, THandler>(
+    public async Task GivenNoMessageIdInContext_WhenSendingMessage_NonEmptyMessageIdIsObservedByHandler<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(
-            services => services.RegisterMessageType<TMessage, TResponse, THandler>(testCase),
-            app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+            services => services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase),
+            app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         using var request = ConstructHttpRequest(testCase);
 
         var response = await host.HttpClient.SendAsync(request);
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await response.AssertStatusCode(StatusCodes.Status404NotFound);
+            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            return;
+        }
+
         await response.AssertSuccessStatusCode();
 
         var receivedMessageIds = host.Resolve<TestObservations>().ReceivedMessageIds;
@@ -225,22 +263,23 @@ public sealed partial class MessagingServerContextTests
 
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenTraceIdInTraceParentWithoutActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandlers<TMessage, TResponse, THandler>(
+    public async Task GivenTraceIdInTraceParentWithoutActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandlers<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(services =>
         {
-            services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
+            services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase);
             _ = services.AddMessageHandler<NestedTestMessageHandler>();
 
             _ = services.Replace(ServiceDescriptor.Singleton<FnToCallFromHandler>(p =>
             {
                 ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
-                return p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new());
+                return p.GetRequiredService<IMessageSenders>().For(NestedTestMessage.T).Handle(new());
             }));
-        }, app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+        }, app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         using var request = ConstructHttpRequest(testCase);
 
@@ -248,6 +287,14 @@ public sealed partial class MessagingServerContextTests
         ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(TraceParentHeaderName, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await host.HttpClient.SendAsync(request);
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await response.AssertStatusCode(StatusCodes.Status404NotFound);
+            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            return;
+        }
+
         await response.AssertSuccessStatusCode();
 
         var receivedTraceIds = host.Resolve<TestObservations>().ReceivedTraceIds;
@@ -257,22 +304,23 @@ public sealed partial class MessagingServerContextTests
 
     [Test]
     [TestCaseSource(typeof(HttpTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler<TMessage, TResponse, THandler>(
+    public async Task GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler<TMessage, TResponse, TIHandler, THandler>(
         MessageTestCase testCase)
         where TMessage : class, IHttpMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IHttpMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await CreateTestHost(services =>
         {
-            services.RegisterMessageType<TMessage, TResponse, THandler>(testCase);
+            services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase);
             _ = services.AddMessageHandler<NestedTestMessageHandler>();
 
             _ = services.Replace(ServiceDescriptor.Singleton<FnToCallFromHandler>(p =>
             {
                 ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
-                return p.GetRequiredService<IMessageClients>().For(NestedTestMessage.T).Handle(new());
+                return p.GetRequiredService<IMessageSenders>().For(NestedTestMessage.T).Handle(new());
             }));
-        }, app => app.MapMessageEndpoints<TMessage, TResponse>(testCase));
+        }, app => app.MapMessageEndpoints<TMessage, TResponse, TIHandler>(testCase));
 
         using var a = CreateActivity(nameof(GivenTraceIdInTraceParentWithActiveActivity_WhenSendingMessage_IdFromActivityIsObservedByHandler));
         activity = a;
@@ -282,6 +330,14 @@ public sealed partial class MessagingServerContextTests
         ((HttpHeaders?)request.Content?.Headers ?? request.Headers).Add(TraceParentHeaderName, "00-80e1a2ed08e019fc1110464cfa66635c-7a085853722dc6d2-01");
 
         var response = await host.HttpClient.SendAsync(request);
+
+        if (!testCase.HandlerIsEnabled)
+        {
+            await response.AssertStatusCode(StatusCodes.Status404NotFound);
+            Assert.That(response.Headers.TryGetValues(ConquerorContextHeaderName, out _), Is.False);
+            return;
+        }
+
         await response.AssertSuccessStatusCode();
 
         var receivedTraceIds = host.Resolve<TestObservations>().ReceivedTraceIds;
@@ -447,7 +503,7 @@ public sealed partial class MessagingServerContextTests
         public int Payload { get; init; }
     }
 
-    public sealed class NestedTestMessageHandler(
+    public sealed partial class NestedTestMessageHandler(
         TestObservations testObservations,
         IConquerorContextAccessor contextAccessor)
         : NestedTestMessage.IHandler

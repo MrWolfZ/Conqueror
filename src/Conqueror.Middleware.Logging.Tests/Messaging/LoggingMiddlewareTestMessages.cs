@@ -19,10 +19,11 @@ public static partial class LoggingMiddlewareTestMessages
 
     public const string TestTransportName = "test-transport";
 
-    public static void RegisterMessageType<TMessage, TResponse, THandler>(this IServiceCollection services,
-                                                                          MessageTestCase<TMessage, TResponse, THandler> testCase)
+    public static void RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(this IServiceCollection services,
+                                                                                     MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         _ = services.AddMessageHandler<THandler>()
                     .AddSingleton<IMessageTestCasePipelineConfiguration<TMessage, TResponse>>(testCase);
@@ -116,7 +117,7 @@ public static partial class LoggingMiddlewareTestMessages
         bool hasCustomCategoryFactory,
         HookTestBehavior? hookTestBehavior)
     {
-        yield return new MessageTestCase<TestMessage, TestMessageResponse, TestMessageHandler>
+        yield return new MessageTestCase<TestMessage, TestMessageResponse, TestMessage.IHandler, TestMessageHandler>
         {
             Message = new() { Payload = 10 },
             MessageJson = "{\"Payload\":10}",
@@ -134,7 +135,7 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithoutResponse, UnitMessageResponse, TestMessageWithoutResponseHandler>
+        yield return new MessageTestCase<TestMessageWithoutResponse, UnitMessageResponse, TestMessageWithoutResponse.IHandler, TestMessageWithoutResponseHandler>
         {
             Message = new() { Payload = 10 },
             MessageJson = "{\"Payload\":10}",
@@ -152,7 +153,7 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithoutPayload, TestMessageResponse, TestMessageWithoutPayloadHandler>
+        yield return new MessageTestCase<TestMessageWithoutPayload, TestMessageResponse, TestMessageWithoutPayload.IHandler, TestMessageWithoutPayloadHandler>
         {
             Message = new(),
             MessageJson = null,
@@ -170,7 +171,7 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithoutResponseWithoutPayload, UnitMessageResponse, TestMessageWithoutResponseWithoutPayloadHandler>
+        yield return new MessageTestCase<TestMessageWithoutResponseWithoutPayload, UnitMessageResponse, TestMessageWithoutResponseWithoutPayload.IHandler, TestMessageWithoutResponseWithoutPayloadHandler>
         {
             Message = new(),
             MessageJson = null,
@@ -188,7 +189,7 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithComplexPayload, TestMessageResponse, TestMessageWithComplexPayloadHandler>
+        yield return new MessageTestCase<TestMessageWithComplexPayload, TestMessageResponse, TestMessageWithComplexPayload.IHandler, TestMessageWithComplexPayloadHandler>
         {
             Message = new() { Payload = 10, NestedPayload = new() { Payload = 11, Payload2 = 12 } },
             MessageJson = "{\"Payload\":10,\"NestedPayload\":{\"Payload\":11,\"Payload2\":12}}",
@@ -206,7 +207,7 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithCustomSerializedPayloadType, TestMessageWithCustomSerializedPayloadTypeResponse, TestMessageWithCustomSerializedPayloadTypeHandler>
+        yield return new MessageTestCase<TestMessageWithCustomSerializedPayloadType, TestMessageWithCustomSerializedPayloadTypeResponse, TestMessageWithCustomSerializedPayloadType.IHandler, TestMessageWithCustomSerializedPayloadTypeHandler>
         {
             Message = new() { Payload = new(10) },
             MessageJson = "{\"Payload\":10}",
@@ -224,7 +225,7 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithCustomJsonTypeInfo, TestMessageWithCustomJsonTypeInfoResponse, TestMessageWithCustomJsonTypeInfoHandler>
+        yield return new MessageTestCase<TestMessageWithCustomJsonTypeInfo, TestMessageWithCustomJsonTypeInfoResponse, TestMessageWithCustomJsonTypeInfo.IHandler, TestMessageWithCustomJsonTypeInfoHandler>
         {
             Message = new() { MessagePayload = 10 },
             MessageJson = "{\"MESSAGE_PAYLOAD\":10}",
@@ -242,7 +243,7 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = null,
         };
 
-        yield return new MessageTestCase<TestMessageWithCustomTransport, TestMessageResponse, TestMessageWithCustomTransportHandler>
+        yield return new MessageTestCase<TestMessageWithCustomTransport, TestMessageResponse, TestMessageWithCustomTransport.IHandler, TestMessageWithCustomTransportHandler>
         {
             Message = new() { Payload = 10 },
             MessageJson = "{\"Payload\":10}",
@@ -260,7 +261,7 @@ public static partial class LoggingMiddlewareTestMessages
             TransportTypeName = TestTransportName,
         };
 
-        yield return new MessageTestCase<TestMessageBase, TestMessageResponse, TestMessageBaseHandler>
+        yield return new MessageTestCase<TestMessageBase, TestMessageResponse, TestMessageBase.IHandler, TestMessageBaseHandler>
         {
             Message = new TestMessageSub { PayloadBase = 10, PayloadSub = 11 },
             MessageJson = "{\"PayloadSub\":11,\"PayloadBase\":10}",
@@ -372,9 +373,10 @@ public static partial class LoggingMiddlewareTestMessages
         }
     }
 
-    public sealed class MessageTestCase<TMessage, TResponse, THandler> : IMessageTestCasePipelineConfiguration<TMessage, TResponse>
+    public sealed class MessageTestCase<TMessage, TResponse, TIHandler, THandler> : IMessageTestCasePipelineConfiguration<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         private readonly string? expectedLogCategory;
 
@@ -420,8 +422,8 @@ public static partial class LoggingMiddlewareTestMessages
             {
                 var hookSuppressesMessage = HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookDoesNotLogAndReturnsFalse;
 
-                var clientTransportRole = nameof(MessageTransportRole.Client).ToLowerInvariant();
-                var serverTransportRole = nameof(MessageTransportRole.Server).ToLowerInvariant();
+                var clientTransportRole = nameof(MessageTransportRole.Sender).ToLowerInvariant();
+                var serverTransportRole = nameof(MessageTransportRole.Receiver).ToLowerInvariant();
 
                 if (PreExecutionLogLevel is not LogLevel.None && PreExecutionLogLevel >= ConfiguredLogLevel)
                 {
@@ -618,12 +620,12 @@ public static partial class LoggingMiddlewareTestMessages
                                                        .Append($",hook:{HookBehavior?.ToString() ?? "None"}")
                                                        .ToString();
 
-        public static implicit operator TestCaseData(MessageTestCase<TMessage, TResponse, THandler> messageTestCase)
+        public static implicit operator TestCaseData(MessageTestCase<TMessage, TResponse, TIHandler, THandler> messageTestCase)
         {
             return new(messageTestCase)
             {
                 TestName = messageTestCase.TestLabel,
-                TypeArgs = [typeof(TMessage), typeof(TResponse), typeof(THandler)],
+                TypeArgs = [typeof(TMessage), typeof(TResponse), typeof(TIHandler), typeof(THandler)],
             };
         }
     }
@@ -660,7 +662,7 @@ public static partial class LoggingMiddlewareTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageHandler(Exception? exception = null) : TestMessage.IHandler
+    public sealed partial class TestMessageHandler(Exception? exception = null) : TestMessage.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
         {
@@ -681,7 +683,7 @@ public static partial class LoggingMiddlewareTestMessages
     [Message<TestMessageResponse>]
     public sealed partial record TestMessageWithoutPayload;
 
-    public sealed class TestMessageWithoutPayloadHandler(Exception? exception = null) : TestMessageWithoutPayload.IHandler
+    public sealed partial class TestMessageWithoutPayloadHandler(Exception? exception = null) : TestMessageWithoutPayload.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithoutPayload message, CancellationToken cancellationToken = default)
         {
@@ -705,7 +707,7 @@ public static partial class LoggingMiddlewareTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithoutResponseHandler(Exception? exception = null) : TestMessageWithoutResponse.IHandler
+    public sealed partial class TestMessageWithoutResponseHandler(Exception? exception = null) : TestMessageWithoutResponse.IHandler
     {
         public async Task Handle(TestMessageWithoutResponse message, CancellationToken cancellationToken = default)
         {
@@ -724,7 +726,7 @@ public static partial class LoggingMiddlewareTestMessages
     [Message]
     public sealed partial record TestMessageWithoutResponseWithoutPayload;
 
-    public sealed class TestMessageWithoutResponseWithoutPayloadHandler(Exception? exception = null) : TestMessageWithoutResponseWithoutPayload.IHandler
+    public sealed partial class TestMessageWithoutResponseWithoutPayloadHandler(Exception? exception = null) : TestMessageWithoutResponseWithoutPayload.IHandler
     {
         public async Task Handle(TestMessageWithoutResponseWithoutPayload message, CancellationToken cancellationToken = default)
         {
@@ -757,7 +759,7 @@ public static partial class LoggingMiddlewareTestMessages
         public required int? Payload2 { get; init; }
     }
 
-    public sealed class TestMessageWithComplexPayloadHandler(Exception? exception = null) : TestMessageWithComplexPayload.IHandler
+    public sealed partial class TestMessageWithComplexPayloadHandler(Exception? exception = null) : TestMessageWithComplexPayload.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithComplexPayload message, CancellationToken cancellationToken = default)
         {
@@ -789,9 +791,9 @@ public static partial class LoggingMiddlewareTestMessages
     [JsonConverter(typeof(TestMessageWithCustomSerializedPayloadTypeHandler.PayloadJsonConverter))]
     public sealed record TestMessageWithCustomSerializedPayloadTypePayload(int Payload);
 
-    public sealed class TestMessageWithCustomSerializedPayloadTypeHandler(Exception? exception = null) : TestMessageWithCustomSerializedPayloadType.IHandler
+    public sealed partial class TestMessageWithCustomSerializedPayloadTypeHandler(Exception? exception = null) : TestMessageWithCustomSerializedPayloadType.IHandler
     {
-        public async Task<TestMessageWithCustomSerializedPayloadTypeResponse> Handle(TestMessageWithCustomSerializedPayloadType query,
+        public async Task<TestMessageWithCustomSerializedPayloadTypeResponse> Handle(TestMessageWithCustomSerializedPayloadType message,
                                                                                      CancellationToken cancellationToken = default)
         {
             await Task.Yield();
@@ -802,7 +804,7 @@ public static partial class LoggingMiddlewareTestMessages
                 throw exception;
             }
 
-            return new() { Payload = new(query.Payload.Payload + 1) };
+            return new() { Payload = new(message.Payload.Payload + 1) };
         }
 
         public static void ConfigurePipeline(TestMessageWithCustomSerializedPayloadType.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
@@ -832,7 +834,7 @@ public static partial class LoggingMiddlewareTestMessages
         public int ResponsePayload { get; init; }
     }
 
-    public sealed class TestMessageWithCustomJsonTypeInfoHandler(Exception? exception = null) : TestMessageWithCustomJsonTypeInfo.IHandler
+    public sealed partial class TestMessageWithCustomJsonTypeInfoHandler(Exception? exception = null) : TestMessageWithCustomJsonTypeInfo.IHandler
     {
         public async Task<TestMessageWithCustomJsonTypeInfoResponse> Handle(TestMessageWithCustomJsonTypeInfo message, CancellationToken cancellationToken = default)
         {
@@ -861,7 +863,7 @@ public static partial class LoggingMiddlewareTestMessages
         public int Payload { get; init; }
     }
 
-    public sealed class TestMessageWithCustomTransportHandler(Exception? exception = null) : TestMessageWithCustomTransport.IHandler
+    public sealed partial class TestMessageWithCustomTransportHandler(Exception? exception = null) : TestMessageWithCustomTransport.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageWithCustomTransport message, CancellationToken cancellationToken = default)
         {
@@ -879,8 +881,8 @@ public static partial class LoggingMiddlewareTestMessages
         public static void ConfigurePipeline(TestMessageWithCustomTransport.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
     }
 
-    public sealed class TestMessageTransport<TMessage, TResponse>(IMessageTransportClient<TMessage, TResponse> wrapped)
-        : IMessageTransportClient<TMessage, TResponse>
+    public sealed class TestMessageTransport<TMessage, TResponse>(IMessageSender<TMessage, TResponse> wrapped)
+        : IMessageSender<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         public string TransportTypeName => TestTransportName;
@@ -906,7 +908,7 @@ public static partial class LoggingMiddlewareTestMessages
         public int PayloadSub { get; init; }
     }
 
-    public sealed class TestMessageBaseHandler(Exception? exception = null) : TestMessageBase.IHandler
+    public sealed partial class TestMessageBaseHandler(Exception? exception = null) : TestMessageBase.IHandler
     {
         public async Task<TestMessageResponse> Handle(TestMessageBase message, CancellationToken cancellationToken = default)
         {

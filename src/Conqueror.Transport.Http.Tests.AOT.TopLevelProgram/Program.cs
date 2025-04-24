@@ -43,7 +43,7 @@ app.MapPost("/api/custom", async (HttpContext ctx)
                     return Results.BadRequest("could not parse message");
                 }
 
-                var topLevelTestMessageResponse = await ctx.GetMessageClient(TopLevelTestMessage.T).Handle(message, ctx.RequestAborted);
+                var topLevelTestMessageResponse = await ctx.HandleMessage(message);
 
                 return Results.Json(topLevelTestMessageResponse, TopLevelTestMessageJsonSerializerContext.Default);
             });
@@ -52,7 +52,7 @@ app.MapGet("/api/customGet/{payload:int}", async (int payload, HttpContext ctx)
                =>
            {
                var message = new TopLevelTestMessage { Payload = payload, Nested = new() { NestedString = "test" } };
-               var topLevelTestMessageResponse = await ctx.GetMessageClient(TopLevelTestMessage.T).Handle(message, ctx.RequestAborted);
+               var topLevelTestMessageResponse = await ctx.HandleMessage(message);
 
                return Results.Json(topLevelTestMessageResponse, TopLevelTestMessageJsonSerializerContext.Default);
            });
@@ -62,7 +62,7 @@ app.MapGet("/api/chained/{payload:int}", async (int payload, HttpContext ctx)
            {
                var message = new TopLevelTestMessage { Payload = payload, Nested = new() { NestedString = "test" } };
                var topLevelTestMessageResponse = await ctx.RequestServices
-                                                          .GetRequiredService<IMessageClients>()
+                                                          .GetRequiredService<IMessageSenders>()
                                                           .For(TopLevelTestMessage.T)
                                                           .WithTransport(b => b.UseHttp(new("http://localhost:5202/group/")))
                                                           .Handle(message, ctx.RequestAborted);

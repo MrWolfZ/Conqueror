@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,14 +11,17 @@ internal sealed class SignalHandlerInvoker<TSignal>(
     : ISignalHandlerInvoker
     where TSignal : class, ISignal<TSignal>
 {
-    public Task Invoke(IServiceProvider serviceProvider, object signal, string transportTypeName, CancellationToken cancellationToken)
+    public Task Invoke<T>(IServiceProvider serviceProvider, T signal, string transportTypeName, CancellationToken cancellationToken)
+        where T : class, ISignal<T>
     {
+        Debug.Assert(typeof(T) == typeof(TSignal), $"the signal type was expected to be {typeof(TSignal)}, but was {typeof(T)} instead.");
+
         var dispatcher = new SignalDispatcher<TSignal>(serviceProvider,
                                                        new(new Publisher(handlerFn, transportTypeName)),
                                                        configurePipeline,
                                                        SignalTransportRole.Receiver);
 
-        return dispatcher.Dispatch((TSignal)signal, cancellationToken);
+        return dispatcher.Dispatch((signal as TSignal)!, cancellationToken);
     }
 
     private sealed class Publisher(SignalHandlerFn<TSignal> handlerFn, string transportTypeName) : ISignalPublisher<TSignal>
@@ -31,9 +35,10 @@ internal sealed class SignalHandlerInvoker<TSignal>(
 
 internal interface ISignalHandlerInvoker
 {
-    Task Invoke(
+    Task Invoke<TSignal>(
         IServiceProvider serviceProvider,
-        object signal,
+        TSignal signal,
         string transportTypeName,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken)
+        where TSignal : class, ISignal<TSignal>;
 }

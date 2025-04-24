@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using Conqueror.SourceGenerators.Signalling;
-using Conqueror.SourceGenerators.TestUtil;
 using Microsoft.CodeAnalysis;
 
 namespace Conqueror.SourceGenerators.Tests.Signalling;
@@ -157,7 +156,7 @@ public partial record TestSignalSub(int Payload) : TestSignal(Payload);";
     }
 
     [Test]
-    public Task GivenTestSignalWithAlreadyDefinedHandlerInterface_WhenRunningGenerator_SkipsSignalType()
+    public Task GivenTestSignalWithAlreadyDefinedTProperty_WhenRunningGenerator_SkipsSignalType()
     {
         const string input = @"using Conqueror;
 
@@ -352,6 +351,24 @@ public interface ITestTransport2SignalHandler<TSignal, TIHandler>
 [Signal]
 [TestTransportSignal(StringProperty = ""Test"")]
 [TestTransport2Signal]
+public partial record TestSignal;";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
+    public Task GivenTypeWithAttributeWithSameSuffix_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"using System;
+
+namespace Generator.Tests;
+
+public class MySignalAttribute : Attribute;
+
+[MySignal]
 public partial record TestSignal;";
 
         var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));

@@ -8,10 +8,9 @@ namespace Conqueror;
 
 public interface ISignalBroadcastingStrategy
 {
-    Task BroadcastSignal<TSignal>(IReadOnlyCollection<ISignalReceiverHandlerInvoker> signalHandlerInvokers,
+    Task BroadcastSignal<TSignal>(IReadOnlyCollection<SignalHandlerFn<TSignal>> signalHandlerInvocationFns,
                                   IServiceProvider serviceProvider,
                                   TSignal signal,
-                                  string transportTypeName,
                                   CancellationToken cancellationToken)
         where TSignal : class, ISignal<TSignal>;
 }

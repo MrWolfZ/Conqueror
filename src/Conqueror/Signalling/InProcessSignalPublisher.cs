@@ -18,6 +18,6 @@ internal sealed class InProcessSignalPublisher<TSignal>(
                         CancellationToken cancellationToken)
     {
         return serviceProvider.GetRequiredService<InProcessSignalReceiver>()
-                              .Broadcast(signal, serviceProvider, broadcastingStrategy, TransportTypeName, cancellationToken);
+                              .Broadcast(signal, serviceProvider, broadcastingStrategy, cancellationToken);
     }
 }

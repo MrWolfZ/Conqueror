@@ -642,7 +642,7 @@ public sealed class SignalHandlerFunctionalityPublisherWithSyncTransportFactoryT
         TestSignal.IHandler builder,
         Func<ISignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null)
     {
-        return builder.WithPublisher(b =>
+        return builder.WithTransport(b =>
         {
             b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);
             return baseConfigure?.Invoke(b) ?? b.ServiceProvider.GetRequiredService<TestSignalPublisher<TestSignal>>();
@@ -657,7 +657,7 @@ public sealed class SignalHandlerFunctionalityPublisherWithAsyncTransportFactory
         TestSignal.IHandler builder,
         Func<ISignalPublisherBuilder<TestSignal>, ISignalPublisher<TestSignal>?>? baseConfigure = null)
     {
-        return builder.WithPublisher(async b =>
+        return builder.WithTransport(async b =>
         {
             await Task.Delay(1);
             b.ServiceProvider.GetRequiredService<TestObservations>().ServiceProvidersFromTransportFactory.Add(b.ServiceProvider);

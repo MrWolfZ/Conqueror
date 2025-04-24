@@ -20,10 +20,11 @@ public sealed class LoggingMessageMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestMessages), nameof(GenerateTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, THandler>(
-        MessageTestCase<TMessage, TResponse, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, TIHandler, THandler>(
+        MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services => services.RegisterMessageType(testCase),
@@ -43,8 +44,7 @@ public sealed class LoggingMessageMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IMessageClients>()
-                          .For(TMessage.T);
+        var handler = host.Resolve<IMessageSenders>().For(TIHandler.MessageTypes);
 
         if (typeof(TMessage) == typeof(TestMessageWithCustomTransport))
         {
@@ -54,7 +54,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         try
         {
-            _ = await handler.Handle(testCase.Message, host.TestTimeoutToken);
+            _ = await TIHandler.Invoke(handler, testCase.Message, host.TestTimeoutToken);
 
             if (testCase.Exception != null)
             {
@@ -85,10 +85,11 @@ public sealed class LoggingMessageMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestMessages), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, THandler>(
-        MessageTestCase<TMessage, TResponse, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, TIHandler, THandler>(
+        MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -112,8 +113,7 @@ public sealed class LoggingMessageMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IMessageClients>()
-                          .For(TMessage.T);
+        var handler = host.Resolve<IMessageSenders>().For(TIHandler.MessageTypes);
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -122,7 +122,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         try
         {
-            _ = await handler.Handle(testCase.Message, host.TestTimeoutToken);
+            _ = await TIHandler.Invoke(handler, testCase.Message, host.TestTimeoutToken);
         }
         catch
         {
@@ -137,10 +137,11 @@ public sealed class LoggingMessageMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestMessages), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, THandler>(
-        MessageTestCase<TMessage, TResponse, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, TIHandler, THandler>(
+        MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -164,8 +165,7 @@ public sealed class LoggingMessageMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IMessageClients>()
-                          .For(TMessage.T);
+        var handler = host.Resolve<IMessageSenders>().For(TIHandler.MessageTypes);
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -174,7 +174,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         try
         {
-            _ = await handler.Handle(testCase.Message, host.TestTimeoutToken);
+            _ = await TIHandler.Invoke(handler, testCase.Message, host.TestTimeoutToken);
         }
         catch
         {
@@ -189,10 +189,11 @@ public sealed class LoggingMessageMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestMessages), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, THandler>(
-        MessageTestCase<TMessage, TResponse, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, TIHandler, THandler>(
+        MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         SelfLog.Enable(Console.Error);
 
@@ -224,8 +225,7 @@ public sealed class LoggingMessageMiddlewareTests
             },
             logging => logging.AddSerilog(serilogLogger));
 
-        var handler = host.Resolve<IMessageClients>()
-                          .For(TMessage.T);
+        var handler = host.Resolve<IMessageSenders>().For(TIHandler.MessageTypes);
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -234,7 +234,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         try
         {
-            _ = await handler.Handle(testCase.Message, host.TestTimeoutToken);
+            _ = await TIHandler.Invoke(handler, testCase.Message, host.TestTimeoutToken);
         }
         catch
         {
@@ -249,10 +249,11 @@ public sealed class LoggingMessageMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestMessages), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, THandler>(
-        MessageTestCase<TMessage, TResponse, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TMessage, TResponse, TIHandler, THandler>(
+        MessageTestCase<TMessage, TResponse, TIHandler, THandler> testCase)
         where TMessage : class, IMessage<TMessage, TResponse>
-        where THandler : class, IGeneratedMessageHandler
+        where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
+        where THandler : class, TIHandler
     {
         SelfLog.Enable(Console.Error);
 
@@ -285,8 +286,7 @@ public sealed class LoggingMessageMiddlewareTests
             },
             logging => logging.AddSerilog(serilogLogger));
 
-        var handler = host.Resolve<IMessageClients>()
-                          .For(TMessage.T);
+        var handler = host.Resolve<IMessageSenders>().For(TIHandler.MessageTypes);
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -295,7 +295,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         try
         {
-            _ = await handler.Handle(testCase.Message, host.TestTimeoutToken);
+            _ = await TIHandler.Invoke(handler, testCase.Message, host.TestTimeoutToken);
         }
         catch
         {
@@ -321,7 +321,7 @@ public sealed class LoggingMessageMiddlewareTests
     {
         var exception = new TestException();
 
-        var testCase = new MessageTestCase<TestMessage, TestMessageResponse, TestMessageHandler>
+        var testCase = new MessageTestCase<TestMessage, TestMessageResponse, TestMessage.IHandler, TestMessageHandler>
         {
             Message = new() { Payload = 10 },
             MessageJson = "{\"Payload\":10}",
@@ -357,7 +357,7 @@ public sealed class LoggingMessageMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IMessageClients>()
+        var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
                           .WithPipeline(p => p.UseLogging());
 
@@ -394,7 +394,7 @@ public sealed class LoggingMessageMiddlewareTests
         var hookException = new TestException();
         var handlerException = new Exception("from handler");
 
-        var testCase = new MessageTestCase<TestMessage, TestMessageResponse, TestMessageHandler>
+        var testCase = new MessageTestCase<TestMessage, TestMessageResponse, TestMessage.IHandler, TestMessageHandler>
         {
             Message = new() { Payload = 10 },
             MessageJson = "{\"Payload\":10}",
@@ -430,7 +430,7 @@ public sealed class LoggingMessageMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IMessageClients>()
+        var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
                           .WithPipeline(p => p.UseLogging(o =>
                           {
@@ -492,7 +492,7 @@ public sealed class LoggingMessageMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IMessageClients>()
+        var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
                           .WithPipeline(p => p.UseLogging(c => c.PreExecutionLogLevel = LogLevel.Warning)
                                               .ConfigureLogging(c => c.PreExecutionLogLevel = LogLevel.Debug));
@@ -525,7 +525,7 @@ public sealed class LoggingMessageMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<IMessageClients>()
+        var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
                           .WithPipeline(p => p.UseLogging().WithoutLogging());
 

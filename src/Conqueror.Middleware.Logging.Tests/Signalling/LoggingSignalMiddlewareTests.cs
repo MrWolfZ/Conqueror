@@ -20,11 +20,11 @@ public sealed class LoggingSignalMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
-        SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddleware_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
+        SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
-        where THandler : class, ISignalHandler
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services => services.RegisterSignalType(testCase),
@@ -44,17 +44,17 @@ public sealed class LoggingSignalMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<ISignalPublishers>().For<TSignal, THandlerInterface>();
+        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
             handler = handler.WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false))
-                             .WithPublisher(b => new TestSignalPublisher<TSignal>(b.UseInProcess(new TestSignalBroadcastingStrategy(TestTransportName))));
+                             .WithTransport(b => new TestSignalPublisher<TSignal>(b.UseInProcess(new TestSignalBroadcastingStrategy())));
         }
 
         try
         {
-            await THandlerInterface.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
 
             if (testCase.Exception != null)
             {
@@ -85,11 +85,11 @@ public sealed class LoggingSignalMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
-        SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSimpleLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
+        SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
-        where THandler : class, ISignalHandler
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -113,7 +113,7 @@ public sealed class LoggingSignalMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<ISignalPublishers>().For<TSignal, THandlerInterface>();
+        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -122,7 +122,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await THandlerInterface.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
         }
         catch
         {
@@ -137,11 +137,11 @@ public sealed class LoggingSignalMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
-        SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
+        SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
-        where THandler : class, ISignalHandler
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler
     {
         await using var host = await LoggingMiddlewareTestHost.Create(
             services =>
@@ -165,7 +165,7 @@ public sealed class LoggingSignalMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<ISignalPublishers>().For<TSignal, THandlerInterface>();
+        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -174,7 +174,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await THandlerInterface.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
         }
         catch
         {
@@ -189,11 +189,11 @@ public sealed class LoggingSignalMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
-        SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
+        SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
-        where THandler : class, ISignalHandler
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler
     {
         SelfLog.Enable(Console.Error);
 
@@ -225,7 +225,7 @@ public sealed class LoggingSignalMiddlewareTests
             },
             logging => logging.AddSerilog(serilogLogger));
 
-        var handler = host.Resolve<ISignalPublishers>().For<TSignal, THandlerInterface>();
+        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -234,7 +234,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await THandlerInterface.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
         }
         catch
         {
@@ -249,11 +249,11 @@ public sealed class LoggingSignalMiddlewareTests
 
     [Test]
     [TestCaseSource(typeof(LoggingMiddlewareTestSignals), nameof(GenerateSnapshotTestCaseData))]
-    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, THandlerInterface, THandler>(
-        SignalTestCase<TSignal, THandlerInterface, THandler> testCase)
+    public async Task GivenHandlerWithLoggingMiddlewareAndSerilogJsonLogger_WhenCallingHandler_CorrectMessagesGetLogged<TSignal, TIHandler, THandler>(
+        SignalTestCase<TSignal, TIHandler, THandler> testCase)
         where TSignal : class, ISignal<TSignal>
-        where THandlerInterface : class, ISignalHandler<TSignal, THandlerInterface>
-        where THandler : class, ISignalHandler
+        where TIHandler : class, ISignalHandler<TSignal, TIHandler>
+        where THandler : class, TIHandler
     {
         SelfLog.Enable(Console.Error);
 
@@ -286,7 +286,7 @@ public sealed class LoggingSignalMiddlewareTests
             },
             logging => logging.AddSerilog(serilogLogger));
 
-        var handler = host.Resolve<ISignalPublishers>().For<TSignal, THandlerInterface>();
+        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -295,7 +295,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await THandlerInterface.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
+            await TIHandler.Invoke(handler, testCase.Signal, host.TestTimeoutToken);
         }
         catch
         {

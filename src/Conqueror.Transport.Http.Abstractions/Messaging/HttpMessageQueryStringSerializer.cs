@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -12,7 +11,7 @@ using System.Threading.Tasks;
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public sealed class HttpMessageQueryStringSerializer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] TMessage, TResponse> : IHttpMessageSerializer<TMessage, TResponse>
+public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHttpMessageSerializer<TMessage, TResponse>
     where TMessage : class, IHttpMessage<TMessage, TResponse>
 {
     public string? ContentType => null;
@@ -60,8 +59,15 @@ public sealed class HttpMessageQueryStringSerializer<[DynamicallyAccessedMembers
             return TMessage.EmptyInstance;
         }
 
-        // TODO: support constructor parameters
-        var message = Activator.CreateInstance<TMessage>();
+        // TODO: support constructor with parameters
+        var parameterlessConstructor = TMessage.PublicConstructors.FirstOrDefault(c => c.GetParameters().Length == 0);
+
+        if (parameterlessConstructor is null)
+        {
+            throw new InvalidOperationException($"HTTP query string deserialization requires a public parameterless constructor for message type '{nameof(TMessage)}'");
+        }
+
+        var message = parameterlessConstructor.Invoke([]) as TMessage ?? throw new InvalidOperationException($"failed to invoke parameterless constructor for message type '{nameof(TMessage)}'");
 
         foreach (var prop in TMessage.PublicProperties)
         {
