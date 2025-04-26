@@ -747,7 +747,7 @@ public static partial class LoggingMiddlewareTestSignals
 
             foreach (var invoker in invokers)
             {
-                await invoker.Invoke(signal, serviceProvider, TransportTypeName, null, [], cancellationToken);
+                await invoker.Invoke(signal, serviceProvider, TransportTypeName, cancellationToken);
             }
         }
     }
