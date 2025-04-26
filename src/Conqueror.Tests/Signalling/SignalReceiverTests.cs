@@ -341,11 +341,7 @@ file sealed class TestSignalTransportReceiverHost(IServiceProvider serviceProvid
 
             return receiverBuilder;
 
-            Task Invoke(TSignal signal, CancellationToken ct)
-            {
-                // TODO: populate context and add context data test
-                return invoker.Invoke(signal, serviceProvider, TestTransportTypeName, null, [], ct);
-            }
+            Task Invoke(TSignal signal, CancellationToken ct) => invoker.Invoke(signal, serviceProvider, TestTransportTypeName, ct);
         }
     }
 }
@@ -395,11 +391,7 @@ file sealed class TestSignalTransport2ReceiverHost(IServiceProvider serviceProvi
             await THandler.ConfigureTestTransport2Receiver(receiverBuilder);
             return receiverBuilder;
 
-            Task Invoke(TSignal signal, CancellationToken ct)
-            {
-                // TODO: populate context and add context data test
-                return invoker.Invoke(signal, serviceProvider, TestTransportTypeName, null, [], ct);
-            }
+            Task Invoke(TSignal signal, CancellationToken ct) => invoker.Invoke(signal, serviceProvider, TestTransportTypeName, ct);
         }
     }
 }

@@ -48,10 +48,6 @@ internal sealed class InProcessSignalReceiver(SignalHandlerRegistry registry, IS
             return invoker.Invoke((TSignal)signal,
                                   serviceProvider,
                                   ConquerorConstants.InProcessTransportName,
-                                  null,
-
-                                  // the context data is already automatically being propagated in-memory, so me don't need to add it again
-                                  [],
                                   cancellationToken);
         }
     }
