@@ -93,13 +93,6 @@ public sealed class MessagingClientContextTests : IDisposable
 
         var httpClient = host.HttpClient;
 
-        if (testCase.RegistrationMethod
-            is MessageTestCaseRegistrationMethod.CustomController
-            or MessageTestCaseRegistrationMethod.CustomEndpoint)
-        {
-            httpClient.BaseAddress = new("http://localhost/custom/");
-        }
-
         string? seenMessageIdOnClient = null;
         string? seenTraceIdOnClient = null;
 

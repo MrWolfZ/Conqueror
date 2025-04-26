@@ -55,13 +55,6 @@ public sealed class MessagingClientExecutionTests
 
         var httpClient = host.HttpClient;
 
-        if (testCase.RegistrationMethod
-            is MessageTestCaseRegistrationMethod.CustomController
-            or MessageTestCaseRegistrationMethod.CustomEndpoint)
-        {
-            httpClient.BaseAddress = new("http://localhost/custom/");
-        }
-
         IHttpMessageSender<TM, TR> ConfigureTransport<TM, TR>(IMessageSenderBuilder<TM, TR> builder)
             where TM : class, IHttpMessage<TM, TR>
             => builder.UseHttp(new("http://localhost"))

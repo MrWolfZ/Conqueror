@@ -2,16 +2,11 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Mime;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
 using static Conqueror.ConquerorTransportHttpConstants;
 using JsonOptions = Microsoft.AspNetCore.Http.Json.JsonOptions;
@@ -27,10 +22,8 @@ public static partial class HttpTestMessages
 
     public enum MessageTestCaseRegistrationMethod
     {
-        CustomController,
         Endpoints,
         ExplicitEndpoint,
-        CustomEndpoint,
     }
 
     public static void RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(this IServiceCollection services, MessageTestCase testCase)
@@ -70,26 +63,9 @@ public static partial class HttpTestMessages
                         });
         }
 
-        if (testCase.RegistrationMethod
-            is MessageTestCaseRegistrationMethod.Endpoints
-            or MessageTestCaseRegistrationMethod.ExplicitEndpoint
-            or MessageTestCaseRegistrationMethod.CustomEndpoint)
-        {
-            _ = services.AddRouting()
-                        .AddEndpointsApiExplorer()
-                        .AddMessageEndpoints();
-            return;
-        }
-
-        if (testCase.RegistrationMethod == MessageTestCaseRegistrationMethod.CustomController)
-        {
-            _ = services.AddControllers();
-
-            var applicationPartManager = new ApplicationPartManager();
-            applicationPartManager.ApplicationParts.Add(new TestControllerApplicationPart());
-            applicationPartManager.FeatureProviders.Add(new TestControllerFeatureProvider());
-            _ = services.AddSingleton(applicationPartManager);
-        }
+        _ = services.AddRouting()
+                    .AddEndpointsApiExplorer()
+                    .AddMessageEndpoints();
     }
 
     public static void MapMessageEndpoints<TMessage, TResponse, TIHandler>(this IApplicationBuilder app, MessageTestCase testCase)
@@ -98,13 +74,6 @@ public static partial class HttpTestMessages
     {
         _ = app.UseConquerorWellKnownErrorHandling();
         _ = app.UseRouting();
-
-        if (testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.CustomController)
-        {
-            _ = app.UseEndpoints(b => b.MapControllers());
-
-            return;
-        }
 
         _ = app.UseEndpoints(endpoints =>
         {
@@ -118,68 +87,6 @@ public static partial class HttpTestMessages
             if (testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.Endpoints)
             {
                 _ = endpoints.MapMessageEndpoints();
-                return;
-            }
-
-            if (testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.CustomEndpoint)
-            {
-                _ = endpoints.MapPost("/custom/api/test",
-                                      async (TestMessage message, HttpContext ctx)
-                                          => TypedResults.Ok(await ctx.HandleMessage(message)))
-                             .WithName(nameof(TestMessage))
-                             .WithTags(nameof(TestMessage))
-                             .WithGroupName(nameof(TestMessage));
-
-                _ = endpoints.MapPost("/custom/api/testMessageWithoutPayload",
-                                      (Delegate)(async (HttpContext ctx)
-                                          => TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithoutPayload()))))
-                             .WithName(nameof(TestMessageWithoutPayload))
-                             .WithTags(nameof(TestMessageWithoutPayload))
-                             .WithGroupName(nameof(TestMessageWithoutPayload));
-
-                _ = endpoints.MapPost("/custom/api/testMessageWithoutResponse",
-                                      async (TestMessageWithoutResponse message, HttpContext ctx) =>
-                                      {
-                                          await ctx.HandleMessage(message);
-                                          return TypedResults.NoContent();
-                                      })
-                             .WithName(nameof(TestMessageWithoutResponse))
-                             .WithTags(nameof(TestMessageWithoutResponse))
-                             .WithGroupName(nameof(TestMessageWithoutResponse))
-                             .WithMetadata(new ProducesResponseTypeMetadata(204));
-
-                _ = endpoints.MapPost("/custom/api/testMessageWithoutResponseWithoutPayload",
-                                      async (HttpContext ctx) =>
-                                      {
-                                          await ctx.HandleMessage(new TestMessageWithoutResponseWithoutPayload());
-                                          return TypedResults.NoContent();
-                                      })
-                             .WithName(nameof(TestMessageWithoutResponseWithoutPayload))
-                             .WithTags(nameof(TestMessageWithoutResponseWithoutPayload))
-                             .WithGroupName(nameof(TestMessageWithoutResponseWithoutPayload))
-                             .WithMetadata(new ProducesResponseTypeMetadata(204));
-
-                _ = endpoints.MapGet("/custom/api/testMessageWithGet",
-                                     async (int payload, string param, HttpContext ctx)
-                                         => TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithGet { Payload = payload, Param = param })))
-                             .WithName(nameof(TestMessageWithGet))
-                             .WithTags(nameof(TestMessageWithGet))
-                             .WithGroupName(nameof(TestMessageWithGet));
-
-                _ = endpoints.MapGet("/custom/api/testMessageWithGetWithoutPayload",
-                                     (Delegate)(async (HttpContext ctx)
-                                         => TypedResults.Ok(await ctx.HandleMessage(new TestMessageWithGetWithoutPayload()))))
-                             .WithName(nameof(TestMessageWithGetWithoutPayload))
-                             .WithTags(nameof(TestMessageWithGetWithoutPayload))
-                             .WithGroupName(nameof(TestMessageWithGetWithoutPayload));
-
-                _ = endpoints.MapPost("/custom/api/testMessageWithMiddleware",
-                                      async (TestMessageWithMiddleware message, HttpContext ctx)
-                                          => TypedResults.Ok(await ctx.HandleMessage(message)))
-                             .WithName(nameof(TestMessageWithMiddleware))
-                             .WithTags(nameof(TestMessageWithMiddleware))
-                             .WithGroupName(nameof(TestMessageWithMiddleware));
-
                 return;
             }
 
@@ -874,167 +781,6 @@ public static partial class HttpTestMessages
                 HandlerIsEnabled = false,
                 Message = new TestMessageWithDelegateHandler { Payload = 10 },
                 Response = null,
-                RegistrationMethod = registrationMethod,
-            };
-        }
-
-        foreach (var registrationMethod in new[]
-                 {
-                     MessageTestCaseRegistrationMethod.CustomController,
-                     MessageTestCaseRegistrationMethod.CustomEndpoint,
-                 })
-        {
-            yield return new()
-            {
-                MessageType = typeof(TestMessage),
-                ResponseType = typeof(TestMessageResponse),
-                HandlerType = typeof(TestMessageHandler),
-                IHandlerType = typeof(TestMessage.IHandler),
-                HttpMethod = MethodPost,
-                FullPath = "/custom/api/test",
-                SuccessStatusCode = 200,
-                ApiGroupName = nameof(TestMessage),
-                Name = null,
-                ParameterCount = 1,
-                QueryString = null,
-                Payload = "{\"payload\":10}",
-                ResponsePayload = "{\"payload\":11}",
-                MessageContentType = MediaTypeNames.Application.Json,
-                ResponseContentType = MediaTypeNames.Application.Json,
-                Message = new TestMessage { Payload = 10 },
-                Response = new TestMessageResponse { Payload = 11 },
-                RegistrationMethod = registrationMethod,
-            };
-
-            yield return new()
-            {
-                MessageType = typeof(TestMessageWithoutResponse),
-                ResponseType = null,
-                HandlerType = typeof(TestMessageWithoutResponseHandler),
-                IHandlerType = typeof(TestMessageWithoutResponse.IHandler),
-                HttpMethod = MethodPost,
-                FullPath = "/custom/api/testMessageWithoutResponse",
-                SuccessStatusCode = 204,
-                ApiGroupName = nameof(TestMessageWithoutResponse),
-                Name = null,
-                ParameterCount = 1,
-                QueryString = null,
-                Payload = "{\"payload\":10}",
-                ResponsePayload = string.Empty,
-                MessageContentType = MediaTypeNames.Application.Json,
-                ResponseContentType = null,
-                Message = new TestMessageWithoutResponse { Payload = 10 },
-                Response = null,
-                RegistrationMethod = registrationMethod,
-            };
-
-            yield return new()
-            {
-                MessageType = typeof(TestMessageWithoutPayload),
-                ResponseType = typeof(TestMessageResponse),
-                HandlerType = typeof(TestMessageWithoutPayloadHandler),
-                IHandlerType = typeof(TestMessageWithoutPayload.IHandler),
-                HttpMethod = MethodPost,
-                FullPath = "/custom/api/testMessageWithoutPayload",
-                SuccessStatusCode = 200,
-                ApiGroupName = nameof(TestMessageWithoutPayload),
-                Name = null,
-                ParameterCount = 0,
-                QueryString = null,
-                Payload = null,
-                ResponsePayload = "{\"payload\":11}",
-                MessageContentType = null,
-                ResponseContentType = MediaTypeNames.Application.Json,
-                Message = new TestMessageWithoutPayload(),
-                Response = new TestMessageResponse { Payload = 11 },
-                RegistrationMethod = registrationMethod,
-            };
-
-            yield return new()
-            {
-                MessageType = typeof(TestMessageWithoutResponseWithoutPayload),
-                ResponseType = null,
-                HandlerType = typeof(TestMessageWithoutResponseWithoutPayloadHandler),
-                IHandlerType = typeof(TestMessageWithoutResponseWithoutPayload.IHandler),
-                HttpMethod = MethodPost,
-                FullPath = "/custom/api/testMessageWithoutResponseWithoutPayload",
-                SuccessStatusCode = 204,
-                ApiGroupName = nameof(TestMessageWithoutResponseWithoutPayload),
-                Name = null,
-                ParameterCount = 0,
-                QueryString = null,
-                Payload = null,
-                ResponsePayload = string.Empty,
-                MessageContentType = null,
-                ResponseContentType = null,
-                Message = new TestMessageWithoutResponseWithoutPayload(),
-                Response = null,
-                RegistrationMethod = registrationMethod,
-            };
-
-            yield return new()
-            {
-                MessageType = typeof(TestMessageWithGet),
-                ResponseType = typeof(TestMessageResponse),
-                HandlerType = typeof(TestMessageWithGetHandler),
-                IHandlerType = typeof(TestMessageWithGet.IHandler),
-                HttpMethod = MethodGet,
-                FullPath = "/custom/api/testMessageWithGet",
-                SuccessStatusCode = 200,
-                ApiGroupName = nameof(TestMessageWithGet),
-                Name = null,
-                ParameterCount = 2,
-                QueryString = "?payload=10&param=test",
-                Payload = null,
-                ResponsePayload = "{\"payload\":11}",
-                MessageContentType = null,
-                ResponseContentType = MediaTypeNames.Application.Json,
-                Message = new TestMessageWithGet { Payload = 10, Param = "test" },
-                Response = new TestMessageResponse { Payload = 11 },
-                RegistrationMethod = registrationMethod,
-            };
-
-            yield return new()
-            {
-                MessageType = typeof(TestMessageWithGetWithoutPayload),
-                ResponseType = typeof(TestMessageResponse),
-                HandlerType = typeof(TestMessageWithGetWithoutPayloadHandler),
-                IHandlerType = typeof(TestMessageWithGetWithoutPayload.IHandler),
-                HttpMethod = MethodGet,
-                FullPath = "/custom/api/testMessageWithGetWithoutPayload",
-                SuccessStatusCode = 200,
-                ApiGroupName = nameof(TestMessageWithGetWithoutPayload),
-                Name = null,
-                ParameterCount = 0,
-                QueryString = null,
-                Payload = null,
-                ResponsePayload = "{\"payload\":11}",
-                MessageContentType = null,
-                ResponseContentType = MediaTypeNames.Application.Json,
-                Message = new TestMessageWithGetWithoutPayload(),
-                Response = new TestMessageResponse { Payload = 11 },
-                RegistrationMethod = registrationMethod,
-            };
-
-            yield return new()
-            {
-                MessageType = typeof(TestMessageWithMiddleware),
-                ResponseType = typeof(TestMessageResponse),
-                HandlerType = typeof(TestMessageWithMiddlewareHandler),
-                IHandlerType = typeof(TestMessageWithMiddleware.IHandler),
-                HttpMethod = MethodPost,
-                FullPath = "/custom/api/testMessageWithMiddleware",
-                SuccessStatusCode = 200,
-                ApiGroupName = nameof(TestMessageWithMiddleware),
-                Name = null,
-                ParameterCount = 1,
-                QueryString = null,
-                Payload = "{\"payload\":10}",
-                ResponsePayload = "{\"payload\":11}",
-                MessageContentType = MediaTypeNames.Application.Json,
-                ResponseContentType = MediaTypeNames.Application.Json,
-                Message = new TestMessageWithMiddleware { Payload = 10 },
-                Response = new TestMessageResponse { Payload = 11 },
                 RegistrationMethod = registrationMethod,
             };
         }
@@ -2008,81 +1754,6 @@ public static partial class HttpTestMessages
     public sealed partial record TestMessageWithDelegateHandler
     {
         public int Payload { get; init; }
-    }
-
-    [ApiController]
-    private sealed class TestHttpMessageController : ControllerBase
-    {
-        [HttpPost("/custom/api/test", Name = nameof(TestMessage))]
-        [ApiExplorerSettings(GroupName = nameof(TestMessage))]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessage(TestMessage message)
-        {
-            return HttpContext.HandleMessage(message);
-        }
-
-        [HttpPost("/custom/api/testMessageWithoutPayload", Name = nameof(TestMessageWithoutPayload))]
-        [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutPayload))]
-        [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithoutPayload()
-        {
-            return HttpContext.HandleMessage(new TestMessageWithoutPayload());
-        }
-
-        [HttpPost("/custom/api/testMessageWithoutResponse", Name = nameof(TestMessageWithoutResponse))]
-        [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutResponse))]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(204)]
-        public Task ExecuteTestMessageWithoutResponse(TestMessageWithoutResponse message)
-        {
-            return HttpContext.HandleMessage(message);
-        }
-
-        [HttpPost("/custom/api/testMessageWithoutResponseWithoutPayload", Name = nameof(TestMessageWithoutResponseWithoutPayload))]
-        [ApiExplorerSettings(GroupName = nameof(TestMessageWithoutResponseWithoutPayload))]
-        [ProducesResponseType(204)]
-        public Task ExecuteTestMessageWithoutPayloadWithoutResponse()
-        {
-            return HttpContext.HandleMessage(new TestMessageWithoutResponseWithoutPayload());
-        }
-
-        [HttpGet("/custom/api/testMessageWithGet", Name = nameof(TestMessageWithGet))]
-        [ApiExplorerSettings(GroupName = nameof(TestMessageWithGet))]
-        [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithGet(int payload, string param)
-        {
-            return HttpContext.HandleMessage(new TestMessageWithGet { Payload = payload, Param = param });
-        }
-
-        [HttpGet("/custom/api/testMessageWithGetWithoutPayload", Name = nameof(TestMessageWithGetWithoutPayload))]
-        [ApiExplorerSettings(GroupName = nameof(TestMessageWithGetWithoutPayload))]
-        [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithGetWithoutPayload()
-        {
-            return HttpContext.HandleMessage(new TestMessageWithGetWithoutPayload());
-        }
-
-        [HttpPost("/custom/api/testMessageWithMiddleware", Name = nameof(TestMessageWithMiddleware))]
-        [ApiExplorerSettings(GroupName = nameof(TestMessageWithMiddleware))]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [ProducesResponseType<TestMessageResponse>(200, MediaTypeNames.Application.Json)]
-        public Task<TestMessageResponse> ExecuteTestMessageWithMiddleware(TestMessageWithMiddleware message)
-        {
-            return HttpContext.HandleMessage(message);
-        }
-    }
-
-    private sealed class TestControllerApplicationPart : ApplicationPart, IApplicationPartTypeProvider
-    {
-        public override string Name => nameof(TestControllerApplicationPart);
-
-        public IEnumerable<TypeInfo> Types { get; } = [typeof(TestHttpMessageController).GetTypeInfo()];
-    }
-
-    private sealed class TestControllerFeatureProvider : ControllerFeatureProvider
-    {
-        protected override bool IsController(TypeInfo typeInfo) => typeInfo.AsType() == typeof(TestHttpMessageController);
     }
 
     public sealed class TestObservations
