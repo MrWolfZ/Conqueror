@@ -62,15 +62,19 @@ internal sealed class InProcessSignalReceiver(SignalHandlerRegistry registry, IS
         }
     }
 
-    private sealed class Receiver<TSignal>(IServiceProvider serviceProvider) : IInProcessSignalReceiver<TSignal>
+    private sealed class Receiver<TSignal>(IServiceProvider serviceProvider) : IInProcessSignalReceiver
         where TSignal : class, ISignal<TSignal>
     {
+        public Type SignalType { get; } = typeof(TSignal);
+
         public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-        public bool IsEnabled { get; private set; }
+        public bool IsEnabled { get; private set; } = true;
 
-        public void Enable() => IsEnabled = true;
-
-        public void Disable() => IsEnabled = false;
+        public IInProcessSignalReceiver Disable()
+        {
+            IsEnabled = false;
+            return this;
+        }
     }
 }

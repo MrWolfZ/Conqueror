@@ -39,8 +39,6 @@ This file contains all the open points for extensions and improvements to the **
 ### Core ASP Core
 
 - [ ] add tests for client error handling
-- [ ] add tests for duplicate path detection for all combinations of registrations methods (i.e. controllers and endpoints, explicitly and implicitly)
-- [ ] add tests that assert that arrays and lists can be used as messages and responses
 - [ ] create `HttpMessageEndpointDescriptor` and pass that around internally when registering endpoints instead of accessing `TMessage` everywhere
 - [ ] allow adding endpoints explicitly or manually and then `MapMessageEndpoints` skips those message types
 - [ ] add tests that a custom base interface can be used to specify custom conventions

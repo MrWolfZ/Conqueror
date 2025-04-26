@@ -19,9 +19,9 @@ internal sealed partial class TestSignalHandler : TestSignal.IHandler
     static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
         => pipeline.UseLogging();
 
-    static void ISignalHandler.ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver)
+    static void ISignalHandler.ConfigureInProcessReceiver(IInProcessSignalReceiver receiver)
     {
-        receiver.Enable();
+        _ = receiver.Disable();
     }
 }
 

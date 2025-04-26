@@ -27,11 +27,9 @@ public interface ISignalHandler
         // by default, we use an empty pipeline
     }
 
-    static virtual void ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver)
-        where T : class, ISignal<T>
+    static virtual void ConfigureInProcessReceiver(IInProcessSignalReceiver receiver)
     {
-        // by default, we enable the in-process receiver for all signal types
-        receiver.Enable();
+        // we don't configure the receiver (by default, it is enabled for all signal types)
     }
 }
 
