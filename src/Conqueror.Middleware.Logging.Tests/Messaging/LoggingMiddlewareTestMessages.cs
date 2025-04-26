@@ -857,7 +857,7 @@ public static partial class LoggingMiddlewareTestMessages
     [JsonSerializable(typeof(TestMessageWithCustomJsonTypeInfoResponse))]
     internal sealed partial class TestMessageWithCustomJsonTypeInfoJsonSerializerContext : JsonSerializerContext;
 
-    [Message<TestMessageResponse>]
+    [TestTransportMessage<TestMessageResponse>]
     public sealed partial record TestMessageWithCustomTransport
     {
         public int Payload { get; init; }
@@ -881,7 +881,7 @@ public static partial class LoggingMiddlewareTestMessages
         public static void ConfigurePipeline(TestMessageWithCustomTransport.IPipeline pipeline) => ConfigureLoggingPipeline(pipeline);
     }
 
-    public sealed class TestMessageTransport<TMessage, TResponse>(IMessageSender<TMessage, TResponse> wrapped)
+    public sealed class TestMessageTransport<TMessage, TResponse>
         : IMessageSender<TMessage, TResponse>
         where TMessage : class, IMessage<TMessage, TResponse>
     {
@@ -893,7 +893,10 @@ public static partial class LoggingMiddlewareTestMessages
                                           CancellationToken cancellationToken)
         {
             await Task.Yield();
-            return await wrapped.Send(message, serviceProvider, conquerorContext, cancellationToken);
+            var invoker = serviceProvider.GetRequiredService<IMessageHandlerRegistry>()
+                                         .GetReceiverHandlerInvoker<TMessage, TResponse, ITestTransportMessageHandlerTypesInjector>();
+
+            return await invoker!.Invoke<TMessage, TResponse>(message, serviceProvider, TransportTypeName, cancellationToken);
         }
     }
 

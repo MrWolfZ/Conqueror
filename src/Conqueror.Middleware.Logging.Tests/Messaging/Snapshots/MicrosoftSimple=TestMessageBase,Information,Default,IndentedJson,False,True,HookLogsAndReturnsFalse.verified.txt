@@ -3,7 +3,7 @@
 fail: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageSub[0]
       ExceptionHook:TestException,test-message-id,test-trace-id
       Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
-         at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageBaseHandler.Handle(TestMessageBase message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line 920
+         at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageBaseHandler.Handle(TestMessageBase message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line 923
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line 52
          at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx)

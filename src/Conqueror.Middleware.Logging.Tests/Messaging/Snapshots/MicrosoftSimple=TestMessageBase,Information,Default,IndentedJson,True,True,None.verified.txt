@@ -8,7 +8,7 @@
 fail: CustomCategory_TestMessageSub[2027292319]
       An exception occurred while handling message after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
-         at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageBaseHandler.Handle(TestMessageBase message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line 920
+         at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageBaseHandler.Handle(TestMessageBase message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line 923
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line 52
          at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx)
