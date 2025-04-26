@@ -15,8 +15,25 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
         context.InitializeGeneratorForAttribute("Signal", GetSignalTypesDescriptor, SignalTypeSources.GenerateSignalTypeFile);
     }
 
-    public static SignalTypeDescriptor GetSignalTypesDescriptor(INamedTypeSymbol signalTypeSymbol, SemanticModel semanticModel)
+    public static SignalTypeDescriptor? GetSignalTypesDescriptor(INamedTypeSymbol signalTypeSymbol, SemanticModel semanticModel)
     {
+        // skip signal types that already declare a types member
+        // TODO: improve by simply skipping the generation of the property / nested type instead of ignoring the whole type
+        if (signalTypeSymbol.MemberNames.Contains("T"))
+        {
+            return null;
+        }
+
+        var attribute = signalTypeSymbol.GetAttributes()
+                                        .FirstOrDefault(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
+                                        ?.AttributeClass;
+
+        // we did not find a message attribute (e.g. a false positive from "[SomeOtherSignal(...)]")
+        if (attribute is null)
+        {
+            return null;
+        }
+
         var signalTypeDescriptor = GeneratorHelper.GenerateTypeDescriptor(signalTypeSymbol, semanticModel);
         var attributeDescriptors = signalTypeSymbol.GetAttributes()
                                                    .Where(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
@@ -36,23 +53,6 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
         if (context.SemanticModel.GetDeclaredSymbol(context.Node) is not INamedTypeSymbol signalTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
-            return null;
-        }
-
-        // skip signal types that already declare a types member
-        // TODO: improve by simply skipping the generation of the property / nested type instead of ignoring the whole type
-        if (signalTypeSymbol.MemberNames.Contains("T"))
-        {
-            return null;
-        }
-
-        var attribute = signalTypeSymbol.GetAttributes()
-                                        .FirstOrDefault(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
-                                        ?.AttributeClass;
-
-        // we did not find a message attribute (e.g. a false positive from "[SomeOtherSignal(...)]")
-        if (attribute is null)
-        {
             return null;
         }
 

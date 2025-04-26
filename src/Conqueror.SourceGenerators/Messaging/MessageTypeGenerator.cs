@@ -21,6 +21,13 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
                                                                    SemanticModel semanticModel,
                                                                    CancellationToken ct)
     {
+        // skip message types that already declare a types member
+        // TODO: improve by simply skipping the generation of the property / nested type instead of ignoring the whole type
+        if (messageTypeSymbol.MemberNames.Contains("T"))
+        {
+            return null;
+        }
+
         ITypeSymbol? responseTypeSymbol = null;
 
         var attribute = messageTypeSymbol.GetAttributes()
@@ -73,13 +80,6 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
             return null;
         }
 
-        // skip message types that already declare a types member
-        // TODO: improve by simply skipping the generation of the property / nested type instead of ignoring the whole type
-        if (messageTypeSymbol.MemberNames.Contains("T"))
-        {
-            return null;
-        }
-
         ct.ThrowIfCancellationRequested();
 
         return GetMessageTypesDescriptor(messageTypeSymbol, context.SemanticModel, ct);
@@ -120,7 +120,8 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
             "Conqueror",
             "Conqueror.UnitMessageResponse",
             Accessibility.Public,
-            true,
+            IsRecord: true,
+            IsAbstract: false,
             TypeArguments: default,
             TypeConstraints: null,
             Attributes: default,

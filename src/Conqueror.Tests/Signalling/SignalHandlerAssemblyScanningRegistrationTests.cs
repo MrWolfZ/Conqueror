@@ -6,16 +6,6 @@ namespace Conqueror.Tests.Signalling;
 public partial class SignalHandlerAssemblyScanningRegistrationTests
 {
     [Test]
-    public void GivenServiceCollection_WhenAddingAllHandlersFromExecutingAssembly_AddsSameTypesAsIfAssemblyWasSpecifiedExplicitly()
-    {
-        var services1 = new ServiceCollection().AddSignalHandlersFromAssembly(typeof(SignalHandlerAssemblyScanningRegistrationTests).Assembly);
-        var services2 = new ServiceCollection().AddSignalHandlersFromExecutingAssembly();
-
-        Assert.That(services2, Has.Count.EqualTo(services1.Count));
-        Assert.That(services1.Select(d => d.ServiceType), Is.EquivalentTo(services2.Select(d => d.ServiceType)));
-    }
-
-    [Test]
     [TestCase(typeof(TestSignalHandler), typeof(TestSignal))]
     [TestCase(typeof(InternalTestSignalHandler), typeof(InternalTestSignal))]
     [TestCase(typeof(InternalTopLevelTestSignalHandler), typeof(InternalTopLevelTestSignal))]

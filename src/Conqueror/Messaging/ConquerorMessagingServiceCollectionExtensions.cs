@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Messaging;
@@ -145,59 +144,13 @@ public static class ConquerorMessagingServiceCollectionExtensions
         }, configurePipeline);
     }
 
-    [RequiresUnreferencedCode("Types might be removed")]
-    [RequiresDynamicCode("Types might be removed")]
     public static IServiceCollection AddMessageHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
     {
         services.AddConquerorMessaging();
 
-        var validTypes = assembly.GetTypes()
-                                 .Where(t => t.IsAssignableTo(typeof(IMessageHandler)))
-                                 .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false, IsNestedFamily: false })
-                                 .Where(t => t.DeclaringType?.IsPublic ?? true)
-                                 .ToList();
-
-        foreach (var messageHandlerType in validTypes)
-        {
-            var messageHandlerInterfaces = messageHandlerType.GetInterfaces()
-                                                             .Where(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IMessageHandler<,,>))
-                                                             .ToList();
-
-            if (messageHandlerInterfaces.Count > 1)
-            {
-                // ignore invalid handlers here instead of throwing to make the code more robust; also, it
-                // should not be possible for this exact situation to occur anyway (outside of tests) due to
-                // static interface properties causing issues when implementing multiple handler interfaces
-                continue;
-            }
-
-            var addHandlerMethod = typeof(ConquerorMessagingServiceCollectionExtensions)
-                                   .GetMethod(nameof(AddMessageHandlerInternalGeneric), BindingFlags.NonPublic | BindingFlags.Static)
-                                   ?.MakeGenericMethod(messageHandlerType);
-
-            if (addHandlerMethod is null)
-            {
-                throw new InvalidOperationException($"could not find method '{nameof(ConquerorMessagingServiceCollectionExtensions)}.{nameof(AddMessageHandlerInternalGeneric)}'");
-            }
-
-            try
-            {
-                addHandlerMethod.Invoke(null, [services, ServiceDescriptor.Transient(messageHandlerType, messageHandlerType), false]);
-            }
-            catch (TargetInvocationException ex) when (ex.InnerException != null)
-            {
-                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-            }
-        }
+        MessageHandlerTypeServiceRegistry.RunWithRegisteredTypes(new ServiceRegisterable(services, assembly));
 
         return services;
-    }
-
-    [RequiresUnreferencedCode("Types might be removed")]
-    [RequiresDynamicCode("Types might be removed")]
-    public static IServiceCollection AddMessageHandlersFromExecutingAssembly(this IServiceCollection services)
-    {
-        return services.AddMessageHandlersFromAssembly(Assembly.GetCallingAssembly());
     }
 
     internal static IServiceCollection AddConquerorMessaging(this IServiceCollection services)
@@ -258,6 +211,20 @@ public static class ConquerorMessagingServiceCollectionExtensions
         services.AddSingleton(registration);
 
         return services;
+    }
+
+    private sealed class ServiceRegisterable(IServiceCollection services, Assembly assembly) : IMessageHandlerServiceRegisterable
+    {
+        public void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>()
+            where THandler : class, IMessageHandler
+        {
+            if (typeof(THandler) is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false, IsNestedFamily: false }
+                && (typeof(THandler).DeclaringType?.IsPublic ?? true)
+                && typeof(THandler).Assembly == assembly)
+            {
+                _ = services.AddMessageHandlerInternalGeneric<THandler>(ServiceDescriptor.Transient<THandler, THandler>(), shouldOverwriteRegistration: false);
+            }
+        }
     }
 
     private sealed class MessageHandlerRegistrationTypeInjectable(

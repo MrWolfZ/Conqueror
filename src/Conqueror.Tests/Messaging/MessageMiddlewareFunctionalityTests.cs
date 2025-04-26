@@ -852,7 +852,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandlersFromExecutingAssembly()
+        _ = services.AddMessageHandlersFromAssembly(typeof(TestMessage).Assembly)
                     .AddSingleton<Action<TestMessage.IPipeline>>(pipeline => pipeline.Use(new TestMessageMiddleware<TestMessage, TestMessageResponse>(observations)))
                     .AddSingleton(observations);
 
@@ -875,7 +875,7 @@ public sealed partial class MessageMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddMessageHandlersFromExecutingAssembly()
+        _ = services.AddMessageHandlersFromAssembly(typeof(TestMessageWithoutResponse).Assembly)
                     .AddSingleton<Action<TestMessageWithoutResponse.IPipeline>>(pipeline => pipeline.Use(new TestMessageMiddleware<TestMessageWithoutResponse, UnitMessageResponse>(observations)))
                     .AddSingleton(observations);
 

@@ -42,12 +42,19 @@ public sealed class SignalHandlerTypeGenerator : IIncrementalGenerator
         return GenerateHandlerDescriptor(handlerTypeSymbol, signalTypeSymbols, context.SemanticModel);
     }
 
-    private static SignalHandlerTypeDescriptor GenerateHandlerDescriptor(INamedTypeSymbol handlerTypeSymbol,
-                                                                         List<INamedTypeSymbol> signalTypeSymbols,
-                                                                         SemanticModel semanticModel)
+    private static SignalHandlerTypeDescriptor? GenerateHandlerDescriptor(INamedTypeSymbol handlerTypeSymbol,
+                                                                          List<INamedTypeSymbol> signalTypeSymbols,
+                                                                          SemanticModel semanticModel)
     {
         var handlerTypeDescriptor = GeneratorHelper.GenerateTypeDescriptor(handlerTypeSymbol, semanticModel);
-        var signalTypeDescriptors = signalTypeSymbols.Select(s => SignalTypeGenerator.GetSignalTypesDescriptor(s, semanticModel)).ToArray();
+        var signalTypeDescriptors = signalTypeSymbols.Select(s => SignalTypeGenerator.GetSignalTypesDescriptor(s, semanticModel))
+                                                     .OfType<SignalTypeDescriptor>()
+                                                     .ToArray();
+
+        if (signalTypeDescriptors.Length == 0)
+        {
+            return null;
+        }
 
         return new(handlerTypeDescriptor, new(signalTypeDescriptors));
     }

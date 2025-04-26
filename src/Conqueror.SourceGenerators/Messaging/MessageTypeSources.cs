@@ -20,9 +20,9 @@ public static class MessageTypeSources
 
         var filename = sb.Append(descriptor.MessageDescriptor.FullyQualifiedName)
                          .Append("_ConquerorMessageType.g.cs")
-                         .Replace('<', '_')
+                         .Replace("<", "__")
                          .Replace('>', '_')
-                         .Replace(',', '.')
+                         .Replace(',', '_')
                          .Replace(' ', '_')
                          .ToString();
 
@@ -63,7 +63,7 @@ public static class MessageTypeSources
             using (sb.AppendLine().AppendTransportMessageType(indentation, in messageTypeDescriptor, in responseTypeDescriptor, in attribute))
             {
                 _ = sb.AppendTransportMessageHandlerInterface(indentation, in messageTypeDescriptor, in responseTypeDescriptor, in attribute)
-                      .AppendTransportMessageTypesProperties(indentation, in attribute);
+                      .AppendTransportMessageTypesProperties(indentation, in messageTypeDescriptor, in responseTypeDescriptor, in attribute);
             }
         }
 
@@ -192,7 +192,7 @@ public static class MessageTypeSources
                .AppendMessageTypeGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation);
 
-        if (messageTypeDescriptor.HasProperties())
+        if (messageTypeDescriptor.HasProperties() || messageTypeDescriptor.IsAbstract)
         {
             return sb.Append($"static {messageTypeDescriptor.Name}? global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.EmptyInstance => null;").AppendLine();
         }
@@ -202,13 +202,17 @@ public static class MessageTypeSources
 
     private static StringBuilder AppendAttributeParameterProperty(this StringBuilder sb,
                                                                   Indentation indentation,
+                                                                  in TypeDescriptor messageTypeDescriptor,
+                                                                  in TypeDescriptor responseTypeDescriptor,
+                                                                  in MessageAttributeDescriptor attributeDescriptor,
                                                                   in AttributeParameterDescriptor parameterDescriptor)
     {
+        var messageTypeName = attributeDescriptor.FullyQualifiedMessageTypeName ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Message";
         return sb.AppendMessageTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append("public static ")
+                 .Append("static ")
                  .AppendAttributeParameterPropertyType(in parameterDescriptor)
-                 .Append($" {parameterDescriptor.Name} => ")
+                 .Append($" global::{messageTypeName}<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.{parameterDescriptor.Name} => ")
                  .AppendAttributeParameterValue(in parameterDescriptor.Value).Append(";").AppendLine();
     }
 
@@ -275,12 +279,14 @@ public static class MessageTypeSources
 
     private static StringBuilder AppendTransportMessageTypesProperties(this StringBuilder sb,
                                                                        Indentation indentation,
+                                                                       in TypeDescriptor messageTypeDescriptor,
+                                                                       in TypeDescriptor responseTypeDescriptor,
                                                                        in MessageAttributeDescriptor attributeDescriptor)
     {
         foreach (var property in attributeDescriptor.Properties)
         {
             _ = sb.AppendLine()
-                  .AppendAttributeParameterProperty(indentation, in property);
+                  .AppendAttributeParameterProperty(indentation, in messageTypeDescriptor, in responseTypeDescriptor, in attributeDescriptor, in property);
         }
 
         return sb;

@@ -55,6 +55,11 @@ public sealed class MessageHandlerTypeGenerator : IIncrementalGenerator
                                                        .OfType<MessageTypeDescriptor>()
                                                        .ToArray();
 
+        if (messageTypeDescriptors.Length == 0)
+        {
+            return null;
+        }
+
         return new(handlerTypeDescriptor, new(messageTypeDescriptors), diagnostics);
     }
 }

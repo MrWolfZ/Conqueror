@@ -518,12 +518,12 @@ public sealed partial class MessageHandlerFunctionalityAssemblyScanningTests : M
 {
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
-        return services.AddMessageHandlersFromExecutingAssembly();
+        return services.AddMessageHandlersFromAssembly(typeof(MessageHandlerFunctionalityAssemblyScanningTests).Assembly);
     }
 
     protected override IServiceCollection RegisterHandlerWithoutResponse(IServiceCollection services)
     {
-        return services.AddMessageHandlersFromExecutingAssembly();
+        return services.AddMessageHandlersFromAssembly(typeof(MessageHandlerFunctionalityAssemblyScanningTests).Assembly);
     }
 
     // ReSharper disable once UnusedType.Global (accessed via reflection)

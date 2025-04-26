@@ -10,7 +10,7 @@ var builder = Host.CreateDefaultBuilder();
 
 builder.ConfigureServices(services =>
 {
-    services.AddMessageHandler<TestMessageHandler>()
+    services.AddMessageHandlersFromAssembly(typeof(Program).Assembly)
             .AddSignalHandler<TestSignalHandler>();
 });
 

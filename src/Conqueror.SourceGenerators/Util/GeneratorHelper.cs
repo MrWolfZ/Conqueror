@@ -21,6 +21,7 @@ public static class GeneratorHelper
             symbol.ToString(),
             symbol.DeclaredAccessibility,
             symbol.IsRecord,
+            symbol.IsAbstract,
             new(typeArguments.Select(t => t.ToString()).ToArray()),
             GetTypeConstraints(symbol as INamedTypeSymbol),
             GetAttributes(symbol),

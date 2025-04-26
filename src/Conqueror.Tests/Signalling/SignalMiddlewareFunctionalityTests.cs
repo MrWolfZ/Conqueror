@@ -688,7 +688,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         var services = new ServiceCollection();
         var observations = new TestObservations();
 
-        _ = services.AddSignalHandlersFromExecutingAssembly()
+        _ = services.AddSignalHandlersFromAssembly(typeof(TestSignal).Assembly)
                     .AddSingleton<Action<ISignalPipeline<TestSignal>>>(pipeline => pipeline.Use(new TestSignalMiddleware<TestSignal>(observations)))
                     .AddSingleton(observations);
 

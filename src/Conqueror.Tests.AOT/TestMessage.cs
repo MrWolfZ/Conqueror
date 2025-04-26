@@ -15,7 +15,7 @@ internal sealed partial class TestMessageHandler(ISignalPublishers signalPublish
     public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
     {
         await signalPublishers.For(TestSignal.T)
-                                    .Handle(new() { Payload = message.Payload }, cancellationToken);
+                              .Handle(new() { Payload = message.Payload }, cancellationToken);
 
         return new(message.Payload + 1);
     }

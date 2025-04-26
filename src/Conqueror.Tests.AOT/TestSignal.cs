@@ -21,7 +21,7 @@ internal sealed partial class TestSignalHandler : TestSignal.IHandler
 
     static void ISignalHandler.ConfigureInProcessReceiver(IInProcessSignalReceiver receiver)
     {
-        _ = receiver.Disable();
+        // _ = receiver.Disable();
     }
 }
 
