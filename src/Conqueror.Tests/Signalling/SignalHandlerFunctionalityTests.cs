@@ -436,7 +436,7 @@ public sealed partial class SignalHandlerFunctionalityDefaultTests : SignalHandl
             observations.CancellationTokens.Add(cancellationToken);
         }
 
-        static void ISignalHandler.ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver) => receiver.Disable();
+        static void ISignalHandler.ConfigureInProcessReceiver(IInProcessSignalReceiver receiver) => receiver.Disable();
     }
 
     private sealed partial class DisposableSignalHandler(DisposalObservation observation) : TestSignal.IHandler, IDisposable

@@ -105,7 +105,7 @@ public sealed partial class SignallingTypeGenerationTests
         static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline)
             => pipeline.UseTest().UseTest();
 
-        static void ISignalHandler.ConfigureInProcessReceiver<T>(IInProcessSignalReceiver<T> receiver)
+        static void ISignalHandler.ConfigureInProcessReceiver(IInProcessSignalReceiver receiver)
         {
             // nothing to do
         }

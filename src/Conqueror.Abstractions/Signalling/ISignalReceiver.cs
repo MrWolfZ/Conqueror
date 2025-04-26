@@ -3,10 +3,10 @@
 // ReSharper disable once CheckNamespace
 namespace Conqueror;
 
-public interface IMessageReceiver<out TReceiver>
-    where TReceiver : class, IMessageReceiver<TReceiver>
+public interface ISignalReceiver<out TReceiver>
+    where TReceiver : class, ISignalReceiver<TReceiver>
 {
-    Type MessageType { get; }
+    Type SignalType { get; }
 
     /// <summary>
     ///     Note that this is (usually) the service provider from the global scope,
