@@ -360,6 +360,73 @@ public partial record TestSignal;";
     }
 
     [Test]
+    public Task GivenTestSignalForTransportWithSignalTypeOverride_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"#nullable enable
+
+using Conqueror;
+using Conqueror.Signalling;
+using System;
+
+namespace Generator.OriginalTransport
+{
+    [SignalTransport(Prefix = ""TestTransport"", Namespace = ""Generator.OriginalTransport"")]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class TestTransportSignalAttribute : Attribute
+    {
+        public string? StringProperty { get; init; }
+    }
+
+    public interface ITestTransportSignal<TSignal> : ISignal<TSignal>
+        where TSignal : class, ITestTransportSignal<TSignal>
+    {
+        static virtual string StringProperty { get; set; } = ""Default"";
+    }
+
+    public interface ITestTransportSignalHandler<TSignal, TIHandler>
+        where TSignal : class, ITestTransportSignal<TSignal>
+        where TIHandler : class, ITestTransportSignalHandler<TSignal, TIHandler>
+    {
+        static ISignalHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
+            where THandler : class, TIHandler
+            => throw new NotImplementedException();
+    }
+}
+
+namespace Generator.CustomTransport
+{
+    [SignalTransport(Prefix = ""TestTransport"", Namespace = ""Generator.OriginalTransport"",
+                      FullyQualifiedSignalTypeName = ""Generator.CustomTransport.ICustomTestTransportSignal"")]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class CustomTestTransportSignalAttribute : Attribute
+    {
+        public string? ExtraProperty { get; init; }
+    }
+
+    public interface ICustomTestTransportSignal<TSignal> : Generator.OriginalTransport.ITestTransportSignal<TSignal>
+        where TSignal : class, ICustomTestTransportSignal<TSignal>
+    {
+        static string Generator.OriginalTransport.ITestTransportSignal<TSignal>.StringProperty { get; set; } = TSignal.ExtraProperty ?? ""Default"";
+
+        static virtual string? ExtraProperty { get; set; }
+    }
+}
+
+namespace Generator.Tests
+{
+    using Generator.CustomTransport;
+
+    [CustomTestTransportSignal(ExtraProperty = ""Test"")]
+    public partial record TestSignal;
+}";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
     public Task GivenTypeWithAttributeWithSameSuffix_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using System;

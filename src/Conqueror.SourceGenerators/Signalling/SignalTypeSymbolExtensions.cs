@@ -17,7 +17,7 @@ public static class SignalTypeSymbolExtensions
         return attributeSymbol?.GetAttributes().Any(a => a.AttributeClass?.ToString() == "Conqueror.Signalling.SignalTransportAttribute") ?? false;
     }
 
-    public static (string Prefix, string Namespace) GetPrefixAndNamespaceFromSignalTransportAttribute(this INamedTypeSymbol attributeSymbol)
+    public static (string Prefix, string Namespace, string? FullyQualifiedSignalTypeName) GetPrefixAndNamespaceFromSignalTransportAttribute(this INamedTypeSymbol attributeSymbol)
     {
         var namedArguments = attributeSymbol.GetAttributes()
                                             .First(a => a.AttributeClass?.ToString() == "Conqueror.Signalling.SignalTransportAttribute")
@@ -25,7 +25,8 @@ public static class SignalTypeSymbolExtensions
 
         var prefix = namedArguments.First(a => a.Key == "Prefix").Value.Value as string ?? string.Empty;
         var ns = namedArguments.First(a => a.Key == "Namespace").Value.Value as string ?? string.Empty;
+        var signalTypeName = namedArguments.Where(a => a.Key == "FullyQualifiedSignalTypeName").Select(a => a.Value.Value).FirstOrDefault() as string;
 
-        return (prefix, ns);
+        return (prefix, ns, signalTypeName);
     }
 }

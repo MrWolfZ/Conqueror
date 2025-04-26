@@ -17,7 +17,7 @@ public static class MessageTypeSymbolExtensions
         return attributeSymbol?.GetAttributes().Any(a => a.AttributeClass?.ToString() == "Conqueror.Messaging.MessageTransportAttribute") ?? false;
     }
 
-    public static (string Prefix, string Namespace) GetPrefixAndNamespaceFromMessageTransportAttribute(this INamedTypeSymbol attributeSymbol)
+    public static (string Prefix, string Namespace, string? FullyQualifiedMessageTypeName) GetMessageTransportAttributeProperties(this INamedTypeSymbol attributeSymbol)
     {
         var namedArguments = attributeSymbol.GetAttributes()
                                             .First(a => a.AttributeClass?.ToString() == "Conqueror.Messaging.MessageTransportAttribute")
@@ -25,7 +25,8 @@ public static class MessageTypeSymbolExtensions
 
         var prefix = namedArguments.First(a => a.Key == "Prefix").Value.Value as string ?? string.Empty;
         var ns = namedArguments.First(a => a.Key == "Namespace").Value.Value as string ?? string.Empty;
+        var messageTypeName = namedArguments.Where(a => a.Key == "FullyQualifiedMessageTypeName").Select(a => a.Value.Value).FirstOrDefault() as string;
 
-        return (prefix, ns);
+        return (prefix, ns, messageTypeName);
     }
 }

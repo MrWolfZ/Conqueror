@@ -5,6 +5,7 @@ using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Conqueror.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -781,6 +782,28 @@ public static partial class HttpTestMessages
                 HandlerIsEnabled = false,
                 Message = new TestMessageWithDelegateHandler { Payload = 10 },
                 Response = null,
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithCustomConventions),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithCustomConventionsHandler),
+                IHandlerType = typeof(TestMessageWithCustomConventions.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/customApi/testMessageWithCustomConventions",
+                SuccessStatusCode = 201,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = "{\"payload\":11}",
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithCustomConventions { Payload = 10 },
+                Response = new TestMessageResponse { Payload = 11 },
                 RegistrationMethod = registrationMethod,
             };
         }
@@ -1756,6 +1779,29 @@ public static partial class HttpTestMessages
         public int Payload { get; init; }
     }
 
+    [CustomHttpMessage<TestMessageResponse>(CustomPathPrefix = "customApi")]
+    public sealed partial record TestMessageWithCustomConventions
+    {
+        public int Payload { get; init; }
+    }
+
+    public sealed partial class TestMessageWithCustomConventionsHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithCustomConventions.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageWithCustomConventions message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return new() { Payload = message.Payload + 1 };
+        }
+    }
+
     public sealed class TestObservations
     {
         public List<string?> ReceivedMessageIds { get; } = [];
@@ -1772,4 +1818,25 @@ public static partial class HttpTestMessages
 
         public IConquerorContextData? ReceivedBidirectionalContextData { get; set; }
     }
+}
+
+[SuppressMessage("ReSharper", "UnusedTypeParameter", Justification = "used by source generator")]
+[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "used by source generator")]
+[MessageTransport(Prefix = "Http", Namespace = "Conqueror", FullyQualifiedMessageTypeName = "Conqueror.Transport.Http.Tests.Messaging.ICustomHttpMessage")]
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class CustomHttpMessageAttribute<TResponse> : Attribute
+{
+    public string? CustomPathPrefix { get; set; }
+}
+
+[SuppressMessage("ReSharper", "StaticMemberInGenericType", Justification = "The static members are intentionally per generic type")]
+[SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty", Justification = "Members are set via code generation")]
+public interface ICustomHttpMessage<TMessage, TResponse> : IHttpMessage<TMessage, TResponse>
+    where TMessage : class, ICustomHttpMessage<TMessage, TResponse>
+{
+    static string IHttpMessage<TMessage, TResponse>.PathPrefix => TMessage.CustomPathPrefix ?? "api";
+
+    static int IHttpMessage<TMessage, TResponse>.SuccessStatusCode => 201;
+
+    static virtual string? CustomPathPrefix { get; }
 }

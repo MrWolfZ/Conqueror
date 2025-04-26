@@ -87,8 +87,9 @@ public static class SignalTypeSources
                                                          in SignalAttributeDescriptor attributeDescriptor)
     {
         var keyword = signalTypeDescriptor.IsRecord ? "record" : "class";
+        var signalTypeName = attributeDescriptor.FullyQualifiedSignalTypeName ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Signal";
         return sb.AppendIndentation(indentation)
-                 .Append($"partial {keyword} {signalTypeDescriptor.Name} : global::{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Signal<{signalTypeDescriptor.Name}>").AppendLine()
+                 .Append($"partial {keyword} {signalTypeDescriptor.Name} : global::{signalTypeName}<{signalTypeDescriptor.Name}>").AppendLine()
                  .AppendBlock(indentation);
     }
 

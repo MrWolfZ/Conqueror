@@ -91,8 +91,9 @@ public static class MessageTypeSources
                                                           in MessageAttributeDescriptor attributeDescriptor)
     {
         var keyword = messageTypeDescriptor.IsRecord ? "record" : "class";
+        var messageTypeName = attributeDescriptor.FullyQualifiedMessageTypeName ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Message";
         return sb.AppendIndentation(indentation)
-                 .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Message<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
+                 .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::{messageTypeName}<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
                  .AppendBlock(indentation);
     }
 
