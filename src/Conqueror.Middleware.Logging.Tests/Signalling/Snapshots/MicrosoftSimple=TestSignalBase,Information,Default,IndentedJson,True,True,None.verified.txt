@@ -8,7 +8,7 @@
 fail: CustomCategory_TestSignalSub[712209902]
       An exception occurred while handling signal after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals+TestException: test exception
-         at Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalBaseHandler.Handle(TestSignalBase signal, CancellationToken cancellationToken) in {ProjectDirectory}Signalling/LoggingMiddlewareTestSignals.cs:line 769
+         at Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalBaseHandler.Handle(TestSignalBase signal, CancellationToken cancellationToken) in {ProjectDirectory}Signalling/LoggingMiddlewareTestSignals.cs:line 775
          at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Signalling/LoggingSignalMiddleware.cs:line 51
          at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
          at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx)

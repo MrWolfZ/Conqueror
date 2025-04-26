@@ -706,7 +706,7 @@ public static partial class LoggingMiddlewareTestSignals
     [JsonSerializable(typeof(TestSignalWithCustomJsonTypeInfo))]
     internal sealed partial class TestSignalWithCustomJsonTypeInfoJsonSerializerContext : JsonSerializerContext;
 
-    [Signal]
+    [TestTransportSignal]
     public sealed partial record TestSignalWithCustomTransport
     {
         public int Payload { get; init; }
@@ -730,8 +730,7 @@ public static partial class LoggingMiddlewareTestSignals
             => ConfigureLoggingPipeline(pipeline);
     }
 
-    public sealed class TestSignalPublisher<TSignal>(ISignalPublisher<TSignal> wrapped)
-        : ISignalPublisher<TSignal>
+    public sealed class TestSignalPublisher<TSignal> : ISignalPublisher<TSignal>
         where TSignal : class, ISignal<TSignal>
     {
         public string TransportTypeName => TestTransportName;
@@ -742,7 +741,14 @@ public static partial class LoggingMiddlewareTestSignals
                                   CancellationToken cancellationToken)
         {
             await Task.Yield();
-            await wrapped.Publish(signal, serviceProvider, conquerorContext, cancellationToken);
+
+            var invokers = serviceProvider.GetRequiredService<ISignalHandlerRegistry>()
+                                          .GetReceiverHandlerInvokers<ITestTransportSignalHandlerTypesInjector>();
+
+            foreach (var invoker in invokers)
+            {
+                await invoker.Invoke(signal, serviceProvider, TransportTypeName, null, [], cancellationToken);
+            }
         }
     }
 

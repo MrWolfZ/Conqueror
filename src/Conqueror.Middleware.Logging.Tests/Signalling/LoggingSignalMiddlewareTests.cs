@@ -49,7 +49,7 @@ public sealed class LoggingSignalMiddlewareTests
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
             handler = handler.WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false))
-                             .WithTransport(b => new TestSignalPublisher<TSignal>(b.UseInProcess(new TestSignalBroadcastingStrategy())));
+                             .WithTransport(_ => new TestSignalPublisher<TSignal>());
         }
 
         try
