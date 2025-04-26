@@ -8,11 +8,10 @@ namespace Conqueror;
 public static class InProcessMessageSenderBuilderExtensions
 {
     public static IMessageSender<TMessage, TResponse> UseInProcess<TMessage, TResponse>(
-        this IMessageSenderBuilder<TMessage, TResponse> builder,
-        string? transportTypeName = null)
+        this IMessageSenderBuilder<TMessage, TResponse> builder)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        var (handler, isDisabled) = builder.UseInProcessInternal(transportTypeName);
+        var (handler, isDisabled) = builder.UseInProcessInternal();
 
         if (isDisabled)
         {
@@ -23,17 +22,15 @@ public static class InProcessMessageSenderBuilderExtensions
     }
 
     public static IMessageSender<TMessage, TResponse>? UseInProcessIfAvailable<TMessage, TResponse>(
-        this IMessageSenderBuilder<TMessage, TResponse> builder,
-        string? transportTypeName = null)
+        this IMessageSenderBuilder<TMessage, TResponse> builder)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        var (handler, _) = builder.UseInProcessInternal(transportTypeName);
+        var (handler, _) = builder.UseInProcessInternal();
         return handler;
     }
 
     private static (IMessageSender<TMessage, TResponse>? Handler, bool IsDisabled) UseInProcessInternal<TMessage, TResponse>(
-        this IMessageSenderBuilder<TMessage, TResponse> builder,
-        string? transportTypeName)
+        this IMessageSenderBuilder<TMessage, TResponse> builder)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         var invoker = builder.ServiceProvider
@@ -52,7 +49,7 @@ public static class InProcessMessageSenderBuilderExtensions
             return (null, true);
         }
 
-        return (new InProcessMessageSender<TMessage, TResponse>(invoker, transportTypeName), false);
+        return (new InProcessMessageSender<TMessage, TResponse>(invoker), false);
     }
 
     private sealed class Injectable(IServiceProvider serviceProvider) : ICoreMessageHandlerTypesInjectable<bool>

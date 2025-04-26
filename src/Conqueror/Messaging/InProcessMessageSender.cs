@@ -5,12 +5,11 @@ using System.Threading.Tasks;
 namespace Conqueror.Messaging;
 
 internal sealed class InProcessMessageSender<TMessage, TResponse>(
-    IMessageReceiverHandlerInvoker invoker,
-    string? transportTypeName)
+    IMessageReceiverHandlerInvoker invoker)
     : IMessageSender<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
-    public string TransportTypeName => transportTypeName ?? ConquerorConstants.InProcessTransportName;
+    public string TransportTypeName => ConquerorConstants.InProcessTransportName;
 
     public Task<TResponse> Send(TMessage message,
                                       IServiceProvider serviceProvider,
