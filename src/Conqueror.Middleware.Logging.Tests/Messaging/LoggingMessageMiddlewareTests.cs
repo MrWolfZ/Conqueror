@@ -49,7 +49,7 @@ public sealed class LoggingMessageMiddlewareTests
         if (typeof(TMessage) == typeof(TestMessageWithCustomTransport))
         {
             handler = handler.WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false))
-                             .WithTransport(b => new TestMessageTransport<TMessage, TResponse>(b.UseInProcess(TestTransportName)));
+                             .WithTransport(_ => new TestMessageTransport<TMessage, TResponse>());
         }
 
         try
