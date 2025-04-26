@@ -6,11 +6,8 @@ using System.Diagnostics;
 
 namespace Conqueror.Context;
 
-// TODO: move to abstractions and replace interface with concrete class
 public sealed class DefaultConquerorContextData : IConquerorContextData
 {
-    public static readonly DefaultConquerorContextData Empty = new();
-
     private readonly Lazy<ConcurrentDictionary<string, (object Value, ConquerorContextDataScope Scope)>> itemsLazy = new();
 
     public IEnumerator<(string Key, object Value, ConquerorContextDataScope Scope)> GetEnumerator()

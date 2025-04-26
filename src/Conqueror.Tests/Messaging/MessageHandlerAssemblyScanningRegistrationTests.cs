@@ -6,16 +6,6 @@ namespace Conqueror.Tests.Messaging;
 public partial class MessageHandlerAssemblyScanningRegistrationTests
 {
     [Test]
-    public void GivenServiceCollection_WhenAddingAllHandlersFromExecutingAssembly_AddsSameTypesAsIfAssemblyWasSpecifiedExplicitly()
-    {
-        var services1 = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
-        var services2 = new ServiceCollection().AddMessageHandlersFromExecutingAssembly();
-
-        Assert.That(services2, Has.Count.EqualTo(services1.Count));
-        Assert.That(services1.Select(d => d.ServiceType), Is.EquivalentTo(services2.Select(d => d.ServiceType)));
-    }
-
-    [Test]
     [TestCase(typeof(TestMessageHandler), typeof(TestMessage), typeof(TestMessageResponse))]
     [TestCase(typeof(InternalTestMessageHandler), typeof(InternalTestMessage), typeof(TestMessageResponse))]
     [TestCase(typeof(InternalTopLevelTestMessageHandler), typeof(InternalTopLevelTestMessage), typeof(TestMessageResponse))]
@@ -32,6 +22,29 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
                                                                              && r.MessageType == messageType
                                                                              && r.ResponseType == responseType
                                                                              && r.HandlerType == handlerType));
+    }
+
+    [Test]
+    public void GivenServiceCollection_WhenAddingAllHandlersFromAssembly_AddsMessageHandlerWithMultipleMessageTypesAsTransient()
+    {
+        var services = new ServiceCollection().AddMessageHandlersFromAssembly(typeof(MessageHandlerAssemblyScanningRegistrationTests).Assembly);
+
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationType == d.ServiceType
+                                                                             && d.ServiceType == typeof(MultiTestMessageHandler)
+                                                                             && d.Lifetime == ServiceLifetime.Transient));
+
+        Assert.That(services, Has.Exactly(2).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.HandlerType == typeof(MultiTestMessageHandler)));
+
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.MessageType == typeof(TestMessageForMulti1)
+                                                                             && r.ResponseType == typeof(TestMessageResponse)
+                                                                             && r.HandlerType == typeof(MultiTestMessageHandler)));
+
+        Assert.That(services, Has.Exactly(1).Matches<ServiceDescriptor>(d => d.ImplementationInstance is MessageHandlerRegistration r
+                                                                             && r.MessageType == typeof(TestMessageForMulti2)
+                                                                             && r.ResponseType == typeof(TestMessageResponse)
+                                                                             && r.HandlerType == typeof(MultiTestMessageHandler)));
     }
 
     [Test]
@@ -129,7 +142,6 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ProtectedTestMessageHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ExplicitTestMessageHandler)));
         Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(ExplicitTestMessageWithoutResponseHandler)));
-        Assert.That(services, Has.None.Matches<ServiceDescriptor>(d => d.ServiceType == typeof(MultiTestMessageHandler)));
     }
 
     [Message<TestMessageResponse>]
@@ -146,6 +158,12 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
     public sealed partial record TestMessage2;
 
     public sealed record TestMessage2Response;
+
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageForMulti1;
+
+    [Message<TestMessageResponse>]
+    public sealed partial record TestMessageForMulti2;
 
     [Message]
     public sealed partial record TestMessageWithoutResponse;
@@ -182,13 +200,13 @@ public partial class MessageHandlerAssemblyScanningRegistrationTests
             => Task.FromResult(new TestMessageResponse());
     }
 
-    public sealed partial class MultiTestMessageHandler : TestMessage.IHandler, TestMessage2.IHandler
+    public sealed partial class MultiTestMessageHandler : TestMessageForMulti1.IHandler, TestMessageForMulti2.IHandler
     {
-        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+        public Task<TestMessageResponse> Handle(TestMessageForMulti1 message, CancellationToken cancellationToken = default)
             => Task.FromResult(new TestMessageResponse());
 
-        public Task<TestMessage2Response> Handle(TestMessage2 message, CancellationToken cancellationToken = default)
-            => Task.FromResult(new TestMessage2Response());
+        public Task<TestMessageResponse> Handle(TestMessageForMulti2 message, CancellationToken cancellationToken = default)
+            => Task.FromResult(new TestMessageResponse());
     }
 
     public sealed partial class TestMessageWithoutResponseHandler : TestMessageWithoutResponse.IHandler

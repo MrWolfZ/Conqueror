@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Conqueror.SourceGenerators.Util;
+using Microsoft.CodeAnalysis;
 
 namespace Conqueror.SourceGenerators.Signalling;
 
@@ -42,7 +43,8 @@ public static class SignalHandlerTypeSources
         using var p = sb.AppendParentClasses(indentation, handlerDescriptor.ParentClasses);
         using var mt = sb.AppendSignalHandlerType(indentation, in handlerDescriptor);
 
-        return sb.AppendGetTypeInjectorsMethod(indentation, in handlerDescriptor, in descriptor.SignalTypes);
+        return sb.AppendGetTypeInjectorsMethod(indentation, in handlerDescriptor, in descriptor.SignalTypes)
+                 .AppendModuleInitializerMethod(indentation, in handlerDescriptor);
     }
 
     private static IDisposable AppendSignalHandlerType(this StringBuilder sb,
@@ -101,6 +103,27 @@ public static class SignalHandlerTypeSources
         }
 
         return sb;
+    }
+
+    private static StringBuilder AppendModuleInitializerMethod(this StringBuilder sb,
+                                                               Indentation indentation,
+                                                               in TypeDescriptor handlerDescriptor)
+    {
+        if (handlerDescriptor.Methods.Any(m => m.Name is "ModuleInitializer")
+            || handlerDescriptor.Accessibility is not (Accessibility.Public or Accessibility.Internal)
+            || handlerDescriptor.ParentClasses.Any(pc => pc.Accessibility is not (Accessibility.Public or Accessibility.Internal))
+            || handlerDescriptor.IsAbstract
+            || handlerDescriptor.TypeArguments.Count > 0)
+        {
+            return sb;
+        }
+
+        return sb.AppendLine()
+                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append("[global::System.Runtime.CompilerServices.ModuleInitializer]").AppendLineWithIndentation(indentation)
+                 .Append("public static void ModuleInitializer()").AppendLineWithIndentation(indentation)
+                 .AppendSingleIndent().Append($"=> global::Conqueror.SignalHandlerTypeServiceRegistry.RegisterHandlerType<{handlerDescriptor.Name}>();").AppendLine();
     }
 
     private static StringBuilder AppendSignalTypeGeneratedCodeAttribute(this StringBuilder sb,

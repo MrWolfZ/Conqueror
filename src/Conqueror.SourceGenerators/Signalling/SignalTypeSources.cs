@@ -61,7 +61,7 @@ public static class SignalTypeSources
             using (sb.AppendLine().AppendTransportSignalType(indentation, in signalTypeDescriptor, in attribute))
             {
                 _ = sb.AppendTransportSignalHandlerInterface(indentation, in signalTypeDescriptor, in attribute)
-                      .AppendTransportSignalTypesProperties(indentation, in attribute);
+                      .AppendTransportSignalTypesProperties(indentation, in signalTypeDescriptor, in attribute);
             }
         }
 
@@ -146,7 +146,7 @@ public static class SignalTypeSources
                .AppendSignalTypeGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation);
 
-        if (signalTypeDescriptor.HasProperties())
+        if (signalTypeDescriptor.HasProperties() || signalTypeDescriptor.IsAbstract)
         {
             return sb.Append($"static {signalTypeDescriptor.Name}? global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.EmptyInstance => null;").AppendLine();
         }
@@ -156,13 +156,16 @@ public static class SignalTypeSources
 
     private static StringBuilder AppendAttributeParameterProperty(this StringBuilder sb,
                                                                   Indentation indentation,
+                                                                  in TypeDescriptor signalTypeDescriptor,
+                                                                  in SignalAttributeDescriptor attributeDescriptor,
                                                                   in AttributeParameterDescriptor parameterDescriptor)
     {
+        var signalTypeName = attributeDescriptor.FullyQualifiedSignalTypeName ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Signal";
         return sb.AppendSignalTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append("public static ")
+                 .Append("static ")
                  .AppendAttributeParameterPropertyType(in parameterDescriptor)
-                 .Append($" {parameterDescriptor.Name} => ")
+                 .Append($" global::{signalTypeName}<{signalTypeDescriptor.Name}>.{parameterDescriptor.Name} => ")
                  .AppendAttributeParameterValue(in parameterDescriptor.Value).Append(";").AppendLine();
     }
 
@@ -216,12 +219,13 @@ public static class SignalTypeSources
 
     private static StringBuilder AppendTransportSignalTypesProperties(this StringBuilder sb,
                                                                       Indentation indentation,
+                                                                      in TypeDescriptor signalTypeDescriptor,
                                                                       in SignalAttributeDescriptor attributeDescriptor)
     {
         foreach (var property in attributeDescriptor.Properties)
         {
             _ = sb.AppendLine()
-                  .AppendAttributeParameterProperty(indentation, in property);
+                  .AppendAttributeParameterProperty(indentation, in signalTypeDescriptor, in attributeDescriptor, in property);
         }
 
         return sb;

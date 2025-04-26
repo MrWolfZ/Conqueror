@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Conqueror.SourceGenerators.Util;
+using Microsoft.CodeAnalysis;
 
 namespace Conqueror.SourceGenerators.Messaging;
 
@@ -20,9 +21,9 @@ public static class MessageHandlerTypeSources
 
         var filename = sb.Append(descriptor.HandlerDescriptor.FullyQualifiedName)
                          .Append("_ConquerorMessageHandlerType.g.cs")
-                         .Replace('<', '_')
+                         .Replace("<", "__")
                          .Replace('>', '_')
-                         .Replace(',', '.')
+                         .Replace(',', '_')
                          .Replace(' ', '_')
                          .ToString();
 
@@ -42,7 +43,8 @@ public static class MessageHandlerTypeSources
         using var p = sb.AppendParentClasses(indentation, handlerDescriptor.ParentClasses);
         using var mt = sb.AppendMessageHandlerType(indentation, in handlerDescriptor);
 
-        return sb.AppendGetTypeInjectorsMethod(indentation, in handlerDescriptor, in descriptor.MessageTypes);
+        return sb.AppendGetTypeInjectorsMethod(indentation, in handlerDescriptor, in descriptor.MessageTypes)
+                 .AppendModuleInitializerMethod(indentation, in handlerDescriptor);
     }
 
     private static IDisposable AppendMessageHandlerType(this StringBuilder sb,
@@ -101,6 +103,27 @@ public static class MessageHandlerTypeSources
         }
 
         return sb;
+    }
+
+    private static StringBuilder AppendModuleInitializerMethod(this StringBuilder sb,
+                                                               Indentation indentation,
+                                                               in TypeDescriptor handlerDescriptor)
+    {
+        if (handlerDescriptor.Methods.Any(m => m.Name is "ModuleInitializer")
+            || handlerDescriptor.Accessibility is not (Accessibility.Public or Accessibility.Internal)
+            || handlerDescriptor.ParentClasses.Any(pc => pc.Accessibility is not (Accessibility.Public or Accessibility.Internal))
+            || handlerDescriptor.IsAbstract
+            || handlerDescriptor.TypeArguments.Count > 0)
+        {
+            return sb;
+        }
+
+        return sb.AppendLine()
+                 .AppendMessageTypeGeneratedCodeAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append("[global::System.Runtime.CompilerServices.ModuleInitializer]").AppendLineWithIndentation(indentation)
+                 .Append("public static void ModuleInitializer()").AppendLineWithIndentation(indentation)
+                 .AppendSingleIndent().Append($"=> global::Conqueror.MessageHandlerTypeServiceRegistry.RegisterHandlerType<{handlerDescriptor.Name}>();").AppendLine();
     }
 
     private static StringBuilder AppendMessageTypeGeneratedCodeAttribute(this StringBuilder sb,

@@ -504,12 +504,12 @@ public sealed partial class SignalHandlerFunctionalityAssemblyScanningTests : Si
 {
     protected override IServiceCollection RegisterHandler(IServiceCollection services)
     {
-        return services.AddSignalHandlersFromExecutingAssembly();
+        return services.AddSignalHandlersFromAssembly(typeof(SignalHandlerFunctionalityAssemblyScanningTests).Assembly);
     }
 
     protected override IServiceCollection RegisterHandler2(IServiceCollection services)
     {
-        return services.AddSignalHandlersFromExecutingAssembly()
+        return services.AddSignalHandlersFromAssembly(typeof(SignalHandlerFunctionalityAssemblyScanningTests).Assembly)
                        .AddSignalHandler<TestSignalHandler>();
     }
 

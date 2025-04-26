@@ -9,6 +9,7 @@ public readonly record struct TypeDescriptor(
     string FullyQualifiedName,
     Accessibility Accessibility,
     bool IsRecord,
+    bool IsAbstract,
     EquatableArray<string> TypeArguments,
     string? TypeConstraints,
     EquatableArray<AttributeDescriptor> Attributes,
@@ -26,6 +27,7 @@ public readonly record struct TypeDescriptor(
     public readonly string FullyQualifiedName = FullyQualifiedName;
     public readonly EquatableArray<InterfaceDescriptor> Interfaces = Interfaces;
     public readonly bool IsRecord = IsRecord;
+    public readonly bool IsAbstract = IsAbstract;
     public readonly EquatableArray<MethodDescriptor> Methods = Methods;
     public readonly string Name = Name;
     public readonly string Namespace = Namespace;

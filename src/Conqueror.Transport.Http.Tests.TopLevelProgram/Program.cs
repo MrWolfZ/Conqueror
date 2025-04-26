@@ -16,7 +16,7 @@ builder.Services
            c.DocInclusionPredicate((_, _) => true);
        });
 
-builder.Services.AddMessageHandlersFromExecutingAssembly();
+builder.Services.AddMessageHandlersFromAssembly(typeof(Program).Assembly);
 
 var app = builder.Build();
 

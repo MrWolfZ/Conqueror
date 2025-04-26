@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Conqueror;
 using Conqueror.Signalling;
@@ -103,49 +102,13 @@ public static class ConquerorSignallingServiceCollectionExtensions
         }, configurePipeline);
     }
 
-    [RequiresUnreferencedCode("uses reflection to find applicable types; in AOT scenarios, register each handler with AddSignalHandler<MyHandler>() instead")]
-    [RequiresDynamicCode("uses reflection to find applicable types; in AOT scenarios, register each handler with AddSignalHandler<MyHandler>() instead")]
     public static IServiceCollection AddSignalHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
     {
         services.AddConquerorSignalling();
 
-        var validTypes = assembly.GetTypes()
-                                 .Where(t => t.IsAssignableTo(typeof(ISignalHandler)))
-                                 .Where(t => t is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false, IsNestedFamily: false })
-                                 .Where(t => !t.DeclaringType?.IsNestedPrivate ?? true)
-                                 .Where(t => t.GetInterfaces().Any(i => i.Name == "IHandler"))
-                                 .Where(t => t.DeclaringType?.Name != "IHandler")
-                                 .ToList();
-
-        foreach (var signalHandlerType in validTypes)
-        {
-            var addHandlerMethod = typeof(ConquerorSignallingServiceCollectionExtensions)
-                                   .GetMethod(nameof(AddSignalHandlerInternalGeneric), BindingFlags.NonPublic | BindingFlags.Static)
-                                   ?.MakeGenericMethod(signalHandlerType);
-
-            if (addHandlerMethod is null)
-            {
-                throw new InvalidOperationException($"could not find method '{nameof(ConquerorMessagingServiceCollectionExtensions)}.{nameof(AddSignalHandlerInternalGeneric)}'");
-            }
-
-            try
-            {
-                addHandlerMethod.Invoke(null, [services, ServiceDescriptor.Transient(signalHandlerType, signalHandlerType), false]);
-            }
-            catch (TargetInvocationException ex) when (ex.InnerException != null)
-            {
-                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-            }
-        }
+        SignalHandlerTypeServiceRegistry.RunWithRegisteredTypes(new ServiceRegisterable(services, assembly));
 
         return services;
-    }
-
-    [RequiresUnreferencedCode("uses reflection to find applicable types; in AOT scenarios, register each handler with AddSignalHandler<MyHandler>() instead")]
-    [RequiresDynamicCode("uses reflection to find applicable types; in AOT scenarios, register each handler with AddSignalHandler<MyHandler>() instead")]
-    public static IServiceCollection AddSignalHandlersFromExecutingAssembly(this IServiceCollection services)
-    {
-        return services.AddSignalHandlersFromAssembly(Assembly.GetCallingAssembly());
     }
 
     internal static IServiceCollection AddConquerorSignalling(this IServiceCollection services)
@@ -197,6 +160,20 @@ public static class ConquerorSignallingServiceCollectionExtensions
         services.AddSingleton(new SignalHandlerRegistration(typeof(TSignal), null, fn, invoker, [TIHandler.CoreTypesInjector]));
 
         return services;
+    }
+
+    private sealed class ServiceRegisterable(IServiceCollection services, Assembly assembly) : ISignalHandlerServiceRegisterable
+    {
+        public void Register<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>()
+            where THandler : class, ISignalHandler
+        {
+            if (typeof(THandler) is { IsInterface: false, IsAbstract: false, ContainsGenericParameters: false, IsNestedPrivate: false, IsNestedFamily: false }
+                && (typeof(THandler).DeclaringType?.IsPublic ?? true)
+                && typeof(THandler).Assembly == assembly)
+            {
+                _ = services.AddSignalHandlerInternalGeneric<THandler>(ServiceDescriptor.Transient<THandler, THandler>(), shouldOverwriteRegistration: false);
+            }
+        }
     }
 
     private sealed class SignalHandlerRegistrationTypeInjectable(
