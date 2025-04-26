@@ -718,6 +718,90 @@ public partial record TestMessageWithoutResponse;";
     }
 
     [Test]
+    public Task GivenTestMessageForTransportWithMessageTypeOverride_WhenRunningGenerator_GeneratesCorrectTypes()
+    {
+        const string input = @"#nullable enable
+
+using Conqueror;
+using Conqueror.Messaging;
+using System;
+
+namespace Generator.OriginalTransport
+{
+    [MessageTransport(Prefix = ""TestTransport"", Namespace = ""Generator.OriginalTransport"")]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class TestTransportMessageAttribute : Attribute
+    {
+        public string? StringProperty { get; init; }
+    }
+
+    [MessageTransport(Prefix = ""TestTransport"", Namespace = ""Generator.OriginalTransport"")]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class TestTransportMessageAttribute<TResponse> : Attribute
+    {
+        public string? StringProperty { get; init; }
+    }
+
+    public interface ITestTransportMessage<TMessage, TResponse> : IMessage<TMessage, TResponse>
+        where TMessage : class, ITestTransportMessage<TMessage, TResponse>
+    {
+        static virtual string StringProperty { get; set; } = ""Default"";
+    }
+
+    public interface ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
+        where TMessage : class, ITestTransportMessage<TMessage, TResponse>
+        where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
+    {
+        static IMessageHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
+            where THandler : class, TIHandler
+            => throw new NotImplementedException();
+    }
+}
+
+namespace Generator.CustomTransport
+{
+    [MessageTransport(Prefix = ""TestTransport"", Namespace = ""Generator.OriginalTransport"",
+                      FullyQualifiedMessageTypeName = ""Generator.CustomTransport.ICustomTestTransportMessage"")]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class CustomTestTransportMessageAttribute : Attribute
+    {
+        public string? ExtraProperty { get; init; }
+    }
+
+    [MessageTransport(Prefix = ""TestTransport"", Namespace = ""Generator.OriginalTransport"",
+                      FullyQualifiedMessageTypeName = ""Generator.CustomTransport.ICustomTestTransportMessage"")]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class CustomTestTransportMessageAttribute<TResponse> : Attribute
+    {
+        public string? ExtraProperty { get; init; }
+    }
+
+    public interface ICustomTestTransportMessage<TMessage, TResponse> : Generator.OriginalTransport.ITestTransportMessage<TMessage, TResponse>
+        where TMessage : class, ICustomTestTransportMessage<TMessage, TResponse>
+    {
+        static string Generator.OriginalTransport.ITestTransportMessage<TMessage, TResponse>.StringProperty { get; set; } = TMessage.ExtraProperty ?? ""Default"";
+
+        static virtual string? ExtraProperty { get; set; }
+    }
+}
+
+namespace Generator.Tests
+{
+    using Generator.CustomTransport;
+
+    [CustomTestTransportMessage<TestMessageResponse>(ExtraProperty = ""Test"")]
+    public partial record TestMessage;
+
+    public record TestMessageResponse;
+}";
+
+        var (diagnostics, output) = TestHelpers.GetGeneratedOutput(generators, assembliesToLoad, new(input));
+
+        Assert.That(diagnostics, Is.Empty, output);
+        return Verify(output, Settings());
+    }
+
+    [Test]
     public Task GivenTypeWithAttributeWithSameSuffix_WhenRunningGenerator_GeneratesCorrectTypes()
     {
         const string input = @"using System;

@@ -108,8 +108,8 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
 
     private static MessageAttributeDescriptor GenerateMessageAttributeDescriptor(AttributeData attributeData, INamedTypeSymbol attributeSymbol)
     {
-        var (prefix, ns) = attributeSymbol.GetPrefixAndNamespaceFromMessageTransportAttribute();
-        return new(prefix, ns, GeneratorHelper.GetAttributeProperties(attributeData));
+        var (prefix, ns, messageTypeName) = attributeSymbol.GetMessageTransportAttributeProperties();
+        return new(prefix, ns, messageTypeName, GeneratorHelper.GetAttributeProperties(attributeData));
     }
 
     private static TypeDescriptor GenerateUnitResponseTypeDescriptor()

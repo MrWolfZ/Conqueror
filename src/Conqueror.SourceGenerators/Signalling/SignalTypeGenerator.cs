@@ -63,7 +63,7 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
 
     private static SignalAttributeDescriptor GenerateSignalAttributeDescriptor(AttributeData attributeData, INamedTypeSymbol attributeSymbol)
     {
-        var (prefix, ns) = attributeSymbol.GetPrefixAndNamespaceFromSignalTransportAttribute();
-        return new(prefix, ns, GeneratorHelper.GetAttributeProperties(attributeData));
+        var (prefix, ns, signalTypeName) = attributeSymbol.GetPrefixAndNamespaceFromSignalTransportAttribute();
+        return new(prefix, ns, signalTypeName, GeneratorHelper.GetAttributeProperties(attributeData));
     }
 }

@@ -22,8 +22,10 @@ public readonly record struct MessageTypeDescriptor(
 public readonly record struct MessageAttributeDescriptor(
     string Prefix,
     string Namespace,
+    string? FullyQualifiedMessageTypeName,
     EquatableArray<AttributeParameterDescriptor> Properties)
 {
+    public readonly string? FullyQualifiedMessageTypeName = FullyQualifiedMessageTypeName;
     public readonly string Namespace = Namespace;
     public readonly string Prefix = Prefix;
     public readonly EquatableArray<AttributeParameterDescriptor> Properties = Properties;

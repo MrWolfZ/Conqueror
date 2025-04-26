@@ -16,4 +16,10 @@ public sealed class MessageTransportAttribute : Attribute
     ///     The namespace in which <b>ALL</b> types for this transport exist.
     /// </summary>
     public required string Namespace { get; init; }
+
+    /// <summary>
+    ///     This property allows creating custom conventions by overriding only the message type name
+    ///     and using the <see cref="Prefix" /> and <see cref="Namespace" /> of another transport.
+    /// </summary>
+    public string? FullyQualifiedMessageTypeName { get; init; }
 }
