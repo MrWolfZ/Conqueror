@@ -1,9 +1,11 @@
-﻿namespace Conqueror.Middleware.Logging.Tests;
+﻿using System.Text.RegularExpressions;
+
+namespace Conqueror.Middleware.Logging.Tests;
 
 internal static class LogOutputNormalizationStringExtensions
 {
     public static string NormalizeLogOutput(this string logOutput)
-        => NormalizeLineEndingsInJsonOutput(NormalizePathSeparators(logOutput));
+        => NormalizeLineNumbersInExceptions(NormalizeLineEndingsInJsonOutput(NormalizePathSeparators(logOutput)));
 
     private static string NormalizeLineEndingsInJsonOutput(string logOutput)
     {
@@ -35,15 +37,26 @@ internal static class LogOutputNormalizationStringExtensions
         return logOutput.Replace(@"src\", "src/")
                         .Replace(@"Conqueror\", "Conqueror/")
                         .Replace(@"Messaging\", "Messaging/")
+                        .Replace(@"MessageTypeGenerator\", "MessageTypeGenerator/")
                         .Replace(@"Signalling\", "Signalling/")
-                        .Replace(@"Streaming\", "Streaming/")
+                        .Replace(@"SignalTypeGenerator\", "SignalTypeGenerator/")
+                        .Replace(@"Iterator\", "Iterator/")
+                        .Replace(@"IteratorTypeGenerator\", "IteratorTypeGenerator/")
                         .Replace(@"Logging\", "Logging/")
                         .Replace(@"Tests\", "Tests/")
 
                         // on unix platforms the stack trace contains references to {ProjectDirectory} instead
                         // of the solution dir for this test project, so we have to normalize those as well when
                         // running on non-unix systems
-                        .Replace("{SolutionDirectory}src/Conqueror.Middleware.Logging.Tests/", "{ProjectDirectory}");
+                        .Replace("{SolutionDirectory}src/Conqueror.Middleware.Logging.Tests/", "{ProjectDirectory}")
+
+                        .Replace(@"obj\Debug\net8.0\Conqueror.SourceGenerators\", "obj/Debug/net8.0/Conqueror.SourceGenerators/");
+    }
+
+    private static string NormalizeLineNumbersInExceptions(string logOutput)
+    {
+        var regex = new Regex(":line [0-9]+");
+        return regex.Replace(logOutput, ":line FIXED");
     }
 
     private static string? FindSolutionDir(string? directory)
