@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Conqueror;
-using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Conqueror.Transport.Http.Tests.AOT.TopLevelProgram;
 using Microsoft.AspNetCore.Routing.Constraints;
 
@@ -43,7 +42,10 @@ app.MapPost("/api/custom", async (HttpContext ctx)
                     return Results.BadRequest("could not parse message");
                 }
 
-                var topLevelTestMessageResponse = await ctx.HandleMessage(message);
+                var topLevelTestMessageResponse = await ctx.RequestServices
+                                                           .GetRequiredService<IMessageSenders>()
+                                                           .For(TopLevelTestMessage.T)
+                                                           .Handle(message);
 
                 return Results.Json(topLevelTestMessageResponse, TopLevelTestMessageJsonSerializerContext.Default);
             });
@@ -52,7 +54,10 @@ app.MapGet("/api/customGet/{payload:int}", async (int payload, HttpContext ctx)
                =>
            {
                var message = new TopLevelTestMessage { Payload = payload, Nested = new() { NestedString = "test" } };
-               var topLevelTestMessageResponse = await ctx.HandleMessage(message);
+               var topLevelTestMessageResponse = await ctx.RequestServices
+                                                          .GetRequiredService<IMessageSenders>()
+                                                          .For(TopLevelTestMessage.T)
+                                                          .Handle(message);
 
                return Results.Json(topLevelTestMessageResponse, TopLevelTestMessageJsonSerializerContext.Default);
            });

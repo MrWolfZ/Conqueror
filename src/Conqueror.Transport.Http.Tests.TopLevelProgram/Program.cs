@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Conqueror;
-using Conqueror.Transport.Http.Server.AspNetCore.Messaging;
 using Conqueror.Transport.Http.Tests.TopLevelProgram;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,15 +29,15 @@ if (app.Environment.IsDevelopment())
 app.UseConquerorWellKnownErrorHandling();
 
 app.MapPost("/api/custom", (
-                    HttpContext ctx,
-                    [FromBody] TopLevelTestMessage message)
-                => ctx.HandleMessage(message));
+                    [FromBody] TopLevelTestMessage message,
+                    IMessageSenders senders)
+                => senders.For(TopLevelTestMessage.T).Handle(message));
 
-app.MapGet("/api/customGet/{payload:int}", async (int payload, HttpContext ctx)
+app.MapGet("/api/customGet/{payload:int}", async (int payload, IMessageSenders senders)
                =>
            {
                var message = new TopLevelTestMessage { Payload = payload, Nested = new() { NestedString = "test" } };
-               return await ctx.HandleMessage(message);
+               return await senders.For(TopLevelTestMessage.T).Handle(message);
            });
 
 app.MapGroup("/group").MapMessageEndpoint(TopLevelTestMessage.T)?.WithName("TopLevelTestMessage2");

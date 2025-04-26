@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Net.Mime;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
@@ -50,11 +49,8 @@ public sealed class MessagingServerApiDescriptionTests
         Assert.That(messageApiDescription.GroupName, Is.EqualTo(testCase.ApiGroupName));
         Assert.That(messageApiDescription.ParameterDescriptions, Has.Count.EqualTo(testCase.ParameterCount));
 
-        var isController = testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.CustomController;
-
         var messageMediaTypes = messageApiDescription.SupportedRequestFormats.Select(f => f.MediaType);
-        var expectedAcceptContentTypes = isController ? [MediaTypeNames.Application.Json, "application/*+json"] : new[] { testCase.MessageContentType };
-        Assert.That(messageMediaTypes, testCase.MessageContentType is null ? Is.Empty : Is.EquivalentTo(expectedAcceptContentTypes));
+        Assert.That(messageMediaTypes, testCase.MessageContentType is null ? Is.Empty : Is.EquivalentTo(new[] { testCase.MessageContentType }));
 
         var responseMediaTypes = messageApiDescription.SupportedResponseTypes.SelectMany(t => t.ApiResponseFormats).Select(f => f.MediaType);
         Assert.That(responseMediaTypes, testCase.ResponseContentType is null ? Is.Empty : Is.EquivalentTo(new[] { testCase.ResponseContentType }));
@@ -118,10 +114,7 @@ public sealed class MessagingServerApiDescriptionTests
         Assert.That(ToHttpMethodString(operation.Key), Is.EqualTo(testCase.HttpMethod));
         Assert.That(operation.Value.OperationId, Is.EqualTo(testCase.Name ?? testCase.MessageType.Name));
 
-        var expectedTags = testCase.RegistrationMethod is MessageTestCaseRegistrationMethod.CustomController
-            ? new[] { "TestHttpMessage" }
-            : [testCase.ApiGroupName ?? testCase.Name ?? testCase.MessageType.Name];
-
+        var expectedTags = new[] { testCase.ApiGroupName ?? testCase.Name ?? testCase.MessageType.Name };
         Assert.That(operation.Value.Tags.Select(t => t.Name).ToList(), Is.EqualTo(expectedTags));
 
         Assert.That(operation.Value.Parameters, Has.Count.EqualTo(testCase.HttpMethod == MethodGet ? testCase.ParameterCount : 0));
