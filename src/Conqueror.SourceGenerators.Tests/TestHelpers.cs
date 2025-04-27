@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -27,15 +28,68 @@ public static partial class TestHelpers
         IEnumerable<Assembly> assembliesToLoad,
         Options opts)
     {
-        var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, opts);
+        var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, [], opts);
 
         var output = string.Join("\n", trees.Select(t => $"{t.FilePath.Replace(@"\", "/")}:\n{t}"));
         return (diagnostics, output);
     }
 
+    public static (ImmutableArray<Diagnostic> Diagnostics, string Output) GetGeneratedOutput(
+        IEnumerable<IIncrementalGenerator> generators,
+        IEnumerable<Assembly> assembliesToLoad,
+        IEnumerable<MetadataReference> additionalReferences,
+        Options opts)
+    {
+        var (diagnostics, trees) = GetGeneratedTrees(generators, assembliesToLoad, additionalReferences, opts);
+
+        var output = string.Join("\n", trees.Select(t => $"{t.FilePath.Replace(@"\", "/")}:\n{t}"));
+        return (diagnostics, output);
+    }
+
+    public static (ImmutableArray<Diagnostic> Diagnostics, byte[]? Assembly) GetGeneratedAssembly(
+        string assemblyName,
+        IEnumerable<IIncrementalGenerator> generators,
+        IEnumerable<Assembly> assembliesToLoad,
+        Options opts)
+    {
+        var incrementalGenerators = generators as IIncrementalGenerator[] ?? generators.ToArray();
+        var compilation = CreateCompilation(assemblyName, incrementalGenerators, assembliesToLoad, [], opts);
+
+        var (_, outputCompilation) = RunGeneratorAndAssertOutput(incrementalGenerators, opts, compilation);
+
+        using var ms = new MemoryStream();
+        var result = outputCompilation.Emit(ms);
+
+        if (!result.Success)
+        {
+            return (result.Diagnostics, null);
+        }
+
+        _ = ms.Seek(0, SeekOrigin.Begin);
+        return (result.Diagnostics, ms.ToArray());
+    }
+
     private static (ImmutableArray<Diagnostic> Diagnostics, ImmutableArray<SyntaxTree> SyntaxTrees) GetGeneratedTrees(
         IEnumerable<IIncrementalGenerator> generators,
         IEnumerable<Assembly> assembliesToLoad,
+        IEnumerable<MetadataReference> additionalReferences,
+        Options opts)
+    {
+        var incrementalGenerators = generators as IIncrementalGenerator[] ?? generators.ToArray();
+        var compilation = CreateCompilation("generator", incrementalGenerators, assembliesToLoad, additionalReferences, opts);
+
+        var (runResult, outputCompilation) = RunGeneratorAndAssertOutput(incrementalGenerators, opts, compilation);
+
+        var combinedDiagnostics = runResult.Diagnostics.AddRange(outputCompilation.GetDiagnostics());
+
+        return (combinedDiagnostics, runResult.GeneratedTrees);
+    }
+
+    private static CSharpCompilation CreateCompilation(
+        string assemblyName,
+        IEnumerable<IIncrementalGenerator> generators,
+        IEnumerable<Assembly> assembliesToLoad,
+        IEnumerable<MetadataReference> additionalReferences,
         Options opts)
     {
         var syntaxTrees = opts.Sources
@@ -46,33 +100,26 @@ public static partial class TestHelpers
                                   return tree.WithRootAndOptions(tree.GetRoot(), options);
                               });
 
-        var incrementalGenerators = generators as IIncrementalGenerator[] ?? generators.ToArray();
-
         var references = AppDomain.CurrentDomain.GetAssemblies()
                                   .Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
                                   .Concat(assembliesToLoad)
                                   .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
                                   .Concat([
-                                      ..incrementalGenerators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
+                                      ..generators.Select(x => MetadataReference.CreateFromFile(x.GetType().Assembly.Location)),
                                       MetadataReference.CreateFromFile(typeof(DisplayAttribute).Assembly.Location),
                                       MetadataReference.CreateFromFile(typeof(GeneratedCodeAttribute).Assembly.Location),
                                   ])
+                                  .Concat(additionalReferences)
                                   .Distinct();
 
-        var compilation = CSharpCompilation.Create(
-            "generator",
+        return CSharpCompilation.Create(
+            assemblyName,
             syntaxTrees,
             references,
             new(OutputKind.DynamicallyLinkedLibrary));
-
-        var (runResult, diagnostics) = RunGeneratorAndAssertOutput(incrementalGenerators, opts, compilation);
-
-        var combinedDiagnostics = runResult.Diagnostics.AddRange(diagnostics);
-
-        return (combinedDiagnostics, runResult.GeneratedTrees);
     }
 
-    private static (GeneratorDriverRunResult RunResult, ImmutableArray<Diagnostic> Diagnostics) RunGeneratorAndAssertOutput(
+    private static (GeneratorDriverRunResult RunResult, Compilation Compilation) RunGeneratorAndAssertOutput(
         IEnumerable<IIncrementalGenerator> generators,
         Options options,
         CSharpCompilation compilation,
@@ -115,7 +162,7 @@ public static partial class TestHelpers
                 Is.All.Matches(((object Value, IncrementalStepRunReason Reason) x) => x.Reason == IncrementalStepRunReason.Cached));
         }
 
-        return (runResult, outputCompilation.GetDiagnostics());
+        return (runResult, outputCompilation);
     }
 
     private static void AssertRunsEqual(GeneratorDriverRunResult runResult1, GeneratorDriverRunResult runResult2, IReadOnlyCollection<string> trackingNames)

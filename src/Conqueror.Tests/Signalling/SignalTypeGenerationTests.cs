@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace Conqueror.Tests.Signalling;
 
-public sealed partial class SignallingTypeGenerationTests
+public sealed partial class SignalTypeGenerationTests
 {
     [Test]
     public async Task GivenSignalTypeWithExplicitImplementations_WhenUsingHandler_ItWorks()
@@ -58,6 +58,32 @@ public sealed partial class SignallingTypeGenerationTests
 
     [Signal]
     public sealed partial record TestSignal2(int Payload);
+
+    // generated
+    public sealed partial record TestSignal2 : ISignal<TestSignal2>
+    {
+        public static SignalTypes<TestSignal2, IHandler> T => new();
+
+        [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "emulating generator output")]
+        public partial interface IHandler : ISignalHandler<TestSignal2, IHandler, IHandler.Proxy>
+        {
+            Task Handle(TestSignal2 signal, CancellationToken cancellationToken = default);
+
+            static Task ISignalHandler<TestSignal2, IHandler>.Invoke(IHandler handler, TestSignal2 signal, CancellationToken cancellationToken)
+                => handler.Handle(signal, cancellationToken);
+
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            public sealed class Proxy : SignalHandlerProxy<TestSignal2, IHandler, Proxy>, IHandler;
+        }
+
+        static TestSignal2? ISignal<TestSignal2>.EmptyInstance => null;
+
+        static IEnumerable<ConstructorInfo> ISignal<TestSignal2>.PublicConstructors
+            => typeof(TestSignal2).GetConstructors(BindingFlags.Public);
+
+        static IEnumerable<PropertyInfo> ISignal<TestSignal2>.PublicProperties
+            => typeof(TestSignal2).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+    }
 
     [Signal]
     public sealed partial record GenericTestSignal<TPayload>(TPayload Payload);

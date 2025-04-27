@@ -17,13 +17,6 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
 
     public static SignalTypeDescriptor? GetSignalTypesDescriptor(INamedTypeSymbol signalTypeSymbol, SemanticModel semanticModel)
     {
-        // skip signal types that already declare a types member
-        // TODO: improve by simply skipping the generation of the property / nested type instead of ignoring the whole type
-        if (signalTypeSymbol.MemberNames.Contains("T"))
-        {
-            return null;
-        }
-
         var attribute = signalTypeSymbol.GetAttributes()
                                         .FirstOrDefault(a => a.AttributeClass?.IsSignalTransportAttribute() ?? false)
                                         ?.AttributeClass;
@@ -53,6 +46,13 @@ public sealed class SignalTypeGenerator : IIncrementalGenerator
         if (context.SemanticModel.GetDeclaredSymbol(context.Node) is not INamedTypeSymbol signalTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
+            return null;
+        }
+
+        // skip signal types in our special test class
+        // TODO: improve the generator by lazily generating all properties that have not been defined yet
+        if (signalTypeSymbol.ContainingAssembly?.Name == "Conqueror.Tests" && signalTypeSymbol.ContainingType?.Name == "SignalTypeGenerationTests")
+        {
             return null;
         }
 

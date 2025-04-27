@@ -21,13 +21,6 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
                                                                    SemanticModel semanticModel,
                                                                    CancellationToken ct)
     {
-        // skip message types that already declare a types member
-        // TODO: improve by simply skipping the generation of the property / nested type instead of ignoring the whole type
-        if (messageTypeSymbol.MemberNames.Contains("T"))
-        {
-            return null;
-        }
-
         ITypeSymbol? responseTypeSymbol = null;
 
         var attribute = messageTypeSymbol.GetAttributes()
@@ -77,6 +70,13 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
         if (context.SemanticModel.GetDeclaredSymbol(context.Node) is not INamedTypeSymbol messageTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
+            return null;
+        }
+
+        // skip message types in our special test class
+        // TODO: improve the generator by lazily generating all properties that have not been defined yet
+        if (messageTypeSymbol.ContainingAssembly?.Name == "Conqueror.Tests" && messageTypeSymbol.ContainingType?.Name == "MessageTypeGenerationTests")
+        {
             return null;
         }
 

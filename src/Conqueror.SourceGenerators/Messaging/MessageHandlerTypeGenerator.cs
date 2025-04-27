@@ -32,8 +32,6 @@ public sealed class MessageHandlerTypeGenerator : IIncrementalGenerator
                                                   .Where(s => s.IsMessageType())
                                                   .ToList();
 
-        var diagnostics = new List<DiagnosticWithLocationDescriptor>();
-
         if (messageTypeSymbols.Count == 0)
         {
             return null;
@@ -41,12 +39,11 @@ public sealed class MessageHandlerTypeGenerator : IIncrementalGenerator
 
         ct.ThrowIfCancellationRequested();
 
-        return GenerateHandlerDescriptor(handlerTypeSymbol, messageTypeSymbols, new([..diagnostics]), context.SemanticModel, ct);
+        return GenerateHandlerDescriptor(handlerTypeSymbol, messageTypeSymbols, context.SemanticModel, ct);
     }
 
     private static MessageHandlerTypeDescriptor? GenerateHandlerDescriptor(INamedTypeSymbol handlerTypeSymbol,
                                                                            List<INamedTypeSymbol> messageTypeSymbols,
-                                                                           EquatableArray<DiagnosticWithLocationDescriptor> diagnostics,
                                                                            SemanticModel semanticModel,
                                                                            CancellationToken ct)
     {
@@ -60,6 +57,6 @@ public sealed class MessageHandlerTypeGenerator : IIncrementalGenerator
             return null;
         }
 
-        return new(handlerTypeDescriptor, new(messageTypeDescriptors), diagnostics);
+        return new(handlerTypeDescriptor, new(messageTypeDescriptors), new([]));
     }
 }
