@@ -422,8 +422,8 @@ public static partial class LoggingMiddlewareTestMessages
             {
                 var hookSuppressesMessage = HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookDoesNotLogAndReturnsFalse;
 
-                var clientTransportRole = nameof(MessageTransportRole.Sender).ToLowerInvariant();
-                var serverTransportRole = nameof(MessageTransportRole.Receiver).ToLowerInvariant();
+                var senderTransportRole = nameof(MessageTransportRole.Sender).ToLowerInvariant();
+                var receiverTransportRole = nameof(MessageTransportRole.Receiver).ToLowerInvariant();
 
                 if (PreExecutionLogLevel is not LogLevel.None && PreExecutionLogLevel >= ConfiguredLogLevel)
                 {
@@ -433,19 +433,10 @@ public static partial class LoggingMiddlewareTestMessages
                     {
                         var preExecutionLogRegexBuilder = new StringBuilder();
 
-                        _ = preExecutionLogRegexBuilder.Append("Handling ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = preExecutionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = preExecutionLogRegexBuilder.Append("message ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = preExecutionLogRegexBuilder.Append("on ").Append(clientTransportRole).Append(' ');
-                        }
+                        _ = preExecutionLogRegexBuilder.Append("Handling message on ")
+                                                       .Append(TransportTypeName ?? "in-process")
+                                                       .Append(' ')
+                                                       .Append(senderTransportRole).Append(' ');
 
                         if (hasPayload)
                         {
@@ -472,14 +463,13 @@ public static partial class LoggingMiddlewareTestMessages
 
                         yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionMessage);
 
-                        if (TransportTypeName is not null)
-                        {
-                            _ = preExecutionLogRegexBuilder.Replace(clientTransportRole, serverTransportRole);
+                        _ = TransportTypeName is not null
+                            ? preExecutionLogRegexBuilder.Replace(senderTransportRole, receiverTransportRole)
+                            : preExecutionLogRegexBuilder.Replace($"on in-process {senderTransportRole} ", string.Empty);
 
-                            var preExecutionServerMessage = new Regex(preExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var preExecutionServerMessage = new Regex(preExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                            yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionServerMessage);
-                        }
+                        yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionServerMessage);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
@@ -497,19 +487,10 @@ public static partial class LoggingMiddlewareTestMessages
                     {
                         var postExecutionLogRegexBuilder = new StringBuilder();
 
-                        _ = postExecutionLogRegexBuilder.Append("Handled ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = postExecutionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = postExecutionLogRegexBuilder.Append("message ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = postExecutionLogRegexBuilder.Append("on ").Append(clientTransportRole).Append(' ');
-                        }
+                        _ = postExecutionLogRegexBuilder.Append("Handled message on ")
+                                                        .Append(TransportTypeName ?? "in-process")
+                                                        .Append(' ')
+                                                        .Append(senderTransportRole).Append(' ');
 
                         if (hasResponse)
                         {
@@ -536,14 +517,13 @@ public static partial class LoggingMiddlewareTestMessages
 
                         yield return (PostExecutionLogLevel ?? LogLevel.Information, postExecutionMessage);
 
-                        if (TransportTypeName is not null)
-                        {
-                            _ = postExecutionLogRegexBuilder.Replace(clientTransportRole, serverTransportRole);
+                        _ = TransportTypeName is not null
+                            ? postExecutionLogRegexBuilder.Replace(senderTransportRole, receiverTransportRole)
+                            : postExecutionLogRegexBuilder.Replace($"on in-process {senderTransportRole} ", string.Empty);
 
-                            var postExecutionServerMessage = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var postExecutionServerMessage = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                            yield return (PreExecutionLogLevel ?? LogLevel.Information, postExecutionServerMessage);
-                        }
+                        yield return (PreExecutionLogLevel ?? LogLevel.Information, postExecutionServerMessage);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
@@ -559,19 +539,10 @@ public static partial class LoggingMiddlewareTestMessages
                     {
                         var exceptionLogRegexBuilder = new StringBuilder();
 
-                        _ = exceptionLogRegexBuilder.Append("An exception occurred while handling ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = exceptionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = exceptionLogRegexBuilder.Append("message ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = exceptionLogRegexBuilder.Append("on ").Append(clientTransportRole).Append(' ');
-                        }
+                        _ = exceptionLogRegexBuilder.Append("An exception occurred while handling message on ")
+                                                    .Append(TransportTypeName ?? "in-process")
+                                                    .Append(' ')
+                                                    .Append(senderTransportRole).Append(' ');
 
                         _ = exceptionLogRegexBuilder.Append(@"after [0-9]+\.[0-9]+ms \(Message ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
 
@@ -581,14 +552,13 @@ public static partial class LoggingMiddlewareTestMessages
 
                         yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionMessage);
 
-                        if (TransportTypeName is not null)
-                        {
-                            _ = exceptionLogRegexBuilder.Replace(clientTransportRole, serverTransportRole);
+                        _ = TransportTypeName is not null
+                            ? exceptionLogRegexBuilder.Replace(senderTransportRole, receiverTransportRole)
+                            : exceptionLogRegexBuilder.Replace($"on in-process {senderTransportRole} ", string.Empty);
 
-                            var exceptionServerMessage = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var exceptionServerMessage = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                            yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionServerMessage);
-                        }
+                        yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionServerMessage);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)

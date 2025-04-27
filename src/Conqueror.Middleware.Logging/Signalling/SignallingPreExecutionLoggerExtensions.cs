@@ -20,7 +20,7 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Handling {TransportTypeName:l} signal on {TransportRole:l} with payload {@SignalPayload:l} (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
+        Message = "Handling signal on {TransportTypeName:l} {TransportRole:l} with payload {@SignalPayload:l} (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
     public static partial void LogSignalForTransport(this ILogger logger,
                                                      LogLevel logLevel,
                                                      string transportTypeName,
@@ -39,7 +39,7 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Handling {TransportTypeName:l} signal on {TransportRole:l} (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
+        Message = "Handling signal on {TransportTypeName:l} {TransportRole:l} (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
     public static partial void LogSignalWithoutPayloadForTransport(this ILogger logger,
                                                                    LogLevel logLevel,
                                                                    string transportTypeName,
@@ -109,7 +109,7 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Handling {TransportTypeName:l} signal on {TransportRole:l} with payload\n{@SignalPayload:l}\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
+        Message = "Handling signal on {TransportTypeName:l} {TransportRole:l} with payload\n{@SignalPayload:l}\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
     private static partial void LogSignalWithPayloadAsIndentedJsonForTransportUnix(this ILogger logger,
                                                                                    LogLevel logLevel,
                                                                                    string transportTypeName,
@@ -120,7 +120,7 @@ internal static partial class SignallingPreExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal",
-        Message = "Handling {TransportTypeName:l} signal on {TransportRole:l} with payload\r\n{@SignalPayload:l}\r\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
+        Message = "Handling signal on {TransportTypeName:l} {TransportRole:l} with payload\r\n{@SignalPayload:l}\r\n(Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
     private static partial void LogSignalWithPayloadAsIndentedJsonForTransportNonUnix(this ILogger logger,
                                                                                       LogLevel logLevel,
                                                                                       string transportTypeName,

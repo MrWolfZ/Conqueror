@@ -18,7 +18,7 @@ internal static partial class SignallingPostExecutionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal-handled",
-        Message = "Handled {TransportTypeName:l} signal on {TransportRole:l} in {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
+        Message = "Handled signal on {TransportTypeName:l} {TransportRole:l} in {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
     public static partial void LogSignalHandledForTransport(this ILogger logger,
                                                             LogLevel logLevel,
                                                             string transportTypeName,

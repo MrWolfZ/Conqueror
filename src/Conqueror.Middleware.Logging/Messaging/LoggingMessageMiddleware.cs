@@ -105,7 +105,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
 
         if (shouldOmitPayload || !hasPayload)
         {
-            if (ctx.TransportType.IsInProcess())
+            if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
             {
                 logger.LogMessageWithoutPayload(Configuration.PreExecutionLogLevel, messageId, traceId);
                 return;
@@ -119,7 +119,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             return;
         }
 
-        if (ctx.TransportType.IsInProcess())
+        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
         {
             if (Configuration.MessagePayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
             {
@@ -203,7 +203,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
 
         if (shouldOmitPayload || ctx.HasUnitResponse)
         {
-            if (ctx.TransportType.IsInProcess())
+            if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
             {
                 logger.LogMessageResponseWithoutPayload(Configuration.PostExecutionLogLevel,
                                                         elapsedTime.TotalMilliseconds,
@@ -223,7 +223,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             return;
         }
 
-        if (ctx.TransportType.IsInProcess())
+        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
         {
             if (Configuration.ResponsePayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
             {
@@ -317,7 +317,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
         // full stack trace, but that could introduce subtle race conditions, so we prefer the former approach
         var exceptionToLog = new WrappingException(exception, executionStackTrace.ToString());
 
-        if (ctx.TransportType.IsInProcess())
+        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
         {
             logger.LogMessageException(Configuration.ExceptionLogLevel,
                                        exceptionToLog,

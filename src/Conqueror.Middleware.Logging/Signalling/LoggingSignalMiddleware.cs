@@ -102,7 +102,7 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
 
         if (shouldOmitPayload || !hasPayload)
         {
-            if (ctx.TransportType.IsInProcess())
+            if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == SignalTransportRole.Receiver)
             {
                 logger.LogSignalWithoutPayload(Configuration.PreExecutionLogLevel, signalId, traceId);
                 return;
@@ -116,7 +116,7 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             return;
         }
 
-        if (ctx.TransportType.IsInProcess())
+        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == SignalTransportRole.Receiver)
         {
             if (Configuration.PayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
             {
@@ -194,7 +194,7 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             return;
         }
 
-        if (ctx.TransportType.IsInProcess())
+        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == SignalTransportRole.Receiver)
         {
             logger.LogSignalHandled(Configuration.PostExecutionLogLevel,
                                     elapsedTime.TotalMilliseconds,
@@ -262,7 +262,7 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
         // full stack trace, but that could introduce subtle race conditions, so we prefer the former approach
         var exceptionToLog = new WrappingException(exception, executionStackTrace.ToString());
 
-        if (ctx.TransportType.IsInProcess())
+        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == SignalTransportRole.Receiver)
         {
             logger.LogSignalException(Configuration.ExceptionLogLevel,
                                       exceptionToLog,

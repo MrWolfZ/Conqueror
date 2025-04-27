@@ -20,7 +20,7 @@ internal static partial class MessagingExceptionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-message-exception",
-        Message = "An exception occurred while handling {TransportTypeName:l} message on {TransportRole:l} after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})")]
+        Message = "An exception occurred while handling message on {TransportTypeName:l} {TransportRole:l} after {ResponseLatency:0.0000}ms (Message ID: {MessageId:l}, Trace ID: {TraceId:l})")]
     public static partial void LogMessageExceptionForTransport(this ILogger logger,
                                                                LogLevel logLevel,
                                                                Exception exception,

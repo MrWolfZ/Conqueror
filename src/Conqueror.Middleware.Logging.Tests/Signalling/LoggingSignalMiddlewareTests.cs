@@ -44,12 +44,13 @@ public sealed class LoggingSignalMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
+        var handler = host.Resolve<ISignalPublishers>()
+                          .For(TIHandler.SignalTypes)
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
-            handler = handler.WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false))
-                             .WithTransport(_ => new TestSignalPublisher<TSignal>());
+            handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
         }
 
         try
@@ -113,7 +114,14 @@ public sealed class LoggingSignalMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
+        var handler = host.Resolve<ISignalPublishers>()
+                          .For(TIHandler.SignalTypes)
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+
+        if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
+        {
+            handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
+        }
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -165,7 +173,14 @@ public sealed class LoggingSignalMiddlewareTests
                 }
             });
 
-        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
+        var handler = host.Resolve<ISignalPublishers>()
+                          .For(TIHandler.SignalTypes)
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+
+        if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
+        {
+            handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
+        }
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -225,7 +240,14 @@ public sealed class LoggingSignalMiddlewareTests
             },
             logging => logging.AddSerilog(serilogLogger));
 
-        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
+        var handler = host.Resolve<ISignalPublishers>()
+                          .For(TIHandler.SignalTypes)
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+
+        if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
+        {
+            handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
+        }
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
@@ -286,7 +308,14 @@ public sealed class LoggingSignalMiddlewareTests
             },
             logging => logging.AddSerilog(serilogLogger));
 
-        var handler = host.Resolve<ISignalPublishers>().For(TIHandler.SignalTypes);
+        var handler = host.Resolve<ISignalPublishers>()
+                          .For(TIHandler.SignalTypes)
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+
+        if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
+        {
+            handler = handler.WithTransport(_ => new TestSignalPublisher<TSignal>());
+        }
 
         using var loggingStopWatch = LoggingStopwatch.WithTimingFactory(() => TimeSpan.FromMilliseconds(123.456));
 
