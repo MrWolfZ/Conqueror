@@ -63,20 +63,20 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
             => typeof(TestMessage).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
 
-    partial record TestMessage : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportsWithoutResponse.ITestTransportMessage<TestMessage, global::Conqueror.UnitMessageResponse>
+    partial record TestMessage : global::Messaging.WithCustomTransportsWithoutResponse.Transport1.ITestTransportMessage<TestMessage, global::Conqueror.UnitMessageResponse>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportsWithoutResponse.ITestTransportMessageHandler<TestMessage, global::Conqueror.UnitMessageResponse, IHandler>;
+        partial interface IHandler : global::Messaging.WithCustomTransportsWithoutResponse.Transport1.ITestTransportMessageHandler<TestMessage, global::Conqueror.UnitMessageResponse, IHandler>;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        static string global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportsWithoutResponse.ITestTransportMessage<TestMessage, global::Conqueror.UnitMessageResponse>.StringProperty => "Test";
+        static string global::Messaging.WithCustomTransportsWithoutResponse.Transport1.ITestTransportMessage<TestMessage, global::Conqueror.UnitMessageResponse>.StringProperty => "Test";
     }
 
-    partial record TestMessage : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportsWithoutResponse.ITestTransport2Message<TestMessage, global::Conqueror.UnitMessageResponse>
+    partial record TestMessage : global::Messaging.WithCustomTransportsWithoutResponse.Transport2.ITestTransport2Message<TestMessage, global::Conqueror.UnitMessageResponse>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportsWithoutResponse.ITestTransport2MessageHandler<TestMessage, global::Conqueror.UnitMessageResponse, IHandler>;
+        partial interface IHandler : global::Messaging.WithCustomTransportsWithoutResponse.Transport2.ITestTransport2MessageHandler<TestMessage, global::Conqueror.UnitMessageResponse, IHandler>;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        static string global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportsWithoutResponse.ITestTransport2Message<TestMessage, global::Conqueror.UnitMessageResponse>.StringProperty => "Test2";
+        static string global::Messaging.WithCustomTransportsWithoutResponse.Transport2.ITestTransport2Message<TestMessage, global::Conqueror.UnitMessageResponse>.StringProperty => "Test2";
     }
 }
 

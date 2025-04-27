@@ -60,21 +60,21 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
             => typeof(TestMessage).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
 
-    partial record TestMessage : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>
+    partial record TestMessage : global::Messaging.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.ITestTransportMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse, IHandler>;
+        partial interface IHandler : global::Messaging.WithCustomTransport.ITestTransportMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse, IHandler>;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        static string global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>.StringProperty => "Test";
+        static string global::Messaging.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>.StringProperty => "Test";
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        static int global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>.IntProperty => 1;
+        static int global::Messaging.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>.IntProperty => 1;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        static int[] global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>.IntArrayProperty => new[] { 1, 2, 3 };
+        static int[] global::Messaging.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>.IntArrayProperty => new[] { 1, 2, 3 };
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        static string? global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>.NullProperty => null;
+        static string? global::Messaging.WithCustomTransport.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport.TestMessageResponse>.NullProperty => null;
     }
 }
 
