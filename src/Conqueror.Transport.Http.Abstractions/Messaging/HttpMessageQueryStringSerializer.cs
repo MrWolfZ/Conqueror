@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,10 +33,28 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
 
         foreach (var prop in TMessage.PublicProperties)
         {
+            var propName = Uncapitalize(prop.Name);
+            var propValue = prop.GetValue(message);
+
+            if (propValue is IEnumerable enumerable)
+            {
+                foreach (var v in enumerable)
+                {
+                    _ = uriBuilder.Append(isFirst ? '?' : '&')
+                                  .Append(propName)
+                                  .Append('=')
+                                  .Append(Uri.EscapeDataString(v?.ToString() ?? string.Empty));
+
+                    isFirst = false;
+                }
+
+                continue;
+            }
+
             _ = uriBuilder.Append(isFirst ? '?' : '&')
-                          .Append(Uncapitalize(prop.Name))
+                          .Append(propName)
                           .Append('=')
-                          .Append(Uri.EscapeDataString(prop.GetValue(message)?.ToString() ?? string.Empty));
+                          .Append(Uri.EscapeDataString(propValue?.ToString() ?? string.Empty));
 
             isFirst = false;
         }
@@ -59,60 +79,114 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
             return TMessage.EmptyInstance;
         }
 
-        // TODO: support constructor with parameters
+        if (FindMatchingConstructor(query) is { } constructor)
+        {
+            var parameters = BuildConstructorParameters(constructor, query);
+            return constructor.Invoke(parameters) as TMessage
+                   ?? throw new InvalidOperationException($"failed to invoke constructor for message type '{typeof(TMessage)}'");
+        }
+
         var parameterlessConstructor = TMessage.PublicConstructors.FirstOrDefault(c => c.GetParameters().Length == 0);
 
         if (parameterlessConstructor is null)
         {
-            throw new InvalidOperationException($"HTTP query string deserialization requires a public parameterless constructor for message type '{nameof(TMessage)}'");
+            throw new InvalidOperationException($"HTTP query string deserialization requires a public parameterless constructor for message type '{typeof(TMessage)}'");
         }
 
-        var message = parameterlessConstructor.Invoke([]) as TMessage ?? throw new InvalidOperationException($"failed to invoke parameterless constructor for message type '{nameof(TMessage)}'");
+        var message = parameterlessConstructor.Invoke([]) as TMessage
+                      ?? throw new InvalidOperationException($"failed to invoke parameterless constructor for message type '{typeof(TMessage)}'");
 
         foreach (var prop in TMessage.PublicProperties)
         {
-            var values = query.GetValueOrDefault(Uncapitalize(prop.Name));
+            var values = query.GetValueOrDefault(Uncapitalize(prop.Name)) ?? query.GetValueOrDefault(prop.Name);
 
             if (values is null || values.Count == 0)
             {
                 continue;
             }
 
-            try
+            if (IsCollectionType(prop.PropertyType))
             {
-                // Handle single value properties
-                if (!IsCollectionType(prop.PropertyType))
+                var collectionValues = ConvertCollection(values, prop.PropertyType);
+                if (collectionValues != null)
                 {
-                    var value = values[0];
-                    if (value is null)
-                    {
-                        continue;
-                    }
-
-                    var convertedValue = ConvertValue(value, prop.PropertyType);
-                    if (convertedValue != null)
-                    {
-                        prop.SetValue(message, convertedValue);
-                    }
+                    prop.SetValue(message, collectionValues);
                 }
 
-                // Handle collection properties
-                else
-                {
-                    var collectionValues = ConvertCollection(values, prop.PropertyType);
-                    if (collectionValues != null)
-                    {
-                        prop.SetValue(message, collectionValues);
-                    }
-                }
+                continue;
             }
-            catch (Exception)
+
+            var value = values[0];
+            if (value is null)
             {
-                // Skip properties that fail to parse
+                continue;
+            }
+
+            var convertedValue = ConvertValue(value, prop.PropertyType);
+            if (convertedValue != null)
+            {
+                prop.SetValue(message, convertedValue);
             }
         }
 
         return message;
+    }
+
+    private static ConstructorInfo? FindMatchingConstructor(IReadOnlyDictionary<string, IReadOnlyList<string?>> query)
+    {
+        var queryParamNames = new HashSet<string>(query.Keys, StringComparer.OrdinalIgnoreCase);
+
+        return TMessage.PublicConstructors
+                       .Where(c => c.GetParameters().Length > 0)
+                       .Select(c => new
+                       {
+                           Constructor = c,
+                           Parameters = c.GetParameters(),
+                           MatchCount = c.GetParameters().Count(p => (p.Name is not null && queryParamNames.Contains(p.Name)) || p.HasDefaultValue),
+                       })
+                       .FirstOrDefault(x => x.MatchCount == queryParamNames.Count)
+                       ?.Constructor;
+    }
+
+    private static object?[] BuildConstructorParameters(ConstructorInfo constructor,
+                                                        IReadOnlyDictionary<string, IReadOnlyList<string?>> query)
+    {
+        var parameters = constructor.GetParameters();
+        var paramValues = new object?[parameters.Length];
+
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            var param = parameters[i];
+
+            if (param.Name is not null && (
+                    query.TryGetValue(param.Name, out var values) || (query.TryGetValue(Uncapitalize(param.Name), out values)
+                                                                      && values.Count > 0)))
+            {
+                if (IsCollectionType(param.ParameterType))
+                {
+                    paramValues[i] = ConvertCollection(values, param.ParameterType);
+                }
+                else
+                {
+                    var value = values[0];
+                    if (value != null)
+                    {
+                        paramValues[i] = ConvertValue(value, param.ParameterType);
+                    }
+                    else if (param.HasDefaultValue)
+                    {
+                        paramValues[i] = param.DefaultValue;
+                    }
+                }
+            }
+            else if (param.HasDefaultValue)
+            {
+                // If parameter not in query but has default value, use it
+                paramValues[i] = param.DefaultValue;
+            }
+        }
+
+        return paramValues;
     }
 
     private static bool IsCollectionType(Type type)
@@ -212,7 +286,7 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
             return Enum.TryParse(underlyingType, value, true, out var result) ? result : null;
         }
 
-        return null;
+        throw new InvalidOperationException($"unable to convert value '{value}' to type '{targetType.FullName}'");
     }
 
     private static object? ConvertCollection(IReadOnlyList<string?> values, Type collectionType)

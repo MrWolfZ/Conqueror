@@ -44,6 +44,11 @@ public static partial class HttpTestMessages
                                                        throw new NotSupportedException();
                                                    });
         }
+        else if (typeof(TMessage) == typeof(TestMessageForAssemblyScanning)
+                 || typeof(TMessage) == typeof(TestMessageWithoutResponseForAssemblyScanning))
+        {
+            _ = services.AddMessageHandlersFromAssembly(typeof(TestMessageForAssemblyScanning).Assembly);
+        }
         else
         {
             _ = services.AddMessageHandler<THandler>();
@@ -344,7 +349,7 @@ public static partial class HttpTestMessages
                 HandlerType = typeof(TestMessageWithFullPathAndVersionHandler),
                 IHandlerType = typeof(TestMessageWithFullPathAndVersion.IHandler),
                 HttpMethod = MethodPost,
-                FullPath = "/custom/full/path/for/message",
+                FullPath = "/custom/full/path/for/message/ignoring/version",
                 SuccessStatusCode = 200,
                 ApiGroupName = null,
                 Name = null,
@@ -469,39 +474,54 @@ public static partial class HttpTestMessages
                 RegistrationMethod = registrationMethod,
             };
 
-            // complex get queries are not supported in minimal API
-            if (registrationMethod
-                is not MessageTestCaseRegistrationMethod.Endpoints
-                and not MessageTestCaseRegistrationMethod.ExplicitEndpoint)
+            yield return new()
             {
-                yield return new()
+                MessageType = typeof(TestMessageWithGetWithPrimaryConstructor),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithGetWithPrimaryConstructorHandler),
+                IHandlerType = typeof(TestMessageWithGetWithPrimaryConstructor.IHandler),
+                HttpMethod = MethodGet,
+                FullPath = "/api/testMessageWithGetWithPrimaryConstructor",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 3,
+                QueryString = "?payload=10&param=test&intArray=11&intArray=12",
+                Payload = null,
+                ResponsePayload = "{\"payload\":33}",
+                MessageContentType = null,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithGetWithPrimaryConstructor(10, "test", [11, 12]),
+                Response = new TestMessageResponse { Payload = 33 },
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithComplexGetPayload),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithComplexGetPayloadHandler),
+                IHandlerType = typeof(TestMessageWithComplexGetPayload.IHandler),
+                HttpMethod = MethodGet,
+                FullPath = "/api/testMessageWithComplexGetPayload",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 3,
+                QueryString = "?payload=10&nestedList=11&nestedList=12&nestedArray=13&nestedArray=14",
+                Payload = null,
+                ResponsePayload = "{\"payload\":60}",
+                MessageContentType = null,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithComplexGetPayload
                 {
-                    MessageType = typeof(TestMessageWithComplexGetPayload),
-                    ResponseType = typeof(TestMessageResponse),
-                    HandlerType = typeof(TestMessageWithComplexGetPayloadHandler),
-                    IHandlerType = typeof(TestMessageWithComplexGetPayload.IHandler),
-                    HttpMethod = MethodGet,
-                    FullPath = "/api/testMessageWithComplexGetPayload",
-                    SuccessStatusCode = 200,
-                    ApiGroupName = null,
-                    Name = null,
-                    ParameterCount = 5,
-                    QueryString = "?payload=10&nestedPayload.payload=11&nestedPayload.payload2=12&nestedList=13&nestedList=14&nestedArray=15&nestedArray=16",
-                    Payload = null,
-                    ResponsePayload = "{\"payload\":91}",
-                    MessageContentType = null,
-                    ResponseContentType = MediaTypeNames.Application.Json,
-                    Message = new TestMessageWithComplexGetPayload
-                    {
-                        Payload = 10,
-                        NestedPayload = new() { Payload = 11, Payload2 = 12 },
-                        NestedList = [13, 14],
-                        NestedArray = [15, 16],
-                    },
-                    Response = new TestMessageResponse { Payload = 91 },
-                    RegistrationMethod = registrationMethod,
-                };
-            }
+                    Payload = 10,
+                    NestedList = [11, 12],
+                    NestedArray = [13, 14],
+                },
+                Response = new TestMessageResponse { Payload = 60 },
+                RegistrationMethod = registrationMethod,
+            };
 
             yield return new()
             {
@@ -525,107 +545,101 @@ public static partial class HttpTestMessages
                 RegistrationMethod = registrationMethod,
             };
 
-            // custom serializer and json type info is only supported in minimal API
-            if (registrationMethod
-                is MessageTestCaseRegistrationMethod.Endpoints
-                or MessageTestCaseRegistrationMethod.ExplicitEndpoint)
+            yield return new()
             {
-                yield return new()
-                {
-                    MessageType = typeof(TestMessageWithCustomSerializer),
-                    ResponseType = typeof(TestMessageWithCustomSerializerResponse),
-                    HandlerType = typeof(TestMessageWithCustomSerializerHandler),
-                    IHandlerType = typeof(TestMessageWithCustomSerializer.IHandler),
-                    HttpMethod = MethodPost,
-                    FullPath = "/api/custom/path/for/serializer/12",
-                    Template = "/api/custom/path/for/serializer/{pathPayload:int}",
-                    SuccessStatusCode = 200,
-                    ApiGroupName = null,
-                    Name = null,
-                    ParameterCount = 1,
-                    QueryString = "?query-payload=10",
-                    Payload = "{\"bodyPayload\":11}",
-                    ResponsePayload = "{\"total-payload\":33}",
-                    MessageContentType = "application/custom-message",
-                    ResponseContentType = "application/custom-response",
-                    MessageSerializer = TestMessageWithCustomSerializer.HttpMessageSerializer,
-                    ResponseSerializer = TestMessageWithCustomSerializer.HttpResponseSerializer,
-                    Message = new TestMessageWithCustomSerializer { QueryPayload = 10, BodyPayload = 11, PathPayload = 12 },
-                    Response = new TestMessageWithCustomSerializerResponse { Payload = 33 },
-                    RegistrationMethod = registrationMethod,
-                };
+                MessageType = typeof(TestMessageWithCustomSerializer),
+                ResponseType = typeof(TestMessageWithCustomSerializerResponse),
+                HandlerType = typeof(TestMessageWithCustomSerializerHandler),
+                IHandlerType = typeof(TestMessageWithCustomSerializer.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/custom/path/for/serializer/12",
+                Template = "/api/custom/path/for/serializer/{pathPayload:int}",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = "?query-payload=10",
+                Payload = "{\"bodyPayload\":11}",
+                ResponsePayload = "{\"total-payload\":33}",
+                MessageContentType = "application/custom-message",
+                ResponseContentType = "application/custom-response",
+                MessageSerializer = TestMessageWithCustomSerializer.HttpMessageSerializer,
+                ResponseSerializer = TestMessageWithCustomSerializer.HttpResponseSerializer,
+                Message = new TestMessageWithCustomSerializer { QueryPayload = 10, BodyPayload = 11, PathPayload = 12 },
+                Response = new TestMessageWithCustomSerializerResponse { Payload = 33 },
+                RegistrationMethod = registrationMethod,
+            };
 
-                yield return new()
-                {
-                    MessageType = typeof(TestMessageWithCustomJsonTypeInfo),
-                    ResponseType = typeof(TestMessageWithCustomJsonTypeInfoResponse),
-                    HandlerType = typeof(TestMessageWithCustomJsonTypeInfoHandler),
-                    IHandlerType = typeof(TestMessageWithCustomJsonTypeInfo.IHandler),
-                    HttpMethod = MethodPost,
-                    FullPath = "/api/testMessageWithCustomJsonTypeInfo",
-                    SuccessStatusCode = 200,
-                    ApiGroupName = null,
-                    Name = null,
-                    ParameterCount = 1,
-                    QueryString = null,
-                    Payload = "{\"MESSAGE_PAYLOAD\":10}",
-                    ResponsePayload = "{\"RESPONSE_PAYLOAD\":11}",
-                    MessageContentType = MediaTypeNames.Application.Json,
-                    ResponseContentType = MediaTypeNames.Application.Json,
-                    JsonSerializerContext = GetJsonSerializerContext<TestMessageWithCustomJsonTypeInfo, TestMessageWithCustomJsonTypeInfoResponse>(),
-                    Message = new TestMessageWithCustomJsonTypeInfo { MessagePayload = 10 },
-                    Response = new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 },
-                    RegistrationMethod = registrationMethod,
-                };
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithCustomJsonTypeInfo),
+                ResponseType = typeof(TestMessageWithCustomJsonTypeInfoResponse),
+                HandlerType = typeof(TestMessageWithCustomJsonTypeInfoHandler),
+                IHandlerType = typeof(TestMessageWithCustomJsonTypeInfo.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithCustomJsonTypeInfo",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"MESSAGE_PAYLOAD\":10}",
+                ResponsePayload = "{\"RESPONSE_PAYLOAD\":11}",
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                JsonSerializerContext = GetJsonSerializerContext<TestMessageWithCustomJsonTypeInfo, TestMessageWithCustomJsonTypeInfoResponse>(),
+                Message = new TestMessageWithCustomJsonTypeInfo { MessagePayload = 10 },
+                Response = new TestMessageWithCustomJsonTypeInfoResponse { ResponsePayload = 11 },
+                RegistrationMethod = registrationMethod,
+            };
 
-                static JsonSerializerContext? GetJsonSerializerContext<TMessage, TResponse>()
-                    where TMessage : class, IMessage<TMessage, TResponse>
-                    => TMessage.JsonSerializerContext;
+            static JsonSerializerContext? GetJsonSerializerContext<TMessage, TResponse>()
+                where TMessage : class, IMessage<TMessage, TResponse>
+                => TMessage.JsonSerializerContext;
 
-                yield return new()
-                {
-                    MessageType = typeof(TestMessageWithMiddleware),
-                    ResponseType = typeof(TestMessageResponse),
-                    HandlerType = typeof(TestMessageWithMiddlewareHandler),
-                    IHandlerType = typeof(TestMessageWithMiddleware.IHandler),
-                    HttpMethod = MethodPost,
-                    FullPath = "/api/testMessageWithMiddleware",
-                    SuccessStatusCode = 200,
-                    ApiGroupName = null,
-                    Name = null,
-                    ParameterCount = 1,
-                    QueryString = null,
-                    Payload = "{\"payload\":10}",
-                    ResponsePayload = "{\"payload\":11}",
-                    MessageContentType = MediaTypeNames.Application.Json,
-                    ResponseContentType = MediaTypeNames.Application.Json,
-                    Message = new TestMessageWithMiddleware { Payload = 10 },
-                    Response = new TestMessageResponse { Payload = 11 },
-                    RegistrationMethod = registrationMethod,
-                };
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithMiddleware),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithMiddlewareHandler),
+                IHandlerType = typeof(TestMessageWithMiddleware.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithMiddleware",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = "{\"payload\":11}",
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithMiddleware { Payload = 10 },
+                Response = new TestMessageResponse { Payload = 11 },
+                RegistrationMethod = registrationMethod,
+            };
 
-                yield return new()
-                {
-                    MessageType = typeof(TestMessageWithMiddlewareWithoutResponse),
-                    ResponseType = null,
-                    HandlerType = typeof(TestMessageWithMiddlewareWithoutResponseHandler),
-                    IHandlerType = typeof(TestMessageWithMiddlewareWithoutResponse.IHandler),
-                    HttpMethod = MethodPost,
-                    FullPath = "/api/testMessageWithMiddlewareWithoutResponse",
-                    SuccessStatusCode = 204,
-                    ApiGroupName = null,
-                    Name = null,
-                    ParameterCount = 1,
-                    QueryString = null,
-                    Payload = "{\"payload\":10}",
-                    ResponsePayload = string.Empty,
-                    MessageContentType = MediaTypeNames.Application.Json,
-                    ResponseContentType = null,
-                    Message = new TestMessageWithMiddlewareWithoutResponse { Payload = 10 },
-                    Response = null,
-                    RegistrationMethod = registrationMethod,
-                };
-            }
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithMiddlewareWithoutResponse),
+                ResponseType = null,
+                HandlerType = typeof(TestMessageWithMiddlewareWithoutResponseHandler),
+                IHandlerType = typeof(TestMessageWithMiddlewareWithoutResponse.IHandler),
+                HttpMethod = MethodPost,
+                FullPath = "/api/testMessageWithMiddlewareWithoutResponse",
+                SuccessStatusCode = 204,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 1,
+                QueryString = null,
+                Payload = "{\"payload\":10}",
+                ResponsePayload = string.Empty,
+                MessageContentType = MediaTypeNames.Application.Json,
+                ResponseContentType = null,
+                Message = new TestMessageWithMiddlewareWithoutResponse { Payload = 10 },
+                Response = null,
+                RegistrationMethod = registrationMethod,
+            };
 
             yield return new()
             {
@@ -806,13 +820,7 @@ public static partial class HttpTestMessages
                 Response = new TestMessageResponse { Payload = 11 },
                 RegistrationMethod = registrationMethod,
             };
-        }
 
-        foreach (var registrationMethod in new[]
-                 {
-                     MessageTestCaseRegistrationMethod.Endpoints,
-                 })
-        {
             yield return new()
             {
                 MessageType = typeof(TestMessageForAssemblyScanning),
@@ -1159,7 +1167,7 @@ public static partial class HttpTestMessages
         }
     }
 
-    [HttpMessage<TestMessageResponse>(FullPath = "/custom/full/path/for/message", Version = "v2")]
+    [HttpMessage<TestMessageResponse>(FullPath = "/custom/full/path/for/message/ignoring/version", Version = "v2")]
     public sealed partial record TestMessageWithFullPathAndVersion
     {
         public int Payload { get; init; }
@@ -1297,27 +1305,38 @@ public static partial class HttpTestMessages
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "testing")]
+    public sealed partial record TestMessageWithGetWithPrimaryConstructor(int Payload, string Param, int[] IntArray);
+
+    public sealed partial class TestMessageWithGetWithPrimaryConstructorHandler(
+        IServiceProvider serviceProvider,
+        FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithGetWithPrimaryConstructor.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageWithGetWithPrimaryConstructor message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return new() { Payload = message.Payload + message.IntArray.Sum() };
+        }
+    }
+
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
     public sealed partial record TestMessageWithComplexGetPayload
     {
         [Required]
-        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global", Justification = "set by ASP during model binding")]
         public int? Payload { get; init; }
-
-        public required TestMessageWithComplexGetPayloadPayload NestedPayload { get; init; }
 
         public required List<int> NestedList { get; init; }
 
         [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "for testing")]
         public required int[] NestedArray { get; init; }
-    }
-
-    public sealed record TestMessageWithComplexGetPayloadPayload
-    {
-        [Required]
-        public required int Payload { get; init; }
-
-        [Required]
-        public required int Payload2 { get; init; }
     }
 
     public sealed partial class TestMessageWithComplexGetPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
@@ -1333,7 +1352,7 @@ public static partial class HttpTestMessages
                 await fnToCallFromHandler(serviceProvider);
             }
 
-            return new() { Payload = (message.Payload ?? 0) + message.NestedPayload.Payload + message.NestedPayload.Payload2 + message.NestedList.Sum() + message.NestedArray.Sum() };
+            return new() { Payload = (message.Payload ?? 0) + message.NestedList.Sum() + message.NestedArray.Sum() };
         }
     }
 

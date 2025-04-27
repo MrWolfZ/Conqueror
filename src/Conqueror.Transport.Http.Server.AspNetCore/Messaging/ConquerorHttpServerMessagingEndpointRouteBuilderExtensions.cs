@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
 using System.Text.Json.Serialization;
@@ -73,7 +74,8 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             if (duplicates.Count > 0)
             {
-                var msg = $"path: {TMessage.FullPath}, messageTypes: {string.Join(", ", duplicates.Select(d => d.MessageType))}";
+                var duplicateMessageTypes = duplicates.Select(d => d.MessageType).Concat([typeof(TMessage)]);
+                var msg = $"path: {TMessage.FullPath}{Environment.NewLine}messageTypes:{Environment.NewLine}{string.Join(Environment.NewLine, duplicateMessageTypes)}";
 
                 throw new InvalidOperationException($"found multiple Conqueror message types with identical path!{Environment.NewLine}{msg}");
             }
@@ -254,8 +256,11 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             static IReadOnlyCollection<(string Name, Type Type)> GetQueryParams()
             {
-                return TMessage.PublicProperties.Select(p => (p.Name, p.PropertyType)).ToArray();
+                return TMessage.PublicProperties.Select(p => (Uncapitalize(p.Name), p.PropertyType)).ToArray();
             }
+
+            static string Uncapitalize(string str)
+                => char.ToLower(str[0], CultureInfo.InvariantCulture) + str[1..];
         }
     }
 }
