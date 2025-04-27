@@ -72,14 +72,14 @@ namespace Conqueror.Transport.Http.Tests.Messaging.Server
 
     namespace DuplicateMessageName
     {
-        [HttpMessage<TestMessageResponse>]
+        [HttpMessage<OtherTestMessageResponse>]
         public sealed partial record TestMessage;
 
-        public sealed record TestMessageResponse;
+        public sealed record OtherTestMessageResponse;
 
         public sealed partial class TestMessageHandler : TestMessage.IHandler
         {
-            public async Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
+            public async Task<OtherTestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken = default)
             {
                 await Task.Yield();
                 cancellationToken.ThrowIfCancellationRequested();
