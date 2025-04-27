@@ -148,7 +148,7 @@ public sealed record LoggingMessagePostExecutionContext<TMessage, TResponse>
     /// <summary>
     ///     The response that is being logged (is <c>null</c> if there is no response).
     /// </summary>
-    public required TResponse? Response { get; init; }
+    public required TResponse Response { get; init; }
 
     /// <summary>
     ///     The time which has elapsed while executing the message.

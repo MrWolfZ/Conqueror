@@ -162,7 +162,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
     private void PostExecution(ILogger logger,
                                string messageId,
                                string traceId,
-                               TResponse? response,
+                               TResponse response,
                                TimeSpan elapsedTime,
                                MessageMiddlewareContext<TMessage, TResponse> ctx)
     {
