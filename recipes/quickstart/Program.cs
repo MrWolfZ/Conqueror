@@ -1,23 +1,28 @@
-using Conqueror;
+using Quickstart;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddConquerorCQSTypesFromExecutingAssembly();
-
 builder.Services
-       .AddControllers()
-       .AddConquerorCQSHttpControllers();
+       .AddSingleton<CountersRepository>()
 
-builder.Services
-       .AddEndpointsApiExplorer()
+       // This registers all the handlers in the project; alternatively, you can register
+       // individual handlers as well
+       .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
+       .AddSignalHandlersFromAssembly(typeof(Program).Assembly)
+
+       // Add some services that Conqueror needs to properly expose messages via HTTP
+       .AddMessageEndpoints()
+
+       // Let's enable Swashbuckle to get a nice Swagger UI
        .AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwagger()
+   .UseSwaggerUI();
 
-app.UseConqueror();
-app.MapControllers();
+// This enables message handlers as minimal HTTP API endpoints (including in AOT mode
+// if you need that, although please check the corresponding recipe for more details)
+app.MapMessageEndpoints();
 
 app.Run();
