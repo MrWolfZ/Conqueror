@@ -476,6 +476,28 @@ public static partial class HttpTestMessages
 
             yield return new()
             {
+                MessageType = typeof(TestMessageWithGetWithOptionalPayload),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithGetWithOptionalPayloadHandler),
+                IHandlerType = typeof(TestMessageWithGetWithOptionalPayload.IHandler),
+                HttpMethod = MethodGet,
+                FullPath = "/api/testMessageWithGetWithOptionalPayload",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 2,
+                QueryString = null,
+                Payload = null,
+                ResponsePayload = "{\"payload\":1}",
+                MessageContentType = null,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithGetWithOptionalPayload(),
+                Response = new TestMessageResponse { Payload = 1 },
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
                 MessageType = typeof(TestMessageWithGetWithPrimaryConstructor),
                 ResponseType = typeof(TestMessageResponse),
                 HandlerType = typeof(TestMessageWithGetWithPrimaryConstructorHandler),
@@ -493,6 +515,28 @@ public static partial class HttpTestMessages
                 ResponseContentType = MediaTypeNames.Application.Json,
                 Message = new TestMessageWithGetWithPrimaryConstructor(10, "test", [11, 12]),
                 Response = new TestMessageResponse { Payload = 33 },
+                RegistrationMethod = registrationMethod,
+            };
+
+            yield return new()
+            {
+                MessageType = typeof(TestMessageWithGetWithPrimaryConstructorWithOptionalParameters),
+                ResponseType = typeof(TestMessageResponse),
+                HandlerType = typeof(TestMessageWithGetWithPrimaryConstructorWithOptionalParametersHandler),
+                IHandlerType = typeof(TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.IHandler),
+                HttpMethod = MethodGet,
+                FullPath = "/api/testMessageWithGetWithPrimaryConstructorWithOptionalParameters",
+                SuccessStatusCode = 200,
+                ApiGroupName = null,
+                Name = null,
+                ParameterCount = 2,
+                QueryString = null,
+                Payload = null,
+                ResponsePayload = "{\"payload\":1}",
+                MessageContentType = null,
+                ResponseContentType = MediaTypeNames.Application.Json,
+                Message = new TestMessageWithGetWithPrimaryConstructorWithOptionalParameters(),
+                Response = new TestMessageResponse { Payload = 1 },
                 RegistrationMethod = registrationMethod,
             };
 
@@ -1305,6 +1349,31 @@ public static partial class HttpTestMessages
     }
 
     [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    public sealed partial record TestMessageWithGetWithOptionalPayload
+    {
+        public int? Payload { get; init; }
+
+        public string? Param { get; init; }
+    }
+
+    public sealed partial class TestMessageWithGetWithOptionalPayloadHandler(IServiceProvider serviceProvider, FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithGetWithOptionalPayload.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageWithGetWithOptionalPayload message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return new() { Payload = (message.Payload ?? 0) + 1 };
+        }
+    }
+
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
     [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "testing")]
     public sealed partial record TestMessageWithGetWithPrimaryConstructor(int Payload, string Param, int[] IntArray);
 
@@ -1324,6 +1393,29 @@ public static partial class HttpTestMessages
             }
 
             return new() { Payload = message.Payload + message.IntArray.Sum() };
+        }
+    }
+
+    [HttpMessage<TestMessageResponse>(HttpMethod = MethodGet)]
+    [SuppressMessage("Performance", "CA1819:Properties should not return arrays", Justification = "testing")]
+    public sealed partial record TestMessageWithGetWithPrimaryConstructorWithOptionalParameters(int? Payload = null, string? Param = null);
+
+    public sealed partial class TestMessageWithGetWithPrimaryConstructorWithOptionalParametersHandler(
+        IServiceProvider serviceProvider,
+        FnToCallFromHandler? fnToCallFromHandler = null)
+        : TestMessageWithGetWithPrimaryConstructorWithOptionalParameters.IHandler
+    {
+        public async Task<TestMessageResponse> Handle(TestMessageWithGetWithPrimaryConstructorWithOptionalParameters message, CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (fnToCallFromHandler is not null)
+            {
+                await fnToCallFromHandler(serviceProvider);
+            }
+
+            return new() { Payload = (message.Payload ?? 0) + 1 };
         }
     }
 

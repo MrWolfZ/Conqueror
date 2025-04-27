@@ -88,15 +88,15 @@ internal sealed class ConquerorHttpServerMessagingEndpointMetadataApiDescription
             return;
         }
 
-        foreach (var (name, type) in endpointMetadata.QueryParams)
+        foreach (var param in endpointMetadata.QueryParams)
         {
             parameterDescriptions.Add(new()
             {
-                Name = name,
-                ModelMetadata = new EndpointModelMetadata(ModelMetadataIdentity.ForType(type)),
+                Name = param.Name,
+                ModelMetadata = new EndpointModelMetadata(ModelMetadataIdentity.ForType(param.PropertyType)),
                 Source = BindingSource.Query,
-                Type = type,
-                IsRequired = true,
+                Type = param.PropertyType,
+                IsRequired = param.IsRequired,
             });
         }
 
@@ -219,7 +219,7 @@ internal sealed record ConquerorHttpMessageEndpointMetadata
 
     public required bool HasPayload { get; init; }
 
-    public required IReadOnlyCollection<(string Name, Type Type)> QueryParams { get; init; }
+    public required IReadOnlyCollection<HttpMessageEndpointQueryParameterMetadata> QueryParams { get; init; }
 
     public required Type ResponseType { get; init; }
 
@@ -228,4 +228,13 @@ internal sealed record ConquerorHttpMessageEndpointMetadata
     public required string MessageContentType { get; init; }
 
     public required string ResponseContentType { get; init; }
+}
+
+internal sealed record HttpMessageEndpointQueryParameterMetadata
+{
+    public required string Name { get; init; }
+
+    public required Type PropertyType { get; init; }
+
+    public required bool IsRequired { get; init; }
 }

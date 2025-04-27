@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
@@ -254,9 +256,36 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
 
             return TMessage.ApiGroupName is null ? builder : builder.WithGroupName(TMessage.ApiGroupName);
 
-            static IReadOnlyCollection<(string Name, Type Type)> GetQueryParams()
+            static IReadOnlyCollection<HttpMessageEndpointQueryParameterMetadata> GetQueryParams()
             {
-                return TMessage.PublicProperties.Select(p => (Uncapitalize(p.Name), p.PropertyType)).ToArray();
+                if (TMessage.PublicConstructors.Any(c => c.GetParameters().Length == 0))
+                {
+                    return TMessage.PublicProperties
+                                   .Select(p => new HttpMessageEndpointQueryParameterMetadata
+                                   {
+                                       Name = Uncapitalize(p.Name),
+                                       PropertyType = p.PropertyType,
+                                       IsRequired = p.PropertyType.GetCustomAttribute<RequiredMemberAttribute>() is not null,
+                                   })
+                                   .ToArray();
+                }
+
+                var constructor = TMessage.PublicConstructors.FirstOrDefault();
+
+                if (constructor is null)
+                {
+                    throw new InvalidOperationException($"no public constructor found for message type '{typeof(TMessage)}'");
+                }
+
+                return constructor.GetParameters()
+                                  .Where(p => p.Name is not null)
+                                  .Select(p => new HttpMessageEndpointQueryParameterMetadata
+                                  {
+                                      Name = Uncapitalize(p.Name!),
+                                      PropertyType = p.ParameterType,
+                                      IsRequired = !p.HasDefaultValue,
+                                  })
+                                  .ToArray();
             }
 
             static string Uncapitalize(string str)
