@@ -169,7 +169,9 @@ public static class GeneratorHelper
     private static EquatableArray<AttributeDescriptor> GetAttributes(ITypeSymbol symbol)
     {
         return new(symbol.GetAttributes()
-                         .Where(a => a.AttributeClass?.ContainingNamespace.ToString().StartsWith("Conqueror") ?? false)
+
+                         // filter out system attributes (specifically `AttributeUsageAttribute`) to prevent issues like infinite loops
+                         .Where(a => !(a.AttributeClass?.ContainingNamespace.ToString() ?? string.Empty).StartsWith("System"))
                          .Select(a => new AttributeDescriptor(a.AttributeClass!.Name,
                                                               a.AttributeClass.ContainingNamespace?.ToString() ?? string.Empty,
                                                               a.AttributeClass.ToString(),

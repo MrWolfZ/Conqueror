@@ -51,20 +51,20 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransp
             => typeof(TestSignal).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
 
-    partial record TestSignal : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransports.ITestTransportSignal<TestSignal>
+    partial record TestSignal : global::Signalling.WithCustomTransports.Transport1.ITestTransportSignal<TestSignal>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransports.ITestTransportSignalHandler<TestSignal, IHandler>;
+        partial interface IHandler : global::Signalling.WithCustomTransports.Transport1.ITestTransportSignalHandler<TestSignal, IHandler>;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
-        static string global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransports.ITestTransportSignal<TestSignal>.StringProperty => "Test";
+        static string global::Signalling.WithCustomTransports.Transport1.ITestTransportSignal<TestSignal>.StringProperty => "Test";
     }
 
-    partial record TestSignal : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransports.ITestTransport2Signal<TestSignal>
+    partial record TestSignal : global::Signalling.WithCustomTransports.Transport2.ITestTransport2Signal<TestSignal>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransports.ITestTransport2SignalHandler<TestSignal, IHandler>;
+        partial interface IHandler : global::Signalling.WithCustomTransports.Transport2.ITestTransport2SignalHandler<TestSignal, IHandler>;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
-        static string global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransports.ITestTransport2Signal<TestSignal>.StringProperty => "Test2";
+        static string global::Signalling.WithCustomTransports.Transport2.ITestTransport2Signal<TestSignal>.StringProperty => "Test2";
     }
 }
 

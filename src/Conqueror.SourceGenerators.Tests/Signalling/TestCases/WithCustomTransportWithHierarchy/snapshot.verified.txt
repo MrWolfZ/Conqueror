@@ -51,9 +51,9 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransp
             => typeof(TestSignal).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
 
-    partial record TestSignal : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransportWithHierarchy.ITestTransportSignal<TestSignal>
+    partial record TestSignal : global::Signalling.WithCustomTransportWithHierarchy.ITestTransportSignal<TestSignal>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransportWithHierarchy.ITestTransportSignalHandler<TestSignal, IHandler>;
+        partial interface IHandler : global::Signalling.WithCustomTransportWithHierarchy.ITestTransportSignalHandler<TestSignal, IHandler>;
     }
 }
 
@@ -110,9 +110,9 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransp
             => typeof(TestSignalSub).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
 
-    partial record TestSignalSub : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransportWithHierarchy.ITestTransportSignal<TestSignalSub>
+    partial record TestSignalSub : global::Signalling.WithCustomTransportWithHierarchy.ITestTransportSignal<TestSignalSub>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransportWithHierarchy.ITestTransportSignalHandler<TestSignalSub, IHandler>;
+        partial interface IHandler : global::Signalling.WithCustomTransportWithHierarchy.ITestTransportSignalHandler<TestSignalSub, IHandler>;
     }
 }
 

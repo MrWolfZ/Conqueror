@@ -60,9 +60,9 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
             => typeof(TestMessage).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
 
-    partial record TestMessage : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>
+    partial record TestMessage : global::Messaging.WithCustomTransportWithHierarchy.ITestTransportMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.ITestTransportMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler>;
+        partial interface IHandler : global::Messaging.WithCustomTransportWithHierarchy.ITestTransportMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler>;
     }
 }
 
@@ -128,9 +128,9 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
             => typeof(TestMessageSub).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
 
-    partial record TestMessageSub : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.ITestTransportMessage<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>
+    partial record TestMessageSub : global::Messaging.WithCustomTransportWithHierarchy.ITestTransportMessage<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.ITestTransportMessageHandler<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler>;
+        partial interface IHandler : global::Messaging.WithCustomTransportWithHierarchy.ITestTransportMessageHandler<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler>;
     }
 }
 

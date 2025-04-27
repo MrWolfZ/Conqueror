@@ -51,21 +51,21 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransp
             => typeof(TestSignal).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);
     }
 
-    partial record TestSignal : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransport.ITestTransportSignal<TestSignal>
+    partial record TestSignal : global::Signalling.WithCustomTransport.ITestTransportSignal<TestSignal>
     {
-        partial interface IHandler : global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransport.ITestTransportSignalHandler<TestSignal, IHandler>;
+        partial interface IHandler : global::Signalling.WithCustomTransport.ITestTransportSignalHandler<TestSignal, IHandler>;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
-        static string global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransport.ITestTransportSignal<TestSignal>.StringProperty => "Test";
+        static string global::Signalling.WithCustomTransport.ITestTransportSignal<TestSignal>.StringProperty => "Test";
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
-        static int global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransport.ITestTransportSignal<TestSignal>.IntProperty => 1;
+        static int global::Signalling.WithCustomTransport.ITestTransportSignal<TestSignal>.IntProperty => 1;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
-        static int[] global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransport.ITestTransportSignal<TestSignal>.IntArrayProperty => new[] { 1, 2, 3 };
+        static int[] global::Signalling.WithCustomTransport.ITestTransportSignal<TestSignal>.IntArrayProperty => new[] { 1, 2, 3 };
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
-        static string? global::Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransport.ITestTransportSignal<TestSignal>.NullProperty => null;
+        static string? global::Signalling.WithCustomTransport.ITestTransportSignal<TestSignal>.NullProperty => null;
     }
 }
 

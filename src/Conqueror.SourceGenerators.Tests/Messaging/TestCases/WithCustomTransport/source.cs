@@ -3,64 +3,73 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Conqueror;
 using Conqueror.Messaging;
+using Messaging.WithCustomTransport;
 
-namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport;
-
-[MessageTransport(Prefix = "TestTransport", Namespace = "Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport")]
-[AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public class TestTransportMessageAttribute : Attribute
+namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport
 {
-    public string? StringProperty { get; init; }
+    [TestTransportMessage<TestMessageResponse>(StringProperty = "Test", IntProperty = 1, IntArrayProperty = [1, 2, 3], NullProperty = null)]
+    public partial record TestMessage;
 
-    public int IntProperty { get; init; }
+    public record TestMessageResponse;
 
-    public int[]? IntArrayProperty { get; init; }
-
-    public string? NullProperty { get; init; }
-
-    public string? UnsetProperty { get; init; }
+    public partial class TestMessageHandler : TestMessage.IHandler
+    {
+        public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
 }
 
-[MessageTransport(Prefix = "TestTransport", Namespace = "Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport")]
-[AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public sealed class TestTransportMessageAttribute<TResponse> : TestTransportMessageAttribute;
-
-public interface ITestTransportMessage<out TMessage, TResponse> : IMessage<TMessage, TResponse>
-    where TMessage : class, ITestTransportMessage<TMessage, TResponse>
+namespace Messaging.WithCustomTransport
 {
-    static virtual string StringProperty => "Default";
+    [MessageTransport(Prefix = "TestTransport", Namespace = "Messaging.WithCustomTransport")]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public class TestTransportMessageAttribute : Attribute
+    {
+        public string? StringProperty { get; init; }
 
-    static virtual int IntProperty { get; }
+        public int IntProperty { get; init; }
 
-    static virtual int[] IntArrayProperty { get; } = [];
+        public int[]? IntArrayProperty { get; init; }
 
-    static virtual string? NullProperty { get; }
+        public string? NullProperty { get; init; }
 
-    static virtual string? UnsetProperty { get; }
-}
+        public string? UnsetProperty { get; init; }
+    }
 
-public interface ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
-    where TMessage : class, ITestTransportMessage<TMessage, TResponse>
-    where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
-{
-    static IMessageHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
-        where THandler : class, TIHandler
-        => throw new NotSupportedException();
-}
+    [MessageTransport(Prefix = "TestTransport", Namespace = "Messaging.WithCustomTransport")]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class TestTransportMessageAttribute<TResponse> : TestTransportMessageAttribute;
 
-[TestTransportMessage<TestMessageResponse>(StringProperty = "Test", IntProperty = 1, IntArrayProperty = [1, 2, 3], NullProperty = null)]
-public partial record TestMessage;
+    public interface ITestTransportMessage<out TMessage, TResponse> : IMessage<TMessage, TResponse>
+        where TMessage : class, ITestTransportMessage<TMessage, TResponse>
+    {
+        static virtual string StringProperty => "Default";
 
-public record TestMessageResponse;
+        static virtual int IntProperty { get; }
 
-public partial class TestMessageHandler : TestMessage.IHandler
-{
-    public Task<TestMessageResponse> Handle(TestMessage message, CancellationToken cancellationToken) => throw new NotSupportedException();
+        static virtual int[] IntArrayProperty { get; } = [];
+
+        static virtual string? NullProperty { get; }
+
+        static virtual string? UnsetProperty { get; }
+    }
+
+    public interface ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
+        where TMessage : class, ITestTransportMessage<TMessage, TResponse>
+        where TIHandler : class, ITestTransportMessageHandler<TMessage, TResponse, TIHandler>
+    {
+        static IMessageHandlerTypesInjector CreateTestTransportTypesInjector<THandler>()
+            where THandler : class, TIHandler
+            => throw new NotSupportedException();
+    }
 }
 
 // make the compiler happy during design time
-public partial record TestMessage
+namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransport
 {
-    public partial interface IHandler;
+    public partial record TestMessage
+    {
+        public partial interface IHandler;
+    }
 }
