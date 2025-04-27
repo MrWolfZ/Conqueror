@@ -9,7 +9,8 @@ public static class ConquerorHttpServerMessagingAspNetCoreServiceCollectionExten
 {
     public static IServiceCollection AddMessageEndpoints(this IServiceCollection services)
     {
-        _ = services.AddConqueror();
+        _ = services.AddConqueror()
+                    .AddEndpointsApiExplorer();
 
         services.TryAddEnumerable(
             ServiceDescriptor.Transient<IApiDescriptionProvider, ConquerorHttpServerMessagingEndpointMetadataApiDescriptionProvider>());
