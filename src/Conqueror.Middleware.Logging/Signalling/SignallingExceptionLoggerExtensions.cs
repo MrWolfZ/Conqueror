@@ -20,7 +20,7 @@ internal static partial class SignallingExceptionLoggerExtensions
 
     [LoggerMessage(
         EventName = "conqueror-signal-exception",
-        Message = "An exception occurred while handling {TransportTypeName:l} signal on {TransportRole:l} after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
+        Message = "An exception occurred while handling signal on {TransportTypeName:l} {TransportRole:l} after {ResponseLatency:0.0000}ms (Signal ID: {SignalId:l}, Trace ID: {TraceId:l})")]
     public static partial void LogSignalExceptionForTransport(this ILogger logger,
                                                               LogLevel logLevel,
                                                               Exception exception,

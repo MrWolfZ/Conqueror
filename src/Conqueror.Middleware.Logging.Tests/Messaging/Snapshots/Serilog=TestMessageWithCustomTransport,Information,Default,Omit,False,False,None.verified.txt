@@ -1,2 +1,4 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling message (Message ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Information] Handled message in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling message on test-transport sender (Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handling message on test-transport receiver (Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handled message on test-transport receiver in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handled message on test-transport sender in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

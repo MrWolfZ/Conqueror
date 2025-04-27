@@ -1,4 +1,8 @@
-﻿info: CustomCategory_TestMessageWithCustomJsonTypeInfo[0]
+﻿info: CustomCategory_TestMessageWithCustomJsonTypeInfo[711195907]
+      Handling message on in-process sender with payload {"MESSAGE_PAYLOAD":10} (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageWithCustomJsonTypeInfo[0]
       PreHook:TestMessageWithCustomJsonTypeInfo,test-message-id,test-trace-id
 info: CustomCategory_TestMessageWithCustomJsonTypeInfo[0]
       PostHook:TestMessageWithCustomJsonTypeInfoResponse,test-message-id,test-trace-id
+info: CustomCategory_TestMessageWithCustomJsonTypeInfo[412531951]
+      Handled message on in-process sender and got response {"RESPONSE_PAYLOAD":11} in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

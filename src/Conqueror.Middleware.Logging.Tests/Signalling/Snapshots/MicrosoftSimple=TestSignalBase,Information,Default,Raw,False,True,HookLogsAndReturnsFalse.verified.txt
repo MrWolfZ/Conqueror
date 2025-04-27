@@ -1,4 +1,6 @@
-﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[0]
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[441733974]
+      Handling signal on in-process publisher with payload TestSignalSub { PayloadBase = 10, PayloadSub = 11 } (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[0]
       PreHook:TestSignalSub,test-message-id,test-trace-id
 fail: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[0]
       ExceptionHook:TestException,test-message-id,test-trace-id
@@ -8,4 +10,13 @@ fail: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals
          at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
          at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx)
          at Conqueror.Signalling.SignalPipelineRunner`1.<>c__DisplayClass3_2.<Execute>b__1(TSignal signal, CancellationToken token) in {SolutionDirectory}src/Conqueror/Signalling/SignalPipelineRunner.cs:line FIXED
+
+fail: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[712209902]
+      An exception occurred while handling signal on in-process publisher after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals+TestException: test exception
+         at Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalBaseHandler.Handle(TestSignalBase signal, CancellationToken cancellationToken) in {ProjectDirectory}Signalling/LoggingMiddlewareTestSignals.cs:line FIXED
+         at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Signalling/LoggingSignalMiddleware.cs:line FIXED
+         at Conqueror.Signalling.SignalPipelineRunner`1.Execute(IServiceProvider serviceProvider, TSignal initialSignal, ISignalPublisher`1 publisher, SignalTransportType transportType, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Signalling/SignalPipelineRunner.cs:line FIXED
+         at Conqueror.Signalling.SignalDispatcher`1.Dispatch(TSignal signal, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Signalling/SignalDispatcher.cs:line FIXED
+         at Conqueror.Signalling.SequentialSignalBroadcastingStrategy.BroadcastSignal[TSignal](IReadOnlyCollection`1 signalHandlerInvocationFns, IServiceProvider serviceProvider, TSignal signal, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Signalling/SequentialSignalBroadcastingStrategy.cs:line FIXED
 

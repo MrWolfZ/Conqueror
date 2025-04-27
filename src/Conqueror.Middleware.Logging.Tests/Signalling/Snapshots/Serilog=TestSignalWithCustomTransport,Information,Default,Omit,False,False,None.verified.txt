@@ -1,2 +1,4 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling signal (Signal ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Information] Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling signal on test-transport publisher (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handling signal on test-transport receiver (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handled signal on test-transport receiver in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handled signal on test-transport publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

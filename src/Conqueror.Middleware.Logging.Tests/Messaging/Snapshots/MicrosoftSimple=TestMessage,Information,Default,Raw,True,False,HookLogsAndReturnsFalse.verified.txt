@@ -1,4 +1,8 @@
-﻿info: CustomCategory_TestMessage[0]
+﻿info: CustomCategory_TestMessage[711195907]
+      Handling message on in-process sender with payload TestMessage { Payload = 10 } (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessage[0]
       PreHook:TestMessage,test-message-id,test-trace-id
 info: CustomCategory_TestMessage[0]
       PostHook:TestMessageResponse,test-message-id,test-trace-id
+info: CustomCategory_TestMessage[412531951]
+      Handled message on in-process sender and got response TestMessageResponse { Payload = 11 } in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

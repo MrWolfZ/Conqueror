@@ -1,2 +1,8 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] PreHook:"TestSignalWithCustomTransport","test-message-id","test-trace-id"
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling signal on test-transport publisher with payload
+{
+  "Payload": 10
+}
+(Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] PreHook:"TestSignalWithCustomTransport","test-message-id","test-trace-id"
 2020-01-01 00:00:00.000 +00:00 [Information] PostHook:"test-message-id","test-trace-id"
+2020-01-01 00:00:00.000 +00:00 [Information] Handled signal on test-transport publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

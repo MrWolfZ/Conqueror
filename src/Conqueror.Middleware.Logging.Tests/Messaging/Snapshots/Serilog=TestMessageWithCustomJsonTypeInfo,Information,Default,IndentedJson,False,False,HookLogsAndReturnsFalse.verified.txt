@@ -1,2 +1,12 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] PreHook:"TestMessageWithCustomJsonTypeInfo","test-message-id","test-trace-id"
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling message on in-process sender with payload
+{
+  "MESSAGE_PAYLOAD": 10
+}
+(Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] PreHook:"TestMessageWithCustomJsonTypeInfo","test-message-id","test-trace-id"
 2020-01-01 00:00:00.000 +00:00 [Information] PostHook:"TestMessageWithCustomJsonTypeInfoResponse","test-message-id","test-trace-id"
+2020-01-01 00:00:00.000 +00:00 [Information] Handled message on in-process sender and got response
+{
+  "RESPONSE_PAYLOAD": 11
+}
+in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

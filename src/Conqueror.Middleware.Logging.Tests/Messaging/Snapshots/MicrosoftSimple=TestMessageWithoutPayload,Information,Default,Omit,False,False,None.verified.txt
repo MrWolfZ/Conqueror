@@ -1,4 +1,8 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutPayload[711195907]
+      Handling message on in-process sender (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutPayload[711195907]
       Handling message (Message ID: test-message-id, Trace ID: test-trace-id)
 info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutPayload[412531951]
       Handled message in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutPayload[412531951]
+      Handled message on in-process sender in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

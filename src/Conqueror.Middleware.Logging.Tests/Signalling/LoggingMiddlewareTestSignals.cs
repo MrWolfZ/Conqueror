@@ -363,34 +363,26 @@ public static partial class LoggingMiddlewareTestSignals
                     {
                         var preExecutionLogRegexBuilder = new StringBuilder();
 
-                        _ = preExecutionLogRegexBuilder.Append("Handling ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = preExecutionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = preExecutionLogRegexBuilder.Append("signal ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = preExecutionLogRegexBuilder.Append("on ").Append(publisherTransportRole).Append(' ');
-                        }
+                        _ = preExecutionLogRegexBuilder.Append("Handling signal on ")
+                                                       .Append(TransportTypeName ?? "in-process")
+                                                       .Append(' ')
+                                                       .Append(publisherTransportRole)
+                                                       .Append(' ');
 
                         if (hasPayload)
                         {
-                            if (PayloadLoggingStrategy is Logging.PayloadLoggingStrategy.Raw)
+                            if (PayloadLoggingStrategy is Conqueror.PayloadLoggingStrategy.Raw)
                             {
                                 _ = preExecutionLogRegexBuilder.Append($"with payload {Signal} ");
                             }
 
-                            if (PayloadLoggingStrategy is Logging.PayloadLoggingStrategy.IndentedJson)
+                            if (PayloadLoggingStrategy is Conqueror.PayloadLoggingStrategy.IndentedJson)
                             {
                                 var json = JsonSerializer.Serialize(JsonDocument.Parse(SignalJson!), new JsonSerializerOptions { WriteIndented = true });
                                 _ = preExecutionLogRegexBuilder.Append($"with payload{Environment.NewLine}      {json.Replace(Environment.NewLine, $"{Environment.NewLine}      ")}{Environment.NewLine}      ");
                             }
 
-                            if (PayloadLoggingStrategy is Logging.PayloadLoggingStrategy.MinimalJson or null)
+                            if (PayloadLoggingStrategy is Conqueror.PayloadLoggingStrategy.MinimalJson or null)
                             {
                                 _ = preExecutionLogRegexBuilder.Append($"with payload {SignalJson} ");
                             }
@@ -402,14 +394,13 @@ public static partial class LoggingMiddlewareTestSignals
 
                         yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionSignal);
 
-                        if (TransportTypeName is not null)
-                        {
-                            _ = preExecutionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole);
+                        _ = TransportTypeName is not null
+                            ? preExecutionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole)
+                            : preExecutionLogRegexBuilder.Replace($"on in-process {publisherTransportRole} ", string.Empty);
 
-                            var preExecutionServerSignal = new Regex(preExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var preExecutionServerSignal = new Regex(preExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                            yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionServerSignal);
-                        }
+                        yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionServerSignal);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
@@ -425,19 +416,11 @@ public static partial class LoggingMiddlewareTestSignals
                     {
                         var postExecutionLogRegexBuilder = new StringBuilder();
 
-                        _ = postExecutionLogRegexBuilder.Append("Handled ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = postExecutionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = postExecutionLogRegexBuilder.Append("signal ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = postExecutionLogRegexBuilder.Append("on ").Append(publisherTransportRole).Append(' ');
-                        }
+                        _ = postExecutionLogRegexBuilder.Append("Handled signal on ")
+                                                        .Append(TransportTypeName ?? "in-process")
+                                                        .Append(' ')
+                                                        .Append(publisherTransportRole)
+                                                        .Append(' ');
 
                         _ = postExecutionLogRegexBuilder.Append(@"in [0-9]+\.[0-9]+ms \(Signal ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
 
@@ -445,14 +428,13 @@ public static partial class LoggingMiddlewareTestSignals
 
                         yield return (PostExecutionLogLevel ?? LogLevel.Information, postExecutionSignal);
 
-                        if (TransportTypeName is not null)
-                        {
-                            _ = postExecutionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole);
+                        _ = TransportTypeName is not null
+                            ? postExecutionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole)
+                            : postExecutionLogRegexBuilder.Replace($"on in-process {publisherTransportRole} ", string.Empty);
 
-                            var postExecutionServerSignal = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var postExecutionServerSignal = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                            yield return (PreExecutionLogLevel ?? LogLevel.Information, postExecutionServerSignal);
-                        }
+                        yield return (PreExecutionLogLevel ?? LogLevel.Information, postExecutionServerSignal);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
@@ -468,19 +450,11 @@ public static partial class LoggingMiddlewareTestSignals
                     {
                         var exceptionLogRegexBuilder = new StringBuilder();
 
-                        _ = exceptionLogRegexBuilder.Append("An exception occurred while handling ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = exceptionLogRegexBuilder.Append(TransportTypeName).Append(' ');
-                        }
-
-                        _ = exceptionLogRegexBuilder.Append("signal ");
-
-                        if (TransportTypeName is not null)
-                        {
-                            _ = exceptionLogRegexBuilder.Append("on ").Append(publisherTransportRole).Append(' ');
-                        }
+                        _ = exceptionLogRegexBuilder.Append("An exception occurred while handling signal on ")
+                                                    .Append(TransportTypeName ?? "in-process")
+                                                    .Append(' ')
+                                                    .Append(publisherTransportRole)
+                                                    .Append(' ');
 
                         _ = exceptionLogRegexBuilder.Append(@"after [0-9]+\.[0-9]+ms \(Signal ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
 
@@ -490,14 +464,13 @@ public static partial class LoggingMiddlewareTestSignals
 
                         yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionSignal);
 
-                        if (TransportTypeName is not null)
-                        {
-                            _ = exceptionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole);
+                        _ = TransportTypeName is not null
+                            ? exceptionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole)
+                            : exceptionLogRegexBuilder.Replace($"on in-process {publisherTransportRole} ", string.Empty);
 
-                            var exceptionServerSignal = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var exceptionServerSignal = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                            yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionServerSignal);
-                        }
+                        yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionServerSignal);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)

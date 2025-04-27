@@ -1,2 +1,4 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] PreHook:"TestMessage","test-message-id","test-trace-id"
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling message on in-process sender (Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] PreHook:"TestMessage","test-message-id","test-trace-id"
 2020-01-01 00:00:00.000 +00:00 [Information] PostHook:"TestMessageResponse","test-message-id","test-trace-id"
+2020-01-01 00:00:00.000 +00:00 [Information] Handled message on in-process sender in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
