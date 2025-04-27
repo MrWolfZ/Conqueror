@@ -15,6 +15,36 @@ resharper_member_can_be_private_global_highlighting = none
 # we don't really care about performance in test code
 resharper_usage_of_default_struct_equality_highlighting = none
 
+[*/Conqueror.SourceGenerators.Tests/*/TestCases/*/source.cs]
+# in the test files for source generators we need to disable some rules
+# since they cause false positives
+resharper_check_namespace_highlighting = error
+resharper_class_never_instantiated_global_highlighting = none
+resharper_class_never_instantiated_local_highlighting = none
+resharper_not_accessed_positional_property_global_highlighting = none
+resharper_partial_type_with_single_part_highlighting = none
+resharper_redundant_nullable_directive_highlighting = none
+resharper_static_member_in_generic_type_highlighting = none
+resharper_unassigned_get_only_auto_property_highlighting = none
+resharper_unused_auto_property_accessor_global_highlighting = none
+resharper_unused_member_global_highlighting = none
+resharper_unused_member_local_highlighting = none
+resharper_unused_parameter_global_highlighting = none
+resharper_unused_parameter_local_highlighting = none
+resharper_unused_type_global_highlighting = none
+resharper_unused_type_local_highlighting = none
+resharper_unused_type_parameter_highlighting = none
+
+dotnet_diagnostic.CA1000.severity = none # do not declare static members on generic types
+dotnet_diagnostic.CA1813.severity = none # avoid unsealed attributes
+dotnet_diagnostic.CA1819.severity = none # properties should not return arrays
+
+dotnet_diagnostic.SA1403.severity = none # file may only contain a single namespace
+dotnet_diagnostic.SA1649.severity = none # file name should match first type name
+
+dotnet_diagnostic.S1144.severity = none # unused private types or members should be removed
+dotnet_diagnostic.S2326.severity = none # unused type parameters should be removed
+
 [*.csproj]
 end_of_line = lf
 indent_size = 4
