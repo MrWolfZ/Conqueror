@@ -90,7 +90,7 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
 
         if (parameterlessConstructor is null)
         {
-            throw new InvalidOperationException($"HTTP query string deserialization requires a public parameterless constructor for message type '{typeof(TMessage)}'");
+            throw new InvalidOperationException($"could not find a matching constructor or public parameterless constructor for message type '{typeof(TMessage)}'");
         }
 
         var message = parameterlessConstructor.Invoke([]) as TMessage
@@ -144,7 +144,7 @@ public sealed class HttpMessageQueryStringSerializer<TMessage, TResponse> : IHtt
                            Parameters = c.GetParameters(),
                            MatchCount = c.GetParameters().Count(p => (p.Name is not null && queryParamNames.Contains(p.Name)) || p.HasDefaultValue),
                        })
-                       .FirstOrDefault(x => x.MatchCount == queryParamNames.Count)
+                       .FirstOrDefault(x => x.MatchCount >= queryParamNames.Count)
                        ?.Constructor;
     }
 

@@ -59,6 +59,11 @@ public sealed class MessagingServerApiDescriptionTests
         {
             Assert.That(messageApiDescription.ParameterDescriptions[0].Type, Is.EqualTo(testCase.MessageType));
         }
+
+        if (testCase.Message is TestMessageWithGetWithOptionalPayload or TestMessageWithGetWithPrimaryConstructorWithOptionalParameters)
+        {
+            Assert.That(messageApiDescription.ParameterDescriptions.Select(p => p.IsRequired), Is.EqualTo(new[] { false, false }));
+        }
     }
 
     [Test]
