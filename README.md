@@ -1,203 +1,481 @@
 <!-- markdownlint-disable MD033 -->
 
-# Conqueror - for building scalable & maintainable .NET applications
+# Conqueror - a highly ergonomic messaging library for .NET
 
-> ATTENTION: This project is currently undergoing an extensive API redesign that includes replacing **CQS** with a more generic **Messaging** module, reducing the number of libraries by unifying **Messaging**, **Eventing** and **Streaming** modules into a single set of libraries, using source generators instead of reflection for AOT compatibility, moving the configuration of transports to the call site for more obvious code and easier debuggability, and more (see branch [feature/messaging-lib](https://github.com/MrWolfZ/Conqueror/tree/feature/messaging-lib)). Therefore, contrary to what some of this README says, everything in here is still subject to change. Therefore please do not yet use this project for any production application.
-
-**Conqueror** is a set of libraries that helps you build .NET applications in a structured way, using patterns like [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as middlewares), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), and [data streams](https://en.wikipedia.org/wiki/Data_stream).
+**Conqueror** is a set of libraries that helps you build .NET applications in a structured way, using patterns like [messaging](https://en.wikipedia.org/wiki/Messaging_pattern), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as middlewares), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), and [data streams](https://en.wikipedia.org/wiki/Data_stream).
 
 **Conqueror** encourages clean architectures by decoupling your application logic from concrete transports like HTTP, and allows exposing business operations via many different transports with thin adapters. **Conqueror** makes it simple to build modular monoliths or distributed systems with clear contracts between different modules and applications. It also allows to transition from a modular monolith to a distributed system with minimal friction, giving teams the flexibility to start simple and delay the transition until the right time in a project's lifecycle.
-
-See our [quickstart](#quickstart) or [example projects](examples) if you want to jump right into code examples for using **Conqueror**. Or head over to our [recipes](#recipes) for more detailed guidance on how you can utilize **Conqueror** to its maximum. Finally, if you want to learn more about the motivation behind this project (including comparisons to similar projects like [MediatR](https://github.com/jbogard/MediatR)), head over to the [motivation](#motivation) section.
 
 [![Build Status](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml/badge.svg)](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml)
 [![license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Conqueror** only supports [.NET 6 or later](https://dotnet.microsoft.com/en-us/download)
-
-## Libraries
-
-### **Conqueror.CQS**
-
-[![status-stable](https://img.shields.io/badge/status-stable-brightgreen)](https://www.nuget.org/packages/Conqueror.CQS/)
-
-Split your business processes into simple-to-maintain and easy-to-test pieces of code using the [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) pattern. Handle cross-cutting concerns like logging, validation, authorization etc. using configurable middlewares. Keep your applications scalable by moving commands and queries from a modular monolith to a distributed application with minimal friction.
-
-Head over to our [CQS recipes](#cqs-introduction) for more guidance on how to use this library.
-
-[![NuGet version (Conqueror.CQS)](https://img.shields.io/nuget/v/Conqueror.CQS?label=Conqueror.CQS)](https://www.nuget.org/packages/Conqueror.CQS/)
-[![NuGet version (Conqueror.CQS.Abstractions)](https://img.shields.io/nuget/v/Conqueror.CQS.Abstractions?label=Conqueror.CQS.Abstractions)](https://www.nuget.org/packages/Conqueror.CQS.Abstractions/)
-[![NuGet version (Conqueror.CQS.Analyzers)](https://img.shields.io/nuget/v/Conqueror.CQS.Analyzers?label=Conqueror.CQS.Analyzers)](https://www.nuget.org/packages/Conqueror.CQS.Analyzers/)
-
-**Middlewares:**
-
-[![NuGet version (Conqueror.CQS.Middleware.Authentication)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Authentication?label=Conqueror.CQS.Middleware.Authentication)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Authentication/)
-[![NuGet version (Conqueror.CQS.Middleware.Authorization)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Authorization?label=Conqueror.CQS.Middleware.Authorization)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Authorization/)
-[![NuGet version (Conqueror.CQS.Middleware.DataAnnotationValidation)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.DataAnnotationValidation?label=Conqueror.CQS.Middleware.DataAnnotationValidation)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.DataAnnotationValidation/)
-[![NuGet version (Conqueror.CQS.Middleware.Logging)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Logging?label=Conqueror.CQS.Middleware.Logging)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Logging/)
-[![NuGet version (Conqueror.CQS.Middleware.Polly)](https://img.shields.io/nuget/v/Conqueror.CQS.Middleware.Polly?label=Conqueror.CQS.Middleware.Polly)](https://www.nuget.org/packages/Conqueror.CQS.Middleware.Polly/)
-
-**Transports:**
-
-[![NuGet version (Conqueror.CQS.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Server.AspNetCore?label=Conqueror.CQS.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Server.AspNetCore/)
-[![NuGet version (Conqueror.CQS.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.CQS.Transport.Http.Client?label=Conqueror.CQS.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.CQS.Transport.Http.Client/)
-
-### Experimental Libraries
-
-The libraries below are still experimental. This means they do not have a stable API and are missing code documentation and recipes. They are therefore not suited for use in production applications, but can be used in proofs-of-concept or toy apps. If you use any of the experimental libraries and find bugs or have ideas for improving them, please don't hesitate to [create an issue](https://github.com/MrWolfZ/Conqueror/issues/new).
-
-<details>
-<summary>Click here to see experimental libraries</summary>
-
-### **Conqueror.Eventing**
-
-[![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Eventing/)
-
-Decouple your application logic by using in-process event publishing using the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Handle cross-cutting concerns like logging, tracing, filtering etc. using configurable middlewares. Keep your applications scalable by moving events from a modular monolith to a distributed application with minimal friction.
-
-Head over to our [eventing recipes](#eventing-introduction) for more guidance on how to use this library.
-
-[![NuGet version (Conqueror.Eventing)](https://img.shields.io/nuget/v/Conqueror.Eventing?label=Conqueror.Eventing)](https://www.nuget.org/packages/Conqueror.Eventing/)
-[![NuGet version (Conqueror.Eventing.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Eventing.Abstractions?label=Conqueror.Eventing.Abstractions)](https://www.nuget.org/packages/Conqueror.Eventing.Abstractions/)
-
-### **Conqueror.Streaming**
-
-[![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming/)
-
-Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace using a pull-based approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
-
-Head over to our [streaming recipes](#streaming-introduction) for more guidance on how to use this library.
-
-[![NuGet version (Conqueror.Streaming)](https://img.shields.io/nuget/v/Conqueror.Streaming?label=Conqueror.Streaming)](https://www.nuget.org/packages/Conqueror.Streaming/)
-[![NuGet version (Conqueror.Streaming.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Streaming.Abstractions?label=Conqueror.Streaming.Abstractions)](https://www.nuget.org/packages/Conqueror.Streaming.Abstractions/)
-
-**Transports:**
-
-[![NuGet version (Conqueror.Streaming.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.Streaming.Transport.Http.Server.AspNetCore?label=Conqueror.Streaming.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.Streaming.Transport.Http.Server.AspNetCore/)
-[![NuGet version (Conqueror.Streaming.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.Streaming.Transport.Http.Client?label=Conqueror.Streaming.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.Streaming.Transport.Http.Client/)
-
-</details>
+> **Conqueror** only supports [.NET 8 or later](https://dotnet.microsoft.com/en-us/download)
 
 ## Quickstart
 
 This quickstart guide will let you jump right into the code without lengthy explanations (for more guidance head over to our [recipes](#recipes)). By following this guide you'll add HTTP commands and queries to your ASP.NET Core application. You can also find the [source code](recipes/quickstart) here in the repository.
 
 ```sh
-# add relevant CQS packages
-dotnet add package Conqueror.CQS
-dotnet add package Conqueror.CQS.Middleware.Logging
-dotnet add package Conqueror.CQS.Transport.Http.Server.AspNetCore
+dotnet new webapi -n Quickstart && cd Quickstart
+dotnet add package Conqueror --prerelease
+dotnet add package Conqueror.Middleware.Logging --prerelease
+dotnet add package Conqueror.Transport.Http.Server.AspNetCore --prerelease
+dotnet add package Swashbuckle.AspNetCore # to get a nice Swagger UI
 ```
 
+Let's start by defining the contracts of our quickstart application in [Contracts.cs](recipes/quickstart/Contracts.cs):
+
 ```cs
-// add Conqueror CQS to your services
-builder.Services.AddConquerorCQSTypesFromExecutingAssembly();
+using System.ComponentModel.DataAnnotations;
+using Conqueror;
+
+namespace Quickstart;
+
+// In Conqueror, everything revolves around contracts of different kinds: messages, signals, and
+// iterators (the latter is still experimental and therefore not yet included in the Quickstart).
+// The contracts are simple records or classes marked by one or more attributes which determine the
+// kind and transports (in-process, HTTP, gRPC, RabbitMQ, etc.) of the contract. A source generator
+// is used to enhance the contracts with additional code, and therefore they must be partial
+
+// Note that using transports is fully optional, and if you want you can use Conqueror purely
+// in-process, similar to libraries like MediatR
+
+// The `HttpMessage` attribute tells Conqueror that this record can be exposed via HTTP (using
+// the corresponding transport package). The attribute allows customizing the HTTP endpoint method,
+// path, path prefix, version, API group name, etc. (note that all are optional with sensible
+// defaults, in this case leading to `POST /api/v1/incrementCounterByAmount`)
+[HttpMessage<CounterIncrementedResponse>(Version = "v1")]
+public sealed partial record IncrementCounterByAmount(string CounterName)
+{
+    // We use simple data annotation validation as an example, but more powerful validation
+    // tools like FluentValidation are also supported. Note that the built-in .NET data annotation
+    // validation is only supported for properties, not constructor parameters
+    [Range(1, long.MaxValue)]
+    public required long IncrementBy { get; init; }
+}
+
+public sealed record CounterIncrementedResponse(long NewCounterValue);
+
+// By default, HTTP messages are sent and received as POST, but all methods are supported.
+// Parameters can be optional, and messages can have enumerable responses as well
+[HttpMessage<List<CounterValue>>(HttpMethod = "GET", Version = "v1")]
+public sealed partial record GetCounters(string? Prefix = null);
+
+public sealed record CounterValue(string CounterName, long Value);
+
+// Signals are a pub/sub mechanism, and can be handled in-process (like we do in this quickstart)
+// or published via a transport like RabbitMQ (using the corresponding transport package)
+[Signal]
+public sealed partial record CounterIncremented(
+    string CounterName,
+    long NewValue,
+    long IncrementBy);
+```
+
+In [CountersRepository.cs](recipes/quickstart/CountersRepository.cs) create a simple repository to simulate talking to a database:
+
+```cs
+using System.Collections.Concurrent;
+
+namespace Quickstart;
+
+// simulate a database repository (which is usually async)
+internal sealed class CountersRepository
+{
+    private readonly ConcurrentDictionary<string, long> counters = new();
+
+    public async Task<long> AddOrIncrementCounterValue(string counterName, long incrementBy)
+    {
+        await Task.CompletedTask;
+        return counters.AddOrUpdate(counterName, incrementBy, (_, value) => value + incrementBy);
+    }
+
+    public async Task<long> GetCounterValue(string counterName)
+    {
+        await Task.CompletedTask;
+        return counters.GetValueOrDefault(counterName, 0L);
+    }
+
+    public async Task<IReadOnlyDictionary<string, long>> GetCounters()
+    {
+        await Task.CompletedTask;
+        return counters;
+    }
+}
+```
+
+In [IncrementCounterByAmountHandler.cs](recipes/quickstart/IncrementCounterByAmountHandler.cs) create a message handler for our `IncrementCounterByAmount` message type.
+
+```cs
+using System.ComponentModel.DataAnnotations;
+using Conqueror;
+
+namespace Quickstart;
+
+// The handler type is also enhanced by the Conqueror source generator, so it must be partial
+internal sealed partial class IncrementCounterByAmountHandler(
+        CountersRepository repository,
+        ISignalPublishers publishers)
+
+    // This interface (among other things) is generated by a source generator
+    : IncrementCounterByAmount.IHandler
+{
+    // Configure a pipeline of middlewares which is executed for every message
+    public static void ConfigurePipeline(IncrementCounterByAmount.IPipeline pipeline) =>
+        pipeline
+
+            // Conqueror ships with a handful of useful middleware packages
+            // for common cross-cutting concerns like logging and authorization
+            .UseLogging(o => o.MessagePayloadLoggingStrategy = PayloadLoggingStrategy.IndentedJson)
+
+            // Pipelines can have inline middlewares for ad-hoc logic (or you can
+            // build a full-fledged middleware; see the recipes for more details)
+            .Use(ctx =>
+            {
+                // Perform a simple data annotation validation (in a real application you would
+                // likely use a more powerful validation library like FluentValidation)
+                Validator.ValidateObject(ctx.Message, new(ctx.Message), true);
+
+                // Note that the middleware has access to the message with its proper type(i.e.
+                // the compiler knows that `ctx.Message` is of type `IncrementCounterByAmount`),
+                // so you could also write the validation directly like this:
+                if (ctx.Message.IncrementBy <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(ctx.Message.IncrementBy),
+                                                          "increment amount must be positive");
+                }
+
+                return ctx.Next(ctx.Message, ctx.CancellationToken);
+            })
+
+            // Middlewares which have been added to a pipeline can be configured further
+            .ConfigureLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
+
+    public async Task<CounterIncrementedResponse> Handle(
+        IncrementCounterByAmount message,
+        CancellationToken cancellationToken = default)
+    {
+        var newValue = await repository.AddOrIncrementCounter(message.CounterName,
+                                                              message.IncrementBy);
+
+        // `ISignalPublishers` is a factory to get a publisher for a signal type. The
+        // `CounterIncremented.T` property is generated by the source generator and is used for
+        // type inference. The 'For' method returns a `CounterIncremented.IHandler` (which is a
+        // proxy for the actual signal handlers)
+        await publishers.For(CounterIncremented.T)
+
+                        // You can customize the transport which is used to publish the signal
+                        // (e.g. sending it via RabbitMQ), but here we configure the in-process
+                        // transport to use parallel broadcasting for demonstration (instead of
+                        // the default sequential broadcasting). You can also pass your own custom
+                        // strategy if you need it
+                        .WithTransport(b => b.UseInProcessWithParallelBroadcastingStrategy())
+
+                        // The 'Handle' method is unique for each `IHandler`. This means that your
+                        // IDE's "Go to Implementation" feature will show all signal handlers for
+                        // this signal, making it simple to find all the places in your code where
+                        // a signal is used
+                        .Handle(new(message.CounterName, newValue, message.IncrementBy),
+                                cancellationToken);
+
+        return new(await repository.GetCounterValue(message.CounterName));
+    }
+}
+```
+
+In [DoublingCounterIncrementedHandler.cs](recipes/quickstart/DoublingCounterIncrementedHandler.cs) create a signal handler that doubles increment operations on specific counters.
+
+```cs
+using Conqueror;
+
+namespace Quickstart;
+
+internal sealed partial class DoublingCounterIncrementedHandler(
+    IMessageSenders senders)
+    : CounterIncremented.IHandler
+{
+    // Signal handlers support handling multiple signal types (by adding more `IHandler`
+    // interfaces), so the pipeline configuration is generic and is reused for all signal types
+    // (`typeof(T)` can be checked to customize the pipeline for a specific signal type)
+    static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
+        pipeline.Use(ctx =>
+                {
+                    // we are only interested in specific signals, so we skip the handler (and the
+                    // rest of the pipeline) for all others
+                    if (ctx.Signal is CounterIncremented { CounterName: "doubler" })
+                    {
+                        return ctx.Next(ctx.Signal, ctx.CancellationToken);
+                    }
+
+                    return Task.CompletedTask;
+                })
+                .Use(ctx =>
+                {
+                    // Below in the 'Handle' method we call 'IncrementCounterByAmount' again,
+                    // which could lead to an infinite loop. Conqueror "flows" context data
+                    // across different executions, which is useful here to handle a signal
+                    // only once per HTTP request
+                    if (ctx.ConquerorContext.ContextData.Get<bool>("doubled"))
+                    {
+                        return Task.CompletedTask;
+                    }
+
+                    ctx.ConquerorContext.ContextData.Set("doubled", true);
+
+                    return ctx.Next(ctx.Signal, ctx.CancellationToken);
+                })
+                .UseLogging(o => o.PayloadLoggingStrategy = PayloadLoggingStrategy.IndentedJson);
+
+    public async Task Handle(
+        CounterIncremented signal,
+        CancellationToken cancellationToken = default)
+    {
+        await senders
+              .For(IncrementCounterByAmount.T)
+
+              // When calling a message (or signal, etc.) handler, you can specify a sender
+              // pipeline, which is executed before the message is sent via the configured
+              // transport (and on the receiver the handler's own pipeline is then also executed)
+              .WithPipeline(p => p.UseLogging(o =>
+              {
+                  o.PreExecutionHook = ctx =>
+                  {
+                      // Let's log a custom log message instead of Conqueror's default
+                      ctx.Logger.LogInformation(
+                          "doubling increment of counter '{CounterName}'",
+                          ctx.Message.CounterName);
+                      return false;
+                  };
+
+                  o.PostExecutionHook = ctx =>
+                  {
+                      ctx.Logger.LogInformation(
+                          "doubled increment of counter '{CounterName}', it is now {NewValue}",
+                          ctx.Message.CounterName,
+                          ctx.Response.NewCounterValue);
+                      return false;
+                  };
+              }))
+
+              // You can customize the transport which is used to send the message (e.g. sending it
+              // via HTTP), but for demonstration we use the in-process transport (which already
+              // happens by default)
+              .WithTransport(b => b.UseInProcess())
+
+              // The 'Handle' method is unique for each `IHandler`, so "Go to Implementation" in
+              // your IDE will jump directly to your handler, enabling smooth code base navigation,
+              // even across different projects and transports
+              .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
+                      cancellationToken);
+    }
+}
+```
+
+In [GetCountersHandler.cs](recipes/quickstart/GetCountersHandler.cs) create a message handler that returns a filtered list of counters.
+
+```cs
+using Conqueror;
+
+namespace Quickstart;
+
+internal sealed partial class GetCountersHandler(
+    CountersRepository repository)
+    : GetCounters.IHandler
+{
+    public static void ConfigurePipeline(GetCounters.IPipeline pipeline) =>
+        pipeline.UseLogging(o =>
+        {
+            // The pipeline has access to the service provider from the scope of the call to the
+            // handler in case you need it to resolve some services
+            var isDevelopment = pipeline.ServiceProvider
+                                        .GetRequiredService<IHostEnvironment>()
+                                        .IsDevelopment();
+
+            // The logging middleware supports detailed configuration options. For example, like
+            // here we can omit verbose output from the logs in production. Note that in a real
+            // application you would wrap such logic into an extension method (leveraging
+            // `ConfigureLogging`) to make it reusable across message types. And thanks to the
+            // builder pattern, you could then call it simply like this:
+            // `pipeline.UseLogging().OmitResponseFromLogsInProduction()`
+            o.ResponsePayloadLoggingStrategy = isDevelopment
+                ? PayloadLoggingStrategy.IndentedJson
+                : PayloadLoggingStrategy.Omit;
+
+            // You can also make the logging strategy dependent on the message or response
+            // payloads, e.g. to omit confidential data from the logs
+            o.ResponsePayloadLoggingStrategyFactory = (_, resp)
+                => resp.Any(c => c.CounterName == "confidential")
+                    ? PayloadLoggingStrategy.Omit
+                    : o.ResponsePayloadLoggingStrategy;
+        });
+
+    public async Task<List<CounterValue>> Handle(
+        GetCounters message,
+        CancellationToken cancellationToken = default)
+    {
+        var allCounters = await repository.GetCounters();
+
+        return allCounters.Where(p => message.Prefix is null || p.Key.StartsWith(message.Prefix))
+                          .Select(p => new CounterValue(p.Key, p.Value))
+                          .ToList();
+    }
+}
+```
+
+Finally, set up the app in [Program.cs](recipes/quickstart/Program.cs):
+
+```cs
+using Quickstart;
+
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-       .AddControllers()
-       .AddConquerorCQSHttpControllers();
+       .AddSingleton<CountersRepository>()
 
-// add Conqueror to your web app (just before mapping endpoints / controllers)
-app.UseConqueror();
-app.MapControllers();
+       // This registers all the handlers in the project; alternatively, you can register
+       // individual handlers as well
+       .AddMessageHandlersFromAssembly(typeof(Program).Assembly)
+       .AddSignalHandlersFromAssembly(typeof(Program).Assembly)
+
+       // Add some services that Conqueror needs to properly expose messages via HTTP
+       .AddMessageEndpoints()
+
+       // Let's enable Swashbuckle to get a nice Swagger UI
+       .AddSwaggerGen();
+
+var app = builder.Build();
+
+app.UseSwagger()
+   .UseSwaggerUI();
+
+// This enables message handlers as minimal HTTP API endpoints (including in AOT mode
+// if you need that, although please check the corresponding recipe for more details)
+app.MapMessageEndpoints();
+
+app.Run();
 ```
 
-In [IncrementCounterByCommand.cs](recipes/quickstart/IncrementCounterByCommand.cs) create a command that increments a named counter by a given amount (for demonstration purposes the counter is stored in an environment variable instead of a database).
-
-```cs
-using Conqueror;
-
-namespace Quickstart;
-
-[HttpCommand(Version = "v1")]
-public sealed record IncrementCounterByCommand(string CounterName, int IncrementBy);
-
-public sealed record IncrementCounterByCommandResponse(int NewCounterValue);
-
-public interface IIncrementCounterByCommandHandler
-    : ICommandHandler<IncrementCounterByCommand, IncrementCounterByCommandResponse>;
-
-internal sealed class IncrementCounterByCommandHandler
-    : IIncrementCounterByCommandHandler
-{
-    public static void ConfigurePipeline(ICommandPipeline<IncrementCounterByCommand, IncrementCounterByCommandResponse> pipeline) =>
-        pipeline.UseLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
-
-    public async Task<IncrementCounterByCommandResponse> Handle(IncrementCounterByCommand command,
-                                                                CancellationToken cancellationToken = default)
-    {
-        // simulate an asynchronous operation
-        await Task.CompletedTask;
-
-        var envVariableName = $"QUICKSTART_COUNTERS_{command.CounterName}";
-        var counterValue = int.Parse(Environment.GetEnvironmentVariable(envVariableName) ?? "0");
-        var newCounterValue = counterValue + command.IncrementBy;
-        Environment.SetEnvironmentVariable(envVariableName, newCounterValue.ToString());
-        return new(newCounterValue);
-    }
-}
-```
-
-In [GetCounterValueQuery.cs](recipes/quickstart/GetCounterValueQuery.cs) create a query that returns the value of a counter with the given name.
-
-```cs
-using Conqueror;
-
-namespace Quickstart;
-
-[HttpQuery(Version = "v1")]
-public sealed record GetCounterValueQuery(string CounterName);
-
-public sealed record GetCounterValueQueryResponse(int CounterValue);
-
-public interface IGetCounterValueQueryHandler
-    : IQueryHandler<GetCounterValueQuery, GetCounterValueQueryResponse>;
-
-internal sealed class GetCounterValueQueryHandler
-    : IGetCounterValueQueryHandler
-{
-    // add logging to the query pipeline and configure the pre-execution log
-    // level (only for demonstration purposes since the default is the same)
-    public static void ConfigurePipeline(IQueryPipeline<GetCounterValueQuery, GetCounterValueQueryResponse> pipeline) =>
-        pipeline.UseLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
-
-    public async Task<GetCounterValueQueryResponse> Handle(GetCounterValueQuery query,
-                                                           CancellationToken cancellationToken = default)
-    {
-        // simulate an asynchronous operation
-        await Task.CompletedTask;
-
-        var envVariableName = $"QUICKSTART_COUNTERS_{query.CounterName}";
-        var counterValue = int.Parse(Environment.GetEnvironmentVariable(envVariableName) ?? "0");
-        return new(counterValue);
-    }
-}
-```
-
-Now launch your app and you can call the command and query via HTTP.
+Now launch your app and you can call the message handlers via HTTP.
 
 ```sh
-curl http://localhost:5000/api/v1/commands/incrementCounterBy --data '{"counterName":"test","incrementBy":2}' -H 'Content-Type: application/json'
+# in background shell
+dotnet run
+
+curl http://localhost:5000/api/v1/incrementCounterByAmount \
+  --data '{"counterName":"test","incrementBy":2}' \
+  -H 'Content-Type: application/json'
 # prints {"newCounterValue":2}
 
-curl http://localhost:5000/api/v1/queries/getCounterValue?counterName=test
-# prints {"counterValue":2}
+curl http://localhost:5000/api/v1/getCounters?prefix=tes
+# prints [{"counterName":"test","value":2}]
+
+# this doubles the increment operation through a signal handler
+curl http://localhost:5000/api/v1/incrementCounterByAmount \
+  --data '{"counterName":"doubler","incrementBy":2}' \
+  -H 'Content-Type: application/json'
+# prints {"newCounterValue":4}
+
+curl http://localhost:5000/api/v1/getCounters
+# prints [{"counterName":"test","value":2},{"counterName":"doubler","value":4}]
+
+# add a confidential counter
+curl http://localhost:5000/api/v1/incrementCounterByAmount \
+  --data '{"counterName":"confidential","incrementBy":1000}' \
+  -H 'Content-Type: application/json'
+# prints {"newCounterValue":1000}
+
+curl http://localhost:5000/api/v1/getCounters
+# prints [{"counterName":"test","value":2},{"counterName":"doubler","value":4},{"counterName":"confidential","value":1000}]
 ```
 
-Thanks to the logging middleware we added to the command and query pipelines, you will see output similar to this in the server console.
+Thanks to the logging middleware we added to the pipelines, you will see output similar to this in the server console.
+
+> Are you able to spot a bug in our logging configuration for confidential counters?
 
 ```log
-info: Quickstart.IncrementCounterByCommand[0]
-      Executing command with payload {"CounterName":"test","IncrementBy":2} (Command ID: 1560c983e4856bd5, Trace ID: fe675fdbf9a987620af31a474bf7ae8c)
-info: Quickstart.IncrementCounterByCommand[0]
-      Executed command and got response {"NewCounterValue":2} in 4.2150ms (Command ID: 1560c983e4856bd5, Trace ID: fe675fdbf9a987620af31a474bf7ae8c)
-info: Quickstart.GetCounterValueQuery[0]
-      Executing query with payload {"CounterName":"test"} (Query ID: defa354e95d67ead, Trace ID: 8fdfa04f8c45ae3174044be0001a6e96)
-info: Quickstart.GetCounterValueQuery[0]
-      Executed query and got response {"CounterValue":2} in 2.9833ms (Query ID: defa354e95d67ead, Trace ID: 8fdfa04f8c45ae3174044be0001a6e96)
+info: Quickstart.IncrementCounterByAmount[711195907]
+      Handling message on http receiver with payload
+      {
+        "CounterName": "test",
+        "IncrementBy": 2
+      }
+      (Message ID: fb074b19f88c65e6, Trace ID: 9b9fe7ce6e603247b13eb4cc781de6cf)
+info: Quickstart.IncrementCounterByAmount[412531951]
+      Handled message on http receiver and got response {"NewCounterValue":2} in 29.9088ms (Message ID: fb074b19f88c65e6, Trace ID: 9b9fe7ce6e603247b13eb4cc781de6cf)
+info: Quickstart.GetCounters[711195907]
+      Handling message on http receiver with payload {"Prefix":"tes"} (Message ID: 89c34aa7ea997929, Trace ID: 485643428bfa70b2832992ce2301386c)
+info: Quickstart.GetCounters[412531951]
+      Handled message on http receiver and got response
+      [
+        {
+          "CounterName": "test",
+          "Value": 2
+        }
+      ]
+      in 6.3682ms (Message ID: 89c34aa7ea997929, Trace ID: 485643428bfa70b2832992ce2301386c)
+info: Quickstart.IncrementCounterByAmount[711195907]
+      Handling message on http receiver with payload
+      {
+        "CounterName": "doubler",
+        "IncrementBy": 2
+      }
+      (Message ID: 3c95064c69bad17b, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
+info: Quickstart.CounterIncremented[441733974]
+      Handling signal with payload
+      {
+        "CounterName": "doubler",
+        "NewValue": 2,
+        "IncrementBy": 2
+      }
+      (Signal ID: 014a95afac5712ee, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
+info: Quickstart.IncrementCounterByAmount[0]
+      doubling increment of counter 'doubler'
+info: Quickstart.IncrementCounterByAmount[711195907]
+      Handling message with payload
+      {
+        "CounterName": "doubler",
+        "IncrementBy": 2
+      }
+      (Message ID: ecfef635f91abbb9, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
+info: Quickstart.IncrementCounterByAmount[412531951]
+      Handled message and got response {"NewCounterValue":4} in 3.0264ms (Message ID: ecfef635f91abbb9, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
+info: Quickstart.IncrementCounterByAmount[0]
+      doubled increment of counter 'doubler', it is now 4
+info: Quickstart.CounterIncremented[1977864143]
+      Handled signal in 14.9293ms (Signal ID: 014a95afac5712ee, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
+info: Quickstart.IncrementCounterByAmount[412531951]
+      Handled message on http receiver and got response {"NewCounterValue":4} in 18.6752ms (Message ID: 3c95064c69bad17b, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
+info: Quickstart.GetCounters[711195907]
+      Handling message on http receiver with payload {"Prefix":null} (Message ID: a516aabf628b1ff4, Trace ID: f1b784dbda5f2809fb8a6b0a093b0421)
+info: Quickstart.GetCounters[412531951]
+      Handled message on http receiver and got response
+      [
+        {
+          "CounterName": "test",
+          "Value": 2
+        },
+        {
+          "CounterName": "doubler",
+          "Value": 4
+        }
+      ]
+      in 0.5010ms (Message ID: a516aabf628b1ff4, Trace ID: f1b784dbda5f2809fb8a6b0a093b0421)
+info: Quickstart.IncrementCounterByAmount[711195907]
+      Handling message on http receiver with payload
+      {
+        "CounterName": "confidential",
+        "IncrementBy": 1000
+      }
+      (Message ID: 6c45a52a82cc5384, Trace ID: 0d85b67886f6b489a6784e27abef7bcb)
+info: Quickstart.IncrementCounterByAmount[412531951]
+      Handled message on http receiver and got response {"NewCounterValue":1000} in 0.5142ms (Message ID: 6c45a52a82cc5384, Trace ID: 0d85b67886f6b489a6784e27abef7bcb)
+info: Quickstart.GetCounters[711195907]
+      Handling message on http receiver with payload {"Prefix":null} (Message ID: 4fc7ba52508e19ef, Trace ID: 42dc5a8f32afec50fc8709a271d7874b)
+info: Quickstart.GetCounters[412531951]
+      Handled message on http receiver in 0.4799ms (Message ID: 4fc7ba52508e19ef, Trace ID: 42dc5a8f32afec50fc8709a271d7874b)
 ```
 
-If you have swagger UI enabled, it will show the new command and query and they can be called from there.
+If you have swagger UI enabled, it will show the new messages and they can be called from there.
 
 <!--
   use an HTML image instead of a markdown image to ensure that enough
@@ -206,19 +484,70 @@ If you have swagger UI enabled, it will show the new command and query and they 
 -->
 <img src="./recipes/quickstart/swagger.gif?raw=true" alt="Quickstart Swagger" style="height: 565px" height="565px" />
 
+## Libraries
+
+[![NuGet version (Conqueror)](https://img.shields.io/nuget/v/Conqueror?label=Conqueror)](https://www.nuget.org/packages/Conqueror/)
+[![NuGet version (Conqueror.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Abstractions?label=Conqueror.Abstractions)](https://www.nuget.org/packages/Conqueror.Abstractions/)
+
+### Middlewares
+
+[![NuGet version (Conqueror.Middleware.Authorization)](https://img.shields.io/nuget/v/Conqueror.Middleware.Authorization?label=Conqueror.Middleware.Authorization)](https://www.nuget.org/packages/Conqueror.Middleware.Authorization/)
+[![NuGet version (Conqueror.Middleware.Logging)](https://img.shields.io/nuget/v/Conqueror.Middleware.Logging?label=Conqueror.Middleware.Logging)](https://www.nuget.org/packages/Conqueror.Middleware.Logging/)
+
+### Transports
+
+[![NuGet version (Conqueror.Transport.Http.Abstractions)](https://img.shields.io/nuget/v/Conqueror.Transport.Http.Abstractions?label=Conqueror.Transport.Http.Abstractions)](https://www.nuget.org/packages/Conqueror.Transport.Http.Abstractions/)
+[![NuGet version (Conqueror.Transport.Http.Client)](https://img.shields.io/nuget/v/Conqueror.Transport.Http.Client?label=Conqueror.Transport.Http.Client)](https://www.nuget.org/packages/Conqueror.Transport.Http.Client/)
+[![NuGet version (Conqueror.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.Transport.Http.Server.AspNetCore?label=Conqueror.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.Transport.Http.Server.AspNetCore/)
+
+## Functionalities
+
+### **Messaging**
+
+[![status-stable](https://img.shields.io/badge/status-stable-brightgreen)](https://www.nuget.org/packages/Conqueror/)
+
+Split your business processes into simple-to-maintain and easy-to-test pieces of code using the [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) pattern. Handle cross-cutting concerns like logging, validation, authorization etc. using configurable middlewares. Keep your applications scalable by moving commands and queries from a modular monolith to a distributed application with minimal friction.
+
+Head over to our [recipes](#recipes) for more guidance on how to use this library.
+
+### **Signalling**
+
+[![status-stable](https://img.shields.io/badge/status-stable-yellow)](https://www.nuget.org/packages/Conqueror/)
+
+Decouple your application logic by using in-process signal publishing using the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Handle cross-cutting concerns like logging, tracing, filtering etc. using configurable middlewares. Keep your applications scalable by moving signals from a modular monolith to a distributed application with minimal friction.
+
+Head over to our [signalling recipes](#signalling-introduction) for more guidance on how to use this library.
+
+### Experimental Functionalities
+
+The functionalities below are still experimental. This means they do not have a stable API and are missing code documentation and recipes. They are therefore not suited for use in production applications, but can be used in proofs-of-concept or toy apps. If you use any of the experimental libraries and find bugs or have ideas for improving them, please don't hesitate to [create an issue](https://github.com/MrWolfZ/Conqueror/issues/new).
+
+<details>
+<summary>Click here to see experimental libraries</summary>
+
+### **Iterating**
+
+[![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror/)
+
+Keep your applications in control by allowing them to consume [data streams](https://en.wikipedia.org/wiki/Data_stream) at their own pace using a pull-based approach. Handle cross-cutting concerns like logging, error handling, authorization etc. using configurable middlewares. Keep your applications scalable by moving stream consumers from a modular monolith to a distributed application with minimal friction.
+
+Head over to our [iterating recipes](#iterating-introduction) for more guidance on how to use this library.
+
+</details>
+
 ## Recipes
 
 In addition to code-level API documentation, **Conqueror** provides you with recipes that will guide you in how to utilize it to its maximum. Each recipe will help you solve one particular challenge that you will likely encounter while building a .NET application.
 
 > For every "How do I do X?" you can imagine for this project, you should be able to find a recipe here. If you don't see a recipe for your question, please let us know by [creating an issue](https://github.com/MrWolfZ/Conqueror/issues/new) or even better, provide the recipe as a pull request.
 
-### CQS Introduction
+### Messaging Introduction
 
 [![library-status-stable](https://img.shields.io/badge/library%20status-stable-brightgreen)](https://www.nuget.org/packages/Conqueror.CQS/)
 
 CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) (which is the inspiration for this project and also where the name is derived from: conquer -> **co**mmands a**n**d **quer**ies). The core idea behind this pattern is that operations which only read data (i.e. queries) and operations which mutate data or cause side-effects (i.e. commands) have very different characteristics (for a start, in most applications queries are executed much more frequently than commands). In addition, business operations often map very well to commands and queries, allowing you to model your application in a way that allows technical and business stakeholders alike to understand the capabilities of the system. There are many other benefits we gain from following this separation in our application logic. For example, commands and queries represent a natural boundary for encapsulation, provide clear contracts for modularization, and allow solving cross-cutting concerns according to the nature of the operation (e.g. caching makes sense for queries, but not so much for commands). With commands and queries, testing often becomes more simple as well, since they provide a clear list of the capabilities that should be tested (allowing more focus to be placed on use-case-driven testing instead of traditional unit testing).
 
-#### CQS Basics
+#### Messaging Basics
 
 - [getting started](recipes/cqs/basics/getting-started#readme)
 - [testing command and query handlers](recipes/cqs/basics/testing-handlers#readme)
@@ -226,7 +555,7 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [testing command and query handlers that have middleware pipelines](recipes/cqs/basics/testing-handlers-with-pipelines#readme)
 - [testing middlewares and reusable pipelines](recipes/cqs/basics/testing-middlewares#readme)
 
-#### CQS Advanced
+#### Messaging Advanced
 
 - [exposing commands and queries via HTTP](recipes/cqs/advanced/exposing-via-http#readme)
 - [testing HTTP commands and queries](recipes/cqs/advanced/testing-http#readme)
@@ -243,14 +572,14 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [building a CLI using commands and queries](recipes/cqs/advanced/building-cli#readme) _(to-be-written)_
 -->
 
-#### CQS Expert
+#### Messaging Expert
 
 - [store and access background context information in the scope of a single command or query](recipes/cqs/expert/command-query-context#readme) _(to-be-written)_
 - [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/cqs/expert/conqueror-context#readme) _(to-be-written)_
 - [accessing properties of commands and queries in middlewares](recipes/cqs/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 - [exposing and calling commands and queries via other transports (e.g. gRPC)](recipes/cqs/expert/exposing-via-other-transports#readme) _(to-be-written)_
 
-#### CQS Cross-Cutting Concerns
+#### Messaging Cross-Cutting Concerns
 
 - [authenticating and authorizing commands and queries](recipes/cqs/cross-cutting-concerns/auth#readme) _(to-be-written)_
 - [logging commands and queries](recipes/cqs/cross-cutting-concerns/logging#readme) _(to-be-written)_
@@ -267,13 +596,13 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 <details>
 <summary>Click here to see recipes for experimental libraries</summary>
 
-### Eventing Introduction
+### Signalling Introduction
 
-[![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Eventing/)
+[![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror/)
 
-Eventing is a way to refer to the publishing and observing of events via the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Eventing is a good way to decouple or loosely couple different parts of your application by making an event publisher agnostic to the observers of events it publishes. In addition to this basic idea, **Conqueror** allows solving cross-cutting concerns on both the publisher as well as the observer side.
+Signalling is a way to refer to the publishing and observing of signals via the [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) pattern. Signalling is a good way to decouple or loosely couple different parts of your application by making an event publisher agnostic to the observers of signals it publishes. In addition to this basic idea, **Conqueror** allows solving cross-cutting concerns on both the publisher as well as the observer side.
 
-#### Eventing Basics
+#### Signalling Basics
 
 - [getting started](recipes/eventing/basics/getting-started#readme) _(to-be-written)_
 - [testing event observers](recipes/eventing/basics/testing-observers#readme) _(to-be-written)_
@@ -283,7 +612,7 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [testing event publisher pipeline](recipes/eventing/basics/testing-publisher-pipeline#readme) _(to-be-written)_
 - [testing middlewares](recipes/eventing/basics/testing-middlewares#readme) _(to-be-written)_
 
-#### Eventing Advanced
+#### Signalling Advanced
 
 - [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/eventing/advanced/different-dependency-injection#readme) _(to-be-written)_
 - [execute event observers with a different strategy (e.g. parallel execution)](recipes/eventing/advanced/publishing-strategy#readme) _(to-be-written)_
@@ -291,13 +620,13 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [creating a clean architecture with loose coupling via events](recipes/eventing/advanced/clean-architecture#readme) _(to-be-written)_
 - [moving from a modular monolith to a distributed system](recipes/eventing/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
-#### Eventing Expert
+#### Signalling Expert
 
 - [store and access background context information in the scope of a single event](recipes/eventing/expert/event-context#readme) _(to-be-written)_
 - [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/eventing/expert/conqueror-context#readme) _(to-be-written)_
 - [accessing properties of events in middlewares](recipes/eventing/expert/accessing-properties-in-middlewares#readme) _(to-be-written)_
 
-#### Eventing Cross-Cutting Concerns
+#### Signalling Cross-Cutting Concerns
 
 - [logging events](recipes/eventing/cross-cutting-concerns/logging#readme) _(to-be-written)_
 - [retrying failed event observers](recipes/eventing/cross-cutting-concerns/retry#readme) _(to-be-written)_
@@ -305,13 +634,13 @@ Eventing is a way to refer to the publishing and observing of events via the [pu
 - [metrics for events](recipes/eventing/cross-cutting-concerns/metrics#readme) _(to-be-written)_
 - [tracing events](recipes/eventing/cross-cutting-concerns/tracing#readme) _(to-be-written)_
 
-### Streaming Introduction
+### Iterating Introduction
 
-[![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror.Streaming/)
+[![library-status-experimental](https://img.shields.io/badge/library%20status-experimental-yellow)](https://www.nuget.org/packages/Conqueror/)
 
 For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** uses a pull-based approach where the consumer controls the pace (using `IAsyncEnumerable`), which is a good approach for use cases like paging and event sourcing.
 
-#### Streaming Basics
+#### Iterating Basics
 
 - [getting started](recipes/streaming/basics/getting-started#readme) _(to-be-written)_
 - [testing streaming request handlers](recipes/streaming/basics/testing-handlers#readme) _(to-be-written)_
@@ -319,7 +648,7 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** us
 - [testing streaming request handlers that have middleware pipelines](recipes/streaming/basics/testing-handlers-with-pipelines#readme) _(to-be-written)_
 - [testing middlewares](recipes/streaming/basics/testing-middlewares#readme) _(to-be-written)_
 
-#### Streaming Advanced
+#### Iterating Advanced
 
 - [using a different dependency injection container (e.g. Autofac or Ninject)](recipes/streaming/advanced/different-dependency-injection#readme) _(to-be-written)_
 - [reading streams from a messaging system (e.g. Kafka or RabbitMQ)](recipes/streaming/advanced/reading-from-messaging-system#readme) _(to-be-written)_
@@ -333,7 +662,7 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** us
 - [authenticating and authorizing streaming requests](recipes/streaming/advanced/auth#readme) _(to-be-written)_
 - [moving from a modular monolith to a distributed system](recipes/streaming/advanced/monolith-to-distributed#readme) _(to-be-written)_
 
-#### Streaming Expert
+#### Iterating Expert
 
 - [store and access background context information in the scope of a single streaming request](recipes/streaming/expert/streaming-request-context#readme) _(to-be-written)_
 - [propagate background context information (e.g. trace ID) across multiple commands, queries, events, and streams](recipes/streaming/expert/conqueror-context#readme) _(to-be-written)_
@@ -341,7 +670,7 @@ For [data streaming](https://en.wikipedia.org/wiki/Data_stream) **Conqueror** us
 - [exposing and consuming streams via other transports (e.g. SignalR)](recipes/streaming/expert/exposing-via-other-transports#readme) _(to-be-written)_
 - [building test assertions that work for HTTP and non-HTTP streams](recipes/streaming/expert/building-test-assertions-for-http-and-non-http#readme) _(to-be-written)_
 
-#### Streaming Cross-Cutting Concerns
+#### Iterating Cross-Cutting Concerns
 
 - [authenticating and authorizing streaming requests](recipes/streaming/cross-cutting-concerns/auth#readme) _(to-be-written)_
 - [logging streaming requests and items](recipes/streaming/cross-cutting-concerns/logging#readme) _(to-be-written)_
