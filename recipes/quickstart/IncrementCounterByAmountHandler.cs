@@ -17,7 +17,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
 
             // Conqueror ships with a handful of useful middleware packages
             // for common cross-cutting concerns like logging and authorization
-            .UseLogging(o => o.MessagePayloadLoggingStrategy = PayloadLoggingStrategy.IndentedJson)
+            .UseLogging()
 
             // Pipelines can have inline middlewares for ad-hoc logic (or you can
             // build a full-fledged middleware; see the recipes for more details)
@@ -27,7 +27,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
                 // likely use a more powerful validation library like FluentValidation)
                 Validator.ValidateObject(ctx.Message, new(ctx.Message), true);
 
-                // Note that the middleware has access to the message with its proper type(i.e.
+                // Note that the middleware has access to the message with its proper type (i.e.
                 // the compiler knows that `ctx.Message` is of type `IncrementCounterByAmount`),
                 // so you could also write the validation directly like this:
                 if (ctx.Message.IncrementBy <= 0)
@@ -40,7 +40,8 @@ internal sealed partial class IncrementCounterByAmountHandler(
             })
 
             // Middlewares which have been added to a pipeline can be configured further
-            .ConfigureLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
+            .ConfigureLogging(o => o.MessagePayloadLoggingStrategy =
+                                  PayloadLoggingStrategy.IndentedJson);
 
     public async Task<CounterIncrementedResponse> Handle(
         IncrementCounterByAmount message,
