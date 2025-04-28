@@ -1,19 +1,27 @@
 <!-- markdownlint-disable MD033 -->
 
-# Conqueror - a highly ergonomic messaging library for .NET
+# Conqueror - a highly ergonomic library for building structured, scalable .NET apps
 
-**Conqueror** is a set of libraries that helps you build .NET applications in a structured way, using patterns like [messaging](https://en.wikipedia.org/wiki/Messaging_pattern), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as middlewares), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), and [data streams](https://en.wikipedia.org/wiki/Data_stream).
+**Conqueror** is a .NET library that simplifies writing modular, scalable applications by unifying messages, signals, and more into a consistent, extensible model. It uses modern features of .NET like source generators and static abstract interface methods to reduce boilerplate, support advanced uses cases like AOT compilation, and to provide a highly ergonomic user-friendly API.
 
-**Conqueror** encourages clean architectures by decoupling your application logic from concrete transports like HTTP, and allows exposing business operations via many different transports with thin adapters. **Conqueror** makes it simple to build modular monoliths or distributed systems with clear contracts between different modules and applications. It also allows to transition from a modular monolith to a distributed system with minimal friction, giving teams the flexibility to start simple and delay the transition until the right time in a project's lifecycle.
+Whether you're building a monolith or distributed microservices, **Conqueror** provides a seamless experience with minimal ceremony. It also eases the transition from a modular monolith to a distributed system with minimal friction, giving teams the flexibility to start simple and delay the transition until the right time in a project's lifecycle.
+
+**Conqueror** encourages clean architectures by decoupling your application logic from concrete transports like HTTP, and allows exposing business operations via many different transports with thin adapters.
+
+**Conqueror** leverages design patterns like [messaging](https://en.wikipedia.org/wiki/Messaging_pattern), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as _middlewares_), [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming), [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), and more.
+
+<img src="./docs/intro.svg?raw=true" alt="Intro" style="height: 565px" height="565px" />
 
 [![Build Status](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml/badge.svg)](https://github.com/MrWolfZ/Conqueror/actions/workflows/dotnet.yml)
+[![NuGet version (Conqueror)](https://img.shields.io/nuget/v/Conqueror?label=Conqueror)](https://www.nuget.org/packages/Conqueror/)
+[![.NET 8 or later](https://img.shields.io/badge/.NET-8_or_later-blue)](https://dotnet.microsoft.com/en-us/download)
 [![license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Conqueror** only supports [.NET 8 or later](https://dotnet.microsoft.com/en-us/download)
 
 ## Quickstart
 
-This quickstart guide will let you jump right into the code without lengthy explanations (for more guidance head over to our [recipes](#recipes)). By following this guide you'll add HTTP commands and queries to your ASP.NET Core application. You can also find the [source code](recipes/quickstart) here in the repository.
+This quickstart guide will let you jump right into the code without lengthy explanations. If you prefer more guidance, head over to our [recipes](#recipes). By following this quickstart guide, you'll add HTTP messages and an in-process signal to a minimal API ASP.NET Core application. You can also find the [source code](recipes/quickstart) here in the repository.
 
 ```sh
 dotnet new webapi -n Quickstart && cd Quickstart
@@ -72,6 +80,38 @@ public sealed partial record CounterIncremented(
     long IncrementBy);
 ```
 
+<details>
+<summary>Click here to see file without the comments to get a better idea how your own code will look like</summary>
+
+```cs
+using System.ComponentModel.DataAnnotations;
+using Conqueror;
+
+namespace Quickstart;
+
+[HttpMessage<CounterIncrementedResponse>(Version = "v1")]
+public sealed partial record IncrementCounterByAmount(string CounterName)
+{
+    [Range(1, long.MaxValue)]
+    public required long IncrementBy { get; init; }
+}
+
+public sealed record CounterIncrementedResponse(long NewCounterValue);
+
+[HttpMessage<List<CounterValue>>(HttpMethod = "GET", Version = "v1")]
+public sealed partial record GetCounters(string? Prefix = null);
+
+public sealed record CounterValue(string CounterName, long Value);
+
+[Signal]
+public sealed partial record CounterIncremented(
+    string CounterName,
+    long NewValue,
+    long IncrementBy);
+```
+
+</details>
+
 In [CountersRepository.cs](recipes/quickstart/CountersRepository.cs) create a simple repository to simulate talking to a database:
 
 ```cs
@@ -126,7 +166,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
 
             // Conqueror ships with a handful of useful middleware packages
             // for common cross-cutting concerns like logging and authorization
-            .UseLogging(o => o.MessagePayloadLoggingStrategy = PayloadLoggingStrategy.IndentedJson)
+            .UseLogging()
 
             // Pipelines can have inline middlewares for ad-hoc logic (or you can
             // build a full-fledged middleware; see the recipes for more details)
@@ -136,7 +176,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
                 // likely use a more powerful validation library like FluentValidation)
                 Validator.ValidateObject(ctx.Message, new(ctx.Message), true);
 
-                // Note that the middleware has access to the message with its proper type(i.e.
+                // Note that the middleware has access to the message with its proper type (i.e.
                 // the compiler knows that `ctx.Message` is of type `IncrementCounterByAmount`),
                 // so you could also write the validation directly like this:
                 if (ctx.Message.IncrementBy <= 0)
@@ -149,7 +189,8 @@ internal sealed partial class IncrementCounterByAmountHandler(
             })
 
             // Middlewares which have been added to a pipeline can be configured further
-            .ConfigureLogging(o => o.ExceptionLogLevel = LogLevel.Critical);
+            .ConfigureLogging(o => o.MessagePayloadLoggingStrategy =
+                                  PayloadLoggingStrategy.IndentedJson);
 
     public async Task<CounterIncrementedResponse> Handle(
         IncrementCounterByAmount message,
@@ -182,6 +223,43 @@ internal sealed partial class IncrementCounterByAmountHandler(
     }
 }
 ```
+
+<details>
+<summary>Click here to see a more realistic trimmed down version of the file</summary>
+
+```cs
+using System.ComponentModel.DataAnnotations;
+using Conqueror;
+
+namespace Quickstart;
+
+internal sealed partial class IncrementCounterByAmountHandler(
+    CountersRepository repository,
+    ISignalPublishers publishers)
+    : IncrementCounterByAmount.IHandler
+{
+    public static void ConfigurePipeline(IncrementCounterByAmount.IPipeline pipeline) =>
+        pipeline.UseLogging()
+                .UseDataAnnotationValidation()
+                .UseIndentedJsonMessageLogFormatting();
+
+    public async Task<CounterIncrementedResponse> Handle(
+        IncrementCounterByAmount message,
+        CancellationToken cancellationToken = default)
+    {
+        var newValue = await repository.AddOrIncrementCounter(message.CounterName,
+                                                              message.IncrementBy);
+
+        await publishers.For(CounterIncremented.T)
+                        .Handle(new(message.CounterName, newValue, message.IncrementBy),
+                                cancellationToken);
+
+        return new(await repository.GetCounterValue(message.CounterName));
+    }
+}
+```
+
+</details>
 
 In [DoublingCounterIncrementedHandler.cs](recipes/quickstart/DoublingCounterIncrementedHandler.cs) create a signal handler that doubles increment operations on specific counters.
 
@@ -224,6 +302,14 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 
                     return ctx.Next(ctx.Signal, ctx.CancellationToken);
                 })
+
+                // Middlewares in the pipeline are executed in the order that they are added in.
+                // We add the logging middleware to the pipeline only after the prior two
+                // middlewares to ensure that only signals which are not skipped get logged.
+                // The `Configure...` extension methods for middlewares can be used to modify the
+                // behavior of middlewares that were added earlier to a pipeline. A common pattern
+                // is to define reusable pipelines that define the order of middlewares and then
+                // use `Configure...` for a particular handler to modify the pipeline as necessary
                 .UseLogging(o => o.PayloadLoggingStrategy = PayloadLoggingStrategy.IndentedJson);
 
     public async Task Handle(
@@ -270,6 +356,36 @@ internal sealed partial class DoublingCounterIncrementedHandler(
     }
 }
 ```
+
+<details>
+<summary>Click here to see a more realistic trimmed down version of the file</summary>
+
+```cs
+using Conqueror;
+
+namespace Quickstart;
+
+internal sealed partial class DoublingCounterIncrementedHandler(
+    IMessageSenders senders)
+    : CounterIncremented.IHandler
+{
+    static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
+        pipeline.SkipSignalMatching<CounterIncremented>(s => s.CounterName != "doubler")
+                .EnsureSingleExecutionPerOperation()
+                .UseLoggingWithIndentedJson();
+
+    public async Task Handle(
+        CounterIncremented signal,
+        CancellationToken cancellationToken = default)
+    {
+        await senders.For(IncrementCounterByAmount.T)
+                     .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
+                             cancellationToken);
+    }
+}
+```
+
+</details>
 
 In [GetCountersHandler.cs](recipes/quickstart/GetCountersHandler.cs) create a message handler that returns a filtered list of counters.
 
@@ -321,6 +437,38 @@ internal sealed partial class GetCountersHandler(
     }
 }
 ```
+
+<details>
+<summary>Click here to see a more realistic trimmed down version of the file</summary>
+
+```cs
+using Conqueror;
+
+namespace Quickstart;
+
+internal sealed partial class GetCountersHandler(
+    CountersRepository repository)
+    : GetCounters.IHandler
+{
+    public static void ConfigurePipeline(GetCounters.IPipeline pipeline) =>
+        pipeline.UseLogging()
+                .OmitResponseFromLogsInProduction()
+                .OmitResponseFromLogsForMessageMatching(m => m.CounterName == "confidential");
+
+    public async Task<List<CounterValue>> Handle(
+        GetCounters message,
+        CancellationToken cancellationToken = default)
+    {
+        var allCounters = await repository.GetCounters();
+
+        return allCounters.Where(p => message.Prefix is null || p.Key.StartsWith(message.Prefix))
+                          .Select(p => new CounterValue(p.Key, p.Value))
+                          .ToList();
+    }
+}
+```
+
+</details>
 
 Finally, set up the app in [Program.cs](recipes/quickstart/Program.cs):
 
@@ -474,15 +622,15 @@ info: Quickstart.GetCounters[711195907]
 info: Quickstart.GetCounters[412531951]
       Handled message on http receiver in 0.4799ms (Message ID: 4fc7ba52508e19ef, Trace ID: 42dc5a8f32afec50fc8709a271d7874b)
 ```
-
+<!-- 
 If you have swagger UI enabled, it will show the new messages and they can be called from there.
 
 <!--
   use an HTML image instead of a markdown image to ensure that enough
   vertical space is reserved even before the image is loaded so that
   links to anchors in the readme work correctly
--->
-<img src="./recipes/quickstart/swagger.gif?raw=true" alt="Quickstart Swagger" style="height: 565px" height="565px" />
+->
+<img src="./recipes/quickstart/swagger.gif?raw=true" alt="Quickstart Swagger" style="height: 565px" height="565px" /> -->
 
 ## Libraries
 
@@ -501,6 +649,9 @@ If you have swagger UI enabled, it will show the new messages and they can be ca
 [![NuGet version (Conqueror.Transport.Http.Server.AspNetCore)](https://img.shields.io/nuget/v/Conqueror.Transport.Http.Server.AspNetCore?label=Conqueror.Transport.Http.Server.AspNetCore)](https://www.nuget.org/packages/Conqueror.Transport.Http.Server.AspNetCore/)
 
 ## Functionalities
+
+<details>
+<summary>Click here to see documentation still under construction</summary>
 
 ### **Messaging**
 
@@ -522,9 +673,6 @@ Head over to our [signalling recipes](#signalling-introduction) for more guidanc
 
 The functionalities below are still experimental. This means they do not have a stable API and are missing code documentation and recipes. They are therefore not suited for use in production applications, but can be used in proofs-of-concept or toy apps. If you use any of the experimental libraries and find bugs or have ideas for improving them, please don't hesitate to [create an issue](https://github.com/MrWolfZ/Conqueror/issues/new).
 
-<details>
-<summary>Click here to see experimental libraries</summary>
-
 ### **Iterating**
 
 [![status-experimental](https://img.shields.io/badge/status-experimental-yellow)](https://www.nuget.org/packages/Conqueror/)
@@ -543,7 +691,8 @@ In addition to code-level API documentation, **Conqueror** provides you with rec
 
 ### Messaging Introduction
 
-[![library-status-stable](https://img.shields.io/badge/library%20status-stable-brightgreen)](https://www.nuget.org/packages/Conqueror.CQS/)
+<details>
+<summary>Click here to see documentation still under construction</summary>
 
 CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) (which is the inspiration for this project and also where the name is derived from: conquer -> **co**mmands a**n**d **quer**ies). The core idea behind this pattern is that operations which only read data (i.e. queries) and operations which mutate data or cause side-effects (i.e. commands) have very different characteristics (for a start, in most applications queries are executed much more frequently than commands). In addition, business operations often map very well to commands and queries, allowing you to model your application in a way that allows technical and business stakeholders alike to understand the capabilities of the system. There are many other benefits we gain from following this separation in our application logic. For example, commands and queries represent a natural boundary for encapsulation, provide clear contracts for modularization, and allow solving cross-cutting concerns according to the nature of the operation (e.g. caching makes sense for queries, but not so much for commands). With commands and queries, testing often becomes more simple as well, since they provide a clear list of the capabilities that should be tested (allowing more focus to be placed on use-case-driven testing instead of traditional unit testing).
 
@@ -591,10 +740,12 @@ CQS is an acronym for [command-query separation](https://en.wikipedia.org/wiki/C
 - [metrics for commands and queries](recipes/cqs/cross-cutting-concerns/metrics#readme) _(to-be-written)_
 - [tracing commands and queries](recipes/cqs/cross-cutting-concerns/tracing#readme) _(to-be-written)_
 
-### Recipes for experimental libraries
+</details>
+
+### Recipes for experimental functionalities
 
 <details>
-<summary>Click here to see recipes for experimental libraries</summary>
+<summary>Click here to see recipes for experimental functionalities</summary>
 
 ### Signalling Introduction
 

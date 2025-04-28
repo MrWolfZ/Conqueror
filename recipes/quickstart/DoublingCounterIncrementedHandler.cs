@@ -36,6 +36,14 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 
                     return ctx.Next(ctx.Signal, ctx.CancellationToken);
                 })
+
+                // Middlewares in the pipeline are executed in the order that they are added in.
+                // We add the logging middleware to the pipeline only after the prior two
+                // middlewares to ensure that only signals which are not skipped get logged.
+                // The `Configure...` extension methods for middlewares can be used to modify the
+                // behavior of middlewares that were added earlier to a pipeline. A common pattern
+                // is to define reusable pipelines that define the order of middlewares and then
+                // use `Configure...` for a particular handler to modify the pipeline as necessary
                 .UseLogging(o => o.PayloadLoggingStrategy = PayloadLoggingStrategy.IndentedJson);
 
     public async Task Handle(

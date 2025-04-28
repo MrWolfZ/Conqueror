@@ -1,0 +1,194 @@
+direction: down
+
+MessagesWithResponse: Messages {
+  Caller: {
+    shape: rectangle
+  }
+
+  SenderPipeline: Sender Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  Transport: {
+    shape: hexagon
+    style.fill: "#e0f7fa"
+  }
+
+  HandlerPipeline: Handler Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  Handler: {
+    shape: rectangle
+  }
+
+  Caller -> SenderPipeline: "Message" {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  SenderPipeline -> Caller: "Response" {
+    style.stroke: "#388e3c"
+    style.animated: true
+  }
+
+  SenderPipeline -> Transport: "Message" {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Transport -> SenderPipeline: "Response" {
+    style.stroke: "#388e3c"
+    style.animated: true
+  }
+
+  Transport -> HandlerPipeline: "Message" {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  HandlerPipeline -> Transport: "Response" {
+    style.stroke: "#388e3c"
+    style.animated: true
+  }
+
+  HandlerPipeline -> Handler: "Message" {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Handler -> HandlerPipeline: "Response" {
+    style.stroke: "#388e3c"
+    style.animated: true
+  }
+}
+
+MessagesFireAndForget: Messages (fire & forget) {
+  Caller: {
+    shape: rectangle
+  }
+
+  SenderPipeline: Sender Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  Transport: {
+    shape: hexagon
+    style.fill: "#e0f7fa"
+  }
+
+  HandlerPipeline: Handler Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  Handler: {
+    shape: rectangle
+  }
+
+  Caller -> SenderPipeline: "Message" {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  SenderPipeline -> Transport: "Message" {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Transport -> HandlerPipeline: "Message" {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  HandlerPipeline -> Handler: "Message" {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+}
+
+Signals: {
+  Caller: {
+    shape: rectangle
+  }
+
+  PublishPipeline: "Publish Pipeline" {
+    shape: rectangle
+    style.fill: "#e0f7fa"
+  }
+
+  Transport: {
+    shape: hexagon
+    style.fill: "#e0f7fa"
+  }
+
+  Handler1Pipeline: Handler 1 Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  Handler2Pipeline: Handler 2 Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  HandlerNPipeline: Handler N Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  Handler1: Handler 1 {
+    shape: rectangle
+  }
+
+  Handler2: Handler 2 {
+    shape: rectangle
+  }
+
+  HandlerN: Handler N {
+    shape: rectangle
+  }
+
+  Caller -> PublishPipeline: Signal {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  PublishPipeline -> Transport: Signal {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Transport -> Handler1Pipeline: Signal {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Transport -> Handler2Pipeline: Signal {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Transport -> HandlerNPipeline: Signal {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Handler1Pipeline -> Handler1: Signal {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Handler2Pipeline -> Handler2: Signal {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  HandlerNPipeline -> HandlerN: Signal {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+}
