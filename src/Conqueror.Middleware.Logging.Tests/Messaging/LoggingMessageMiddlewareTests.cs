@@ -362,7 +362,9 @@ public sealed class LoggingMessageMiddlewareTests
             PostExecutionLogLevel = null,
             ExceptionLogLevel = null,
             MessagePayloadLoggingStrategy = null,
+            MessagePayloadLoggingStrategyFromFactory = null,
             ResponsePayloadLoggingStrategy = null,
+            ResponsePayloadLoggingStrategyFromFactory = null,
             LoggerCategoryFactory = null,
             HookBehavior = HookTestBehavior.HookLogsAndReturnsTrue,
             TransportTypeName = null,
@@ -392,7 +394,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         try
         {
-            _ = await handler.Handle(new() { Payload = 10 }, host.TestTimeoutToken);
+            _ = await handler.Handle(testCase.Message, host.TestTimeoutToken);
             Assert.Fail("Exception should have been thrown");
         }
         catch (TestException thrownException)
@@ -435,7 +437,9 @@ public sealed class LoggingMessageMiddlewareTests
             PostExecutionLogLevel = null,
             ExceptionLogLevel = null,
             MessagePayloadLoggingStrategy = null,
+            MessagePayloadLoggingStrategyFromFactory = null,
             ResponsePayloadLoggingStrategy = null,
+            ResponsePayloadLoggingStrategyFromFactory = null,
             LoggerCategoryFactory = null,
             HookBehavior = HookTestBehavior.HookLogsAndReturnsTrue,
             TransportTypeName = null,

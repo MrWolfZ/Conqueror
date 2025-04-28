@@ -1,8 +1,0 @@
-﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomSerializedPayloadType[441733974]
-      Handling signal on in-process publisher with payload {"Payload":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomSerializedPayloadType[0]
-      PreHook:TestSignalWithCustomSerializedPayloadType,test-message-id,test-trace-id
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomSerializedPayloadType[0]
-      PostHook:test-message-id,test-trace-id
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomSerializedPayloadType[1977864143]
-      Handled signal on in-process publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

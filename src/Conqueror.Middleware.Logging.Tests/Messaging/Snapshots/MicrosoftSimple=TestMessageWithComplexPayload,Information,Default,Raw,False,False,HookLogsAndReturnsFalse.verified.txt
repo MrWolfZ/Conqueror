@@ -1,8 +1,0 @@
-﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[711195907]
-      Handling message on in-process sender with payload TestMessageWithComplexPayload { Payload = 10, NestedPayload = TestMessageWithComplexPayloadPayload { Payload = 11, Payload2 = 12 } } (Message ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[0]
-      PreHook:TestMessageWithComplexPayload,test-message-id,test-trace-id
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[0]
-      PostHook:TestMessageResponse,test-message-id,test-trace-id
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[412531951]
-      Handled message on in-process sender and got response TestMessageResponse { Payload = 33 } in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

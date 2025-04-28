@@ -54,6 +54,7 @@ public static partial class LoggingMiddlewareTestMessages
                           // when we know that nothing will be logged anyway
                           from hasException in willLog ? new[] { true, false } : [false]
                           from payloadLoggingStrategy in willLog ? allPayloadLoggingStrategies : [null]
+                          from payloadLoggingStrategyFromFactory in willLog ? new PayloadLoggingStrategy?[] { null, PayloadLoggingStrategy.Raw } : [null]
                           from hasCustomCategoryFactory in willLog && payloadLoggingStrategy is null ? new[] { true, false } : [false]
                           from hookTestBehavior in willLog && payloadLoggingStrategy is null ? allHookTestBehaviors : [HookTestBehavior.HookLogsAndReturnsTrue]
                           select (configuredLogLevel: (LogLevel)configuredLogLevel,
@@ -62,7 +63,9 @@ public static partial class LoggingMiddlewareTestMessages
                                   exceptionLogLevel: logLevel,
                                   hasException,
                                   messagePayloadLoggingStrategy: payloadLoggingStrategy,
+                                  messagePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
                                   responsePayloadLoggingStrategy: payloadLoggingStrategy,
+                                  responsePayloadLoggingStrategyFromFactory: payloadLoggingStrategyFromFactory,
                                   hasCustomCategoryFactory,
                                   hookTestBehavior))
         {
@@ -72,7 +75,9 @@ public static partial class LoggingMiddlewareTestMessages
                                                             t.exceptionLogLevel,
                                                             t.hasException,
                                                             t.messagePayloadLoggingStrategy,
+                                                            t.messagePayloadLoggingStrategyFromFactory,
                                                             t.responsePayloadLoggingStrategy,
+                                                            t.responsePayloadLoggingStrategyFromFactory,
                                                             t.hasCustomCategoryFactory,
                                                             t.hookTestBehavior))
             {
@@ -88,8 +93,7 @@ public static partial class LoggingMiddlewareTestMessages
         foreach (var t in from hasException in new[] { true, false }
                           from hasCustomCategoryFactory in new[] { true, false }
                           from payloadLoggingStrategy in allPayloadLoggingStrategies
-                          from hookTestBehavior in new HookTestBehavior?[] { HookTestBehavior.HookLogsAndReturnsFalse, null }
-                          select (hasException, hasCustomCategoryFactory, payloadLoggingStrategy, hookTestBehavior))
+                          select (hasException, hasCustomCategoryFactory, payloadLoggingStrategy))
         {
             foreach (var c in GenerateTestCasesWithSettings(configuredLogLevel: LogLevel.Information,
                                                             preExecutionLogLevel: null,
@@ -97,9 +101,11 @@ public static partial class LoggingMiddlewareTestMessages
                                                             exceptionLogLevel: null,
                                                             t.hasException,
                                                             t.payloadLoggingStrategy,
+                                                            messagePayloadLoggingStrategyFromFactory: null,
                                                             t.payloadLoggingStrategy,
+                                                            responsePayloadLoggingStrategyFromFactory: null,
                                                             t.hasCustomCategoryFactory,
-                                                            t.hookTestBehavior))
+                                                            hookTestBehavior: null))
             {
                 yield return c;
             }
@@ -113,7 +119,9 @@ public static partial class LoggingMiddlewareTestMessages
         LogLevel? exceptionLogLevel,
         bool hasException,
         PayloadLoggingStrategy? messagePayloadLoggingStrategy,
+        PayloadLoggingStrategy? messagePayloadLoggingStrategyFromFactory,
         PayloadLoggingStrategy? responsePayloadLoggingStrategy,
+        PayloadLoggingStrategy? responsePayloadLoggingStrategyFromFactory,
         bool hasCustomCategoryFactory,
         HookTestBehavior? hookTestBehavior)
     {
@@ -129,7 +137,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             HookBehavior = hookTestBehavior,
             TransportTypeName = null,
@@ -147,7 +157,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             HookBehavior = hookTestBehavior,
             TransportTypeName = null,
@@ -165,7 +177,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             HookBehavior = hookTestBehavior,
             TransportTypeName = null,
@@ -183,7 +197,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             HookBehavior = hookTestBehavior,
             TransportTypeName = null,
@@ -201,7 +217,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             HookBehavior = hookTestBehavior,
             TransportTypeName = null,
@@ -219,7 +237,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             HookBehavior = hookTestBehavior,
             TransportTypeName = null,
@@ -237,7 +257,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             HookBehavior = hookTestBehavior,
             TransportTypeName = null,
@@ -255,7 +277,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             HookBehavior = hookTestBehavior,
             TransportTypeName = TestTransportName,
@@ -273,7 +297,9 @@ public static partial class LoggingMiddlewareTestMessages
             PostExecutionLogLevel = postExecutionLogLevel,
             ExceptionLogLevel = exceptionLogLevel,
             MessagePayloadLoggingStrategy = messagePayloadLoggingStrategy,
+            MessagePayloadLoggingStrategyFromFactory = messagePayloadLoggingStrategyFromFactory,
             ResponsePayloadLoggingStrategy = responsePayloadLoggingStrategy,
+            ResponsePayloadLoggingStrategyFromFactory = responsePayloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
             ExpectedLoggerCategory = typeof(TestMessageSub).FullName?.Replace('+', '.')!,
             HookBehavior = hookTestBehavior,
@@ -308,9 +334,19 @@ public static partial class LoggingMiddlewareTestMessages
                 c.MessagePayloadLoggingStrategy = testCase.MessagePayloadLoggingStrategy.Value;
             }
 
+            if (testCase.MessagePayloadLoggingStrategyFromFactory is not null)
+            {
+                c.MessagePayloadLoggingStrategyFactory = _ => testCase.MessagePayloadLoggingStrategyFromFactory.Value;
+            }
+
             if (testCase.ResponsePayloadLoggingStrategy is not null)
             {
                 c.ResponsePayloadLoggingStrategy = testCase.ResponsePayloadLoggingStrategy.Value;
+            }
+
+            if (testCase.ResponsePayloadLoggingStrategyFromFactory is not null)
+            {
+                c.ResponsePayloadLoggingStrategyFactory = (_, _) => testCase.ResponsePayloadLoggingStrategyFromFactory.Value;
             }
 
             if (testCase.LoggerCategoryFactory is not null)
@@ -330,6 +366,9 @@ public static partial class LoggingMiddlewareTestMessages
 
                 c.PreExecutionHook = ctx =>
                 {
+                    Assert.That(ctx.LogLevel, Is.EqualTo(testCase.PreExecutionLogLevel ?? LogLevel.Information));
+                    Assert.That(ctx.Message, Is.SameAs(testCase.Message));
+
                     if (hookLogs)
                     {
                         ctx.Logger.Log(ctx.LogLevel, "PreHook:{MessageType},{MessageId},{TraceId}", ctx.Message.GetType().Name, ctx.MessageId, ctx.TraceId);
@@ -340,6 +379,11 @@ public static partial class LoggingMiddlewareTestMessages
 
                 c.PostExecutionHook = ctx =>
                 {
+                    Assert.That(ctx.LogLevel, Is.EqualTo(testCase.PostExecutionLogLevel ?? LogLevel.Information));
+                    Assert.That(ctx.Message, Is.SameAs(testCase.Message));
+                    Assert.That(ctx.Response, Is.EqualTo(testCase.Response ?? UnitMessageResponse.Instance));
+                    Assert.That(ctx.HasResponse, Is.EqualTo(testCase.Response is not null));
+
                     if (hookLogs)
                     {
                         ctx.Logger.Log(ctx.LogLevel, "PostHook:{ResponseType},{MessageId},{TraceId}", ctx.Response?.GetType().Name, ctx.MessageId, ctx.TraceId);
@@ -350,6 +394,8 @@ public static partial class LoggingMiddlewareTestMessages
 
                 c.ExceptionHook = ctx =>
                 {
+                    Assert.That(ctx.LogLevel, Is.EqualTo(testCase.ExceptionLogLevel ?? LogLevel.Error));
+
                     if (hookLogs)
                     {
                         var exceptionToLog = new WrappingException(ctx.Exception, ctx.ExecutionStackTrace.ToString());
@@ -382,9 +428,13 @@ public static partial class LoggingMiddlewareTestMessages
 
         public required TMessage Message { get; init; }
 
+        object IMessageTestCasePipelineConfiguration.Message => Message;
+
         public required string? MessageJson { get; init; }
 
         public required TResponse? Response { get; init; }
+
+        object? IMessageTestCasePipelineConfiguration.Response => Response;
 
         public required string? ResponseJson { get; init; }
 
@@ -400,7 +450,11 @@ public static partial class LoggingMiddlewareTestMessages
 
         public required PayloadLoggingStrategy? MessagePayloadLoggingStrategy { get; init; }
 
+        public required PayloadLoggingStrategy? MessagePayloadLoggingStrategyFromFactory { get; init; }
+
         public required PayloadLoggingStrategy? ResponsePayloadLoggingStrategy { get; init; }
+
+        public required PayloadLoggingStrategy? ResponsePayloadLoggingStrategyFromFactory { get; init; }
 
         public required Func<TMessage, string>? LoggerCategoryFactory { get; init; }
 
@@ -440,18 +494,20 @@ public static partial class LoggingMiddlewareTestMessages
 
                         if (hasPayload)
                         {
-                            if (MessagePayloadLoggingStrategy is PayloadLoggingStrategy.Raw)
+                            var messagePayloadLoggingStrategy = MessagePayloadLoggingStrategyFromFactory ?? MessagePayloadLoggingStrategy;
+
+                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.Raw)
                             {
                                 _ = preExecutionLogRegexBuilder.Append($"with payload {Message} ");
                             }
 
-                            if (MessagePayloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
+                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
                             {
                                 var json = JsonSerializer.Serialize(JsonDocument.Parse(MessageJson!), new JsonSerializerOptions { WriteIndented = true });
                                 _ = preExecutionLogRegexBuilder.Append($"with payload{Environment.NewLine}      {json.Replace(Environment.NewLine, $"{Environment.NewLine}      ")}{Environment.NewLine}      ");
                             }
 
-                            if (MessagePayloadLoggingStrategy is PayloadLoggingStrategy.MinimalJson or null)
+                            if (messagePayloadLoggingStrategy is PayloadLoggingStrategy.MinimalJson or null)
                             {
                                 _ = preExecutionLogRegexBuilder.Append($"with payload {MessageJson} ");
                             }
@@ -494,18 +550,20 @@ public static partial class LoggingMiddlewareTestMessages
 
                         if (hasResponse)
                         {
-                            if (MessagePayloadLoggingStrategy is PayloadLoggingStrategy.Raw)
+                            var responsePayloadLoggingStrategy = ResponsePayloadLoggingStrategyFromFactory ?? ResponsePayloadLoggingStrategy;
+
+                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.Raw)
                             {
                                 _ = postExecutionLogRegexBuilder.Append($"and got response {Response} ");
                             }
 
-                            if (MessagePayloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
+                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.IndentedJson)
                             {
                                 var json = JsonSerializer.Serialize(JsonDocument.Parse(ResponseJson!), new JsonSerializerOptions { WriteIndented = true });
                                 _ = postExecutionLogRegexBuilder.Append($"and got response{Environment.NewLine}      {json.Replace(Environment.NewLine, $"{Environment.NewLine}      ")}{Environment.NewLine}      ");
                             }
 
-                            if (MessagePayloadLoggingStrategy is PayloadLoggingStrategy.MinimalJson or null)
+                            if (responsePayloadLoggingStrategy is PayloadLoggingStrategy.MinimalJson or null)
                             {
                                 _ = postExecutionLogRegexBuilder.Append($"and got response {ResponseJson} ");
                             }
@@ -570,12 +628,11 @@ public static partial class LoggingMiddlewareTestMessages
             }
         }
 
-        public JsonSerializerContext? JsonSerializerContext => TMessage.JsonSerializerContext;
-
         public string TestLabelShort => new StringBuilder().Append(typeof(TMessage).Name)
                                                            .Append($",{ConfiguredLogLevel}")
                                                            .Append($",{PreExecutionLogLevel?.ToString() ?? "Default"}")
                                                            .Append($",{MessagePayloadLoggingStrategy?.ToString() ?? "Default"}")
+                                                           .Append($",{MessagePayloadLoggingStrategyFromFactory?.ToString() ?? string.Empty}")
                                                            .Append($",{LoggerCategoryFactory is not null}")
                                                            .Append($",{Exception is not null}")
                                                            .Append($",{HookBehavior?.ToString() ?? "None"}")
@@ -585,6 +642,7 @@ public static partial class LoggingMiddlewareTestMessages
                                                        .Append($",conf lvl:{ConfiguredLogLevel}")
                                                        .Append($",logged lvl:{PreExecutionLogLevel?.ToString() ?? "Default"}")
                                                        .Append($",strategy:{MessagePayloadLoggingStrategy?.ToString() ?? "Default"}")
+                                                       .Append($",stratFromFac:{MessagePayloadLoggingStrategyFromFactory?.ToString() ?? string.Empty}")
                                                        .Append($",has cat:{LoggerCategoryFactory is not null}")
                                                        .Append($",has ex:{Exception is not null}")
                                                        .Append($",hook:{HookBehavior?.ToString() ?? "None"}")
@@ -602,6 +660,10 @@ public static partial class LoggingMiddlewareTestMessages
 
     public interface IMessageTestCasePipelineConfiguration
     {
+        object Message { get; }
+
+        object? Response { get; }
+
         LogLevel? PreExecutionLogLevel { get; }
 
         LogLevel? PostExecutionLogLevel { get; }
@@ -610,7 +672,11 @@ public static partial class LoggingMiddlewareTestMessages
 
         PayloadLoggingStrategy? MessagePayloadLoggingStrategy { get; }
 
+        PayloadLoggingStrategy? MessagePayloadLoggingStrategyFromFactory { get; }
+
         PayloadLoggingStrategy? ResponsePayloadLoggingStrategy { get; }
+
+        PayloadLoggingStrategy? ResponsePayloadLoggingStrategyFromFactory { get; }
 
         HookTestBehavior? HookBehavior { get; }
     }

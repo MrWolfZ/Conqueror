@@ -100,8 +100,11 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             return;
         }
 
+        var payloadLoggingStrategy = Configuration.MessagePayloadLoggingStrategyFactory?.Invoke(ctx.Message)
+                                     ?? Configuration.MessagePayloadLoggingStrategy;
+
         var hasPayload = TMessage.EmptyInstance is null;
-        var shouldOmitPayload = Configuration.MessagePayloadLoggingStrategy == PayloadLoggingStrategy.Omit;
+        var shouldOmitPayload = payloadLoggingStrategy == PayloadLoggingStrategy.Omit;
 
         if (shouldOmitPayload || !hasPayload)
         {
@@ -121,10 +124,10 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
 
         if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
         {
-            if (Configuration.MessagePayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
             {
                 logger.LogMessageWithPayloadAsIndentedJson(Configuration.PreExecutionLogLevel,
-                                                           Serialize(ctx.Message, Configuration.MessagePayloadLoggingStrategy),
+                                                           Serialize(ctx.Message, payloadLoggingStrategy),
                                                            messageId,
                                                            traceId);
 
@@ -132,19 +135,19 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             }
 
             logger.LogMessage(Configuration.PreExecutionLogLevel,
-                              Serialize(ctx.Message, Configuration.MessagePayloadLoggingStrategy),
+                              Serialize(ctx.Message, payloadLoggingStrategy),
                               messageId,
                               traceId);
 
             return;
         }
 
-        if (Configuration.MessagePayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+        if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
         {
             logger.LogMessageWithPayloadAsIndentedJsonForTransport(Configuration.PreExecutionLogLevel,
                                                                    ctx.TransportType.Name,
                                                                    GetTransportRoleName(ctx.TransportType.Role),
-                                                                   Serialize(ctx.Message, Configuration.MessagePayloadLoggingStrategy),
+                                                                   Serialize(ctx.Message, payloadLoggingStrategy),
                                                                    messageId,
                                                                    traceId);
 
@@ -154,7 +157,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
         logger.LogMessageForTransport(Configuration.PreExecutionLogLevel,
                                       ctx.TransportType.Name,
                                       GetTransportRoleName(ctx.TransportType.Role),
-                                      Serialize(ctx.Message, Configuration.MessagePayloadLoggingStrategy),
+                                      Serialize(ctx.Message, payloadLoggingStrategy),
                                       messageId,
                                       traceId);
     }
@@ -178,6 +181,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
                     TraceId = traceId,
                     Message = ctx.Message,
                     Response = response,
+                    HasResponse = typeof(TResponse) != typeof(UnitMessageResponse),
                     ElapsedTime = elapsedTime,
                 };
 
@@ -199,7 +203,10 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             return;
         }
 
-        var shouldOmitPayload = Configuration.ResponsePayloadLoggingStrategy == PayloadLoggingStrategy.Omit;
+        var payloadLoggingStrategy = Configuration.ResponsePayloadLoggingStrategyFactory?.Invoke(ctx.Message, response)
+                                     ?? Configuration.ResponsePayloadLoggingStrategy;
+
+        var shouldOmitPayload = payloadLoggingStrategy == PayloadLoggingStrategy.Omit;
 
         if (shouldOmitPayload || ctx.HasUnitResponse)
         {
@@ -225,10 +232,10 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
 
         if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
         {
-            if (Configuration.ResponsePayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
             {
                 logger.LogMessageResponseWithPayloadAsIndentedJson(Configuration.PostExecutionLogLevel,
-                                                                   Serialize(response, Configuration.ResponsePayloadLoggingStrategy),
+                                                                   Serialize(response, payloadLoggingStrategy),
                                                                    elapsedTime.TotalMilliseconds,
                                                                    messageId,
                                                                    traceId);
@@ -237,7 +244,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             }
 
             logger.LogMessageResponse(Configuration.PostExecutionLogLevel,
-                                      Serialize(response, Configuration.ResponsePayloadLoggingStrategy),
+                                      Serialize(response, payloadLoggingStrategy),
                                       elapsedTime.TotalMilliseconds,
                                       messageId,
                                       traceId);
@@ -245,12 +252,12 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             return;
         }
 
-        if (Configuration.ResponsePayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+        if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
         {
             logger.LogMessageResponseWithPayloadAsIndentedJsonForTransport(Configuration.PostExecutionLogLevel,
                                                                            ctx.TransportType.Name,
                                                                            GetTransportRoleName(ctx.TransportType.Role),
-                                                                           Serialize(response, Configuration.ResponsePayloadLoggingStrategy),
+                                                                           Serialize(response, payloadLoggingStrategy),
                                                                            elapsedTime.TotalMilliseconds,
                                                                            messageId,
                                                                            traceId);
@@ -261,7 +268,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
         logger.LogMessageResponseForTransport(Configuration.PostExecutionLogLevel,
                                               ctx.TransportType.Name,
                                               GetTransportRoleName(ctx.TransportType.Role),
-                                              Serialize(response, Configuration.ResponsePayloadLoggingStrategy),
+                                              Serialize(response, payloadLoggingStrategy),
                                               elapsedTime.TotalMilliseconds,
                                               messageId,
                                               traceId);

@@ -360,6 +360,7 @@ public sealed class LoggingSignalMiddlewareTests
             PostExecutionLogLevel = null,
             ExceptionLogLevel = null,
             PayloadLoggingStrategy = null,
+            PayloadLoggingStrategyFromFactory = null,
             LoggerCategoryFactory = null,
             HookBehavior = HookTestBehavior.HookLogsAndReturnsTrue,
             TransportTypeName = null,
@@ -389,7 +390,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         try
         {
-            await handler.Handle(new() { Payload = 10 }, host.TestTimeoutToken);
+            await handler.Handle(testCase.Signal, host.TestTimeoutToken);
             Assert.Fail("Exception should have been thrown");
         }
         catch (TestException thrownException)
@@ -430,6 +431,7 @@ public sealed class LoggingSignalMiddlewareTests
             PostExecutionLogLevel = null,
             ExceptionLogLevel = null,
             PayloadLoggingStrategy = null,
+            PayloadLoggingStrategyFromFactory = null,
             LoggerCategoryFactory = null,
             HookBehavior = HookTestBehavior.HookLogsAndReturnsTrue,
             TransportTypeName = null,
