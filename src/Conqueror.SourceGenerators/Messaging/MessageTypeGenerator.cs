@@ -122,6 +122,7 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
             Accessibility.Public,
             IsRecord: true,
             IsAbstract: false,
+            IsPrimitive: false,
             TypeArguments: default,
             TypeConstraints: null,
             Attributes: default,
@@ -130,6 +131,7 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
             ParentClasses: default,
             Properties: default,
             Methods: default,
-            Enumerable: null);
+            Enumerable: null,
+            Tuple: null);
     }
 }

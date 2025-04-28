@@ -22,15 +22,17 @@ public static class GeneratorHelper
             symbol.DeclaredAccessibility,
             symbol.IsRecord,
             symbol.IsAbstract,
-            new(typeArguments.Select(t => t.ToString()).ToArray()),
+            IsPrimitive(symbol),
+            new(typeArguments.Select(t => GenerateTypeDescriptor(t, semanticModel).ToWrapper()).ToArray()),
             GetTypeConstraints(symbol as INamedTypeSymbol),
             GetAttributes(symbol),
-            GetProperties(symbol),
+            GetProperties(symbol, semanticModel),
             GetMethods(symbol),
-            GetBaseTypes(symbol),
+            GetBaseTypes(symbol, semanticModel),
             GetInterfaces(symbol),
             GetParentClasses(symbol, semanticModel),
-            Enumerable: GenerateEnumerableDescriptor(symbol));
+            GenerateEnumerableDescriptor(symbol, semanticModel),
+            GetTupleDescriptor(symbol, semanticModel));
     }
 
     public static EquatableArray<AttributeParameterDescriptor> GetAttributeProperties(AttributeData attributeData)
@@ -56,7 +58,7 @@ public static class GeneratorHelper
             => new(null, new(values.Select(GetValue).ToArray()), false);
     }
 
-    private static EnumerableDescriptor? GenerateEnumerableDescriptor(ITypeSymbol symbol)
+    private static EnumerableDescriptor? GenerateEnumerableDescriptor(ITypeSymbol symbol, SemanticModel semanticModel)
     {
         if (symbol.SpecialType == SpecialType.System_String)
         {
@@ -70,17 +72,26 @@ public static class GeneratorHelper
                 var typeArgument = interfaceType.TypeArguments[0];
 
                 return new(symbol.ToString(),
-                           typeArgument.ToString(),
                            symbol is IArrayTypeSymbol,
-                           IsPrimitive(typeArgument),
-                           typeArgument.IsReferenceType);
+                           GenerateTypeDescriptor(typeArgument, semanticModel).ToWrapper());
             }
         }
 
         return null;
     }
 
-    private static EquatableArray<BaseTypeDescriptor> GetBaseTypes(ITypeSymbol symbol)
+    private static TupleDescriptor? GetTupleDescriptor(ITypeSymbol symbol, SemanticModel semanticModel)
+    {
+        if (!symbol.IsTupleType || symbol is not INamedTypeSymbol s)
+        {
+            return null;
+        }
+
+        var items = s.TypeArguments.Select(a => GenerateTypeDescriptor(a, semanticModel).ToWrapper()).ToArray();
+        return new(new(items));
+    }
+
+    private static EquatableArray<BaseTypeDescriptor> GetBaseTypes(ITypeSymbol symbol, SemanticModel semanticModel)
     {
         var baseType = symbol.BaseType;
 
@@ -92,7 +103,7 @@ public static class GeneratorHelper
                            baseType.ContainingNamespace?.ToString() ?? string.Empty,
                            baseType.ToString(),
                            GetAttributes(baseType),
-                           GetProperties(baseType)));
+                           GetProperties(baseType, semanticModel)));
 
             baseType = baseType.BaseType;
         }
@@ -179,7 +190,7 @@ public static class GeneratorHelper
                          .ToArray());
     }
 
-    private static EquatableArray<PropertyDescriptor> GetProperties(ITypeSymbol symbol)
+    private static EquatableArray<PropertyDescriptor> GetProperties(ITypeSymbol symbol, SemanticModel semanticModel)
     {
         var properties = symbol.GetMembers()
                                .OfType<IPropertySymbol>()
@@ -190,7 +201,7 @@ public static class GeneratorHelper
                                                                    IsPrimitive(p.Type),
                                                                    IsNullable(p.Type),
                                                                    p.Type.SpecialType == SpecialType.System_String,
-                                                                   GenerateEnumerableDescriptor(p.Type)))
+                                                                   GenerateEnumerableDescriptor(p.Type, semanticModel)))
                                .ToArray();
 
         return new(properties);

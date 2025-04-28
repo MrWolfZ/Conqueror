@@ -80,7 +80,7 @@ public static class MessageTypeSources
                  .Append("/// <summary>").AppendLineWithIndentation(indentation)
                  .Append($"///     Message types for <see cref=\"global::{messageTypeDescriptor.FullyQualifiedName}\" />.").AppendLineWithIndentation(indentation)
                  .Append("/// </summary>").AppendLineWithIndentation(indentation)
-                 .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
+                 .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
                  .AppendBlock(indentation);
     }
 
@@ -93,7 +93,7 @@ public static class MessageTypeSources
         var keyword = messageTypeDescriptor.IsRecord ? "record" : "class";
         var messageTypeName = attributeDescriptor.FullyQualifiedMessageTypeName ?? $"{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}Message";
         return sb.AppendIndentation(indentation)
-                 .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::{messageTypeName}<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
+                 .Append($"partial {keyword} {messageTypeDescriptor.Name} : global::{messageTypeName}<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>").AppendLine()
                  .AppendBlock(indentation);
     }
 
@@ -104,7 +104,7 @@ public static class MessageTypeSources
     {
         return sb.AppendMessageTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append("public static ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}, IHandler> T => new();").AppendLine();
+                 .Append("public static ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"global::Conqueror.MessageTypes<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}, IHandler> T => new();").AppendLine();
     }
 
     private static StringBuilder AppendMessageHandlerInterface(this StringBuilder sb,
@@ -115,7 +115,7 @@ public static class MessageTypeSources
         sb = sb.AppendLine()
                .AppendMessageTypeGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append("public ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"partial interface IHandler : global::Conqueror.IMessageHandler<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>").AppendLine();
+               .Append("public ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"partial interface IHandler : global::Conqueror.IMessageHandler<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>").AppendLine();
 
         using var d = sb.AppendBlock(indentation);
 
@@ -128,7 +128,7 @@ public static class MessageTypeSources
               .AppendMessageTypeGeneratedCodeAttribute(indentation)
               .AppendIndentation(indentation)
               .Append("static ").Append(responseTypeDescriptor.IsUnitMessageResponse() ? "async " : string.Empty)
-              .Append($"global::System.Threading.Tasks.Task<global::{responseTypeDescriptor.FullyQualifiedName()}> global::Conqueror.IMessageHandler<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}, IHandler>.Invoke(IHandler handler, {messageTypeDescriptor.Name} message, global::System.Threading.CancellationToken cancellationToken)").AppendLine();
+              .Append($"global::System.Threading.Tasks.Task<{responseTypeDescriptor.FullyQualifiedName()}> global::Conqueror.IMessageHandler<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}, IHandler>.Invoke(IHandler handler, {messageTypeDescriptor.Name} message, global::System.Threading.CancellationToken cancellationToken)").AppendLine();
 
         if (responseTypeDescriptor.IsUnitMessageResponse())
         {
@@ -162,7 +162,7 @@ public static class MessageTypeSources
                                                                         in MessageAttributeDescriptor attributeDescriptor)
     {
         return sb.AppendIndentation(indentation)
-                 .Append($"partial interface IHandler : global::{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}MessageHandler<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}, IHandler>;").AppendLine();
+                 .Append($"partial interface IHandler : global::{attributeDescriptor.Namespace}.I{attributeDescriptor.Prefix}MessageHandler<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}, IHandler>;").AppendLine();
     }
 
     private static StringBuilder AppendMessagePipelineInterface(this StringBuilder sb,
@@ -173,14 +173,14 @@ public static class MessageTypeSources
         sb = sb.AppendLine()
                .AppendMessageTypeGeneratedCodeAttribute(indentation)
                .AppendIndentation(indentation)
-               .Append("public ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"partial interface IPipeline : global::Conqueror.IMessagePipeline<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>").AppendLine();
+               .Append("public ").AppendNewKeywordIfNecessary(messageTypeDescriptor).Append($"partial interface IPipeline : global::Conqueror.IMessagePipeline<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>").AppendLine();
 
         using var d = sb.AppendBlock(indentation);
 
         return sb.AppendEditorBrowsableNeverAttribute(indentation)
                  .AppendMessageTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"public sealed class Proxy : global::Conqueror.MessagePipelineProxy<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>, IPipeline;").AppendLine();
+                 .Append($"public sealed class Proxy : global::Conqueror.MessagePipelineProxy<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>, IPipeline;").AppendLine();
     }
 
     private static StringBuilder AppendMessageEmptyInstanceProperty(this StringBuilder sb,
@@ -194,10 +194,10 @@ public static class MessageTypeSources
 
         if (messageTypeDescriptor.HasProperties() || messageTypeDescriptor.IsAbstract)
         {
-            return sb.Append($"static {messageTypeDescriptor.Name}? global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.EmptyInstance => null;").AppendLine();
+            return sb.Append($"static {messageTypeDescriptor.Name}? global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.EmptyInstance => null;").AppendLine();
         }
 
-        return sb.Append($"static {messageTypeDescriptor.Name} global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.EmptyInstance => new();").AppendLine();
+        return sb.Append($"static {messageTypeDescriptor.Name} global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.EmptyInstance => new();").AppendLine();
     }
 
     private static StringBuilder AppendAttributeParameterProperty(this StringBuilder sb,
@@ -212,7 +212,7 @@ public static class MessageTypeSources
                  .AppendIndentation(indentation)
                  .Append("static ")
                  .AppendAttributeParameterPropertyType(in parameterDescriptor)
-                 .Append($" global::{messageTypeName}<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.{parameterDescriptor.Name} => ")
+                 .Append($" global::{messageTypeName}<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.{parameterDescriptor.Name} => ")
                  .AppendAttributeParameterValue(in parameterDescriptor.Value).Append(";").AppendLine();
     }
 
@@ -230,7 +230,7 @@ public static class MessageTypeSources
         return sb.AppendLine()
                  .AppendMessageTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"static global::System.Text.Json.Serialization.JsonSerializerContext global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.JsonSerializerContext")
+                 .Append($"static global::System.Text.Json.Serialization.JsonSerializerContext global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.JsonSerializerContext")
                  .AppendLineWithIndentation(indentation)
                  .AppendSingleIndent().Append($"=> global::{messageTypeDescriptor.FullyQualifiedName}JsonSerializerContext.Default;").AppendLine();
     }
@@ -243,7 +243,7 @@ public static class MessageTypeSources
         return sb.AppendLine()
                  .AppendMessageTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.PublicConstructors")
+                 .Append($"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.ConstructorInfo> global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.PublicConstructors")
                  .AppendLineWithIndentation(indentation)
                  .AppendSingleIndent().Append($"=> typeof({messageTypeDescriptor.Name}).GetConstructors(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);").AppendLine();
     }
@@ -256,19 +256,19 @@ public static class MessageTypeSources
         return sb.AppendLine()
                  .AppendMessageTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
-                 .Append($"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.IMessage<{messageTypeDescriptor.Name}, global::{responseTypeDescriptor.FullyQualifiedName()}>.PublicProperties")
+                 .Append($"static global::System.Collections.Generic.IEnumerable<global::System.Reflection.PropertyInfo> global::Conqueror.IMessage<{messageTypeDescriptor.Name}, {responseTypeDescriptor.FullyQualifiedName()}>.PublicProperties")
                  .AppendLineWithIndentation(indentation)
                  .AppendSingleIndent().Append($"=> typeof({messageTypeDescriptor.Name}).GetProperties(global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.Instance);").AppendLine();
     }
 
     private static StringBuilder AppendResponseTypeParameterIfNotUnitResponse(this StringBuilder sb, in TypeDescriptor responseTypeDescriptor)
     {
-        return !responseTypeDescriptor.IsUnitMessageResponse() ? sb.Append($"<global::{responseTypeDescriptor.FullyQualifiedName()}>") : sb;
+        return !responseTypeDescriptor.IsUnitMessageResponse() ? sb.Append($"<{responseTypeDescriptor.FullyQualifiedName()}>") : sb;
     }
 
     private static StringBuilder AppendResponseTypeParameterToListIfNotUnitResponse(this StringBuilder sb, in TypeDescriptor responseTypeDescriptor)
     {
-        return !responseTypeDescriptor.IsUnitMessageResponse() ? sb.Append($", global::{responseTypeDescriptor.FullyQualifiedName()}") : sb;
+        return !responseTypeDescriptor.IsUnitMessageResponse() ? sb.Append($", {responseTypeDescriptor.FullyQualifiedName()}") : sb;
     }
 
     private static StringBuilder AppendNewKeywordIfNecessary(this StringBuilder sb,
