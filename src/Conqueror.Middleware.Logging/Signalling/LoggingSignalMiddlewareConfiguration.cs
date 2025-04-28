@@ -35,6 +35,12 @@ public sealed class LoggingSignalMiddlewareConfiguration<TSignal>
     public PayloadLoggingStrategy PayloadLoggingStrategy { get; set; } = PayloadLoggingStrategy.MinimalJson;
 
     /// <summary>
+    ///     A factory method to determine the strategy to use for logging the signal payload.
+    ///     If this is not set, the <see cref="PayloadLoggingStrategy" /> is used.
+    /// </summary>
+    public Func<TSignal, PayloadLoggingStrategy>? PayloadLoggingStrategyFactory { get; set; }
+
+    /// <summary>
     ///     Customize the logger category. The factory is passed the signal.
     ///     By default, the logger will use the fully-qualified type name of
     ///     the signal type.

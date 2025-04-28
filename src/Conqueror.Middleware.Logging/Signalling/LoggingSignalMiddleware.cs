@@ -97,8 +97,11 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             return;
         }
 
+        var payloadLoggingStrategy = Configuration.PayloadLoggingStrategyFactory?.Invoke(ctx.Signal)
+                                     ?? Configuration.PayloadLoggingStrategy;
+
         var hasPayload = TSignal.EmptyInstance is null;
-        var shouldOmitPayload = Configuration.PayloadLoggingStrategy == PayloadLoggingStrategy.Omit;
+        var shouldOmitPayload = payloadLoggingStrategy == PayloadLoggingStrategy.Omit;
 
         if (shouldOmitPayload || !hasPayload)
         {
@@ -118,10 +121,10 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
 
         if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == SignalTransportRole.Receiver)
         {
-            if (Configuration.PayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
             {
                 logger.LogSignalWithPayloadAsIndentedJson(Configuration.PreExecutionLogLevel,
-                                                          Serialize(ctx.Signal, Configuration.PayloadLoggingStrategy),
+                                                          Serialize(ctx.Signal, payloadLoggingStrategy),
                                                           signalId,
                                                           traceId);
 
@@ -129,19 +132,19 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
             }
 
             logger.LogSignal(Configuration.PreExecutionLogLevel,
-                             Serialize(ctx.Signal, Configuration.PayloadLoggingStrategy),
+                             Serialize(ctx.Signal, payloadLoggingStrategy),
                              signalId,
                              traceId);
 
             return;
         }
 
-        if (Configuration.PayloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+        if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
         {
             logger.LogSignalWithPayloadAsIndentedJsonForTransport(Configuration.PreExecutionLogLevel,
                                                                   ctx.TransportType.Name,
                                                                   GetTransportRoleName(ctx.TransportType.Role),
-                                                                  Serialize(ctx.Signal, Configuration.PayloadLoggingStrategy),
+                                                                  Serialize(ctx.Signal, payloadLoggingStrategy),
                                                                   signalId,
                                                                   traceId);
 
@@ -151,7 +154,7 @@ internal sealed partial class LoggingSignalMiddleware<TSignal> : ISignalMiddlewa
         logger.LogSignalForTransport(Configuration.PreExecutionLogLevel,
                                      ctx.TransportType.Name,
                                      GetTransportRoleName(ctx.TransportType.Role),
-                                     Serialize(ctx.Signal, Configuration.PayloadLoggingStrategy),
+                                     Serialize(ctx.Signal, payloadLoggingStrategy),
                                      signalId,
                                      traceId);
     }

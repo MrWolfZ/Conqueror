@@ -30,15 +30,33 @@ public sealed class LoggingMessageMiddlewareConfiguration<TMessage, TResponse>
 
     /// <summary>
     ///     The strategy to use for logging the message payload.
-    ///     Defaults to <see cref="PayloadLoggingStrategy.MinimalJson" />.
+    ///     Defaults to <see cref="PayloadLoggingStrategy.MinimalJson" />.<br />
+    ///     <br />
+    ///     If <see cref="MessagePayloadLoggingStrategyFactory" /> is set,
+    ///     this property is ignored.
     /// </summary>
     public PayloadLoggingStrategy MessagePayloadLoggingStrategy { get; set; } = PayloadLoggingStrategy.MinimalJson;
 
     /// <summary>
+    ///     A factory method to determine the strategy to use for logging the message payload.
+    ///     If this is not set, the <see cref="MessagePayloadLoggingStrategy" /> is used.
+    /// </summary>
+    public Func<TMessage, PayloadLoggingStrategy>? MessagePayloadLoggingStrategyFactory { get; set; }
+
+    /// <summary>
     ///     The strategy to use for logging the response payload (if any).
-    ///     Defaults to <see cref="PayloadLoggingStrategy.MinimalJson" />.
+    ///     Defaults to <see cref="PayloadLoggingStrategy.MinimalJson" />.<br />
+    ///     <br />
+    ///     If <see cref="MessagePayloadLoggingStrategyFactory" /> is set,
+    ///     this property is ignored.
     /// </summary>
     public PayloadLoggingStrategy ResponsePayloadLoggingStrategy { get; set; } = PayloadLoggingStrategy.MinimalJson;
+
+    /// <summary>
+    ///     A factory method to determine the strategy to use for logging the response payload.
+    ///     If this is not set, the <see cref="ResponsePayloadLoggingStrategy" /> is used.
+    /// </summary>
+    public Func<TMessage, TResponse, PayloadLoggingStrategy>? ResponsePayloadLoggingStrategyFactory { get; set; }
 
     /// <summary>
     ///     Customize the logger category. The factory is passed the message.
@@ -146,7 +164,15 @@ public sealed record LoggingMessagePostExecutionContext<TMessage, TResponse>
     public required TMessage Message { get; init; }
 
     /// <summary>
-    ///     The response that is being logged (is <c>null</c> if there is no response).
+    ///     Whether the message has a response.
+    /// </summary>
+    public required bool HasResponse { get; init; }
+
+    /// <summary>
+    ///     The response that is being logged (this is set to an instance of
+    ///     <see cref="UnitMessageResponse" /> if the message has no response;
+    ///     check <see cref="HasResponse" /> if you need to distinguish between
+    ///     the two cases).
     /// </summary>
     public required TResponse Response { get; init; }
 
