@@ -29,6 +29,9 @@ public sealed partial class AuthorizationMessageMiddlewareTests
     {
         await using var host = await AuthorizationMiddlewareTestHost.Create(services => services.AddMessageHandler<TestMessageHandler>());
 
+        var authenticationCheckName = $"authn {authenticationCheck}";
+        var authorizationCheckName = $"authz {authorizationCheck}";
+
         var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
                           .WithPipeline(p => p.UseAuthorization(c =>
@@ -36,18 +39,18 @@ public sealed partial class AuthorizationMessageMiddlewareTests
                               _ = authenticationCheck switch
                               {
                                   "none" => c,
-                                  "syncSuccess" => c.AddAuthorizationCheck(ctx => ctx.Success()),
-                                  "syncFail" => c.AddAuthorizationCheck(ctx => ctx.Unauthenticated("test failure")),
-                                  "asyncSuccess" => c.AddAuthorizationCheck(async (ctx, ct) =>
+                                  "syncSuccess" => c.AddAuthorizationCheck(authenticationCheckName, ctx => ctx.Success()),
+                                  "syncFail" => c.AddAuthorizationCheck(authenticationCheckName, ctx => ctx.Unauthenticated("test failure")),
+                                  "asyncSuccess" => c.AddAuthorizationCheck(authenticationCheckName, async ctx =>
                                   {
                                       await Task.Yield();
-                                      ct.ThrowIfCancellationRequested();
+                                      ctx.CancellationToken.ThrowIfCancellationRequested();
                                       return ctx.Success();
                                   }),
-                                  "asyncFail" => c.AddAuthorizationCheck(async (ctx, ct) =>
+                                  "asyncFail" => c.AddAuthorizationCheck(authenticationCheckName, async ctx =>
                                   {
                                       await Task.Yield();
-                                      ct.ThrowIfCancellationRequested();
+                                      ctx.CancellationToken.ThrowIfCancellationRequested();
                                       return ctx.Unauthenticated(["test failure 1", "test failure 2"]);
                                   }),
                                   _ => throw new ArgumentOutOfRangeException(nameof(authenticationCheck), authenticationCheck, null),
@@ -57,22 +60,28 @@ public sealed partial class AuthorizationMessageMiddlewareTests
                               _ = authorizationCheck switch
                               {
                                   "none" => c,
-                                  "syncSuccess" => c.AddAuthorizationCheck(ctx => ctx.Success()),
-                                  "syncFail" => c.AddAuthorizationCheck(ctx => ctx.Unauthorized("test failure")),
-                                  "asyncSuccess" => c.AddAuthorizationCheck(async (ctx, ct) =>
+                                  "syncSuccess" => c.AddAuthorizationCheck(authorizationCheckName, ctx => ctx.Success()),
+                                  "syncFail" => c.AddAuthorizationCheck(authorizationCheckName, ctx => ctx.Unauthorized("test failure")),
+                                  "asyncSuccess" => c.AddAuthorizationCheck(authorizationCheckName, async ctx =>
                                   {
                                       await Task.Yield();
-                                      ct.ThrowIfCancellationRequested();
+                                      ctx.CancellationToken.ThrowIfCancellationRequested();
                                       return ctx.Success();
                                   }),
-                                  "asyncFail" => c.AddAuthorizationCheck(async (ctx, ct) =>
+                                  "asyncFail" => c.AddAuthorizationCheck(authorizationCheckName, async ctx =>
                                   {
                                       await Task.Yield();
-                                      ct.ThrowIfCancellationRequested();
+                                      ctx.CancellationToken.ThrowIfCancellationRequested();
                                       return ctx.Unauthorized(["test failure 1", "test failure 2"]);
                                   }),
                                   _ => throw new ArgumentOutOfRangeException(nameof(authorizationCheck), authorizationCheck, null),
                               };
+                          }).ConfigureAuthorization(c =>
+                          {
+                              var expectedChecks = new List<string>().Concat(authenticationCheck is not "none" ? [authenticationCheckName] : [])
+                                                                     .Concat(authorizationCheck is not "none" ? [authorizationCheckName] : []);
+
+                              Assert.That(c.AuthorizationChecks.Select(check => check.Id), Is.EqualTo(expectedChecks));
                           }));
 
         if (authenticationCheck is not "syncFail" and not "asyncFail" && authorizationCheck is not "syncFail" and not "asyncFail")
@@ -98,14 +107,35 @@ public sealed partial class AuthorizationMessageMiddlewareTests
     }
 
     [Test]
-    public async Task GivenHandlerWithAuthorizationMiddlewareWithFailingCheck_WhenRemovingMiddlewareCallingHandler_CallSucceeds()
+    public async Task GivenHandlerWithAuthorizationMiddlewareWithFailingCheck_WhenRemovingFailingCheckAndCallingHandler_CallSucceeds()
     {
         await using var host = await AuthorizationMiddlewareTestHost.Create(services => services.AddMessageHandler<TestMessageHandler>());
 
         var handler = host.Resolve<IMessageSenders>()
                           .For(TestMessage.T)
-                          .WithPipeline(p => p.UseAuthorization(c => c.AddAuthorizationCheck(ctx => ctx.Unauthenticated("test")))
-                                              .WithoutAuthorization());
+                          .WithPipeline(p => p.UseAuthorization(c => c.AddAuthorizationCheck("test", ctx => ctx.Unauthenticated("test")))
+                                              .ConfigureAuthorization(c => c.RemoveAuthorizationCheck("test")
+
+                                                                            // use return value of prior call to assert it is still the configuration
+                                                                            .AddAuthorizationCheck("test2", ctx => ctx.Success())));
+
+        var response = await handler.Handle(new() { Payload = 10 }, host.TestTimeoutToken);
+
+        Assert.That(response.Payload, Is.EqualTo(11));
+    }
+
+    [Test]
+    public async Task GivenHandlerWithAuthorizationMiddlewareWithFailingCheck_WhenRemovingMiddlewareAndCallingHandler_CallSucceeds()
+    {
+        await using var host = await AuthorizationMiddlewareTestHost.Create(services => services.AddMessageHandler<TestMessageHandler>());
+
+        var handler = host.Resolve<IMessageSenders>()
+                          .For(TestMessage.T)
+                          .WithPipeline(p => p.UseAuthorization(c => c.AddAuthorizationCheck("test", ctx => ctx.Unauthenticated("test")))
+                                              .WithoutAuthorization()
+
+                                              // use return value of prior call to assert it is still the pipeline
+                                              .Use(ctx => ctx.Next(ctx.Message, ctx.CancellationToken)));
 
         var response = await handler.Handle(new() { Payload = 10 }, host.TestTimeoutToken);
 
@@ -132,14 +162,14 @@ public sealed partial class AuthorizationMessageMiddlewareTests
         var handler = scope.ServiceProvider
                            .GetRequiredService<IMessageSenders>()
                            .For(TestMessage.T)
-                           .WithPipeline(p => p.UseAuthorization(c =>
-                           {
-                               _ = c.AddAuthorizationCheck(ctx =>
-                               {
-                                   seenContext = ctx;
-                                   return ctx.Success();
-                               });
-                           }));
+                           .WithPipeline(p => p.UseAuthorization(c => c.AddAuthorizationCheck("test", ctx =>
+                                                                       {
+                                                                           seenContext = ctx;
+                                                                           return ctx.Success();
+                                                                       })
+
+                                                                       // use return value of prior call to assert it is still the configuration
+                                                                       .AddAuthorizationCheck("test2", ctx => ctx.Success())));
 
         var msg = new TestMessage { Payload = 10 };
         _ = await handler.Handle(msg, host.TestTimeoutToken);
@@ -149,6 +179,7 @@ public sealed partial class AuthorizationMessageMiddlewareTests
         Assert.That(seenContext.ServiceProvider, Is.SameAs(scope.ServiceProvider));
         Assert.That(seenContext.ConquerorContext.DownstreamContextData.Get<string>("test-key"), Is.EqualTo("test-value"));
         Assert.That(seenContext.CurrentPrincipal, Is.SameAs(claimsPrincipal));
+        Assert.That(seenContext.CancellationToken, Is.EqualTo(host.TestTimeoutToken));
     }
 
     [Message<TestMessageResponse>]

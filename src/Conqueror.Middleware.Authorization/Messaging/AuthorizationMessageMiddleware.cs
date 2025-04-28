@@ -13,11 +13,12 @@ internal sealed class AuthorizationMessageMiddleware<TMessage, TResponse> : IMes
         var authContext = new MessageAuthorizationContext<TMessage, TResponse>(ctx.Message,
                                                                                ctx.ServiceProvider,
                                                                                ctx.ConquerorContext,
-                                                                               ctx.ConquerorContext.GetCurrentPrincipal());
+                                                                               ctx.ConquerorContext.GetCurrentPrincipal(),
+                                                                               ctx.CancellationToken);
 
-        foreach (var authorizationCheck in Configuration.AuthorizationChecks)
+        foreach (var (_, authorizationCheck) in Configuration.AuthorizationChecks)
         {
-            var authorizationResult = await authorizationCheck(authContext, ctx.CancellationToken).ConfigureAwait(false);
+            var authorizationResult = await authorizationCheck(authContext).ConfigureAwait(false);
 
             if (authorizationResult is AuthorizationFailureResult failure)
             {
