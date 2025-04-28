@@ -40,6 +40,7 @@ dotnet_diagnostic.CA1813.severity = none # avoid unsealed attributes
 dotnet_diagnostic.CA1819.severity = none # properties should not return arrays
 
 dotnet_diagnostic.SA1403.severity = none # file may only contain a single namespace
+dotnet_diagnostic.SA1414.severity = none # tuple members should have names
 dotnet_diagnostic.SA1649.severity = none # file name should match first type name
 
 dotnet_diagnostic.S1144.severity = none # unused private types or members should be removed

@@ -10,7 +10,8 @@ public readonly record struct TypeDescriptor(
     Accessibility Accessibility,
     bool IsRecord,
     bool IsAbstract,
-    EquatableArray<string> TypeArguments,
+    bool IsPrimitive,
+    EquatableArray<TypeDescriptorWrapper> TypeArguments,
     string? TypeConstraints,
     EquatableArray<AttributeDescriptor> Attributes,
     EquatableArray<PropertyDescriptor> Properties,
@@ -18,7 +19,8 @@ public readonly record struct TypeDescriptor(
     EquatableArray<BaseTypeDescriptor> BaseTypes,
     EquatableArray<InterfaceDescriptor> Interfaces,
     EquatableArray<ParentClass> ParentClasses,
-    EnumerableDescriptor? Enumerable)
+    EnumerableDescriptor? Enumerable,
+    TupleDescriptor? Tuple)
 {
     public readonly Accessibility Accessibility = Accessibility;
     public readonly EquatableArray<AttributeDescriptor> Attributes = Attributes;
@@ -26,16 +28,26 @@ public readonly record struct TypeDescriptor(
     public readonly EnumerableDescriptor? Enumerable = Enumerable;
     public readonly string FullyQualifiedName = FullyQualifiedName;
     public readonly EquatableArray<InterfaceDescriptor> Interfaces = Interfaces;
-    public readonly bool IsRecord = IsRecord;
     public readonly bool IsAbstract = IsAbstract;
+    public readonly bool IsPrimitive = IsPrimitive;
+    public readonly bool IsRecord = IsRecord;
     public readonly EquatableArray<MethodDescriptor> Methods = Methods;
     public readonly string Name = Name;
     public readonly string Namespace = Namespace;
     public readonly EquatableArray<ParentClass> ParentClasses = ParentClasses;
     public readonly EquatableArray<PropertyDescriptor> Properties = Properties;
     public readonly string SimpleName = SimpleName;
-    public readonly EquatableArray<string> TypeArguments = TypeArguments;
+    public readonly TupleDescriptor? Tuple = Tuple;
+    public readonly EquatableArray<TypeDescriptorWrapper> TypeArguments = TypeArguments;
     public readonly string? TypeConstraints = TypeConstraints;
+
+    public TypeDescriptorWrapper ToWrapper() => new(this);
+}
+
+// reference type to break cycle that would otherwise cause the generator to fail to initialize
+public sealed record TypeDescriptorWrapper(TypeDescriptor Descriptor)
+{
+    public TypeDescriptor Descriptor { get; } = Descriptor;
 }
 
 public readonly record struct ParentClass(
