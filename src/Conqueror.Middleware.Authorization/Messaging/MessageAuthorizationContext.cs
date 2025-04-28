@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Security.Claims;
+using System.Threading;
 
 namespace Conqueror.Middleware.Authorization.Messaging;
 
@@ -7,7 +8,8 @@ public sealed class MessageAuthorizationContext<TMessage, TResponse>(
     TMessage message,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
-    ClaimsPrincipal? currentPrincipal)
+    ClaimsPrincipal? currentPrincipal,
+    CancellationToken cancellationToken)
     : AuthorizationContext
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -18,4 +20,6 @@ public sealed class MessageAuthorizationContext<TMessage, TResponse>(
     public override ConquerorContext ConquerorContext { get; } = conquerorContext;
 
     public override ClaimsPrincipal? CurrentPrincipal { get; } = currentPrincipal;
+
+    public override CancellationToken CancellationToken { get; } = cancellationToken;
 }
