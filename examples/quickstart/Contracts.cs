@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Conqueror;
 
 namespace Quickstart;
@@ -12,10 +12,10 @@ namespace Quickstart;
 // Note that using transports is fully optional, and if you want you can use Conqueror purely
 // in-process, similar to libraries like MediatR
 
-// The `HttpMessage` attribute tells Conqueror that this record can be exposed via HTTP (using
-// the corresponding transport package). The attribute allows customizing the HTTP endpoint method,
-// path, path prefix, version, API group name, etc. (note that all are optional with sensible
-// defaults, in this case leading to `POST /api/v1/incrementCounterByAmount`)
+// The `HttpMessage` attribute tells Conqueror that this message type can be exposed via HTTP
+// (using the corresponding transport package). The attribute allows customizing the HTTP endpoint
+// method, path, path prefix, version, API group name, etc. (note that all these are optional with
+// sensible defaults, in this case leading to `POST /api/v1/incrementCounterByAmount`)
 [HttpMessage<CounterIncrementedResponse>(Version = "v1")]
 public sealed partial record IncrementCounterByAmount(string CounterName)
 {

@@ -49,10 +49,10 @@ namespace Quickstart;
 // Note that using transports is fully optional, and if you want you can use Conqueror purely
 // in-process, similar to libraries like MediatR
 
-// The `HttpMessage` attribute tells Conqueror that this record can be exposed via HTTP (using
-// the corresponding transport package). The attribute allows customizing the HTTP endpoint method,
-// path, path prefix, version, API group name, etc. (note that all are optional with sensible
-// defaults, in this case leading to `POST /api/v1/incrementCounterByAmount`)
+// The `HttpMessage` attribute tells Conqueror that this message type can be exposed via HTTP
+// (using the corresponding transport package). The attribute allows customizing the HTTP endpoint
+// method, path, path prefix, version, API group name, etc. (note that all these are optional with
+// sensible defaults, in this case leading to `POST /api/v1/incrementCounterByAmount`)
 [HttpMessage<CounterIncrementedResponse>(Version = "v1")]
 public sealed partial record IncrementCounterByAmount(string CounterName)
 {
@@ -127,21 +127,21 @@ internal sealed class CountersRepository
 {
     private readonly ConcurrentDictionary<string, long> counters = new();
 
-    public async Task<long> AddOrIncrementCounterValue(string counterName, long incrementBy)
+    public async Task<long> AddOrIncrementCounter(string counterName, long incrementBy)
     {
-        await Task.CompletedTask;
+        await Task.Yield();
         return counters.AddOrUpdate(counterName, incrementBy, (_, value) => value + incrementBy);
     }
 
     public async Task<long> GetCounterValue(string counterName)
     {
-        await Task.CompletedTask;
+        await Task.Yield();
         return counters.GetValueOrDefault(counterName, 0L);
     }
 
     public async Task<IReadOnlyDictionary<string, long>> GetCounters()
     {
-        await Task.CompletedTask;
+        await Task.Yield();
         return counters;
     }
 }
@@ -309,7 +309,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
                     return ctx.Next(ctx.Signal, ctx.CancellationToken);
                 })
 
-                // Middlewares in the pipeline are executed in the order that they are added in.
+                // Middlewares in the pipeline are executed in the order that they are added.
                 // We add the logging middleware to the pipeline only after the prior two
                 // middlewares to ensure that only signals which are not skipped get logged.
                 // The `Configure...` extension methods for middlewares can be used to modify the
