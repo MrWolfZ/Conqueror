@@ -84,6 +84,8 @@ public sealed partial record CounterIncremented(
 > <details>
 > <summary>Click here to see file without the comments to get a better idea how your own code will look like</summary>
 >
+> [Contracts.cs](examples/quickstart.enhanced/Contracts.cs)
+>
 > <!-- REPLACECODE examples/quickstart.enhanced/Contracts.cs -->
 > ```cs
 > using System.ComponentModel.DataAnnotations;
@@ -231,6 +233,8 @@ internal sealed partial class IncrementCounterByAmountHandler(
 > <details>
 > <summary>Click here to see a more realistic trimmed down version of the file</summary>
 >
+> [IncrementCounterByAmountHandler.cs](examples/quickstart.enhanced/IncrementCounterByAmountHandler.cs)
+>
 > <!-- REPLACECODE examples/quickstart.enhanced/IncrementCounterByAmountHandler.cs -->
 > ```cs
 > using System.ComponentModel.DataAnnotations;
@@ -366,6 +370,8 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 > <details>
 > <summary>Click here to see a more realistic trimmed down version of the file</summary>
 >
+> [DoublingCounterIncrementedHandler.cs](examples/quickstart.enhanced/DoublingCounterIncrementedHandler.cs)
+>
 > <!-- REPLACECODE examples/quickstart.enhanced/DoublingCounterIncrementedHandler.cs -->
 > ```cs
 > using Conqueror;
@@ -450,6 +456,8 @@ internal sealed partial class GetCountersHandler(
 
 > <details>
 > <summary>Click here to see a more realistic trimmed down version of the file</summary>
+>
+> [GetCountersHandler.cs](examples/quickstart.enhanced/GetCountersHandler.cs)
 >
 > <!-- REPLACECODE examples/quickstart.enhanced/GetCountersHandler.cs -->
 > ```cs
