@@ -1,4 +1,4 @@
-﻿using Conqueror;
+using Conqueror;
 
 namespace Quickstart;
 
@@ -37,7 +37,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
                     return ctx.Next(ctx.Signal, ctx.CancellationToken);
                 })
 
-                // Middlewares in the pipeline are executed in the order that they are added in.
+                // Middlewares in the pipeline are executed in the order that they are added.
                 // We add the logging middleware to the pipeline only after the prior two
                 // middlewares to ensure that only signals which are not skipped get logged.
                 // The `Configure...` extension methods for middlewares can be used to modify the
