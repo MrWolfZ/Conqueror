@@ -91,7 +91,7 @@ public sealed partial record CounterIncremented(
 > using System.ComponentModel.DataAnnotations;
 > using Conqueror;
 > 
-> namespace Quickstart;
+> namespace Quickstart.Enhanced;
 > 
 > [HttpMessage<CounterIncrementedResponse>(Version = "v1")]
 > public sealed partial record IncrementCounterByAmount(string CounterName)
@@ -237,10 +237,9 @@ internal sealed partial class IncrementCounterByAmountHandler(
 >
 > <!-- REPLACECODE examples/quickstart.enhanced/IncrementCounterByAmountHandler.cs -->
 > ```cs
-> using System.ComponentModel.DataAnnotations;
 > using Conqueror;
 > 
-> namespace Quickstart;
+> namespace Quickstart.Enhanced;
 > 
 > internal sealed partial class IncrementCounterByAmountHandler(
 >     CountersRepository repository,
@@ -248,9 +247,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
 >     : IncrementCounterByAmount.IHandler
 > {
 >     public static void ConfigurePipeline(IncrementCounterByAmount.IPipeline pipeline) =>
->         pipeline.UseLogging()
->                 .UseDataAnnotationValidation()
->                 .UseIndentedJsonMessageLogFormatting();
+>         pipeline.UseDefault();
 > 
 >     public async Task<CounterIncrementedResponse> Handle(
 >         IncrementCounterByAmount message,
@@ -260,6 +257,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
 >                                                               message.IncrementBy);
 > 
 >         await publishers.For(CounterIncremented.T)
+>                         .WithDefaultPublisherPipeline()
 >                         .Handle(new(message.CounterName, newValue, message.IncrementBy),
 >                                 cancellationToken);
 > 
@@ -376,14 +374,14 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 > ```cs
 > using Conqueror;
 > 
-> namespace Quickstart;
+> namespace Quickstart.Enhanced;
 > 
 > internal sealed partial class DoublingCounterIncrementedHandler(
 >     IMessageSenders senders)
 >     : CounterIncremented.IHandler
 > {
 >     static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
->         pipeline.SkipSignalMatching<CounterIncremented>(s => s.CounterName != "doubler")
+>         pipeline.SkipSignalMatching<T, CounterIncremented>(s => s.CounterName != "doubler")
 >                 .EnsureSingleExecutionPerOperation()
 >                 .UseLoggingWithIndentedJson();
 > 
@@ -392,6 +390,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 >         CancellationToken cancellationToken = default)
 >     {
 >         await senders.For(IncrementCounterByAmount.T)
+>                      .WithDefaultSenderPipeline()
 >                      .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
 >                              cancellationToken);
 >     }
@@ -461,18 +460,17 @@ internal sealed partial class GetCountersHandler(
 >
 > <!-- REPLACECODE examples/quickstart.enhanced/GetCountersHandler.cs -->
 > ```cs
-> using Conqueror;
-> 
-> namespace Quickstart;
+> namespace Quickstart.Enhanced;
 > 
 > internal sealed partial class GetCountersHandler(
 >     CountersRepository repository)
 >     : GetCounters.IHandler
 > {
 >     public static void ConfigurePipeline(GetCounters.IPipeline pipeline) =>
->         pipeline.UseLogging()
->                 .OmitResponseFromLogsInProduction()
->                 .OmitResponseFromLogsForMessageMatching(m => m.CounterName == "confidential");
+>         pipeline.UseDefault()
+>                 .OmitResponsePayloadFromLogsInProduction()
+>                 .OmitResponsePayloadFromLogsForResponseMatching(r => r.Any(c => c.CounterName ==
+>                                                                         "confidential"));
 > 
 >     public async Task<List<CounterValue>> Handle(
 >         GetCounters message,
