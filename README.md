@@ -33,6 +33,7 @@ dotnet add package Swashbuckle.AspNetCore # to get a nice Swagger UI
 
 Let's start by defining the contracts of our quickstart application in [Contracts.cs](examples/quickstart/Contracts.cs):
 
+<!-- REPLACECODE examples/quickstart/Contracts.cs -->
 ```cs
 using System.ComponentModel.DataAnnotations;
 using Conqueror;
@@ -80,40 +81,42 @@ public sealed partial record CounterIncremented(
     long IncrementBy);
 ```
 
-<details>
-<summary>Click here to see file without the comments to get a better idea how your own code will look like</summary>
-
-```cs
-using System.ComponentModel.DataAnnotations;
-using Conqueror;
-
-namespace Quickstart;
-
-[HttpMessage<CounterIncrementedResponse>(Version = "v1")]
-public sealed partial record IncrementCounterByAmount(string CounterName)
-{
-    [Range(1, long.MaxValue)]
-    public required long IncrementBy { get; init; }
-}
-
-public sealed record CounterIncrementedResponse(long NewCounterValue);
-
-[HttpMessage<List<CounterValue>>(HttpMethod = "GET", Version = "v1")]
-public sealed partial record GetCounters(string? Prefix = null);
-
-public sealed record CounterValue(string CounterName, long Value);
-
-[Signal]
-public sealed partial record CounterIncremented(
-    string CounterName,
-    long NewValue,
-    long IncrementBy);
-```
-
-</details>
+> <details>
+> <summary>Click here to see file without the comments to get a better idea how your own code will look like</summary>
+>
+> <!-- REPLACECODE examples/quickstart.enhanced/Contracts.cs -->
+> ```cs
+> using System.ComponentModel.DataAnnotations;
+> using Conqueror;
+> 
+> namespace Quickstart;
+> 
+> [HttpMessage<CounterIncrementedResponse>(Version = "v1")]
+> public sealed partial record IncrementCounterByAmount(string CounterName)
+> {
+>     [Range(1, long.MaxValue)]
+>     public required long IncrementBy { get; init; }
+> }
+> 
+> public sealed record CounterIncrementedResponse(long NewCounterValue);
+> 
+> [HttpMessage<List<CounterValue>>(HttpMethod = "GET", Version = "v1")]
+> public sealed partial record GetCounters(string? Prefix = null);
+> 
+> public sealed record CounterValue(string CounterName, long Value);
+> 
+> [Signal]
+> public sealed partial record CounterIncremented(
+>     string CounterName,
+>     long NewValue,
+>     long IncrementBy);
+> ```
+>
+> </details>
 
 In [CountersRepository.cs](examples/quickstart/CountersRepository.cs) create a simple repository to simulate talking to a database:
 
+<!-- REPLACECODE examples/quickstart/CountersRepository.cs -->
 ```cs
 using System.Collections.Concurrent;
 
@@ -146,6 +149,7 @@ internal sealed class CountersRepository
 
 In [IncrementCounterByAmountHandler.cs](examples/quickstart/IncrementCounterByAmountHandler.cs) create a message handler for our `IncrementCounterByAmount` message type.
 
+<!-- REPLACECODE examples/quickstart/IncrementCounterByAmountHandler.cs -->
 ```cs
 using System.ComponentModel.DataAnnotations;
 using Conqueror;
@@ -224,45 +228,47 @@ internal sealed partial class IncrementCounterByAmountHandler(
 }
 ```
 
-<details>
-<summary>Click here to see a more realistic trimmed down version of the file</summary>
-
-```cs
-using System.ComponentModel.DataAnnotations;
-using Conqueror;
-
-namespace Quickstart;
-
-internal sealed partial class IncrementCounterByAmountHandler(
-    CountersRepository repository,
-    ISignalPublishers publishers)
-    : IncrementCounterByAmount.IHandler
-{
-    public static void ConfigurePipeline(IncrementCounterByAmount.IPipeline pipeline) =>
-        pipeline.UseLogging()
-                .UseDataAnnotationValidation()
-                .UseIndentedJsonMessageLogFormatting();
-
-    public async Task<CounterIncrementedResponse> Handle(
-        IncrementCounterByAmount message,
-        CancellationToken cancellationToken = default)
-    {
-        var newValue = await repository.AddOrIncrementCounter(message.CounterName,
-                                                              message.IncrementBy);
-
-        await publishers.For(CounterIncremented.T)
-                        .Handle(new(message.CounterName, newValue, message.IncrementBy),
-                                cancellationToken);
-
-        return new(await repository.GetCounterValue(message.CounterName));
-    }
-}
-```
-
-</details>
+> <details>
+> <summary>Click here to see a more realistic trimmed down version of the file</summary>
+>
+> <!-- REPLACECODE examples/quickstart.enhanced/IncrementCounterByAmountHandler.cs -->
+> ```cs
+> using System.ComponentModel.DataAnnotations;
+> using Conqueror;
+> 
+> namespace Quickstart;
+> 
+> internal sealed partial class IncrementCounterByAmountHandler(
+>     CountersRepository repository,
+>     ISignalPublishers publishers)
+>     : IncrementCounterByAmount.IHandler
+> {
+>     public static void ConfigurePipeline(IncrementCounterByAmount.IPipeline pipeline) =>
+>         pipeline.UseLogging()
+>                 .UseDataAnnotationValidation()
+>                 .UseIndentedJsonMessageLogFormatting();
+> 
+>     public async Task<CounterIncrementedResponse> Handle(
+>         IncrementCounterByAmount message,
+>         CancellationToken cancellationToken = default)
+>     {
+>         var newValue = await repository.AddOrIncrementCounter(message.CounterName,
+>                                                               message.IncrementBy);
+> 
+>         await publishers.For(CounterIncremented.T)
+>                         .Handle(new(message.CounterName, newValue, message.IncrementBy),
+>                                 cancellationToken);
+> 
+>         return new(await repository.GetCounterValue(message.CounterName));
+>     }
+> }
+> ```
+>
+> </details>
 
 In [DoublingCounterIncrementedHandler.cs](examples/quickstart/DoublingCounterIncrementedHandler.cs) create a signal handler that doubles increment operations on specific counters.
 
+<!-- REPLACECODE examples/quickstart/DoublingCounterIncrementedHandler.cs -->
 ```cs
 using Conqueror;
 
@@ -357,38 +363,42 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 }
 ```
 
-<details>
-<summary>Click here to see a more realistic trimmed down version of the file</summary>
-
-```cs
-using Conqueror;
-
-namespace Quickstart;
-
-internal sealed partial class DoublingCounterIncrementedHandler(
-    IMessageSenders senders)
-    : CounterIncremented.IHandler
-{
-    static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
-        pipeline.SkipSignalMatching<CounterIncremented>(s => s.CounterName != "doubler")
-                .EnsureSingleExecutionPerOperation()
-                .UseLoggingWithIndentedJson();
-
-    public async Task Handle(
-        CounterIncremented signal,
-        CancellationToken cancellationToken = default)
-    {
-        await senders.For(IncrementCounterByAmount.T)
-                     .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
-                             cancellationToken);
-    }
-}
-```
+> <details>
+> <summary>Click here to see a more realistic trimmed down version of the file</summary>
+>
+> <!-- REPLACECODE examples/quickstart.enhanced/DoublingCounterIncrementedHandler.cs -->
+> ```cs
+> using Conqueror;
+> 
+> namespace Quickstart;
+> 
+> internal sealed partial class DoublingCounterIncrementedHandler(
+>     IMessageSenders senders)
+>     : CounterIncremented.IHandler
+> {
+>     static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
+>         pipeline.SkipSignalMatching<CounterIncremented>(s => s.CounterName != "doubler")
+>                 .EnsureSingleExecutionPerOperation()
+>                 .UseLoggingWithIndentedJson();
+> 
+>     public async Task Handle(
+>         CounterIncremented signal,
+>         CancellationToken cancellationToken = default)
+>     {
+>         await senders.For(IncrementCounterByAmount.T)
+>                      .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
+>                              cancellationToken);
+>     }
+> }
+> ```
+>
+> </details>
 
 </details>
 
 In [GetCountersHandler.cs](examples/quickstart/GetCountersHandler.cs) create a message handler that returns a filtered list of counters.
 
+<!-- REPLACECODE examples/quickstart/GetCountersHandler.cs -->
 ```cs
 using Conqueror;
 
@@ -438,40 +448,42 @@ internal sealed partial class GetCountersHandler(
 }
 ```
 
-<details>
-<summary>Click here to see a more realistic trimmed down version of the file</summary>
-
-```cs
-using Conqueror;
-
-namespace Quickstart;
-
-internal sealed partial class GetCountersHandler(
-    CountersRepository repository)
-    : GetCounters.IHandler
-{
-    public static void ConfigurePipeline(GetCounters.IPipeline pipeline) =>
-        pipeline.UseLogging()
-                .OmitResponseFromLogsInProduction()
-                .OmitResponseFromLogsForMessageMatching(m => m.CounterName == "confidential");
-
-    public async Task<List<CounterValue>> Handle(
-        GetCounters message,
-        CancellationToken cancellationToken = default)
-    {
-        var allCounters = await repository.GetCounters();
-
-        return allCounters.Where(p => message.Prefix is null || p.Key.StartsWith(message.Prefix))
-                          .Select(p => new CounterValue(p.Key, p.Value))
-                          .ToList();
-    }
-}
-```
-
-</details>
+> <details>
+> <summary>Click here to see a more realistic trimmed down version of the file</summary>
+>
+> <!-- REPLACECODE examples/quickstart.enhanced/GetCountersHandler.cs -->
+> ```cs
+> using Conqueror;
+> 
+> namespace Quickstart;
+> 
+> internal sealed partial class GetCountersHandler(
+>     CountersRepository repository)
+>     : GetCounters.IHandler
+> {
+>     public static void ConfigurePipeline(GetCounters.IPipeline pipeline) =>
+>         pipeline.UseLogging()
+>                 .OmitResponseFromLogsInProduction()
+>                 .OmitResponseFromLogsForMessageMatching(m => m.CounterName == "confidential");
+> 
+>     public async Task<List<CounterValue>> Handle(
+>         GetCounters message,
+>         CancellationToken cancellationToken = default)
+>     {
+>         var allCounters = await repository.GetCounters();
+> 
+>         return allCounters.Where(p => message.Prefix is null || p.Key.StartsWith(message.Prefix))
+>                           .Select(p => new CounterValue(p.Key, p.Value))
+>                           .ToList();
+>     }
+> }
+> ```
+>
+> </details>
 
 Finally, set up the app in [Program.cs](examples/quickstart/Program.cs):
 
+<!-- REPLACECODE examples/quickstart/Program.cs -->
 ```cs
 using Quickstart;
 

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -euo pipefail
+
+trap 'echo "❌ Git hook failed at line $LINENO. Aborting commit." >&2' ERR
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+readme="README.md"
+changed=false
+
+[[ ! -f "$readme" ]] && exit 0
+
+changed_files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^examples/.+\.cs$' || true)
+matching_files=()
+
+for file in $changed_files; do
+    if grep -q "<!--[[:space:]]*REPLACECODE[[:space:]]*$file[[:space:]]*-->" "$readme"; then
+        matching_files+=("$file")
+    fi
+done
+
+if [ ${#matching_files[@]} -gt 0 ]; then
+    before_checksum=$(sha256sum "$readme" | awk '{print $1}')
+    python3 $SCRIPT_DIR/scripts/update_readme_code_blocks.py "${matching_files[@]}"
+    after_checksum=$(sha256sum "$readme" | awk '{print $1}')
+
+    if [[ "$before_checksum" != "$after_checksum" ]]; then
+        git add "$readme"
+        echo "Updated code blocks in $readme and staged it for commit."
+    fi
+fi
+
+exit 0
