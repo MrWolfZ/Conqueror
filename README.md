@@ -31,7 +31,7 @@ dotnet add package Conqueror.Transport.Http.Server.AspNetCore --prerelease
 dotnet add package Swashbuckle.AspNetCore # to get a nice Swagger UI
 ```
 
-Let's start by defining the contracts of our quickstart application in [Contracts.cs](recipes/quickstart/Contracts.cs):
+Let's start by defining the contracts of our quickstart application in [Contracts.cs](examples/quickstart/Contracts.cs):
 
 ```cs
 using System.ComponentModel.DataAnnotations;
@@ -112,7 +112,7 @@ public sealed partial record CounterIncremented(
 
 </details>
 
-In [CountersRepository.cs](recipes/quickstart/CountersRepository.cs) create a simple repository to simulate talking to a database:
+In [CountersRepository.cs](examples/quickstart/CountersRepository.cs) create a simple repository to simulate talking to a database:
 
 ```cs
 using System.Collections.Concurrent;
@@ -144,7 +144,7 @@ internal sealed class CountersRepository
 }
 ```
 
-In [IncrementCounterByAmountHandler.cs](recipes/quickstart/IncrementCounterByAmountHandler.cs) create a message handler for our `IncrementCounterByAmount` message type.
+In [IncrementCounterByAmountHandler.cs](examples/quickstart/IncrementCounterByAmountHandler.cs) create a message handler for our `IncrementCounterByAmount` message type.
 
 ```cs
 using System.ComponentModel.DataAnnotations;
@@ -261,7 +261,7 @@ internal sealed partial class IncrementCounterByAmountHandler(
 
 </details>
 
-In [DoublingCounterIncrementedHandler.cs](recipes/quickstart/DoublingCounterIncrementedHandler.cs) create a signal handler that doubles increment operations on specific counters.
+In [DoublingCounterIncrementedHandler.cs](examples/quickstart/DoublingCounterIncrementedHandler.cs) create a signal handler that doubles increment operations on specific counters.
 
 ```cs
 using Conqueror;
@@ -387,7 +387,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 
 </details>
 
-In [GetCountersHandler.cs](recipes/quickstart/GetCountersHandler.cs) create a message handler that returns a filtered list of counters.
+In [GetCountersHandler.cs](examples/quickstart/GetCountersHandler.cs) create a message handler that returns a filtered list of counters.
 
 ```cs
 using Conqueror;
@@ -470,7 +470,7 @@ internal sealed partial class GetCountersHandler(
 
 </details>
 
-Finally, set up the app in [Program.cs](recipes/quickstart/Program.cs):
+Finally, set up the app in [Program.cs](examples/quickstart/Program.cs):
 
 ```cs
 using Quickstart;
@@ -630,7 +630,7 @@ If you have swagger UI enabled, it will show the new messages and they can be ca
   vertical space is reserved even before the image is loaded so that
   links to anchors in the readme work correctly
 ->
-<img src="./recipes/quickstart/swagger.gif?raw=true" alt="Quickstart Swagger" style="height: 565px" height="565px" /> -->
+<img src="./examples/quickstart/swagger.gif?raw=true" alt="Quickstart Swagger" style="height: 565px" height="565px" /> -->
 
 ## Libraries
 
