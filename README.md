@@ -19,6 +19,30 @@ Whether you're building a monolith or distributed microservices, **Conqueror** p
 
 > **Conqueror** only supports [.NET 8 or later](https://dotnet.microsoft.com/en-us/download)
 
+<!-- TOC -->
+* [Quickstart](#quickstart)
+* [Recipes](#recipes)
+  * [Messaging Introduction](#messaging-introduction)
+    * [Messaging Basics](#messaging-basics)
+    * [Messaging Advanced](#messaging-advanced)
+    * [Messaging Expert](#messaging-expert)
+    * [Messaging Cross-Cutting Concerns](#messaging-cross-cutting-concerns)
+  * [Signalling Introduction](#signalling-introduction)
+    * [Signalling Basics](#signalling-basics)
+    * [Signalling Advanced](#signalling-advanced)
+    * [Signalling Expert](#signalling-expert)
+    * [Signalling Cross-Cutting Concerns](#signalling-cross-cutting-concerns)
+  * [Iterating Introduction](#iterating-introduction)
+    * [Iterating Basics](#iterating-basics)
+    * [Iterating Advanced](#iterating-advanced)
+    * [Iterating Expert](#iterating-expert)
+    * [Iterating Cross-Cutting Concerns](#iterating-cross-cutting-concerns)
+* [Motivation](#motivation)
+  * [Comparison with similar projects](#comparison-with-similar-projects)
+    * [Differences to MediatR](#differences-to-mediatr)
+    * [Differences to MassTransit](#differences-to-masstransit)
+<!-- TOC -->
+
 ## Quickstart
 
 This quickstart guide will let you jump right into the code without lengthy explanations. If you prefer more guidance, head over to our [recipes](#recipes). By following this quickstart guide, you'll add HTTP messages and an in-process signal to a minimal API ASP.NET Core application. You can also find the [source code](recipes/quickstart) here in the repository.
@@ -409,8 +433,6 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 >
 > </details>
 
-</details>
-
 In [GetCountersHandler.cs](examples/quickstart/GetCountersHandler.cs) create a message handler that returns a filtered list of counters.
 
 <!-- REPLACECODE examples/quickstart/GetCountersHandler.cs -->
@@ -670,7 +692,7 @@ info: Quickstart.GetCountersHandler[412531951]
 <!-- 
 If you have swagger UI enabled, it will show the new messages and they can be called from there.
 
-<!--
+<!-
   use an HTML image instead of a markdown image to ensure that enough
   vertical space is reserved even before the image is loaded so that
   links to anchors in the readme work correctly
