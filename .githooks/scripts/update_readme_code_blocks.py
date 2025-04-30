@@ -28,8 +28,8 @@ def update_readme(readme_content: str, replacements: dict) -> str:
                 i += 1
 
             # Match start of code block
-            if i < len(lines) and re.match(rf'^{re.escape(quote)}```cs\s*$', lines[i]):
-                result.append(lines[i])  # keep ```cs
+            if i < len(lines) and re.match(rf'^{re.escape(quote)}```\w*\s*$', lines[i]):
+                result.append(lines[i])  # keep ```
                 i += 1
 
                 # Skip existing code block
@@ -45,7 +45,7 @@ def update_readme(readme_content: str, replacements: dict) -> str:
                 result.append(f"{quote}```")
 
             else:
-                result.append(f"{quote}<!-- ERROR: Expected ```cs block after marker for {filepath} -->")
+                result.append(f"{quote}<!-- ERROR: Expected ``` block after marker for {filepath} -->")
         else:
             result.append(line)
             i += 1
