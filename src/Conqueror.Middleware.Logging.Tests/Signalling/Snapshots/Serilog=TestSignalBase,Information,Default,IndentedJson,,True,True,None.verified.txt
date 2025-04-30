@@ -1,16 +1,16 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling signal on in-process publisher with payload
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Publishing in-process signal of type '"TestSignalSub"' with payload
 {
   "PayloadSub": 11,
   "PayloadBase": 10
 }
 (Signal ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Information] Handling signal with payload
+2020-01-01 00:00:00.000 +00:00 [Information] Handling signal of type '"TestSignalSub"' with payload
 {
   "PayloadSub": 11,
   "PayloadBase": 10
 }
 (Signal ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Error] An exception occurred while handling signal after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Error] An exception occurred while handling signal of type '"TestSignalSub"' after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
 Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals+TestException: test exception
    at Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalBaseHandler.Handle(TestSignalBase signal, CancellationToken cancellationToken) in {ProjectDirectory}Signalling/LoggingMiddlewareTestSignals.cs:line FIXED
    at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Signalling/LoggingSignalMiddleware.cs:line FIXED
@@ -18,7 +18,7 @@ Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals+TestE
    at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx)
    at Conqueror.Signalling.SignalPipelineRunner`1.<>c__DisplayClass3_2.<Execute>b__1(TSignal signal, CancellationToken token) in {SolutionDirectory}src/Conqueror/Signalling/SignalPipelineRunner.cs:line FIXED
 
-2020-01-01 00:00:00.000 +00:00 [Error] An exception occurred while handling signal on in-process publisher after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Error] An exception occurred while publishing in-process signal of type '"TestSignalSub"' after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
 Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals+TestException: test exception
    at Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalBaseHandler.Handle(TestSignalBase signal, CancellationToken cancellationToken) in {ProjectDirectory}Signalling/LoggingMiddlewareTestSignals.cs:line FIXED
    at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Signalling/LoggingSignalMiddleware.cs:line FIXED

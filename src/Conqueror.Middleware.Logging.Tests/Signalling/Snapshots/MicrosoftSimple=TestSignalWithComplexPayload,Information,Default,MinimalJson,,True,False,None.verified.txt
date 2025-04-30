@@ -1,8 +1,8 @@
 ﻿info: CustomCategory_TestSignalWithComplexPayload[441733974]
-      Handling signal on in-process publisher with payload {"Payload":10,"NestedPayload":{"Payload":11,"Payload2":12}} (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Publishing in-process signal of type 'TestSignalWithComplexPayload' with payload {"Payload":10,"NestedPayload":{"Payload":11,"Payload2":12}} (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithComplexPayload[441733974]
-      Handling signal with payload {"Payload":10,"NestedPayload":{"Payload":11,"Payload2":12}} (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Handling signal of type 'TestSignalWithComplexPayload' with payload {"Payload":10,"NestedPayload":{"Payload":11,"Payload2":12}} (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithComplexPayload[1977864143]
-      Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Handled signal of type 'TestSignalWithComplexPayload' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithComplexPayload[1977864143]
-      Handled signal on in-process publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Published in-process signal of type 'TestSignalWithComplexPayload' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

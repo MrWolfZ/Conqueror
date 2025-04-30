@@ -28,7 +28,7 @@ public static class ConquerorMiddlewareLoggingSignalPipelineExtensions
                                                                Action<LoggingSignalMiddlewareConfiguration<TSignal>>? configure = null)
         where TSignal : class, ISignal<TSignal>
     {
-        var configuration = new LoggingSignalMiddlewareConfiguration<TSignal>();
+        var configuration = new LoggingSignalMiddlewareConfiguration<TSignal>(pipeline.HandlerType);
         configure?.Invoke(configuration);
         return pipeline.Use(new LoggingSignalMiddleware<TSignal> { Configuration = configuration });
     }

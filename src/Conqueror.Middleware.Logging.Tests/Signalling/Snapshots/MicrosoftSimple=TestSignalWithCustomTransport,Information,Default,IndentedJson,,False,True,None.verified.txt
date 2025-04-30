@@ -1,17 +1,17 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[441733974]
-      Handling signal on test-transport publisher with payload
+      Publishing test-transport signal of type 'TestSignalWithCustomTransport' with payload
       {
         "Payload": 10
       }
       (Signal ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[441733974]
-      Handling signal on test-transport receiver with payload
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransportHandler[441733974]
+      Handling test-transport signal of type 'TestSignalWithCustomTransport' with payload
       {
         "Payload": 10
       }
       (Signal ID: test-message-id, Trace ID: test-trace-id)
-fail: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[712209902]
-      An exception occurred while handling signal on test-transport receiver after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+fail: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransportHandler[712209902]
+      An exception occurred while handling test-transport signal of type 'TestSignalWithCustomTransport' after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals+TestException: test exception
          at Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransportHandler.Handle(TestSignalWithCustomTransport signal, CancellationToken cancellationToken) in {ProjectDirectory}Signalling/LoggingMiddlewareTestSignals.cs:line FIXED
          at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Signalling/LoggingSignalMiddleware.cs:line FIXED
@@ -20,7 +20,7 @@ fail: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals
          at Conqueror.Signalling.SignalPipelineRunner`1.<>c__DisplayClass3_2.<Execute>b__1(TSignal signal, CancellationToken token) in {SolutionDirectory}src/Conqueror/Signalling/SignalPipelineRunner.cs:line FIXED
 
 fail: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[712209902]
-      An exception occurred while handling signal on test-transport publisher after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      An exception occurred while publishing test-transport signal of type 'TestSignalWithCustomTransport' after 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals+TestException: test exception
          at Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransportHandler.Handle(TestSignalWithCustomTransport signal, CancellationToken cancellationToken) in {ProjectDirectory}Signalling/LoggingMiddlewareTestSignals.cs:line FIXED
          at Conqueror.Middleware.Logging.Signalling.LoggingSignalMiddleware`1.Execute(SignalMiddlewareContext`1 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Signalling/LoggingSignalMiddleware.cs:line FIXED

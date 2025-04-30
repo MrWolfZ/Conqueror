@@ -1,16 +1,16 @@
 ﻿info: CustomCategory_TestSignalWithCustomSerializedPayloadType[441733974]
-      Handling signal on in-process publisher with payload
+      Publishing in-process signal of type 'TestSignalWithCustomSerializedPayloadType' with payload
       {
         "Payload": 10
       }
       (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithCustomSerializedPayloadType[441733974]
-      Handling signal with payload
+      Handling signal of type 'TestSignalWithCustomSerializedPayloadType' with payload
       {
         "Payload": 10
       }
       (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithCustomSerializedPayloadType[1977864143]
-      Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Handled signal of type 'TestSignalWithCustomSerializedPayloadType' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithCustomSerializedPayloadType[1977864143]
-      Handled signal on in-process publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Published in-process signal of type 'TestSignalWithCustomSerializedPayloadType' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

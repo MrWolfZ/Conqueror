@@ -1,8 +1,8 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignal[441733974]
-      Handling signal on in-process publisher with payload {"Payload":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignal[441733974]
-      Handling signal with payload {"Payload":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Publishing in-process signal of type 'TestSignal' with payload {"Payload":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalHandler[441733974]
+      Handling signal of type 'TestSignal' with payload {"Payload":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalHandler[1977864143]
+      Handled signal of type 'TestSignal' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignal[1977864143]
-      Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignal[1977864143]
-      Handled signal on in-process publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Published in-process signal of type 'TestSignal' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

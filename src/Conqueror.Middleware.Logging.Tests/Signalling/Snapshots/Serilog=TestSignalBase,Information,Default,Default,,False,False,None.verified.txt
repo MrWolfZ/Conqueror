@@ -1,4 +1,4 @@
-﻿2020-01-01 00:00:00.000 +00:00 [Information] Handling signal on in-process publisher with payload {"PayloadSub":11,"PayloadBase":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Information] Handling signal with payload {"PayloadSub":11,"PayloadBase":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Information] Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
-2020-01-01 00:00:00.000 +00:00 [Information] Handled signal on in-process publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Publishing in-process signal of type '"TestSignalSub"' with payload {"PayloadSub":11,"PayloadBase":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handling signal of type '"TestSignalSub"' with payload {"PayloadSub":11,"PayloadBase":10} (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handled signal of type '"TestSignalSub"' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Published in-process signal of type '"TestSignalSub"' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

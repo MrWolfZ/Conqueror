@@ -1,16 +1,16 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[441733974]
-      Handling signal on test-transport publisher with payload
+      Publishing test-transport signal of type 'TestSignalWithCustomTransport' with payload
       {
         "Payload": 10
       }
       (Signal ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[441733974]
-      Handling signal on test-transport receiver with payload
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransportHandler[441733974]
+      Handling test-transport signal of type 'TestSignalWithCustomTransport' with payload
       {
         "Payload": 10
       }
       (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransportHandler[1977864143]
+      Handled test-transport signal of type 'TestSignalWithCustomTransport' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[1977864143]
-      Handled signal on test-transport receiver in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[1977864143]
-      Handled signal on test-transport publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Published test-transport signal of type 'TestSignalWithCustomTransport' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

@@ -596,7 +596,7 @@ public static partial class LoggingMiddlewareTestMessages
 
                         var postExecutionServerMessage = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                        yield return (expectedSenderCategory, PreExecutionLogLevel ?? LogLevel.Information, postExecutionServerMessage);
+                        yield return (expectedSenderCategory, PostExecutionLogLevel ?? LogLevel.Information, postExecutionServerMessage);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)

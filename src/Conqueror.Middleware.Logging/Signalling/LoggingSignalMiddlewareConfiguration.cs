@@ -10,6 +10,11 @@ namespace Conqueror.Middleware.Logging.Signalling;
 public sealed class LoggingSignalMiddlewareConfiguration<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
+    internal LoggingSignalMiddlewareConfiguration(Type? handlerType)
+    {
+        HandlerType = handlerType;
+    }
+
     /// <summary>
     ///     The level at which the pre-execution log message is logged.
     ///     Defaults to <see cref="LogLevel.Information" />.
@@ -76,6 +81,8 @@ public sealed class LoggingSignalMiddlewareConfiguration<TSignal>
     ///     itself. It will always be re-thrown by the middleware.
     /// </summary>
     public Func<LoggingSignalExceptionContext<TSignal>, bool>? ExceptionHook { get; set; }
+
+    internal Type? HandlerType { get; }
 }
 
 /// <summary>
@@ -105,6 +112,11 @@ public sealed record LoggingSignalPreExecutionContext<TSignal>
     ///     The trace ID of the Conqueror operation context.
     /// </summary>
     public required string TraceId { get; init; }
+
+    /// <summary>
+    ///     The transport type of the signal execution.
+    /// </summary>
+    public required SignalTransportType TransportType { get; init; }
 
     /// <summary>
     ///     The signal that is being logged.
@@ -139,6 +151,11 @@ public sealed record LoggingSignalPostExecutionContext<TSignal>
     ///     The trace ID of the Conqueror operation context.
     /// </summary>
     public required string TraceId { get; init; }
+
+    /// <summary>
+    ///     The transport type of the signal execution.
+    /// </summary>
+    public required SignalTransportType TransportType { get; init; }
 
     /// <summary>
     ///     The signal that is being logged.
@@ -178,6 +195,11 @@ public sealed record LoggingSignalExceptionContext<TSignal>
     ///     The trace ID of the Conqueror operation context.
     /// </summary>
     public required string TraceId { get; init; }
+
+    /// <summary>
+    ///     The transport type of the signal execution.
+    /// </summary>
+    public required SignalTransportType TransportType { get; init; }
 
     /// <summary>
     ///     The signal that is being logged.

@@ -67,8 +67,6 @@ public sealed class LoggingMessageMiddlewareTests
             // we are testing a side-effect, so it is fine to ignore everything here
         }
 
-        var expectedLogEntries = testCase.ExpectedLogMessages.Select(t => (t.Category, t.LogLevel, t.MessagePattern));
-
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
         // ReSharper disable once DisposeOnUsingVariable (intentionally done to force a flush)
@@ -76,7 +74,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         Assert.Multiple(() =>
         {
-            foreach (var (cat, lvl, messagePattern) in expectedLogEntries)
+            foreach (var (cat, lvl, messagePattern) in testCase.ExpectedLogMessages)
             {
                 Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Cat == cat && e.Lvl == lvl && messagePattern.IsMatch(e.Msg)),
                             $"expected cat={cat}, lvl={lvl}, message pattern={messagePattern}");

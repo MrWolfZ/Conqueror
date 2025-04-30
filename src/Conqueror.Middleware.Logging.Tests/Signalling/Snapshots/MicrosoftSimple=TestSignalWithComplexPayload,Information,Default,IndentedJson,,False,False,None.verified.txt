@@ -1,5 +1,5 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithComplexPayload[441733974]
-      Handling signal on in-process publisher with payload
+      Publishing in-process signal of type 'TestSignalWithComplexPayload' with payload
       {
         "Payload": 10,
         "NestedPayload": {
@@ -8,8 +8,8 @@
         }
       }
       (Signal ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithComplexPayload[441733974]
-      Handling signal with payload
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithComplexPayloadHandler[441733974]
+      Handling signal of type 'TestSignalWithComplexPayload' with payload
       {
         "Payload": 10,
         "NestedPayload": {
@@ -18,7 +18,7 @@ info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals
         }
       }
       (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithComplexPayloadHandler[1977864143]
+      Handled signal of type 'TestSignalWithComplexPayload' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithComplexPayload[1977864143]
-      Handled signal in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithComplexPayload[1977864143]
-      Handled signal on in-process publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Published in-process signal of type 'TestSignalWithComplexPayload' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

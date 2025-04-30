@@ -1,8 +1,8 @@
 ﻿info: CustomCategory_TestSignalWithCustomTransport[441733974]
-      Handling signal on test-transport publisher (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Publishing test-transport signal of type 'TestSignalWithCustomTransport' (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithCustomTransport[441733974]
-      Handling signal on test-transport receiver (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Handling test-transport signal of type 'TestSignalWithCustomTransport' (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithCustomTransport[1977864143]
-      Handled signal on test-transport receiver in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Handled test-transport signal of type 'TestSignalWithCustomTransport' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestSignalWithCustomTransport[1977864143]
-      Handled signal on test-transport publisher in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+      Published test-transport signal of type 'TestSignalWithCustomTransport' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
