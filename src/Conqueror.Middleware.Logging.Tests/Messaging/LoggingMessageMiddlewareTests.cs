@@ -46,7 +46,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         var handler = host.Resolve<IMessageSenders>()
                           .For(TIHandler.MessageTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TMessage) == typeof(TestMessageWithCustomTransport))
         {
@@ -67,7 +67,7 @@ public sealed class LoggingMessageMiddlewareTests
             // we are testing a side-effect, so it is fine to ignore everything here
         }
 
-        var expectedLogEntries = testCase.ExpectedLogMessages.Select(t => (testCase.ExpectedLoggerCategory, t.LogLevel, t.MessagePattern));
+        var expectedLogEntries = testCase.ExpectedLogMessages.Select(t => (t.Category, t.LogLevel, t.MessagePattern));
 
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
@@ -116,7 +116,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         var handler = host.Resolve<IMessageSenders>()
                           .For(TIHandler.MessageTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TMessage) == typeof(TestMessageWithCustomTransport))
         {
@@ -175,7 +175,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         var handler = host.Resolve<IMessageSenders>()
                           .For(TIHandler.MessageTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TMessage) == typeof(TestMessageWithCustomTransport))
         {
@@ -242,7 +242,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         var handler = host.Resolve<IMessageSenders>()
                           .For(TIHandler.MessageTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TMessage) == typeof(TestMessageWithCustomTransport))
         {
@@ -310,7 +310,7 @@ public sealed class LoggingMessageMiddlewareTests
 
         var handler = host.Resolve<IMessageSenders>()
                           .For(TIHandler.MessageTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TMessage) == typeof(TestMessageWithCustomTransport))
         {

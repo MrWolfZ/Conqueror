@@ -10,6 +10,11 @@ namespace Conqueror.Middleware.Logging.Messaging;
 public sealed class LoggingMessageMiddlewareConfiguration<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
+    internal LoggingMessageMiddlewareConfiguration(Type? handlerType)
+    {
+        HandlerType = handlerType;
+    }
+
     /// <summary>
     ///     The level at which the pre-execution log message is logged.
     ///     Defaults to <see cref="LogLevel.Information" />.
@@ -94,6 +99,8 @@ public sealed class LoggingMessageMiddlewareConfiguration<TMessage, TResponse>
     ///     itself. It will always be re-thrown by the middleware.
     /// </summary>
     public Func<LoggingMessageExceptionContext<TMessage, TResponse>, bool>? ExceptionHook { get; set; }
+
+    internal Type? HandlerType { get; }
 }
 
 /// <summary>
@@ -123,6 +130,11 @@ public sealed record LoggingMessagePreExecutionContext<TMessage, TResponse>
     ///     The trace ID of the Conqueror operation context.
     /// </summary>
     public required string TraceId { get; init; }
+
+    /// <summary>
+    ///     The transport type of the message execution.
+    /// </summary>
+    public required MessageTransportType TransportType { get; init; }
 
     /// <summary>
     ///     The message that is being logged.
@@ -157,6 +169,11 @@ public sealed record LoggingMessagePostExecutionContext<TMessage, TResponse>
     ///     The trace ID of the Conqueror operation context.
     /// </summary>
     public required string TraceId { get; init; }
+
+    /// <summary>
+    ///     The transport type of the message execution.
+    /// </summary>
+    public required MessageTransportType TransportType { get; init; }
 
     /// <summary>
     ///     The message that is being logged.
@@ -209,6 +226,11 @@ public sealed record LoggingMessageExceptionContext<TMessage, TResponse>
     ///     The trace ID of the Conqueror operation context.
     /// </summary>
     public required string TraceId { get; init; }
+
+    /// <summary>
+    ///     The transport type of the message execution.
+    /// </summary>
+    public required MessageTransportType TransportType { get; init; }
 
     /// <summary>
     ///     The message that is being logged.
