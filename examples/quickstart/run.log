@@ -1,0 +1,80 @@
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling http message of type 'IncrementCounterByAmount' with payload
+      {
+        "CounterName": "test",
+        "IncrementBy": 2
+      }
+      (Message ID: 8d6593393b592be7, Trace ID: 9f49b02534df157313aa4fe5edc36bfe)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":2} in 33.2277ms (Message ID: 8d6593393b592be7, Trace ID: 9f49b02534df157313aa4fe5edc36bfe)
+info: Quickstart.GetCountersHandler[711195907]
+      Handling http message of type 'GetCounters' with payload {"Prefix":"tes"} (Message ID: 8c1ef6a764aed796, Trace ID: a804d8d086b2102afa2af651ad86fb36)
+info: Quickstart.GetCountersHandler[412531951]
+      Handled http message of type 'GetCounters' and got response
+      [
+        {
+          "CounterName": "test",
+          "Value": 2
+        }
+      ]
+      in 6.3624ms (Message ID: 8c1ef6a764aed796, Trace ID: a804d8d086b2102afa2af651ad86fb36)
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling http message of type 'IncrementCounterByAmount' with payload
+      {
+        "CounterName": "doubler",
+        "IncrementBy": 2
+      }
+      (Message ID: 2f2cb247021d2ee0, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.DoublingCounterIncrementedHandler[441733974]
+      Handling signal of type 'CounterIncremented' with payload
+      {
+        "CounterName": "doubler",
+        "NewValue": 2,
+        "IncrementBy": 2
+      }
+      (Signal ID: 85d8955727f526aa, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.IncrementCounterByAmount[0]
+      doubling increment of counter 'doubler'
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling message of type 'IncrementCounterByAmount' with payload
+      {
+        "CounterName": "doubler",
+        "IncrementBy": 2
+      }
+      (Message ID: 5311de941ad7aa20, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 3.8204ms (Message ID: 5311de941ad7aa20, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.IncrementCounterByAmount[0]
+      doubled increment of counter 'doubler', it is now 4
+info: Quickstart.DoublingCounterIncrementedHandler[1977864143]
+      Handled signal of type 'CounterIncremented' in 16.7602ms (Signal ID: 85d8955727f526aa, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 20.9651ms (Message ID: 2f2cb247021d2ee0, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.GetCountersHandler[711195907]
+      Handling http message of type 'GetCounters' with payload {"Prefix":null} (Message ID: 411b31c9614b284e, Trace ID: f1b75fe47e043cbd1ac400d65ce91cb5)
+info: Quickstart.GetCountersHandler[412531951]
+      Handled http message of type 'GetCounters' and got response
+      [
+        {
+          "CounterName": "test",
+          "Value": 2
+        },
+        {
+          "CounterName": "doubler",
+          "Value": 4
+        }
+      ]
+      in 0.4262ms (Message ID: 411b31c9614b284e, Trace ID: f1b75fe47e043cbd1ac400d65ce91cb5)
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling http message of type 'IncrementCounterByAmount' with payload
+      {
+        "CounterName": "confidential",
+        "IncrementBy": 1000
+      }
+      (Message ID: 77884562dab999b1, Trace ID: 7fdf00fc3ef39a8076d0c48c9c545aef)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":1000} in 0.6406ms (Message ID: 77884562dab999b1, Trace ID: 7fdf00fc3ef39a8076d0c48c9c545aef)
+info: Quickstart.GetCountersHandler[711195907]
+      Handling http message of type 'GetCounters' with payload {"Prefix":null} (Message ID: 85791577e3f50c87, Trace ID: 1e9560273e354aa7870dd1da736f44b8)
+info: Quickstart.GetCountersHandler[412531951]
+      Handled http message of type 'GetCounters' in 0.5875ms (Message ID: 85791577e3f50c87, Trace ID: 1e9560273e354aa7870dd1da736f44b8)

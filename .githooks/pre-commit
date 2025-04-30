@@ -11,7 +11,7 @@ changed=false
 
 [[ ! -f "$readme" ]] && exit 0
 
-changed_files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^examples/.+\.cs$' || true)
+changed_files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^examples/.+\.(cs|sh|log)$' || true)
 matching_files=()
 
 for file in $changed_files; do

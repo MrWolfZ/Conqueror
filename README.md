@@ -521,12 +521,17 @@ app.MapMessageEndpoints();
 app.Run();
 ```
 
-Now launch your app and you can call the message handlers via HTTP.
+Now launch your app:
 
+<!-- REPLACECODE examples/quickstart/run.sh -->
 ```sh
-# in background shell
 dotnet run
+```
 
+And then you can call the message handlers via HTTP.
+
+<!-- REPLACECODE examples/quickstart/call.sh -->
+```sh
 curl http://localhost:5000/api/v1/incrementCounterByAmount \
   --data '{"counterName":"test","incrementBy":2}' \
   -H 'Content-Type: application/json'
@@ -558,63 +563,64 @@ Thanks to the logging middleware we added to the pipelines, you will see output 
 
 > Are you able to spot a bug in our logging configuration for confidential counters?
 
+<!-- REPLACECODE examples/quickstart/run.log -->
 ```log
-info: Quickstart.IncrementCounterByAmount[711195907]
-      Handling message on http receiver with payload
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling http message of type 'IncrementCounterByAmount' with payload
       {
         "CounterName": "test",
         "IncrementBy": 2
       }
-      (Message ID: fb074b19f88c65e6, Trace ID: 9b9fe7ce6e603247b13eb4cc781de6cf)
-info: Quickstart.IncrementCounterByAmount[412531951]
-      Handled message on http receiver and got response {"NewCounterValue":2} in 29.9088ms (Message ID: fb074b19f88c65e6, Trace ID: 9b9fe7ce6e603247b13eb4cc781de6cf)
-info: Quickstart.GetCounters[711195907]
-      Handling message on http receiver with payload {"Prefix":"tes"} (Message ID: 89c34aa7ea997929, Trace ID: 485643428bfa70b2832992ce2301386c)
-info: Quickstart.GetCounters[412531951]
-      Handled message on http receiver and got response
+      (Message ID: 8d6593393b592be7, Trace ID: 9f49b02534df157313aa4fe5edc36bfe)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":2} in 33.2277ms (Message ID: 8d6593393b592be7, Trace ID: 9f49b02534df157313aa4fe5edc36bfe)
+info: Quickstart.GetCountersHandler[711195907]
+      Handling http message of type 'GetCounters' with payload {"Prefix":"tes"} (Message ID: 8c1ef6a764aed796, Trace ID: a804d8d086b2102afa2af651ad86fb36)
+info: Quickstart.GetCountersHandler[412531951]
+      Handled http message of type 'GetCounters' and got response
       [
         {
           "CounterName": "test",
           "Value": 2
         }
       ]
-      in 6.3682ms (Message ID: 89c34aa7ea997929, Trace ID: 485643428bfa70b2832992ce2301386c)
-info: Quickstart.IncrementCounterByAmount[711195907]
-      Handling message on http receiver with payload
+      in 6.3624ms (Message ID: 8c1ef6a764aed796, Trace ID: a804d8d086b2102afa2af651ad86fb36)
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling http message of type 'IncrementCounterByAmount' with payload
       {
         "CounterName": "doubler",
         "IncrementBy": 2
       }
-      (Message ID: 3c95064c69bad17b, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
-info: Quickstart.CounterIncremented[441733974]
-      Handling signal with payload
+      (Message ID: 2f2cb247021d2ee0, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.DoublingCounterIncrementedHandler[441733974]
+      Handling signal of type 'CounterIncremented' with payload
       {
         "CounterName": "doubler",
         "NewValue": 2,
         "IncrementBy": 2
       }
-      (Signal ID: 014a95afac5712ee, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
+      (Signal ID: 85d8955727f526aa, Trace ID: acc51361d87c132744e4d1ac40b31f46)
 info: Quickstart.IncrementCounterByAmount[0]
       doubling increment of counter 'doubler'
-info: Quickstart.IncrementCounterByAmount[711195907]
-      Handling message with payload
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling message of type 'IncrementCounterByAmount' with payload
       {
         "CounterName": "doubler",
         "IncrementBy": 2
       }
-      (Message ID: ecfef635f91abbb9, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
-info: Quickstart.IncrementCounterByAmount[412531951]
-      Handled message and got response {"NewCounterValue":4} in 3.0264ms (Message ID: ecfef635f91abbb9, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
+      (Message ID: 5311de941ad7aa20, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 3.8204ms (Message ID: 5311de941ad7aa20, Trace ID: acc51361d87c132744e4d1ac40b31f46)
 info: Quickstart.IncrementCounterByAmount[0]
       doubled increment of counter 'doubler', it is now 4
-info: Quickstart.CounterIncremented[1977864143]
-      Handled signal in 14.9293ms (Signal ID: 014a95afac5712ee, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
-info: Quickstart.IncrementCounterByAmount[412531951]
-      Handled message on http receiver and got response {"NewCounterValue":4} in 18.6752ms (Message ID: 3c95064c69bad17b, Trace ID: bd7ae2a544cfa565876e8e5edf58faeb)
-info: Quickstart.GetCounters[711195907]
-      Handling message on http receiver with payload {"Prefix":null} (Message ID: a516aabf628b1ff4, Trace ID: f1b784dbda5f2809fb8a6b0a093b0421)
-info: Quickstart.GetCounters[412531951]
-      Handled message on http receiver and got response
+info: Quickstart.DoublingCounterIncrementedHandler[1977864143]
+      Handled signal of type 'CounterIncremented' in 16.7602ms (Signal ID: 85d8955727f526aa, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":4} in 20.9651ms (Message ID: 2f2cb247021d2ee0, Trace ID: acc51361d87c132744e4d1ac40b31f46)
+info: Quickstart.GetCountersHandler[711195907]
+      Handling http message of type 'GetCounters' with payload {"Prefix":null} (Message ID: 411b31c9614b284e, Trace ID: f1b75fe47e043cbd1ac400d65ce91cb5)
+info: Quickstart.GetCountersHandler[412531951]
+      Handled http message of type 'GetCounters' and got response
       [
         {
           "CounterName": "test",
@@ -625,20 +631,20 @@ info: Quickstart.GetCounters[412531951]
           "Value": 4
         }
       ]
-      in 0.5010ms (Message ID: a516aabf628b1ff4, Trace ID: f1b784dbda5f2809fb8a6b0a093b0421)
-info: Quickstart.IncrementCounterByAmount[711195907]
-      Handling message on http receiver with payload
+      in 0.4262ms (Message ID: 411b31c9614b284e, Trace ID: f1b75fe47e043cbd1ac400d65ce91cb5)
+info: Quickstart.IncrementCounterByAmountHandler[711195907]
+      Handling http message of type 'IncrementCounterByAmount' with payload
       {
         "CounterName": "confidential",
         "IncrementBy": 1000
       }
-      (Message ID: 6c45a52a82cc5384, Trace ID: 0d85b67886f6b489a6784e27abef7bcb)
-info: Quickstart.IncrementCounterByAmount[412531951]
-      Handled message on http receiver and got response {"NewCounterValue":1000} in 0.5142ms (Message ID: 6c45a52a82cc5384, Trace ID: 0d85b67886f6b489a6784e27abef7bcb)
-info: Quickstart.GetCounters[711195907]
-      Handling message on http receiver with payload {"Prefix":null} (Message ID: 4fc7ba52508e19ef, Trace ID: 42dc5a8f32afec50fc8709a271d7874b)
-info: Quickstart.GetCounters[412531951]
-      Handled message on http receiver in 0.4799ms (Message ID: 4fc7ba52508e19ef, Trace ID: 42dc5a8f32afec50fc8709a271d7874b)
+      (Message ID: 77884562dab999b1, Trace ID: 7fdf00fc3ef39a8076d0c48c9c545aef)
+info: Quickstart.IncrementCounterByAmountHandler[412531951]
+      Handled http message of type 'IncrementCounterByAmount' and got response {"NewCounterValue":1000} in 0.6406ms (Message ID: 77884562dab999b1, Trace ID: 7fdf00fc3ef39a8076d0c48c9c545aef)
+info: Quickstart.GetCountersHandler[711195907]
+      Handling http message of type 'GetCounters' with payload {"Prefix":null} (Message ID: 85791577e3f50c87, Trace ID: 1e9560273e354aa7870dd1da736f44b8)
+info: Quickstart.GetCountersHandler[412531951]
+      Handled http message of type 'GetCounters' in 0.5875ms (Message ID: 85791577e3f50c87, Trace ID: 1e9560273e354aa7870dd1da736f44b8)
 ```
 <!-- 
 If you have swagger UI enabled, it will show the new messages and they can be called from there.
