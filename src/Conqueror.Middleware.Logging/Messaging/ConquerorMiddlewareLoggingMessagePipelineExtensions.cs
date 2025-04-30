@@ -27,7 +27,7 @@ public static class ConquerorMiddlewareLoggingMessagePipelineExtensions
                                                                                         Action<LoggingMessageMiddlewareConfiguration<TMessage, TResponse>>? configure = null)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        var configuration = new LoggingMessageMiddlewareConfiguration<TMessage, TResponse>();
+        var configuration = new LoggingMessageMiddlewareConfiguration<TMessage, TResponse>(pipeline.HandlerType);
         configure?.Invoke(configuration);
         return pipeline.Use(new LoggingMessageMiddleware<TMessage, TResponse> { Configuration = configuration });
     }

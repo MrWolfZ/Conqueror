@@ -1,8 +1,8 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[711195907]
-      Handling message on in-process sender (Message ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[711195907]
-      Handling message (Message ID: test-message-id, Trace ID: test-trace-id)
+      Sending in-process message of type 'TestMessageWithComplexPayload' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayloadHandler[711195907]
+      Handling message of type 'TestMessageWithComplexPayload' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayloadHandler[412531951]
+      Handled message of type 'TestMessageWithComplexPayload' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
 info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[412531951]
-      Handled message in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[412531951]
-      Handled message on in-process sender in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+      Sent in-process message of type 'TestMessageWithComplexPayload' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

@@ -1,25 +1,25 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageSub[711195907]
-      Handling message on in-process sender with payload
+      Sending in-process message of type 'TestMessageSub' with payload
       {
         "PayloadSub": 11,
         "PayloadBase": 10
       }
       (Message ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageSub[711195907]
-      Handling message with payload
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageBaseHandler[711195907]
+      Handling message of type 'TestMessageSub' with payload
       {
         "PayloadSub": 11,
         "PayloadBase": 10
       }
       (Message ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageSub[412531951]
-      Handled message and got response
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageBaseHandler[412531951]
+      Handled message of type 'TestMessageSub' and got response
       {
         "Payload": 11
       }
       in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
 info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageSub[412531951]
-      Handled message on in-process sender and got response
+      Sent in-process message of type 'TestMessageSub' and got response
       {
         "Payload": 11
       }

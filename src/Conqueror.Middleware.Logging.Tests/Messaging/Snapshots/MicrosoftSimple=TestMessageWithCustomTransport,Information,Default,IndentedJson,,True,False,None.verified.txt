@@ -1,23 +1,23 @@
 ﻿info: CustomCategory_TestMessageWithCustomTransport[711195907]
-      Handling message on test-transport sender with payload
+      Sending test-transport message of type 'TestMessageWithCustomTransport' with payload
       {
         "Payload": 10
       }
       (Message ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestMessageWithCustomTransport[711195907]
-      Handling message on test-transport receiver with payload
+      Handling test-transport message of type 'TestMessageWithCustomTransport' with payload
       {
         "Payload": 10
       }
       (Message ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestMessageWithCustomTransport[412531951]
-      Handled message on test-transport receiver and got response
+      Handled test-transport message of type 'TestMessageWithCustomTransport' and got response
       {
         "Payload": 11
       }
       in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestMessageWithCustomTransport[412531951]
-      Handled message on test-transport sender and got response
+      Sent test-transport message of type 'TestMessageWithCustomTransport' and got response
       {
         "Payload": 11
       }

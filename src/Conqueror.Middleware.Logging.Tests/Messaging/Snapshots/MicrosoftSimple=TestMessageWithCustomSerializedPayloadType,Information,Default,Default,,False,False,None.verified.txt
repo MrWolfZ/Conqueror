@@ -1,8 +1,8 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomSerializedPayloadType[711195907]
-      Handling message on in-process sender with payload {"Payload":10} (Message ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomSerializedPayloadType[711195907]
-      Handling message with payload {"Payload":10} (Message ID: test-message-id, Trace ID: test-trace-id)
+      Sending in-process message of type 'TestMessageWithCustomSerializedPayloadType' with payload {"Payload":10} (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomSerializedPayloadTypeHandler[711195907]
+      Handling message of type 'TestMessageWithCustomSerializedPayloadType' with payload {"Payload":10} (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomSerializedPayloadTypeHandler[412531951]
+      Handled message of type 'TestMessageWithCustomSerializedPayloadType' and got response {"Payload":11} in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
 info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomSerializedPayloadType[412531951]
-      Handled message and got response {"Payload":11} in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomSerializedPayloadType[412531951]
-      Handled message on in-process sender and got response {"Payload":11} in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+      Sent in-process message of type 'TestMessageWithCustomSerializedPayloadType' and got response {"Payload":11} in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

@@ -1,17 +1,17 @@
 ﻿info: CustomCategory_TestMessageWithCustomSerializedPayloadType[711195907]
-      Handling message on in-process sender with payload
+      Sending in-process message of type 'TestMessageWithCustomSerializedPayloadType' with payload
       {
         "Payload": 10
       }
       (Message ID: test-message-id, Trace ID: test-trace-id)
 info: CustomCategory_TestMessageWithCustomSerializedPayloadType[711195907]
-      Handling message with payload
+      Handling message of type 'TestMessageWithCustomSerializedPayloadType' with payload
       {
         "Payload": 10
       }
       (Message ID: test-message-id, Trace ID: test-trace-id)
 fail: CustomCategory_TestMessageWithCustomSerializedPayloadType[2027292319]
-      An exception occurred while handling message after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+      An exception occurred while handling message of type 'TestMessageWithCustomSerializedPayloadType' after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
          at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomSerializedPayloadTypeHandler.Handle(TestMessageWithCustomSerializedPayloadType message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line FIXED
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line FIXED
@@ -20,7 +20,7 @@ fail: CustomCategory_TestMessageWithCustomSerializedPayloadType[2027292319]
          at Conqueror.Messaging.MessagePipelineRunner`2.<>c__DisplayClass3_2.<Execute>b__1(TMessage message, CancellationToken token) in {SolutionDirectory}src/Conqueror/Messaging/MessagePipelineRunner.cs:line FIXED
 
 fail: CustomCategory_TestMessageWithCustomSerializedPayloadType[2027292319]
-      An exception occurred while handling message on in-process sender after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+      An exception occurred while sending in-process message of type 'TestMessageWithCustomSerializedPayloadType' after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
          at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomSerializedPayloadTypeHandler.Handle(TestMessageWithCustomSerializedPayloadType message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line FIXED
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line FIXED

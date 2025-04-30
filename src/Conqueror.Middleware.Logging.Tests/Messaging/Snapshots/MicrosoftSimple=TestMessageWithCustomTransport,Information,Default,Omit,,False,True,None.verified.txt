@@ -1,9 +1,9 @@
 ﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomTransport[711195907]
-      Handling message on test-transport sender (Message ID: test-message-id, Trace ID: test-trace-id)
-info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomTransport[711195907]
-      Handling message on test-transport receiver (Message ID: test-message-id, Trace ID: test-trace-id)
-fail: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomTransport[2027292319]
-      An exception occurred while handling message on test-transport receiver after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+      Sending test-transport message of type 'TestMessageWithCustomTransport' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomTransportHandler[711195907]
+      Handling test-transport message of type 'TestMessageWithCustomTransport' (Message ID: test-message-id, Trace ID: test-trace-id)
+fail: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomTransportHandler[2027292319]
+      An exception occurred while handling test-transport message of type 'TestMessageWithCustomTransport' after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
          at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomTransportHandler.Handle(TestMessageWithCustomTransport message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line FIXED
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line FIXED
@@ -12,7 +12,7 @@ fail: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages
          at Conqueror.Messaging.MessagePipelineRunner`2.<>c__DisplayClass3_2.<Execute>b__1(TMessage message, CancellationToken token) in {SolutionDirectory}src/Conqueror/Messaging/MessagePipelineRunner.cs:line FIXED
 
 fail: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomTransport[2027292319]
-      An exception occurred while handling message on test-transport sender after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+      An exception occurred while sending test-transport message of type 'TestMessageWithCustomTransport' after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
       Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
          at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomTransportHandler.Handle(TestMessageWithCustomTransport message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line FIXED
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line FIXED

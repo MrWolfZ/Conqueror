@@ -41,7 +41,11 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
 
         try
         {
-            PreExecution(logger, messageId, traceId, ctx);
+            PreExecution(
+                logger,
+                messageId,
+                traceId,
+                ctx);
 
             // we are aware that capturing the current stack trace like this has a performance impact, but
             // we believe that the trade-off between performance and debuggability is worth it here; if this
@@ -51,23 +55,37 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
 
             var response = await ctx.Next(ctx.Message, ctx.CancellationToken).ConfigureAwait(false);
 
-            PostExecution(logger, messageId, traceId, response, sw.Elapsed, ctx);
+            PostExecution(
+                logger,
+                messageId,
+                traceId,
+                response,
+                sw.Elapsed,
+                ctx);
 
             return response;
         }
         catch (Exception e)
         {
             executionStackTrace ??= new(skipFrames: 1, fNeedFileInfo: true);
-            OnException(logger, messageId, traceId, e, executionStackTrace, sw.Elapsed, ctx);
+            OnException(
+                logger,
+                messageId,
+                traceId,
+                e,
+                executionStackTrace,
+                sw.Elapsed,
+                ctx);
 
             throw;
         }
     }
 
-    private void PreExecution(ILogger logger,
-                              string messageId,
-                              string traceId,
-                              MessageMiddlewareContext<TMessage, TResponse> ctx)
+    private void PreExecution(
+        ILogger logger,
+        string messageId,
+        string traceId,
+        MessageMiddlewareContext<TMessage, TResponse> ctx)
     {
         if (Configuration.PreExecutionHook is { } preExecutionHook)
         {
@@ -79,6 +97,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
                     LogLevel = Configuration.PreExecutionLogLevel,
                     MessageId = messageId,
                     TraceId = traceId,
+                    TransportType = ctx.TransportType,
                     Message = ctx.Message,
                 };
 
@@ -100,74 +119,160 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             return;
         }
 
-        var payloadLoggingStrategy = Configuration.MessagePayloadLoggingStrategyFactory?.Invoke(ctx.Message)
-                                     ?? Configuration.MessagePayloadLoggingStrategy;
+        var payloadLoggingStrategy = Configuration.MessagePayloadLoggingStrategyFactory?.Invoke(ctx.Message) ?? Configuration.MessagePayloadLoggingStrategy;
 
         var hasPayload = TMessage.EmptyInstance is null;
         var shouldOmitPayload = payloadLoggingStrategy == PayloadLoggingStrategy.Omit;
 
-        if (shouldOmitPayload || !hasPayload)
+        if (ctx.TransportType.Role == MessageTransportRole.Sender)
         {
-            if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
+            if (shouldOmitPayload || !hasPayload)
             {
-                logger.LogMessageWithoutPayload(Configuration.PreExecutionLogLevel, messageId, traceId);
+                if (ctx.TransportType.IsInProcess())
+                {
+                    logger.LogMessageWithoutPayloadOnSender(
+                        Configuration.PreExecutionLogLevel,
+                        ctx.Message.GetType().Name,
+                        messageId,
+                        traceId);
+
+                    return;
+                }
+
+                logger.LogMessageWithoutPayloadForTransportOnSender(
+                    Configuration.PreExecutionLogLevel,
+                    ctx.TransportType.Name,
+                    ctx.Message.GetType().Name,
+                    messageId,
+                    traceId);
+
                 return;
             }
 
-            logger.LogMessageWithoutPayloadForTransport(Configuration.PreExecutionLogLevel,
-                                                        ctx.TransportType.Name,
-                                                        GetTransportRoleName(ctx.TransportType.Role),
-                                                        messageId,
-                                                        traceId);
+            if (ctx.TransportType.IsInProcess())
+            {
+                if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+                {
+                    logger.LogMessageWithPayloadAsIndentedJsonOnSender(
+                        Configuration.PreExecutionLogLevel,
+                        ctx.Message.GetType().Name,
+                        Serialize(ctx.Message, payloadLoggingStrategy),
+                        messageId,
+                        traceId);
+
+                    return;
+                }
+
+                logger.LogMessageOnSender(
+                    Configuration.PreExecutionLogLevel,
+                    ctx.Message.GetType().Name,
+                    Serialize(ctx.Message, payloadLoggingStrategy),
+                    messageId,
+                    traceId);
+
+                return;
+            }
+
+            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            {
+                logger.LogMessageWithPayloadAsIndentedJsonForTransportOnSender(
+                    Configuration.PreExecutionLogLevel,
+                    ctx.TransportType.Name,
+                    ctx.Message.GetType().Name,
+                    Serialize(ctx.Message, payloadLoggingStrategy),
+                    messageId,
+                    traceId);
+
+                return;
+            }
+
+            logger.LogMessageForTransportOnSender(
+                Configuration.PreExecutionLogLevel,
+                ctx.TransportType.Name,
+                ctx.Message.GetType().Name,
+                Serialize(ctx.Message, payloadLoggingStrategy),
+                messageId,
+                traceId);
+
             return;
         }
 
-        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
+        if (shouldOmitPayload || !hasPayload)
         {
-            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            if (ctx.TransportType.IsInProcess())
             {
-                logger.LogMessageWithPayloadAsIndentedJson(Configuration.PreExecutionLogLevel,
-                                                           Serialize(ctx.Message, payloadLoggingStrategy),
-                                                           messageId,
-                                                           traceId);
+                logger.LogMessageWithoutPayloadOnReceiver(
+                    Configuration.PreExecutionLogLevel,
+                    ctx.Message.GetType().Name,
+                    messageId,
+                    traceId);
 
                 return;
             }
 
-            logger.LogMessage(Configuration.PreExecutionLogLevel,
-                              Serialize(ctx.Message, payloadLoggingStrategy),
-                              messageId,
-                              traceId);
+            logger.LogMessageWithoutPayloadForTransportOnReceiver(
+                Configuration.PreExecutionLogLevel,
+                ctx.TransportType.Name,
+                ctx.Message.GetType().Name,
+                messageId,
+                traceId);
+
+            return;
+        }
+
+        if (ctx.TransportType.IsInProcess())
+        {
+            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            {
+                logger.LogMessageWithPayloadAsIndentedJsonOnReceiver(
+                    Configuration.PreExecutionLogLevel,
+                    ctx.Message.GetType().Name,
+                    Serialize(ctx.Message, payloadLoggingStrategy),
+                    messageId,
+                    traceId);
+
+                return;
+            }
+
+            logger.LogMessageOnReceiver(
+                Configuration.PreExecutionLogLevel,
+                ctx.Message.GetType().Name,
+                Serialize(ctx.Message, payloadLoggingStrategy),
+                messageId,
+                traceId);
 
             return;
         }
 
         if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
         {
-            logger.LogMessageWithPayloadAsIndentedJsonForTransport(Configuration.PreExecutionLogLevel,
-                                                                   ctx.TransportType.Name,
-                                                                   GetTransportRoleName(ctx.TransportType.Role),
-                                                                   Serialize(ctx.Message, payloadLoggingStrategy),
-                                                                   messageId,
-                                                                   traceId);
+            logger.LogMessageWithPayloadAsIndentedJsonForTransportOnReceiver(
+                Configuration.PreExecutionLogLevel,
+                ctx.TransportType.Name,
+                ctx.Message.GetType().Name,
+                Serialize(ctx.Message, payloadLoggingStrategy),
+                messageId,
+                traceId);
 
             return;
         }
 
-        logger.LogMessageForTransport(Configuration.PreExecutionLogLevel,
-                                      ctx.TransportType.Name,
-                                      GetTransportRoleName(ctx.TransportType.Role),
-                                      Serialize(ctx.Message, payloadLoggingStrategy),
-                                      messageId,
-                                      traceId);
+        logger.LogMessageForTransportOnReceiver(
+            Configuration.PreExecutionLogLevel,
+            ctx.TransportType.Name,
+            ctx.Message.GetType().Name,
+            Serialize(ctx.Message, payloadLoggingStrategy),
+            messageId,
+            traceId);
     }
 
-    private void PostExecution(ILogger logger,
-                               string messageId,
-                               string traceId,
-                               TResponse response,
-                               TimeSpan elapsedTime,
-                               MessageMiddlewareContext<TMessage, TResponse> ctx)
+    private void PostExecution(
+        ILogger logger,
+        string messageId,
+        string traceId,
+        TResponse response,
+        TimeSpan elapsedTime,
+        MessageMiddlewareContext<TMessage, TResponse> ctx)
     {
         if (Configuration.PostExecutionHook is { } postExecutionHook)
         {
@@ -179,6 +284,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
                     LogLevel = Configuration.PostExecutionLogLevel,
                     MessageId = messageId,
                     TraceId = traceId,
+                    TransportType = ctx.TransportType,
                     Message = ctx.Message,
                     Response = response,
                     HasResponse = typeof(TResponse) != typeof(UnitMessageResponse),
@@ -203,84 +309,172 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             return;
         }
 
-        var payloadLoggingStrategy = Configuration.ResponsePayloadLoggingStrategyFactory?.Invoke(ctx.Message, response)
-                                     ?? Configuration.ResponsePayloadLoggingStrategy;
+        var payloadLoggingStrategy = Configuration.ResponsePayloadLoggingStrategyFactory?.Invoke(ctx.Message, response) ?? Configuration.ResponsePayloadLoggingStrategy;
 
         var shouldOmitPayload = payloadLoggingStrategy == PayloadLoggingStrategy.Omit;
 
-        if (shouldOmitPayload || ctx.HasUnitResponse)
+        if (ctx.TransportType.Role == MessageTransportRole.Sender)
         {
-            if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
+            if (shouldOmitPayload || ctx.HasUnitResponse)
             {
-                logger.LogMessageResponseWithoutPayload(Configuration.PostExecutionLogLevel,
-                                                        elapsedTime.TotalMilliseconds,
-                                                        messageId,
-                                                        traceId);
+                if (ctx.TransportType.IsInProcess())
+                {
+                    logger.LogMessageResponseWithoutPayloadOnSender(
+                        Configuration.PostExecutionLogLevel,
+                        ctx.Message.GetType().Name,
+                        elapsedTime.TotalMilliseconds,
+                        messageId,
+                        traceId);
+
+                    return;
+                }
+
+                logger.LogMessageResponseWithoutPayloadForTransportOnSender(
+                    Configuration.PostExecutionLogLevel,
+                    ctx.TransportType.Name,
+                    ctx.Message.GetType().Name,
+                    elapsedTime.TotalMilliseconds,
+                    messageId,
+                    traceId);
 
                 return;
             }
 
-            logger.LogMessageResponseWithoutPayloadForTransport(Configuration.PostExecutionLogLevel,
-                                                                ctx.TransportType.Name,
-                                                                GetTransportRoleName(ctx.TransportType.Role),
-                                                                elapsedTime.TotalMilliseconds,
-                                                                messageId,
-                                                                traceId);
+            if (ctx.TransportType.IsInProcess())
+            {
+                if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+                {
+                    logger.LogMessageResponseWithPayloadAsIndentedJsonOnSender(
+                        Configuration.PostExecutionLogLevel,
+                        ctx.Message.GetType().Name,
+                        Serialize(response, payloadLoggingStrategy),
+                        elapsedTime.TotalMilliseconds,
+                        messageId,
+                        traceId);
+
+                    return;
+                }
+
+                logger.LogMessageResponseOnSender(
+                    Configuration.PostExecutionLogLevel,
+                    ctx.Message.GetType().Name,
+                    Serialize(response, payloadLoggingStrategy),
+                    elapsedTime.TotalMilliseconds,
+                    messageId,
+                    traceId);
+
+                return;
+            }
+
+            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            {
+                logger.LogMessageResponseWithPayloadAsIndentedJsonForTransportOnSender(
+                    Configuration.PostExecutionLogLevel,
+                    ctx.TransportType.Name,
+                    ctx.Message.GetType().Name,
+                    Serialize(response, payloadLoggingStrategy),
+                    elapsedTime.TotalMilliseconds,
+                    messageId,
+                    traceId);
+
+                return;
+            }
+
+            logger.LogMessageResponseForTransportOnSender(
+                Configuration.PostExecutionLogLevel,
+                ctx.TransportType.Name,
+                ctx.Message.GetType().Name,
+                Serialize(response, payloadLoggingStrategy),
+                elapsedTime.TotalMilliseconds,
+                messageId,
+                traceId);
 
             return;
         }
 
-        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
+        if (shouldOmitPayload || ctx.HasUnitResponse)
         {
-            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            if (ctx.TransportType.IsInProcess())
             {
-                logger.LogMessageResponseWithPayloadAsIndentedJson(Configuration.PostExecutionLogLevel,
-                                                                   Serialize(response, payloadLoggingStrategy),
-                                                                   elapsedTime.TotalMilliseconds,
-                                                                   messageId,
-                                                                   traceId);
+                logger.LogMessageResponseWithoutPayloadOnReceiver(
+                    Configuration.PostExecutionLogLevel,
+                    ctx.Message.GetType().Name,
+                    elapsedTime.TotalMilliseconds,
+                    messageId,
+                    traceId);
 
                 return;
             }
 
-            logger.LogMessageResponse(Configuration.PostExecutionLogLevel,
-                                      Serialize(response, payloadLoggingStrategy),
-                                      elapsedTime.TotalMilliseconds,
-                                      messageId,
-                                      traceId);
+            logger.LogMessageResponseWithoutPayloadForTransportOnReceiver(
+                Configuration.PostExecutionLogLevel,
+                ctx.TransportType.Name,
+                ctx.Message.GetType().Name,
+                elapsedTime.TotalMilliseconds,
+                messageId,
+                traceId);
+
+            return;
+        }
+
+        if (ctx.TransportType.IsInProcess())
+        {
+            if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
+            {
+                logger.LogMessageResponseWithPayloadAsIndentedJsonOnReceiver(
+                    Configuration.PostExecutionLogLevel,
+                    ctx.Message.GetType().Name,
+                    Serialize(response, payloadLoggingStrategy),
+                    elapsedTime.TotalMilliseconds,
+                    messageId,
+                    traceId);
+
+                return;
+            }
+
+            logger.LogMessageResponseOnReceiver(
+                Configuration.PostExecutionLogLevel,
+                ctx.Message.GetType().Name,
+                Serialize(response, payloadLoggingStrategy),
+                elapsedTime.TotalMilliseconds,
+                messageId,
+                traceId);
 
             return;
         }
 
         if (payloadLoggingStrategy == PayloadLoggingStrategy.IndentedJson)
         {
-            logger.LogMessageResponseWithPayloadAsIndentedJsonForTransport(Configuration.PostExecutionLogLevel,
-                                                                           ctx.TransportType.Name,
-                                                                           GetTransportRoleName(ctx.TransportType.Role),
-                                                                           Serialize(response, payloadLoggingStrategy),
-                                                                           elapsedTime.TotalMilliseconds,
-                                                                           messageId,
-                                                                           traceId);
+            logger.LogMessageResponseWithPayloadAsIndentedJsonForTransportOnReceiver(
+                Configuration.PostExecutionLogLevel,
+                ctx.TransportType.Name,
+                ctx.Message.GetType().Name,
+                Serialize(response, payloadLoggingStrategy),
+                elapsedTime.TotalMilliseconds,
+                messageId,
+                traceId);
 
             return;
         }
 
-        logger.LogMessageResponseForTransport(Configuration.PostExecutionLogLevel,
-                                              ctx.TransportType.Name,
-                                              GetTransportRoleName(ctx.TransportType.Role),
-                                              Serialize(response, payloadLoggingStrategy),
-                                              elapsedTime.TotalMilliseconds,
-                                              messageId,
-                                              traceId);
+        logger.LogMessageResponseForTransportOnReceiver(
+            Configuration.PostExecutionLogLevel,
+            ctx.TransportType.Name,
+            ctx.Message.GetType().Name,
+            Serialize(response, payloadLoggingStrategy),
+            elapsedTime.TotalMilliseconds,
+            messageId,
+            traceId);
     }
 
-    private void OnException(ILogger logger,
-                             string messageId,
-                             string traceId,
-                             Exception exception,
-                             StackTrace executionStackTrace,
-                             TimeSpan elapsedTime,
-                             MessageMiddlewareContext<TMessage, TResponse> ctx)
+    private void OnException(
+        ILogger logger,
+        string messageId,
+        string traceId,
+        Exception exception,
+        StackTrace executionStackTrace,
+        TimeSpan elapsedTime,
+        MessageMiddlewareContext<TMessage, TResponse> ctx)
     {
         if (Configuration.ExceptionHook is { } exceptionHook)
         {
@@ -292,6 +486,7 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
                     LogLevel = Configuration.ExceptionLogLevel,
                     MessageId = messageId,
                     TraceId = traceId,
+                    TransportType = ctx.TransportType,
                     Message = ctx.Message,
                     Exception = exception,
                     ExecutionStackTrace = executionStackTrace,
@@ -324,24 +519,54 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
         // full stack trace, but that could introduce subtle race conditions, so we prefer the former approach
         var exceptionToLog = new WrappingException(exception, executionStackTrace.ToString());
 
-        if (ctx.TransportType.IsInProcess() && ctx.TransportType.Role == MessageTransportRole.Receiver)
+        if (ctx.TransportType.Role == MessageTransportRole.Sender)
         {
-            logger.LogMessageException(Configuration.ExceptionLogLevel,
-                                       exceptionToLog,
-                                       elapsedTime.TotalMilliseconds,
-                                       messageId,
-                                       traceId);
+            if (ctx.TransportType.IsInProcess())
+            {
+                logger.LogMessageExceptionOnSender(
+                    Configuration.ExceptionLogLevel,
+                    exceptionToLog,
+                    ctx.Message.GetType().Name,
+                    elapsedTime.TotalMilliseconds,
+                    messageId,
+                    traceId);
+
+                return;
+            }
+
+            logger.LogMessageExceptionForTransportOnSender(
+                Configuration.ExceptionLogLevel,
+                exceptionToLog,
+                ctx.TransportType.Name,
+                ctx.Message.GetType().Name,
+                elapsedTime.TotalMilliseconds,
+                messageId,
+                traceId);
 
             return;
         }
 
-        logger.LogMessageExceptionForTransport(Configuration.ExceptionLogLevel,
-                                               exceptionToLog,
-                                               ctx.TransportType.Name,
-                                               GetTransportRoleName(ctx.TransportType.Role),
-                                               elapsedTime.TotalMilliseconds,
-                                               messageId,
-                                               traceId);
+        if (ctx.TransportType.IsInProcess())
+        {
+            logger.LogMessageExceptionOnReceiver(
+                Configuration.ExceptionLogLevel,
+                exceptionToLog,
+                ctx.Message.GetType().Name,
+                elapsedTime.TotalMilliseconds,
+                messageId,
+                traceId);
+
+            return;
+        }
+
+        logger.LogMessageExceptionForTransportOnReceiver(
+            Configuration.ExceptionLogLevel,
+            exceptionToLog,
+            ctx.TransportType.Name,
+            ctx.Message.GetType().Name,
+            elapsedTime.TotalMilliseconds,
+            messageId,
+            traceId);
     }
 
     private ILogger GetLogger(MessageMiddlewareContext<TMessage, TResponse> ctx)
@@ -353,13 +578,22 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
             return loggerFactory.CreateLogger(loggerName);
         }
 
+        if (Configuration.HandlerType is not null)
+        {
+            return loggerFactory.CreateLogger(Configuration.HandlerType);
+        }
+
         return loggerFactory.CreateLogger(ctx.Message.GetType());
     }
 
-    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
-                                  Justification = "we explicitly fail in AOT scenarios without a serializer context on the message type")]
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
-                                  Justification = "we explicitly fail in AOT scenarios without a serializer context on the message type")]
+    [UnconditionalSuppressMessage(
+        "AOT",
+        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "we explicitly fail in AOT scenarios without a serializer context on the message type")]
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "we explicitly fail in AOT scenarios without a serializer context on the message type")]
     private static object? Serialize<T>(T value, PayloadLoggingStrategy payloadLoggingStrategy)
     {
         if (payloadLoggingStrategy is PayloadLoggingStrategy.Omit or PayloadLoggingStrategy.Raw)
@@ -391,17 +625,11 @@ internal sealed partial class LoggingMessageMiddleware<TMessage, TResponse> : IM
         return JsonSerializer.Serialize(value, value?.GetType() ?? typeof(T), jsonSerializerOptions);
     }
 
-    private static string GetTransportRoleName(MessageTransportRole transportRole) => transportRole switch
-    {
-        MessageTransportRole.Sender => "sender",
-        MessageTransportRole.Receiver => "receiver",
-        _ => throw new ArgumentOutOfRangeException(nameof(transportRole), transportRole, null),
-    };
-
     [LoggerMessage(
         EventName = "conqueror-message-logging-hook-exception",
         Message = "An exception occurred while executing logging hook")]
-    private static partial void LogHookException(ILogger logger,
-                                                 LogLevel logLevel,
-                                                 Exception exception);
+    private static partial void LogHookException(
+        ILogger logger,
+        LogLevel logLevel,
+        Exception exception);
 }
