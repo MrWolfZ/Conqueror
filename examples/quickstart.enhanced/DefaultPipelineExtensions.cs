@@ -22,7 +22,8 @@ public static class DefaultPipelineExtensions
     }
 
     public static IMessagePipeline<TMessage, TResponse> UseDefaultForSender<TMessage, TResponse>(
-        this IMessagePipeline<TMessage, TResponse> pipeline)
+        this IMessagePipeline<TMessage, TResponse> pipeline,
+        Type? loggerCategoryType = null)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
         // when calling the handler from the same process, we don't want to log the payload
@@ -31,12 +32,20 @@ public static class DefaultPipelineExtensions
             return pipeline;
         }
 
-        return pipeline.UseLogging()
+        return pipeline.UseLogging(c =>
+                       {
+                           if (loggerCategoryType is not null)
+                           {
+                               c.LoggerCategoryFactory = _ => loggerCategoryType.FullName ??
+                                                              loggerCategoryType.Name;
+                           }
+                       })
                        .WithIndentedJsonPayloadLogFormatting();
     }
 
     public static ISignalPipeline<TSignal> UseDefaultForPublisher<TSignal>(
-        this ISignalPipeline<TSignal> pipeline)
+        this ISignalPipeline<TSignal> pipeline,
+        Type? loggerCategoryType = null)
         where TSignal : class, ISignal<TSignal>
     {
         // when calling the handler from the same process, we don't want to log the payload
@@ -45,23 +54,32 @@ public static class DefaultPipelineExtensions
             return pipeline;
         }
 
-        return pipeline.UseLogging()
+        return pipeline.UseLogging(c =>
+                       {
+                           if (loggerCategoryType is not null)
+                           {
+                               c.LoggerCategoryFactory = _ => loggerCategoryType.FullName ??
+                                                              loggerCategoryType.Name;
+                           }
+                       })
                        .WithIndentedJsonPayloadLogFormatting();
     }
 
     public static TIHandler WithDefaultSenderPipeline<TMessage, TResponse, TIHandler>(
-        this IMessageHandler<TMessage, TResponse, TIHandler> handler)
+        this IMessageHandler<TMessage, TResponse, TIHandler> handler,
+        Type? loggerCategoryType = null)
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return handler.WithPipeline(p => p.UseDefaultForSender());
+        return handler.WithPipeline(p => p.UseDefaultForSender(loggerCategoryType));
     }
 
     public static TIHandler WithDefaultPublisherPipeline<TSignal, TIHandler>(
-        this ISignalHandler<TSignal, TIHandler> handler)
+        this ISignalHandler<TSignal, TIHandler> handler,
+        Type? loggerCategoryType = null)
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return handler.WithPipeline(p => p.UseDefaultForPublisher());
+        return handler.WithPipeline(p => p.UseDefaultForPublisher(loggerCategoryType));
     }
 }

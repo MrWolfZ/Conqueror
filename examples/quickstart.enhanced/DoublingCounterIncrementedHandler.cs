@@ -7,8 +7,8 @@ internal sealed partial class DoublingCounterIncrementedHandler(
     : CounterIncremented.IHandler
 {
     static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
-        pipeline.SkipSignalMatching<T, CounterIncremented>(s => s.CounterName != "doubler")
-                .EnsureSingleExecutionPerOperation()
+        pipeline.SkipSignalMatching((CounterIncremented s) => s.CounterName != "doubler")
+                .EnsureSingleExecutionPerOperation(nameof(DoublingCounterIncrementedHandler))
                 .UseLoggingWithIndentedJson();
 
     public async Task Handle(
@@ -16,7 +16,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
         CancellationToken cancellationToken = default)
     {
         await senders.For(IncrementCounterByAmount.T)
-                     .WithDefaultSenderPipeline()
+                     .WithDefaultSenderPipeline(typeof(DoublingCounterIncrementedHandler))
                      .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
                              cancellationToken);
     }

@@ -52,6 +52,16 @@ public static class LoggingPipelineExtensions
             c.ResponsePayloadLoggingStrategyFactory = (_, resp) => predicate(resp)
                 ? PayloadLoggingStrategy.Omit
                 : c.ResponsePayloadLoggingStrategy;
+
+            c.PostExecutionHook = ctx =>
+            {
+                if (predicate(ctx.Response))
+                {
+                    ctx.Logger.LogInformation("response omitted because of predicate match");
+                }
+
+                return true;
+            };
         });
     }
 
