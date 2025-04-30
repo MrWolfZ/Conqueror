@@ -1,6 +1,6 @@
 direction: down
 
-MessagesWithResponse: Messages {
+Messages: {
   Caller: {
     shape: rectangle
   }
@@ -65,51 +65,6 @@ MessagesWithResponse: Messages {
   }
 }
 
-MessagesFireAndForget: Messages (fire & forget) {
-  Caller: {
-    shape: rectangle
-  }
-
-  SenderPipeline: Sender Pipeline {
-    shape: queue
-    style.fill: "#e0f7fa"
-  }
-
-  Transport: {
-    shape: hexagon
-    style.fill: "#e0f7fa"
-  }
-
-  HandlerPipeline: Handler Pipeline {
-    shape: queue
-    style.fill: "#e0f7fa"
-  }
-
-  Handler: {
-    shape: rectangle
-  }
-
-  Caller -> SenderPipeline: "Message" {
-    style.stroke: "#0288d1"
-    style.animated: true
-  }
-
-  SenderPipeline -> Transport: "Message" {
-    style.stroke: "#0288d1"
-    style.animated: true
-  }
-
-  Transport -> HandlerPipeline: "Message" {
-    style.stroke: "#0288d1"
-    style.animated: true
-  }
-
-  HandlerPipeline -> Handler: "Message" {
-    style.stroke: "#0288d1"
-    style.animated: true
-  }
-}
-
 Signals: {
   Caller: {
     shape: rectangle
@@ -138,6 +93,7 @@ Signals: {
   HandlerNPipeline: Handler N Pipeline {
     shape: queue
     style.fill: "#e0f7fa"
+    style.multiple: true
   }
 
   Handler1: Handler 1 {
@@ -150,6 +106,7 @@ Signals: {
 
   HandlerN: Handler N {
     shape: rectangle
+    style.multiple: true
   }
 
   Caller -> PublishPipeline: Signal {
@@ -189,6 +146,71 @@ Signals: {
 
   HandlerNPipeline -> HandlerN: Signal {
     style.stroke: "#0288d1"
+    style.animated: true
+  }
+}
+
+Iterators: {
+  Caller: {
+    shape: rectangle
+  }
+
+  RunnerPipeline: Runner Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  Transport: {
+    shape: hexagon
+    style.fill: "#e0f7fa"
+  }
+
+  HandlerPipeline: Handler Pipeline {
+    shape: queue
+    style.fill: "#e0f7fa"
+  }
+
+  Handler: {
+    shape: rectangle
+  }
+
+  Caller -> RunnerPipeline: "Run, next, next, ...      " {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  RunnerPipeline -> Caller: "Item 1, Item 2, ..." {
+    style.stroke: "#388e3c"
+    style.animated: true
+  }
+
+  RunnerPipeline -> Transport: "Run, next, next, ...      " {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Transport -> RunnerPipeline: "Item 1, Item 2, ..." {
+    style.stroke: "#388e3c"
+    style.animated: true
+  }
+
+  Transport -> HandlerPipeline: "Run, next, next, ...      " {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  HandlerPipeline -> Transport: "Item 1, Item 2, ..." {
+    style.stroke: "#388e3c"
+    style.animated: true
+  }
+
+  HandlerPipeline -> Handler: "Run, next, next, ...      " {
+    style.stroke: "#0288d1"
+    style.animated: true
+  }
+
+  Handler -> HandlerPipeline: "Item 1, Item 2, ..." {
+    style.stroke: "#388e3c"
     style.animated: true
   }
 }
