@@ -7,7 +7,8 @@ namespace Conqueror.Messaging;
 
 internal sealed class MessageHandlerInvoker<TMessage, TResponse>(
     Action<IMessagePipeline<TMessage, TResponse>>? configurePipeline,
-    MessageHandlerFn<TMessage, TResponse> handlerFn)
+    MessageHandlerFn<TMessage, TResponse> handlerFn,
+    Type? handlerType)
     : IMessageHandlerInvoker
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -20,7 +21,8 @@ internal sealed class MessageHandlerInvoker<TMessage, TResponse>(
         var dispatcher = new MessageDispatcher<TMessage, TResponse>(serviceProvider,
                                                                     new(new Sender(handlerFn, transportTypeName)),
                                                                     configurePipeline,
-                                                                    MessageTransportRole.Receiver);
+                                                                    MessageTransportRole.Receiver,
+                                                                    handlerType);
 
         var response = await dispatcher.Dispatch((message as TMessage)!, cancellationToken).ConfigureAwait(false);
         return (TR)(object)response!;

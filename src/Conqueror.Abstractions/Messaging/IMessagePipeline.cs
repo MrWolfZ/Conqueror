@@ -15,6 +15,12 @@ public delegate Task<TResponse> MessageMiddlewareFn<TMessage, TResponse>(Message
 public interface IMessagePipeline<TMessage, TResponse> : IReadOnlyCollection<IMessageMiddleware<TMessage, TResponse>>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
+    /// <summary>
+    ///     The type of the handler this pipeline is being built for. Is <c>null</c> for
+    ///     delegate handlers or when the pipeline is being built for a sender.
+    /// </summary>
+    Type? HandlerType { get; }
+
     IServiceProvider ServiceProvider { get; }
 
     ConquerorContext ConquerorContext { get; }
@@ -44,6 +50,8 @@ public class MessagePipelineProxy<TMessage, TResponse> : IMessagePipeline<TMessa
     where TMessage : class, IMessage<TMessage, TResponse>
 {
     public int Count => Wrapped.Count;
+
+    public Type? HandlerType => Wrapped.HandlerType;
 
     public IServiceProvider ServiceProvider => Wrapped.ServiceProvider;
 

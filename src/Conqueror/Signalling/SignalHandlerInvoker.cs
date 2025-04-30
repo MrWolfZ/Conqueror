@@ -7,7 +7,8 @@ namespace Conqueror.Signalling;
 
 internal sealed class SignalHandlerInvoker<TSignal>(
     Action<ISignalPipeline<TSignal>>? configurePipeline,
-    SignalHandlerFn<TSignal> handlerFn)
+    SignalHandlerFn<TSignal> handlerFn,
+    Type? handlerType)
     : ISignalHandlerInvoker
     where TSignal : class, ISignal<TSignal>
 {
@@ -19,7 +20,8 @@ internal sealed class SignalHandlerInvoker<TSignal>(
         var dispatcher = new SignalDispatcher<TSignal>(serviceProvider,
                                                        new(new Publisher(handlerFn, transportTypeName)),
                                                        configurePipeline,
-                                                       SignalTransportRole.Receiver);
+                                                       SignalTransportRole.Receiver,
+                                                       handlerType);
 
         return dispatcher.Dispatch((signal as TSignal)!, cancellationToken);
     }

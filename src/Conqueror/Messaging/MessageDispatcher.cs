@@ -9,7 +9,8 @@ internal sealed class MessageDispatcher<TMessage, TResponse>(
     IServiceProvider serviceProvider,
     MessageSenderFactory<TMessage, TResponse> senderFactory,
     Action<IMessagePipeline<TMessage, TResponse>>? configurePipelineField,
-    MessageTransportRole transportRole)
+    MessageTransportRole transportRole,
+    Type? handlerType)
     : IMessageDispatcher<TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
@@ -37,7 +38,7 @@ internal sealed class MessageDispatcher<TMessage, TResponse>(
             conquerorContext.SetMessageId(messageIdFactory.GenerateId());
         }
 
-        var pipeline = new MessagePipeline<TMessage, TResponse>(serviceProvider, conquerorContext, transportType);
+        var pipeline = new MessagePipeline<TMessage, TResponse>(handlerType, serviceProvider, conquerorContext, transportType);
 
         configurePipelineField?.Invoke(pipeline);
 
@@ -60,19 +61,22 @@ internal sealed class MessageDispatcher<TMessage, TResponse>(
                 configurePipelineField?.Invoke(pipeline);
                 configurePipeline(pipeline);
             },
-            transportRole);
+            transportRole,
+            handlerType);
 
     public IMessageDispatcher<TMessage, TResponse> WithSender(ConfigureMessageSender<TMessage, TResponse> configureSender)
         => new MessageDispatcher<TMessage, TResponse>(
             serviceProvider,
             new(configureSender),
             configurePipelineField,
-            transportRole);
+            transportRole,
+            handlerType);
 
     public IMessageDispatcher<TMessage, TResponse> WithSender(ConfigureMessageSenderAsync<TMessage, TResponse> configureSender)
         => new MessageDispatcher<TMessage, TResponse>(
             serviceProvider,
             new(configureSender),
             configurePipelineField,
-            transportRole);
+            transportRole,
+            handlerType);
 }

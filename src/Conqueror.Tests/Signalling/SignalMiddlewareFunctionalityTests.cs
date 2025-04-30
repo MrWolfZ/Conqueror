@@ -21,6 +21,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
 
                         var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
                         obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
+                        obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
 
                         testCase.ConfigureHandlerPipeline?.Invoke(pipeline);
                     });
@@ -33,6 +34,10 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         var expectedTransportTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
                                                                  .Select(r => new SignalTransportType(ConquerorConstants.InProcessTransportName, r))
                                                                  .ToList();
+
+        var expectedHandlerTypesFromPipelineBuilders = testCase.ExpectedTransportRolesFromPipelineBuilders
+                                                               .Select(r => r == SignalTransportRole.Publisher ? null : typeof(TestSignalHandler))
+                                                               .ToList();
 
         using var tokenSource = new CancellationTokenSource();
 
@@ -47,6 +52,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
 
             var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
             obs.TransportTypesFromPipelineBuilders.Add(pipeline.TransportType);
+            obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
 
             testCase.ConfigurePublisherPipeline?.Invoke(pipeline);
         }).Handle(signal, tokenSource.Token);
@@ -58,6 +64,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                     Is.EqualTo(testCase.ExpectedMiddlewareTypes
                                        .Select(t => new SignalTransportType(ConquerorConstants.InProcessTransportName, t.TransportRole))));
         Assert.That(observations.TransportTypesFromPipelineBuilders, Is.EqualTo(expectedTransportTypesFromPipelineBuilders));
+        Assert.That(observations.HandlerTypesFromPipelineBuilders, Is.EqualTo(expectedHandlerTypesFromPipelineBuilders));
     }
 
     private static IEnumerable<ConquerorMiddlewareFunctionalityTestCase<TestSignal>> GenerateTestCases()
@@ -614,7 +621,12 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                             var obs = p.GetRequiredService<TestObservations>();
                             obs.SignalsFromHandlers.Add(signal);
                             obs.CancellationTokensFromHandlers.Add(cancellationToken);
-                        }, pipeline => pipeline.Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
+                        }, pipeline =>
+                        {
+                            var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                            obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
+                            _ = pipeline.Use(new TestSignalMiddleware<TestSignal>(obs));
+                        })
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -628,6 +640,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
 
         Assert.That(observations.SignalsFromMiddlewares, Is.EqualTo(new[] { signal }));
         Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestSignalMiddleware<TestSignal>) }));
+        Assert.That(observations.HandlerTypesFromPipelineBuilders, Is.EqualTo(new Type?[] { null }));
     }
 
     [Test]
@@ -643,7 +656,12 @@ public sealed partial class SignalMiddlewareFunctionalityTests
                             var obs = p.GetRequiredService<TestObservations>();
                             obs.SignalsFromHandlers.Add(signal);
                             obs.CancellationTokensFromHandlers.Add(cancellationToken);
-                        }, pipeline => pipeline.Use(new TestSignalMiddleware<TestSignal>(pipeline.ServiceProvider.GetRequiredService<TestObservations>())))
+                        }, pipeline =>
+                        {
+                            var obs = pipeline.ServiceProvider.GetRequiredService<TestObservations>();
+                            obs.HandlerTypesFromPipelineBuilders.Add(pipeline.HandlerType);
+                            _ = pipeline.Use(new TestSignalMiddleware<TestSignal>(obs));
+                        })
                     .AddSingleton(observations);
 
         var provider = services.BuildServiceProvider();
@@ -657,6 +675,7 @@ public sealed partial class SignalMiddlewareFunctionalityTests
 
         Assert.That(observations.SignalsFromMiddlewares, Is.EqualTo(new[] { signal }));
         Assert.That(observations.MiddlewareTypes, Is.EqualTo(new[] { typeof(TestSignalMiddleware<TestSignal>) }));
+        Assert.That(observations.HandlerTypesFromPipelineBuilders, Is.EqualTo(new Type?[] { null }));
     }
 
     [Test]
@@ -1018,6 +1037,8 @@ public sealed partial class SignalMiddlewareFunctionalityTests
         public List<CancellationToken> CancellationTokensFromHandlers { get; } = [];
 
         public List<CancellationToken> CancellationTokensFromMiddlewares { get; } = [];
+
+        public List<Type?> HandlerTypesFromPipelineBuilders { get; } = [];
 
         public List<SignalTransportType> TransportTypesFromPipelineBuilders { get; } = [];
 

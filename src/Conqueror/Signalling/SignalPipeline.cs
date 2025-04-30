@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace Conqueror.Signalling;
 
 internal sealed class SignalPipeline<TSignal>(
+    Type? handlerType,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
     SignalTransportType transportType)
@@ -14,6 +15,8 @@ internal sealed class SignalPipeline<TSignal>(
     where TSignal : class, ISignal<TSignal>
 {
     private readonly List<ISignalMiddleware<TSignal>> middlewares = [];
+
+    public Type? HandlerType { get; } = handlerType;
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 

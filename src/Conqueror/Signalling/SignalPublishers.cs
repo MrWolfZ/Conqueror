@@ -16,10 +16,12 @@ internal sealed class SignalPublishers(IServiceProvider serviceProvider) : ISign
     {
         TIHandlerParam ICoreSignalHandlerTypesInjectable<TIHandlerParam>.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
         {
-            var dispatcher = new SignalDispatcher<TSignal>(serviceProvider,
-                                                           new(b => b.UseInProcessWithSequentialBroadcastingStrategy()),
-                                                           null,
-                                                           SignalTransportRole.Publisher);
+            var dispatcher = new SignalDispatcher<TSignal>(
+                serviceProvider,
+                new(b => b.UseInProcessWithSequentialBroadcastingStrategy()),
+                null,
+                SignalTransportRole.Publisher,
+                null);
 
             var proxy = new TProxy
             {

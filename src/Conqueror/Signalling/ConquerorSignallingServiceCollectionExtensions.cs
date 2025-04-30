@@ -153,7 +153,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
     {
         services.AddConquerorSignalling();
 
-        var invoker = new SignalHandlerInvoker<TSignal>(configurePipeline, fn);
+        var invoker = new SignalHandlerInvoker<TSignal>(configurePipeline, fn, null);
 
         // we do not support configuring the receiver for delegate handlers (yet), since they are mostly
         // designed to support simple testing scenarios, not be used as full-fledged signal handlers
@@ -190,7 +190,8 @@ public static class ConquerorSignallingServiceCollectionExtensions
 
             var invoker = new SignalHandlerInvoker<TSignal>(
                 THandler.ConfigurePipeline,
-                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct));
+                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct),
+                typeof(THandler));
 
             var registration = new SignalHandlerRegistration(typeof(TSignal), typeof(THandler), null, invoker, THandler.GetTypeInjectors().ToList());
 

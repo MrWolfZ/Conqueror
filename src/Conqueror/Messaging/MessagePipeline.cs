@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace Conqueror.Messaging;
 
 internal sealed class MessagePipeline<TMessage, TResponse>(
+    Type? handlerType,
     IServiceProvider serviceProvider,
     ConquerorContext conquerorContext,
     MessageTransportType transportType)
@@ -14,6 +15,8 @@ internal sealed class MessagePipeline<TMessage, TResponse>(
     where TMessage : class, IMessage<TMessage, TResponse>
 {
     private readonly List<IMessageMiddleware<TMessage, TResponse>> middlewares = [];
+
+    public Type? HandlerType { get; } = handlerType;
 
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
