@@ -7,9 +7,9 @@ fail: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages
       Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages+TestException: test exception
          at Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayloadHandler.Handle(TestMessageWithComplexPayload message, CancellationToken cancellationToken) in {ProjectDirectory}Messaging/LoggingMiddlewareTestMessages.cs:line FIXED
          at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx) in {SolutionDirectory}src/Conqueror.Middleware.Logging/Messaging/LoggingMessageMiddleware.cs:line FIXED
-         at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
-         at Conqueror.Middleware.Logging.Messaging.LoggingMessageMiddleware`2.Execute(MessageMiddlewareContext`2 ctx)
          at Conqueror.Messaging.MessagePipelineRunner`2.<>c__DisplayClass3_2.<Execute>b__1(TMessage message, CancellationToken token) in {SolutionDirectory}src/Conqueror/Messaging/MessagePipelineRunner.cs:line FIXED
+         at Conqueror.Messaging.MessagePipelineRunner`2.Execute(IServiceProvider serviceProvider, TMessage initialMessage, IMessageSender`2 sender, MessageTransportType transportType, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Messaging/MessagePipelineRunner.cs:line FIXED
+         at Conqueror.Messaging.MessageDispatcher`2.Dispatch(TMessage message, CancellationToken cancellationToken) in {SolutionDirectory}src/Conqueror/Messaging/MessageDispatcher.cs:line FIXED
 
 fail: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithComplexPayload[2027292319]
       An exception occurred while sending in-process message of type 'TestMessageWithComplexPayload' after 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
