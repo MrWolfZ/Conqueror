@@ -17,10 +17,12 @@ internal sealed class MessageSenders(IServiceProvider serviceProvider) : IMessag
         TIHandlerParam ICoreMessageHandlerTypesInjectable<TIHandlerParam>
             .WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>()
         {
-            var dispatcher = new MessageDispatcher<TMessage, TResponse>(serviceProvider,
-                                                                        new(b => b.UseInProcess()),
-                                                                        null,
-                                                                        MessageTransportRole.Sender);
+            var dispatcher = new MessageDispatcher<TMessage, TResponse>(
+                serviceProvider,
+                new(b => b.UseInProcess()),
+                null,
+                MessageTransportRole.Sender,
+                null);
 
             var proxy = new TProxy
             {

@@ -13,6 +13,12 @@ public delegate Task SignalMiddlewareFn<TSignal>(SignalMiddlewareContext<TSignal
 public interface ISignalPipeline<TSignal> : IReadOnlyCollection<ISignalMiddleware<TSignal>>
     where TSignal : class, ISignal<TSignal>
 {
+    /// <summary>
+    ///     The type of the handler this pipeline is being built for. Is <c>null</c> for
+    ///     delegate handlers or when the pipeline is being built for a publisher.
+    /// </summary>
+    Type? HandlerType { get; }
+
     IServiceProvider ServiceProvider { get; }
 
     ConquerorContext ConquerorContext { get; }

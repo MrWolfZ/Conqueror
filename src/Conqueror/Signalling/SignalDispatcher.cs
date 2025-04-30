@@ -9,7 +9,8 @@ internal sealed class SignalDispatcher<TSignal>(
     IServiceProvider serviceProvider,
     SignalPublisherFactory<TSignal> publisherFactory,
     Action<ISignalPipeline<TSignal>>? configurePipelineField,
-    SignalTransportRole transportRole)
+    SignalTransportRole transportRole,
+    Type? handlerType)
     : ISignalDispatcher<TSignal>
     where TSignal : class, ISignal<TSignal>
 {
@@ -37,7 +38,7 @@ internal sealed class SignalDispatcher<TSignal>(
             conquerorContext.SetSignalId(signalIdFactory.GenerateId());
         }
 
-        var pipeline = new SignalPipeline<TSignal>(serviceProvider, conquerorContext, transportType);
+        var pipeline = new SignalPipeline<TSignal>(handlerType, serviceProvider, conquerorContext, transportType);
 
         configurePipelineField?.Invoke(pipeline);
 
@@ -60,19 +61,22 @@ internal sealed class SignalDispatcher<TSignal>(
                 configurePipelineField?.Invoke(pipeline);
                 configurePipeline(pipeline);
             },
-            transportRole);
+            transportRole,
+            handlerType);
 
     public ISignalDispatcher<TSignal> WithPublisher(ConfigureSignalPublisher<TSignal> configurePublisher)
         => new SignalDispatcher<TSignal>(
             serviceProvider,
             new(configurePublisher),
             configurePipelineField,
-            transportRole);
+            transportRole,
+            handlerType);
 
     public ISignalDispatcher<TSignal> WithPublisher(ConfigureSignalPublisherAsync<TSignal> configurePublisher)
         => new SignalDispatcher<TSignal>(
             serviceProvider,
             new(configurePublisher),
             configurePipelineField,
-            transportRole);
+            transportRole,
+            handlerType);
 }

@@ -194,7 +194,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
     {
         services.AddConquerorMessaging();
 
-        var invoker = new MessageHandlerInvoker<TMessage, TResponse>(configurePipeline, fn);
+        var invoker = new MessageHandlerInvoker<TMessage, TResponse>(configurePipeline, fn, null);
 
         // we do not support configuring the receiver for delegate handlers (yet), since they are mostly
         // designed to support simple testing scenarios, not be used as full-fledged message handlers
@@ -238,7 +238,8 @@ public static class ConquerorMessagingServiceCollectionExtensions
         {
             var invoker = new MessageHandlerInvoker<TMessage, TResponse>(
                 p => THandler.ConfigurePipeline(new TPipelineProxy { Wrapped = p }),
-                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct));
+                (n, p, ct) => TIHandler.Invoke((TIHandler)p.GetRequiredService(typeof(THandler)), n, ct),
+                typeof(THandler));
 
             var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), typeof(THandler), null, invoker, THandler.GetTypeInjectors().ToList());
 
