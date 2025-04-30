@@ -22,17 +22,18 @@ public static class SignalPipelineExtensions
     }
 
     public static ISignalPipeline<TSignal> EnsureSingleExecutionPerOperation<TSignal>(
-        this ISignalPipeline<TSignal> pipeline)
+        this ISignalPipeline<TSignal> pipeline,
+        string marker)
         where TSignal : class, ISignal<TSignal>
     {
         return pipeline.Use(ctx =>
         {
-            if (ctx.ConquerorContext.ContextData.Get<bool>("executed"))
+            if (ctx.ConquerorContext.ContextData.Get<bool>(marker))
             {
                 return Task.CompletedTask;
             }
 
-            ctx.ConquerorContext.ContextData.Set("executed", true);
+            ctx.ConquerorContext.ContextData.Set(marker, true);
 
             return ctx.Next(ctx.Signal, ctx.CancellationToken);
         });

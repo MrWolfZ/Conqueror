@@ -39,11 +39,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 
                 // Middlewares in the pipeline are executed in the order that they are added.
                 // We add the logging middleware to the pipeline only after the prior two
-                // middlewares to ensure that only signals which are not skipped get logged.
-                // The `Configure...` extension methods for middlewares can be used to modify the
-                // behavior of middlewares that were added earlier to a pipeline. A common pattern
-                // is to define reusable pipelines that define the order of middlewares and then
-                // use `Configure...` for a particular handler to modify the pipeline as necessary
+                // middlewares to ensure that only signals which are not skipped get logged
                 .UseLogging(o => o.PayloadLoggingStrategy = PayloadLoggingStrategy.IndentedJson);
 
     public async Task Handle(
@@ -52,27 +48,31 @@ internal sealed partial class DoublingCounterIncrementedHandler(
     {
         await senders
               .For(IncrementCounterByAmount.T)
-
-              // When calling a message (or signal, etc.) handler, you can specify a sender
-              // pipeline, which is executed before the message is sent via the configured
-              // transport (and on the receiver the handler's own pipeline is then also executed)
-              .WithPipeline(p => p.UseLogging(o =>
+              .WithPipeline(p => p.UseLogging(c =>
               {
-                  o.PreExecutionHook = ctx =>
+                  // you can set the logger category (by default, it is the fully qualified type
+                  // name of the handler for handler pipelines and the signal type for publisher
+                  // pipelines)
+                  c.LoggerCategoryFactory = _
+                      => typeof(DoublingCounterIncrementedHandler).FullName!;
+
+                  // You can hook into the logging stages to customize the log messages
+                  c.PreExecutionHook = ctx =>
                   {
-                      // Let's log a custom log message instead of Conqueror's default
                       ctx.Logger.LogInformation(
                           "doubling increment of counter '{CounterName}'",
                           ctx.Message.CounterName);
-                      return false;
+
+                      return false; // return true here to let the default message be logged
                   };
 
-                  o.PostExecutionHook = ctx =>
+                  c.PostExecutionHook = ctx =>
                   {
                       ctx.Logger.LogInformation(
                           "doubled increment of counter '{CounterName}', it is now {NewValue}",
                           ctx.Message.CounterName,
                           ctx.Response.NewCounterValue);
+
                       return false;
                   };
               }))
@@ -85,7 +85,8 @@ internal sealed partial class DoublingCounterIncrementedHandler(
               // The 'Handle' method is unique for each `IHandler`, so "Go to Implementation" in
               // your IDE will jump directly to your handler, enabling smooth code base navigation,
               // even across different projects and transports
-              .Handle(new(signal.CounterName) { IncrementBy = signal.IncrementBy },
-                      cancellationToken);
+              .Handle(
+                  new(signal.CounterName) { IncrementBy = signal.IncrementBy },
+                  cancellationToken);
     }
 }
