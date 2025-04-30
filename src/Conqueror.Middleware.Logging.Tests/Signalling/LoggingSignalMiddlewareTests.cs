@@ -46,7 +46,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         var handler = host.Resolve<ISignalPublishers>()
                           .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
@@ -67,8 +67,6 @@ public sealed class LoggingSignalMiddlewareTests
             // we are testing a side-effect, so it is fine to ignore everything here
         }
 
-        var expectedLogEntries = testCase.ExpectedLogMessages.Select(t => (testCase.ExpectedLoggerCategory, t.LogLevel, t.MessagePattern));
-
         var logEntries = host.Resolve<LoggingMiddlewareTestLogSink>().LogEntries;
 
         // ReSharper disable once DisposeOnUsingVariable (intentionally done to force a flush)
@@ -76,7 +74,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         Assert.Multiple(() =>
         {
-            foreach (var (cat, lvl, messagePattern) in expectedLogEntries)
+            foreach (var (cat, lvl, messagePattern) in testCase.ExpectedLogMessages)
             {
                 Assert.That(logEntries, Has.Exactly(1).Matches<(string Cat, LogLevel Lvl, string Msg)>(e => e.Cat == cat && e.Lvl == lvl && messagePattern.IsMatch(e.Msg)),
                             $"expected cat={cat}, lvl={lvl}, message pattern={messagePattern}");
@@ -116,7 +114,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         var handler = host.Resolve<ISignalPublishers>()
                           .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
@@ -175,7 +173,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         var handler = host.Resolve<ISignalPublishers>()
                           .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
@@ -242,7 +240,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         var handler = host.Resolve<ISignalPublishers>()
                           .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {
@@ -310,7 +308,7 @@ public sealed class LoggingSignalMiddlewareTests
 
         var handler = host.Resolve<ISignalPublishers>()
                           .For(TIHandler.SignalTypes)
-                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase, addHooks: false));
+                          .WithPipeline(p => ConfigureLoggingPipeline(p, testCase));
 
         if (typeof(TSignal) == typeof(TestSignalWithCustomTransport))
         {

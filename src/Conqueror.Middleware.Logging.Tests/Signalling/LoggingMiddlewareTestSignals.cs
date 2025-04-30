@@ -226,15 +226,13 @@ public static partial class LoggingMiddlewareTestSignals
             PayloadLoggingStrategy = payloadLoggingStrategy,
             PayloadLoggingStrategyFromFactory = payloadLoggingStrategyFromFactory,
             LoggerCategoryFactory = hasCustomCategoryFactory ? m => $"CustomCategory_{m.GetType().Name}" : null,
-            ExpectedLoggerCategory = typeof(TestSignalSub).FullName?.Replace('+', '.')!,
             HookBehavior = hookTestBehavior,
             TransportTypeName = null,
         };
     }
 
     public static void ConfigureLoggingPipeline<TSignal>(ISignalPipeline<TSignal> pipeline,
-                                                         ISignalTestCasePipelineConfiguration<TSignal> testCase,
-                                                         bool addHooks = true)
+                                                         ISignalTestCasePipelineConfiguration<TSignal> testCase)
         where TSignal : class, ISignal<TSignal>
     {
         _ = pipeline.UseLogging(c =>
@@ -269,11 +267,6 @@ public static partial class LoggingMiddlewareTestSignals
                 c.LoggerCategoryFactory = testCase.LoggerCategoryFactory;
             }
 
-            if (!addHooks)
-            {
-                return;
-            }
-
             if (testCase.HookBehavior is { } hookTestBehavior)
             {
                 var hookReturn = hookTestBehavior is HookTestBehavior.HookLogsAndReturnsTrue or HookTestBehavior.HookDoesNotLogAndReturnsTrue;
@@ -286,7 +279,13 @@ public static partial class LoggingMiddlewareTestSignals
 
                     if (hookLogs)
                     {
-                        ctx.Logger.Log(ctx.LogLevel, "PreHook:{SignalType},{SignalId},{TraceId}", ctx.Signal.GetType().Name, ctx.SignalId, ctx.TraceId);
+                        ctx.Logger.Log(ctx.LogLevel,
+                                       "PreHook:{SignalType},{SignalId},{TraceId},{TransportTypeName},{TransportRole}",
+                                       ctx.Signal.GetType().Name,
+                                       ctx.SignalId,
+                                       ctx.TraceId,
+                                       ctx.TransportType.Name,
+                                       ctx.TransportType.Role);
                     }
 
                     return hookReturn;
@@ -299,7 +298,12 @@ public static partial class LoggingMiddlewareTestSignals
 
                     if (hookLogs)
                     {
-                        ctx.Logger.Log(ctx.LogLevel, "PostHook:{SignalId},{TraceId}", ctx.SignalId, ctx.TraceId);
+                        ctx.Logger.Log(ctx.LogLevel,
+                                       "PostHook:{SignalId},{TraceId},{TransportTypeName},{TransportRole}",
+                                       ctx.SignalId,
+                                       ctx.TraceId,
+                                       ctx.TransportType.Name,
+                                       ctx.TransportType.Role);
                     }
 
                     return hookReturn;
@@ -312,7 +316,14 @@ public static partial class LoggingMiddlewareTestSignals
                     if (hookLogs)
                     {
                         var exceptionToLog = new WrappingException(ctx.Exception, ctx.ExecutionStackTrace.ToString());
-                        ctx.Logger.Log(ctx.LogLevel, exceptionToLog, "ExceptionHook:{ExceptionType},{SignalId},{TraceId}", ctx.Exception.GetType().Name, ctx.SignalId, ctx.TraceId);
+                        ctx.Logger.Log(ctx.LogLevel,
+                                       exceptionToLog,
+                                       "ExceptionHook:{ExceptionType},{SignalId},{TraceId},{TransportTypeName},{TransportRole}",
+                                       ctx.Exception.GetType().Name,
+                                       ctx.SignalId,
+                                       ctx.TraceId,
+                                       ctx.TransportType.Name,
+                                       ctx.TransportType.Role);
                     }
 
                     return hookReturn;
@@ -335,10 +346,8 @@ public static partial class LoggingMiddlewareTestSignals
     public sealed class SignalTestCase<TSignal, TIHandler, THandler> : ISignalTestCasePipelineConfiguration<TSignal>
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
-        where THandler : class, ISignalHandler
+        where THandler : class, TIHandler
     {
-        private readonly string? expectedLogCategory;
-
         public required TSignal Signal { get; init; }
 
         object ISignalTestCasePipelineConfiguration.Signal => Signal;
@@ -361,26 +370,20 @@ public static partial class LoggingMiddlewareTestSignals
 
         public required Func<TSignal, string>? LoggerCategoryFactory { get; init; }
 
-        public string ExpectedLoggerCategory
-        {
-            get => LoggerCategoryFactory?.Invoke(Signal) ?? expectedLogCategory ?? typeof(TSignal).FullName?.Replace('+', '.')!;
-            init => expectedLogCategory = value;
-        }
-
         public required HookTestBehavior? HookBehavior { get; init; }
 
         public required string? TransportTypeName { get; init; }
 
         [SuppressMessage("Performance", "SYSLIB1045:Convert to \'GeneratedRegexAttribute\'.", Justification = "we don't need the performance here")]
-        public IEnumerable<(LogLevel LogLevel, Regex MessagePattern)> ExpectedLogMessages
+        public IEnumerable<(string Category, LogLevel LogLevel, Regex MessagePattern)> ExpectedLogMessages
         {
             [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "it is a well-known value")]
             get
             {
-                var hookSuppressesSignal = HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookDoesNotLogAndReturnsFalse;
+                var expectedHandlerCategory = LoggerCategoryFactory?.Invoke(Signal) ?? typeof(THandler).FullName?.Replace('+', '.')!;
+                var expectedPublisherCategory = LoggerCategoryFactory?.Invoke(Signal) ?? Signal.GetType().FullName?.Replace('+', '.')!;
 
-                var publisherTransportRole = nameof(SignalTransportRole.Publisher).ToLowerInvariant();
-                var receiverTransportRole = nameof(SignalTransportRole.Receiver).ToLowerInvariant();
+                var hookSuppressesSignal = HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookDoesNotLogAndReturnsFalse;
 
                 if (PreExecutionLogLevel is not LogLevel.None && PreExecutionLogLevel >= ConfiguredLogLevel)
                 {
@@ -390,11 +393,14 @@ public static partial class LoggingMiddlewareTestSignals
                     {
                         var preExecutionLogRegexBuilder = new StringBuilder();
 
-                        _ = preExecutionLogRegexBuilder.Append("Handling signal on ")
-                                                       .Append(TransportTypeName ?? "in-process")
-                                                       .Append(' ')
-                                                       .Append(publisherTransportRole)
-                                                       .Append(' ');
+                        _ = preExecutionLogRegexBuilder.Append("Handling ");
+
+                        if (TransportTypeName is not null)
+                        {
+                            _ = preExecutionLogRegexBuilder.Append(TransportTypeName).Append(' ');
+                        }
+
+                        _ = preExecutionLogRegexBuilder.Append($"signal of type '{Signal.GetType().Name}' ");
 
                         if (hasPayload)
                         {
@@ -421,21 +427,24 @@ public static partial class LoggingMiddlewareTestSignals
 
                         var preExecutionSignal = new Regex(preExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                        yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionSignal);
+                        yield return (expectedHandlerCategory, PreExecutionLogLevel ?? LogLevel.Information, preExecutionSignal);
 
                         _ = TransportTypeName is not null
-                            ? preExecutionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole)
-                            : preExecutionLogRegexBuilder.Replace($"on in-process {publisherTransportRole} ", string.Empty);
+                            ? preExecutionLogRegexBuilder.Replace($"Handling {TransportTypeName}", $"Publishing {TransportTypeName}")
+                            : preExecutionLogRegexBuilder.Replace("Handling", "Publishing in-process");
 
                         var preExecutionServerSignal = new Regex(preExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                        yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionServerSignal);
+                        yield return (expectedPublisherCategory, PreExecutionLogLevel ?? LogLevel.Information, preExecutionServerSignal);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
                     {
-                        var preExecutionSignalFromHook = new Regex($"PreHook:{Signal.GetType().Name},[a-f0-9]{{16}},[a-f0-9]{{32}}");
-                        yield return (PreExecutionLogLevel ?? LogLevel.Information, preExecutionSignalFromHook);
+                        var preExecutionMessageFromHook = $"PreHook:{Signal.GetType().Name},[a-f0-9]{{16}},[a-f0-9]{{32}}";
+                        var preExecutionMessageFromHandlerHook = $"{preExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
+                        var preExecutionMessageFromPublisherHook = $"{preExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Publisher";
+                        yield return (expectedHandlerCategory, PreExecutionLogLevel ?? LogLevel.Information, new(preExecutionMessageFromHandlerHook));
+                        yield return (expectedPublisherCategory, PreExecutionLogLevel ?? LogLevel.Information, new(preExecutionMessageFromPublisherHook));
                     }
                 }
 
@@ -445,31 +454,37 @@ public static partial class LoggingMiddlewareTestSignals
                     {
                         var postExecutionLogRegexBuilder = new StringBuilder();
 
-                        _ = postExecutionLogRegexBuilder.Append("Handled signal on ")
-                                                        .Append(TransportTypeName ?? "in-process")
-                                                        .Append(' ')
-                                                        .Append(publisherTransportRole)
-                                                        .Append(' ');
+                        _ = postExecutionLogRegexBuilder.Append("Handled ");
+
+                        if (TransportTypeName is not null)
+                        {
+                            _ = postExecutionLogRegexBuilder.Append(TransportTypeName).Append(' ');
+                        }
+
+                        _ = postExecutionLogRegexBuilder.Append($"signal of type '{Signal.GetType().Name}' ");
 
                         _ = postExecutionLogRegexBuilder.Append(@"in [0-9]+\.[0-9]+ms \(Signal ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
 
-                        var postExecutionSignal = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var postExecutionMessage = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                        yield return (PostExecutionLogLevel ?? LogLevel.Information, postExecutionSignal);
+                        yield return (expectedHandlerCategory, PostExecutionLogLevel ?? LogLevel.Information, postExecutionMessage);
 
                         _ = TransportTypeName is not null
-                            ? postExecutionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole)
-                            : postExecutionLogRegexBuilder.Replace($"on in-process {publisherTransportRole} ", string.Empty);
+                            ? postExecutionLogRegexBuilder.Replace($"Handled {TransportTypeName}", $"Published {TransportTypeName}")
+                            : postExecutionLogRegexBuilder.Replace("Handled", "Published in-process");
 
-                        var postExecutionServerSignal = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var postExecutionServerMessage = new Regex(postExecutionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                        yield return (PreExecutionLogLevel ?? LogLevel.Information, postExecutionServerSignal);
+                        yield return (expectedPublisherCategory, PostExecutionLogLevel ?? LogLevel.Information, postExecutionServerMessage);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
                     {
-                        var postExecutionSignalFromHook = new Regex("PostHook:[a-f0-9]{16},[a-f0-9]{32}");
-                        yield return (PostExecutionLogLevel ?? LogLevel.Information, postExecutionSignalFromHook);
+                        var postExecutionMessageFromHook = $"PostHook:[a-f0-9]{{16}},[a-f0-9]{{32}}";
+                        var postExecutionMessageFromHandlerHook = $"{postExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
+                        var postExecutionMessageFromPublisherHook = $"{postExecutionMessageFromHook},{TransportTypeName ?? "in-process"},Publisher";
+                        yield return (expectedHandlerCategory, PostExecutionLogLevel ?? LogLevel.Information, new(postExecutionMessageFromHandlerHook));
+                        yield return (expectedPublisherCategory, PostExecutionLogLevel ?? LogLevel.Information, new(postExecutionMessageFromPublisherHook));
                     }
                 }
 
@@ -479,33 +494,39 @@ public static partial class LoggingMiddlewareTestSignals
                     {
                         var exceptionLogRegexBuilder = new StringBuilder();
 
-                        _ = exceptionLogRegexBuilder.Append("An exception occurred while handling signal on ")
-                                                    .Append(TransportTypeName ?? "in-process")
-                                                    .Append(' ')
-                                                    .Append(publisherTransportRole)
-                                                    .Append(' ');
+                        _ = exceptionLogRegexBuilder.Append("An exception occurred while handling ");
+
+                        if (TransportTypeName is not null)
+                        {
+                            _ = exceptionLogRegexBuilder.Append(TransportTypeName).Append(' ');
+                        }
+
+                        _ = exceptionLogRegexBuilder.Append($"signal of type '{Signal.GetType().Name}' ");
 
                         _ = exceptionLogRegexBuilder.Append(@"after [0-9]+\.[0-9]+ms \(Signal ID: [a-f0-9]{16}, Trace ID: [a-f0-9]{32}\)");
 
                         _ = exceptionLogRegexBuilder.Append(".*test exception");
 
-                        var exceptionSignal = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var exceptionMessage = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                        yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionSignal);
+                        yield return (expectedHandlerCategory, ExceptionLogLevel ?? LogLevel.Error, exceptionMessage);
 
                         _ = TransportTypeName is not null
-                            ? exceptionLogRegexBuilder.Replace(publisherTransportRole, receiverTransportRole)
-                            : exceptionLogRegexBuilder.Replace($"on in-process {publisherTransportRole} ", string.Empty);
+                            ? exceptionLogRegexBuilder.Replace($"handling {TransportTypeName}", $"publishing {TransportTypeName}")
+                            : exceptionLogRegexBuilder.Replace("handling", "publishing in-process");
 
-                        var exceptionServerSignal = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
+                        var exceptionServerMessage = new Regex(exceptionLogRegexBuilder.ToString(), RegexOptions.Compiled | RegexOptions.Singleline);
 
-                        yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionServerSignal);
+                        yield return (expectedPublisherCategory, ExceptionLogLevel ?? LogLevel.Error, exceptionServerMessage);
                     }
 
                     if (HookBehavior is HookTestBehavior.HookLogsAndReturnsFalse or HookTestBehavior.HookLogsAndReturnsTrue)
                     {
-                        var exceptionSignalFromHook = new Regex($"ExceptionHook:{Exception.GetType().Name},[a-f0-9]{{16}},[a-f0-9]{{32}}");
-                        yield return (ExceptionLogLevel ?? LogLevel.Error, exceptionSignalFromHook);
+                        var exceptionMessageFromHook = $"ExceptionHook:{Exception?.GetType().Name},[a-f0-9]{{16}},[a-f0-9]{{32}}";
+                        var exceptionMessageFromHandlerHook = $"{exceptionMessageFromHook},{TransportTypeName ?? "in-process"},Receiver";
+                        var exceptionMessageFromPublisherHook = $"{exceptionMessageFromHook},{TransportTypeName ?? "in-process"},Publisher";
+                        yield return (expectedHandlerCategory, ExceptionLogLevel ?? LogLevel.Error, new(exceptionMessageFromHandlerHook));
+                        yield return (expectedPublisherCategory, ExceptionLogLevel ?? LogLevel.Error, new(exceptionMessageFromPublisherHook));
                     }
                 }
             }
