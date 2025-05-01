@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+    <Import Project="../../.targets/common.targets" />
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Conqueror.Transport.Http.Client" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.4" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.4" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../../src/Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" Condition="$(ShouldReferenceProject)" />
+        <ProjectReference Include="../Examples.BlazorWebAssembly.Contracts/Examples.BlazorWebAssembly.Contracts.csproj" />
+        <ProjectReference Include="../Examples.BlazorWebAssembly.SharedMiddlewares/Examples.BlazorWebAssembly.SharedMiddlewares.csproj" />
+    </ItemGroup>
+
+</Project>

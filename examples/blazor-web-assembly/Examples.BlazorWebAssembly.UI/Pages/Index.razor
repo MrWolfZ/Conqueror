@@ -1,0 +1,121 @@
+﻿@page "/"
+@inject IMessageSenders MessageSenders
+@implements IDisposable
+
+<PageTitle>Chat</PageTitle>
+
+<h1>Chat</h1>
+
+@if (currentEntries == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div>
+        <textarea id="chatContent"
+                  @bind="chatContent"
+                  rows="10"
+                  cols="50"
+                  readonly></textarea>
+    </div>
+
+    <div>
+        <label for="userName">Username:</label>
+        <input id="userName"
+               @bind="user" />
+    </div>
+
+    <div>
+        <label for="entry">Message:</label>
+        <input id="entry"
+               @bind="content"
+               @onkeydown="HandleKeyDown" />
+    </div>
+
+    <button class="btn btn-primary"
+            @onclick="BroadcastEntry">Send
+    </button>
+}
+
+@code {
+    private ChatEntry[]? currentEntries;
+    private string chatContent = "No messages yet.";
+    private string user = "";
+    private string content = "";
+    private Timer? refreshTimer;
+    private readonly TimeSpan refreshInterval = TimeSpan.FromSeconds(2);
+
+    private async Task BroadcastEntry()
+    {
+        if (!string.IsNullOrWhiteSpace(user) && !string.IsNullOrWhiteSpace(content))
+        {
+            await MessageSenders.For(BroadcastChatEntry.T)
+                                .WithDefaultClientPipeline()
+                                .WithHttpApiTransport()
+                                .Handle(new() { User = user, Content = content });
+
+            content = "";
+
+            await RefreshChat();
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e is { Key: "Enter", ShiftKey: false }) // Allow shift+enter for new lines
+        {
+            await BroadcastEntry();
+        }
+    }
+
+    private async Task RefreshChat()
+    {
+        currentEntries = await MessageSenders.For(GetChat.T)
+                                             .WithDefaultClientPipeline()
+                                             .WithHttpApiTransport()
+                                             .Handle(new());
+
+        UpdateChatContent();
+        StateHasChanged();
+    }
+
+    private void UpdateChatContent()
+    {
+        chatContent = currentEntries is { Length: > 0 }
+            ? string.Join("\n", currentEntries.Select(e => $"{e.User}: {e.Content}"))
+            : "No messages yet.";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshChat();
+
+        refreshTimer = new(
+            async void (_) =>
+            {
+                try
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        await RefreshChat();
+                    });
+                }
+                catch
+                {
+                    // let's ignore failing refreshes for now
+                }
+            },
+            null,
+            refreshInterval,
+            refreshInterval);
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Dispose();
+    }
+
+}
