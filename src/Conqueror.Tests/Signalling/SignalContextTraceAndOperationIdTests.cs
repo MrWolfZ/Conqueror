@@ -1,8 +1,8 @@
 using System.Diagnostics;
 
-namespace Conqueror.Tests.Messaging;
+namespace Conqueror.Tests.Signalling;
 
-public sealed partial class MessageContextTraceAndOperationIdTests
+public sealed partial class SignalContextTraceAndOperationIdTests
 {
     private static int testCaseCounter;
 
@@ -19,31 +19,27 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         string? messageIdFromTransportBuilder = null;
         string? traceIdFromHandler = null;
         string? messageIdFromHandler = null;
-        string? traceIdFromNestedMessageHandler = null;
-        string? messageIdFromNestedMessageHandler = null;
+        string? traceIdFromNestedSignalHandler = null;
+        string? messageIdFromNestedSignalHandler = null;
 
         var services = new ServiceCollection();
 
-        _ = services.AddMessageHandlerDelegate(
-                        TestMessage.T,
-                        async (msg, p, ct) =>
+        _ = services.AddSignalHandlerDelegate(
+                        TestSignal.T,
+                        async (_, p, ct) =>
                         {
                             await Task.Yield();
                             traceIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
-                            messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetMessageId();
-                            _ = await p.GetRequiredService<IMessageSenders>().For(NestedTestMessage.T).Handle(new(), ct);
-
-                            return new();
+                            messageIdFromHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetSignalId();
+                            await p.GetRequiredService<ISignalPublishers>().For(NestedTestSignal.T).Handle(new(), ct);
                         })
-                    .AddMessageHandlerDelegate(
-                        NestedTestMessage.T,
+                    .AddSignalHandlerDelegate(
+                        NestedTestSignal.T,
                         async (_, p, _) =>
                         {
                             await Task.Yield();
-                            traceIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
-                            messageIdFromNestedMessageHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetMessageId();
-
-                            return new();
+                            traceIdFromNestedSignalHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetTraceId();
+                            messageIdFromNestedSignalHandler = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext!.GetSignalId();
                         });
 
         await using var serviceProvider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
@@ -59,19 +55,19 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         using var d = conquerorContext;
 
         var testCaseIdx = Interlocked.Increment(ref testCaseCounter);
-        using var activity = hasActivity ? StartActivity(nameof(MessageContextTraceAndOperationIdTests) + testCaseIdx) : null;
+        using var activity = hasActivity ? StartActivity(nameof(SignalContextTraceAndOperationIdTests) + testCaseIdx) : null;
 
-        var handlerSender = serviceProvider.GetRequiredService<IMessageSenders>()
-                                           .For(TestMessage.T)
+        var handlerSender = serviceProvider.GetRequiredService<ISignalPublishers>()
+                                           .For(TestSignal.T)
                                            .WithTransport(b =>
                                            {
                                                traceIdFromTransportBuilder = b.ConquerorContext.GetTraceId();
-                                               messageIdFromTransportBuilder = b.ConquerorContext.GetMessageId();
+                                               messageIdFromTransportBuilder = b.ConquerorContext.GetSignalId();
 
-                                               return b.UseInProcess();
+                                               return b.UseInProcessWithSequentialBroadcastingStrategy();
                                            });
 
-        _ = await handlerSender.Handle(new());
+        await handlerSender.Handle(new());
 
         var expectedTraceId = (hasCustomTraceId, hasActivity) switch
         {
@@ -84,11 +80,11 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         {
             Assert.That(traceIdFromTransportBuilder, Is.EqualTo(expectedTraceId));
             Assert.That(traceIdFromHandler, Is.EqualTo(expectedTraceId));
-            Assert.That(traceIdFromNestedMessageHandler, Is.EqualTo(expectedTraceId));
+            Assert.That(traceIdFromNestedSignalHandler, Is.EqualTo(expectedTraceId));
 
             Assert.That(messageIdFromTransportBuilder, Is.EqualTo(messageIdFromHandler));
             Assert.That(messageIdFromHandler, Is.Not.Null);
-            Assert.That(messageIdFromNestedMessageHandler, Is.Not.EqualTo(messageIdFromHandler));
+            Assert.That(messageIdFromNestedSignalHandler, Is.Not.EqualTo(messageIdFromHandler));
         });
     }
 
@@ -129,11 +125,9 @@ public sealed partial class MessageContextTraceAndOperationIdTests
         }
     }
 
-    [Message<TestMessageResponse>]
-    private sealed partial record TestMessage;
+    [Signal]
+    private sealed partial record TestSignal;
 
-    private sealed record TestMessageResponse;
-
-    [Message<TestMessageResponse>]
-    private sealed partial record NestedTestMessage;
+    [Signal]
+    private sealed partial record NestedTestSignal;
 }
