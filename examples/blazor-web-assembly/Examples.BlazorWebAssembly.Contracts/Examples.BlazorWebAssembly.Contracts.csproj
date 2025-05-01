@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../../.targets/common.targets" />
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Conqueror.Transport.Http.Abstractions" Version="$(ConquerorVersion)" Condition="$(ShouldReferencePackage)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../../src/Conqueror.Transport.Http.Abstractions/Conqueror.Transport.Http.Abstractions.csproj" Condition="$(ShouldReferenceProject)" />
+
+        <!-- only required when using project references; when using a package reference the source generator is included in the abstractions package -->
+        <ProjectReference Include="../../../src/Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Condition="$(ShouldReferenceProject) == true" />
+    </ItemGroup>
+
+</Project>

@@ -29,9 +29,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{64
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "blazor-web-assembly", "blazor-web-assembly", "{DFF050FB-A89F-4086-B195-D7775B0A9C5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.API", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.API\Conqueror.Examples.BlazorWebAssembly.API.csproj", "{DEC1F1DB-0179-478C-B947-EC6487D9B2EA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.BlazorWebAssembly.API", "examples\blazor-web-assembly\Examples.BlazorWebAssembly.API\Examples.BlazorWebAssembly.API.csproj", "{DEC1F1DB-0179-478C-B947-EC6487D9B2EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Contracts", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Contracts\Conqueror.Examples.BlazorWebAssembly.Contracts.csproj", "{38205228-73E4-40A1-AF09-65049C2A01EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.BlazorWebAssembly.Contracts", "examples\blazor-web-assembly\Examples.BlazorWebAssembly.Contracts\Examples.BlazorWebAssembly.Contracts.csproj", "{38205228-73E4-40A1-AF09-65049C2A01EE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".targets", ".targets", "{76EC9B29-4F54-449D-B2CE-18164CA6FB28}"
 	ProjectSection(SolutionItems) = preProject
@@ -57,9 +57,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{32A9E3
 		build\publish.bat = build\publish.bat
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Tests", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Tests\Conqueror.Examples.BlazorWebAssembly.Tests.csproj", "{1F9CB58D-EEEB-44EA-BF3F-7A34E6372C06}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Application", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Application\Conqueror.Examples.BlazorWebAssembly.Application.csproj", "{6F100036-6720-477D-9FDA-66E2C45EEEA4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.BlazorWebAssembly.Tests", "examples\blazor-web-assembly\Examples.BlazorWebAssembly.Tests\Examples.BlazorWebAssembly.Tests.csproj", "{1F9CB58D-EEEB-44EA-BF3F-7A34E6372C06}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests.TopLevelProgram", "src\Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests.TopLevelProgram\Conqueror.CQS.Transport.Http.Server.AspNetCore.Tests.TopLevelProgram.csproj", "{BC284CFD-4289-42E2-87AE-7F73F372ABEC}"
 EndProject
@@ -90,11 +88,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Transpo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests", "src\Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests\Conqueror.Streaming.Transport.Http.Server.AspNetCore.Tests.csproj", "{C2DF1455-7EAE-42F9-B228-78765270DEE9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares\Conqueror.Examples.BlazorWebAssembly.SharedMiddlewares.csproj", "{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.BlazorWebAssembly.SharedMiddlewares", "examples\blazor-web-assembly\Examples.BlazorWebAssembly.SharedMiddlewares\Examples.BlazorWebAssembly.SharedMiddlewares.csproj", "{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Analyzers", "src\Conqueror.CQS.Analyzers\Conqueror.CQS.Analyzers.csproj", "{F4197CCE-32AA-4D57-A13B-46050A5B1FAF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.Domain", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.Domain\Conqueror.Examples.BlazorWebAssembly.Domain.csproj", "{1565A63F-25F8-4758-A6B7-6D522125DD33}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "recipes", "recipes", "{93B58C31-C6DE-4BC0-8EAF-E2B11CEF1082}"
 EndProject
@@ -168,7 +164,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", "{6E208A99-685B-484D-AD3C-8FF4C1C70154}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Examples.BlazorWebAssembly.UI", "examples\blazor-web-assembly\Conqueror.Examples.BlazorWebAssembly.UI\Conqueror.Examples.BlazorWebAssembly.UI.csproj", "{756F0129-307B-491F-B58E-7B705C140131}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.BlazorWebAssembly.UI", "examples\blazor-web-assembly\Examples.BlazorWebAssembly.UI\Examples.BlazorWebAssembly.UI.csproj", "{756F0129-307B-491F-B58E-7B705C140131}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.CQS.Benchmarks", "src\Conqueror.CQS.Benchmarks\Conqueror.CQS.Benchmarks.csproj", "{0A011017-B8CD-453A-92C0-7EDC3475CC8A}"
 EndProject
@@ -303,10 +299,6 @@ Global
 		{1F9CB58D-EEEB-44EA-BF3F-7A34E6372C06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F9CB58D-EEEB-44EA-BF3F-7A34E6372C06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F9CB58D-EEEB-44EA-BF3F-7A34E6372C06}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F100036-6720-477D-9FDA-66E2C45EEEA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F100036-6720-477D-9FDA-66E2C45EEEA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F100036-6720-477D-9FDA-66E2C45EEEA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F100036-6720-477D-9FDA-66E2C45EEEA4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC284CFD-4289-42E2-87AE-7F73F372ABEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -363,10 +355,6 @@ Global
 		{F4197CCE-32AA-4D57-A13B-46050A5B1FAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4197CCE-32AA-4D57-A13B-46050A5B1FAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4197CCE-32AA-4D57-A13B-46050A5B1FAF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1565A63F-25F8-4758-A6B7-6D522125DD33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1565A63F-25F8-4758-A6B7-6D522125DD33}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1565A63F-25F8-4758-A6B7-6D522125DD33}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1565A63F-25F8-4758-A6B7-6D522125DD33}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B3522E63-DA56-4760-880D-6DB62DC15785}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B3522E63-DA56-4760-880D-6DB62DC15785}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3522E63-DA56-4760-880D-6DB62DC15785}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -505,9 +493,7 @@ Global
 		{DEC1F1DB-0179-478C-B947-EC6487D9B2EA} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 		{38205228-73E4-40A1-AF09-65049C2A01EE} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 		{1F9CB58D-EEEB-44EA-BF3F-7A34E6372C06} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
-		{6F100036-6720-477D-9FDA-66E2C45EEEA4} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 		{5CBCFCB6-FC8D-499E-993A-546ABCF61EFE} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
-		{1565A63F-25F8-4758-A6B7-6D522125DD33} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
 		{9AD2EEC8-4EBF-4181-863A-9706A5F4F26F} = {72DB3747-BE19-4A7A-8864-934D8F605A78}
 		{8BBA53A0-B332-4634-BEE5-6C8BB80743F1} = {7790F8B9-DDEB-4CFC-AD99-02461BE00097}
 		{2D9E96FD-5E1C-469F-90A5-39E0B1E97A8D} = {6FF60443-0ED1-4BCE-AB14-B2A1523FB575}
