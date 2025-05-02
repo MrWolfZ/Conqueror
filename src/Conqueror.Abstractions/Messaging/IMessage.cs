@@ -17,6 +17,13 @@ public interface IMessage<out TMessage, TResponse>
     where TMessage : class, IMessage<TMessage, TResponse>
 {
     /// <summary>
+    ///     This is an internal helper property used by Conqueror to work around the need for
+    ///     reflection. Implementations of the property should only be created by the source
+    ///     generator.
+    /// </summary>
+    static abstract ICoreMessageHandlerTypesInjector CoreTypesInjector { get; }
+
+    /// <summary>
     ///     Some transports must be able to construct an instance of this message
     ///     if it has no properties, but since this is only known to the actual
     ///     type, we cannot use the generic type constraint 'new()'. Instead, we

@@ -45,6 +45,9 @@ public sealed partial class MessageTypeGenerationTests
     {
         public static MessageTypes<TestMessage, TestMessageResponse, IHandler> T => new();
 
+        static ICoreMessageHandlerTypesInjector IMessage<TestMessage, TestMessageResponse>.CoreTypesInjector
+            => CoreMessageHandlerTypesInjector<TestMessage, TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestMessage? IMessage<TestMessage, TestMessageResponse>.EmptyInstance => null;
 
@@ -96,6 +99,9 @@ public sealed partial class MessageTypeGenerationTests
     public sealed partial record TestMessageWithoutResponse : IMessage<TestMessageWithoutResponse, UnitMessageResponse>
     {
         public static MessageTypes<TestMessageWithoutResponse, UnitMessageResponse, IHandler> T => new();
+
+        static ICoreMessageHandlerTypesInjector IMessage<TestMessageWithoutResponse, UnitMessageResponse>.CoreTypesInjector
+            => CoreMessageHandlerTypesInjector<TestMessageWithoutResponse, UnitMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         static TestMessageWithoutResponse? IMessage<TestMessageWithoutResponse, UnitMessageResponse>.EmptyInstance => null;

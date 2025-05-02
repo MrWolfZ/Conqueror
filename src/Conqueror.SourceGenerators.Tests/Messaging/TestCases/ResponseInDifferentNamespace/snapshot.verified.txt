@@ -25,6 +25,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.ResponseInDiffere
         public static global::Conqueror.MessageTypes<TestMessage, global::Some.Other.Namespace.TestMessageResponse, IHandler> T => new();
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage, global::Some.Other.Namespace.TestMessageResponse>.CoreTypesInjector
+            => global::Conqueror.CoreMessageHandlerTypesInjector<TestMessage, global::Some.Other.Namespace.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage, global::Some.Other.Namespace.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]

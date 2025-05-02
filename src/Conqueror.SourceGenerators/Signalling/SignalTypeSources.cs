@@ -43,6 +43,7 @@ public static class SignalTypeSources
         using (sb.AppendSignalType(indentation, in signalTypeDescriptor))
         {
             _ = sb.AppendSignalTypesProperty(indentation, in signalTypeDescriptor)
+                  .AppendCoreSignalHandlerTypesInjectorProperty(indentation, in signalTypeDescriptor)
                   .AppendSignalHandlerInterface(indentation, in signalTypeDescriptor)
                   .AppendSignalEmptyInstanceProperty(indentation, in signalTypeDescriptor)
                   .AppendJsonSerializerContext(indentation, in signalTypeDescriptor, descriptor.HasJsonSerializerContext)
@@ -100,6 +101,22 @@ public static class SignalTypeSources
         return sb.AppendSignalTypeGeneratedCodeAttribute(indentation)
                  .AppendIndentation(indentation)
                  .Append("public static ").AppendNewKeywordIfNecessary(signalTypeDescriptor).Append($"global::Conqueror.SignalTypes<{signalTypeDescriptor.Name}, IHandler> T => new();").AppendLine();
+    }
+
+    private static StringBuilder AppendCoreSignalHandlerTypesInjectorProperty(this StringBuilder sb,
+                                                                              Indentation indentation,
+                                                                              in TypeDescriptor signalTypeDescriptor)
+    {
+        return sb.AppendLine()
+                 .AppendSignalTypeGeneratedCodeAttribute(indentation)
+                 .AppendIndentation(indentation)
+                 .Append($"static global::Conqueror.ICoreSignalHandlerTypesInjector global::Conqueror.ISignal<{signalTypeDescriptor.Name}>.CoreTypesInjector").AppendLineWithIndentation(indentation)
+                 .AppendSingleIndent()
+
+                 // We are cheating a bit here by using handler proxy as the type parameter for the handler type.
+                 // This is because this property here is only used to generate publishers with the correct interface,
+                 // and we don't need the concrete handler type there.
+                 .Append($"=> global::Conqueror.CoreSignalHandlerTypesInjector<{signalTypeDescriptor.Name}, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;").AppendLine();
     }
 
     private static StringBuilder AppendSignalHandlerInterface(this StringBuilder sb,

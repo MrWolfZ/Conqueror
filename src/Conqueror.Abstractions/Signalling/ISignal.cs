@@ -16,6 +16,13 @@ public interface ISignal<out TSignal>
     where TSignal : class, ISignal<TSignal>
 {
     /// <summary>
+    ///     This is an internal helper property used by Conqueror to work around the need for
+    ///     reflection. Implementations of the property should only be created by the source
+    ///     generator.
+    /// </summary>
+    static abstract ICoreSignalHandlerTypesInjector CoreTypesInjector { get; }
+
+    /// <summary>
     ///     Some transports must be able to construct an instance of this signal
     ///     if it has no properties, but since this is only known to the actual
     ///     type, we cannot use the generic type constraint 'new()'. Instead, we

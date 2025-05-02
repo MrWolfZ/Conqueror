@@ -23,6 +23,10 @@ partial record GlobalTestSignal : global::Conqueror.ISignal<GlobalTestSignal>
     public static global::Conqueror.SignalTypes<GlobalTestSignal, IHandler> T => new();
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+    static global::Conqueror.ICoreSignalHandlerTypesInjector global::Conqueror.ISignal<GlobalTestSignal>.CoreTypesInjector
+        => global::Conqueror.CoreSignalHandlerTypesInjector<GlobalTestSignal, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
+
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
     public partial interface IHandler : global::Conqueror.ISignalHandler<GlobalTestSignal, IHandler, IHandler.Proxy>
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]

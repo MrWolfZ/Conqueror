@@ -25,6 +25,10 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.GenericWithHiera
         public static global::Conqueror.SignalTypes<TestSignal<TFirst, TSecond>, IHandler> T => new();
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreSignalHandlerTypesInjector global::Conqueror.ISignal<TestSignal<TFirst, TSecond>>.CoreTypesInjector
+            => global::Conqueror.CoreSignalHandlerTypesInjector<TestSignal<TFirst, TSecond>, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         public partial interface IHandler : global::Conqueror.ISignalHandler<TestSignal<TFirst, TSecond>, IHandler, IHandler.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
@@ -77,6 +81,10 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.GenericWithHiera
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         public static new global::Conqueror.SignalTypes<TestSignal, IHandler> T => new();
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreSignalHandlerTypesInjector global::Conqueror.ISignal<TestSignal>.CoreTypesInjector
+            => global::Conqueror.CoreSignalHandlerTypesInjector<TestSignal, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         public new partial interface IHandler : global::Conqueror.ISignalHandler<TestSignal, IHandler, IHandler.Proxy>

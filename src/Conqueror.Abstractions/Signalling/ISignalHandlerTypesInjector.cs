@@ -13,13 +13,13 @@ public interface ISignalHandlerTypesInjector
     Type SignalType { get; }
 }
 
-internal interface ICoreSignalHandlerTypesInjector : ISignalHandlerTypesInjector
+public interface ICoreSignalHandlerTypesInjector : ISignalHandlerTypesInjector
 {
     TResult Create<TResult>(ICoreSignalHandlerTypesInjectable<TResult> injectable);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal sealed class CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy, THandler> : ICoreSignalHandlerTypesInjector
+public sealed class CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy, THandler> : ICoreSignalHandlerTypesInjector
     where TSignal : class, ISignal<TSignal>
     where TIHandler : class, ISignalHandler<TSignal, TIHandler, TProxy>
     where TProxy : SignalHandlerProxy<TSignal, TIHandler, TProxy>, TIHandler, new()
@@ -46,7 +46,7 @@ internal sealed class CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy,
 /// </summary>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal interface ICoreSignalHandlerTypesInjectable<out TResult>
+public interface ICoreSignalHandlerTypesInjectable<out TResult>
 {
     TResult WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>()
         where TSignal : class, ISignal<TSignal>

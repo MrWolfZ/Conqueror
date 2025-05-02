@@ -8,7 +8,7 @@ internal sealed class MessageSenders(IServiceProvider serviceProvider) : IMessag
         where TMessage : class, IMessage<TMessage, TResponse>
         where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler>
     {
-        return TIHandler.CoreTypesInjector.Create(new Injectable<TIHandler>(serviceProvider));
+        return TMessage.CoreTypesInjector.Create(new Injectable<TIHandler>(serviceProvider));
     }
 
     private sealed class Injectable<TIHandlerParam>(IServiceProvider serviceProvider) : ICoreMessageHandlerTypesInjectable<TIHandlerParam>
