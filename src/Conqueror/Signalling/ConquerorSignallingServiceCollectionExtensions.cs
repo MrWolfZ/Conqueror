@@ -157,7 +157,7 @@ public static class ConquerorSignallingServiceCollectionExtensions
 
         // we do not support configuring the receiver for delegate handlers (yet), since they are mostly
         // designed to support simple testing scenarios, not be used as full-fledged signal handlers
-        services.AddSingleton(new SignalHandlerRegistration(typeof(TSignal), null, fn, invoker, [TIHandler.CoreTypesInjector]));
+        services.AddSingleton(new SignalHandlerRegistration(typeof(TSignal), null, fn, invoker, [TSignal.CoreTypesInjector]));
 
         return services;
     }

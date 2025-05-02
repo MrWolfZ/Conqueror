@@ -41,9 +41,6 @@ public interface ISignalHandler<TSignal, TIHandler> : ISignalHandler
 {
     static virtual SignalTypes<TSignal, TIHandler> SignalTypes { get; } = new();
 
-    internal static virtual ICoreSignalHandlerTypesInjector CoreTypesInjector
-        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
-
     static virtual Task Invoke(TIHandler handler, TSignal signal, CancellationToken cancellationToken)
         => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler interface type");
 }
@@ -54,15 +51,6 @@ public interface ISignalHandler<TSignal, TIHandler, TProxy> : ISignalHandler<TSi
     where TIHandler : class, ISignalHandler<TSignal, TIHandler, TProxy>
     where TProxy : SignalHandlerProxy<TSignal, TIHandler, TProxy>, TIHandler, new()
 {
-    /// <summary>
-    ///     We are cheating a bit here by using <see cref="TIHandler" /> as the type parameter for the handler type
-    ///     of the default types injector. This is because this property here is only used to generate publishers
-    ///     with the correct interface (<see cref="ISignalPublishers" />), and we don't need the concrete handler type
-    ///     there.
-    /// </summary>
-    static ICoreSignalHandlerTypesInjector ISignalHandler<TSignal, TIHandler>.CoreTypesInjector
-        => CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy, TIHandler>.Default;
-
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "by design")]
     [EditorBrowsable(EditorBrowsableState.Never)]
     static ISignalHandlerTypesInjector CreateCoreTypesInjector<THandler>()
@@ -91,6 +79,9 @@ public abstract class SignalHandlerProxy<TSignal, TIHandler, TProxy> : ISignalHa
 
     public TIHandler WithTransport(ConfigureSignalPublisherAsync<TSignal> configureTransport)
         => new TProxy { Dispatcher = Dispatcher.WithPublisher(configureTransport) };
+
+    static IEnumerable<ISignalHandlerTypesInjector> ISignalHandler.GetTypeInjectors()
+        => throw new NotSupportedException("this method should never be called on the proxy");
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]

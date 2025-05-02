@@ -25,6 +25,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
         public static global::Conqueror.MessageTypes<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler> T => new();
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>.CoreTypesInjector
+            => global::Conqueror.CoreMessageHandlerTypesInjector<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
@@ -90,6 +94,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTranspo
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public static new global::Conqueror.MessageTypes<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler> T => new();
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse>.CoreTypesInjector
+            => global::Conqueror.CoreMessageHandlerTypesInjector<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public new partial interface IHandler : global::Conqueror.IMessageHandler<TestMessageSub, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.WithCustomTransportWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>

@@ -13,13 +13,13 @@ public interface IMessageHandlerTypesInjector
     Type MessageType { get; }
 }
 
-internal interface ICoreMessageHandlerTypesInjector : IMessageHandlerTypesInjector
+public interface ICoreMessageHandlerTypesInjector : IMessageHandlerTypesInjector
 {
     TResult Create<TResult>(ICoreMessageHandlerTypesInjectable<TResult> injectable);
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal sealed class CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler> : ICoreMessageHandlerTypesInjector
+public sealed class CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler> : ICoreMessageHandlerTypesInjector
     where TMessage : class, IMessage<TMessage, TResponse>
     where TIHandler : class, IMessageHandler<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy>
     where TProxy : MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy>, TIHandler, new()
@@ -48,7 +48,7 @@ internal sealed class CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHan
 /// </summary>
 /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
 [EditorBrowsable(EditorBrowsableState.Never)]
-internal interface ICoreMessageHandlerTypesInjectable<out TResult>
+public interface ICoreMessageHandlerTypesInjectable<out TResult>
 {
     TResult WithInjectedTypes<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, THandler>()
         where TMessage : class, IMessage<TMessage, TResponse>

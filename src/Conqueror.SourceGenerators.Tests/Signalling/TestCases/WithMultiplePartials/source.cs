@@ -19,6 +19,8 @@ public partial record TestSignal
 {
     public partial interface IHandler;
 
+    public static ICoreSignalHandlerTypesInjector CoreTypesInjector => null!;
+
     public static TestSignal? EmptyInstance => null;
 
     public static System.Collections.Generic.IEnumerable<System.Reflection.ConstructorInfo> PublicConstructors => null!;

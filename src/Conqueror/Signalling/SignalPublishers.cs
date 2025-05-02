@@ -8,7 +8,7 @@ internal sealed class SignalPublishers(IServiceProvider serviceProvider) : ISign
         where TSignal : class, ISignal<TSignal>
         where TIHandler : class, ISignalHandler<TSignal, TIHandler>
     {
-        return TIHandler.CoreTypesInjector.Create(new Injectable<TIHandler>(serviceProvider));
+        return TSignal.CoreTypesInjector.Create(new Injectable<TIHandler>(serviceProvider));
     }
 
     private sealed class Injectable<TIHandlerParam>(IServiceProvider serviceProvider) : ICoreSignalHandlerTypesInjectable<TIHandlerParam>

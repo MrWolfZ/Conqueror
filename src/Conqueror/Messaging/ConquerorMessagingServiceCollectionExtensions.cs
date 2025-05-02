@@ -198,7 +198,7 @@ public static class ConquerorMessagingServiceCollectionExtensions
 
         // we do not support configuring the receiver for delegate handlers (yet), since they are mostly
         // designed to support simple testing scenarios, not be used as full-fledged message handlers
-        var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), null, fn, invoker, [TIHandler.CoreTypesInjector]);
+        var registration = new MessageHandlerRegistration(typeof(TMessage), typeof(TResponse), null, fn, invoker, [TMessage.CoreTypesInjector]);
 
         var existingRegistration = services.SingleOrDefault(d => d.ImplementationInstance is MessageHandlerRegistration r
                                                                  && r.MessageType == typeof(TMessage));

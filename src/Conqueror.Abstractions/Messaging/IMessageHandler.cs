@@ -35,9 +35,6 @@ public interface IMessageHandler<TMessage, TResponse, TIHandler> : IMessageHandl
 {
     static virtual MessageTypes<TMessage, TResponse, TIHandler> MessageTypes { get; } = new();
 
-    internal static virtual ICoreMessageHandlerTypesInjector CoreTypesInjector
-        => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler type");
-
     static virtual Task<TResponse> Invoke(TIHandler handler, TMessage message, CancellationToken cancellationToken)
         => throw new NotSupportedException("this should be implemented by the source generator for each concrete handler interface type");
 }
@@ -51,15 +48,6 @@ public interface IMessageHandler<TMessage, TResponse, TIHandler, TProxy, in TIPi
     where TIPipeline : class, IMessagePipeline<TMessage, TResponse>
     where TPipelineProxy : MessagePipelineProxy<TMessage, TResponse>, TIPipeline, new()
 {
-    /// <summary>
-    ///     We are cheating a bit here by using <see cref="TIHandler" /> as the type parameter for the handler type
-    ///     of the default types injector. This is because this property here is only used to generate clients
-    ///     with the correct interface (<see cref="IMessageSenders" />), and we don't need the concrete handler type
-    ///     there.
-    /// </summary>
-    static ICoreMessageHandlerTypesInjector IMessageHandler<TMessage, TResponse, TIHandler>.CoreTypesInjector
-        => CoreMessageHandlerTypesInjector<TMessage, TResponse, TIHandler, TProxy, TIPipeline, TPipelineProxy, TIHandler>.Default;
-
     static virtual void ConfigurePipeline(TIPipeline pipeline)
     {
         // by default, we use an empty pipeline
@@ -93,6 +81,9 @@ public abstract class MessageHandlerProxy<TMessage, TResponse, TIHandler, TProxy
 
     public TIHandler WithTransport(ConfigureMessageSenderAsync<TMessage, TResponse> configureTransport)
         => new TProxy { Dispatcher = Dispatcher.WithSender(configureTransport) };
+
+    static IEnumerable<IMessageHandlerTypesInjector> IMessageHandler.GetTypeInjectors()
+        => throw new NotSupportedException("this method should never be called on the proxy");
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]

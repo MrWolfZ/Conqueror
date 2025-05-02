@@ -25,6 +25,10 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithCustomTransp
         public static global::Conqueror.SignalTypes<TestSignal, IHandler> T => new();
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreSignalHandlerTypesInjector global::Conqueror.ISignal<TestSignal>.CoreTypesInjector
+            => global::Conqueror.CoreSignalHandlerTypesInjector<TestSignal, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         public partial interface IHandler : global::Conqueror.ISignalHandler<TestSignal, IHandler, IHandler.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]

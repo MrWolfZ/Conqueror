@@ -19,6 +19,8 @@ public partial record TestMessage
 {
     public partial interface IHandler;
 
+    public static ICoreMessageHandlerTypesInjector CoreTypesInjector => null!;
+
     public static TestMessage? EmptyInstance => null;
 
     public static System.Collections.Generic.IEnumerable<System.Reflection.ConstructorInfo> PublicConstructors => null!;

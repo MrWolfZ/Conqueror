@@ -23,6 +23,10 @@ partial record GlobalTestMessage : global::Conqueror.IMessage<GlobalTestMessage,
     public static global::Conqueror.MessageTypes<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler> T => new();
 
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+    static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<GlobalTestMessage, global::GlobalTestMessageResponse>.CoreTypesInjector
+        => global::Conqueror.CoreMessageHandlerTypesInjector<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
     public partial interface IHandler : global::Conqueror.IMessageHandler<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]

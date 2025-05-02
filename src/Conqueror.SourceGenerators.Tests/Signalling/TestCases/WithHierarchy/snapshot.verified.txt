@@ -25,6 +25,10 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithHierarchy
         public static global::Conqueror.SignalTypes<TestSignal, IHandler> T => new();
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreSignalHandlerTypesInjector global::Conqueror.ISignal<TestSignal>.CoreTypesInjector
+            => global::Conqueror.CoreSignalHandlerTypesInjector<TestSignal, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         public partial interface IHandler : global::Conqueror.ISignalHandler<TestSignal, IHandler, IHandler.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
@@ -77,6 +81,10 @@ namespace Conqueror.SourceGenerators.Tests.Signalling.TestCases.WithHierarchy
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         public static new global::Conqueror.SignalTypes<TestSignalSub, IHandler> T => new();
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreSignalHandlerTypesInjector global::Conqueror.ISignal<TestSignalSub>.CoreTypesInjector
+            => global::Conqueror.CoreSignalHandlerTypesInjector<TestSignalSub, IHandler, IHandler.Proxy, IHandler.Proxy>.Default;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Signalling.SignalTypeGenerator", "FIXED_VERSION")]
         public new partial interface IHandler : global::Conqueror.ISignalHandler<TestSignalSub, IHandler, IHandler.Proxy>

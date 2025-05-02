@@ -25,6 +25,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTy
         public static global::Conqueror.MessageTypes<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse, IHandler> T => new();
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse>.CoreTypesInjector
+            => global::Conqueror.CoreMessageHandlerTypesInjector<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
@@ -85,6 +89,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTy
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public static global::Conqueror.MessageTypes<TestMessage2, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse2, IHandler> T => new();
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage2, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse2>.CoreTypesInjector
+            => global::Conqueror.CoreMessageHandlerTypesInjector<TestMessage2, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse2, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage2, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.MultipleMessageTypes.TestMessageResponse2, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>

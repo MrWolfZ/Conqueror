@@ -25,6 +25,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierar
         public static global::Conqueror.MessageTypes<TestMessage<TFirst, TSecond>, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler> T => new();
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage<TFirst, TSecond>, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse>.CoreTypesInjector
+            => global::Conqueror.CoreMessageHandlerTypesInjector<TestMessage<TFirst, TSecond>, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage<TFirst, TSecond>, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
@@ -85,6 +89,10 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierar
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public static new global::Conqueror.MessageTypes<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler> T => new();
+
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
+        static global::Conqueror.ICoreMessageHandlerTypesInjector global::Conqueror.IMessage<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse>.CoreTypesInjector
+            => global::Conqueror.CoreMessageHandlerTypesInjector<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy, IHandler.Proxy>.Default;
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         public new partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
