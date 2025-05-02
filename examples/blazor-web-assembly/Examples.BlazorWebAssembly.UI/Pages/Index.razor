@@ -4,45 +4,77 @@
 
 <PageTitle>Chat</PageTitle>
 
-<h1>Chat</h1>
-
-@if (currentEntries == null)
-{
-    <p>
-        <em>Loading...</em>
-    </p>
-}
-else
-{
-    <div>
-        <textarea id="chatContent"
-                  @bind="chatContent"
-                  rows="10"
-                  cols="50"
-                  readonly></textarea>
+<div class="chat-page">
+    <div class="chat-header">
+        <h1>Chat Room</h1>
     </div>
 
-    <div>
-        <label for="userName">Username:</label>
-        <input id="userName"
-               @bind="user" />
-    </div>
+    @if (currentEntries == null)
+    {
+        <div class="loading-container">
+            <div class="spinner-border text-primary"
+                 role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading chat history...</p>
+        </div>
+    }
+    else
+    {
+        <div id="chatContent"
+             class="chat-container">
+            @if (currentEntries.Length > 0)
+            {
+                @foreach (var entry in currentEntries)
+                {
+                    <div class="chat-message @(entry.User == user ? "chat-message-own" : "")">
+                        <div class="message-header">
+                            <strong>@entry.User</strong>
+                            <small class="text-muted">@DateTime.Now.ToString("HH:mm")</small>
+                        </div>
+                        <div class="message-content">@entry.Content</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-chat">
+                    <i class="bi bi-chat-dots"></i>
+                    <p>No messages yet. Start a conversation!</p>
+                </div>
+            }
+        </div>
 
-    <div>
-        <label for="entry">Message:</label>
-        <input id="entry"
-               @bind="content"
-               @onkeydown="HandleKeyDown" />
-    </div>
+        <div class="chat-controls">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Username</span>
+                <input type="text"
+                       class="form-control"
+                       id="userName"
+                       placeholder="Enter your name"
+                       @bind="user" />
+            </div>
 
-    <button class="btn btn-primary"
-            @onclick="BroadcastEntry">Send
-    </button>
-}
+            <div class="input-group mb-3">
+                <textarea class="form-control message-input"
+                          id="entry"
+                          placeholder="Type your message here..."
+                          rows="2"
+                          @bind="content"
+                          @bind:event="oninput"
+                          @onkeyup="HandleKeyUp"></textarea>
+                <button class="btn btn-primary send-button"
+                        @onclick="BroadcastEntry">
+                    <i class="bi bi-send"></i> Send
+                </button>
+            </div>
+            <small class="text-muted helper-text">Press Enter to send, Shift+Enter for new line</small>
+        </div>
+    }
+</div>
 
 @code {
     private ChatEntry[]? currentEntries;
-    private string chatContent = "No messages yet.";
     private string user = "";
     private string content = "";
     private Timer? refreshTimer;
@@ -63,7 +95,7 @@ else
         }
     }
 
-    private async Task HandleKeyDown(KeyboardEventArgs e)
+    private async Task HandleKeyUp(KeyboardEventArgs e)
     {
         if (e is { Key: "Enter", ShiftKey: false }) // Allow shift+enter for new lines
         {
@@ -75,18 +107,24 @@ else
     {
         currentEntries = await MessageSenders.For(GetChat.T)
                                              .WithDefaultClientPipeline()
+                                             .WithPipeline(p => p.Use(async ctx =>
+                                             {
+                                                 try
+                                                 {
+                                                     return await ctx.Next(ctx.Message, ctx.CancellationToken);
+                                                 }
+                                                 catch (Exception ex)
+                                                 {
+                                                     Console.Error.WriteLine(ex);
+
+                                                     // return a fallback value
+                                                     return [];
+                                                 }
+                                             }))
                                              .WithHttpApiTransport()
                                              .Handle(new());
 
-        UpdateChatContent();
         StateHasChanged();
-    }
-
-    private void UpdateChatContent()
-    {
-        chatContent = currentEntries is { Length: > 0 }
-            ? string.Join("\n", currentEntries.Select(e => $"{e.User}: {e.Content}"))
-            : "No messages yet.";
     }
 
     protected override async Task OnInitializedAsync()
