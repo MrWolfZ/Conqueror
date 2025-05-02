@@ -121,7 +121,7 @@ public static class MessageTypeSources
 
         _ = sb.AppendMessageTypeGeneratedCodeAttribute(indentation)
               .AppendIndentation(indentation)
-              .Append("global::System.Threading.Tasks.Task").AppendLine()
+              .Append("global::System.Threading.Tasks.Task")
               .AppendResponseTypeParameterIfNotUnitResponse(in responseTypeDescriptor)
               .Append($" Handle({messageTypeDescriptor.Name} message, global::System.Threading.CancellationToken cancellationToken = default);").AppendLine()
               .AppendLine()

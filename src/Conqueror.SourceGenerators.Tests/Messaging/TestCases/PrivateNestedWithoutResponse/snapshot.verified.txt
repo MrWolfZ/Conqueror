@@ -30,8 +30,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.PrivateNestedWith
             public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.UnitMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
             {
                 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-                global::System.Threading.Tasks.Task
- Handle(TestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
+                global::System.Threading.Tasks.Task Handle(TestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
 
                 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
                 static async global::System.Threading.Tasks.Task<global::Conqueror.UnitMessageResponse> global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.UnitMessageResponse, IHandler>.Invoke(IHandler handler, TestMessage message, global::System.Threading.CancellationToken cancellationToken)
