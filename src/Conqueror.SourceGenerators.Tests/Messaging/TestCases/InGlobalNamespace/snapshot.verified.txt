@@ -26,8 +26,7 @@ partial record GlobalTestMessage : global::Conqueror.IMessage<GlobalTestMessage,
     public partial interface IHandler : global::Conqueror.IMessageHandler<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
     {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-        global::System.Threading.Tasks.Task
-<global::GlobalTestMessageResponse> Handle(GlobalTestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
+        global::System.Threading.Tasks.Task<global::GlobalTestMessageResponse> Handle(GlobalTestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
         static global::System.Threading.Tasks.Task<global::GlobalTestMessageResponse> global::Conqueror.IMessageHandler<GlobalTestMessage, global::GlobalTestMessageResponse, IHandler>.Invoke(IHandler handler, GlobalTestMessage message, global::System.Threading.CancellationToken cancellationToken)

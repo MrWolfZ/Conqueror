@@ -28,8 +28,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithoutRes
         public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage<TFirst, TSecond>, global::Conqueror.UnitMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            global::System.Threading.Tasks.Task
- Handle(TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken = default);
+            global::System.Threading.Tasks.Task Handle(TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken = default);
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             static async global::System.Threading.Tasks.Task<global::Conqueror.UnitMessageResponse> global::Conqueror.IMessageHandler<TestMessage<TFirst, TSecond>, global::Conqueror.UnitMessageResponse, IHandler>.Invoke(IHandler handler, TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken)

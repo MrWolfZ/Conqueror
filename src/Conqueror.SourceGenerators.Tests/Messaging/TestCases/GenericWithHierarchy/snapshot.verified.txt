@@ -28,8 +28,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierar
         public partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage<TFirst, TSecond>, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            global::System.Threading.Tasks.Task
-<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse> Handle(TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken = default);
+            global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse> Handle(TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken = default);
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             static global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse> global::Conqueror.IMessageHandler<TestMessage<TFirst, TSecond>, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler>.Invoke(IHandler handler, TestMessage<TFirst, TSecond> message, global::System.Threading.CancellationToken cancellationToken)
@@ -91,8 +90,7 @@ namespace Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierar
         public new partial interface IHandler : global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler, IHandler.Proxy, IPipeline, IPipeline.Proxy>
         {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
-            global::System.Threading.Tasks.Task
-<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse> Handle(TestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
+            global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse> Handle(TestMessage message, global::System.Threading.CancellationToken cancellationToken = default);
 
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Conqueror.SourceGenerators.Messaging.MessageTypeGenerator", "FIXED_VERSION")]
             static global::System.Threading.Tasks.Task<global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse> global::Conqueror.IMessageHandler<TestMessage, global::Conqueror.SourceGenerators.Tests.Messaging.TestCases.GenericWithHierarchy.TestMessageResponse, IHandler>.Invoke(IHandler handler, TestMessage message, global::System.Threading.CancellationToken cancellationToken)
