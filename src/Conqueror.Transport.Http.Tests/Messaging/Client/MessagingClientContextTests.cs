@@ -175,7 +175,7 @@ public sealed class MessagingClientContextTests : IDisposable
         return HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddSingleton<FnToCallFromHandler>(p =>
+                _ = services.AddSingleton<FnToCallFromHandler>((_, p) =>
                 {
                     var conquerorContextAccessor = p.GetRequiredService<IConquerorContextAccessor>();
                     seenMessageIdOnServer = conquerorContextAccessor.ConquerorContext?.GetMessageId();

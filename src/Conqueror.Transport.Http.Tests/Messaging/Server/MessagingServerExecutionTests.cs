@@ -97,7 +97,7 @@ public sealed class MessagingServerExecutionTests
             services =>
             {
                 _ = services.AddMessageHandler<TestMessageHandler>()
-                            .AddSingleton<FnToCallFromHandler>(p =>
+                            .AddSingleton<FnToCallFromHandler>((_, p) =>
                             {
                                 seenClaimsPrincipal = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCurrentPrincipalInternal();
                                 return Task.CompletedTask;
