@@ -16,11 +16,7 @@ internal sealed partial class GetCountersHandler(
                                         .IsDevelopment();
 
             // The logging middleware supports detailed configuration options. For example, like
-            // here we can omit verbose output from the logs in production. Note that in a real
-            // application you would wrap such logic into an extension method (leveraging
-            // `ConfigureLogging`) to make it reusable across message types. And thanks to the
-            // builder pattern, you could then call it simply like this:
-            // `pipeline.UseLogging().OmitResponseFromLogsInProduction()`
+            // here we can omit verbose output from the logs in production
             c.ResponsePayloadLoggingStrategy = isDevelopment
                 ? PayloadLoggingStrategy.IndentedJson
                 : PayloadLoggingStrategy.Omit;
@@ -28,13 +24,14 @@ internal sealed partial class GetCountersHandler(
             // You can also make the logging strategy dependent on the message or response
             // payloads, e.g. to omit confidential data from the logs
             c.ResponsePayloadLoggingStrategyFactory = (_, resp)
-                => resp.Any(c => c.CounterName == "confidential")
+                => resp.Any(m => m.CounterName == "confidential")
                     ? PayloadLoggingStrategy.Omit
                     : c.ResponsePayloadLoggingStrategy;
 
+            // you can customize logging even further by hooking into the log message creation
             c.PostExecutionHook = ctx =>
             {
-                if (ctx.Response.Any(c => c.CounterName == "confidential"))
+                if (ctx.Response.Any(m => m.CounterName == "confidential"))
                 {
                     // log an additional explanation for why the response is omitted from the logs
                     ctx.Logger.LogInformation("response omitted because of confidential data");

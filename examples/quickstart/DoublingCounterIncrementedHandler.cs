@@ -48,38 +48,11 @@ internal sealed partial class DoublingCounterIncrementedHandler(
     {
         await senders
               .For(IncrementCounterByAmount.T)
-              .WithPipeline(p => p.UseLogging(c =>
-              {
-                  // you can set the logger category (by default, it is the fully qualified type
-                  // name of the handler for handler pipelines and the signal type for publisher
-                  // pipelines)
-                  c.LoggerCategoryFactory = _
-                      => typeof(DoublingCounterIncrementedHandler).FullName!;
 
-                  // You can hook into the logging stages to customize the log messages
-                  c.PreExecutionHook = ctx =>
-                  {
-                      ctx.Logger.LogInformation(
-                          "doubling increment of counter '{CounterName}'",
-                          ctx.Message.CounterName);
-
-                      return false; // return true here to let the default message be logged
-                  };
-
-                  c.PostExecutionHook = ctx =>
-                  {
-                      ctx.Logger.LogInformation(
-                          "doubled increment of counter '{CounterName}', it is now {NewValue}",
-                          ctx.Message.CounterName,
-                          ctx.Response.NewCounterValue);
-
-                      return false;
-                  };
-              }))
-
-              // You can customize the transport which is used to send the message (e.g. sending it
-              // via HTTP), but for demonstration we use the in-process transport (which already
-              // happens by default)
+              // Message senders can also have pipelines and use different transports. The exact
+              // same middlewares like logging, validation, error handling, etc. can be used on
+              // both senders/publishers and handlers
+              .WithPipeline(p => p.UseLogging())
               .WithTransport(b => b.UseInProcess())
 
               // The 'Handle' method is unique for each `IHandler`, so "Go to Implementation" in
