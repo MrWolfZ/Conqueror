@@ -7,7 +7,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="IMessagePipeline{TMessage,TResponse}" /> to add, configure, or remove logging functionality.
 /// </summary>
-public static class ConquerorMiddlewareLoggingMessagePipelineExtensions
+public static class LoggingMessageMiddlewarePipelineExtensions
 {
     /// <summary>
     ///     Add logging functionality to a message pipeline. By default, the following messages are logged:

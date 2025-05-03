@@ -7,7 +7,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="IMessagePipeline{TMessage,TResponse}" /> to add, configure, or remove authorization functionality.
 /// </summary>
-public static class ConquerorMiddlewareAuthorizationMessagePipelineExtensions
+public static class AuthorizationMessageMiddlewarePipelineExtensions
 {
     /// <summary>
     ///     Add authorization functionality to a message pipeline.

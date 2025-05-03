@@ -7,7 +7,7 @@ namespace Conqueror;
 /// <summary>
 ///     Extension methods for <see cref="ISignalPipeline{TSignal}" /> to add, configure, or remove logging functionality.
 /// </summary>
-public static class ConquerorMiddlewareLoggingSignalPipelineExtensions
+public static class LoggingSignalMiddlewarePipelineExtensions
 {
     /// <summary>
     ///     Add logging functionality to a signal pipeline. By default, the following messages are logged:
