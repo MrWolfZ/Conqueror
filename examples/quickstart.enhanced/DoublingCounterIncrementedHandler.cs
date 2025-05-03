@@ -9,7 +9,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
     static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
         pipeline.SkipSignalMatching((CounterIncremented s) => s.CounterName != "doubler")
                 .EnsureSingleExecutionPerOperation(nameof(DoublingCounterIncrementedHandler))
-                .UseLoggingWithIndentedJson();
+                .UseDefault();
 
     public async Task Handle(
         CounterIncremented signal,

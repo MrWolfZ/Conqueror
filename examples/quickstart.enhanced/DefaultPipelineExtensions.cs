@@ -26,7 +26,8 @@ public static class DefaultPipelineExtensions
         Type? loggerCategoryType = null)
         where TMessage : class, IMessage<TMessage, TResponse>
     {
-        // when calling the handler from the same process, we don't want to log the payload
+        // when calling the handler from the same process, the handler already logs the message,
+        // so we don't need to log it again
         if (pipeline.TransportType.IsInProcess())
         {
             return pipeline;
@@ -40,6 +41,11 @@ public static class DefaultPipelineExtensions
                                                               loggerCategoryType.Name;
                            }
                        })
+
+                       // we can already validate the message payload before sending it to the
+                       // remote handler to fail fast without incurring the cost of the remote
+                       // call
+                       .UseDataAnnotationValidation()
                        .WithIndentedJsonPayloadLogFormatting();
     }
 

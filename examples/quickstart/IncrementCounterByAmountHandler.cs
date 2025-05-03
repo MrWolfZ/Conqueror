@@ -27,8 +27,8 @@ internal sealed partial class IncrementCounterByAmountHandler(
                 // likely use a more powerful validation library like FluentValidation)
                 Validator.ValidateObject(ctx.Message, new(ctx.Message), true);
 
-                // Note that the middleware has access to the message with its proper type (i.e.
-                // the compiler knows that `ctx.Message` is of type `IncrementCounterByAmount`),
+                // The middleware has access to the message with its proper type (i.e. the
+                // compiler knows that `ctx.Message` is of type `IncrementCounterByAmount`),
                 // so you could also write the validation directly like this:
                 if (ctx.Message.IncrementBy <= 0)
                 {
@@ -40,7 +40,10 @@ internal sealed partial class IncrementCounterByAmountHandler(
                 return ctx.Next(ctx.Message, ctx.CancellationToken);
             })
 
-            // Middlewares which have been added to a pipeline can be configured further
+            // The `Use...` methods add middlewares to the pipeline, and afterward they can be
+            // configured further, which is useful for extracting common configuration into a
+            // shared method and then configure it per handler, e.g. like this:
+            // `pipeline.UseDefault().WithIndentedJsonPayloadLogFormatting()`
             .ConfigureLogging(c => c.MessagePayloadLoggingStrategy =
                                   PayloadLoggingStrategy.IndentedJson);
 

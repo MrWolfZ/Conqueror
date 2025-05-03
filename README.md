@@ -206,8 +206,8 @@ internal sealed partial class IncrementCounterByAmountHandler(
                 // likely use a more powerful validation library like FluentValidation)
                 Validator.ValidateObject(ctx.Message, new(ctx.Message), true);
 
-                // Note that the middleware has access to the message with its proper type (i.e.
-                // the compiler knows that `ctx.Message` is of type `IncrementCounterByAmount`),
+                // The middleware has access to the message with its proper type (i.e. the
+                // compiler knows that `ctx.Message` is of type `IncrementCounterByAmount`),
                 // so you could also write the validation directly like this:
                 if (ctx.Message.IncrementBy <= 0)
                 {
@@ -219,7 +219,10 @@ internal sealed partial class IncrementCounterByAmountHandler(
                 return ctx.Next(ctx.Message, ctx.CancellationToken);
             })
 
-            // Middlewares which have been added to a pipeline can be configured further
+            // The `Use...` methods add middlewares to the pipeline, and afterward they can be
+            // configured further, which is useful for extracting common configuration into a
+            // shared method and then configure it per handler, e.g. like this:
+            // `pipeline.UseDefault().WithIndentedJsonPayloadLogFormatting()`
             .ConfigureLogging(c => c.MessagePayloadLoggingStrategy =
                                   PayloadLoggingStrategy.IndentedJson);
 
@@ -355,38 +358,11 @@ internal sealed partial class DoublingCounterIncrementedHandler(
     {
         await senders
               .For(IncrementCounterByAmount.T)
-              .WithPipeline(p => p.UseLogging(c =>
-              {
-                  // you can set the logger category (by default, it is the fully qualified type
-                  // name of the handler for handler pipelines and the signal type for publisher
-                  // pipelines)
-                  c.LoggerCategoryFactory = _
-                      => typeof(DoublingCounterIncrementedHandler).FullName!;
 
-                  // You can hook into the logging stages to customize the log messages
-                  c.PreExecutionHook = ctx =>
-                  {
-                      ctx.Logger.LogInformation(
-                          "doubling increment of counter '{CounterName}'",
-                          ctx.Message.CounterName);
-
-                      return false; // return true here to let the default message be logged
-                  };
-
-                  c.PostExecutionHook = ctx =>
-                  {
-                      ctx.Logger.LogInformation(
-                          "doubled increment of counter '{CounterName}', it is now {NewValue}",
-                          ctx.Message.CounterName,
-                          ctx.Response.NewCounterValue);
-
-                      return false;
-                  };
-              }))
-
-              // You can customize the transport which is used to send the message (e.g. sending it
-              // via HTTP), but for demonstration we use the in-process transport (which already
-              // happens by default)
+              // Message senders can also have pipelines and use different transports. The exact
+              // same middlewares like logging, validation, error handling, etc. can be used on
+              // both senders/publishers and handlers
+              .WithPipeline(p => p.UseLogging())
               .WithTransport(b => b.UseInProcess())
 
               // The 'Handle' method is unique for each `IHandler`, so "Go to Implementation" in
@@ -417,7 +393,7 @@ internal sealed partial class DoublingCounterIncrementedHandler(
 >     static void ISignalHandler.ConfigurePipeline<T>(ISignalPipeline<T> pipeline) =>
 >         pipeline.SkipSignalMatching((CounterIncremented s) => s.CounterName != "doubler")
 >                 .EnsureSingleExecutionPerOperation(nameof(DoublingCounterIncrementedHandler))
->                 .UseLoggingWithIndentedJson();
+>                 .UseDefault();
 > 
 >     public async Task Handle(
 >         CounterIncremented signal,
@@ -455,11 +431,7 @@ internal sealed partial class GetCountersHandler(
                                         .IsDevelopment();
 
             // The logging middleware supports detailed configuration options. For example, like
-            // here we can omit verbose output from the logs in production. Note that in a real
-            // application you would wrap such logic into an extension method (leveraging
-            // `ConfigureLogging`) to make it reusable across message types. And thanks to the
-            // builder pattern, you could then call it simply like this:
-            // `pipeline.UseLogging().OmitResponseFromLogsInProduction()`
+            // here we can omit verbose output from the logs in production
             c.ResponsePayloadLoggingStrategy = isDevelopment
                 ? PayloadLoggingStrategy.IndentedJson
                 : PayloadLoggingStrategy.Omit;
@@ -467,13 +439,14 @@ internal sealed partial class GetCountersHandler(
             // You can also make the logging strategy dependent on the message or response
             // payloads, e.g. to omit confidential data from the logs
             c.ResponsePayloadLoggingStrategyFactory = (_, resp)
-                => resp.Any(c => c.CounterName == "confidential")
+                => resp.Any(m => m.CounterName == "confidential")
                     ? PayloadLoggingStrategy.Omit
                     : c.ResponsePayloadLoggingStrategy;
 
+            // you can customize logging even further by hooking into the log message creation
             c.PostExecutionHook = ctx =>
             {
-                if (ctx.Response.Any(c => c.CounterName == "confidential"))
+                if (ctx.Response.Any(m => m.CounterName == "confidential"))
                 {
                     // log an additional explanation for why the response is omitted from the logs
                     ctx.Logger.LogInformation("response omitted because of confidential data");

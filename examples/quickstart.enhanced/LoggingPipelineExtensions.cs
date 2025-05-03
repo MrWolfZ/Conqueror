@@ -64,15 +64,4 @@ public static class LoggingPipelineExtensions
             };
         });
     }
-
-    public static ISignalPipeline<TSignal> UseLoggingWithIndentedJson<
-        TSignal>(
-        this ISignalPipeline<TSignal> pipeline)
-        where TSignal : class, ISignal<TSignal>
-    {
-        return pipeline.UseLogging(c =>
-        {
-            c.PayloadLoggingStrategy = PayloadLoggingStrategy.IndentedJson;
-        });
-    }
 }
