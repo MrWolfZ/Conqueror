@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../.targets/lib.targets" />
+    <Import Project="../../../.targets/lib.targets" />
 
     <PropertyGroup>
         <IsAotCompatible>true</IsAotCompatible>
@@ -12,12 +12,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="../Conqueror.Middleware.Authorization/CurrentClaimsPrincipalConquerorContextMethods.cs" Link="CurrentClaimsPrincipalConquerorContextMethods.cs" />
+        <Compile Include="../../../middlewares/authorization/Conqueror.Middleware.Authorization/CurrentClaimsPrincipalConquerorContextMethods.cs" Link="CurrentClaimsPrincipalConquerorContextMethods.cs" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
-        <ProjectReference Include="..\Conqueror.Transport.Http.Abstractions\Conqueror.Transport.Http.Abstractions.csproj" />
+        <ProjectReference Include="../../../Conqueror/Conqueror.csproj" />
+        <ProjectReference Include="../Conqueror.Transport.Http.Abstractions/Conqueror.Transport.Http.Abstractions.csproj" />
     </ItemGroup>
 
     <ItemGroup>

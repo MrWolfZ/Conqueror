@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../../../src/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" Condition="$(ShouldReferenceProject)" />
+        <ProjectReference Include="../../../src/middlewares/logging/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" Condition="$(ShouldReferenceProject)" />
     </ItemGroup>
 
 </Project>

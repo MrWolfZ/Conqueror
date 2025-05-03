@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../.targets/test.targets" />
+    <Import Project="../../../.targets/test.targets" />
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
-        <ProjectReference Include="..\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" />
-        <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="../../../Conqueror/Conqueror.csproj" />
+        <ProjectReference Include="../../../Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="../Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" />
     </ItemGroup>
 
     <ItemGroup>

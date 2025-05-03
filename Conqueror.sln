@@ -104,27 +104,27 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.SourceGenerators.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", "{060F13CA-55B0-4D28-9010-008B87BEA087}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Abstractions", "src\Conqueror.Transport.Http.Abstractions\Conqueror.Transport.Http.Abstractions.csproj", "{B556FAF8-594D-400B-8FFC-B0CF6C5AA56D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Abstractions", "src\transports\http\Conqueror.Transport.Http.Abstractions\Conqueror.Transport.Http.Abstractions.csproj", "{B556FAF8-594D-400B-8FFC-B0CF6C5AA56D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Client", "src\Conqueror.Transport.Http.Client\Conqueror.Transport.Http.Client.csproj", "{AF9A80ED-E2F9-494B-B182-66088F24766F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Client", "src\transports\http\Conqueror.Transport.Http.Client\Conqueror.Transport.Http.Client.csproj", "{AF9A80ED-E2F9-494B-B182-66088F24766F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Server.AspNetCore", "src\Conqueror.Transport.Http.Server.AspNetCore\Conqueror.Transport.Http.Server.AspNetCore.csproj", "{535492F1-C3F7-4C4C-80A4-EA514D4C4FB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Server.AspNetCore", "src\transports\http\Conqueror.Transport.Http.Server.AspNetCore\Conqueror.Transport.Http.Server.AspNetCore.csproj", "{535492F1-C3F7-4C4C-80A4-EA514D4C4FB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Tests", "src\Conqueror.Transport.Http.Tests\Conqueror.Transport.Http.Tests.csproj", "{2186102D-A455-4A47-A0E0-CCA0AFAA7EB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Tests", "src\transports\http\Conqueror.Transport.Http.Tests\Conqueror.Transport.Http.Tests.csproj", "{2186102D-A455-4A47-A0E0-CCA0AFAA7EB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Tests.TopLevelProgram", "src\Conqueror.Transport.Http.Tests.TopLevelProgram\Conqueror.Transport.Http.Tests.TopLevelProgram.csproj", "{A773BB5B-A0BB-4430-8EE6-A085A726A1E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Tests.TopLevelProgram", "src\transports\http\Conqueror.Transport.Http.Tests.TopLevelProgram\Conqueror.Transport.Http.Tests.TopLevelProgram.csproj", "{A773BB5B-A0BB-4430-8EE6-A085A726A1E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Tests.AOT.TopLevelProgram", "src\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram.csproj", "{7D5209BE-BECD-451B-9864-0174F09604AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Transport.Http.Tests.AOT.TopLevelProgram", "src\transports\http\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram\Conqueror.Transport.Http.Tests.AOT.TopLevelProgram.csproj", "{7D5209BE-BECD-451B-9864-0174F09604AB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "middlewares", "middlewares", "{752A44EA-6603-47C4-9348-87B4100B7F98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging", "src\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj", "{29D1F1D0-D01F-4A99-8F8F-FD5850362E64}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging", "src\middlewares\logging\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj", "{29D1F1D0-D01F-4A99-8F8F-FD5850362E64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging.Tests", "src\Conqueror.Middleware.Logging.Tests\Conqueror.Middleware.Logging.Tests.csproj", "{15084881-E515-4FF4-8640-AB7C08552A64}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Logging.Tests", "src\middlewares\logging\Conqueror.Middleware.Logging.Tests\Conqueror.Middleware.Logging.Tests.csproj", "{15084881-E515-4FF4-8640-AB7C08552A64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization", "src\Conqueror.Middleware.Authorization\Conqueror.Middleware.Authorization.csproj", "{B251E37A-25A6-45C3-882D-C1A32B3911C8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization", "src\middlewares\authorization\Conqueror.Middleware.Authorization\Conqueror.Middleware.Authorization.csproj", "{B251E37A-25A6-45C3-882D-C1A32B3911C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Tests", "src\Conqueror.Middleware.Authorization.Tests\Conqueror.Middleware.Authorization.Tests.csproj", "{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Authorization.Tests", "src\middlewares\authorization\Conqueror.Middleware.Authorization.Tests\Conqueror.Middleware.Authorization.Tests.csproj", "{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Tests.AOT", "src\Conqueror.Tests.AOT\Conqueror.Tests.AOT.csproj", "{5FDF23E5-3431-417A-A595-39E7B1407F7D}"
 EndProject
@@ -162,11 +162,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "iterators", "iterators", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{F93EFC78-9927-473E-BC2A-0A53916910F8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly", "src\Conqueror.Middleware.Polly\Conqueror.Middleware.Polly.csproj", "{81F827C1-77D6-48D3-9167-6CED2D06DF73}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly", "src\middlewares\polly\Conqueror.Middleware.Polly\Conqueror.Middleware.Polly.csproj", "{81F827C1-77D6-48D3-9167-6CED2D06DF73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly.Tests", "src\Conqueror.Middleware.Polly.Tests\Conqueror.Middleware.Polly.Tests.csproj", "{F5F1C095-6970-45DE-AE43-EFF17A75B148}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly.Tests", "src\middlewares\polly\Conqueror.Middleware.Polly.Tests\Conqueror.Middleware.Polly.Tests.csproj", "{F5F1C095-6970-45DE-AE43-EFF17A75B148}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Benchmarks", "src\Conqueror.Benchmarks\Conqueror.Benchmarks.csproj", "{1FF21176-D184-4EA4-8F02-DDAF83CE4344}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "logging", "logging", "{0902FB15-77D3-4AC1-ABCF-F88C78AC6435}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "recipes", "recipes", "{4C0826BB-6EAE-469E-8256-4476248C0D7E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "authorization", "authorization", "{CCAB719C-7B60-4BE6-98D9-024D6EB33030}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "polly", "polly", "{84A9E825-D5FD-449D-96E7-40D758E85133}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "recipes", "recipes", "{D7405204-68A3-4199-BA61-04404E66B151}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "recipes", "recipes", "{8BA04662-56CD-4DB0-B64B-A56F02FC2120}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -341,10 +353,6 @@ Global
 		{2A5AAAFE-7D34-441F-980B-2EABC305E326} = {6E208A99-685B-484D-AD3C-8FF4C1C70154}
 		{C2DF1455-7EAE-42F9-B228-78765270DEE9} = {6E208A99-685B-484D-AD3C-8FF4C1C70154}
 		{756F0129-307B-491F-B58E-7B705C140131} = {DFF050FB-A89F-4086-B195-D7775B0A9C5C}
-		{29D1F1D0-D01F-4A99-8F8F-FD5850362E64} = {752A44EA-6603-47C4-9348-87B4100B7F98}
-		{15084881-E515-4FF4-8640-AB7C08552A64} = {752A44EA-6603-47C4-9348-87B4100B7F98}
-		{B251E37A-25A6-45C3-882D-C1A32B3911C8} = {752A44EA-6603-47C4-9348-87B4100B7F98}
-		{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2} = {752A44EA-6603-47C4-9348-87B4100B7F98}
 		{B0993B42-CC27-4D21-9C44-0E3E665E5539} = {646E4311-2098-4936-8A6D-AA871A214898}
 		{C527A6A0-B880-46E2-BB69-37C1A97F7C9A} = {646E4311-2098-4936-8A6D-AA871A214898}
 		{6FF60443-0ED1-4BCE-AB14-B2A1523FB575} = {7D9B059E-D5E5-4EEE-9EDB-2CA396CDA6F8}
@@ -373,7 +381,17 @@ Global
 		{1426E240-A39D-440A-ABEB-2A270B2BECB8} = {D3D7AD04-67AC-4834-9324-B60BE0972FDF}
 		{25092051-89DD-4DAE-A773-F904F18B21B1} = {6C3C774B-8D77-45A6-B913-BE61B3376435}
 		{F93EFC78-9927-473E-BC2A-0A53916910F8} = {25092051-89DD-4DAE-A773-F904F18B21B1}
-		{81F827C1-77D6-48D3-9167-6CED2D06DF73} = {752A44EA-6603-47C4-9348-87B4100B7F98}
-		{F5F1C095-6970-45DE-AE43-EFF17A75B148} = {752A44EA-6603-47C4-9348-87B4100B7F98}
+		{0902FB15-77D3-4AC1-ABCF-F88C78AC6435} = {752A44EA-6603-47C4-9348-87B4100B7F98}
+		{4C0826BB-6EAE-469E-8256-4476248C0D7E} = {0902FB15-77D3-4AC1-ABCF-F88C78AC6435}
+		{CCAB719C-7B60-4BE6-98D9-024D6EB33030} = {752A44EA-6603-47C4-9348-87B4100B7F98}
+		{84A9E825-D5FD-449D-96E7-40D758E85133} = {752A44EA-6603-47C4-9348-87B4100B7F98}
+		{D7405204-68A3-4199-BA61-04404E66B151} = {CCAB719C-7B60-4BE6-98D9-024D6EB33030}
+		{8BA04662-56CD-4DB0-B64B-A56F02FC2120} = {84A9E825-D5FD-449D-96E7-40D758E85133}
+		{B251E37A-25A6-45C3-882D-C1A32B3911C8} = {CCAB719C-7B60-4BE6-98D9-024D6EB33030}
+		{C6FD481D-851A-4DFF-B8B8-246AE87E0ED2} = {CCAB719C-7B60-4BE6-98D9-024D6EB33030}
+		{29D1F1D0-D01F-4A99-8F8F-FD5850362E64} = {0902FB15-77D3-4AC1-ABCF-F88C78AC6435}
+		{15084881-E515-4FF4-8640-AB7C08552A64} = {0902FB15-77D3-4AC1-ABCF-F88C78AC6435}
+		{81F827C1-77D6-48D3-9167-6CED2D06DF73} = {84A9E825-D5FD-449D-96E7-40D758E85133}
+		{F5F1C095-6970-45DE-AE43-EFF17A75B148} = {84A9E825-D5FD-449D-96E7-40D758E85133}
 	EndGlobalSection
 EndGlobal

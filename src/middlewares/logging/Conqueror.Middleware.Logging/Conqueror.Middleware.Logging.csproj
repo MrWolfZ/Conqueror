@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../.targets/lib.targets" />
+    <Import Project="../../../.targets/lib.targets" />
 
     <PropertyGroup>
         <IsAotCompatible>true</IsAotCompatible>
@@ -22,7 +22,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
+        <ProjectReference Include="../../../Conqueror.Abstractions/Conqueror.Abstractions.csproj" />
     </ItemGroup>
 
     <ItemGroup>
