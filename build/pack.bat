@@ -26,6 +26,7 @@ dotnet pack %srcDir%\Conqueror -c Release -o %publishDir% --include-symbols
 REM middlewares
 dotnet pack %srcDir%\Conqueror.Middleware.Authorization -c Release -o %publishDir% --include-symbols
 dotnet pack %srcDir%\Conqueror.Middleware.Logging -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\Conqueror.Middleware.Polly -c Release -o %publishDir% --include-symbols
 
 REM transports
 dotnet pack %srcDir%\Conqueror.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
