@@ -19,7 +19,7 @@ namespace Conqueror.Transport.Http.Tests.Messaging;
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global", Justification = "Members are used by ASP.NET Core via reflection")]
 public static partial class HttpTestMessages
 {
-    public delegate Task FnToCallFromHandler(IServiceProvider serviceProvider);
+    public delegate Task FnToCallFromHandler(object message, IServiceProvider serviceProvider);
 
     public enum MessageTestCaseRegistrationMethod
     {
@@ -983,7 +983,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1015,7 +1015,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = 11 };
@@ -1038,7 +1038,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
         }
     }
@@ -1068,7 +1068,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
         }
     }
@@ -1089,7 +1089,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1112,7 +1112,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1135,7 +1135,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1158,7 +1158,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1181,7 +1181,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1204,7 +1204,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1227,7 +1227,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1250,7 +1250,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1273,7 +1273,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1296,7 +1296,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1321,7 +1321,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1341,7 +1341,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = 11 };
@@ -1366,7 +1366,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = (message.Payload ?? 0) + 1 };
@@ -1389,7 +1389,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + message.IntArray.Sum() };
@@ -1412,7 +1412,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = (message.Payload ?? 0) + 1 };
@@ -1441,7 +1441,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = (message.Payload ?? 0) + message.NestedList.Sum() + message.NestedArray.Sum() };
@@ -1472,7 +1472,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = new(message.Payload.Payload + 1) };
@@ -1584,7 +1584,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.PathPayload + message.QueryPayload + message.BodyPayload };
@@ -1612,7 +1612,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { ResponsePayload = message.MessagePayload + 1 };
@@ -1640,7 +1640,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1666,7 +1666,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
         }
 
@@ -1700,7 +1700,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
@@ -1723,7 +1723,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
@@ -1746,7 +1746,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return [new() { Payload = message.Payload + 1 }, new() { Payload = message.Payload + 2 }];
@@ -1774,7 +1774,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1797,7 +1797,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
         }
     }
@@ -1818,7 +1818,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1846,7 +1846,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };
@@ -1874,7 +1874,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
         }
 
@@ -1906,7 +1906,7 @@ public static partial class HttpTestMessages
 
             if (fnToCallFromHandler is not null)
             {
-                await fnToCallFromHandler(serviceProvider);
+                await fnToCallFromHandler(message, serviceProvider);
             }
 
             return new() { Payload = message.Payload + 1 };

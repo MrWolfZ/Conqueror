@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
@@ -29,7 +30,8 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
         Action<IApplicationBuilder>? configure = null,
         TimeSpan? testTimeout = null)
     {
-        var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole().SetMinimumLevel(LogLevel.Trace)
+        var hostBuilder = new HostBuilder().ConfigureLogging(logging => logging.AddConsole()
+                                                                               .SetMinimumLevel(LogLevel.Trace)
 
                                                                                // set some very verbose loggers to info to reduce noise in the logs
                                                                                .AddFilter(typeof(FileSystemXmlRepository).FullName, LogLevel.Information)
@@ -39,8 +41,17 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
                                            {
                                                _ = webHost.UseTestServer();
 
-                                               _ = webHost.ConfigureServices(configureServices ?? (_ => { }));
-                                               _ = webHost.Configure(configure ?? (_ => { }));
+                                               _ = webHost.ConfigureServices(services =>
+                                               {
+                                                   ConfigureBearerAuthentication(services);
+
+                                                   configureServices?.Invoke(services);
+                                               });
+
+                                               if (configure is not null)
+                                               {
+                                                   _ = webHost.Configure(configure);
+                                               }
                                            });
 
         var host = await hostBuilder.StartAsync();
@@ -81,5 +92,32 @@ internal sealed class HttpTransportTestHost : IAsyncDisposable
                 resource.Dispose();
             }
         }
+    }
+
+    private static void ConfigureBearerAuthentication(IServiceCollection services)
+    {
+        _ = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer(options =>
+                    {
+                        options.TokenValidationParameters.NameClaimType = "id";
+                        options.TokenValidationParameters.RoleClaimType = "role";
+                    });
+
+        _ = services.PostConfigure<JwtBearerOptions>(
+            JwtBearerDefaults.AuthenticationScheme,
+            options =>
+            {
+                options.Audience = HttpTransportTestAuthenticationUtil.Audience;
+                options.Authority = HttpTransportTestAuthenticationUtil.Authority;
+
+                options.TokenValidationParameters.ValidAudience = HttpTransportTestAuthenticationUtil.Audience;
+                options.TokenValidationParameters.ValidIssuer = HttpTransportTestAuthenticationUtil.Issuer;
+
+                options.TokenValidationParameters.IssuerSigningKeyResolver = (
+                    _,
+                    _,
+                    _,
+                    _) => [HttpTransportTestAuthenticationUtil.SigningKey];
+            });
     }
 }

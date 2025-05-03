@@ -274,7 +274,7 @@ public sealed partial class MessagingServerContextTests
             services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase);
             _ = services.AddMessageHandler<NestedTestMessageHandler>();
 
-            _ = services.Replace(ServiceDescriptor.Singleton<FnToCallFromHandler>(p =>
+            _ = services.Replace(ServiceDescriptor.Singleton<FnToCallFromHandler>((_, p) =>
             {
                 ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
                 return p.GetRequiredService<IMessageSenders>().For(NestedTestMessage.T).Handle(new());
@@ -315,7 +315,7 @@ public sealed partial class MessagingServerContextTests
             services.RegisterMessageType<TMessage, TResponse, TIHandler, THandler>(testCase);
             _ = services.AddMessageHandler<NestedTestMessageHandler>();
 
-            _ = services.Replace(ServiceDescriptor.Singleton<FnToCallFromHandler>(p =>
+            _ = services.Replace(ServiceDescriptor.Singleton<FnToCallFromHandler>((_, p) =>
             {
                 ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
                 return p.GetRequiredService<IMessageSenders>().For(NestedTestMessage.T).Handle(new());
@@ -386,7 +386,7 @@ public sealed partial class MessagingServerContextTests
         return HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddSingleton<FnToCallFromHandler>(p =>
+                _ = services.AddSingleton<FnToCallFromHandler>((_, p) =>
                 {
                     ObserveAndSetContextData(p.GetRequiredService<TestObservations>(), p.GetRequiredService<IConquerorContextAccessor>());
                     return Task.CompletedTask;

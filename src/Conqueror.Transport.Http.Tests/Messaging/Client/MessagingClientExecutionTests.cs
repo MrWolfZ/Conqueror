@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -69,22 +70,34 @@ public sealed class MessagingClientExecutionTests
         {
             TestMessageWithMiddleware m => messageClients.For(TestMessageWithMiddleware.T)
                                                          .WithTransport(ConfigureTransport)
-                                                         .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware, TestMessageResponse>>()))
+                                                         .WithPipeline(p => p.Use(
+                                                                           p.ServiceProvider
+                                                                            .GetRequiredService<TestMessageMiddleware<TestMessageWithMiddleware,
+                                                                                TestMessageResponse>>()))
                                                          .Handle(m, host.TestTimeoutToken),
 
             TestMessageWithMiddlewareWithoutResponse m => messageClients.For(TestMessageWithMiddlewareWithoutResponse.T)
                                                                         .WithTransport(ConfigureTransport)
-                                                                        .WithPipeline(p => p.Use(p.ServiceProvider.GetRequiredService<TestMessageMiddleware<TestMessageWithMiddlewareWithoutResponse, UnitMessageResponse>>()))
+                                                                        .WithPipeline(p => p.Use(
+                                                                                          p.ServiceProvider
+                                                                                           .GetRequiredService<TestMessageMiddleware<
+                                                                                               TestMessageWithMiddlewareWithoutResponse,
+                                                                                               UnitMessageResponse>>()))
                                                                         .Handle(m, host.TestTimeoutToken),
 
-            _ => THandler.Invoke(messageClients.For(THandler.MessageTypes).WithTransport(ConfigureTransport),
-                                 (TMessage)testCase.Message,
-                                 host.TestTimeoutToken),
+            _ => THandler.Invoke(
+                messageClients.For(THandler.MessageTypes).WithTransport(ConfigureTransport),
+                (TMessage)testCase.Message,
+                host.TestTimeoutToken),
         };
 
         if (!testCase.HandlerIsEnabled)
         {
-            await Assert.ThatAsync(() => responseTask, Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+            await Assert.ThatAsync(
+                () => responseTask,
+                Throws.TypeOf<HttpMessageFailedOnClientException>()
+                      .With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+
             return;
         }
 
@@ -122,11 +135,13 @@ public sealed class MessagingClientExecutionTests
 
         var httpClient = host.HttpClient;
 
-        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageSenders>()
-                                                          .For(TestMessage.T)
-                                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
-                                                          .Handle(new(), host.TestTimeoutToken),
-                               Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+        await Assert.ThatAsync(
+            () => clientServiceProvider.GetRequiredService<IMessageSenders>()
+                                       .For(TestMessage.T)
+                                       .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                       .Handle(new(), host.TestTimeoutToken),
+            Throws.TypeOf<HttpMessageFailedOnClientException>()
+                  .With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
 
         Assert.That(callWasReceivedOnServer, Is.False);
     }
@@ -146,24 +161,104 @@ public sealed class MessagingClientExecutionTests
 
         var httpClient = host.HttpClient;
 
-        await Assert.ThatAsync(() => clientServiceProvider.GetRequiredService<IMessageSenders>()
-                                                          .For(TestMessageWithoutResponse.T)
-                                                          .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
-                                                          .Handle(new(), host.TestTimeoutToken),
-                               Throws.TypeOf<HttpMessageFailedOnClientException>().With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
+        await Assert.ThatAsync(
+            () => clientServiceProvider.GetRequiredService<IMessageSenders>()
+                                       .For(TestMessageWithoutResponse.T)
+                                       .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                       .Handle(new(), host.TestTimeoutToken),
+            Throws.TypeOf<HttpMessageFailedOnClientException>()
+                  .With.Matches<HttpMessageFailedOnClientException>(ex => ex.StatusCode == HttpStatusCode.NotFound));
 
         Assert.That(callWasReceivedOnServer, Is.False);
     }
 
-    private Task<HttpTransportTestHost> CreateTestHost(Action<IServiceCollection> configureServices,
-                                                       Action<IApplicationBuilder> configure)
+    [Test]
+    [TestCase(MessageFailedException.WellKnownReasons.Unauthenticated, StatusCodes.Status401Unauthorized)]
+    [TestCase(MessageFailedException.WellKnownReasons.Unauthorized, StatusCodes.Status403Forbidden)]
+    [TestCase(MessageFailedException.WellKnownReasons.InvalidFormattedContextData, StatusCodes.Status400BadRequest)]
+    public async Task GivenTestHttpMessageHandlerThatThrowsWellKnownException_WhenExecutingMessage_ReturnsCorrectStatusCode(
+        string reason,
+        int expectedStatusCode)
+    {
+        await using var host = await CreateTestHost(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageHandler>()
+                            .AddSingleton<FnToCallFromHandler>((msg, _) => throw new TestWellKnownException(reason)
+                            {
+                                MessagePayload = msg,
+                                TransportType = new(ConquerorTransportHttpConstants.TransportName, MessageTransportRole.Receiver),
+                            });
+
+                _ = services.AddRouting().AddMessageEndpoints();
+            },
+            app => app.UseConquerorWellKnownErrorHandling().UseRouting().UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+
+        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+
+        var httpClient = host.HttpClient;
+
+        await Assert.ThatAsync(
+            () => clientServiceProvider.GetRequiredService<IMessageSenders>()
+                                       .For(TestMessage.T)
+                                       .WithTransport(b => b.UseHttp(new("http://localhost")).WithHttpClient(httpClient))
+                                       .Handle(new(), host.TestTimeoutToken),
+            Throws.TypeOf<HttpMessageFailedOnClientException>()
+                  .With.Matches<HttpMessageFailedOnClientException>(ex => (int?)ex.StatusCode == expectedStatusCode));
+    }
+
+    [Test]
+    public async Task GivenApiWithBearerTokenAuthentication_WhenExecutingMessageWithBearerToken_AuthenticatedPrincipalIsAvailableInContext()
+    {
+        ClaimsPrincipal? seenPrincipal = null;
+
+        const string userName = "test-user";
+
+        await using var host = await CreateTestHost(
+            services =>
+            {
+                _ = services.AddMessageHandler<TestMessageHandler>()
+                            .AddSingleton<FnToCallFromHandler>((_, p) =>
+                            {
+                                seenPrincipal = p.GetRequiredService<IConquerorContextAccessor>().ConquerorContext?.GetCurrentPrincipalInternal();
+
+                                return Task.CompletedTask;
+                            });
+
+                _ = services.AddRouting().AddMessageEndpoints();
+            },
+            app => app.UseConquerorWellKnownErrorHandling()
+                      .UseAuthentication()
+                      .UseRouting()
+                      .UseEndpoints(endpoints => endpoints.MapMessageEndpoints()));
+
+        await using var clientServiceProvider = new ServiceCollection().AddConqueror().BuildServiceProvider();
+
+        var httpClient = host.HttpClient;
+
+        _ = await clientServiceProvider.GetRequiredService<IMessageSenders>()
+                                       .For(TestMessage.T)
+                                       .WithTransport(b => b.UseHttp(new("http://localhost"))
+                                                            .WithHttpClient(httpClient)
+                                                            .WithHeaders(h => h.WithAuthenticatedPrincipal(userName)))
+                                       .Handle(new(), host.TestTimeoutToken);
+
+        Assert.That(seenPrincipal, Is.Not.Null);
+        Assert.That(seenPrincipal?.Identity?.IsAuthenticated, Is.True);
+        Assert.That(seenPrincipal?.Identity?.Name, Is.EqualTo(userName));
+    }
+
+    private Task<HttpTransportTestHost> CreateTestHost(
+        Action<IServiceCollection> configureServices,
+        Action<IApplicationBuilder> configure)
     {
         return HttpTransportTestHost.Create(
             services =>
             {
-                _ = services.AddSingleton<FnToCallFromHandler>(_ =>
+                _ = services.AddSingleton<FnToCallFromHandler>((_, _) =>
                 {
                     callWasReceivedOnServer = true;
+
                     return Task.CompletedTask;
                 });
 
@@ -179,5 +274,10 @@ public sealed class MessagingClientExecutionTests
 
                 configure(app);
             });
+    }
+
+    private sealed class TestWellKnownException(string wellKnownReason) : MessageFailedException
+    {
+        public override string WellKnownReason { get; } = wellKnownReason;
     }
 }
