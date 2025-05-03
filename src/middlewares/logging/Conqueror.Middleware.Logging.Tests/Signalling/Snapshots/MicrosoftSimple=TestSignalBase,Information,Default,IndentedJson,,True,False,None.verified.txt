@@ -1,0 +1,18 @@
+﻿info: CustomCategory_TestSignalSub[441733974]
+      Publishing in-process signal of type 'TestSignalSub' with payload
+      {
+        "PayloadSub": 11,
+        "PayloadBase": 10
+      }
+      (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignalSub[441733974]
+      Handling signal of type 'TestSignalSub' with payload
+      {
+        "PayloadSub": 11,
+        "PayloadBase": 10
+      }
+      (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignalSub[1977864143]
+      Handled signal of type 'TestSignalSub' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignalSub[1977864143]
+      Published in-process signal of type 'TestSignalSub' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

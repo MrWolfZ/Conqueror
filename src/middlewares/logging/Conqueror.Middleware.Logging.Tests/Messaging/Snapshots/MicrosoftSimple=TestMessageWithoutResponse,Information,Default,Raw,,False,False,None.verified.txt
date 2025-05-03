@@ -1,0 +1,8 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutResponse[711195907]
+      Sending in-process message of type 'TestMessageWithoutResponse' with payload TestMessageWithoutResponse { Payload = 10 } (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutResponseHandler[711195907]
+      Handling message of type 'TestMessageWithoutResponse' with payload TestMessageWithoutResponse { Payload = 10 } (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutResponseHandler[412531951]
+      Handled message of type 'TestMessageWithoutResponse' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithoutResponse[412531951]
+      Sent in-process message of type 'TestMessageWithoutResponse' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

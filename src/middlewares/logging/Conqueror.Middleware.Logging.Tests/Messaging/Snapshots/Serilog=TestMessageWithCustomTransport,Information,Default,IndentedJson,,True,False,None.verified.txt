@@ -1,0 +1,20 @@
+﻿2020-01-01 00:00:00.000 +00:00 [Information] Sending test-transport message of type '"TestMessageWithCustomTransport"' with payload
+{
+  "Payload": 10
+}
+(Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handling test-transport message of type '"TestMessageWithCustomTransport"' with payload
+{
+  "Payload": 10
+}
+(Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Handled test-transport message of type '"TestMessageWithCustomTransport"' and got response
+{
+  "Payload": 11
+}
+in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+2020-01-01 00:00:00.000 +00:00 [Information] Sent test-transport message of type '"TestMessageWithCustomTransport"' and got response
+{
+  "Payload": 11
+}
+in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

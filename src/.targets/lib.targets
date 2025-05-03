@@ -17,12 +17,14 @@
         <Authors>Jonathan Ziller</Authors>
         <Copyright>Copyright (c) 2022-present Jonathan Ziller</Copyright>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageTags>CQS CQRS Command-Query-Separation Eventing Events PubSub</PackageTags>
+        <RepositoryUrl>https://github.com/MrWolfZ/Conqueror</RepositoryUrl> 
+        <RepositoryType>git</RepositoryType> 
+        <PackageTags>Conqueror CQS CQRS Command-Query-Separation Messages Messaging Signals Signalling Events PubSub Streaming Iterators</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="../../README.md" Pack="true" PackagePath="\" Visible="false" />
+        <None Include="README.md" Pack="true" PackagePath="\" Visible="false" />
     </ItemGroup>
 
 </Project>

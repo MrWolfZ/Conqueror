@@ -1,0 +1,8 @@
+﻿info: CustomCategory_TestMessageSub[711195907]
+      Sending in-process message of type 'TestMessageSub' with payload {"PayloadSub":11,"PayloadBase":10} (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageSub[711195907]
+      Handling message of type 'TestMessageSub' with payload {"PayloadSub":11,"PayloadBase":10} (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageSub[412531951]
+      Handled message of type 'TestMessageSub' and got response {"Payload":11} in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageSub[412531951]
+      Sent in-process message of type 'TestMessageSub' and got response {"Payload":11} in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

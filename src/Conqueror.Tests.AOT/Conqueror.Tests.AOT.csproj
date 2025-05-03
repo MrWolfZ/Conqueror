@@ -13,12 +13,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Middleware.Authorization\Conqueror.Middleware.Authorization.csproj" />
-        <ProjectReference Include="..\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" />
-        <ProjectReference Include="..\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <ProjectReference Include="..\Conqueror.Transport.Http.Client\Conqueror.Transport.Http.Client.csproj" />
-        <ProjectReference Include="..\Conqueror.Abstractions\Conqueror.Abstractions.csproj" />
-        <ProjectReference Include="..\Conqueror\Conqueror.csproj" />
+        <ProjectReference Include="../Conqueror/Conqueror.csproj" />
+        <ProjectReference Include="../Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="../middlewares/authorization/Conqueror.Middleware.Authorization/Conqueror.Middleware.Authorization.csproj" />
+        <ProjectReference Include="../middlewares/logging/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" />
+        <ProjectReference Include="../transports/http/Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" />
     </ItemGroup>
 
     <ItemGroup>

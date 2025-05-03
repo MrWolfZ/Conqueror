@@ -1,0 +1,8 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignal[441733974]
+      Publishing in-process signal of type 'TestSignal' (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalHandler[441733974]
+      Handling signal of type 'TestSignal' (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalHandler[1977864143]
+      Handled signal of type 'TestSignal' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignal[1977864143]
+      Published in-process signal of type 'TestSignal' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

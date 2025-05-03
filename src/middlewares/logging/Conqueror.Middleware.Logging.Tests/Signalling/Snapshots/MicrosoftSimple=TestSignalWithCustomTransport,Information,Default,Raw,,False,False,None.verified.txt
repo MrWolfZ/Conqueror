@@ -1,0 +1,8 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[441733974]
+      Publishing test-transport signal of type 'TestSignalWithCustomTransport' with payload TestSignalWithCustomTransport { Payload = 10 } (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransportHandler[441733974]
+      Handling test-transport signal of type 'TestSignalWithCustomTransport' with payload TestSignalWithCustomTransport { Payload = 10 } (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransportHandler[1977864143]
+      Handled test-transport signal of type 'TestSignalWithCustomTransport' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomTransport[1977864143]
+      Published test-transport signal of type 'TestSignalWithCustomTransport' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

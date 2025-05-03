@@ -1,0 +1,24 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessage[711195907]
+      Sending in-process message of type 'TestMessage' with payload
+      {
+        "Payload": 10
+      }
+      (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageHandler[711195907]
+      Handling message of type 'TestMessage' with payload
+      {
+        "Payload": 10
+      }
+      (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageHandler[412531951]
+      Handled message of type 'TestMessage' and got response
+      {
+        "Payload": 11
+      }
+      in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessage[412531951]
+      Sent in-process message of type 'TestMessage' and got response
+      {
+        "Payload": 11
+      }
+      in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

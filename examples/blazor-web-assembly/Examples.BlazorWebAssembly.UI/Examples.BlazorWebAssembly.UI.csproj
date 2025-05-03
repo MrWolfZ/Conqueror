@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../../../src/Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" Condition="$(ShouldReferenceProject)" />
+        <ProjectReference Include="../../../src/transports/http/Conqueror.Transport.Http.Client/Conqueror.Transport.Http.Client.csproj" Condition="$(ShouldReferenceProject)" />
         <ProjectReference Include="../Examples.BlazorWebAssembly.Contracts/Examples.BlazorWebAssembly.Contracts.csproj" />
         <ProjectReference Include="../Examples.BlazorWebAssembly.SharedMiddlewares/Examples.BlazorWebAssembly.SharedMiddlewares.csproj" />
     </ItemGroup>

@@ -1,0 +1,16 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomJsonTypeInfo[441733974]
+      Publishing in-process signal of type 'TestSignalWithCustomJsonTypeInfo' with payload
+      {
+        "SIGNAL_PAYLOAD": 10
+      }
+      (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomJsonTypeInfoHandler[441733974]
+      Handling signal of type 'TestSignalWithCustomJsonTypeInfo' with payload
+      {
+        "SIGNAL_PAYLOAD": 10
+      }
+      (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomJsonTypeInfoHandler[1977864143]
+      Handled signal of type 'TestSignalWithCustomJsonTypeInfo' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalWithCustomJsonTypeInfo[1977864143]
+      Published in-process signal of type 'TestSignalWithCustomJsonTypeInfo' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

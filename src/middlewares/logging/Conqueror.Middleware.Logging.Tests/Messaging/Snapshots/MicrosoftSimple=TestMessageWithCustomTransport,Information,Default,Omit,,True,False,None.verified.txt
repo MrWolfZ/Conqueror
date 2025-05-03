@@ -1,0 +1,8 @@
+﻿info: CustomCategory_TestMessageWithCustomTransport[711195907]
+      Sending test-transport message of type 'TestMessageWithCustomTransport' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageWithCustomTransport[711195907]
+      Handling test-transport message of type 'TestMessageWithCustomTransport' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageWithCustomTransport[412531951]
+      Handled test-transport message of type 'TestMessageWithCustomTransport' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessageWithCustomTransport[412531951]
+      Sent test-transport message of type 'TestMessageWithCustomTransport' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

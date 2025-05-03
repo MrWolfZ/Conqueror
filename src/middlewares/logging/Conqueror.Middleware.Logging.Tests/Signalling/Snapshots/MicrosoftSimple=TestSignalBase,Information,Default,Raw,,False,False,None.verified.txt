@@ -1,0 +1,8 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[441733974]
+      Publishing in-process signal of type 'TestSignalSub' with payload TestSignalSub { PayloadBase = 10, PayloadSub = 11 } (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalBaseHandler[441733974]
+      Handling signal of type 'TestSignalSub' with payload TestSignalSub { PayloadBase = 10, PayloadSub = 11 } (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalBaseHandler[1977864143]
+      Handled signal of type 'TestSignalSub' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Signalling.LoggingMiddlewareTestSignals.TestSignalSub[1977864143]
+      Published in-process signal of type 'TestSignalSub' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

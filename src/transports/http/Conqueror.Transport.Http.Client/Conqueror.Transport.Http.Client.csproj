@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../../../.targets/lib.targets" />
+
+    <PropertyGroup>
+        <IsAotCompatible>true</IsAotCompatible>
+    </PropertyGroup>
+
+    <!-- for NuGet -->
+    <PropertyGroup>
+        <Description>Part of the Conqueror library set. Create HTTP clients for servers using the Conqueror package.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../../Conqueror/Conqueror.csproj" />
+        <ProjectReference Include="../Conqueror.Transport.Http.Abstractions/Conqueror.Transport.Http.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

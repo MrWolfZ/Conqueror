@@ -24,14 +24,14 @@ dotnet pack %srcDir%\Conqueror.Abstractions -c Release -o %publishDir% --include
 dotnet pack %srcDir%\Conqueror -c Release -o %publishDir% --include-symbols
 
 REM middlewares
-dotnet pack %srcDir%\Conqueror.Middleware.Authorization -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Middleware.Logging -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Middleware.Polly -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\middlewares\authorization\Conqueror.Middleware.Authorization -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\middlewares\logging\Conqueror.Middleware.Logging -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\middlewares\polly\Conqueror.Middleware.Polly -c Release -o %publishDir% --include-symbols
 
 REM transports
-dotnet pack %srcDir%\Conqueror.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Transport.Http.Client -c Release -o %publishDir% --include-symbols
-dotnet pack %srcDir%\Conqueror.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\transports\http\Conqueror.Transport.Http.Abstractions -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\transports\http\Conqueror.Transport.Http.Client -c Release -o %publishDir% --include-symbols
+dotnet pack %srcDir%\transports\http\Conqueror.Transport.Http.Server.AspNetCore -c Release -o %publishDir% --include-symbols
 
 REM post-clean
 

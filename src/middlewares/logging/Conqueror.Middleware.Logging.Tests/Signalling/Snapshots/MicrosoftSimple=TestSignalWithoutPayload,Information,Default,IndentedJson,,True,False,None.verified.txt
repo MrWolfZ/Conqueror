@@ -1,0 +1,8 @@
+﻿info: CustomCategory_TestSignalWithoutPayload[441733974]
+      Publishing in-process signal of type 'TestSignalWithoutPayload' (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignalWithoutPayload[441733974]
+      Handling signal of type 'TestSignalWithoutPayload' (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignalWithoutPayload[1977864143]
+      Handled signal of type 'TestSignalWithoutPayload' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignalWithoutPayload[1977864143]
+      Published in-process signal of type 'TestSignalWithoutPayload' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

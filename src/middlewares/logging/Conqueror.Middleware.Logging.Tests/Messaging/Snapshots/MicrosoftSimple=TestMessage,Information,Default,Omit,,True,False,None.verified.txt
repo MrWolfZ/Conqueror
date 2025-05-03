@@ -1,0 +1,8 @@
+﻿info: CustomCategory_TestMessage[711195907]
+      Sending in-process message of type 'TestMessage' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessage[711195907]
+      Handling message of type 'TestMessage' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessage[412531951]
+      Handled message of type 'TestMessage' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestMessage[412531951]
+      Sent in-process message of type 'TestMessage' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

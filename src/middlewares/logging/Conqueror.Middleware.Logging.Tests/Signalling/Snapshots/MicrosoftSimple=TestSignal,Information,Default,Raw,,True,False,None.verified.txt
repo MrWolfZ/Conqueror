@@ -1,0 +1,8 @@
+﻿info: CustomCategory_TestSignal[441733974]
+      Publishing in-process signal of type 'TestSignal' with payload TestSignal { Payload = 10 } (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignal[441733974]
+      Handling signal of type 'TestSignal' with payload TestSignal { Payload = 10 } (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignal[1977864143]
+      Handled signal of type 'TestSignal' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)
+info: CustomCategory_TestSignal[1977864143]
+      Published in-process signal of type 'TestSignal' in 123.4560ms (Signal ID: test-message-id, Trace ID: test-trace-id)

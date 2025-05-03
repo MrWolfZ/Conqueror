@@ -1,0 +1,8 @@
+﻿info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomJsonTypeInfo[711195907]
+      Sending in-process message of type 'TestMessageWithCustomJsonTypeInfo' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomJsonTypeInfoHandler[711195907]
+      Handling message of type 'TestMessageWithCustomJsonTypeInfo' (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomJsonTypeInfoHandler[412531951]
+      Handled message of type 'TestMessageWithCustomJsonTypeInfo' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)
+info: Conqueror.Middleware.Logging.Tests.Messaging.LoggingMiddlewareTestMessages.TestMessageWithCustomJsonTypeInfo[412531951]
+      Sent in-process message of type 'TestMessageWithCustomJsonTypeInfo' in 123.4560ms (Message ID: test-message-id, Trace ID: test-trace-id)

@@ -11,11 +11,11 @@
 
     <!-- reference the projects if the full repository is checked out (useful for development) -->
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Conqueror\Conqueror.csproj" Condition="$(ShouldReferenceProject) == true" />
-        <ProjectReference Include="..\..\src\Conqueror.Middleware.Logging\Conqueror.Middleware.Logging.csproj" Condition="$(ShouldReferenceProject) == true" />
-        <ProjectReference Include="..\..\src\Conqueror.Transport.Http.Server.AspNetCore\Conqueror.Transport.Http.Server.AspNetCore.csproj" Condition="$(ShouldReferenceProject) == true" />
+        <ProjectReference Include="../../src/Conqueror/Conqueror.csproj" Condition="$(ShouldReferenceProject) == true" />
+        <ProjectReference Include="../../src/middlewares/logging/Conqueror.Middleware.Logging/Conqueror.Middleware.Logging.csproj" Condition="$(ShouldReferenceProject) == true" />
+        <ProjectReference Include="../../src/transports/http/Conqueror.Transport.Http.Server.AspNetCore/Conqueror.Transport.Http.Server.AspNetCore.csproj" Condition="$(ShouldReferenceProject) == true" />
 
-        <ProjectReference Include="..\..\src\Conqueror.SourceGenerators\Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Condition="$(ShouldReferenceProject) == true" />
+        <ProjectReference Include="../../src/Conqueror.SourceGenerators/Conqueror.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Condition="$(ShouldReferenceProject) == true" />
     </ItemGroup>
 
     <!-- reference the packages if the project is checked out standalone -->

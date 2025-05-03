@@ -8,7 +8,7 @@
 
     <!-- for NuGet -->
     <PropertyGroup>
-        <Description>Part of the Conqueror library set. Abstractions for all messaging packages.</Description>
+        <Description>Part of the Conqueror library set. Abstractions for all packages.</Description>
     </PropertyGroup>
 
     <PropertyGroup>
