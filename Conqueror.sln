@@ -238,6 +238,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Middleware.Polly.Tests", "src\Conqueror.Middleware.Polly.Tests\Conqueror.Middleware.Polly.Tests.csproj", "{F5F1C095-6970-45DE-AE43-EFF17A75B148}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conqueror.Benchmarks", "src\Conqueror.Benchmarks\Conqueror.Benchmarks.csproj", "{1FF21176-D184-4EA4-8F02-DDAF83CE4344}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -499,6 +501,10 @@ Global
 		{F5F1C095-6970-45DE-AE43-EFF17A75B148}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5F1C095-6970-45DE-AE43-EFF17A75B148}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5F1C095-6970-45DE-AE43-EFF17A75B148}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FF21176-D184-4EA4-8F02-DDAF83CE4344}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FF21176-D184-4EA4-8F02-DDAF83CE4344}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FF21176-D184-4EA4-8F02-DDAF83CE4344}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FF21176-D184-4EA4-8F02-DDAF83CE4344}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF050FB-A89F-4086-B195-D7775B0A9C5C} = {646E4311-2098-4936-8A6D-AA871A214898}
