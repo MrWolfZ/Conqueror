@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-    <Import Project="../.targets/test.targets" />
-
-    <ItemGroup>
-        <ProjectReference Include="..\Conqueror.Eventing\Conqueror.Eventing.csproj" />
-    </ItemGroup>
-
-</Project>
