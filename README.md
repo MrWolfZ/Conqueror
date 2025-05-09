@@ -46,7 +46,7 @@
 
 ## Quickstart
 
-This quickstart guide will let you jump right into the code without lengthy explanations. If you prefer more guidance, head over to our [recipes](#recipes). By following this quickstart guide, you'll add HTTP messages and an in-process signal to a minimal API ASP.NET Core application. You can also find the [source code](recipes/quickstart) here in the repository.
+This quickstart guide will let you jump right into the code without lengthy explanations. If you prefer more guidance, head over to our [recipes](#recipes). By following this quickstart guide, you'll add HTTP messages and an in-process signal to a minimal API ASP.NET Core application. You can also find the [source code](examples/quickstart) here in the repository.
 
 ```sh
 dotnet new webapi -n Quickstart && cd Quickstart
