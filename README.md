@@ -8,7 +8,7 @@
 
 - provide excellent developer experience with discoverable APIs, proper IDE integration (e.g. ensuring that "Go to ..." shortcuts work as expected), and great use-case-driven documentation
 - avoid hidden control flow, global state, and global behaviors wherever possible; instead, ensure that all API usage occurs in user code where it makes it obvious (and debuggable) for the developer what is happening
-- everything on top of the core in-process functionality is optional and user-written extensions can be just as powerful as pre-built extension packages
+- everything on top of the core in-process functionality is optional, and user-written extensions can be just as powerful as pre-built extension packages
 - encourage good architecture practices, but provide the freedom to build everything from monoliths to microservices without forcing developers into any particular direction 
 
 <img src="./docs/intro.svg?raw=true" alt="Intro" style="height: 565px" height="565px" />
