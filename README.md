@@ -2,13 +2,14 @@
 
 # Conqueror - a highly ergonomic library for building structured, scalable .NET apps
 
-**Conqueror** is a .NET library that simplifies writing modular, scalable applications by unifying messages, signals, and more into a consistent, extensible model. It uses modern features of .NET like source generators and static abstract interface methods to reduce boilerplate, support advanced uses cases like AOT compilation, and to provide a highly ergonomic user-friendly API.
+**Conqueror** is a .NET library that simplifies writing modular, scalable applications by unifying messages, signals, and async iterators into a consistent, extensible transport-agnostic model. It uses modern features of .NET like source generators and static abstract interface methods to reduce boilerplate, support advanced uses cases like AOT compilation, and to provide a highly ergonomic user-friendly API.
 
-Whether you're building a monolith or distributed microservices, **Conqueror** provides a seamless experience with minimal ceremony. It also eases the transition from a modular monolith to a distributed system with minimal friction, giving teams the flexibility to start simple and delay the transition until the right time in a project's lifecycle.
+## Core Design Goals of Conqueror
 
-**Conqueror** encourages clean architectures by decoupling your application logic from concrete transports like HTTP, and allows exposing business operations via many different transports with thin adapters.
-
-**Conqueror** leverages design patterns like [messaging](https://en.wikipedia.org/wiki/Messaging_pattern), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as _middlewares_), [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming), [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), and more.
+- provide excellent developer experience with discoverable APIs, proper IDE integration (e.g. ensuring that "Go to ..." shortcuts work as expected), and great use-case-driven documentation
+- avoid hidden control flow, global state, and global behaviors wherever possible; instead, ensure that all API usage occurs in user code where it makes it obvious (and debuggable) for the developer what is happening
+- everything on top of the core in-process functionality is optional and user-written extensions can be just as powerful as pre-built extension packages
+- encourage good architecture practices, but provide the freedom to build everything from monoliths to microservices without forcing developers into any particular direction 
 
 <img src="./docs/intro.svg?raw=true" alt="Intro" style="height: 565px" height="565px" />
 
@@ -882,6 +883,8 @@ One way many teams choose to address this issue is by forcing every operation to
 A useful side-effect of moving the handling of cross-cutting concerns away from the concrete transport, is that it allows solving cross-cutting concerns for both incoming and outgoing operations. For example, with **Conqueror** the exact same code can be used for adding retry capabilities for your own command and query handlers as well as when calling an external HTTP API.
 
 On an architectural level, a popular way to build systems these days is using [microservices](https://microservices.io). While microservices are a powerful approach, they can often represent a significant challenge for small or new teams, mostly for deployment and operations (challenges common to most [distributed systems](https://en.wikipedia.org/wiki/Distributed_computing)). A different approach that many teams choose is to start with a [modular monolith](https://martinfowler.com/bliki/MonolithFirst.html) and move to microservices at a later point. However, it is common for teams to struggle with such a migration, partly due to sub-optimal modularization and partly due to existing tools and libraries not providing a smooth transition journey from one approach to another (or often forcing you into the distributed approach directly, e.g. [MassTransit](https://masstransit-project.com)). **Conqueror** addresses this by encouraging you to build modules with clearly defined contracts and by allowing you to switch from having a module be part of a monolith to be its own microservice with minimal code changes.
+
+**Conqueror** leverages design patterns like [messaging](https://en.wikipedia.org/wiki/Messaging_pattern), [chain-of-responsibility](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) (often also known as _middlewares_), [aspect-oriented programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming), [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern), [publish-subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern), and more.
 
 In summary, these are some of the strengths of **Conqueror**:
 
