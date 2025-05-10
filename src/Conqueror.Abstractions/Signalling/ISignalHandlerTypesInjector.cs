@@ -34,8 +34,8 @@ public sealed class CoreSignalHandlerTypesInjector<TSignal, TIHandler, TProxy, T
     ///     having a generic reference to the signal type. This allows bypassing reflection.
     /// </summary>
     /// <param name="injectable">The injectable that should be called with the generic type parameters</param>
-    /// <typeparam name="TResult">The type of result the factory will return</typeparam>
-    /// <returns>The result of calling the factory</returns>
+    /// <typeparam name="TResult">The type of result the injectable will return</typeparam>
+    /// <returns>The result of calling the injectable</returns>
     public TResult Create<TResult>(ICoreSignalHandlerTypesInjectable<TResult> injectable)
         => injectable.WithInjectedTypes<TSignal, TIHandler, TProxy, THandler>();
 }

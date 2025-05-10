@@ -12,35 +12,42 @@ internal sealed class SignalHandlerInvoker<TSignal>(
     : ISignalHandlerInvoker
     where TSignal : class, ISignal<TSignal>
 {
-    public Task Invoke<T>(IServiceProvider serviceProvider, T signal, string transportTypeName, CancellationToken cancellationToken)
-        where T : class, ISignal<T>
+    public Task Invoke(
+        object signal,
+        IServiceProvider serviceProvider,
+        string transportTypeName,
+        CancellationToken cancellationToken)
     {
-        Debug.Assert(typeof(T) == typeof(TSignal), $"the signal type was expected to be {typeof(TSignal)}, but was {typeof(T)} instead.");
+        Debug.Assert(signal.GetType().IsAssignableTo(typeof(TSignal)), $"the signal type was expected to be assignable to '{typeof(TSignal)}', but was '{signal.GetType()}' instead.");
 
-        var dispatcher = new SignalDispatcher<TSignal>(serviceProvider,
-                                                       new(new Publisher(handlerFn, transportTypeName)),
-                                                       configurePipeline,
-                                                       SignalTransportRole.Receiver,
-                                                       handlerType);
+        var dispatcher = new SignalDispatcher<TSignal>(
+            serviceProvider,
+            new(new Publisher(handlerFn, transportTypeName)),
+            configurePipeline,
+            SignalTransportRole.Receiver,
+            handlerType);
 
-        return dispatcher.Dispatch((signal as TSignal)!, cancellationToken);
+        return dispatcher.Dispatch((TSignal)signal, cancellationToken);
     }
 
     private sealed class Publisher(SignalHandlerFn<TSignal> handlerFn, string transportTypeName) : ISignalPublisher<TSignal>
     {
         public string TransportTypeName { get; } = transportTypeName;
 
-        public Task Publish(TSignal signal, IServiceProvider serviceProvider, ConquerorContext conquerorContext, CancellationToken cancellationToken)
+        public Task Publish(
+            TSignal signal,
+            IServiceProvider serviceProvider,
+            ConquerorContext conquerorContext,
+            CancellationToken cancellationToken)
             => handlerFn(signal, serviceProvider, cancellationToken);
     }
 }
 
 internal interface ISignalHandlerInvoker
 {
-    Task Invoke<TSignal>(
+    Task Invoke(
+        object signal,
         IServiceProvider serviceProvider,
-        TSignal signal,
         string transportTypeName,
-        CancellationToken cancellationToken)
-        where TSignal : class, ISignal<TSignal>;
+        CancellationToken cancellationToken);
 }

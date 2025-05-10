@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
-using static Conqueror.ConquerorTransportHttpConstants;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 
 namespace Conqueror.Transport.Http.Tests.Messaging.Server;

@@ -171,7 +171,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                 return;
             }
 
-            if (TMessage.HttpResponseSerializer is { } rs)
+            if (TMessage.HttpMessageResponseSerializer is { } rs)
             {
                 await rs.Serialize(httpContext.RequestServices, httpContext.Response.Body, response, httpContext.RequestAborted).ConfigureAwait(false);
                 return;
@@ -227,7 +227,7 @@ public static class ConquerorHttpServerMessagingEndpointRouteBuilderExtensions
                                  ApiGroupName = TMessage.ApiGroupName,
                                  HttpMethod = TMessage.HttpMethod,
                                  MessageContentType = TMessage.HttpMessageSerializer?.ContentType ?? MediaTypeNames.Application.Json,
-                                 ResponseContentType = TMessage.HttpResponseSerializer?.ContentType ?? MediaTypeNames.Application.Json,
+                                 ResponseContentType = TMessage.HttpMessageResponseSerializer?.ContentType ?? MediaTypeNames.Application.Json,
                                  MessageType = typeof(TMessage),
                                  HasPayload = hasPayload,
                                  QueryParams = TMessage.HttpMethod == ConquerorTransportHttpConstants.MethodGet ? GetQueryParams() : [],

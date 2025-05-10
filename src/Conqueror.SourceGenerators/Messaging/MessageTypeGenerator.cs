@@ -67,7 +67,7 @@ public sealed class MessageTypeGenerator : IIncrementalGenerator
 
     private static MessageTypeDescriptor? GetMessageTypesDescriptor(GeneratorSyntaxContext context, CancellationToken ct)
     {
-        if (context.SemanticModel.GetDeclaredSymbol(context.Node) is not INamedTypeSymbol messageTypeSymbol)
+        if (context.SemanticModel.GetDeclaredSymbolSafe(context.Node) is not INamedTypeSymbol messageTypeSymbol)
         {
             // weird, we couldn't get the symbol, ignore it
             return null;

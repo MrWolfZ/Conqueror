@@ -157,7 +157,7 @@ public static class GeneratorHelper
 
         while (parentSyntax != null && IsAllowedKind(parentSyntax.Kind()))
         {
-            var parentSymbol = semanticModel.GetDeclaredSymbol(parentSyntax);
+            var parentSymbol = semanticModel.GetDeclaredSymbolSafe(parentSyntax);
 
             var parentClassInfo = new ParentClass(
                 parentSyntax.Keyword.ValueText,

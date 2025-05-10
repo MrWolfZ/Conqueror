@@ -16,7 +16,7 @@ public interface IHttpMessageSender<in TMessage, TResponse> : IMessageSender<TMe
     /// </summary>
     /// <param name="httpClient">The HTTP client to use</param>
     /// <returns>The transport client configured to use the HTTP client</returns>
-    IHttpMessageSender<TMessage, TResponse> WithHttpClient(HttpClient? httpClient);
+    IHttpMessageSender<TMessage, TResponse> WithHttpClient(HttpClient httpClient);
 
     IHttpMessageSender<TMessage, TResponse> WithHeaders(Action<HttpRequestHeaders> configureHeaders);
 }

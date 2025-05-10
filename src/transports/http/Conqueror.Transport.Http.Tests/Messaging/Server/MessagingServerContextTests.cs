@@ -4,7 +4,6 @@ using System.Net.Mime;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using static Conqueror.ConquerorTransportHttpConstants;
 using static Conqueror.Transport.Http.Tests.Messaging.HttpTestMessages;
 using MediaTypeHeaderValue = System.Net.Http.Headers.MediaTypeHeaderValue;
 

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
-namespace Conqueror.Transport.Http.Client;
+namespace Conqueror;
 
 internal static class HttpJsonSerializerOptions
 {
